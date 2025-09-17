@@ -8,15 +8,15 @@ cluster&lt;/a>.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydbainl/alloydb-ai-nl/">&lt;code>alloydb-ai-nl&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydbainl/alloydb-ai-nl/">&lt;code>alloydb-ai-nl&lt;/code>&lt;/a>
 Use natural language queries on AlloyDB, powered by AlloyDB AI.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-sql/">&lt;code>postgres-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-sql/">&lt;code>postgres-sql&lt;/code>&lt;/a>
 Execute SQL queries as prepared statements in AlloyDB Postgres.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-execute-sql/">&lt;code>postgres-execute-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-execute-sql/">&lt;code>postgres-execute-sql&lt;/code>&lt;/a>
 Run parameterized SQL statements in AlloyDB Postgres.&lt;/p></description></item><item><title>alloydb-ai-nl</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydbainl/alloydb-ai-nl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydbainl/alloydb-ai-nl/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>alloydb-ai-nl&lt;/code> tool leverages &lt;a href="https://cloud.google.com/alloydb/docs/ai/natural-language-overview">AlloyDB AI next-generation natural
 Language&lt;/a> support to allow an Agent the ability to query
@@ -32,7 +32,20 @@ layer.&lt;/p>
 application end user natural language questions. Natural language streamlines
 the development of generative AI applications by transferring the complexity
 of converting natural language to SQL from the application layer to the
-database layer.&lt;/p></description></item><item><title>alloydb-get-cluster</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-get-cluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-get-cluster/</guid><description>&lt;h2 id="about">About&lt;/h2>
+database layer.&lt;/p></description></item><item><title>alloydb-create-cluster</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-create-cluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-create-cluster/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>alloydb-create-cluster&lt;/code> tool creates a new AlloyDB for PostgreSQL cluster in a specified project and location. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.
+This tool provisions a cluster with a &lt;strong>private IP address&lt;/strong> within the specified VPC network.&lt;/p>
+&lt;p>&lt;strong>Permissions &amp;amp; APIs Required:&lt;/strong>
+Before using, ensure the following on your GCP project:&lt;/p>
+&lt;ol>
+&lt;li>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/li>
+&lt;li>The user or service account executing the tool has the following IAM roles:
+&lt;ul>
+&lt;li>&lt;code>roles/alloydb.admin&lt;/code>: To create and manage the AlloyDB cluster.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ol>
+&lt;p>The tool takes the following input parameters:&lt;/p></description></item><item><title>alloydb-get-cluster</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-get-cluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-get-cluster/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>alloydb-get-cluster&lt;/code> tool retrieves detailed information for a single, specified AlloyDB cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;table>
  &lt;thead>
@@ -45,28 +58,62 @@ database layer.&lt;/p></description></item><item><title>alloydb-get-cluster</tit
  &lt;/thead>
  &lt;tbody>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>projectId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>project&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The GCP project ID to get cluster for.&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>locationId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>location&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The location of the cluster (e.g., &amp;lsquo;us-central1&amp;rsquo;).&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>clusterId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>cluster&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The ID of the cluster to retrieve.&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;blockquote>
-&lt;p>&lt;strong>Note&lt;/strong>
-This tool authenticates using the credentials configured in its &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source which can be either &lt;a href="https://cloud.google.com/docs/authentication/application-default-credentials">Application Default Credentials&lt;/a> or client-side OAuth.&lt;/p></description></item><item><title>alloydb-get-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-get-instance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-get-instance/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_specific_cluster&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-get-cluster&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-alloydb-admin-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to retrieve details for a specific AlloyDB cluster.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be alloydb-get-cluster.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The name of an &lt;code>alloydb-admin&lt;/code> source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Description of the tool that is passed to the agent.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>alloydb-get-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-get-instance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-get-instance/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>alloydb-get-instance&lt;/code> tool retrieves detailed information for a single, specified AlloyDB instance. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;table>
  &lt;thead>
@@ -104,9 +151,43 @@ This tool authenticates using the credentials configured in its &lt;a href="http
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;blockquote>
-&lt;p>&lt;strong>Note&lt;/strong>
-This tool authenticates using the credentials configured in its &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source which can be either &lt;a href="https://cloud.google.com/docs/authentication/application-default-credentials">Application Default Credentials&lt;/a> or client-side OAuth.&lt;/p></description></item><item><title>alloydb-get-user</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-get-user/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-get-user/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_specific_instance&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-get-instance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-alloydb-admin-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to retrieve details for a specific AlloyDB instance.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be alloydb-get-instance.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The name of an &lt;code>alloydb-admin&lt;/code> source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Description of the tool that is passed to the agent.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>alloydb-get-user</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-get-user/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-get-user/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>alloydb-get-user&lt;/code> tool retrieves detailed information for a single, specified AlloyDB user. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;table>
  &lt;thead>
@@ -144,9 +225,43 @@ This tool authenticates using the credentials configured in its &lt;a href="http
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;blockquote>
-&lt;p>&lt;strong>Note&lt;/strong>
-This tool authenticates using the credentials configured in its &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source which can be either &lt;a href="https://cloud.google.com/docs/authentication/application-default-credentials">Application Default Credentials&lt;/a> or client-side OAuth.&lt;/p></description></item><item><title>alloydb-list-clusters</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-list-clusters/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-list-clusters/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_specific_user&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-get-user&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-alloydb-admin-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to retrieve details for a specific AlloyDB user.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be alloydb-get-user.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The name of an &lt;code>alloydb-admin&lt;/code> source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Description of the tool that is passed to the agent.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>alloydb-list-clusters</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-list-clusters/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-list-clusters/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>alloydb-list-clusters&lt;/code> tool retrieves AlloyDB cluster information for all or specified locations in a given project. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;p>&lt;code>alloydb-list-clusters&lt;/code> tool lists the detailed information of AlloyDB cluster(cluster name, state, configuration, etc) for a given project and location. The tool takes the following input parameters:&lt;/p>
 &lt;table>
@@ -160,22 +275,56 @@ This tool authenticates using the credentials configured in its &lt;a href="http
  &lt;/thead>
  &lt;tbody>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>projectId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>project&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The GCP project ID to list clusters for.&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>locationId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>location&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The location to list clusters in (e.g., &amp;lsquo;us-central1&amp;rsquo;). Use &lt;code>-&lt;/code> for all locations. Default: &lt;code>-&lt;/code>.&lt;/td>
  &lt;td style="text-align: left">No&lt;/td>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;blockquote>
-&lt;p>&lt;strong>Note&lt;/strong>
-This tool authenticates using the credentials configured in its &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source which can be either &lt;a href="https://cloud.google.com/docs/authentication/application-default-credentials">Application Default Credentials&lt;/a> or client-side OAuth.&lt;/p></description></item><item><title>alloydb-list-instances</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-list-instances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-list-instances/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_clusters&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-list-clusters&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-admin-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to list all AlloyDB clusters in a given project and location.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be alloydb-list-clusters.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The name of an &lt;code>alloydb-admin&lt;/code> source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Description of the tool that is passed to the agent.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>alloydb-list-instances</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-list-instances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-list-instances/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>alloydb-list-instances&lt;/code> tool retrieves AlloyDB instance information for all or specified clusters and locations in a given project. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;p>&lt;code>alloydb-list-instances&lt;/code> tool lists the detailed information of AlloyDB instances (instance name, type, IP address, state, configuration, etc) for a given project, cluster and location. The tool takes the following input parameters:&lt;/p>
 &lt;table>
@@ -189,28 +338,62 @@ This tool authenticates using the credentials configured in its &lt;a href="http
  &lt;/thead>
  &lt;tbody>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>projectId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>project&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The GCP project ID to list instances for.&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>clusterId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>cluster&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The ID of the cluster to list instances from. Use &amp;lsquo;-&amp;rsquo; to get results for all clusters. Default: &lt;code>-&lt;/code>.&lt;/td>
  &lt;td style="text-align: left">No&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>locationId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>location&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The location of the cluster (e.g., &amp;lsquo;us-central1&amp;rsquo;). Use &amp;lsquo;-&amp;rsquo; to get results for all locations. Default: &lt;code>-&lt;/code>.&lt;/td>
  &lt;td style="text-align: left">No&lt;/td>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;blockquote>
-&lt;p>&lt;strong>Note&lt;/strong>
-This tool authenticates using the credentials configured in its &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source which can be either &lt;a href="https://cloud.google.com/docs/authentication/application-default-credentials">Application Default Credentials&lt;/a> or client-side OAuth.&lt;/p></description></item><item><title>alloydb-list-users</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-list-users/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-list-users/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_instances&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-list-instances&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-admin-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to list all AlloyDB instances for a given project, cluster and location.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be alloydb-list-instances.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The name of an &lt;code>alloydb-admin&lt;/code> source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Description of the tool that is passed to the agent.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>alloydb-list-users</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-list-users/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-list-users/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>alloydb-list-users&lt;/code> tool lists all database users within an AlloyDB cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.
 The tool takes the following input parameters:&lt;/p>
 &lt;table>
@@ -224,28 +407,62 @@ The tool takes the following input parameters:&lt;/p>
  &lt;/thead>
  &lt;tbody>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>projectId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>project&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The GCP project ID to list users for.&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>clusterId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>cluster&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The ID of the cluster to list users from.&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>locationId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>location&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The location of the cluster (e.g., &amp;lsquo;us-central1&amp;rsquo;).&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;blockquote>
-&lt;p>&lt;strong>Note&lt;/strong>
-This tool authenticates using the credentials configured in its &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source which can be either &lt;a href="https://cloud.google.com/docs/authentication/application-default-credentials">Application Default Credentials&lt;/a> or client-side OAuth.&lt;/p></description></item><item><title>BigQuery</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/bigquery/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/bigquery/</guid><description>&lt;h1 id="bigquery-source">BigQuery Source&lt;/h1>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_users&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-list-users&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-admin-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to list all database users within an AlloyDB cluster&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be alloydb-list-users.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The name of an &lt;code>alloydb-admin&lt;/code> source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Description of the tool that is passed to the agent.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>BigQuery</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/bigquery/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/bigquery/</guid><description>&lt;h1 id="bigquery-source">BigQuery Source&lt;/h1>
 &lt;p>&lt;a href="https://cloud.google.com/bigquery/docs">BigQuery&lt;/a> is Google Cloud&amp;rsquo;s fully managed, petabyte-scale,
 and cost-effective analytics data warehouse that lets you run analytics
 over vast amounts of data in near real time. With BigQuery, there&amp;rsquo;s no
@@ -916,15 +1133,15 @@ to a database by following these instructions&lt;/a>.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-sql/">&lt;code>postgres-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-sql/">&lt;code>postgres-sql&lt;/code>&lt;/a>
 Execute SQL queries as prepared statements in PostgreSQL.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-execute-sql/">&lt;code>postgres-execute-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-execute-sql/">&lt;code>postgres-execute-sql&lt;/code>&lt;/a>
 Run parameterized SQL statements in PostgreSQL.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-list-tables/">&lt;code>postgres-list-tables&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-list-tables/">&lt;code>postgres-list-tables&lt;/code>&lt;/a>
 List tables in a PostgreSQL database.&lt;/p></description></item><item><title>Cloud SQL for SQL Server</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/cloud-sql-mssql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/cloud-sql-mssql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://cloud.google.com/sql/docs/sqlserver">Cloud SQL for SQL Server&lt;/a> is a managed database service that
 helps you set up, maintain, manage, and administer your SQL Server databases on
@@ -3390,6 +3607,54 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
+&lt;/table></description></item><item><title>mssql-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/mssql/mssql-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/mssql/mssql-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>mssql-list-tables&lt;/code> tool retrieves schema information for all or specified tables in a SQL server database. It is compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/cloud-sql-mssql/">cloud-sql-mssql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/mssql/">mssql&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>mssql-list-tables&lt;/code> lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned).&lt;/p>
+&lt;p>The tool takes the following input parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>table_names&lt;/code>&lt;/strong> (string, optional): Filters by a comma-separated list of names. By default, it lists all tables in user schemas. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>&lt;code>output_format&lt;/code>&lt;/strong> (string, optional): Indicate the output format of table schema. &lt;code>simple&lt;/code> will return only the table names, &lt;code>detailed&lt;/code> will return the full table information. Default: &lt;code>detailed&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">mssql_list_tables&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">mssql-list-tables&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">mssql-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to retrieve schema information for all or specified tables. Output format can be simple (only table names) or detailed.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;mssql-list-tables&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the source the SQL should execute on.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the agent.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
 &lt;/table></description></item><item><title>mssql-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/mssql/mssql-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/mssql/mssql-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>mssql-sql&lt;/code> tool executes a pre-defined SQL statement against a SQL Server
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
@@ -3641,6 +3906,114 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
+&lt;/table></description></item><item><title>postgres-list-active-queries</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-list-active-queries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-list-active-queries/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-active-queries&lt;/code> tool retrieves information about currently active queries in a Postgres database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-list-active-queries&lt;/code> lists detailed information as JSON for currently active queries. The tool takes the following input parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>min_duraton&lt;/code> (optional): Only show queries running at least this long (e.g., &amp;lsquo;1 minute&amp;rsquo;, &amp;lsquo;1 second&amp;rsquo;, &amp;lsquo;2 seconds&amp;rsquo;). Default: &amp;lsquo;1 minute&amp;rsquo;.&lt;/li>
+&lt;li>&lt;code>exclude_application_names&lt;/code> (optional): A comma-separated list of application names to exclude from the query results. This is useful for filtering out queries from specific applications (e.g., &amp;lsquo;psql&amp;rsquo;, &amp;lsquo;pgAdmin&amp;rsquo;, &amp;lsquo;DBeaver&amp;rsquo;). The match is case-sensitive. Whitespace around commas and names is automatically handled. If this parameter is omitted, no applications are excluded.&lt;/li>
+&lt;li>&lt;code>limit&lt;/code> (optional): The maximum number of rows to return. Default: &lt;code>50&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_active_queries&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-list-active-queries&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">List the top N (default 50) currently running queries (state=&amp;#39;active&amp;#39;) from pg_stat_activity, ordered by longest-running first. Returns pid, user, database, application_name, client_addr, state, wait_event_type/wait_event, backend/xact/query start times, computed query_duration, and the SQL text.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>postgres-list-available-extensions</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-list-available-extensions/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-list-available-extensions/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-available-extensions&lt;/code> tool retrieves all PostgreSQL extensions available for installation on a Postgres database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-list-available-extensions&lt;/code> lists all PostgreSQL extensions available for installation (extension name, default version description) as JSON. The does not support any input parameter.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_available_extensions&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-list-available-extensions&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Discover all PostgreSQL extensions available for installation on this server, returning name, default_version, and description.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>name&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>default_version&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>address_standardizer&lt;/td>
+ &lt;td>3.5.2&lt;/td>
+ &lt;td>Used to parse an address into constituent elements. Generally used to support geocoding address normalization step.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>amcheck&lt;/td>
+ &lt;td>1.4&lt;/td>
+ &lt;td>functions for verifying relation integrity&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>anon&lt;/td>
+ &lt;td>1.0.0&lt;/td>
+ &lt;td>Data anonymization tools&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>autoinc&lt;/td>
+ &lt;td>1.0&lt;/td>
+ &lt;td>functions for autoincrementing fields&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>postgres-list-installed-extensions</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-list-installed-extensions/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-list-installed-extensions/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-installed-extensions&lt;/code> tool retrieves all PostgreSQL extensions installed on a Postgres database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-list-installed-extensions&lt;/code> lists all installed PostgreSQL extensions (extension name, version, schema, owner, description) as JSON. The does not support any input parameter.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_installed_extensions&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-list-installed-extensions&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">List all installed PostgreSQL extensions with their name, version, schema, owner, and description.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;postgres-list-active-queries&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the source the SQL should execute on.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
 &lt;/table></description></item><item><title>postgres-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>postgres-list-tables&lt;/code> tool retrieves schema information for all or specified tables in a Postgres database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
@@ -3669,27 +4042,24 @@ reputation for reliability, feature robustness, and performance.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-sql/">&lt;code>postgres-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-sql/">&lt;code>postgres-sql&lt;/code>&lt;/a>
 Execute SQL queries as prepared statements in PostgreSQL.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-execute-sql/">&lt;code>postgres-execute-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-execute-sql/">&lt;code>postgres-execute-sql&lt;/code>&lt;/a>
 Run parameterized SQL statements in PostgreSQL.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-list-tables/">&lt;code>postgres-list-tables&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-list-tables/">&lt;code>postgres-list-tables&lt;/code>&lt;/a>
 List tables in a PostgreSQL database.&lt;/p>
 &lt;/li>
-&lt;/ul>
-&lt;h3 id="pre-built-configurations">Pre-built Configurations&lt;/h3>
-&lt;ul>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/">PostgreSQL using MCP&lt;/a>&lt;br>
-Connect your IDE to PostgreSQL using Toolbox.&lt;/li>
-&lt;/ul>
-&lt;h2 id="requirements">Requirements&lt;/h2>
-&lt;h3 id="database-user">Database User&lt;/h3>
-&lt;p>This source only uses standard authentication. You will need to &lt;a href="https://www.postgresql.org/docs/current/sql-createuser.html">create a
-PostgreSQL user&lt;/a> to login to the database with.&lt;/p></description></item><item><title>Prebuilt Tools</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/reference/prebuilt-tools/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/reference/prebuilt-tools/</guid><description>&lt;p>Prebuilt tools are reusable, pre-packaged toolsets that are designed to extend the capabilities of agents. These tools are built to be generic and adaptable, allowing developers to interact with and take action on databases.&lt;/p>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-list-active-queries/">&lt;code>postgres-list-active-queries&lt;/code>&lt;/a>
+List active queries in a PostgreSQL database.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/postgres/postgres-list-available-extensions/">&lt;code>postgres-list-available-extensions&lt;/code>&lt;/a>
+List available extensions for installation in a PostgreSQL database.&lt;/p></description></item><item><title>Prebuilt Tools</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/reference/prebuilt-tools/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/reference/prebuilt-tools/</guid><description>&lt;p>Prebuilt tools are reusable, pre-packaged toolsets that are designed to extend the capabilities of agents. These tools are built to be generic and adaptable, allowing developers to interact with and take action on databases.&lt;/p>
 &lt;p>See guides, &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/how-to/connect-ide/">Connect from your IDE&lt;/a>, for details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.&lt;/p>
 &lt;h2 id="alloydb-postgres">AlloyDB Postgres&lt;/h2>
 &lt;ul>
@@ -3716,6 +4086,12 @@ PostgreSQL user&lt;/a> to login to the database with.&lt;/p></description></item
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
+&lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
+&lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
+&lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -3826,6 +4202,12 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
+&lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
+&lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
+&lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -4035,6 +4417,12 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
+&lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
+&lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
+&lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -4283,6 +4671,10 @@ Execute pre-defined SQL Server queries with placeholder parameters.&lt;/p>
 &lt;li>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/mssql/mssql-execute-sql/">&lt;code>mssql-execute-sql&lt;/code>&lt;/a>&lt;br>
 Run parameterized SQL Server queries in SQL Server.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/mssql/mssql-list-tables/">&lt;code>mssql-list-tables&lt;/code>&lt;/a>&lt;br>
+List tables in a SQL Server database.&lt;/p>
 &lt;/li>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
@@ -4807,7 +5199,110 @@ names, or other parts of the query.&lt;/p></description></item><item><title>Allo
  &lt;link rel="canonical" href="https://cloud.google.com/alloydb/docs/connect-ide-using-mcp-toolbox"/>
  &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/connect-ide-using-mcp-toolbox"/>
  &lt;/head>
-&lt;/html></description></item><item><title>BigQuery using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/how-to/connect-ide/bigquery_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/how-to/connect-ide/bigquery_mcp/</guid><description>&lt;html>
+&lt;/html></description></item><item><title>alloydb-create-user</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-create-user/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-create-user/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>alloydb-create-user&lt;/code> tool creates a new database user (&lt;code>ALLOYDB_BUILT_IN&lt;/code> or &lt;code>ALLOYDB_IAM_USER&lt;/code>) within a specified cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
+&lt;p>&lt;strong>Permissions &amp;amp; APIs Required:&lt;/strong>
+Before using, ensure the following on your GCP project:&lt;/p>
+&lt;ol>
+&lt;li>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/li>
+&lt;li>The user or service account executing the tool has the following IAM roles:
+&lt;ul>
+&lt;li>&lt;code>roles/alloydb.admin&lt;/code>: To create and manage AlloyDB users.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ol>
+&lt;p>The tool takes the following input parameters:&lt;/p>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th style="text-align: left">Parameter&lt;/th>
+ &lt;th style="text-align: left">Type&lt;/th>
+ &lt;th style="text-align: left">Description&lt;/th>
+ &lt;th style="text-align: left">Required&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>project&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">The GCP project ID where the cluster exists.&lt;/td>
+ &lt;td style="text-align: left">Yes&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>cluster&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">The ID of the existing cluster where the user will be created.&lt;/td>
+ &lt;td style="text-align: left">Yes&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>location&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">The GCP location where the cluster exists (e.g., &lt;code>us-central1&lt;/code>).&lt;/td>
+ &lt;td style="text-align: left">Yes&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>user&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">The name for the new user. Must be unique within the cluster.&lt;/td>
+ &lt;td style="text-align: left">Yes&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>userType&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">The type of user. Valid values: &lt;code>ALLOYDB_BUILT_IN&lt;/code> and &lt;code>ALLOYDB_IAM_USER&lt;/code>. &lt;code>ALLOYDB_IAM_USER&lt;/code> is recommended.&lt;/td>
+ &lt;td style="text-align: left">Yes&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>password&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">A secure password for the user. Required only if &lt;code>userType&lt;/code> is &lt;code>ALLOYDB_BUILT_IN&lt;/code>.&lt;/td>
+ &lt;td style="text-align: left">No&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>databaseRoles&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">array(string)&lt;/td>
+ &lt;td style="text-align: left">Optional. A list of database roles to grant to the new user (e.g., &lt;code>pg_read_all_data&lt;/code>).&lt;/td>
+ &lt;td style="text-align: left">No&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">create_user&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-create-user&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-admin-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to create a new database user for an AlloyDB cluster.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be alloydb-create-user.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The name of an &lt;code>alloydb-admin&lt;/code> source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Description of the tool that is passed to the agent.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>BigQuery using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/how-to/connect-ide/bigquery_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/how-to/connect-ide/bigquery_mcp/</guid><description>&lt;html>
  &lt;head>
  &lt;link rel="canonical" href="https://cloud.google.com/bigquery/docs/pre-built-tools-with-mcp-toolbox"/>
  &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/bigquery/docs/pre-built-tools-with-mcp-toolbox"/>
@@ -5954,10 +6449,40 @@ have multiple files, you can tell toolbox which to load with the &lt;code>--tool
 etc., you could use environment variables instead with the format &lt;code>${ENV_NAME}&lt;/code>.&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">user&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${USER_NAME}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">password&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${PASSWORD}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>A default value can be specified like &lt;code>${ENV_NAME:default}&lt;/code>.&lt;/p></description></item><item><title>alloydb-wait-for-operation</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/utility/alloydbwaitforoperation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/utility/alloydbwaitforoperation/</guid><description>&lt;p>The &lt;code>alloydb-wait-for-operation&lt;/code> tool is a utility tool that waits for a
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>A default value can be specified like &lt;code>${ENV_NAME:default}&lt;/code>.&lt;/p></description></item><item><title>alloydb-wait-for-operation</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-wait-for-operation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-wait-for-operation/</guid><description>&lt;p>The &lt;code>alloydb-wait-for-operation&lt;/code> tool is a utility tool that waits for a
 long-running AlloyDB operation to complete. It does this by polling the AlloyDB
 Admin API operation status endpoint until the operation is finished, using
-exponential backoff.&lt;/p>
+exponential backoff. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th style="text-align: left">Parameter&lt;/th>
+ &lt;th style="text-align: left">Type&lt;/th>
+ &lt;th style="text-align: left">Description&lt;/th>
+ &lt;th style="text-align: left">Required&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>project&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">The GCP project ID.&lt;/td>
+ &lt;td style="text-align: left">Yes&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>location&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">The location of the operation (e.g., &amp;lsquo;us-central1&amp;rsquo;).&lt;/td>
+ &lt;td style="text-align: left">Yes&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>operation&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">The ID of the operation to wait for.&lt;/td>
+ &lt;td style="text-align: left">Yes&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
 &lt;style type="text/css">
  
  .notice {
