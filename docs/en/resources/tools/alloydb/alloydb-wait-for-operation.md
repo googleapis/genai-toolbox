@@ -26,7 +26,7 @@ and shouldn't be used for production agents.
 
 ```yaml
 tools:
-  get_operation:
+  wait_for_operation:
     kind: alloydb-wait-for-operation
     source: my-alloydb-admin-source
     description: "This will poll on operations API until the operation is done. For checking operation status we need projectId, locationID and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
