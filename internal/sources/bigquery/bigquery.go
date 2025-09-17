@@ -188,6 +188,10 @@ func (s *Source) BigQueryTokenSource() oauth2.TokenSource {
 	return s.TokenSource
 }
 
+func (s *Source) BigQueryTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error) {
+	return google.DefaultTokenSource(ctx, scope)
+}
+
 func (s *Source) GetMaxQueryResultRows() int {
 	return s.MaxQueryResultRows
 }
