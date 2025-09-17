@@ -3,7 +3,7 @@ import { ToolboxClient } from "@toolbox-sdk/core";
 
 
 const TOOLBOX_URL = "http://127.0.0.1:5000"; // Update if needed
-const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || 'your-api-key'; // Replace it with your API key
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || 'api-key'; // Replace it with your API key
 
 const prompt = `
 You're a helpful hotel assistant. You handle hotel searching, booking, and
@@ -35,7 +35,7 @@ function mapZodTypeToOpenAPIType(zodTypeName) {
     return typeMap[zodTypeName] || 'string';
 }
 
-export async function run_application() {
+export async function main() {
    
     const toolboxClient = new ToolboxClient(TOOLBOX_URL); 
     const toolboxTools = await toolboxClient.loadToolset("my-toolset");
@@ -116,4 +116,4 @@ export async function run_application() {
     }
 }
 
-run_application();
+main();
