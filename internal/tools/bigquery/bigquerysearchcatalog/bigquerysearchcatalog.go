@@ -237,7 +237,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		SemanticSearch: true,
 	}
 
-	catalogClient, dataplexClientCreator, err := t.MakeCatalogClient()
+	catalogClient, dataplexClientCreator, _ := t.MakeCatalogClient()
 
 	if t.UseClientOAuth {
 		tokenStr, err := accessToken.ParseBearerToken()
