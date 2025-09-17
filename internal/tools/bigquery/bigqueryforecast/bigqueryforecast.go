@@ -264,6 +264,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	// JobStatistics.QueryStatistics.StatementType
 	query := bqClient.Query(sql)
 	query.Location = bqClient.Location
+	query.Labels = map[string]string{"task": "forecast"}
 
 	// Log the query executed for debugging.
 	logger, err := util.LoggerFromContext(ctx)

@@ -258,6 +258,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	query := bqClient.Query(sql)
 	query.Location = bqClient.Location
+	query.Labels = map[string]string{"task": "execute_sql"}
 
 	// Log the query executed for debugging.
 	logger, err := util.LoggerFromContext(ctx)
