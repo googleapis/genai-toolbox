@@ -14,7 +14,7 @@
 
 steps:
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:537.0.0'
-    id: 'run-all-python-quickstart-samples'
+    id: 'python-quickstart-test'
     entrypoint: 'bash'
     args:
       # The '-c' flag tells bash to execute the following string as a command.

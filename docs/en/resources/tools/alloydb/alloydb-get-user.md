@@ -14,12 +14,10 @@ The `alloydb-get-user` tool retrieves detailed information for a single, specifi
 	
 | Parameter  | Type   | Description                                                                              | Required |
 | :--------- | :----- | :--------------------------------------------------------------------------------------- | :------- |
-| `project`  | string | The GCP project ID to get user for.                                                 | Yes      |
-| `location` | string | The location of the cluster (e.g., 'us-central1'). | Yes      |
-| `cluster` | string | The ID of the cluster to retrieve the user from. | Yes      |
-| `user` | string | The ID of the user to retrieve. | Yes      |
-> **Note**
-> This tool authenticates using the credentials configured in its [alloydb-admin](../../sources/alloydb-admin.md) source which can be either [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials) or client-side OAuth.
+| `project`  | string | The GCP project ID to get user for.                                                      | Yes      |
+| `location` | string | The location of the cluster (e.g., 'us-central1').                                       | Yes      |
+| `cluster`  | string | The ID of the cluster to retrieve the user from.                                         | Yes      |
+| `user`     | string | The ID of the user to retrieve.                                                          | Yes      |
 
 ## Example
 
@@ -33,6 +31,6 @@ tools:
 ## Reference
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be alloydb-get-user.                                                                  |                                               |
+| kind        |                   string                   |     true     | Must be alloydb-get-user.                                                                  |  
 | source      |                   string                   |     true     | The name of an `alloydb-admin` source.                                                                       |
-| description |                   string                   |     true     | Description of the tool that is passed to the agent.                                             |
+| description |                   string                   |     false    | Description of the tool that is passed to the agent.                                             |
