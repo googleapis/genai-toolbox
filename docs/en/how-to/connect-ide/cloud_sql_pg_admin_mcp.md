@@ -43,6 +43,7 @@ to expose your developer assistant tools to create and manage Cloud SQL for Post
         * `get_instance`
         * `list_instances`
         * `list_databases`
+        * `wait_for_operation`
     * `roles/cloudsql.editor`: Provides permissions to manage existing resources.
         * All `viewer` tools
         * `create_database`
@@ -50,7 +51,6 @@ to expose your developer assistant tools to create and manage Cloud SQL for Post
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
-        * `wait_for_operation`
 
 ## Install MCP Toolbox
 
