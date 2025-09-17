@@ -39,15 +39,17 @@ import (
 )
 
 var (
-	PostgresSourceKind                = "postgres"
-	PostgresToolKind                  = "postgres-sql"
-	PostgresListTablesToolKind        = "postgres-list-tables"
-	PostgresListActiveQueriesToolKind = "postgres-list-active-queries"
-	PostgresDatabase                  = os.Getenv("POSTGRES_DATABASE")
-	PostgresHost                      = os.Getenv("POSTGRES_HOST")
-	PostgresPort                      = os.Getenv("POSTGRES_PORT")
-	PostgresUser                      = os.Getenv("POSTGRES_USER")
-	PostgresPass                      = os.Getenv("POSTGRES_PASS")
+	PostgresSourceKind                      = "postgres"
+	PostgresToolKind                        = "postgres-sql"
+	PostgresListTablesToolKind              = "postgres-list-tables"
+	PostgresListActiveQueriesToolKind       = "postgres-list-active-queries"
+	PostgresListInstalledExtensionsToolKind = "postgres-list-installed-extensions"
+	PostgresListAvailableExtensionsToolKind = "postgres-list-available-extensions"
+	PostgresDatabase                        = os.Getenv("POSTGRES_DATABASE")
+	PostgresHost                            = os.Getenv("POSTGRES_HOST")
+	PostgresPort                            = os.Getenv("POSTGRES_PORT")
+	PostgresUser                            = os.Getenv("POSTGRES_USER")
+	PostgresPass                            = os.Getenv("POSTGRES_PASS")
 )
 
 func getPostgresVars(t *testing.T) map[string]any {
@@ -89,6 +91,19 @@ func addPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]any {
 		"source":      "my-instance",
 		"description": "Lists active queries in the database.",
 	}
+
+	tools["list_installed_extensions"] = map[string]any{
+		"kind":        PostgresListInstalledExtensionsToolKind,
+		"source":      "my-instance",
+		"description": "Lists installed extensions in the database.",
+	}
+
+	tools["list_available_extensions"] = map[string]any{
+		"kind":        PostgresListAvailableExtensionsToolKind,
+		"source":      "my-instance",
+		"description": "Lists available extensions in the database.",
+	}
+
 	config["tools"] = tools
 	return config
 }
@@ -172,6 +187,8 @@ func TestPostgres(t *testing.T) {
 	// Run specific Postgres tool tests
 	runPostgresListTablesTest(t, tableNameParam, tableNameAuth)
 	runPostgresListActiveQueriesTest(t, ctx, pool)
+	runPostgresListAvailableExtensionsTest(t)
+	runPostgresListInstalledExtensionsTest(t)
 }
 
 func runPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) {
@@ -472,4 +489,80 @@ func runPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 		})
 	}
 	wg.Wait()
+}
+
+func runPostgresListAvailableExtensionsTest(t *testing.T) {
+	invokeTcs := []struct {
+		name           string
+		api            string
+		requestBody    io.Reader
+		wantStatusCode int
+	}{
+		{
+			name:           "invoke list_available_extensions output",
+			api:            "http://127.0.0.1:5000/api/tool/list_available_extensions/invoke",
+			wantStatusCode: http.StatusOK,
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Intentionally not adding the output check as output depends on the postgres instance used where the the functional test runs.
+			// Adding the check will make the test flaky.
+		})
+	}
+}
+
+func runPostgresListInstalledExtensionsTest(t *testing.T) {
+	invokeTcs := []struct {
+		name           string
+		api            string
+		requestBody    io.Reader
+		wantStatusCode int
+	}{
+		{
+			name:           "invoke list_installed_extensions output",
+			api:            "http://127.0.0.1:5000/api/tool/list_installed_extensions/invoke",
+			wantStatusCode: http.StatusOK,
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Intentionally not adding the output check as output depends on the postgres instance used where the the functional test runs.
+			// Adding the check will make the test flaky.
+		})
+	}
 }

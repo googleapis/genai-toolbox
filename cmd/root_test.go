@@ -1249,6 +1249,10 @@ func TestPrebuiltTools(t *testing.T) {
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
 	sqlite_config, _ := prebuiltconfigs.Get("sqlite")
 	neo4jconfig, _ := prebuiltconfigs.Get("neo4j")
+	alloydbobsvconfig, _ := prebuiltconfigs.Get("alloydb-postgres-observability")
+	cloudsqlpgobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-postgres-observability")
+	cloudsqlmysqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mysql-observability")
+	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1385,7 +1389,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"alloydb_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "alloydb_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan"},
 				},
 			},
 		},
@@ -1395,7 +1399,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"bigquery_database_tools": tools.ToolsetConfig{
 					Name:      "bigquery_database_tools",
-					ToolNames: []string{"analyze_contribution", "ask_data_insights", "execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids"},
+					ToolNames: []string{"analyze_contribution", "ask_data_insights", "execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids", "search_catalog"},
 				},
 			},
 		},
@@ -1415,7 +1419,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan"},
 				},
 			},
 		},
@@ -1425,7 +1429,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_mysql_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mysql_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries"},
 				},
 			},
 		},
@@ -1465,7 +1469,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"mysql_database_tools": tools.ToolsetConfig{
 					Name:      "mysql_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries"},
 				},
 			},
 		},
@@ -1495,7 +1499,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"postgres_database_tools": tools.ToolsetConfig{
 					Name:      "postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan"},
 				},
 			},
 		},
@@ -1536,6 +1540,46 @@ func TestPrebuiltTools(t *testing.T) {
 				"neo4j_database_tools": tools.ToolsetConfig{
 					Name:      "neo4j_database_tools",
 					ToolNames: []string{"execute_cypher", "get_schema"},
+				},
+			},
+		},
+		{
+			name: "alloydb postgres observability prebuilt tools",
+			in:   alloydbobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"alloydb_postgres_cloud_monitoring_tools": tools.ToolsetConfig{
+					Name:      "alloydb_postgres_cloud_monitoring_tools",
+					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
+				},
+			},
+		},
+		{
+			name: "cloudsql postgres observability prebuilt tools",
+			in:   cloudsqlpgobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_postgres_cloud_monitoring_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_postgres_cloud_monitoring_tools",
+					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
+				},
+			},
+		},
+		{
+			name: "cloudsql mysql observability prebuilt tools",
+			in:   cloudsqlmysqlobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_mysql_cloud_monitoring_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_mysql_cloud_monitoring_tools",
+					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
+				},
+			},
+		},
+		{
+			name: "cloudsql mssql observability prebuilt tools",
+			in:   cloudsqlmssqlobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_mssql_cloud_monitoring_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_mssql_cloud_monitoring_tools",
+					ToolNames: []string{"get_system_metrics"},
 				},
 			},
 		},

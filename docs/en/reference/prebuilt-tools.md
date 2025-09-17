@@ -28,6 +28,12 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
 
 ## AlloyDB Postgres Admin
 
@@ -44,6 +50,15 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `alloydb-list-instances`: Lists all instances within an AlloyDB cluster.
     *   `alloydb-list-users`: Lists all database users within an AlloyDB cluster.
     *   `alloydb-create-user`: Creates a new database user in an AlloyDB cluster.
+
+## AlloyDB Postgres Observability
+
+*   `--prebuilt` value: `alloydb-postgres-observability`
+*   **Permissions:**
+    *   **Monitoring Viewer** (`roles/monitoring.viewer`) is required on the project to view monitoring data.
+*   **Tools:**
+    *   `get_system_metrics`: Fetches system level cloud monitoring data (timeseries metrics) for an AlloyDB instance using a PromQL query.
+    *   `get_query_metrics`: Fetches query level cloud monitoring data (timeseries metrics) for queries running in an AlloyDB instance using a PromQL query.
 
 ## BigQuery
 
@@ -65,6 +80,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `get_table_info`: Gets table metadata.
     *   `list_dataset_ids`: Lists datasets.
     *   `list_table_ids`: Lists tables.
+    *   `search_catalog`: Search for entries based on the provided query.
 
 ## Cloud SQL for MySQL
 
@@ -84,6 +100,16 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `get_query_plan`: Provides information about how MySQL executes a SQL statement.
+
+## Cloud SQL for MySQL Observability
+
+*   `--prebuilt` value: `cloud-sql-mysql-observability`
+*   **Permissions:**
+    *   **Monitoring Viewer** (`roles/monitoring.viewer`) is required on the project to view monitoring data.
+*   **Tools:**
+    *   `get_system_metrics`: Fetches system level cloud monitoring data (timeseries metrics) for a MySQL instance using a PromQL query.
+    *   `get_query_metrics`: Fetches query level cloud monitoring data (timeseries metrics) for queries running in a MySQL instance using a PromQL query.
 
 ## Cloud SQL for PostgreSQL
 
@@ -102,6 +128,21 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
+
+## Cloud SQL for PostgreSQL Observability
+
+*   `--prebuilt` value: `cloud-sql-postgres-observability`
+*   **Permissions:**
+    *   **Monitoring Viewer** (`roles/monitoring.viewer`) is required on the project to view monitoring data.
+*   **Tools:**
+    *   `get_system_metrics`: Fetches system level cloud monitoring data (timeseries metrics) for a Postgres instance using a PromQL query.
+    *   `get_query_metrics`: Fetches query level cloud monitoring data (timeseries metrics) for queries running in Postgres instance using a PromQL query.
 
 ## Cloud SQL for SQL Server
 
@@ -121,6 +162,14 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+
+## Cloud SQL for SQL Server Observability
+
+*   `--prebuilt` value: `cloud-sql-mssql-observability`
+*   **Permissions:**
+    *   **Monitoring Viewer** (`roles/monitoring.viewer`) is required on the project to view monitoring data.
+*   **Tools:**
+    *   `get_system_metrics`: Fetches system level cloud monitoring data (timeseries metrics) for a SQL Server instance using a PromQL query.
 
 ## Dataplex
 
@@ -208,6 +257,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `get_query_plan`: Provides information about how MySQL executes a SQL statement.
 
 ## OceanBase
 
@@ -239,6 +289,12 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
 
 ## Spanner (GoogleSQL dialect)
 
