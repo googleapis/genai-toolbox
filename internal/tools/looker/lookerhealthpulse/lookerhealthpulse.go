@@ -273,10 +273,25 @@ func (t *pulseTool) checkDBConnections(ctx context.Context) (interface{}, error)
 			},
 			Limit: &limit,
 		}
-		raw, err := t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-			Body:         query,
-			ResultFormat: "json",
-		}, t.ApiSettings)
+		req2 := lookercommon.RequestRunInlineQuery2{
+			Query: query,
+			RenderOpts: lookercommon.RenderOptions{
+				Format: "json",
+			},
+			QueryApiClientCtx: lookercommon.QueryApiClientContext{
+				Name: "MCP Toolbox",
+			},
+		}
+		raw, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, t.ApiSettings)
+		if err != nil {
+			raw, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
+				Body:         query,
+				ResultFormat: "json",
+			}, t.ApiSettings)
+			if err != nil {
+				return nil, err
+			}
+		}
 		var queryRunCount interface{}
 		if err == nil {
 			var data []map[string]interface{}
@@ -317,12 +332,24 @@ func (t *pulseTool) checkDashboardPerformance(ctx context.Context) (interface{},
 		Sorts: &[]string{"query.count desc"},
 		Limit: &limit,
 	}
-	raw, err := t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-		Body:         query,
-		ResultFormat: "json",
-	}, t.ApiSettings)
+	req2 := lookercommon.RequestRunInlineQuery2{
+		Query: query,
+		RenderOpts: lookercommon.RenderOptions{
+			Format: "json",
+		},
+		QueryApiClientCtx: lookercommon.QueryApiClientContext{
+			Name: "MCP Toolbox",
+		},
+	}
+	raw, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, t.ApiSettings)
 	if err != nil {
-		return nil, err
+		raw, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
+			Body:         query,
+			ResultFormat: "json",
+		}, t.ApiSettings)
+		if err != nil {
+			return nil, err
+		}
 	}
 	var dashboards []map[string]interface{}
 	if err := json.Unmarshal([]byte(raw), &dashboards); err != nil {
@@ -352,12 +379,24 @@ func (t *pulseTool) checkDashboardErrors(ctx context.Context) (interface{}, erro
 		Sorts: &[]string{"history.query_run_count desc"},
 		Limit: &limit,
 	}
-	raw, err := t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-		Body:         query,
-		ResultFormat: "json",
-	}, t.ApiSettings)
+	req2 := lookercommon.RequestRunInlineQuery2{
+		Query: query,
+		RenderOpts: lookercommon.RenderOptions{
+			Format: "json",
+		},
+		QueryApiClientCtx: lookercommon.QueryApiClientContext{
+			Name: "MCP Toolbox",
+		},
+	}
+	raw, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, t.ApiSettings)
 	if err != nil {
-		return nil, err
+		raw, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
+			Body:         query,
+			ResultFormat: "json",
+		}, t.ApiSettings)
+		if err != nil {
+			return nil, err
+		}
 	}
 	var dashboards []map[string]interface{}
 	if err := json.Unmarshal([]byte(raw), &dashboards); err != nil {
@@ -385,12 +424,24 @@ func (t *pulseTool) checkExplorePerformance(ctx context.Context) (interface{}, e
 		Sorts: &[]string{"history.average_runtime desc"},
 		Limit: &limit,
 	}
-	raw, err := t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-		Body:         query,
-		ResultFormat: "json",
-	}, t.ApiSettings)
+	req2 := lookercommon.RequestRunInlineQuery2{
+		Query: query,
+		RenderOpts: lookercommon.RenderOptions{
+			Format: "json",
+		},
+		QueryApiClientCtx: lookercommon.QueryApiClientContext{
+			Name: "MCP Toolbox",
+		},
+	}
+	raw, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, t.ApiSettings)
 	if err != nil {
-		return nil, err
+		raw, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
+			Body:         query,
+			ResultFormat: "json",
+		}, t.ApiSettings)
+		if err != nil {
+			return nil, err
+		}
 	}
 	var explores []map[string]interface{}
 	if err := json.Unmarshal([]byte(raw), &explores); err != nil {
@@ -399,16 +450,30 @@ func (t *pulseTool) checkExplorePerformance(ctx context.Context) (interface{}, e
 
 	// Average query runtime
 	query.Fields = &[]string{"history.average_runtime"}
-	rawAvg, err := t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-		Body:         query,
-		ResultFormat: "json",
-	}, t.ApiSettings)
-	if err == nil {
-		var avgData []map[string]interface{}
-		if err := json.Unmarshal([]byte(rawAvg), &avgData); err == nil {
-			if len(avgData) > 0 {
-				if avgRuntime, ok := avgData[0]["history.average_runtime"].(float64); ok {
-					logger.InfoContext(ctx, fmt.Sprintf("For context, the average query runtime is %.4fs", avgRuntime))
+	req3 := lookercommon.RequestRunInlineQuery2{
+		Query: query,
+		RenderOpts: lookercommon.RenderOptions{
+			Format: "json",
+		},
+		QueryApiClientCtx: lookercommon.QueryApiClientContext{
+			Name: "MCP Toolbox",
+		},
+	}
+	rawAvg, err := lookercommon.RunInlineQuery2(t.SdkClient, req3, t.ApiSettings)
+	if err != nil {
+		rawAvg, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
+			Body:         query,
+			ResultFormat: "json",
+		}, t.ApiSettings)
+		if err != nil {
+			// Log or handle error appropriately, but don't block returning the main result
+		} else {
+			var avgData []map[string]interface{}
+			if err := json.Unmarshal([]byte(rawAvg), &avgData); err == nil {
+				if len(avgData) > 0 {
+					if avgRuntime, ok := avgData[0]["history.average_runtime"].(float64); ok {
+						logger.InfoContext(ctx, fmt.Sprintf("For context, the average query runtime is %.4fs", avgRuntime))
+					}
 				}
 			}
 		}
@@ -435,12 +500,24 @@ func (t *pulseTool) checkScheduleFailures(ctx context.Context) (interface{}, err
 		Sorts: &[]string{"scheduled_job.count desc"},
 		Limit: &limit,
 	}
-	raw, err := t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-		Body:         query,
-		ResultFormat: "json",
-	}, t.ApiSettings)
+	req2 := lookercommon.RequestRunInlineQuery2{
+		Query: query,
+		RenderOpts: lookercommon.RenderOptions{
+			Format: "json",
+		},
+		QueryApiClientCtx: lookercommon.QueryApiClientContext{
+			Name: "MCP Toolbox",
+		},
+	}
+	raw, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, t.ApiSettings)
 	if err != nil {
-		return nil, err
+		raw, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
+			Body:         query,
+			ResultFormat: "json",
+		}, t.ApiSettings)
+		if err != nil {
+			return nil, err
+		}
 	}
 	var schedules []map[string]interface{}
 	if err := json.Unmarshal([]byte(raw), &schedules); err != nil {
