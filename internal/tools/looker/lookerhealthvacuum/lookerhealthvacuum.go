@@ -358,12 +358,24 @@ func (t *vacuumTool) getUsedModels(ctx context.Context) (map[string]int, error) 
 		},
 		Limit: &limit,
 	}
-	raw, err := t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-		Body:         query,
-		ResultFormat: "json",
-	}, nil)
+	req2 := lookercommon.RequestRunInlineQuery2{
+		Query: query,
+		RenderOpts: lookercommon.RenderOptions{
+			Format: "json",
+		},
+		QueryApiClientCtx: lookercommon.QueryApiClientContext{
+			Name: "MCP Toolbox",
+		},
+	}
+	raw, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, nil)
 	if err != nil {
-		return nil, err
+		raw, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
+			Body:         query,
+			ResultFormat: "json",
+		}, nil)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var data []map[string]interface{}
@@ -402,13 +414,25 @@ func (t *vacuumTool) getUnusedExplores(ctx context.Context, modelName string) ([
 				Limit: &limit,
 			}
 
-			rawQueryCount, err := t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-				Body:         queryCountQueryBody,
-				ResultFormat: "json",
-			}, nil)
+			req2 := lookercommon.RequestRunInlineQuery2{
+				Query: queryCountQueryBody,
+				RenderOpts: lookercommon.RenderOptions{
+					Format: "json",
+				},
+				QueryApiClientCtx: lookercommon.QueryApiClientContext{
+					Name: "MCP Toolbox",
+				},
+			}
+			rawQueryCount, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, nil)
 			if err != nil {
-				// Log the error but continue
-				continue
+				rawQueryCount, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
+					Body:         queryCountQueryBody,
+					ResultFormat: "json",
+				}, nil)
+				if err != nil {
+					// Log the error but continue
+					continue
+				}
 			}
 
 			var data []map[string]interface{}
@@ -436,12 +460,24 @@ func (t *vacuumTool) getUsedExploreFields(ctx context.Context, model, explore st
 		},
 		Limit: &limit,
 	}
-	raw, err := t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-		Body:         query,
-		ResultFormat: "json",
-	}, nil)
+	req2 := lookercommon.RequestRunInlineQuery2{
+		Query: query,
+		RenderOpts: lookercommon.RenderOptions{
+			Format: "json",
+		},
+		QueryApiClientCtx: lookercommon.QueryApiClientContext{
+			Name: "MCP Toolbox",
+		},
+	}
+	raw, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, nil)
 	if err != nil {
-		return nil, err
+		raw, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
+			Body:         query,
+			ResultFormat: "json",
+		}, nil)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var data []map[string]interface{}
