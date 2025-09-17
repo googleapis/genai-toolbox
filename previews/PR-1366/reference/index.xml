@@ -136,6 +136,12 @@
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
+&lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
+&lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
+&lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -183,6 +189,7 @@
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
+&lt;li>&lt;code>analyze_contribution&lt;/code>: Use this tool to perform contribution analysis, also called key driver analysis.&lt;/li>
 &lt;li>&lt;code>ask_data_insights&lt;/code>: Use this tool to perform data analysis, get insights, or answer complex questions about the contents of specific BigQuery tables. For more information on required roles, API setup, and IAM configuration, see the setup and authentication section of the &lt;a href="https://cloud.google.com/gemini/docs/conversational-analytics-api/overview">Conversational Analytics API documentation&lt;/a>.&lt;/li>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL statement.&lt;/li>
 &lt;li>&lt;code>forecast&lt;/code>: Use this tool to forecast time series data.&lt;/li>
@@ -245,6 +252,12 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
+&lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
+&lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
+&lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -454,6 +467,12 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
+&lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
+&lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
+&lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>

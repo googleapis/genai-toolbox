@@ -4723,7 +4723,7 @@ to connect to the database and execute the tool.
 
 
 # AlloyDB for PostgreSQL
-AlloyDB for PostgreSQL is a fully-managed, PostgreSQL-compatible database for  demanding transactional workloads.
+AlloyDB for PostgreSQL is a fully-managed, PostgreSQL-compatible database for demanding transactional workloads.
 
 
 ## About
@@ -4741,24 +4741,33 @@ cluster][alloydb-free-trial].
 
 ## Available Tools
 
-- [`alloydb-ai-nl`](../tools/alloydbainl/alloydb-ai-nl.md)  
+- [`alloydb-ai-nl`](../tools/alloydbainl/alloydb-ai-nl.md)
   Use natural language queries on AlloyDB, powered by AlloyDB AI.
 
-- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
+- [`postgres-sql`](../tools/postgres/postgres-sql.md)
   Execute SQL queries as prepared statements in AlloyDB Postgres.
 
-- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
+- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)
   Run parameterized SQL statements in AlloyDB Postgres.
 
-- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)  
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)
   List tables in an AlloyDB for PostgreSQL database.
+
+- [`postgres-list-active-queries`](../tools/postgres/postgres-list-active-queries.md)
+  List active queries in an AlloyDB for PostgreSQL database.
+
+- [`postgres-list-available-extensions`](../tools/postgres/postgres-list-available-extensions.md)
+  List available extensions for installation in a PostgreSQL database.
+
+- [`postgres-list-installed-extensions`](../tools/postgres/postgres-list-installed-extensions.md)
+  List installed extensions in a PostgreSQL database.
 
 ### Pre-built Configurations
 
-- [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)  
+- [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
 Connect your IDE to AlloyDB using Toolbox.
 
-- [AlloyDB Admin API using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/)  
+- [AlloyDB Admin API using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/)
 Create your AlloyDB database with MCP Toolbox.
 
 ## Requirements
@@ -4891,6 +4900,9 @@ avoiding full table scans or complex filters.
 [bigquery-googlesql]: https://cloud.google.com/bigquery/docs/reference/standard-sql/
 
 ## Available Tools
+
+- [`bigquery-analyze-contribution`](../tools/bigquery/bigquery-analyze-contribution.md)
+  Performs contribution analysis, also called key driver analysis in BigQuery.
 
 - [`bigquery-conversational-analytics`](../tools/bigquery/bigquery-conversational-analytics.md)
   Allows conversational interaction with a BigQuery source.
@@ -5318,18 +5330,27 @@ to a database by following these instructions][csql-pg-quickstart].
 
 ## Available Tools
 
-- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
+- [`postgres-sql`](../tools/postgres/postgres-sql.md)
   Execute SQL queries as prepared statements in PostgreSQL.
 
-- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
+- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)
   Run parameterized SQL statements in PostgreSQL.
 
-- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)  
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)
   List tables in a PostgreSQL database.
+
+- [`postgres-list-active-queries`](../tools/postgres/postgres-list-active-queries.md)
+  List active queries in a PostgreSQL database.
+
+- [`postgres-list-available-extensions`](../tools/postgres/postgres-list-available-extensions.md)
+  List available extensions for installation in a PostgreSQL database.
+
+- [`postgres-list-installed-extensions`](../tools/postgres/postgres-list-installed-extensions.md)
+  List installed extensions in a PostgreSQL database.
 
 ### Pre-built Configurations
 
-- [Cloud SQL for Postgres using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/)  
+- [Cloud SQL for Postgres using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/)
 Connect your IDE to Cloud SQL for Postgres using Toolbox.
 
 
@@ -5463,6 +5484,9 @@ to a database by following these instructions][csql-mssql-connect].
 
 - [`mssql-execute-sql`](../tools/mssql/mssql-execute-sql.md)  
   Run parameterized SQL Server queries in Cloud SQL for SQL Server.
+
+- [`mssql-list-tables`](../tools/mssql/mssql-list-tables.md)  
+  List tables in a Cloud SQL for SQL Server database.
 
 ### Pre-built Configurations
 
@@ -6506,18 +6530,27 @@ reputation for reliability, feature robustness, and performance.
 
 ## Available Tools
 
-- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
+- [`postgres-sql`](../tools/postgres/postgres-sql.md)
   Execute SQL queries as prepared statements in PostgreSQL.
 
-- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
+- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)
   Run parameterized SQL statements in PostgreSQL.
 
-- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)  
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)
   List tables in a PostgreSQL database.
+
+- [`postgres-list-active-queries`](../tools/postgres/postgres-list-active-queries.md)
+  List active queries in a PostgreSQL database.
+
+- [`postgres-list-available-extensions`](../tools/postgres/postgres-list-available-extensions.md)
+  List available extensions for installation in a PostgreSQL database.
+
+- [`postgres-list-installed-extensions`](../tools/postgres/postgres-list-installed-extensions.md)
+  List installed extensions in a PostgreSQL database.
 
 ### Pre-built Configurations
 
-- [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)  
+- [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)
 Connect your IDE to PostgreSQL using Toolbox.
 
 ## Requirements
@@ -6751,6 +6784,9 @@ amount of data through a structured format.
 
 - [`mssql-execute-sql`](../tools/mssql/mssql-execute-sql.md)  
   Run parameterized SQL Server queries in SQL Server.
+
+- [`mssql-list-tables`](../tools/mssql/mssql-list-tables.md)  
+  List tables in a SQL Server database.
 
 ## Requirements
 
@@ -9527,6 +9563,12 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
 
 ## AlloyDB Postgres Admin
 
@@ -9556,6 +9598,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   **BigQuery Data Editor** (`roles/bigquery.dataEditor`) to create or modify datasets and tables.
     *   **Gemini for Google Cloud** (`roles/cloudaicompanion.user`) to use the conversational analytics API.
 *   **Tools:**
+    *   `analyze_contribution`: Use this tool to perform contribution analysis, also called key driver analysis.
     *   `ask_data_insights`: Use this tool to perform data analysis, get insights, or answer complex questions about the contents of specific BigQuery tables. For more information on required roles, API setup, and IAM configuration, see the setup and authentication section of the [Conversational Analytics API documentation](https://cloud.google.com/gemini/docs/conversational-analytics-api/overview).
     *   `execute_sql`: Executes a SQL statement.
     *   `forecast`: Use this tool to forecast time series data.
@@ -9600,6 +9643,12 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
 
 ## Cloud SQL for SQL Server
 
@@ -9737,6 +9786,12 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
 
 ## Spanner (GoogleSQL dialect)
 
