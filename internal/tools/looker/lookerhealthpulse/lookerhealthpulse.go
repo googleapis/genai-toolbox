@@ -466,15 +466,14 @@ func (t *pulseTool) checkExplorePerformance(ctx context.Context) (interface{}, e
 			ResultFormat: "json",
 		}, t.ApiSettings)
 		if err != nil {
-			// Log or handle error appropriately, but don't block returning the main result
-		} else {
-			var avgData []map[string]interface{}
-			if err := json.Unmarshal([]byte(rawAvg), &avgData); err == nil {
-				if len(avgData) > 0 {
-					if avgRuntime, ok := avgData[0]["history.average_runtime"].(float64); ok {
-						logger.InfoContext(ctx, fmt.Sprintf("For context, the average query runtime is %.4fs", avgRuntime))
-					}
-				}
+			return nil, err
+		} 
+	}
+	var avgData []map[string]interface{}
+	if err := json.Unmarshal([]byte(rawAvg), &avgData); err == nil {
+		if len(avgData) > 0 {
+			if avgRuntime, ok := avgData[0]["history.average_runtime"].(float64); ok {
+				logger.InfoContext(ctx, fmt.Sprintf("For context, the average query runtime is %.4fs", avgRuntime))
 			}
 		}
 	}
