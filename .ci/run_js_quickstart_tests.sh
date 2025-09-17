@@ -17,7 +17,7 @@
 set -e
 
 TABLE_NAME="hotels_js"
-QUICKSTART_GO_DIR="docs/en/getting-started/quickstart/js"
+QUICKSTART_JS_DIR="docs/en/getting-started/quickstart/js"
 SQL_FILE=".ci/setup_hotels_sample.sql"
 DEPS_FILE=".ci/quickstart_dependencies.json"
 
@@ -85,14 +85,30 @@ run_orch_test() {
   local orch_dir="$1"
   local orch_name
   orch_name=$(basename "$orch_dir")
+
   (
     set -e
+    echo "--- Preparing environment for $orch_name ---"
     setup_orch_table
+
+    # Go into the specific framework directory to install dependencies
     cd "$orch_dir"
     if [ -f "package.json" ]; then
+      echo "Installing dependencies for $orch_name..."
       npm install
     fi
-    npm test
+
+    # Go back to the parent directory ('js/') to run the test
+    cd ..
+
+    # Export the framework name as an environment variable and run the test
+    echo "--- Running tests for $orch_name ---"
+    export ORCH_NAME="$orch_name"
+    node --test quickstart.test.js
+
+    # Clean up the installed dependencies directly without changing directories
+    echo "--- Cleaning environment for $orch_name ---"
+    rm -rf "${orch_name}/node_modules"
   )
 }
 
