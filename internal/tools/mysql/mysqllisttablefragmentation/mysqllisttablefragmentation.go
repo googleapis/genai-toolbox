@@ -45,7 +45,10 @@ const listTableFragmentationStatement = `
 		AND (COALESCE(?, '') = '' OR table_schema = ?)
 		AND (COALESCE(?, '') = '' OR table_name = ?)
 		AND data_free >= ?
-	ORDER BY fragmentation_percentage DESC
+	ORDER BY
+		fragmentation_percentage DESC,
+		table_schema,
+		table_name
 	LIMIT ?;
 `
 
