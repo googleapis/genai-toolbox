@@ -29,7 +29,7 @@ reliability, performance, and ease of use.
   List tables in a MySQL database.
 
 - [`mysql-list-tables-missing-index`](../tools/mysql/mysql-list-tables-missing-index.md)
-  List tables in a Cloud SQL for MySQL database that do not have primary or unique indices.
+  List tables in a MySQL database that do not have primary or unique indices.
 
 ## Requirements
 

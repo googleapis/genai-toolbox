@@ -31,7 +31,7 @@ import (
 const kind string = "mysql-list-tables-missing-index"
 
 const listTablesMissingIndexStatement = `
-	SELECT 
+	SELECT
 		tab.table_schema AS table_schema,
 		tab.table_name AS table_name
 	FROM
