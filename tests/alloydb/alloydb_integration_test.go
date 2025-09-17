@@ -131,6 +131,21 @@ func getAlloyDBToolsConfig() map[string]any {
 				"source":      "alloydb-admin-source",
 				"description": "Retrieves details of a specific AlloyDB user.",
 			},
+			"alloydb-create-cluster": map[string]any{
+				"kind":        "alloydb-create-cluster",
+				"description": "create cluster",
+				"source":      "alloydb-admin-source",
+			},
+			"alloydb-create-instance": map[string]any{
+				"kind":        "alloydb-create-instance",
+				"description": "create instance",
+				"source":      "alloydb-admin-source",
+			},
+			"alloydb-create-user": map[string]any{
+				"kind":        "alloydb-create-user",
+				"description": "create user",
+				"source":      "alloydb-admin-source",
+			},
 		},
 	}
 }
@@ -1094,7 +1109,7 @@ func TestAlloyDBCreateCluster(t *testing.T) {
 	defer cancel()
 
 	var args []string
-	toolsFile := getAlloyDBCreateToolsConfig()
+	toolsFile := getAlloyDBToolsConfig()
 	cmd, cleanupCmd, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %v", err)
@@ -1204,7 +1219,7 @@ func TestAlloyDBCreateInstance(t *testing.T) {
 	defer cancel()
 
 	var args []string
-	toolsFile := getAlloyDBCreateToolsConfig()
+	toolsFile := getAlloyDBToolsConfig()
 	cmd, cleanupCmd, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %v", err)
@@ -1330,7 +1345,7 @@ func TestAlloyDBCreateUser(t *testing.T) {
 	defer cancel()
 
 	var args []string
-	toolsFile := getAlloyDBCreateToolsConfig()
+	toolsFile := getAlloyDBToolsConfig()
 	cmd, cleanupCmd, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %v", err)
@@ -1468,32 +1483,5 @@ func TestAlloyDBCreateUser(t *testing.T) {
 				t.Errorf("unexpected result map (-want +got):\n%s", diff)
 			}
 		})
-	}
-}
-
-func getAlloyDBCreateToolsConfig() map[string]any {
-	return map[string]any{
-		"sources": map[string]any{
-			"my-alloydb-source": map[string]any{
-				"kind": "alloydb-admin",
-			},
-		},
-		"tools": map[string]any{
-			"alloydb-create-cluster": map[string]any{
-				"kind":        "alloydb-create-cluster",
-				"description": "create cluster",
-				"source":      "my-alloydb-source",
-			},
-			"alloydb-create-instance": map[string]any{
-				"kind":        "alloydb-create-instance",
-				"description": "create instance",
-				"source":      "my-alloydb-source",
-			},
-			"alloydb-create-user": map[string]any{
-				"kind":        "alloydb-create-user",
-				"description": "create user",
-				"source":      "my-alloydb-source",
-			},
-		},
 	}
 }

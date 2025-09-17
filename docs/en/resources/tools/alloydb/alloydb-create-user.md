@@ -15,8 +15,10 @@ The `alloydb-create-user` tool creates a new database user (`ALLOYDB_BUILT_IN` o
 **Permissions & APIs Required:**
 Before using, ensure the following on your GCP project:
 1.  The [AlloyDB API](https://console.cloud.google.com/apis/library/alloydb.googleapis.com) is enabled.
-2.  The user or service account executing the tool has the following IAM roles:
-    -   `roles/alloydb.admin`: To create and manage AlloyDB users.
+2. The user or service account executing the tool has one of the following IAM roles:
+    - `roles/alloydb.admin` (the AlloyDB Admin predefined IAM role)
+    - `roles/owner` (the Owner basic IAM role)
+    - `roles/editor` (the Editor basic IAM role)
 
 The tool takes the following input parameters:
 

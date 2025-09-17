@@ -76,7 +76,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		tools.NewStringParameter("cluster", "The ID of the cluster to create the instance in."),
 		tools.NewStringParameter("instance", "A unique ID for the new AlloyDB instance."),
 		tools.NewStringParameterWithDefault("instanceType", "PRIMARY", "The type of instance to create. Valid values are: PRIMARY and READ_POOL. Default is PRIMARY"),
-		tools.NewStringParameter("displayName", "A user-friendly name for the instance."),
+		tools.NewStringParameterWithRequired("displayName", "An optional, user-friendly name for the instance.", false),
 		tools.NewIntParameterWithDefault("nodeCount", 1, "The number of nodes in the read pool. Required only if instanceType is READ_POOL. Default is 1."),
 	}
 	paramManifest := allParameters.Manifest()
@@ -169,12 +169,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	if instanceType == "READ_POOL" {
-		nodeCount, ok := paramsMap["nodeCount"].(int64) 
+		nodeCount, ok := paramsMap["nodeCount"].(int) 
 		if !ok {
-			return nil, fmt.Errorf("invalid 'nodeCount' parameter; expected an integer (int64) for READ_POOL")
+			return nil, fmt.Errorf("invalid 'nodeCount' parameter; expected an integer for READ_POOL")
 		}
 		instance.ReadPoolConfig = &alloydb.ReadPoolConfig{
-			NodeCount: nodeCount,
+			NodeCount: int64(nodeCount),
 		}
 	}
 
