@@ -11,13 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 sources:
   bigquery-source:
     kind: "bigquery"
     project: ${BIGQUERY_PROJECT}
     location: ${BIGQUERY_LOCATION:}
+    useClientOAuth: ${BIGQUERY_USE_CLIENT_OAUTH:false}
 
 tools:
+  analyze_contribution:
+    kind: bigquery-analyze-contribution
+    source: bigquery-source
+    description: Use this tool to analyze the contribution about changes to key metrics in multi-dimensional data.
+
   ask_data_insights:
     kind: bigquery-conversational-analytics
     source: bigquery-source
@@ -56,8 +63,14 @@ tools:
     source: bigquery-source
     description: Use this tool to list tables.
 
+  search_catalog:
+    kind: bigquery-search-catalog
+    source: bigquery-source
+    description: Use this tool to find tables, views, models, routines or connections.
+
 toolsets:
-  bigquery-database-tools:
+  bigquery_database_tools:
+    - analyze_contribution
     - ask_data_insights
     - execute_sql
     - forecast
@@ -65,3 +78,4 @@ toolsets:
     - get_table_info
     - list_dataset_ids
     - list_table_ids
+    - search_catalog
