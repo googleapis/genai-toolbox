@@ -50,8 +50,8 @@ tools:
     kind: mysql-list-tables
     source: mysql-source
     description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
-  list_tables_missing_index:
-    kind: mysql-list-tables-missing-index
+  list_tables_missing_unique_indexes:
+    kind: mysql-list-tables-missing-unique-indexes
     source: mysql-source
     description: "Find tables that do not have primary or unique key constraint. A primary key or unique key is the only mechanism that guaranttes a row is unique. Without them, the database-level protection against data integrity issues will be missing."
 
@@ -61,4 +61,4 @@ toolsets:
     - list_tables
     - get_query_plan
     - list_active_queries
-    - list_tables_missing_index
+    - list_tables_missing_unique_indexes

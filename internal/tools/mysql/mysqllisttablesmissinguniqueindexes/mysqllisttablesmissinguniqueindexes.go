@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mysqllisttablesmissingindex
+package mysqllisttablesmissinguniqueindexes
 
 import (
 	"context"
@@ -28,9 +28,9 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
-const kind string = "mysql-list-tables-missing-index"
+const kind string = "mysql-list-tables-missing-unique-indexes"
 
-const listTablesMissingIndexStatement = `
+const listTablesMissingUniqueIndexesStatement = `
 	SELECT
 		tab.table_schema AS table_schema,
 		tab.table_name AS table_name
@@ -158,9 +158,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, listTablesMissingIndexStatement)
+	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, listTablesMissingUniqueIndexesStatement)
 
-	results, err := t.Pool.QueryContext(ctx, listTablesMissingIndexStatement, table_schema, table_schema, limit)
+	results, err := t.Pool.QueryContext(ctx, listTablesMissingUniqueIndexesStatement, table_schema, table_schema, limit)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}

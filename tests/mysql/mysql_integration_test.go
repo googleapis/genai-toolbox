@@ -348,7 +348,7 @@ func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 >>>>>>> c696e8066b (init implementation)
 }
 
-func runMySQLListTablesMissingIndex(t *testing.T, ctx context.Context, pool *sql.DB) {
+func runMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, pool *sql.DB) {
 	type listDetails struct {
 		TableSchema string `json:"table_schema"`
 		TableName   string `json:"table_name"`
@@ -377,7 +377,7 @@ func runMySQLListTablesMissingIndex(t *testing.T, ctx context.Context, pool *sql
 		want                 any
 	}{
 		{
-			name:                 "invoke list_tables_missing_index when nothing to be found",
+			name:                 "invoke list_tables_missing_unique_indexes when nothing to be found",
 			requestBody:          bytes.NewBufferString(`{}`),
 			newTableName:         "",
 			newTablePrimaryKey:   false,
@@ -387,7 +387,7 @@ func runMySQLListTablesMissingIndex(t *testing.T, ctx context.Context, pool *sql
 			want:                 []listDetails(nil),
 		},
 		{
-			name:                 "invoke list_tables_missing_index pk table will not show",
+			name:                 "invoke list_tables_missing_unique_indexes pk table will not show",
 			requestBody:          bytes.NewBufferString(`{}`),
 			newTableName:         "t01",
 			newTablePrimaryKey:   true,
@@ -397,7 +397,7 @@ func runMySQLListTablesMissingIndex(t *testing.T, ctx context.Context, pool *sql
 			want:                 []listDetails(nil),
 		},
 		{
-			name:                 "invoke list_tables_missing_index uk table will not show",
+			name:                 "invoke list_tables_missing_unique_indexes uk table will not show",
 			requestBody:          bytes.NewBufferString(`{}`),
 			newTableName:         "t02",
 			newTablePrimaryKey:   false,
@@ -407,7 +407,7 @@ func runMySQLListTablesMissingIndex(t *testing.T, ctx context.Context, pool *sql
 			want:                 []listDetails(nil),
 		},
 		{
-			name:                 "invoke list_tables_missing_index non-unique key only table will show",
+			name:                 "invoke list_tables_missing_unique_indexes non-unique key only table will show",
 			requestBody:          bytes.NewBufferString(`{}`),
 			newTableName:         nonUniqueKeyTableName,
 			newTablePrimaryKey:   false,
@@ -417,7 +417,7 @@ func runMySQLListTablesMissingIndex(t *testing.T, ctx context.Context, pool *sql
 			want:                 []listDetails{nonUniqueKeyTableWant},
 		},
 		{
-			name:                 "invoke list_tables_missing_index table with no key at all will show",
+			name:                 "invoke list_tables_missing_unique_indexes table with no key at all will show",
 			requestBody:          bytes.NewBufferString(`{}`),
 			newTableName:         noKeyTableName,
 			newTablePrimaryKey:   false,
@@ -427,7 +427,7 @@ func runMySQLListTablesMissingIndex(t *testing.T, ctx context.Context, pool *sql
 			want:                 []listDetails{nonUniqueKeyTableWant, noKeyTableWant},
 		},
 		{
-			name:                 "invoke list_tables_missing_index table w/ both pk & uk will not show",
+			name:                 "invoke list_tables_missing_unique_indexes table w/ both pk & uk will not show",
 			requestBody:          bytes.NewBufferString(`{}`),
 			newTableName:         "t05",
 			newTablePrimaryKey:   true,
@@ -437,7 +437,7 @@ func runMySQLListTablesMissingIndex(t *testing.T, ctx context.Context, pool *sql
 			want:                 []listDetails{nonUniqueKeyTableWant, noKeyTableWant},
 		},
 		{
-			name:                 "invoke list_tables_missing_index table w/ uk & nk will not show",
+			name:                 "invoke list_tables_missing_unique_indexes table w/ uk & nk will not show",
 			requestBody:          bytes.NewBufferString(`{}`),
 			newTableName:         "t06",
 			newTablePrimaryKey:   false,
@@ -447,7 +447,7 @@ func runMySQLListTablesMissingIndex(t *testing.T, ctx context.Context, pool *sql
 			want:                 []listDetails{nonUniqueKeyTableWant, noKeyTableWant},
 		},
 		{
-			name:                 "invoke list_tables_missing_index table w/ pk & nk will not show",
+			name:                 "invoke list_tables_missing_unique_indexes table w/ pk & nk will not show",
 			requestBody:          bytes.NewBufferString(`{}`),
 			newTableName:         "t07",
 			newTablePrimaryKey:   true,
@@ -457,7 +457,7 @@ func runMySQLListTablesMissingIndex(t *testing.T, ctx context.Context, pool *sql
 			want:                 []listDetails{nonUniqueKeyTableWant, noKeyTableWant},
 		},
 		{
-			name:                 "invoke list_tables_missing_index with a non-exist database, nothing to show",
+			name:                 "invoke list_tables_missing_unique_indexes with a non-exist database, nothing to show",
 			requestBody:          bytes.NewBufferString(`{"table_schema": "non-exist-database"}`),
 			newTableName:         "",
 			newTablePrimaryKey:   false,
@@ -467,7 +467,7 @@ func runMySQLListTablesMissingIndex(t *testing.T, ctx context.Context, pool *sql
 			want:                 []listDetails(nil),
 		},
 		{
-			name:                 "invoke list_tables_missing_index with the right database, show everything",
+			name:                 "invoke list_tables_missing_unique_indexes with the right database, show everything",
 			requestBody:          bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s"}`, MySQLDatabase)),
 			newTableName:         "",
 			newTablePrimaryKey:   false,
@@ -477,7 +477,7 @@ func runMySQLListTablesMissingIndex(t *testing.T, ctx context.Context, pool *sql
 			want:                 []listDetails{nonUniqueKeyTableWant, noKeyTableWant},
 		},
 		{
-			name:                 "invoke list_tables_missing_index with limited output",
+			name:                 "invoke list_tables_missing_unique_indexes with limited output",
 			requestBody:          bytes.NewBufferString(`{"limit": 1}`),
 			newTableName:         "",
 			newTablePrimaryKey:   false,
@@ -502,7 +502,7 @@ func runMySQLListTablesMissingIndex(t *testing.T, ctx context.Context, pool *sql
 				cleanups = append(cleanups, cleanup)
 			}
 
-			const api = "http://127.0.0.1:5000/api/tool/list_tables_missing_index/invoke"
+			const api = "http://127.0.0.1:5000/api/tool/list_tables_missing_unique_indexes/invoke"
 			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
 			if err != nil {
 				t.Fatalf("unable to create request: %v", err)

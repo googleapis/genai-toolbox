@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mysqllisttablesmissingindex_test
+package mysqllisttablesmissinguniqueindexes_test
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttablesmissingindex"
+	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttablesmissinguniqueindexes"
 )
 
 func TestParseFromYamlExecuteSql(t *testing.T) {
@@ -39,7 +39,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mysql-list-tables-missing-index
+					kind: mysql-list-tables-missing-unique-indexes
 					source: my-instance
 					description: some description
 					authRequired:
@@ -47,9 +47,9 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 						- other-auth-service
 			`,
 			want: server.ToolConfigs{
-				"example_tool": mysqllisttablesmissingindex.Config{
+				"example_tool": mysqllisttablesmissinguniqueindexes.Config{
 					Name:         "example_tool",
-					Kind:         "mysql-list-tables-missing-index",
+					Kind:         "mysql-list-tables-missing-unique-indexes",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
