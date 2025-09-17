@@ -25,6 +25,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -36,14 +37,15 @@ import (
 )
 
 var (
-	MySQLSourceKind = "mysql"
-	MySQLToolKind   = "mysql-sql"
-	MySQLListTablesToolKind = "mysql-list-tables"
-	MySQLDatabase   = os.Getenv("MYSQL_DATABASE")
-	MySQLHost       = os.Getenv("MYSQL_HOST")
-	MySQLPort       = os.Getenv("MYSQL_PORT")
-	MySQLUser       = os.Getenv("MYSQL_USER")
-	MySQLPass       = os.Getenv("MYSQL_PASS")
+	MySQLSourceKind            = "mysql"
+	MySQLToolKind              = "mysql-sql"
+	MySQLListActiveQueriesKind = "mysql-list-active-queries"
+	MySQLListTablesToolKind    = "mysql-list-tables"
+	MySQLDatabase              = os.Getenv("MYSQL_DATABASE")
+	MySQLHost                  = os.Getenv("MYSQL_HOST")
+	MySQLPort                  = os.Getenv("MYSQL_PORT")
+	MySQLUser                  = os.Getenv("MYSQL_USER")
+	MySQLPass                  = os.Getenv("MYSQL_PASS")
 )
 
 func getMySQLVars(t *testing.T) map[string]any {
@@ -79,6 +81,11 @@ func addPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]any {
 		"kind":        MySQLListTablesToolKind,
 		"source":      "my-instance",
 		"description": "Lists tables in the database.",
+	}
+	tools["list_active_queries"] = map[string]any{
+		"kind":        MySQLListActiveQueriesKind,
+		"source":      "my-instance",
+		"description": "Lists active queries in the database.",
 	}
 	config["tools"] = tools
 	return config
@@ -157,6 +164,7 @@ func TestMySQLToolEndpoints(t *testing.T) {
 
 	// Run specific MySQL tool tests
 	runMySQLListTablesTest(t, tableNameParam, tableNameAuth)
+	runMySQLListActiveQueriesTest(t, ctx, pool)
 }
 
 func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) {
@@ -219,7 +227,7 @@ func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 		requestBody    io.Reader
 		wantStatusCode int
 		want           any
-		isSimple     bool
+		isSimple       bool
 	}{
 		{
 			name:           "invoke list_tables detailed output",
@@ -232,7 +240,7 @@ func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_names": "%s", "output_format": "simple"}`, tableNameAuth)),
 			wantStatusCode: http.StatusOK,
 			want:           []map[string]any{{"name": tableNameAuth}},
-			isSimple:     true,
+			isSimple:       true,
 		},
 		{
 			name:           "invoke list_tables with multiple table names",
@@ -276,7 +284,9 @@ func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 				return
 			}
 
-			var bodyWrapper struct{ Result json.RawMessage `json:"result"` }
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
 			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
 				t.Fatalf("error decoding response wrapper: %v", err)
 			}
@@ -332,4 +342,152 @@ func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 			}
 		})
 	}
+}
+
+func runMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.DB) {
+	type queryListDetails struct {
+		ProcessId       any    `json:"process_id"`
+		Query           string `json:"query"`
+		TrxStarted      any    `json:"trx_started"`
+		TrxDuration     any    `json:"trx_duration_seconds"`
+		TrxWaitDuration any    `json:"trx_wait_duration_seconds"`
+		QueryTime       any    `json:"query_time"`
+		TrxState        string `json:"trx_state"`
+		ProcessState    string `json:"process_state"`
+		User            string `json:"user"`
+		TrxRowsLocked   any    `json:"trx_rows_locked"`
+		TrxRowsModified any    `json:"trx_rows_modified"`
+		Db              string `json:"db"`
+	}
+
+	singleQueryWanted := queryListDetails{
+		ProcessId:       any(nil),
+		Query:           "SELECT sleep(10)",
+		TrxStarted:      any(nil),
+		TrxDuration:     any(nil),
+		TrxWaitDuration: any(nil),
+		QueryTime:       any(nil),
+		TrxState:        "",
+		ProcessState:    "User sleep",
+		User:            "",
+		TrxRowsLocked:   any(nil),
+		TrxRowsModified: any(nil),
+		Db:              "",
+	}
+
+	invokeTcs := []struct {
+		name                string
+		requestBody         io.Reader
+		clientSleepSecs     int
+		waitSecsBeforeCheck int
+		wantStatusCode      int
+		want                any
+	}{
+		{
+			name:                "invoke list_active_queries when the system is idle",
+			requestBody:         bytes.NewBufferString(`{}`),
+			clientSleepSecs:     0,
+			waitSecsBeforeCheck: 0,
+			wantStatusCode:      http.StatusOK,
+			want:                []queryListDetails(nil),
+		},
+		{
+			name:                "invoke list_active_queries when there is 1 ongoing but lower than the threshold",
+			requestBody:         bytes.NewBufferString(`{"min_duration_secs": 100}`),
+			clientSleepSecs:     10,
+			waitSecsBeforeCheck: 1,
+			wantStatusCode:      http.StatusOK,
+			want:                []queryListDetails(nil),
+		},
+		{
+			name:                "invoke list_active_queries when 1 ongoing query should show up",
+			requestBody:         bytes.NewBufferString(`{"min_duration_secs": 5}`),
+			clientSleepSecs:     0,
+			waitSecsBeforeCheck: 5,
+			wantStatusCode:      http.StatusOK,
+			want:                []queryListDetails{singleQueryWanted},
+		},
+		{
+			name:                "invoke list_active_queries when 2 ongoing query should show up",
+			requestBody:         bytes.NewBufferString(`{"min_duration_secs": 2}`),
+			clientSleepSecs:     10,
+			waitSecsBeforeCheck: 3,
+			wantStatusCode:      http.StatusOK,
+			want:                []queryListDetails{singleQueryWanted, singleQueryWanted},
+		},
+	}
+
+	var wg sync.WaitGroup
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.clientSleepSecs > 0 {
+				wg.Add(1)
+
+				go func() {
+					defer wg.Done()
+
+					err := pool.PingContext(ctx)
+					if err != nil {
+						t.Errorf("unable to connect to test database: %s", err)
+						return
+					}
+					_, err = pool.ExecContext(ctx, fmt.Sprintf("SELECT sleep(%d);", tc.clientSleepSecs))
+					if err != nil {
+						t.Errorf("Executing 'SELECT sleep' failed: %s", err)
+					}
+				}()
+			}
+
+			if tc.waitSecsBeforeCheck > 0 {
+				time.Sleep(time.Duration(tc.waitSecsBeforeCheck) * time.Second)
+			}
+
+			const api = "http://127.0.0.1:5000/api/tool/list_active_queries/invoke"
+			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %v", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %v", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				body, _ := io.ReadAll(resp.Body)
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got any
+			var details []queryListDetails
+			if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+				t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
+			}
+			got = details
+
+			if diff := cmp.Diff(tc.want, got, cmp.Comparer(func(a, b queryListDetails) bool {
+				return a.Query == b.Query && a.ProcessState == b.ProcessState
+			})); diff != "" {
+				t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
+			}
+		})
+	}
+	wg.Wait()
 }

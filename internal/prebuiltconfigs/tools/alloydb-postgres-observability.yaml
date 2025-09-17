@@ -20,7 +20,7 @@ tools:
     source: cloud-monitoring-source
     description: |
       Fetches system level cloudmonitoring data (timeseries metrics) for an AlloyDB cluster, instance.
-      To use this tool, you must provide the Google Cloud `projectID` and a PromQL `query`.
+      To use this tool, you must provide the Google Cloud `projectId` and a PromQL `query`.
 
       Generate the PromQL `query` for AlloyDB system metrics using the provided metrics and rules. Get labels like `cluster_id` and `instance_id` from the user's intent.
 
@@ -116,6 +116,6 @@ tools:
       18. `alloydb.googleapis.com/database/postgresql/insights/pertag/row_count`: The number of retrieved or affected rows since the last sample per tag. `alloydb.googleapis.com/Database`. `user`, `client_addr`, `action`, `application`, `controller`, `db_driver`, `framework`, `route`, `tag_hash`.
 
 toolsets:
-  alloydb-postgres-cloud-monitoring-tools:
+  alloydb_postgres_cloud_monitoring_tools:
     - get_system_metrics
     - get_query_metrics

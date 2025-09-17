@@ -24,10 +24,31 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/option"
 	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
 const SourceKind string = "cloud-sql-admin"
+
+type userAgentRoundTripper struct {
+	userAgent string
+	next      http.RoundTripper
+}
+
+func (rt *userAgentRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	newReq := *req
+	newReq.Header = make(http.Header)
+	for k, v := range req.Header {
+		newReq.Header[k] = v
+	}
+	ua := newReq.Header.Get("User-Agent")
+	if ua == "" {
+		newReq.Header.Set("User-Agent", rt.userAgent)
+	} else {
+		newReq.Header.Set("User-Agent", ua+" "+rt.userAgent)
+	}
+	return rt.next.RoundTrip(&newReq)
+}
 
 // validate interface
 var _ sources.SourceConfig = Config{}
@@ -65,22 +86,36 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	var client *http.Client
 	if r.UseClientOAuth {
-		client = nil
+		client = &http.Client{
+			Transport: &userAgentRoundTripper{
+				userAgent: ua,
+				next:      http.DefaultTransport,
+			},
+		}
 	} else {
 		// Use Application Default Credentials
 		creds, err := google.FindDefaultCredentials(ctx, sqladmin.SqlserviceAdminScope)
 		if err != nil {
 			return nil, fmt.Errorf("failed to find default credentials: %w", err)
 		}
-		client = oauth2.NewClient(ctx, creds.TokenSource)
+		baseClient := oauth2.NewClient(ctx, creds.TokenSource)
+		baseClient.Transport = &userAgentRoundTripper{
+			userAgent: ua,
+			next:      baseClient.Transport,
+		}
+		client = baseClient
+	}
+
+	service, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
 	}
 
 	s := &Source{
 		Name:           r.Name,
 		Kind:           SourceKind,
 		BaseURL:        "https://sqladmin.googleapis.com",
-		Client:         client,
-		UserAgent:      ua,
+		Service:        service,
 		UseClientOAuth: r.UseClientOAuth,
 	}
 	return s, nil
@@ -92,8 +127,7 @@ type Source struct {
 	Name           string `yaml:"name"`
 	Kind           string `yaml:"kind"`
 	BaseURL        string
-	Client         *http.Client
-	UserAgent      string
+	Service        *sqladmin.Service
 	UseClientOAuth bool
 }
 
@@ -101,15 +135,17 @@ func (s *Source) SourceKind() string {
 	return SourceKind
 }
 
-func (s *Source) GetClient(ctx context.Context, accessToken string) (*http.Client, error) {
+func (s *Source) GetService(ctx context.Context, accessToken string) (*sqladmin.Service, error) {
 	if s.UseClientOAuth {
-		if accessToken == "" {
-			return nil, fmt.Errorf("client-side OAuth is enabled but no access token was provided")
-		}
 		token := &oauth2.Token{AccessToken: accessToken}
-		return oauth2.NewClient(ctx, oauth2.StaticTokenSource(token)), nil
+		client := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
+		service, err := sqladmin.NewService(ctx, option.WithHTTPClient(client))
+		if err != nil {
+			return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
+		}
+		return service, nil
 	}
-	return s.Client, nil
+	return s.Service, nil
 }
 
 func (s *Source) UseClientAuthorization() bool {

@@ -27,12 +27,29 @@ tools:
     kind: mysql-execute-sql
     source: cloud-sql-mysql-source
     description: Use this tool to execute SQL.
+  list_active_queries:
+    kind: mysql-list-active-queries
+    source: cloud-sql-mysql-source
+    description: Lists top N (default 10) ongoing queries from processlist and innodb_trx, ordered by execution time in descending order. Returns detailed information of those queries in json format, including process id, query, transaction duration, transaction wait duration, process time, transaction state, process state, username with host, transaction rows locked, transaction rows modified, and db schema.
+  get_query_plan:
+    kind: mysql-sql
+    source: cloud-sql-mysql-source
+    description: "Provide information about how MySQL executes a SQL statement. Common use cases include: 1) analyze query plan to improve its performance, and 2) determine effectiveness of existing indexes and evalueate new ones."
+    statement: |
+      EXPLAIN FORMAT=JSON {{.sql_statement}};
+    templateParameters:
+      - name: sql_statement
+        type: string
+        description: "the SQL statement to explain"
+        required: true
   list_tables:
     kind: mysql-list-tables
     source: cloud-sql-mysql-source
     description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
 
 toolsets:
-  cloud-sql-mysql-database-tools:
+  cloud_sql_mysql_database_tools:
     - execute_sql
     - list_tables
+    - get_query_plan
+    - list_active_queries
