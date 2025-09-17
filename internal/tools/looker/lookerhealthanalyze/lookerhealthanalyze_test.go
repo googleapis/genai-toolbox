@@ -4,88 +4,110 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//	http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package lookerhealthanalyze
+
+package lookerhealthanalyze_test
 
 import (
-	"context"
-	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	yaml "github.com/goccy/go-yaml"
+	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	lha "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthanalyze"
 )
 
-func TestLookerAnalyzeConfig(t *testing.T) {
-	ctx := context.Background()
-	sourceName := "test-looker-source"
-	mockSource := testutils.NewMockLookerSource(t, sourceName)
-	sources := map[string]sources.Source{sourceName: mockSource}
-
-	testCases := []struct {
-		name        string
-		configYAML  string
-		expectError bool
+func TestParseFromYamlLookerHealthAnalyze(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	tcs := []struct {
+		desc string
+		in   string
+		want server.ToolConfigs
 	}{
 		{
-			name: "valid config",
-			configYAML: `
-name: looker-analyze-tool
-kind: looker-analyze
-source: test-looker-source
-description: A tool to analyze Looker projects, models, and explores.
-`,
-			expectError: false,
-		},
-		{
-			name: "missing kind",
-			configYAML: `
-name: looker-analyze-tool
-source: test-looker-source
-description: A tool to analyze Looker projects, models, and explores.
-`,
-			expectError: true,
-		},
-		{
-			name: "missing source",
-			configYAML: `
-name: looker-analyze-tool
-kind: looker-analyze
-description: A tool to analyze Looker projects, models, and explores.
-`,
-			expectError: true,
+			desc: "basic example",
+			in: `
+			tools:
+				example_tool:
+					kind: looker-health-analyze
+					source: my-instance
+					description: some description
+			`,
+			want: server.ToolConfigs{
+				"example_tool": lha.Config{
+					Name:         "example_tool",
+					Kind:         "looker-health-analyze",
+					Source:       "my-instance",
+					Description:  "some description",
+					AuthRequired: []string{},
+				},
+			},
 		},
 	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			decoder := yaml.NewDecoder(strings.NewReader(tc.configYAML))
-			cfg, err := newConfig(ctx, "test-tool", decoder)
-
-			if tc.expectError {
-				if err == nil {
-					t.Errorf("Expected an error but got none")
-				}
-				return
-			}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Tools server.ToolConfigs `yaml:"tools"`
+			}{}
+			// Parse contents
+			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
 			if err != nil {
-				t.Fatalf("Unexpected error: %v", err)
+				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if _, err := cfg.Initialize(sources); err != nil {
-				t.Errorf("Initialization failed: %v", err)
+			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
 	}
 }
 
-func TestLookerAnalyzeInvoke(t *testing.T) {
-	t.Skip("Skipping Invoke test as it requires a real Looker SDK client mock and complex data setup.")
+func TestFailParseFromYamlLookerHealthAnalyze(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	tcs := []struct {
+		desc string
+		in   string
+		err  string
+	}{
+		{
+			desc: "Invalid field",
+			in: `
+			tools:
+				example_tool:
+					kind: looker-health-analyze
+					source: my-instance
+					invalid_field: true
+			`,
+			err: "unable to parse tool \"example_tool\" as kind \"looker-health-analyze\": [2:1] unknown field \"invalid_field\"",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Tools server.ToolConfigs `yaml:"tools"`
+			}{}
+			// Parse contents
+			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			if err == nil {
+				t.Fatalf("expect parsing to fail")
+			}
+			errStr := err.Error()
+			if !strings.Contains(errStr, tc.err) {
+				t.Fatalf("unexpected error string: got %q, want substring %q", errStr, tc.err)
+			}
+		})
+	}
 }
