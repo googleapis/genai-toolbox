@@ -72,6 +72,7 @@ type compatibleSource interface {
 
 // validate compatible sources are still compatible
 var _ compatibleSource = &mysql.Source{}
+var _ compatibleSource = &cloudsqlmysql.Source{}
 
 var compatibleSources = [...]string{mysql.SourceKind, cloudsqlmysql.SourceKind}
 
