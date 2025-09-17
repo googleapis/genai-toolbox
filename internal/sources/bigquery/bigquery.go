@@ -59,6 +59,7 @@ type Config struct {
 	Kind            string   `yaml:"kind" validate:"required"`
 	Project         string   `yaml:"project" validate:"required"`
 	Location        string   `yaml:"location"`
+	ApplicationName string   `yaml:"application_name,omitempty"`
 	AllowedDatasets []string `yaml:"allowedDatasets"`
 	UseClientOAuth  bool     `yaml:"useClientOAuth"`
 }
@@ -76,13 +77,13 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	var err error
 
 	if r.UseClientOAuth {
-		clientCreator, err = newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.Name)
+		clientCreator, err = newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.Name, r.ApplicationName)
 		if err != nil {
 			return nil, fmt.Errorf("error constructing client creator: %w", err)
 		}
 	} else {
 		// Initializes a BigQuery Google SQL source
-		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location)
+		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.ApplicationName)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from ADC: %w", err)
 		}
@@ -219,6 +220,7 @@ func initBigQueryConnection(
 	name string,
 	project string,
 	location string,
+	applicationName string,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
@@ -231,6 +233,9 @@ func initBigQueryConnection(
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, nil, nil, err
+	}
+	if applicationName != "" {
+		userAgent = userAgent + " " + applicationName
 	}
 
 	// Initialize the high-level BigQuery client
@@ -297,10 +302,14 @@ func newBigQueryClientCreator(
 	project string,
 	location string,
 	name string,
+	applicationName string,
 ) (func(string, bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error), error) {
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, err
+	}
+	if applicationName != "" {
+		userAgent = userAgent + " " + applicationName
 	}
 
 	return func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
