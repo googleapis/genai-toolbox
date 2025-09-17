@@ -614,6 +614,11 @@ This guide assumes you have already done the following:
    your preferred virtual environment tool for managing dependencies e.g. [venv][install-venv]).
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
 
+[install-python]: https://wiki.python.org/moin/BeginnersGuide/Download
+[install-pip]: https://pip.pypa.io/en/stable/installation/
+[install-venv]: https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments
+[install-postgres]: https://www.postgresql.org/download/
+
 ### Cloud Setup (Optional)
 {{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
@@ -2170,6 +2175,285 @@ Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs w
 {{< /notice >}}
 
 
+# Neo4j using MCP
+Connect your IDE to Neo4j using Toolbox.
+
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like Neo4j. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a Neo4j instance:
+
+* [Cursor][cursor]
+* [Windsurf][windsurf] (Codium)
+* [Visual Studio Code][vscode] (Copilot)
+* [Cline][cline] (VS Code extension)
+* [Claude desktop][claudedesktop]
+* [Claude code][claudecode]
+* [Gemini CLI][geminicli]
+* [Gemini Code Assist][geminicodeassist]
+
+[toolbox]: https://github.com/googleapis/genai-toolbox
+[cursor]: #configure-your-mcp-client
+[windsurf]: #configure-your-mcp-client
+[vscode]: #configure-your-mcp-client
+[cline]: #configure-your-mcp-client
+[claudedesktop]: #configure-your-mcp-client
+[claudecode]: #configure-your-mcp-client
+[geminicli]: #configure-your-mcp-client
+[geminicodeassist]: #configure-your-mcp-client
+
+## Set up the database
+
+1.  [Create or select a Neo4j instance.](https://neo4j.com/cloud/platform/aura-graph-database/)
+
+## Install MCP Toolbox
+
+1. Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version v0.15.0+:
+
+   <!-- {x-release-please-start-version} -->
+   {{< tabpane persist=header >}}
+{{< tab header="linux/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/linux/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/arm64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="windows/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+{{< /tabpane >}}
+    <!-- {x-release-please-end} -->
+
+1. Make the binary executable:
+
+    ```bash
+    chmod +x toolbox
+    ```
+
+1. Verify the installation:
+
+    ```bash
+    ./toolbox --version
+    ```
+
+## Configure your MCP Client
+
+{{< tabpane text=true >}}
+{{% tab header="Claude code" lang="en" %}}
+
+1.  Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
+1.  Create a `.mcp.json` file in your project root if it doesn't exist.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  Restart Claude code to apply the new configuration.
+{{% /tab %}}
+{{% tab header="Claude desktop" lang="en" %}}
+
+1.  Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
+1.  Under the Developer tab, tap Edit Config to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  Restart Claude desktop.
+1.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
+{{% /tab %}}
+{{% tab header="Cline" lang="en" %}}
+
+1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
+1.  Tap Configure MCP Servers to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  You should see a green active status after the server is successfully connected.
+{{% /tab %}}
+{{% tab header="Cursor" lang="en" %}}
+
+1.  Create a `.cursor` directory in your project root if it doesn't exist.
+1.  Create a `.cursor/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
+{{% /tab %}}
+{{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
+
+1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
+1.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+    "mcp" : {
+        "servers": {
+        "neo4j": {
+            "command": "./PATH/TO/toolbox",
+            "args": ["--prebuilt","neo4j","--stdio"],
+            "env": {
+              "NEO4J_URI": "",
+              "NEO4J_DATABASE": "",
+              "NEO4J_USERNAME": "",
+              "NEO4J_PASSWORD": ""
+            }
+         }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Windsurf" lang="en" %}}
+
+1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the Cascade assistant.
+1.  Tap on the hammer (MCP) icon, then Configure to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Gemini CLI" lang="en" %}}
+
+1.  Install the [Gemini CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Gemini Code Assist" lang="en" %}}
+
+1.  Install the [Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist) extension in Visual Studio Code.
+1.  Enable Agent Mode in Gemini Code Assist chat.
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "neo4j": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","neo4j","--stdio"],
+          "env": {
+            "NEO4J_URI": "",
+            "NEO4J_DATABASE": "",
+            "NEO4J_USERNAME": "",
+            "NEO4J_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{< /tabpane >}}
+
+## Use Tools
+
+Your AI tool is now connected to Neo4j using MCP. Try asking your AI assistant to get the graph schema or execute Cypher statements.
+
+The following tools are available to the LLM:
+
+1.  **get_schema**: extracts the complete database schema, including details about node labels, relationships, properties, constraints, and indexes.
+1.  **execute_cypher**: executes any arbitrary Cypher statement.
+
+{{< notice note >}}
+Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
+{{< /notice >}}
+
+
 # PostgreSQL using MCP
 Connect your IDE to PostgreSQL using Toolbox.
 
@@ -2786,6 +3070,259 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
 ## Use Tools
 
 Your AI tool is now connected to SQL Server using MCP. Try asking your AI assistant to list tables, create a table, or define and execute other SQL statements.
+
+The following tools are available to the LLM:
+
+1.  **list_tables**: lists tables and descriptions
+1.  **execute_sql**: execute any SQL statement
+
+{{< notice note >}}
+Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
+{{< /notice >}}
+
+
+# SQLite using MCP
+Connect your IDE to SQLite using Toolbox.
+
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like SQLite. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a SQLite instance:
+
+* [Cursor][cursor]
+* [Windsurf][windsurf] (Codium)
+* [Visual Studio Code][vscode] (Copilot)
+* [Cline][cline] (VS Code extension)
+* [Claude desktop][claudedesktop]
+* [Claude code][claudecode]
+* [Gemini CLI][geminicli]
+* [Gemini Code Assist][geminicodeassist]
+
+[toolbox]: https://github.com/googleapis/genai-toolbox
+[cursor]: #configure-your-mcp-client
+[windsurf]: #configure-your-mcp-client
+[vscode]: #configure-your-mcp-client
+[cline]: #configure-your-mcp-client
+[claudedesktop]: #configure-your-mcp-client
+[claudecode]: #configure-your-mcp-client
+[geminicli]: #configure-your-mcp-client
+[geminicodeassist]: #configure-your-mcp-client
+
+## Set up the database
+
+1.  [Create or select a SQLite database file.](https://www.sqlite.org/download.html)
+
+## Install MCP Toolbox
+
+1. Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version V0.10.0+:
+
+   <!-- {x-release-please-start-version} -->
+   {{< tabpane persist=header >}}
+{{< tab header="linux/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/linux/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/darwin/arm64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/darwin/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="windows/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+{{< /tabpane >}}
+    <!-- {x-release-please-end} -->
+
+1. Make the binary executable:
+
+    ```bash
+    chmod +x toolbox
+    ```
+
+1. Verify the installation:
+
+    ```bash
+    ./toolbox --version
+    ```
+
+## Configure your MCP Client
+
+{{< tabpane text=true >}}
+{{% tab header="Claude code" lang="en" %}}
+
+1.  Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
+1.  Create a `.mcp.json` file in your project root if it doesn't exist.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "sqlite": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt", "sqlite", "--stdio"],
+          "env": {
+            "SQLITE_DATABASE": "./sample.db"
+          }
+        }
+      }
+    }
+    ```
+
+1.  Restart Claude code to apply the new configuration.
+{{% /tab %}}
+{{% tab header="Claude desktop" lang="en" %}}
+
+1.  Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
+1.  Under the Developer tab, tap Edit Config to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "sqlite": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt", "sqlite", "--stdio"],
+          "env": {
+            "SQLITE_DATABASE": "./sample.db"
+          }
+        }
+      }
+    }
+    ```
+
+1.  Restart Claude desktop.
+1.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
+{{% /tab %}}
+{{% tab header="Cline" lang="en" %}}
+
+1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
+1.  Tap Configure MCP Servers to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "sqlite": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt", "sqlite", "--stdio"],
+          "env": {
+            "SQLITE_DATABASE": "./sample.db"
+          }
+        }
+      }
+    }
+    ```
+
+1.  You should see a green active status after the server is successfully connected.
+{{% /tab %}}
+{{% tab header="Cursor" lang="en" %}}
+
+1.  Create a `.cursor` directory in your project root if it doesn't exist.
+1.  Create a `.cursor/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "sqlite": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt", "sqlite", "--stdio"],
+          "env": {
+            "SQLITE_DATABASE": "./sample.db"
+          }
+        }
+      }
+    }
+    ```
+
+1.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
+{{% /tab %}}
+{{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
+
+1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
+1.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "servers": {
+        "sqlite": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","sqlite","--stdio"],
+          "env": {
+            "SQLITE_DATABASE": "./sample.db"
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Windsurf" lang="en" %}}
+
+1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the Cascade assistant.
+1.  Tap on the hammer (MCP) icon, then Configure to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "sqlite": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","sqlite","--stdio"],
+          "env": {
+            "SQLITE_DATABASE": "./sample.db"
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Gemini CLI" lang="en" %}}
+
+1.  Install the [Gemini CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "sqlite": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","sqlite","--stdio"],
+          "env": {
+            "SQLITE_DATABASE": "./sample.db"
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Gemini Code Assist" lang="en" %}}
+
+1.  Install the [Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist) extension in Visual Studio Code.
+1.  Enable Agent Mode in Gemini Code Assist chat.
+1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "sqlite": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","sqlite","--stdio"],
+          "env": {
+            "SQLITE_DATABASE": "./sample.db"
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{< /tabpane >}}
+
+## Use Tools
+
+Your AI tool is now connected to SQLite using MCP. Try asking your AI assistant to list tables, create a table, or define and execute other SQL statements.
 
 The following tools are available to the LLM:
 
@@ -4186,7 +4723,7 @@ to connect to the database and execute the tool.
 
 
 # AlloyDB for PostgreSQL
-AlloyDB for PostgreSQL is a fully-managed, PostgreSQL-compatible database for  demanding transactional workloads.
+AlloyDB for PostgreSQL is a fully-managed, PostgreSQL-compatible database for demanding transactional workloads.
 
 
 ## About
@@ -4204,21 +4741,33 @@ cluster][alloydb-free-trial].
 
 ## Available Tools
 
-- [`alloydb-ai-nl`](../tools/alloydbainl/alloydb-ai-nl.md)  
+- [`alloydb-ai-nl`](../tools/alloydbainl/alloydb-ai-nl.md)
   Use natural language queries on AlloyDB, powered by AlloyDB AI.
 
-- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
+- [`postgres-sql`](../tools/postgres/postgres-sql.md)
   Execute SQL queries as prepared statements in AlloyDB Postgres.
 
-- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
+- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)
   Run parameterized SQL statements in AlloyDB Postgres.
+
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)
+  List tables in an AlloyDB for PostgreSQL database.
+
+- [`postgres-list-active-queries`](../tools/postgres/postgres-list-active-queries.md)
+  List active queries in an AlloyDB for PostgreSQL database.
+
+- [`postgres-list-available-extensions`](../tools/postgres/postgres-list-available-extensions.md)
+  List available extensions for installation in a PostgreSQL database.
+
+- [`postgres-list-installed-extensions`](../tools/postgres/postgres-list-installed-extensions.md)
+  List installed extensions in a PostgreSQL database.
 
 ### Pre-built Configurations
 
-- [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)  
+- [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
 Connect your IDE to AlloyDB using Toolbox.
 
-- [AlloyDB Admin API using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/)  
+- [AlloyDB Admin API using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/)
 Create your AlloyDB database with MCP Toolbox.
 
 ## Requirements
@@ -4352,6 +4901,9 @@ avoiding full table scans or complex filters.
 
 ## Available Tools
 
+- [`bigquery-analyze-contribution`](../tools/bigquery/bigquery-analyze-contribution.md)
+  Performs contribution analysis, also called key driver analysis in BigQuery.
+
 - [`bigquery-conversational-analytics`](../tools/bigquery/bigquery-conversational-analytics.md)
   Allows conversational interaction with a BigQuery source.
 
@@ -4407,15 +4959,11 @@ allows Toolbox to make queries to [BigQuery][bigquery-docs] on behalf of the
 client or the end-user.
 
 When using this on-behalf-of authentication, you must ensure that the
-identity used has been granted the correct IAM permissions. Currently,
-this option is only supported by the following BigQuery tools:
+identity used has been granted the correct IAM permissions.
 
-- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
-  Run SQL queries directly against BigQuery datasets.
-
-[iam-overview]: https://cloud.google.com/bigquery/docs/access-control
-[adc]: https://cloud.google.com/docs/authentication#adc
-[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-overview]: <https://cloud.google.com/bigquery/docs/access-control>
+[adc]: <https://cloud.google.com/docs/authentication#adc>
+[set-adc]: <https://cloud.google.com/docs/authentication/provide-credentials-adc>
 
 ## Example
 
@@ -4427,6 +4975,9 @@ sources:
     kind: "bigquery"
     project: "my-project-id"
     # location: "US" # Optional: Specifies the location for query jobs.
+    # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
+    #   - "my_dataset_1"
+    #   - "other_project.my_dataset_2"
 ```
 
 Initialize a BigQuery source that uses the client's access token:
@@ -4438,16 +4989,20 @@ sources:
     project: "my-project-id"
     useClientOAuth: true
     # location: "US" # Optional: Specifies the location for query jobs.
+    # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
+    #   - "my_dataset_1"
+    #   - "other_project.my_dataset_2"
 ```
 
 ## Reference
 
-| **field**      | **type** | **required** | **description**                                                                                                                                                                                                                         |
-|----------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind           |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                     |
-| project        |  string  |     true     | Id of the Google Cloud project to use for billing and as the default project for BigQuery resources.                                                                               |
-| location       |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. Defaults to the table's location or 'US' if the location cannot be determined. [Learn More](https://cloud.google.com/bigquery/docs/locations) |
-| useClientOAuth |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries.                                                                                                                                |
+| **field**       | **type** | **required** | **description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|-----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind            |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| project         |  string  |     true     | Id of the Google Cloud project to use for billing and as the default project for BigQuery resources.                                                                                                                                                                                                                                                                                                                                                                                                                |
+| location        |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. Defaults to the table's location or 'US' if the location cannot be determined. [Learn More](https://cloud.google.com/bigquery/docs/locations)                                                                                                                                                                                                    |
+| allowedDatasets | []string |    false     | An optional list of dataset IDs that tools using this source are allowed to access. If provided, any tool operation attempting to access a dataset not in this list will be rejected. To enforce this, two types of operations are also disallowed: 1) Dataset-level operations (e.g., `CREATE SCHEMA`), and 2) operations where table access cannot be statically analyzed (e.g., `EXECUTE IMMEDIATE`, `CREATE PROCEDURE`). If a single dataset is provided, it will be treated as the default for prebuilt tools. |
+| useClientOAuth  |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries.                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 
 # Bigtable
@@ -4610,6 +5165,38 @@ instead of hardcoding your secrets into the configuration file.
 | secure      |  boolean |    false     | Whether to use a secure connection (TLS). Default: false.                         |
 
 
+# Cloud Monitoring
+A "cloud-monitoring" source provides a client for the Cloud Monitoring API.
+
+
+## About
+
+The `cloud-monitoring` source provides a client to interact with the [Google Cloud Monitoring API](https://cloud.google.com/monitoring/api). This allows tools to access cloud monitoring metrics explorer and run promql queries.
+
+Authentication can be handled in two ways:
+1.  **Application Default Credentials (ADC):** By default, the source uses ADC to authenticate with the API.
+2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.
+
+## Example
+
+```yaml
+sources:
+    my-cloud-monitoring:
+        kind: cloud-monitoring
+
+    my-oauth-cloud-monitoring:
+        kind: cloud-monitoring
+        useClientOAuth: true
+```
+
+## Reference
+
+| **field**      | **type** | **required** | **description**                                                                                                                                                           |
+|----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind           |  string  |     true     | Must be "cloud-monitoring".                                                                                                                                                |
+| useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
+
+
 # Cloud SQL for MySQL
 Cloud SQL for MySQL is a fully-managed database service for MySQL.
 
@@ -4633,6 +5220,9 @@ to a database by following these instructions][csql-mysql-quickstart].
 
 - [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
   Run parameterized SQL queries in Cloud SQL for MySQL.
+
+- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)  
+  List tables in a Cloud SQL for MySQL database.
 
 ### Pre-built Configurations
 
@@ -4740,15 +5330,27 @@ to a database by following these instructions][csql-pg-quickstart].
 
 ## Available Tools
 
-- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
+- [`postgres-sql`](../tools/postgres/postgres-sql.md)
   Execute SQL queries as prepared statements in PostgreSQL.
 
-- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
+- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)
   Run parameterized SQL statements in PostgreSQL.
+
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)
+  List tables in a PostgreSQL database.
+
+- [`postgres-list-active-queries`](../tools/postgres/postgres-list-active-queries.md)
+  List active queries in a PostgreSQL database.
+
+- [`postgres-list-available-extensions`](../tools/postgres/postgres-list-available-extensions.md)
+  List available extensions for installation in a PostgreSQL database.
+
+- [`postgres-list-installed-extensions`](../tools/postgres/postgres-list-installed-extensions.md)
+  List installed extensions in a PostgreSQL database.
 
 ### Pre-built Configurations
 
-- [Cloud SQL for Postgres using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/)  
+- [Cloud SQL for Postgres using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/)
 Connect your IDE to Cloud SQL for Postgres using Toolbox.
 
 
@@ -4883,6 +5485,9 @@ to a database by following these instructions][csql-mssql-connect].
 - [`mssql-execute-sql`](../tools/mssql/mssql-execute-sql.md)  
   Run parameterized SQL Server queries in Cloud SQL for SQL Server.
 
+- [`mssql-list-tables`](../tools/mssql/mssql-list-tables.md)  
+  List tables in a Cloud SQL for SQL Server database.
+
 ### Pre-built Configurations
 
 - [Cloud SQL for SQL Server using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mssql_mcp/)  
@@ -4971,6 +5576,38 @@ instead of hardcoding your secrets into the configuration file.
 | user      |  string  |     true     | Name of the SQL Server user to connect as (e.g. "my-pg-user").                              |
 | password  |  string  |     true     | Password of the SQL Server user (e.g. "my-password").                                       |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public` or `private`. Default: `public`. |
+
+
+# Cloud SQL Admin
+A "cloud-sql-admin" source provides a client for the Cloud SQL Admin API.
+
+
+## About
+
+The `cloud-sql-admin` source provides a client to interact with the [Google Cloud SQL Admin API](https://cloud.google.com/sql/docs/mysql/admin-api/v1). This allows tools to perform administrative tasks on Cloud SQL instances, such as creating users and databases.
+
+Authentication can be handled in two ways:
+1.  **Application Default Credentials (ADC):** By default, the source uses ADC to authenticate with the API.
+2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.
+
+## Example
+
+```yaml
+sources:
+    my-cloud-sql-admin:
+        kind: cloud-sql-admin
+
+    my-oauth-cloud-sql-admin:
+        kind: cloud-sql-admin
+        useClientOAuth: true
+```
+
+## Reference
+
+| **field**      | **type** | **required** | **description**                                                                                                                                                           |
+|----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind           |  string  |     true     | Must be "cloud-sql-admin".                                                                                                                                                |
+| useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
 
 
 # couchbase
@@ -5707,6 +6344,9 @@ reliability, performance, and ease of use.
 - [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
   Run parameterized SQL queries in MySQL.
 
+- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)  
+  List tables in a MySQL database.
+
 ## Requirements
 
 ### Database User
@@ -5890,15 +6530,27 @@ reputation for reliability, feature robustness, and performance.
 
 ## Available Tools
 
-- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
+- [`postgres-sql`](../tools/postgres/postgres-sql.md)
   Execute SQL queries as prepared statements in PostgreSQL.
 
-- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
+- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)
   Run parameterized SQL statements in PostgreSQL.
+
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)
+  List tables in a PostgreSQL database.
+
+- [`postgres-list-active-queries`](../tools/postgres/postgres-list-active-queries.md)
+  List active queries in a PostgreSQL database.
+
+- [`postgres-list-available-extensions`](../tools/postgres/postgres-list-available-extensions.md)
+  List available extensions for installation in a PostgreSQL database.
+
+- [`postgres-list-installed-extensions`](../tools/postgres/postgres-list-installed-extensions.md)
+  List installed extensions in a PostgreSQL database.
 
 ### Pre-built Configurations
 
-- [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)  
+- [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)
 Connect your IDE to PostgreSQL using Toolbox.
 
 ## Requirements
@@ -6133,6 +6785,9 @@ amount of data through a structured format.
 - [`mssql-execute-sql`](../tools/mssql/mssql-execute-sql.md)  
   Run parameterized SQL Server queries in SQL Server.
 
+- [`mssql-list-tables`](../tools/mssql/mssql-list-tables.md)  
+  List tables in a SQL Server database.
+
 ## Requirements
 
 ### Database User
@@ -6196,6 +6851,14 @@ SQLite has the following notable characteristics:
 
 - [`sqlite-sql`](../tools/sqlite/sqlite-sql.md)  
   Run SQL queries against a local SQLite database.
+  
+- [`sqlite-execute-sql`](../tools/sqlite/sqlite-execute-sql.md)  
+  Run parameterized SQL statements in SQlite.
+
+### Pre-built Configurations
+
+- [SQLite using MCP](../../how-to/connect-ide/sqlite_mcp.md)  
+Connect your IDE to SQlite using Toolbox.
 
 ## Requirements
 
@@ -6449,6 +7112,78 @@ sources:
 | useGCPIAM    |   bool   |    false     | Set it to `true` if you are using GCP's IAM authentication. Defaults to `false`.                                                 |
 | disableCache |   bool   |    false     | Set it to `true` if you want to enable client-side caching. Defaults to `false`.                                                 |
 
+
+# YugabyteDB
+YugabyteDB is a high-performance, distributed SQL database. 
+
+
+## About
+
+[YugabyteDB][yugabytedb] is a high-performance, distributed SQL database designed for global, internet-scale applications, with full PostgreSQL compatibility.
+
+[yugabytedb]: https://www.yugabyte.com/
+
+## Example
+
+```yaml
+sources:
+    my-yb-source:
+        kind: yugabytedb
+        host: 127.0.0.1
+        port: 5433
+        database: yugabyte
+        user: ${USER_NAME}
+        password: ${PASSWORD}
+        loadBalance: true
+        topologyKeys: cloud.region.zone1:1,cloud.region.zone2:2
+```
+
+## Reference
+
+| **field**                         | **type** | **required** | **description**                                                        |
+|-----------------------------------|:--------:|:------------:|------------------------------------------------------------------------|
+| kind                              |  string  |     true     | Must be "yugabytedb".                                                    |
+| host                              |  string  |     true     | IP address to connect to.                           |
+| port                              |  integer  |     true     | Port to connect to. The default port is 5433.                                      |
+| database                          |  string  |     true     | Name of the YugabyteDB database to connect to. The default database name is yugabyte.           |
+| user                              |  string  |     true     | Name of the YugabyteDB user to connect as. The default user is yugabyte.          |
+| password                          |  string  |     true     | Password of the YugabyteDB user. The default password is yugabyte.                   |
+| loadBalance                      |  boolean  |     false     | If true, enable uniform load balancing. The default loadBalance value is false.                   |
+| topologyKeys                     |  string  |     false     | Comma-separated geo-locations in the form cloud.region.zone:priority to enable topology-aware load balancing. Ignored if loadBalance is false. It is null by default.                   |
+| ybServersRefreshInterval       |  integer  |     false     | The interval (in seconds) to refresh the servers list; ignored if loadBalance is false. The default value of ybServersRefreshInterval is 300.                    |
+| fallbackToTopologyKeysOnly    |  boolean  |     false     | If set to true and topologyKeys are specified, only connect to nodes specified in topologyKeys. By defualt, this is set to false.                    |
+| failedHostReconnectDelaySecs  |  integer  |     false     | Time (in seconds) to wait before trying to connect to failed nodes. The default value of is 5.                   |
+
+
+# AlloyDB Admin
+The "alloydb-admin" source provides a client for the AlloyDB API.
+
+
+## About
+
+The `alloydb-admin` source provides a client to interact with the [Google AlloyDB API](https://cloud.google.com/alloydb/docs/reference/rest). This allows tools to perform administrative tasks on AlloyDB resources, such as managing clusters, instances, and users.
+
+Authentication can be handled in two ways:
+1.  **Application Default Credentials (ADC):** By default, the source uses ADC to authenticate with the API.
+2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.
+
+## Example
+
+```yaml
+sources:
+    my-alloydb-admin:
+        kind: alloy-admin
+
+    my-oauth-alloydb-admin:
+        kind: alloydb-admin
+        useClientOAuth: true
+```
+
+## Reference
+| **field**      | **type** | **required** | **description**                                                                                                                                                           |
+|----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind           |  string  |     true     | Must be "alloydb-admin".                                                                                                                                                |
+| useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
 
 # Tools
 Tools define actions an agent can take -- such as reading and writing to a source.
@@ -6714,6 +7449,11 @@ AlloyDB AI NL Tool.
 
 
 
+# AlloyDB for PostgreSQL
+Tools for AlloyDB for PostgreSQL.
+
+
+
 # BigQuery
 Tools that work with BigQuery Sources.
 
@@ -6726,6 +7466,11 @@ Tools that work with Bigtable Sources.
 
 # ClickHouse
 Tools for interacting with ClickHouse databases and tables.
+
+
+
+# Cloud SQL
+Tools that work with Cloud SQL. 
 
 
 
@@ -6827,6 +7572,104 @@ Tools that provide utility.
 # Valkey
 Tools that work with Valkey Sources.
 
+
+
+# yugabytedb-sql
+A "yugabytedb-sql" tool executes a pre-defined SQL statement against a YugabyteDB database.
+
+
+## About
+
+A `yugabytedb-sql` tool executes a pre-defined SQL statement against a YugabyteDB
+database.
+
+The specified SQL statement is executed as a prepared statement,
+and specified parameters will inserted according to their position: e.g. `1`
+will be the first parameter specified, `$@` will be the second parameter, and so
+on. If template parameters are included, they will be resolved before execution
+of the prepared statement.
+
+## Example
+
+> **Note:** This tool uses parameterized queries to prevent SQL injections.
+> Query parameters can be used as substitutes for arbitrary expressions.
+> Parameters cannot be used as substitutes for identifiers, column names, table
+> names, or other parts of the query.
+
+```yaml
+tools:
+ search_flights_by_number:
+    kind: yugabytedb-sql
+    source: my-yb-instance
+    statement: |
+      SELECT * FROM flights
+      WHERE airline = $1
+      AND flight_number = $2
+      LIMIT 10
+    description: |
+      Use this tool to get information for a specific flight.
+      Takes an airline code and flight number and returns info on the flight.
+      Do NOT use this tool with a flight id. Do NOT guess an airline code or flight number.
+      A airline code is a code for an airline service consisting of two-character
+      airline designator and followed by flight number, which is 1 to 4 digit number.
+      For example, if given CY 0123, the airline is "CY", and flight_number is "123".
+      Another example for this is DL 1234, the airline is "DL", and flight_number is "1234".
+      If the tool returns more than one option choose the date closes to today.
+      Example:
+      {{
+          "airline": "CY",
+          "flight_number": "888",
+      }}
+      Example:
+      {{
+          "airline": "DL",
+          "flight_number": "1234",
+      }}
+    parameters:
+      - name: airline
+        type: string
+        description: Airline unique 2 letter identifier
+      - name: flight_number
+        type: string
+        description: 1 to 4 digit number
+```
+
+### Example with Template Parameters
+
+> **Note:** This tool allows direct modifications to the SQL statement, including identifiers, column names,
+> and table names. **This makes it more vulnerable to SQL injections**. Using basic parameters 
+> only (see above) is recommended for performance and safety reasons. For more details, please
+> check [templateParameters](_index#template-parameters).
+
+```yaml
+tools:
+ list_table:
+    kind: yugabytedb-sql
+    source: my-yb-instance
+    statement: |
+      SELECT * FROM {{.tableName}}
+    description: |
+      Use this tool to list all information from a specific table.
+      Example:
+      {{
+          "tableName": "flights",
+      }}
+    templateParameters:
+      - name: tableName
+        type: string
+        description: Table to select from
+```
+
+## Reference
+
+| **field**           |                  **type**                                 | **required** | **description**                                                                                                                            |
+|---------------------|:---------------------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
+| kind                |                   string                                  |     true     | Must be "yugabytedb-sql".                                                                                                                    |
+| source              |                   string                                  |     true     | Name of the source the SQL should execute on.                                                                                              |
+| description         |                   string                                  |     true     | Description of the tool that is passed to the LLM.                                                                                         |
+| statement           |                   string                                  |     true     | SQL statement to execute on.                                                                                                               |
+| parameters          | [parameters](_index#specifying-parameters)                |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
+| templateParameters  |  [templateParameters](_index#template-parameters)         |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
 
 
 # Samples
@@ -8711,16 +9554,21 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `ALLOYDB_POSTGRES_CLUSTER`: The ID of your AlloyDB cluster.
     *   `ALLOYDB_POSTGRES_INSTANCE`: The ID of your AlloyDB instance.
     *   `ALLOYDB_POSTGRES_DATABASE`: The name of the database to connect to.
-    *   `ALLOYDB_POSTGRES_USER`: The database username. Defaults to IAM authentication if unspecified.
-    *   `ALLOYDB_POSTGRES_PASSWORD`: The password for the database user. Defaults to IAM authentication if unspecified.
-    *   `ALLOYDB_POSTGRES_IP_TYPE`: The IP type i.e. "Public
-     or "Private" (Default: Public).
+    *   `ALLOYDB_POSTGRES_USER`: (Optional) The database username. Defaults to IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_PASSWORD`: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_IP_TYPE`: (Optional) The IP type i.e. "Public" or "Private" (Default: Public).
 *   **Permissions:**
     *   **AlloyDB Client** (`roles/alloydb.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
 
 ## AlloyDB Postgres Admin
 
@@ -8743,12 +9591,14 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   `--prebuilt` value: `bigquery`
 *   **Environment Variables:**
     *   `BIGQUERY_PROJECT`: The GCP project ID.
+    *   `BIGQUERY_LOCATION`: (Optional) The dataset location.
 *   **Permissions:**
     *   **BigQuery User** (`roles/bigquery.user`) to execute queries and view metadata.
     *   **BigQuery Metadata Viewer** (`roles/bigquery.metadataViewer`) to view all datasets.
     *   **BigQuery Data Editor** (`roles/bigquery.dataEditor`) to create or modify datasets and tables.
     *   **Gemini for Google Cloud** (`roles/cloudaicompanion.user`) to use the conversational analytics API.
 *   **Tools:**
+    *   `analyze_contribution`: Use this tool to perform contribution analysis, also called key driver analysis.
     *   `ask_data_insights`: Use this tool to perform data analysis, get insights, or answer complex questions about the contents of specific BigQuery tables. For more information on required roles, API setup, and IAM configuration, see the setup and authentication section of the [Conversational Analytics API documentation](https://cloud.google.com/gemini/docs/conversational-analytics-api/overview).
     *   `execute_sql`: Executes a SQL statement.
     *   `forecast`: Use this tool to forecast time series data.
@@ -8767,6 +9617,8 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `CLOUD_SQL_MYSQL_DATABASE`: The name of the database to connect to.
     *   `CLOUD_SQL_MYSQL_USER`: The database username.
     *   `CLOUD_SQL_MYSQL_PASSWORD`: The password for the database user.
+    *   `CLOUD_SQL_MYSQL_IP_TYPE`: The IP type i.e. "Public
+     or "Private" (Default: Public).
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
@@ -8782,14 +9634,21 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `CLOUD_SQL_POSTGRES_REGION`: The region of your Cloud SQL instance.
     *   `CLOUD_SQL_POSTGRES_INSTANCE`: The ID of your Cloud SQL instance.
     *   `CLOUD_SQL_POSTGRES_DATABASE`: The name of the database to connect to.
-    *   `CLOUD_SQL_POSTGRES_USER`: The database username.
-    *   `CLOUD_SQL_POSTGRES_PASSWORD`: The password for the database user.
+    *   `CLOUD_SQL_POSTGRES_USER`: (Optional) The database username. Defaults to IAM authentication if unspecified.
+    *   `CLOUD_SQL_POSTGRES_PASSWORD`: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.
+    *   `CLOUD_SQL_POSTGRES_IP_TYPE`: (Optional) The IP type i.e. "Public" or "Private" (Default: Public).
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
 
 ## Cloud SQL for SQL Server
 
@@ -8802,6 +9661,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `CLOUD_SQL_MSSQL_IP_ADDRESS`: The IP address of the Cloud SQL instance.
     *   `CLOUD_SQL_MSSQL_USER`: The database username.
     *   `CLOUD_SQL_MSSQL_PASSWORD`: The password for the database user.
+    *   `CLOUD_SQL_MSSQL_IP_TYPE`: (Optional) The IP type i.e. "Public" or "Private" (Default: Public).
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
@@ -8827,7 +9687,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   `--prebuilt` value: `firestore`
 *   **Environment Variables:**
     *   `FIRESTORE_PROJECT`: The GCP project ID.
-    *   `FIRESTORE_DATABASE`: The Firestore database ID.
+    *   `FIRESTORE_DATABASE`: (Optional) The Firestore database ID. Defaults to "(default)".
 *   **Permissions:**
     *   **Cloud Datastore User** (`roles/datastore.user`) to get documents, list collections, and query collections.
     *   **Firebase Rules Viewer** (`roles/firebaserules.viewer`) to get and validate Firestore rules.
@@ -8920,11 +9780,18 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `POSTGRES_DATABASE`: The name of the database to connect to.
     *   `POSTGRES_USER`: The database username.
     *   `POSTGRES_PASSWORD`: The password for the database user.
+    *   `POSTGRES_QUERY_PARAMS`: (Optional) Raw query to be added to the db connection string.
 *   **Permissions:**
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
 
 ## Spanner (GoogleSQL dialect)
 
@@ -8955,5 +9822,30 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `execute_sql`: Executes a DML SQL query using the PostgreSQL interface for Spanner.
     *   `execute_sql_dql`: Executes a DQL SQL query using the PostgreSQL interface for Spanner.
     *   `list_tables`: Lists tables in the database.
+
+## SQLite
+
+*   `--prebuilt` value: `sqlite`
+*   **Environment Variables:**
+    *   `SQLITE_DATABASE`: The path to the SQLite database file (e.g., `./sample.db`).
+*   **Permissions:**
+    *   File system read/write permissions for the specified database file.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## Neo4j
+
+*   `--prebuilt` value: `neo4j`
+*   **Environment Variables:**
+    *   `NEO4J_URI`: The URI of the Neo4j instance (e.g., `bolt://localhost:7687`).
+    *   `NEO4J_DATABASE`: The name of the Neo4j database to connect to.
+    *   `NEO4J_USERNAME`: The username for the Neo4j instance.
+    *   `NEO4J_PASSWORD`: The password for the Neo4j instance.
+*   **Permissions:**
+    *   **Database-level permissions** are required to execute Cypher queries.
+*   **Tools:**
+    *   `execute_cypher`: Executes a Cypher query.
+    *   `get_schema`: Retrieves the schema of the Neo4j database.
 
 

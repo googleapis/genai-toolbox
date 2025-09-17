@@ -121,10 +121,9 @@
 &lt;li>&lt;code>ALLOYDB_POSTGRES_CLUSTER&lt;/code>: The ID of your AlloyDB cluster.&lt;/li>
 &lt;li>&lt;code>ALLOYDB_POSTGRES_INSTANCE&lt;/code>: The ID of your AlloyDB instance.&lt;/li>
 &lt;li>&lt;code>ALLOYDB_POSTGRES_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_USER&lt;/code>: The database username. Defaults to IAM authentication if unspecified.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_PASSWORD&lt;/code>: The password for the database user. Defaults to IAM authentication if unspecified.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_IP_TYPE&lt;/code>: The IP type i.e. &amp;ldquo;Public
-or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_USER&lt;/code>: (Optional) The database username. Defaults to IAM authentication if unspecified.&lt;/li>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_PASSWORD&lt;/code>: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.&lt;/li>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_IP_TYPE&lt;/code>: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -137,6 +136,12 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
+&lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
+&lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
+&lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -171,6 +176,7 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>BIGQUERY_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
+&lt;li>&lt;code>BIGQUERY_LOCATION&lt;/code>: (Optional) The dataset location.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -183,6 +189,7 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
+&lt;li>&lt;code>analyze_contribution&lt;/code>: Use this tool to perform contribution analysis, also called key driver analysis.&lt;/li>
 &lt;li>&lt;code>ask_data_insights&lt;/code>: Use this tool to perform data analysis, get insights, or answer complex questions about the contents of specific BigQuery tables. For more information on required roles, API setup, and IAM configuration, see the setup and authentication section of the &lt;a href="https://cloud.google.com/gemini/docs/conversational-analytics-api/overview">Conversational Analytics API documentation&lt;/a>.&lt;/li>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL statement.&lt;/li>
 &lt;li>&lt;code>forecast&lt;/code>: Use this tool to forecast time series data.&lt;/li>
@@ -204,6 +211,8 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MYSQL_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MYSQL_USER&lt;/code>: The database username.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MYSQL_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_MYSQL_IP_TYPE&lt;/code>: The IP type i.e. &amp;ldquo;Public
+or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -228,8 +237,9 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_POSTGRES_REGION&lt;/code>: The region of your Cloud SQL instance.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_POSTGRES_INSTANCE&lt;/code>: The ID of your Cloud SQL instance.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_POSTGRES_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_POSTGRES_USER&lt;/code>: The database username.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_POSTGRES_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_POSTGRES_USER&lt;/code>: (Optional) The database username. Defaults to IAM authentication if unspecified.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_POSTGRES_PASSWORD&lt;/code>: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_POSTGRES_IP_TYPE&lt;/code>: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -242,6 +252,12 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
+&lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
+&lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
+&lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -257,6 +273,7 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MSSQL_IP_ADDRESS&lt;/code>: The IP address of the Cloud SQL instance.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MSSQL_USER&lt;/code>: The database username.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MSSQL_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_MSSQL_IP_TYPE&lt;/code>: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -300,7 +317,7 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>FIRESTORE_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
-&lt;li>&lt;code>FIRESTORE_DATABASE&lt;/code>: The Firestore database ID.&lt;/li>
+&lt;li>&lt;code>FIRESTORE_DATABASE&lt;/code>: (Optional) The Firestore database ID. Defaults to &amp;ldquo;(default)&amp;rdquo;.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -438,6 +455,7 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;code>POSTGRES_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
 &lt;li>&lt;code>POSTGRES_USER&lt;/code>: The database username.&lt;/li>
 &lt;li>&lt;code>POSTGRES_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
+&lt;li>&lt;code>POSTGRES_QUERY_PARAMS&lt;/code>: (Optional) Raw query to be added to the db connection string.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -449,6 +467,12 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
+&lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
+&lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
+&lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -497,6 +521,49 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a DML SQL query using the PostgreSQL interface for Spanner.&lt;/li>
 &lt;li>&lt;code>execute_sql_dql&lt;/code>: Executes a DQL SQL query using the PostgreSQL interface for Spanner.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="sqlite">SQLite&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>sqlite&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>SQLITE_DATABASE&lt;/code>: The path to the SQLite database file (e.g., &lt;code>./sample.db&lt;/code>).&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>File system read/write permissions for the specified database file.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
+&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="neo4j">Neo4j&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>neo4j&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>NEO4J_URI&lt;/code>: The URI of the Neo4j instance (e.g., &lt;code>bolt://localhost:7687&lt;/code>).&lt;/li>
+&lt;li>&lt;code>NEO4J_DATABASE&lt;/code>: The name of the Neo4j database to connect to.&lt;/li>
+&lt;li>&lt;code>NEO4J_USERNAME&lt;/code>: The username for the Neo4j instance.&lt;/li>
+&lt;li>&lt;code>NEO4J_PASSWORD&lt;/code>: The password for the Neo4j instance.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Database-level permissions&lt;/strong> are required to execute Cypher queries.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>execute_cypher&lt;/code>: Executes a Cypher query.&lt;/li>
+&lt;li>&lt;code>get_schema&lt;/code>: Retrieves the schema of the Neo4j database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul></description></item></channel></rss>
