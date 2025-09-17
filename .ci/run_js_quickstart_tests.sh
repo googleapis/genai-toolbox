@@ -17,7 +17,7 @@
 set -e
 
 TABLE_NAME="hotels_js"
-QUICKSTART_GO_DIR="docs/en/getting-started/quickstart/js"
+QUICKSTART_JS_DIR="docs/en/getting-started/quickstart/js"
 SQL_FILE=".ci/setup_hotels_sample.sql"
 DEPS_FILE=".ci/quickstart_dependencies.json"
 
