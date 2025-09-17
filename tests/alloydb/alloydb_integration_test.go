@@ -39,9 +39,6 @@ import (
 )
 
 var (
-	AlloyDBCreateClusterToolKind  = "alloydb-create-cluster"
-	AlloyDBCreateInstanceToolKind = "alloydb-create-instance"
-	AlloyDBCreateUserToolKind     = "alloydb-create-user"
 	AlloyDBProject                = os.Getenv("ALLOYDB_PROJECT")
 	AlloyDBLocation               = os.Getenv("ALLOYDB_REGION")
 	AlloyDBCluster                = os.Getenv("ALLOYDB_CLUSTER")
