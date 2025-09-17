@@ -133,7 +133,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.UseClientOAuth
 }
 
 func constructSearchQueryHelper(predicate string, operator string, items []string) string {

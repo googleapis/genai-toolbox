@@ -231,7 +231,7 @@ func (s *Source) lazyInitDataplexClient(ctx context.Context, tracer trace.Tracer
 
 	return func() (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
 		once.Do(func() {
-			c, cc, e := initDataplexConnection(ctx, tracer, s.Name, s.Project)
+			c, cc, e := initDataplexConnection(ctx, tracer, s.Name, s.Project, s.UseClientOAuth)
 			if e != nil {
 				err = fmt.Errorf("failed to initialize dataplex client: %w", e)
 				return
@@ -343,7 +343,12 @@ func initDataplexConnection(
 	tracer trace.Tracer,
 	name string,
 	project string,
+	useClientOAuth bool,
 ) (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
+	var client *dataplexapi.CatalogClient
+	var clientCreator DataplexClientCreator
+	var err error
+
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
@@ -357,12 +362,15 @@ func initDataplexConnection(
 		return nil, nil, err
 	}
 
-	client, err := dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
+	if useClientOAuth {
+		clientCreator = newDataplexClientCreator(ctx, project, userAgent)
+	} else {
+		client, err = dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
+		}
 	}
 
-	clientCreator := newDataplexClientCreator(ctx, project, userAgent)
 	return client, clientCreator, nil
 }
 
