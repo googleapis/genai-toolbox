@@ -1,13 +1,13 @@
 ---
-title: "Cloud SQL for PostgreSQL Admin using MCP"
+title: "Cloud SQL for SQL Server Admin using MCP"
 type: docs
-weight: 3
+weight: 5
 description: >
-  Create and manage Cloud SQL for PostgreSQL (Admin) using Toolbox.
+  Create and manage Cloud SQL for SQL Server (Admin) using Toolbox.
 ---
 
 This guide covers how to use [MCP Toolbox for Databases][toolbox]
-to expose your developer assistant tools to create and manage Cloud SQL for PostgreSQL instance, database and users:
+to expose your developer assistant tools to create and manage Cloud SQL for SQL Server instance, database and users:
 
 * [Cursor][cursor]
 * [Windsurf][windsurf] (Codium)
@@ -104,9 +104,9 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
     ```json
     {
       "mcpServers": {
-        "cloud-sql-postgres-admin": {
+        "cloud-sql-mssql-admin": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","cloud-sql-postgres-admin","--stdio"],
+          "args": ["--prebuilt","cloud-sql-mssql-admin","--stdio"],
           "env": {
           }
         }
@@ -126,9 +126,9 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
     ```json
     {
       "mcpServers": {
-        "cloud-sql-postgres-admin": {
+        "cloud-sql-mssql-admin": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","cloud-sql-postgres-admin","--stdio"],
+          "args": ["--prebuilt","cloud-sql-mssql-admin","--stdio"],
           "env": {
           }
         }
@@ -151,9 +151,9 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
     ```json
     {
       "mcpServers": {
-        "cloud-sql-postgres-admin": {
+        "cloud-sql-mssql-admin": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","cloud-sql-postgres-admin","--stdio"],
+          "args": ["--prebuilt","cloud-sql-mssql-admin","--stdio"],
           "env": {
           }
         }
@@ -174,9 +174,9 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
     ```json
     {
       "mcpServers": {
-        "cloud-sql-postgres-admin": {
+        "cloud-sql-mssql-admin": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","cloud-sql-postgres-admin","--stdio"],
+          "args": ["--prebuilt","cloud-sql-mssql-admin","--stdio"],
           "env": {
           }
         }
@@ -199,9 +199,9 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
     ```json
     {
       "servers": {
-        "cloud-sql-postgres-admin": {
+        "cloud-sql-mssql-admin": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","cloud-sql-postgres-admin","--stdio"],
+          "args": ["--prebuilt","cloud-sql-mssql-admin","--stdio"],
           "env": {
           }
         }
@@ -221,9 +221,9 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
     ```json
     {
       "mcpServers": {
-        "cloud-sql-postgres-admin": {
+        "cloud-sql-mssql-admin": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","cloud-sql-postgres-admin","--stdio"],
+          "args": ["--prebuilt","cloud-sql-mssql-admin","--stdio"],
           "env": {
           }
         }
@@ -242,9 +242,9 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
     ```json
     {
       "mcpServers": {
-        "cloud-sql-postgres-admin": {
+        "cloud-sql-mssql-admin": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","cloud-sql-postgres-admin","--stdio"],
+          "args": ["--prebuilt","cloud-sql-mssql-admin","--stdio"],
           "env": {
           }
         }
@@ -263,9 +263,9 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
     ```json
     {
       "mcpServers": {
-        "cloud-sql-postgres-admin": {
+        "cloud-sql-mssql-admin": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","cloud-sql-postgres-admin","--stdio"],
+          "args": ["--prebuilt","cloud-sql-mssql-admin","--stdio"],
           "env": {
           }
         }
@@ -277,10 +277,10 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
 
 ## Use Tools
 
-Your AI tool is now connected to Cloud SQL for PostgreSQL using MCP.
+Your AI tool is now connected to Cloud SQL for SQL Server using MCP.
 
-The `cloud-sql-postgres-admin` server provides tools for managing your Cloud SQL instances and interacting with your database:
-* **create_instance**: Creates a new Cloud SQL for PostgreSQL instance.
+The `cloud-sql-mssql-admin` server provides tools for managing your Cloud SQL instances and interacting with your database:
+* **create_instance**: Creates a new Cloud SQL for SQL Server instance.
 * **get_instance**: Gets information about a Cloud SQL instance.
 * **list_instances**: Lists Cloud SQL instances in a project.
 * **create_database**: Creates a new database in a Cloud SQL instance.
