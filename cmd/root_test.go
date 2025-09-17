@@ -1425,7 +1425,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_mysql_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mysql_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_active_queries", "list_tables"},
 				},
 			},
 		},
@@ -1464,7 +1464,7 @@ func TestPrebuiltTools(t *testing.T) {
 			in:   mysql_config,
 			wantToolset: server.ToolsetConfigs{
 				"mysql_database_tools": tools.ToolsetConfig{
-					Name:      "mysql-database-tools",
+					Name:      "mysql_database_tools",
 					ToolNames: []string{"execute_sql", "list_active_queries", "list_tables"},
 				},
 			},
