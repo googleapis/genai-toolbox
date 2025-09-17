@@ -34,6 +34,9 @@ to a database by following these instructions][csql-mysql-quickstart].
 - [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)
   List tables in a Cloud SQL for MySQL database.
 
+- [`mysql-list-tables-missing-index`](../tools/mysql/mysql-list-tables-missing-index.md)
+  List tables in a Cloud SQL for MySQL database that do not have primary or unique indices.
+
 ### Pre-built Configurations
 
 - [Cloud SQL for MySQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mysql_mcp/)
