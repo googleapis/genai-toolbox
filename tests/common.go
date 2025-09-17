@@ -297,6 +297,26 @@ func AddMySqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 	return config
 }
 
+// AddMySQLPrebuiltToolConfig gets the tools config for mysql prebuilt tools
+func AddMySQLPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["list_tables"] = map[string]any{
+		"kind":        "mysql-list-tables",
+		"source":      "my-instance",
+		"description": "Lists tables in the database.",
+	}
+	tools["list_active_queries"] = map[string]any{
+		"kind":        "mysql-list-active-queries",
+		"source":      "my-instance",
+		"description": "Lists active queries in the database.",
+	}
+	config["tools"] = tools
+	return config
+}
+
 // AddMSSQLExecuteSqlConfig gets the tools config for `mssql-execute-sql`
 func AddMSSQLExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
 	tools, ok := config["tools"].(map[string]any)
