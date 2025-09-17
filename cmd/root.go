@@ -42,6 +42,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	// Import tool packages for side effect of registration
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreatecluster"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreateuser"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetcluster"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetinstance"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetuser"
@@ -114,6 +116,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbupdatemany"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbupdateone"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqllisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttables"
@@ -125,6 +128,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/oceanbase/oceanbasesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistactivequeries"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistavailableextensions"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistinstalledextensions"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
