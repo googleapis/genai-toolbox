@@ -44,7 +44,7 @@ func (rt *userAgentRoundTripper) RoundTrip(req *http.Request) (*http.Response, e
 	if ua == "" {
 		newReq.Header.Set("User-Agent", rt.userAgent)
 	} else {
-		newReq.Header.Set("User-Agent", rt.userAgent+" "+ua)
+		newReq.Header.Set("User-Agent", ua+" "+rt.userAgent)
 	}
 	return rt.next.RoundTrip(&newReq)
 }
