@@ -1167,7 +1167,7 @@ func TestClickHouseListTablesTool(t *testing.T) {
 		}
 
 		params := tools.ParamValues{
-			"database": testDBName,
+			{Name: "database", Value: testDBName},
 		}
 
 		result, err := tool.Invoke(ctx, params, "")
