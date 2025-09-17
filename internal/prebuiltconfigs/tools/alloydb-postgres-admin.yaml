@@ -13,12 +13,6 @@
 # limitations under the License.
 
 sources:
-  alloydb-api-source:
-    kind: http
-    baseUrl: https://alloydb.googleapis.com
-    headers:
-      Authorization: Bearer ${API_KEY}
-      Content-Type: application/json
   alloydb-admin-source:
     kind: alloydb-admin
 tools:
