@@ -52,7 +52,7 @@ type compatibleSource interface {
 	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
 	UseClientAuthorization() bool
 	IsDatasetAllowed(projectID, datasetID string) bool
-	AllowedDatasets() []string
+	BigQueryAllowedDatasets() []string
 }
 
 // validate compatible sources are still compatible
