@@ -131,7 +131,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		if err := util.ValidateDocumentPath(parentPath); err != nil {
 			return nil, fmt.Errorf("invalid parent document path: %w", err)
 		}
-		
+
 		// List subcollections of the specified document
 		docRef := t.Client.Doc(parentPath)
 		collectionRefs, err = docRef.Collections(ctx).GetAll()

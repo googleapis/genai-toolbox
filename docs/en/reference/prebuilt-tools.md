@@ -19,16 +19,21 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `ALLOYDB_POSTGRES_CLUSTER`: The ID of your AlloyDB cluster.
     *   `ALLOYDB_POSTGRES_INSTANCE`: The ID of your AlloyDB instance.
     *   `ALLOYDB_POSTGRES_DATABASE`: The name of the database to connect to.
-    *   `ALLOYDB_POSTGRES_USER`: The database username. Defaults to IAM authentication if unspecified.
-    *   `ALLOYDB_POSTGRES_PASSWORD`: The password for the database user. Defaults to IAM authentication if unspecified.
-    *   `ALLOYDB_POSTGRES_IP_TYPE`: The IP type i.e. "Public
-     or "Private" (Default: Public).
+    *   `ALLOYDB_POSTGRES_USER`: (Optional) The database username. Defaults to IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_PASSWORD`: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_IP_TYPE`: (Optional) The IP type i.e. "Public" or "Private" (Default: Public).
 *   **Permissions:**
     *   **AlloyDB Client** (`roles/alloydb.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
 
 ## AlloyDB Postgres Admin
 
@@ -51,12 +56,14 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   `--prebuilt` value: `bigquery`
 *   **Environment Variables:**
     *   `BIGQUERY_PROJECT`: The GCP project ID.
+    *   `BIGQUERY_LOCATION`: (Optional) The dataset location.
 *   **Permissions:**
     *   **BigQuery User** (`roles/bigquery.user`) to execute queries and view metadata.
     *   **BigQuery Metadata Viewer** (`roles/bigquery.metadataViewer`) to view all datasets.
     *   **BigQuery Data Editor** (`roles/bigquery.dataEditor`) to create or modify datasets and tables.
     *   **Gemini for Google Cloud** (`roles/cloudaicompanion.user`) to use the conversational analytics API.
 *   **Tools:**
+    *   `analyze_contribution`: Use this tool to perform contribution analysis, also called key driver analysis.
     *   `ask_data_insights`: Use this tool to perform data analysis, get insights, or answer complex questions about the contents of specific BigQuery tables. For more information on required roles, API setup, and IAM configuration, see the setup and authentication section of the [Conversational Analytics API documentation](https://cloud.google.com/gemini/docs/conversational-analytics-api/overview).
     *   `execute_sql`: Executes a SQL statement.
     *   `forecast`: Use this tool to forecast time series data.
@@ -75,6 +82,8 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `CLOUD_SQL_MYSQL_DATABASE`: The name of the database to connect to.
     *   `CLOUD_SQL_MYSQL_USER`: The database username.
     *   `CLOUD_SQL_MYSQL_PASSWORD`: The password for the database user.
+    *   `CLOUD_SQL_MYSQL_IP_TYPE`: The IP type i.e. "Public
+     or "Private" (Default: Public).
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
@@ -90,14 +99,21 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `CLOUD_SQL_POSTGRES_REGION`: The region of your Cloud SQL instance.
     *   `CLOUD_SQL_POSTGRES_INSTANCE`: The ID of your Cloud SQL instance.
     *   `CLOUD_SQL_POSTGRES_DATABASE`: The name of the database to connect to.
-    *   `CLOUD_SQL_POSTGRES_USER`: The database username.
-    *   `CLOUD_SQL_POSTGRES_PASSWORD`: The password for the database user.
+    *   `CLOUD_SQL_POSTGRES_USER`: (Optional) The database username. Defaults to IAM authentication if unspecified.
+    *   `CLOUD_SQL_POSTGRES_PASSWORD`: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.
+    *   `CLOUD_SQL_POSTGRES_IP_TYPE`: (Optional) The IP type i.e. "Public" or "Private" (Default: Public).
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
 
 ## Cloud SQL for SQL Server
 
@@ -110,6 +126,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `CLOUD_SQL_MSSQL_IP_ADDRESS`: The IP address of the Cloud SQL instance.
     *   `CLOUD_SQL_MSSQL_USER`: The database username.
     *   `CLOUD_SQL_MSSQL_PASSWORD`: The password for the database user.
+    *   `CLOUD_SQL_MSSQL_IP_TYPE`: (Optional) The IP type i.e. "Public" or "Private" (Default: Public).
 *   **Permissions:**
     *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
@@ -135,7 +152,7 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   `--prebuilt` value: `firestore`
 *   **Environment Variables:**
     *   `FIRESTORE_PROJECT`: The GCP project ID.
-    *   `FIRESTORE_DATABASE`: The Firestore database ID.
+    *   `FIRESTORE_DATABASE`: (Optional) The Firestore database ID. Defaults to "(default)".
 *   **Permissions:**
     *   **Cloud Datastore User** (`roles/datastore.user`) to get documents, list collections, and query collections.
     *   **Firebase Rules Viewer** (`roles/firebaserules.viewer`) to get and validate Firestore rules.
@@ -228,11 +245,18 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `POSTGRES_DATABASE`: The name of the database to connect to.
     *   `POSTGRES_USER`: The database username.
     *   `POSTGRES_PASSWORD`: The password for the database user.
+    *   `POSTGRES_QUERY_PARAMS`: (Optional) Raw query to be added to the db connection string.
 *   **Permissions:**
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
 
 ## Spanner (GoogleSQL dialect)
 
@@ -263,3 +287,28 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `execute_sql`: Executes a DML SQL query using the PostgreSQL interface for Spanner.
     *   `execute_sql_dql`: Executes a DQL SQL query using the PostgreSQL interface for Spanner.
     *   `list_tables`: Lists tables in the database.
+
+## SQLite
+
+*   `--prebuilt` value: `sqlite`
+*   **Environment Variables:**
+    *   `SQLITE_DATABASE`: The path to the SQLite database file (e.g., `./sample.db`).
+*   **Permissions:**
+    *   File system read/write permissions for the specified database file.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+
+## Neo4j
+
+*   `--prebuilt` value: `neo4j`
+*   **Environment Variables:**
+    *   `NEO4J_URI`: The URI of the Neo4j instance (e.g., `bolt://localhost:7687`).
+    *   `NEO4J_DATABASE`: The name of the Neo4j database to connect to.
+    *   `NEO4J_USERNAME`: The username for the Neo4j instance.
+    *   `NEO4J_PASSWORD`: The password for the Neo4j instance.
+*   **Permissions:**
+    *   **Database-level permissions** are required to execute Cypher queries.
+*   **Tools:**
+    *   `execute_cypher`: Executes a Cypher query.
+    *   `get_schema`: Retrieves the schema of the Neo4j database.
