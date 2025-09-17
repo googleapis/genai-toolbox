@@ -212,6 +212,7 @@
 &lt;li>&lt;code>get_table_info&lt;/code>: Gets table metadata.&lt;/li>
 &lt;li>&lt;code>list_dataset_ids&lt;/code>: Lists datasets.&lt;/li>
 &lt;li>&lt;code>list_table_ids&lt;/code>: Lists tables.&lt;/li>
+&lt;li>&lt;code>search_catalog&lt;/code>: Search for entries based on the provided query.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
