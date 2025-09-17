@@ -85,14 +85,24 @@ run_orch_test() {
   local orch_dir="$1"
   local orch_name
   orch_name=$(basename "$orch_dir")
+
   (
     set -e
+    echo "--- Preparing environment for $orch_name ---"
     setup_orch_table
     cd "$orch_dir"
     if [ -f "package.json" ]; then
+      echo "Installing dependencies for $orch_name..."
       npm install
     fi
-    npm test
+    cd ..
+    echo "--- Running tests for $orch_name ---"
+    export ORCH_NAME="$orch_name"
+    node --test quickstart.test.js
+    
+    echo "--- Cleaning environment---"
+    cd "$orch_dir"
+    rm -rf node_modules
   )
 }
 
