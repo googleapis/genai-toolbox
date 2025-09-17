@@ -18,8 +18,9 @@ set -e
 
 TABLE_NAME="hotels_go"
 QUICKSTART_GO_DIR="docs/en/getting-started/quickstart/go"
-SQL_FILE=".ci/setup_hotels_sample.sql"
-DEPS_FILE=".ci/quickstart_dependencies.json"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+SQL_FILE="${SCRIPT_DIR}/setup_hotels_sample.sql"
+DEPS_FILE="${SCRIPT_DIR}/quickstart_dependencies.json"
 
 # Initialize process IDs to empty at the top of the script
 PROXY_PID=""
@@ -32,10 +33,9 @@ install_system_packages() {
   # Define the jq filter
   jq_filter='
     .go
-    | to_entries
+    | keys_unsorted
     | .[]
-    | select(.key != "jq" and .value != null)
-    | "\(.key)=\(.value)"
+    | select(. != "jq")
   '
 
   # Process the file with the filter and load the results into an array
@@ -90,20 +90,24 @@ run_orch_test() {
       echo -e "\nSkipping framework '${orch_name}': Temporarily excluded."
       return
   fi
+  
   (
     set -e
-    echo "--- Preparing to run tests for $orch_name ---"
-    setup_orch_table
-
+    echo "--- Preparing module for $orch_name ---"
     cd "$orch_dir"
 
     if [ -f "go.mod" ]; then
       go mod tidy
     fi
-
-    echo "--- Running tests for $orch_name ---"
-    go test ./...
   )
+
+  echo "--- Preparing to run tests for $orch_name ---"
+  setup_orch_table
+
+  export ORCH_NAME="$orch_name"
+
+  echo "--- Running tests for $orch_name ---"
+  go test -v ./...
 }
 
 cleanup_all() {
@@ -128,7 +132,8 @@ export GOOGLE_API_KEY="$GOOGLE_API_KEY"
 
 setup_toolbox
 
-for ORCH_DIR in "$QUICKSTART_GO_DIR"/*/; do
+cd "$QUICKSTART_GO_DIR"
+for ORCH_DIR in ./*/; do
   if [ ! -d "$ORCH_DIR" ]; then
     continue
   fi
