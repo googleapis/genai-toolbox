@@ -38,10 +38,33 @@ This tool provisions a cluster with a &lt;strong>private IP address&lt;/strong> 
 &lt;p>&lt;strong>Permissions &amp;amp; APIs Required:&lt;/strong>
 Before using, ensure the following on your GCP project:&lt;/p>
 &lt;ol>
-&lt;li>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/li>
-&lt;li>The user or service account executing the tool has the following IAM roles:
+&lt;li>
+&lt;p>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>The user or service account executing the tool has one of the following IAM roles:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>roles/alloydb.admin&lt;/code>: To create and manage the AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>roles/alloydb.admin&lt;/code> (the AlloyDB Admin predefined IAM role)&lt;/li>
+&lt;li>&lt;code>roles/owner&lt;/code> (the Owner basic IAM role)&lt;/li>
+&lt;li>&lt;code>roles/editor&lt;/code> (the Editor basic IAM role)&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ol>
+&lt;p>The tool takes the following input parameters:&lt;/p></description></item><item><title>alloydb-create-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-create-instance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/tools/alloydb/alloydb-create-instance/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>alloydb-create-instance&lt;/code> tool creates a new AlloyDB instance (PRIMARY or READ_POOL) within a specified cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1363/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.
+This tool provisions a new instance with a &lt;strong>public IP address&lt;/strong>.&lt;/p>
+&lt;p>&lt;strong>Permissions &amp;amp; APIs Required:&lt;/strong>
+Before using, ensure the following on your GCP project:&lt;/p>
+&lt;ol>
+&lt;li>
+&lt;p>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>The user or service account executing the tool has one of the following IAM roles:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>roles/alloydb.admin&lt;/code> (the AlloyDB Admin predefined IAM role)&lt;/li>
+&lt;li>&lt;code>roles/owner&lt;/code> (the Owner basic IAM role)&lt;/li>
+&lt;li>&lt;code>roles/editor&lt;/code> (the Editor basic IAM role)&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ol>
@@ -5205,104 +5228,15 @@ names, or other parts of the query.&lt;/p></description></item><item><title>Allo
 Before using, ensure the following on your GCP project:&lt;/p>
 &lt;ol>
 &lt;li>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/li>
-&lt;li>The user or service account executing the tool has the following IAM roles:
+&lt;li>The user or service account executing the tool has one of the following IAM roles:
 &lt;ul>
-&lt;li>&lt;code>roles/alloydb.admin&lt;/code>: To create and manage AlloyDB users.&lt;/li>
+&lt;li>&lt;code>roles/alloydb.admin&lt;/code> (the AlloyDB Admin predefined IAM role)&lt;/li>
+&lt;li>&lt;code>roles/owner&lt;/code> (the Owner basic IAM role)&lt;/li>
+&lt;li>&lt;code>roles/editor&lt;/code> (the Editor basic IAM role)&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ol>
-&lt;p>The tool takes the following input parameters:&lt;/p>
-&lt;table>
- &lt;thead>
- &lt;tr>
- &lt;th style="text-align: left">Parameter&lt;/th>
- &lt;th style="text-align: left">Type&lt;/th>
- &lt;th style="text-align: left">Description&lt;/th>
- &lt;th style="text-align: left">Required&lt;/th>
- &lt;/tr>
- &lt;/thead>
- &lt;tbody>
- &lt;tr>
- &lt;td style="text-align: left">&lt;code>project&lt;/code>&lt;/td>
- &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">The GCP project ID where the cluster exists.&lt;/td>
- &lt;td style="text-align: left">Yes&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td style="text-align: left">&lt;code>cluster&lt;/code>&lt;/td>
- &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">The ID of the existing cluster where the user will be created.&lt;/td>
- &lt;td style="text-align: left">Yes&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td style="text-align: left">&lt;code>location&lt;/code>&lt;/td>
- &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">The GCP location where the cluster exists (e.g., &lt;code>us-central1&lt;/code>).&lt;/td>
- &lt;td style="text-align: left">Yes&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td style="text-align: left">&lt;code>user&lt;/code>&lt;/td>
- &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">The name for the new user. Must be unique within the cluster.&lt;/td>
- &lt;td style="text-align: left">Yes&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td style="text-align: left">&lt;code>userType&lt;/code>&lt;/td>
- &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">The type of user. Valid values: &lt;code>ALLOYDB_BUILT_IN&lt;/code> and &lt;code>ALLOYDB_IAM_USER&lt;/code>. &lt;code>ALLOYDB_IAM_USER&lt;/code> is recommended.&lt;/td>
- &lt;td style="text-align: left">Yes&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td style="text-align: left">&lt;code>password&lt;/code>&lt;/td>
- &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">A secure password for the user. Required only if &lt;code>userType&lt;/code> is &lt;code>ALLOYDB_BUILT_IN&lt;/code>.&lt;/td>
- &lt;td style="text-align: left">No&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td style="text-align: left">&lt;code>databaseRoles&lt;/code>&lt;/td>
- &lt;td style="text-align: left">array(string)&lt;/td>
- &lt;td style="text-align: left">Optional. A list of database roles to grant to the new user (e.g., &lt;code>pg_read_all_data&lt;/code>).&lt;/td>
- &lt;td style="text-align: left">No&lt;/td>
- &lt;/tr>
- &lt;/tbody>
-&lt;/table>
-&lt;h2 id="example">Example&lt;/h2>
-&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">create_user&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-create-user&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-admin-source&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to create a new database user for an AlloyDB cluster.&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
-&lt;table>
- &lt;thead>
- &lt;tr>
- &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
- &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
- &lt;/tr>
- &lt;/thead>
- &lt;tbody>
- &lt;tr>
- &lt;td>kind&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Must be alloydb-create-user.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>source&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>The name of an &lt;code>alloydb-admin&lt;/code> source.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>description&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">false&lt;/td>
- &lt;td>Description of the tool that is passed to the agent.&lt;/td>
- &lt;/tr>
- &lt;/tbody>
-&lt;/table></description></item><item><title>BigQuery using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/how-to/connect-ide/bigquery_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/how-to/connect-ide/bigquery_mcp/</guid><description>&lt;html>
+&lt;p>The tool takes the following input parameters:&lt;/p></description></item><item><title>BigQuery using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1363/how-to/connect-ide/bigquery_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1363/how-to/connect-ide/bigquery_mcp/</guid><description>&lt;html>
  &lt;head>
  &lt;link rel="canonical" href="https://cloud.google.com/bigquery/docs/pre-built-tools-with-mcp-toolbox"/>
  &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/bigquery/docs/pre-built-tools-with-mcp-toolbox"/>
