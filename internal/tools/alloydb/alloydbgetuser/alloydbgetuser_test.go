@@ -1,3 +1,4 @@
+
 // Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alloydbwaitforoperation_test
+package alloydbgetuser_test
 
 import (
 	"testing"
@@ -21,7 +22,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	alloydbwaitforoperation "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydbwaitforoperation"
+	alloydbgetuser "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetuser"
 )
 
 func TestParseFromYaml(t *testing.T) {
@@ -38,24 +39,40 @@ func TestParseFromYaml(t *testing.T) {
 			desc: "basic example",
 			in: `
 			tools:
-				wait-for-thing:
-					kind: alloydb-wait-for-operation
+				get-my-user:
+					kind: alloydb-get-user
+					source: my-alloydb-admin-source
 					description: some description
-					delay: 1s
-					maxDelay: 5s
-					multiplier: 1.5
-					maxRetries: 5
 			`,
 			want: server.ToolConfigs{
-				"wait-for-thing": alloydbwaitforoperation.Config{
-					Name:         "wait-for-thing",
-					Kind:         "alloydb-wait-for-operation",
-					Description:  "some description",
+				"get-my-user": alloydbgetuser.Config{
+					Name:        "get-my-user",
+					Kind:        "alloydb-get-user",
+					Source:      "my-alloydb-admin-source",
+					Description: "some description",
 					AuthRequired: []string{},
-					Delay:        "1s",
-					MaxDelay:     "5s",
-					Multiplier:   1.5,
-					MaxRetries:   5,
+				},
+			},
+		},
+		{
+			desc: "with auth required",
+			in: `
+			tools:
+				get-my-user-auth:
+					kind: alloydb-get-user
+					source: my-alloydb-admin-source
+					description: some description
+					authRequired:
+						- my-google-auth-service
+						- other-auth-service
+			`,
+			want: server.ToolConfigs{
+				"get-my-user-auth": alloydbgetuser.Config{
+					Name:        "get-my-user-auth",
+					Kind:        "alloydb-get-user",
+					Source:      "my-alloydb-admin-source",
+					Description: "some description",
+					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 				},
 			},
 		},
