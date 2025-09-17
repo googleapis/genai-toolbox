@@ -90,20 +90,14 @@ run_orch_test() {
       echo -e "\nSkipping framework '${orch_name}': Temporarily excluded."
       return
   fi
-  (
-    set -e
-    echo "--- Preparing to run tests for $orch_name ---"
-    setup_orch_table
 
-    cd "$orch_dir"
+  echo "--- Preparing to run tests for $orch_name ---"
+  setup_orch_table
 
-    if [ -f "go.mod" ]; then
-      go mod tidy
-    fi
+  export ORCH_NAME="$orch_name"
 
-    echo "--- Running tests for $orch_name ---"
-    go test ./...
-  )
+  echo "--- Running tests for $orch_name ---"
+  go test -v ./...
 }
 
 cleanup_all() {
@@ -128,7 +122,8 @@ export GOOGLE_API_KEY="$GOOGLE_API_KEY"
 
 setup_toolbox
 
-for ORCH_DIR in "$QUICKSTART_GO_DIR"/*/; do
+cd "$QUICKSTART_GO_DIR"
+for ORCH_DIR in ./*/; do
   if [ ! -d "$ORCH_DIR" ]; then
     continue
   fi
