@@ -74,7 +74,7 @@ func initBigQueryConnection(project string) (*bigqueryapi.Client, error) {
 
 func TestBigQueryToolEndpoints(t *testing.T) {
 	sourceConfig := getBigQueryVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Minute)
 	defer cancel()
 
 	var args []string
@@ -200,6 +200,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	runBigQueryListTableIdsToolInvokeTest(t, datasetName, tableName)
 	runBigQueryGetTableInfoToolInvokeTest(t, datasetName, tableName, tableInfoWant)
 	runBigQueryConversationalAnalyticsInvokeTest(t, datasetName, tableName, dataInsightsWant)
+	runBigQuerySearchCatalogToolInvokeTest(t, datasetName, tableName)
 }
 
 func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
@@ -628,6 +629,24 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		"kind":        "bigquery-conversational-analytics",
 		"source":      "my-client-auth-source",
 		"description": "Tool to ask BigQuery conversational analytics",
+	}
+	tools["my-search-catalog-tool"] = map[string]any{
+		"kind":        "bigquery-search-catalog",
+		"source":      "my-instance",
+		"description": "Tool to search the BiqQuery catalog",
+	}
+	tools["my-auth-search-catalog-tool"] = map[string]any{
+		"kind":        "bigquery-search-catalog",
+		"source":      "my-instance",
+		"description": "Tool to search the BiqQuery catalog",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	tools["my-client-auth-search-catalog-tool"] = map[string]any{
+		"kind":        "bigquery-search-catalog",
+		"source":      "my-client-auth-source",
+		"description": "Tool to search the BiqQuery catalog",
 	}
 	config["tools"] = tools
 	return config
@@ -1880,6 +1899,9 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 }
 
 func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tableName, dataInsightsWant string) {
+	// Each test is expected to complete in under 10s, we set a 25s timeout with retries to avoid flaky tests.
+	const maxRetries = 3
+	const requestTimeout = 25 * time.Second
 	// Get ID token
 	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
@@ -1967,18 +1989,53 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			// Send Tool invocation request
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			var resp *http.Response
+			var err error
+
+			bodyBytes, err := io.ReadAll(tc.requestBody)
+			if err != nil {
+				t.Fatalf("failed to read request body: %v", err)
+			}
+
+			req, err := http.NewRequest(http.MethodPost, tc.api, nil)
 			if err != nil {
 				t.Fatalf("unable to create request: %s", err)
 			}
-			req.Header.Add("Content-type", "application/json")
+			req.Header.Set("Content-type", "application/json")
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+
+			for i := 0; i < maxRetries; i++ {
+				ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+				defer cancel()
+
+				req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+				req.GetBody = func() (io.ReadCloser, error) {
+					return io.NopCloser(bytes.NewReader(bodyBytes)), nil
+				}
+				reqWithCtx := req.WithContext(ctx)
+
+				resp, err = http.DefaultClient.Do(reqWithCtx)
+				if err != nil {
+					// Retry on time out.
+					if os.IsTimeout(err) {
+						t.Logf("Request timed out (attempt %d/%d), retrying...", i+1, maxRetries)
+						time.Sleep(5 * time.Second)
+						continue
+					}
+					t.Fatalf("unable to send request: %s", err)
+				}
+				if resp.StatusCode == http.StatusServiceUnavailable {
+					t.Logf("Received 503 Service Unavailable (attempt %d/%d), retrying...", i+1, maxRetries)
+					time.Sleep(15 * time.Second)
+					continue
+				}
+				break
+			}
+
 			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
+				t.Fatalf("Request failed after %d retries: %v", maxRetries, err)
 			}
 			defer resp.Body.Close()
 
@@ -2163,6 +2220,165 @@ func runConversationalAnalyticsWithRestriction(t *testing.T, allowedDatasetName,
 				bodyBytes, _ := io.ReadAll(resp.Body)
 				if !strings.Contains(string(bodyBytes), tc.wantInError) {
 					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
+				}
+			}
+		})
+	}
+}
+
+func runBigQuerySearchCatalogToolInvokeTest(t *testing.T, datasetName string, tableName string) {
+	// Get ID token
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	// Get access token
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		wantKey       string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-search-catalog-tool without body",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-search-catalog-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			wantKey:       "DisplayName",
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			wantKey:       "DisplayName",
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with correct project",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"projectIds\":[\"%s\"], \"datasetIds\":[\"%s\"]}", tableName, BigqueryProject, datasetName))),
+			wantKey:       "DisplayName",
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with non-existent project",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"projectIds\":[\"%s-%s\"], \"datasetIds\":[\"%s\"]}", tableName, BigqueryProject, uuid.NewString(), datasetName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-client-auth-search-catalog-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-client-auth-search-catalog-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			wantKey:       "DisplayName",
+			isErr:         false,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			var result map[string]interface{}
+			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+				t.Fatalf("error parsing response body: %s", err)
+			}
+			resultStr, ok := result["result"].(string)
+			if !ok {
+				if result["result"] == nil && tc.isErr {
+					return
+				}
+				t.Fatalf("expected 'result' field to be a string, got %T", result["result"])
+			}
+			if tc.isErr && (resultStr == "" || resultStr == "[]") {
+				return
+			}
+			var entries []interface{}
+			if err := json.Unmarshal([]byte(resultStr), &entries); err != nil {
+				t.Fatalf("error unmarshalling result string: %v", err)
+			}
+
+			if !tc.isErr {
+				if len(entries) != 1 {
+					t.Fatalf("expected exactly one entry, but got %d", len(entries))
+				}
+				entry, ok := entries[0].(map[string]interface{})
+				if !ok {
+					t.Fatalf("expected first entry to be a map, got %T", entries[0])
+				}
+				respTable, ok := entry[tc.wantKey]
+				if !ok {
+					t.Fatalf("expected entry to have key '%s', but it was not found in %v", tc.wantKey, entry)
+				}
+				if respTable != tableName {
+					t.Fatalf("expected key '%s' to have value '%s', but got %s", tc.wantKey, tableName, respTable)
+				}
+			} else {
+				if len(entries) != 0 {
+					t.Fatalf("expected 0 entries, but got %d", len(entries))
 				}
 			}
 		})

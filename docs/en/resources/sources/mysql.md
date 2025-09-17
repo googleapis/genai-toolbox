@@ -16,11 +16,17 @@ reliability, performance, and ease of use.
 
 ## Available Tools
 
-- [`mysql-sql`](../tools/mysql/mysql-sql.md)  
+- [`mysql-sql`](../tools/mysql/mysql-sql.md)
   Execute pre-defined prepared SQL queries in MySQL.
 
-- [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
+- [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)
   Run parameterized SQL queries in MySQL.
+
+- [`mysql-list-active-queries`](../tools/mysql/mysql-list-active-queries.md)
+  List active queries in MySQL.
+
+- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)
+  List tables in a MySQL database.
 
 ## Requirements
 
