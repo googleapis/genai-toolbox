@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utility
+package alloydb
 
 import (
 	"bytes"
@@ -33,7 +33,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 
-	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydbwaitforoperation"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbwaitforoperation"
 )
 
 var (
