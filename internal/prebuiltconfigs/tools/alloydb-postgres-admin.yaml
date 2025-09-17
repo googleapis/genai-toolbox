@@ -23,47 +23,9 @@ sources:
     kind: alloydb-admin
 tools:
   create_cluster:
-    kind: http
-    source: alloydb-api-source
-    method: POST
-    path: /v1/projects/{{.projectId}}/locations/{{.locationId}}/clusters
-    description: "Create a new AlloyDB cluster. This is a long-running operation, but the API call returns quickly. This will return operation id to be used by get operations tool. Take all parameters from user in one go."
-    pathParams:
-      - name: projectId
-        type: string
-        description: "The dynamic path parameter for project id provided by user."
-      - name: locationId
-        type: string
-        description: "The dynamic path parameter for location. The default value is us-central1. If quota is exhausted then use other regions."
-        default: us-central1
-    queryParams:
-      - name: clusterId
-        type: string
-        description: "A unique ID for the AlloyDB cluster."
-    requestBody: |
-      {
-        "networkConfig": {
-          "network": "projects/{{.project}}/global/networks/{{.network}}"
-        },
-        "initialUser": {
-          "password": "{{.password}}",
-          "user": "{{.user}}"
-        }
-      }
-    bodyParams:
-      - name: project
-        type: string
-        description: "The dynamic path parameter for project id."
-      - name: network
-        type: string
-        description: "The name of the VPC network to connect the cluster to (e.g., 'default')."
-        default: default
-      - name: password
-        type: string
-        description: "A secure password for the initial 'postgres' user or the custom user provided."
-      - name: user
-        type: string
-        description: "The name for the initial superuser. If not provided, it defaults to 'postgres'. The initial database will always be named 'postgres'."
+    kind: alloydb-create-cluster
+    source: alloydb-admin-source
+    description: "Create a new AlloyDB cluster. This is a long-running operation, but the API call returns quickly. This will return operation id to be used by get operations tool. Take all parameters from user in one go." 
   wait_for_operation:
     kind: alloydb-wait-for-operation
     description: "This will poll on operations API until the operation is done. For checking operation status we need projectId, locationID and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
