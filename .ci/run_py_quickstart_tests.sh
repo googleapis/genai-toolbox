@@ -29,7 +29,17 @@ install_system_packages() {
   apt-get update
   apt-get install -y jq
 
-  mapfile -t install_list < <(jq -r '.python | to_entries | .[] | select(.key != "jq" and .value != null) | "\(.key)=\(.value)"' "$DEPS_FILE")
+  # Define the jq filter
+  jq_filter='
+    .python
+    | to_entries
+    | .[]
+    | select(.key != "jq" and .value != null)
+    | "\(.key)=\(.value)"
+  '
+
+  # Process the file with the filter and load the results into an array
+  mapfile -t install_list < <(jq -r "$jq_filter" "$DEPS_FILE")
 
   if (( ${#install_list[@]} > 0 )); then
     apt-get install -y "${install_list[@]}"

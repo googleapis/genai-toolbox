@@ -23,8 +23,8 @@ steps:
       - |
         set -ex
         export VERSION=$(cat ./cmd/version.txt)
-        chmod +x .ci/quickstart_py.sh
-        .ci/quickstart_py.sh
+        chmod +x .ci/run_py_quickstart_tests.sh
+        .ci/run_py_quickstart_tests.sh
     env:
       - 'CLOUD_SQL_INSTANCE=${_CLOUD_SQL_INSTANCE}'
       - 'GCP_PROJECT=${_GCP_PROJECT}'
