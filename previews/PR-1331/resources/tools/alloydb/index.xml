@@ -24,28 +24,62 @@ Before using, ensure the following on your GCP project:&lt;/p>
  &lt;/thead>
  &lt;tbody>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>projectId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>project&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The GCP project ID to get cluster for.&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>locationId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>location&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The location of the cluster (e.g., &amp;lsquo;us-central1&amp;rsquo;).&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>clusterId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>cluster&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The ID of the cluster to retrieve.&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;blockquote>
-&lt;p>&lt;strong>Note&lt;/strong>
-This tool authenticates using the credentials configured in its &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source which can be either &lt;a href="https://cloud.google.com/docs/authentication/application-default-credentials">Application Default Credentials&lt;/a> or client-side OAuth.&lt;/p></description></item><item><title>alloydb-get-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-get-instance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-get-instance/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_specific_cluster&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-get-cluster&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-alloydb-admin-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to retrieve details for a specific AlloyDB cluster.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be alloydb-get-cluster.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The name of an &lt;code>alloydb-admin&lt;/code> source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Description of the tool that is passed to the agent.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>alloydb-get-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-get-instance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-get-instance/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>alloydb-get-instance&lt;/code> tool retrieves detailed information for a single, specified AlloyDB instance. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;table>
  &lt;thead>
@@ -83,9 +117,43 @@ This tool authenticates using the credentials configured in its &lt;a href="http
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;blockquote>
-&lt;p>&lt;strong>Note&lt;/strong>
-This tool authenticates using the credentials configured in its &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source which can be either &lt;a href="https://cloud.google.com/docs/authentication/application-default-credentials">Application Default Credentials&lt;/a> or client-side OAuth.&lt;/p></description></item><item><title>alloydb-get-user</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-get-user/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-get-user/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_specific_instance&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-get-instance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-alloydb-admin-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to retrieve details for a specific AlloyDB instance.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be alloydb-get-instance.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The name of an &lt;code>alloydb-admin&lt;/code> source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Description of the tool that is passed to the agent.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>alloydb-get-user</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-get-user/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-get-user/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>alloydb-get-user&lt;/code> tool retrieves detailed information for a single, specified AlloyDB user. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;table>
  &lt;thead>
@@ -123,9 +191,43 @@ This tool authenticates using the credentials configured in its &lt;a href="http
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;blockquote>
-&lt;p>&lt;strong>Note&lt;/strong>
-This tool authenticates using the credentials configured in its &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source which can be either &lt;a href="https://cloud.google.com/docs/authentication/application-default-credentials">Application Default Credentials&lt;/a> or client-side OAuth.&lt;/p></description></item><item><title>alloydb-list-clusters</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-list-clusters/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-list-clusters/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_specific_user&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-get-user&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-alloydb-admin-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to retrieve details for a specific AlloyDB user.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be alloydb-get-user.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The name of an &lt;code>alloydb-admin&lt;/code> source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Description of the tool that is passed to the agent.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>alloydb-list-clusters</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-list-clusters/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-list-clusters/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>alloydb-list-clusters&lt;/code> tool retrieves AlloyDB cluster information for all or specified locations in a given project. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;p>&lt;code>alloydb-list-clusters&lt;/code> tool lists the detailed information of AlloyDB cluster(cluster name, state, configuration, etc) for a given project and location. The tool takes the following input parameters:&lt;/p>
 &lt;table>
@@ -139,22 +241,56 @@ This tool authenticates using the credentials configured in its &lt;a href="http
  &lt;/thead>
  &lt;tbody>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>projectId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>project&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The GCP project ID to list clusters for.&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>locationId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>location&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The location to list clusters in (e.g., &amp;lsquo;us-central1&amp;rsquo;). Use &lt;code>-&lt;/code> for all locations. Default: &lt;code>-&lt;/code>.&lt;/td>
  &lt;td style="text-align: left">No&lt;/td>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;blockquote>
-&lt;p>&lt;strong>Note&lt;/strong>
-This tool authenticates using the credentials configured in its &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source which can be either &lt;a href="https://cloud.google.com/docs/authentication/application-default-credentials">Application Default Credentials&lt;/a> or client-side OAuth.&lt;/p></description></item><item><title>alloydb-list-instances</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-list-instances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-list-instances/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_clusters&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-list-clusters&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-admin-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to list all AlloyDB clusters in a given project and location.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be alloydb-list-clusters.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The name of an &lt;code>alloydb-admin&lt;/code> source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Description of the tool that is passed to the agent.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>alloydb-list-instances</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-list-instances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-list-instances/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>alloydb-list-instances&lt;/code> tool retrieves AlloyDB instance information for all or specified clusters and locations in a given project. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;p>&lt;code>alloydb-list-instances&lt;/code> tool lists the detailed information of AlloyDB instances (instance name, type, IP address, state, configuration, etc) for a given project, cluster and location. The tool takes the following input parameters:&lt;/p>
 &lt;table>
@@ -168,28 +304,62 @@ This tool authenticates using the credentials configured in its &lt;a href="http
  &lt;/thead>
  &lt;tbody>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>projectId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>project&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The GCP project ID to list instances for.&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>clusterId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>cluster&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The ID of the cluster to list instances from. Use &amp;lsquo;-&amp;rsquo; to get results for all clusters. Default: &lt;code>-&lt;/code>.&lt;/td>
  &lt;td style="text-align: left">No&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>locationId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>location&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The location of the cluster (e.g., &amp;lsquo;us-central1&amp;rsquo;). Use &amp;lsquo;-&amp;rsquo; to get results for all locations. Default: &lt;code>-&lt;/code>.&lt;/td>
  &lt;td style="text-align: left">No&lt;/td>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;blockquote>
-&lt;p>&lt;strong>Note&lt;/strong>
-This tool authenticates using the credentials configured in its &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source which can be either &lt;a href="https://cloud.google.com/docs/authentication/application-default-credentials">Application Default Credentials&lt;/a> or client-side OAuth.&lt;/p></description></item><item><title>alloydb-list-users</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-list-users/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-list-users/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_instances&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-list-instances&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-admin-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to list all AlloyDB instances for a given project, cluster and location.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be alloydb-list-instances.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The name of an &lt;code>alloydb-admin&lt;/code> source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Description of the tool that is passed to the agent.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>alloydb-list-users</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-list-users/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-list-users/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>alloydb-list-users&lt;/code> tool lists all database users within an AlloyDB cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.
 The tool takes the following input parameters:&lt;/p>
 &lt;table>
@@ -203,25 +373,162 @@ The tool takes the following input parameters:&lt;/p>
  &lt;/thead>
  &lt;tbody>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>projectId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>project&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The GCP project ID to list users for.&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>clusterId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>cluster&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The ID of the cluster to list users from.&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">&lt;code>locationId&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">&lt;code>location&lt;/code>&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">The location of the cluster (e.g., &amp;lsquo;us-central1&amp;rsquo;).&lt;/td>
  &lt;td style="text-align: left">Yes&lt;/td>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;blockquote>
-&lt;p>&lt;strong>Note&lt;/strong>
-This tool authenticates using the credentials configured in its &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source which can be either &lt;a href="https://cloud.google.com/docs/authentication/application-default-credentials">Application Default Credentials&lt;/a> or client-side OAuth.&lt;/p></description></item></channel></rss>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_users&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-list-users&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-admin-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to list all database users within an AlloyDB cluster&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be alloydb-list-users.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The name of an &lt;code>alloydb-admin&lt;/code> source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Description of the tool that is passed to the agent.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>alloydb-create-user</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-create-user/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/tools/alloydb/alloydb-create-user/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>alloydb-create-user&lt;/code> tool creates a new database user (&lt;code>ALLOYDB_BUILT_IN&lt;/code> or &lt;code>ALLOYDB_IAM_USER&lt;/code>) within a specified cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1331/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
+&lt;p>&lt;strong>Permissions &amp;amp; APIs Required:&lt;/strong>
+Before using, ensure the following on your GCP project:&lt;/p>
+&lt;ol>
+&lt;li>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/li>
+&lt;li>The user or service account executing the tool has the following IAM roles:
+&lt;ul>
+&lt;li>&lt;code>roles/alloydb.admin&lt;/code>: To create and manage AlloyDB users.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ol>
+&lt;p>The tool takes the following input parameters:&lt;/p>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th style="text-align: left">Parameter&lt;/th>
+ &lt;th style="text-align: left">Type&lt;/th>
+ &lt;th style="text-align: left">Description&lt;/th>
+ &lt;th style="text-align: left">Required&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>project&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">The GCP project ID where the cluster exists.&lt;/td>
+ &lt;td style="text-align: left">Yes&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>cluster&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">The ID of the existing cluster where the user will be created.&lt;/td>
+ &lt;td style="text-align: left">Yes&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>location&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">The GCP location where the cluster exists (e.g., &lt;code>us-central1&lt;/code>).&lt;/td>
+ &lt;td style="text-align: left">Yes&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>user&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">The name for the new user. Must be unique within the cluster.&lt;/td>
+ &lt;td style="text-align: left">Yes&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>userType&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">The type of user. Valid values: &lt;code>ALLOYDB_BUILT_IN&lt;/code> and &lt;code>ALLOYDB_IAM_USER&lt;/code>. &lt;code>ALLOYDB_IAM_USER&lt;/code> is recommended.&lt;/td>
+ &lt;td style="text-align: left">Yes&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>password&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">A secure password for the user. Required only if &lt;code>userType&lt;/code> is &lt;code>ALLOYDB_BUILT_IN&lt;/code>.&lt;/td>
+ &lt;td style="text-align: left">No&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">&lt;code>databaseRoles&lt;/code>&lt;/td>
+ &lt;td style="text-align: left">array(string)&lt;/td>
+ &lt;td style="text-align: left">Optional. A list of database roles to grant to the new user (e.g., &lt;code>pg_read_all_data&lt;/code>).&lt;/td>
+ &lt;td style="text-align: left">No&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">create_user&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-create-user&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-admin-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to create a new database user for an AlloyDB cluster.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be alloydb-create-user.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The name of an &lt;code>alloydb-admin&lt;/code> source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Description of the tool that is passed to the agent.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item></channel></rss>
