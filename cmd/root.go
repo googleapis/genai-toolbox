@@ -42,6 +42,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	// Import tool packages for side effect of registration
+	_ "github.com/googleapis/genai-toolbox/internal/tools/adx"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreatecluster"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreateuser"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetcluster"
@@ -149,6 +150,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	_ "github.com/googleapis/genai-toolbox/internal/sources/adx"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
