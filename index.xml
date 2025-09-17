@@ -4252,6 +4252,7 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;li>&lt;code>get_query_plan&lt;/code>: Provides information about how MySQL executes a SQL statement.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -4489,6 +4490,7 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;li>&lt;code>get_query_plan&lt;/code>: Provides information about how MySQL executes a SQL statement.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
