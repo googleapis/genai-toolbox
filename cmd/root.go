@@ -42,6 +42,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	// Import tool packages for side effect of registration
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreatecluster"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreateinstance"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreateuser"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetcluster"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetinstance"
@@ -49,6 +51,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistclusters"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistinstances"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistusers"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbwaitforoperation"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryanalyzecontribution"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryconversationalanalytics"
@@ -128,6 +131,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/oceanbase/oceanbasesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistactivequeries"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistavailableextensions"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistinstalledextensions"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
@@ -140,7 +145,6 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/tidb/tidbsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/trino/trinoexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/trino/trinosql"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydbwaitforoperation"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/wait"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/yugabytedbsql"

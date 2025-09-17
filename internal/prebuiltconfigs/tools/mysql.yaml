@@ -35,6 +35,17 @@ tools:
     kind: mysql-list-active-queries
     source: mysql-source
     description: Lists top N (default 10) ongoing queries from processlist and innodb_trx, ordered by execution time in descending order. Returns detailed information of those queries in json format, including process id, query, transaction duration, transaction wait duration, process time, transaction state, process state, username with host, transaction rows locked, transaction rows modified, and db schema.
+  get_query_plan:
+    kind: mysql-sql
+    source: mysql-source
+    description: "Provide information about how MySQL executes a SQL statement. Common use cases include: 1) analyze query plan to improve its performance, and 2) determine effectiveness of existing indexes and evalueate new ones."
+    statement: |
+      EXPLAIN FORMAT=JSON {{.sql_statement}};
+    templateParameters:
+      - name: sql_statement
+        type: string
+        description: "the SQL statement to explain"
+        required: true
   list_tables:
     kind: mysql-list-tables
     source: mysql-source
@@ -43,5 +54,6 @@ tools:
 toolsets:
   mysql_database_tools:
     - execute_sql
-    - list_active_queries
     - list_tables
+    - get_query_plan
+    - list_active_queries
