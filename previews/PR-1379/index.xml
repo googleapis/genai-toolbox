@@ -38,23 +38,35 @@ This tool provisions a cluster with a &lt;strong>private IP address&lt;/strong> 
 &lt;p>&lt;strong>Permissions &amp;amp; APIs Required:&lt;/strong>
 Before using, ensure the following on your GCP project:&lt;/p>
 &lt;ol>
-&lt;li>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/li>
-&lt;li>The user or service account executing the tool has one of the following IAM roles:
-- &lt;code>roles/alloydb.admin&lt;/code> (the AlloyDB Admin predefined IAM role)
-- &lt;code>roles/owner&lt;/code> (the Owner basic IAM role)
-- &lt;code>roles/editor&lt;/code> (the Editor basic IAM role)&lt;/li>
+&lt;li>
+&lt;p>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>The user or service account executing the tool has one of the following IAM roles:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>roles/alloydb.admin&lt;/code> (the AlloyDB Admin predefined IAM role)&lt;/li>
+&lt;li>&lt;code>roles/owner&lt;/code> (the Owner basic IAM role)&lt;/li>
+&lt;li>&lt;code>roles/editor&lt;/code> (the Editor basic IAM role)&lt;/li>
+&lt;/ul>
+&lt;/li>
 &lt;/ol>
 &lt;p>The tool takes the following input parameters:&lt;/p></description></item><item><title>alloydb-create-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/tools/alloydb/alloydb-create-instance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/tools/alloydb/alloydb-create-instance/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>alloydb-create-instance&lt;/code> tool creates a new AlloyDB instance (PRIMARY or READ_POOL) within a specified cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.
-This tool provisions a new instance with a &lt;strong>public IP address&lt;/strong> and sets the &lt;code>password.enforce_complexity&lt;/code> database flag to &lt;code>on&lt;/code>, requiring new database passwords to meet complexity rules.&lt;/p>
+This tool provisions a new instance with a &lt;strong>public IP address&lt;/strong>.&lt;/p>
 &lt;p>&lt;strong>Permissions &amp;amp; APIs Required:&lt;/strong>
 Before using, ensure the following on your GCP project:&lt;/p>
 &lt;ol>
-&lt;li>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/li>
-&lt;li>The user or service account executing the tool has one of the following IAM roles:
-- &lt;code>roles/alloydb.admin&lt;/code> (the AlloyDB Admin predefined IAM role)
-- &lt;code>roles/owner&lt;/code> (the Owner basic IAM role)
-- &lt;code>roles/editor&lt;/code> (the Editor basic IAM role)&lt;/li>
+&lt;li>
+&lt;p>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>The user or service account executing the tool has one of the following IAM roles:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>roles/alloydb.admin&lt;/code> (the AlloyDB Admin predefined IAM role)&lt;/li>
+&lt;li>&lt;code>roles/owner&lt;/code> (the Owner basic IAM role)&lt;/li>
+&lt;li>&lt;code>roles/editor&lt;/code> (the Editor basic IAM role)&lt;/li>
+&lt;/ul>
+&lt;/li>
 &lt;/ol>
 &lt;p>The tool takes the following input parameters:&lt;/p></description></item><item><title>alloydb-get-cluster</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/tools/alloydb/alloydb-get-cluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/tools/alloydb/alloydb-get-cluster/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>alloydb-get-cluster&lt;/code> tool retrieves detailed information for a single, specified AlloyDB cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1379/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
