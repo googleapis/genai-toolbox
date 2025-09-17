@@ -14,11 +14,9 @@ The `alloydb-get-cluster` tool retrieves detailed information for a single, spec
 	
 | Parameter  | Type   | Description                                                                              | Required |
 | :--------- | :----- | :--------------------------------------------------------------------------------------- | :------- |
-| `projectId`  | string | The GCP project ID to get cluster for.                                                 | Yes      |
-| `locationId` | string | The location of the cluster (e.g., 'us-central1'). | Yes      |
-| `clusterId` | string | The ID of the cluster to retrieve. | Yes      |
-> **Note**
-> This tool authenticates using the credentials configured in its [alloydb-admin](../../sources/alloydb-admin.md) source which can be either [Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials) or client-side OAuth.
+| `project`  | string | The GCP project ID to get cluster for.                                                   | Yes      |
+| `location` | string | The location of the cluster (e.g., 'us-central1').                                       | Yes      |
+| `cluster`  | string | The ID of the cluster to retrieve.                                                       | Yes      |
 
 ## Example
 
@@ -32,6 +30,6 @@ tools:
 ## Reference
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be alloydb-get-cluster.                                                                  |                                               |
-| source      |                   string                   |     true     | The name of an `alloydb-admin` source.                                                                       |
-| description |                   string                   |     true     | Description of the tool that is passed to the agent.                                             |
+| kind        |                   string                   |     true     | Must be alloydb-get-cluster.                                                                  |
+| source      |                   string                   |     true     | The name of an `alloydb-admin` source.                                                                               |
+| description |                   string                   |     false    | Description of the tool that is passed to the agent.                                                                                |

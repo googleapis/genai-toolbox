@@ -23,6 +23,9 @@ amount of data through a structured format.
 - [`mssql-execute-sql`](../tools/mssql/mssql-execute-sql.md)  
   Run parameterized SQL Server queries in SQL Server.
 
+- [`mssql-list-tables`](../tools/mssql/mssql-list-tables.md)  
+  List tables in a SQL Server database.
+
 ## Requirements
 
 ### Database User
