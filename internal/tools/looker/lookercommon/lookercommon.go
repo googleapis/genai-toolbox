@@ -284,3 +284,32 @@ func RunInlineQuery2(l *v4.LookerSDK, request RequestRunInlineQuery2, options *r
 	err := l.AuthSession.Do(&result, "POST", "/4.0", "/queries/run_inline", nil, request, options)
 	return result, err
 }
+
+func RunInlineQuery(ctx context.Context, sdk *v4.LookerSDK, wq *v4.WriteQuery, format string, options *rtl.ApiSettings) (string, error) {
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return "", fmt.Errorf("unable to get logger from ctx: %s", err)
+	}
+	req := v4.RequestRunInlineQuery{
+		Body:         *wq,
+		ResultFormat: format,
+	}
+	req2 := RequestRunInlineQuery2{
+		Query: *wq,
+		RenderOpts: RenderOptions{
+			Format: format,
+		},
+		QueryApiClientCtx: QueryApiClientContext{
+			Name: "MCP Toolbox",
+		},
+	}
+	resp, err := RunInlineQuery2(sdk, req2, options)
+	if err != nil {
+		logger.DebugContext(ctx, "error querying with new endpoint, trying again with original", err)
+		resp, err = sdk.RunInlineQuery(req, options)
+		if err != nil {
+			return "", fmt.Errorf("error making query request: %s", err)
+		}
+	}
+	return resp, err
+}
