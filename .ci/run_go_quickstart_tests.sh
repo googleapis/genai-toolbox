@@ -18,8 +18,9 @@ set -e
 
 TABLE_NAME="hotels_go"
 QUICKSTART_GO_DIR="docs/en/getting-started/quickstart/go"
-SQL_FILE=".ci/setup_hotels_sample.sql"
-DEPS_FILE=".ci/quickstart_dependencies.json"
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+SQL_FILE="${SCRIPT_DIR}/setup_hotels_sample.sql"
+DEPS_FILE="${SCRIPT_DIR}/quickstart_dependencies.json"
 
 # Initialize process IDs to empty at the top of the script
 PROXY_PID=""
@@ -90,6 +91,15 @@ run_orch_test() {
       echo -e "\nSkipping framework '${orch_name}': Temporarily excluded."
       return
   fi
+  
+  (
+    set -e
+    echo "--- Preparing module for $orch_name ---"
+    cd "$orch_dir"
+    if [ -f "go.mod" ]; then
+      go mod tidy
+    fi
+  )
 
   echo "--- Preparing to run tests for $orch_name ---"
   setup_orch_table
