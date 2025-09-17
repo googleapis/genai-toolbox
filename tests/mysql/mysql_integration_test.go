@@ -33,11 +33,11 @@ var (
 	MySQLSourceKind = "mysql"
 	MySQLToolKind   = "mysql-sql"
 	MySQLListTableFragmentationKind = "mysql-list-table-fragmentation"
-	MySQLDatabase   = os.Getenv("MYSQL_DATABASE")
-	MySQLHost       = os.Getenv("MYSQL_HOST")
-	MySQLPort       = os.Getenv("MYSQL_PORT")
-	MySQLUser       = os.Getenv("MYSQL_USER")
-	MySQLPass       = os.Getenv("MYSQL_PASS")
+	MySQLDatabase                   = os.Getenv("MYSQL_DATABASE")
+	MySQLHost                       = os.Getenv("MYSQL_HOST")
+	MySQLPort                       = os.Getenv("MYSQL_PORT")
+	MySQLUser                       = os.Getenv("MYSQL_USER")
+	MySQLPass                       = os.Getenv("MYSQL_PASS")
 )
 
 func getMySQLVars(t *testing.T) map[string]any {
@@ -201,7 +201,7 @@ func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 		requestBody    io.Reader
 		wantStatusCode int
 		want           any
-		isSimple     bool
+		isSimple       bool
 	}{
 		{
 			name:           "invoke list_tables detailed output",
@@ -214,7 +214,7 @@ func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_names": "%s", "output_format": "simple"}`, tableNameAuth)),
 			wantStatusCode: http.StatusOK,
 			want:           []map[string]any{{"name": tableNameAuth}},
-			isSimple:     true,
+			isSimple:       true,
 		},
 		{
 			name:           "invoke list_tables with multiple table names",
@@ -258,7 +258,9 @@ func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 				return
 			}
 
-			var bodyWrapper struct{ Result json.RawMessage `json:"result"` }
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
 			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
 				t.Fatalf("error decoding response wrapper: %v", err)
 			}
@@ -319,30 +321,30 @@ func runMySQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 
 func runMySQLListTableFragmentationTest(t *testing.T, tableNameParam, tableNameAuth string) {
 	type tableFragmentationDetails struct {
-		TableSchema     string `json:"table_schema"`
-		TableName       string `json:"table_name"`
-		DataSize        any    `json:"data_size"`
-		IndexSize       any `json:"index_size"`
-		DataFree  any `json:"data_free"`
-		FragmentationPercentage any `json:"fragmentation_percentage"`
+		TableSchema             string `json:"table_schema"`
+		TableName               string `json:"table_name"`
+		DataSize                any    `json:"data_size"`
+		IndexSize               any    `json:"index_size"`
+		DataFree                any    `json:"data_free"`
+		FragmentationPercentage any    `json:"fragmentation_percentage"`
 	}
 
 	paramTableEntryWanted := tableFragmentationDetails{
-		TableSchema: MySQLDatabase,
-		TableName: tableNameParam,
-		DataSize: any(nil),
-		IndexSize: any(nil),
-		DataFree: any(nil),
+		TableSchema:             MySQLDatabase,
+		TableName:               tableNameParam,
+		DataSize:                any(nil),
+		IndexSize:               any(nil),
+		DataFree:                any(nil),
 		FragmentationPercentage: any(nil),
-	};
+	}
 	authTableEntryWanted := tableFragmentationDetails{
-		TableSchema: MySQLDatabase,
-		TableName: tableNameAuth,
-		DataSize: any(nil),
-		IndexSize: any(nil),
-		DataFree: any(nil),
+		TableSchema:             MySQLDatabase,
+		TableName:               tableNameAuth,
+		DataSize:                any(nil),
+		IndexSize:               any(nil),
+		DataFree:                any(nil),
 		FragmentationPercentage: any(nil),
-	};
+	}
 
 	invokeTcs := []struct {
 		name           string
@@ -416,7 +418,9 @@ func runMySQLListTableFragmentationTest(t *testing.T, tableNameParam, tableNameA
 				return
 			}
 
-			var bodyWrapper struct{ Result json.RawMessage `json:"result"` }
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
 			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
 				t.Fatalf("error decoding response wrapper: %v", err)
 			}
