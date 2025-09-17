@@ -232,6 +232,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	query := bqClient.Query(newStatement)
 	query.Parameters = highLevelParams
 	query.Location = bqClient.Location
+	query.Labels = map[string]string{"task": "sql"}
 
 	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, newStatement, lowLevelParams, query.ConnectionProperties)
 	if err != nil {
