@@ -667,7 +667,6 @@ steps:
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
-      - "HOSTS=$HOSTS"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
       - "CASSANDRA_HOSTS=$_CASSANDRA_HOSTS"
     secretEnv: ["CLIENT_ID", "CASSANDRA_USER", "CASSANDRA_PASS"]
