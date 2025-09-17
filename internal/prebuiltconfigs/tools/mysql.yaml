@@ -31,6 +31,17 @@ tools:
     kind: mysql-execute-sql
     source: mysql-source
     description: Use this tool to execute SQL.
+  get_query_plan:
+    kind: mysql-sql
+    source: mysql-source
+    description: "Provide information about how MySQL executes a SQL statement. Common use cases include: 1) analyze query plan to improve its performance, and 2) determine effectiveness of existing indexes and evalueate new ones."
+    statement: |
+      EXPLAIN FORMAT=JSON {{.sql_statement}};
+    templateParameters:
+      - name: sql_statement
+        type: string
+        description: "the SQL statement to explain"
+        required: true
   list_tables:
     kind: mysql-list-tables
     source: mysql-source
@@ -39,4 +50,5 @@ tools:
 toolsets:
   mysql_database_tools:
     - execute_sql
+    - get_query_plan
     - list_tables
