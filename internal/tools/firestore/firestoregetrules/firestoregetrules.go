@@ -129,7 +129,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	if release.RulesetName == "" {
-		return nil, fmt.Errorf("no active Firestore rules were found in project '%s'", t.ProjectId)
+		return nil, fmt.Errorf("no active Firestore rules were found in project '%s' and database '%s'", t.ProjectId, t.DatabaseId)
 	}
 
 	// Get the ruleset content
