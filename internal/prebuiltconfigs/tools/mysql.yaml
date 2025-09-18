@@ -50,6 +50,10 @@ tools:
     kind: mysql-list-tables
     source: mysql-source
     description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
+  list_table_fragmentation:
+    kind: mysql-list-table-fragmentation
+    source: mysql-source
+    description: List table fragmentation in MySQL, by calculating the size of the data and index files and free space allocated to each table. The query calculates fragmentation percentage which represents the proportion of free space relative to the total data and index size. Storage can be reclaimed for tables with high fragmentation using OPTIMIZE TABLE.
 
 toolsets:
   mysql_database_tools:
@@ -57,3 +61,4 @@ toolsets:
     - list_tables
     - get_query_plan
     - list_active_queries
+    - list_table_fragmentation
