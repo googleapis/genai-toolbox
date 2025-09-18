@@ -125,6 +125,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllistactivequeries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttablefragmentation"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttables"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttablesmissinguniqueindexes"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jcypher"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jexecutecypher"
