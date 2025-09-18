@@ -1438,6 +1438,238 @@ func RunMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 	wg.Wait()
 }
 
+func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, pool *sql.DB, databaseName string) {
+	type listDetails struct {
+		TableSchema string `json:"table_schema"`
+		TableName   string `json:"table_name"`
+	}
+
+	// bunch of wanted
+	nonUniqueKeyTableName := "t03_non_unqiue_key_table"
+	noKeyTableName := "t04_no_key_table"
+	nonUniqueKeyTableWant := listDetails{
+		TableSchema: databaseName,
+		TableName:   nonUniqueKeyTableName,
+	}
+	noKeyTableWant := listDetails{
+		TableSchema: databaseName,
+		TableName:   noKeyTableName,
+	}
+
+	invokeTcs := []struct {
+		name                 string
+		requestBody          io.Reader
+		newTableName         string
+		newTablePrimaryKey   bool
+		newTableUniqueKey    bool
+		newTableNonUniqueKey bool
+		wantStatusCode       int
+		want                 any
+	}{
+		{
+			name:                 "invoke list_tables_missing_unique_indexes when nothing to be found",
+			requestBody:          bytes.NewBufferString(`{}`),
+			newTableName:         "",
+			newTablePrimaryKey:   false,
+			newTableUniqueKey:    false,
+			newTableNonUniqueKey: false,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails(nil),
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes pk table will not show",
+			requestBody:          bytes.NewBufferString(`{}`),
+			newTableName:         "t01",
+			newTablePrimaryKey:   true,
+			newTableUniqueKey:    false,
+			newTableNonUniqueKey: false,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails(nil),
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes uk table will not show",
+			requestBody:          bytes.NewBufferString(`{}`),
+			newTableName:         "t02",
+			newTablePrimaryKey:   false,
+			newTableUniqueKey:    true,
+			newTableNonUniqueKey: false,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails(nil),
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes non-unique key only table will show",
+			requestBody:          bytes.NewBufferString(`{}`),
+			newTableName:         nonUniqueKeyTableName,
+			newTablePrimaryKey:   false,
+			newTableUniqueKey:    false,
+			newTableNonUniqueKey: true,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails{nonUniqueKeyTableWant},
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes table with no key at all will show",
+			requestBody:          bytes.NewBufferString(`{}`),
+			newTableName:         noKeyTableName,
+			newTablePrimaryKey:   false,
+			newTableUniqueKey:    false,
+			newTableNonUniqueKey: false,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails{nonUniqueKeyTableWant, noKeyTableWant},
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes table w/ both pk & uk will not show",
+			requestBody:          bytes.NewBufferString(`{}`),
+			newTableName:         "t05",
+			newTablePrimaryKey:   true,
+			newTableUniqueKey:    true,
+			newTableNonUniqueKey: false,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails{nonUniqueKeyTableWant, noKeyTableWant},
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes table w/ uk & nk will not show",
+			requestBody:          bytes.NewBufferString(`{}`),
+			newTableName:         "t06",
+			newTablePrimaryKey:   false,
+			newTableUniqueKey:    true,
+			newTableNonUniqueKey: true,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails{nonUniqueKeyTableWant, noKeyTableWant},
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes table w/ pk & nk will not show",
+			requestBody:          bytes.NewBufferString(`{}`),
+			newTableName:         "t07",
+			newTablePrimaryKey:   true,
+			newTableUniqueKey:    false,
+			newTableNonUniqueKey: true,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails{nonUniqueKeyTableWant, noKeyTableWant},
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes with a non-exist database, nothing to show",
+			requestBody:          bytes.NewBufferString(`{"table_schema": "non-exist-database"}`),
+			newTableName:         "",
+			newTablePrimaryKey:   false,
+			newTableUniqueKey:    false,
+			newTableNonUniqueKey: false,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails(nil),
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes with the right database, show everything",
+			requestBody:          bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s"}`, databaseName)),
+			newTableName:         "",
+			newTablePrimaryKey:   false,
+			newTableUniqueKey:    false,
+			newTableNonUniqueKey: false,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails{nonUniqueKeyTableWant, noKeyTableWant},
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes with limited output",
+			requestBody:          bytes.NewBufferString(`{"limit": 1}`),
+			newTableName:         "",
+			newTablePrimaryKey:   false,
+			newTableUniqueKey:    false,
+			newTableNonUniqueKey: false,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails{nonUniqueKeyTableWant},
+		},
+	}
+
+	createTableHelper := func(t *testing.T, tableName, databaseName string, primaryKey, uniqueKey, nonUniqueKey bool, ctx context.Context, pool *sql.DB) func() {
+		var stmt strings.Builder
+		stmt.WriteString(fmt.Sprintf("CREATE TABLE %s (", tableName))
+		stmt.WriteString("c1 INT")
+		if primaryKey {
+			stmt.WriteString(" PRIMARY KEY")
+		}
+		stmt.WriteString(", c2 INT, c3 CHAR(8)")
+		if uniqueKey {
+			stmt.WriteString(", UNIQUE(c2)")
+		}
+		if nonUniqueKey {
+			stmt.WriteString(", INDEX(c3)")
+		}
+		stmt.WriteString(")")
+
+		t.Logf("Creating table: %s", stmt.String())
+		if _, err := pool.ExecContext(ctx, stmt.String()); err != nil {
+			t.Fatalf("failed executing %s: %v", stmt.String(), err)
+		}
+
+		return func() {
+			t.Logf("Dropping table: %s", tableName)
+			if _, err := pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s", tableName)); err != nil {
+				t.Errorf("failed to drop table %s: %v", tableName, err)
+			}
+		}
+	}
+
+	var cleanups []func()
+	defer func() {
+		for i := len(cleanups) - 1; i >= 0; i-- {
+			cleanups[i]()
+		}
+	}()
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.newTableName != "" {
+				cleanup := createTableHelper(t, tc.newTableName, databaseName, tc.newTablePrimaryKey, tc.newTableUniqueKey, tc.newTableNonUniqueKey, ctx, pool)
+				cleanups = append(cleanups, cleanup)
+			}
+
+			const api = "http://127.0.0.1:5000/api/tool/list_tables_missing_unique_indexes/invoke"
+			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %v", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %v", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				body, _ := io.ReadAll(resp.Body)
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got any
+			var details []listDetails
+			if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+				t.Fatalf("failed to unmarshal nested listDetails string: %v", err)
+			}
+			got = details
+
+			if diff := cmp.Diff(tc.want, got, cmp.Comparer(func(a, b listDetails) bool {
+				return a.TableSchema == b.TableSchema && a.TableName == b.TableName
+			})); diff != "" {
+				t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
+			}
+		})
+	}
+}
+
 func RunMySQLListTableFragmentationTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string) {
 	type tableFragmentationDetails struct {
 		TableSchema             string `json:"table_schema"`
