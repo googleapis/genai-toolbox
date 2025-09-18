@@ -83,7 +83,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=v$(cat ./cmd/version.txt)
-        gcloud storage cp toolbox.extensions.linux.amd64 gs://$_BUCKET_NAME/$VERSION/linux/amd64/toolbox-extensions
+        gcloud storage cp toolbox.extensions.linux.amd64 gs://$_BUCKET_NAME/geminicli/$VERSION/linux/amd64/toolbox
 
   - id: "build-darwin-arm64"
     name: golang:1
@@ -131,7 +131,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=v$(cat ./cmd/version.txt)
-        gcloud storage cp toolbox.extensions.darwin.arm64 gs://$_BUCKET_NAME/$VERSION/darwin/arm64/toolbox-extensions
+        gcloud storage cp toolbox.extensions.darwin.arm64 gs://$_BUCKET_NAME/geminicli/$VERSION/darwin/arm64/toolbox
 
   - id: "build-darwin-amd64"
     name: golang:1
@@ -179,7 +179,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=v$(cat ./cmd/version.txt)
-        gcloud storage cp toolbox.extensions.darwin.amd64 gs://$_BUCKET_NAME/$VERSION/darwin/amd64/toolbox-extensions
+        gcloud storage cp toolbox.extensions.darwin.amd64 gs://$_BUCKET_NAME/geminicli/$VERSION/darwin/amd64/toolbox
 
   - id: "build-windows-amd64"
     name: golang:1
@@ -227,7 +227,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=v$(cat ./cmd/version.txt)
-        gcloud storage cp toolbox.extensions.windows.amd64 gs://$_BUCKET_NAME/$VERSION/windows/amd64/toolbox-extensions.exe
+        gcloud storage cp toolbox.extensions.windows.amd64 gs://$_BUCKET_NAME/geminicli/$VERSION/windows/amd64/toolbox.exe
 
 options:
   automapSubstitutions: true
