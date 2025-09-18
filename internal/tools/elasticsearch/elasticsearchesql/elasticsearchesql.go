@@ -51,8 +51,8 @@ type Config struct {
 	Kind         string           `yaml:"kind" validate:"required"`
 	Source       string           `yaml:"source" validate:"required"`
 	Description  string           `yaml:"description" validate:"required"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Query        string           `yaml:"query" validate:"required"`
+	AuthRequired []string         `yaml:"authRequired" validate:"required"`
+	Query        string           `yaml:"query"`
 	Format       string           `yaml:"format"`
 	Timeout      int              `yaml:"timeout"`
 	Parameters   tools.Parameters `yaml:"parameters"`
@@ -140,6 +140,17 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	paramMap := params.AsMap()
+
+	// If a query is provided in the params and not already set in the tool, use it.
+	if query, ok := paramMap["query"]; ok {
+		if str, ok := query.(string); ok && bodyStruct.Query == "" {
+			bodyStruct.Query = str
+		}
+
+		// Drop the query param if not a string or if the tool already has a query.
+		delete(paramMap, "query")
+	}
+
 	for _, param := range t.Parameters {
 		if param.GetType() == "array" {
 			return nil, fmt.Errorf("array parameters are not supported yet")
@@ -154,6 +165,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	res, err := esapi.EsqlQueryRequest{
 		Body:       bytes.NewReader(body),
 		Format:     t.Format,
+		FilterPath: []string{"values"},
 		Instrument: t.EsClient.InstrumentationEnabled(),
 	}.Do(ctx, t.EsClient)
 
@@ -162,13 +174,25 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 	defer res.Body.Close()
 
-	var result any
+	if res.IsError() {
+		// Try to extract error message from response
+		var esErr json.RawMessage
+		err = util.DecodeJSON(res.Body, &esErr)
+		if err != nil {
+			return nil, fmt.Errorf("elasticsearch error: status %s", res.Status())
+		}
+		return esErr, nil
+	}
+
+	var result struct {
+		Values json.RawMessage `json:"values"`
+	}
 	err = util.DecodeJSON(res.Body, &result)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode response body: %w", err)
 	}
 
-	return result, nil
+	return result.Values, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
