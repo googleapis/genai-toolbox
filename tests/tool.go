@@ -385,7 +385,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 		{
 			name:          "Invoke my-auth-required-tool with auth token",
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
-			enabled:       true,
+			enabled:       configs.supportSelect1Auth,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 

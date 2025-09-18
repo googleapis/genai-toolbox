@@ -140,7 +140,7 @@ func getCassandraVars() map[string]any {
 }
 
 func dropTable(session *gocql.Session, tableName string) {
-	err := session.Query(fmt.Sprintf("drop table %s", tableName)).Exec()
+	err := session.Query(fmt.Sprintf("drop table example_keyspace.%s", tableName)).Exec()
 	if err != nil {
 		log.Printf("Failed to drop table %s: %v", tableName, err)
 	}
