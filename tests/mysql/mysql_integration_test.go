@@ -139,4 +139,3 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	tests.RunMySQLListActiveQueriesTest(t, ctx, pool)
 	tests.RunMySQLListTableFragmentationTest(t, MySQLDatabase, tableNameParam, tableNameAuth)
 }
-
