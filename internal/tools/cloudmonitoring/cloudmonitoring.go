@@ -44,11 +44,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name             string   `yaml:"name" validate:"required"`
-	Kind             string   `yaml:"kind" validate:"required"`
-	Source       string            `yaml:"source" validate:"required"`
-	Description      string   `yaml:"description" validate:"required"`
-	AuthRequired     []string `yaml:"authRequired"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description" validate:"required"`
+	AuthRequired []string `yaml:"authRequired"`
 }
 
 // validate interface
@@ -81,9 +81,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Name:        cfg.Name,
 		Kind:        kind,
 		Description: cfg.Description,
-		AllParams:      allParameters,
-		BaseURL: s.BaseURL,
-		UserAgent: s.UserAgent,
+		AllParams:   allParameters,
+		BaseURL:     s.BaseURL,
+		UserAgent:   s.UserAgent,
 		Client:      s.Client,
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest()},
 		mcpManifest: tools.McpManifest{Name: cfg.Name, Description: cfg.Description, InputSchema: allParameters.McpManifest()},
@@ -94,12 +94,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name        string   `yaml:"name"`
-	Kind        string   `yaml:"kind"`
-	Description string   `yaml:"description"`
-	AllParams      tools.Parameters `yaml:"allParams"`
-	BaseURL string            `yaml:"baseURL"`
-	UserAgent      string
+	Name        string           `yaml:"name"`
+	Kind        string           `yaml:"kind"`
+	Description string           `yaml:"description"`
+	AllParams   tools.Parameters `yaml:"allParams"`
+	BaseURL     string           `yaml:"baseURL"`
+	UserAgent   string
 	Client      *http.Client
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
