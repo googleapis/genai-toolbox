@@ -274,7 +274,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 				if msg, ok := t.generateAlloyDBConnectionMessage(map[string]any{"response": op.Response}); ok {
 					return msg, nil
 				}
-				
+
 				return string(opBytes), nil
 			}
 			fmt.Printf("Operation not complete, retrying in %v\n", delay)
