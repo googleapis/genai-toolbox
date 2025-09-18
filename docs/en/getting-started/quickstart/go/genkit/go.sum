@@ -42,6 +42,8 @@ github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2
 github.com/felixge/httpsnoop v1.0.4/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
 github.com/firebase/genkit/go v0.6.2 h1:FaVJtcprfXZz0gXTtARJqUiovu/R2wuJycNn/18aNMc=
 github.com/firebase/genkit/go v0.6.2/go.mod h1:blRYK6oNgwBDX6F+gInACru6q527itviv+xruiMSUuU=
+github.com/firebase/genkit/go v1.0.4 h1:uP4LyfULeVZrkwcTIHUZ+XIOIh1loWXvIv22+RrgLLM=
+github.com/firebase/genkit/go v1.0.4/go.mod h1:GabAxvHNs9ZSvmaK5bfZe2NkTsGP544/baVFegXq4aU=
 github.com/go-jose/go-jose/v4 v4.1.0 h1:cYSYxd3pw5zd2FSXk2vGdn9igQU2PS8MuxrCOCl0FdY=
 github.com/go-jose/go-jose/v4 v4.1.0/go.mod h1:GG/vqmYm3Von2nYiB2vGTXzdoNKE5tix5tuc6iAd+sw=
 github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
@@ -101,6 +103,8 @@ github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 h1:EzJWgHo
 github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415/go.mod h1:GwrjFmJcFw6At/Gs6z4yjiIwzuJ1/+UwLxMQDVQXShQ=
 github.com/xeipuuv/gojsonschema v1.2.0 h1:LhYJRs+L4fBtjZUfuSZIKGeVu0QRy8e5Xi7D17UxZ74=
 github.com/xeipuuv/gojsonschema v1.2.0/go.mod h1:anYRn/JVcOK2ZgGU+IjEV4nwlhoK5sQluxsYJ78Id3Y=
+github.com/yosida95/uritemplate/v3 v3.0.2 h1:Ed3Oyj9yrmi9087+NczuL5BwkIc4wvTb5zIM+UJPGz4=
+github.com/yosida95/uritemplate/v3 v3.0.2/go.mod h1:ILOh0sOhIJR3+L/8afwt/kE++YT040gmv5BQTMR2HP4=
 github.com/zeebo/errs v1.4.0 h1:XNdoD/RRMKP7HD0UhJnIzUy74ISdGGxURlYG8HSWSfM=
 github.com/zeebo/errs v1.4.0/go.mod h1:sgbWHsvVuTPHcqJJGQ1WhI5KbWlHYz+2+2C/LSEtCw4=
 go.opentelemetry.io/auto/sdk v1.1.0 h1:cH53jehLUN6UFLY71z+NDOiNJqDdPRaXzTel0sJySYA=
@@ -141,6 +145,8 @@ google.golang.org/api v0.248.0 h1:hUotakSkcwGdYUqzCRc5yGYsg4wXxpkKlW5ryVqvC1Y=
 google.golang.org/api v0.248.0/go.mod h1:yAFUAF56Li7IuIQbTFoLwXTCI6XCFKueOlS7S9e4F9k=
 google.golang.org/genai v1.11.1 h1:MgI2JVDaIQ1YMuzKFwgPciB+K6kQ8MCBMVL9u7Oa8qw=
 google.golang.org/genai v1.11.1/go.mod h1:HFXR1zT3LCdLxd/NW6IOSCczOYyRAxwaShvYbgPSeVw=
+google.golang.org/genai v1.24.0 h1:j5lt+Qr7W0+OBxwwEPe4DQ+ygEqpvZuSBvYoHIuUjhg=
+google.golang.org/genai v1.24.0/go.mod h1:QPj5NGJw+3wEOHg+PrsWwJKvG6UC84ex5FR7qAYsN/M=
 google.golang.org/genproto v0.0.0-20250603155806-513f23925822 h1:rHWScKit0gvAPuOnu87KpaYtjK5zBMLcULh7gxkCXu4=
 google.golang.org/genproto v0.0.0-20250603155806-513f23925822/go.mod h1:HubltRL7rMh0LfnQPkMH4NPDFEWp0jw3vixw7jEM53s=
 google.golang.org/genproto/googleapis/api v0.0.0-20250818200422-3122310a409c h1:AtEkQdl5b6zsybXcbz00j1LwNodDuH6hVifIaNqk7NQ=
