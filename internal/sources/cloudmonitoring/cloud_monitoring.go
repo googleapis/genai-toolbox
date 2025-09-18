@@ -121,7 +121,7 @@ var _ sources.Source = &Source{}
 type Source struct {
 	Name           string `yaml:"name"`
 	Kind           string `yaml:"kind"`
-	BaseURL        string            `yaml:"baseUrl"`
+	BaseURL        string `yaml:"baseUrl"`
 	Client         *http.Client
 	UserAgent      string
 	UseClientOAuth bool

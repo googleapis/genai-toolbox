@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mssqllisttables_test
+package mysqllisttablesmissinguniqueindexes_test
 
 import (
 	"testing"
@@ -21,10 +21,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	mssqllisttables "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqllisttables"
+	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttablesmissinguniqueindexes"
 )
 
-func TestParseFromYamlmssqlListTables(t *testing.T) {
+func TestParseFromYamlExecuteSql(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -39,18 +39,18 @@ func TestParseFromYamlmssqlListTables(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mssql-list-tables
-					source: my-mssql-instance
+					kind: mysql-list-tables-missing-unique-indexes
+					source: my-instance
 					description: some description
 					authRequired:
 						- my-google-auth-service
 						- other-auth-service
 			`,
 			want: server.ToolConfigs{
-				"example_tool": mssqllisttables.Config{
+				"example_tool": mysqllisttablesmissinguniqueindexes.Config{
 					Name:         "example_tool",
-					Kind:         "mssql-list-tables",
-					Source:       "my-mssql-instance",
+					Kind:         "mysql-list-tables-missing-unique-indexes",
+					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 				},
