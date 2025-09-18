@@ -6095,19 +6095,22 @@ to a database by following these instructions][csql-mysql-quickstart].
 ## Available Tools
 
 - [`mysql-sql`](../tools/mysql/mysql-sql.md)
-  Execute pre-defined prepared SQL queries in MySQL.
+  Execute pre-defined prepared SQL queries in Cloud SQL for MySQL.
 
 - [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)
   Run parameterized SQL queries in Cloud SQL for MySQL.
 
 - [`mysql-list-active-queries`](../tools/mysql/mysql-list-active-queries.md)
-  List active queries in MySQL.
+  List active queries in Cloud SQL for MySQL.
 
 - [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)
   List tables in a Cloud SQL for MySQL database.
 
+- [`mysql-list-tables-missing-unique-indexes`](../tools/mysql/mysql-list-tables-missing-unique-indexes.md)
+  List tables in a Cloud SQL for MySQL database that do not have primary or unique indices.
+
 - [`mysql-list-table-fragmentation`](../tools/mysql/mysql-list-table-fragmentation.md)
-  List table fragmentation in MySQL tables.
+  List table fragmentation in Cloud SQL for MySQL tables.
 
 ### Pre-built Configurations
 
@@ -7234,6 +7237,9 @@ reliability, performance, and ease of use.
 
 - [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)
   List tables in a MySQL database.
+
+- [`mysql-list-tables-missing-unique-indexes`](../tools/mysql/mysql-list-tables-missing-unique-indexes.md)
+  List tables in a MySQL database that do not have primary or unique indices.
 
 - [`mysql-list-table-fragmentation`](../tools/mysql/mysql-list-table-fragmentation.md)
   List table fragmentation in MySQL tables.
@@ -10469,18 +10475,20 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 ## AlloyDB Postgres Admin
 
 * `--prebuilt` value: `alloydb-postgres-admin`
-*   **Environment Variables:**
-    *   `API_KEY`: Your API key for the AlloyDB API.
 *   **Permissions:**
-    *   **AlloyDB Admin** (`roles/alloydb.admin`) IAM role is required on the project.
+    *   **AlloyDB Viewer** (`roles/alloydb.viewer`) is required for `list` and `get` tools.
+    *   **AlloyDB Admin** (`roles/alloydb.admin`) is required for `create` tools.
 *   **Tools:**
-    *   `alloydb-create-cluster`: Creates a new AlloyDB cluster.
-    *   `alloydb-operations-get`: Polls the operations API to track the status of long-running operations.
-    *   `alloydb-create-instance`: Creates a new AlloyDB instance within a cluster.
-    *   `alloydb-list-clusters`: Lists all AlloyDB clusters in a project.
-    *   `alloydb-list-instances`: Lists all instances within an AlloyDB cluster.
-    *   `alloydb-list-users`: Lists all database users within an AlloyDB cluster.
-    *   `alloydb-create-user`: Creates a new database user in an AlloyDB cluster.
+    *   `create_cluster`: Creates a new AlloyDB cluster.
+    *   `list_clusters`: Lists all AlloyDB clusters in a project.
+    *   `get_cluster`: Gets information about a specified AlloyDB cluster.
+    *   `create_instance`: Creates a new AlloyDB instance within a cluster.
+    *   `list_instances`: Lists all instances within an AlloyDB cluster.
+    *   `get_instance`: Gets information about a specified AlloyDB instance.
+    *   `create_user`: Creates a new database user in an AlloyDB cluster.
+    *   `list_users`: Lists all database users within an AlloyDB cluster.
+    *   `get_user`: Gets information about a specified database user in an AlloyDB cluster.
+    *   `wait_for_operation`: Polls the operations API to track the status of long-running operations.
 
 ## AlloyDB Postgres Observability
 
@@ -10542,6 +10550,31 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `get_system_metrics`: Fetches system level cloud monitoring data (timeseries metrics) for a MySQL instance using a PromQL query.
     *   `get_query_metrics`: Fetches query level cloud monitoring data (timeseries metrics) for queries running in a MySQL instance using a PromQL query.
 
+## Cloud SQL for MySQL Admin
+
+*   `--prebuilt` value: `cloud-sql-mysql-admin`
+*   **Permissions:**
+    *   **Cloud SQL Viewer** (`roles/cloudsql.viewer`): Provides read-only access to resources.
+        * `get_instance`
+        * `list_instances`
+        * `list_databases`
+        * `wait_for_operation`
+    *   **Cloud SQL Editor** (`roles/cloudsql.editor`): Provides permissions to manage existing resources.
+        * All `viewer` tools
+        * `create_database`
+    *   **Cloud SQL Admin** (`roles/cloudsql.admin`): Provides full control over all resources.
+        * All `editor` and `viewer` tools
+        * `create_instance`
+        * `create_user`
+*   **Tools:**
+    *   `create_instance`: Creates a new Cloud SQL for MySQL instance.
+    *   `get_instance`: Gets information about a Cloud SQL instance.
+    *   `list_instances`: Lists Cloud SQL instances in a project.
+    *   `create_database`: Creates a new database in a Cloud SQL instance.
+    *   `list_databases`: Lists all databases for a Cloud SQL instance.
+    *   `create_user`: Creates a new user in a Cloud SQL instance.
+    *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
+
 ## Cloud SQL for PostgreSQL
 
 *   `--prebuilt` value: `cloud-sql-postgres`
@@ -10575,6 +10608,31 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `get_system_metrics`: Fetches system level cloud monitoring data (timeseries metrics) for a Postgres instance using a PromQL query.
     *   `get_query_metrics`: Fetches query level cloud monitoring data (timeseries metrics) for queries running in Postgres instance using a PromQL query.
 
+## Cloud SQL for PostgreSQL Admin
+
+*   `--prebuilt` value: `cloud-sql-postgres-admin`
+*   **Permissions:**
+    *   **Cloud SQL Viewer** (`roles/cloudsql.viewer`): Provides read-only access to resources.
+        * `get_instance`
+        * `list_instances`
+        * `list_databases`
+        * `wait_for_operation`
+    *   **Cloud SQL Editor** (`roles/cloudsql.editor`): Provides permissions to manage existing resources.
+        * All `viewer` tools
+        * `create_database`
+    *   **Cloud SQL Admin** (`roles/cloudsql.admin`): Provides full control over all resources.
+        * All `editor` and `viewer` tools
+        * `create_instance`
+        * `create_user`
+*   **Tools:**
+    *   `create_instance`: Creates a new Cloud SQL for PostgreSQL instance.
+    *   `get_instance`: Gets information about a Cloud SQL instance.
+    *   `list_instances`: Lists Cloud SQL instances in a project.
+    *   `create_database`: Creates a new database in a Cloud SQL instance.
+    *   `list_databases`: Lists all databases for a Cloud SQL instance.
+    *   `create_user`: Creates a new user in a Cloud SQL instance.
+    *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
+
 ## Cloud SQL for SQL Server
 
 *   `--prebuilt` value: `cloud-sql-mssql`
@@ -10602,6 +10660,31 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Tools:**
     *   `get_system_metrics`: Fetches system level cloud monitoring data (timeseries metrics) for a SQL Server instance using a PromQL query.
 
+## Cloud SQL for SQL Server Admin
+
+*   `--prebuilt` value: `cloud-sql-mssql-admin`
+*   **Permissions:**
+    *   **Cloud SQL Viewer** (`roles/cloudsql.viewer`): Provides read-only access to resources.
+        * `get_instance`
+        * `list_instances`
+        * `list_databases`
+        * `wait_for_operation`
+    *   **Cloud SQL Editor** (`roles/cloudsql.editor`): Provides permissions to manage existing resources.
+        * All `viewer` tools
+        * `create_database`
+    *   **Cloud SQL Admin** (`roles/cloudsql.admin`): Provides full control over all resources.
+        * All `editor` and `viewer` tools
+        * `create_instance`
+        * `create_user`
+*   **Tools:**
+    *   `create_instance`: Creates a new Cloud SQL for SQL Server instance.
+    *   `get_instance`: Gets information about a Cloud SQL instance.
+    *   `list_instances`: Lists Cloud SQL instances in a project.
+    *   `create_database`: Creates a new database in a Cloud SQL instance.
+    *   `list_databases`: Lists all databases for a Cloud SQL instance.
+    *   `create_user`: Creates a new user in a Cloud SQL instance.
+    *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
+
 ## Dataplex
 
 *   `--prebuilt` value: `dataplex`
@@ -10625,12 +10708,14 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   **Cloud Datastore User** (`roles/datastore.user`) to get documents, list collections, and query collections.
     *   **Firebase Rules Viewer** (`roles/firebaserules.viewer`) to get and validate Firestore rules.
 *   **Tools:**
-    *   `firestore-get-documents`: Gets multiple documents from Firestore by their paths.
-    *   `firestore-list-collections`: Lists Firestore collections for a given parent path.
-    *   `firestore-delete-documents`: Deletes multiple documents from Firestore.
-    *   `firestore-query-collection`: Retrieves one or more Firestore documents from a collection.
-    *   `firestore-get-rules`: Retrieves the active Firestore security rules.
-    *   `firestore-validate-rules`: Checks the provided Firestore Rules source for syntax and validation errors.
+    *   `get_documents`: Gets multiple documents from Firestore by their paths.
+    *   `add_documents`: Adds a new document to a Firestore collection.
+    *   `update_document`: Updates an existing document in Firestore.
+    *   `list_collections`: Lists Firestore collections for a given parent path.
+    *   `delete_documents`: Deletes multiple documents from Firestore.
+    *   `query_collection`: Retrieves one or more Firestore documents from a collection.
+    *   `get_rules`: Retrieves the active Firestore security rules.
+    *   `validate_rules`: Checks the provided Firestore Rules source for syntax and validation errors.
 
 ## Looker
 

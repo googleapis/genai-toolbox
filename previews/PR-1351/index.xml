@@ -1159,15 +1159,11 @@ to a database by following these instructions&lt;/a>.&lt;/p>
 &lt;ul>
 &lt;li>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/mysql/mysql-sql/">&lt;code>mysql-sql&lt;/code>&lt;/a>
-Execute pre-defined prepared SQL queries in MySQL.&lt;/p>
+Execute pre-defined prepared SQL queries in Cloud SQL for MySQL.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/mysql/mysql-execute-sql/">&lt;code>mysql-execute-sql&lt;/code>&lt;/a>
-Run parameterized SQL queries in Cloud SQL for MySQL.&lt;/p>
-&lt;/li>
-&lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/mysql/mysql-list-active-queries/">&lt;code>mysql-list-active-queries&lt;/code>&lt;/a>
-List active queries in MySQL.&lt;/p></description></item><item><title>Cloud SQL for PostgreSQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/sources/cloud-sql-pg/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/sources/cloud-sql-pg/</guid><description>&lt;h2 id="about">About&lt;/h2>
+Run parameterized SQL queries in Cloud SQL for MySQL.&lt;/p></description></item><item><title>Cloud SQL for PostgreSQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/sources/cloud-sql-pg/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/sources/cloud-sql-pg/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://cloud.google.com/sql/docs/postgres">Cloud SQL for PostgreSQL&lt;/a> is a fully-managed database service
 that helps you set up, maintain, manage, and administer your PostgreSQL
 relational databases on Google Cloud Platform.&lt;/p>
@@ -3776,14 +3772,8 @@ List active queries in MySQL.&lt;/p>
 List tables in a MySQL database.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/mysql/mysql-list-table-fragmentation/">&lt;code>mysql-list-table-fragmentation&lt;/code>&lt;/a>
-List table fragmentation in MySQL tables.&lt;/p>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="requirements">Requirements&lt;/h2>
-&lt;h3 id="database-user">Database User&lt;/h3>
-&lt;p>This source only uses standard authentication. You will need to &lt;a href="https://dev.mysql.com/doc/refman/8.4/en/user-names.html">create a
-MySQL user&lt;/a> to login to the database with.&lt;/p></description></item><item><title>mysql-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/mysql/mysql-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/mysql/mysql-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/mysql/mysql-list-tables-missing-unique-indexes/">&lt;code>mysql-list-tables-missing-unique-indexes&lt;/code>&lt;/a>
+List tables in a MySQL database that do not have primary or unique indices.&lt;/p></description></item><item><title>mysql-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/mysql/mysql-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/mysql/mysql-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>mysql-execute-sql&lt;/code> tool executes a SQL statement against a MySQL
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
@@ -3862,7 +3852,24 @@ This tool takes 4 optional input parameters:&lt;/p></description></item><item><t
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/sources/mysql/">mysql&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>mysql-list-tables&lt;/code> lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, it lists all tables in user schemas. The output format can be set to &lt;code>simple&lt;/code> which will return only the table names or &lt;code>detailed&lt;/code> which is the default.&lt;/p></description></item><item><title>mysql-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/mysql/mysql-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/mysql/mysql-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;code>mysql-list-tables&lt;/code> lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, it lists all tables in user schemas. The output format can be set to &lt;code>simple&lt;/code> which will return only the table names or &lt;code>detailed&lt;/code> which is the default.&lt;/p></description></item><item><title>mysql-list-tables-missing-unique-indexes</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/mysql/mysql-list-tables-missing-unique-indexes/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/mysql/mysql-list-tables-missing-unique-indexes/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mysql-list-tables-missing-unique-indexes&lt;/code> tool searches tables that do not have primary or unique indices in a MySQL database. It&amp;rsquo;s compatible with:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/sources/mysql/">mysql&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>mysql-list-tables-missing-unique-indexes&lt;/code> outputs table names, including &lt;code>table_schema&lt;/code> and &lt;code>table_name&lt;/code> in JSON format. It takes 2 optional input parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>table_schema&lt;/code> (optional): Only check tables in this specific schema/database. Search all visible tables in all visible databases if not specified.&lt;/li>
+&lt;li>&lt;code>limit&lt;/code> (optional): max number of queries to return, default &lt;code>50&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_tables_missing_unique_indexes&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">mysql-list-tables-missing-unique-indexes&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-mysql-instance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Find tables that do not have primary or unique key constraint. A primary key or unique key is the only mechanism that guaranttes a row is unique. Without them, the database-level protection against data integrity issues will be missing.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following fields:&lt;/p></description></item><item><title>mysql-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/mysql/mysql-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/mysql/mysql-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>mysql-sql&lt;/code> tool executes a pre-defined SQL statement against a MySQL
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
@@ -4213,25 +4220,24 @@ List available extensions for installation in a PostgreSQL database.&lt;/p></des
 &lt;h2 id="alloydb-postgres-admin">AlloyDB Postgres Admin&lt;/h2>
 &lt;ul>
 &lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>alloydb-postgres-admin&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>API_KEY&lt;/code>: Your API key for the AlloyDB API.&lt;/li>
-&lt;/ul>
-&lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;strong>AlloyDB Admin&lt;/strong> (&lt;code>roles/alloydb.admin&lt;/code>) IAM role is required on the project.&lt;/li>
+&lt;li>&lt;strong>AlloyDB Viewer&lt;/strong> (&lt;code>roles/alloydb.viewer&lt;/code>) is required for &lt;code>list&lt;/code> and &lt;code>get&lt;/code> tools.&lt;/li>
+&lt;li>&lt;strong>AlloyDB Admin&lt;/strong> (&lt;code>roles/alloydb.admin&lt;/code>) is required for &lt;code>create&lt;/code> tools.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;code>alloydb-create-cluster&lt;/code>: Creates a new AlloyDB cluster.&lt;/li>
-&lt;li>&lt;code>alloydb-operations-get&lt;/code>: Polls the operations API to track the status of long-running operations.&lt;/li>
-&lt;li>&lt;code>alloydb-create-instance&lt;/code>: Creates a new AlloyDB instance within a cluster.&lt;/li>
-&lt;li>&lt;code>alloydb-list-clusters&lt;/code>: Lists all AlloyDB clusters in a project.&lt;/li>
-&lt;li>&lt;code>alloydb-list-instances&lt;/code>: Lists all instances within an AlloyDB cluster.&lt;/li>
-&lt;li>&lt;code>alloydb-list-users&lt;/code>: Lists all database users within an AlloyDB cluster.&lt;/li>
-&lt;li>&lt;code>alloydb-create-user&lt;/code>: Creates a new database user in an AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>create_cluster&lt;/code>: Creates a new AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>list_clusters&lt;/code>: Lists all AlloyDB clusters in a project.&lt;/li>
+&lt;li>&lt;code>get_cluster&lt;/code>: Gets information about a specified AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>create_instance&lt;/code>: Creates a new AlloyDB instance within a cluster.&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>: Lists all instances within an AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>get_instance&lt;/code>: Gets information about a specified AlloyDB instance.&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>: Creates a new database user in an AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>list_users&lt;/code>: Lists all database users within an AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>get_user&lt;/code>: Gets information about a specified database user in an AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>: Polls the operations API to track the status of long-running operations.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -4325,6 +4331,46 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
+&lt;h2 id="cloud-sql-for-mysql-admin">Cloud SQL for MySQL Admin&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mysql-admin&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Cloud SQL Viewer&lt;/strong> (&lt;code>roles/cloudsql.viewer&lt;/code>): Provides read-only access to resources.
+&lt;ul>
+&lt;li>&lt;code>get_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Editor&lt;/strong> (&lt;code>roles/cloudsql.editor&lt;/code>): Provides permissions to manage existing resources.
+&lt;ul>
+&lt;li>All &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Admin&lt;/strong> (&lt;code>roles/cloudsql.admin&lt;/code>): Provides full control over all resources.
+&lt;ul>
+&lt;li>All &lt;code>editor&lt;/code> and &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>create_instance&lt;/code>: Creates a new Cloud SQL for MySQL instance.&lt;/li>
+&lt;li>&lt;code>get_instance&lt;/code>: Gets information about a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>: Lists Cloud SQL instances in a project.&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>: Creates a new database in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>: Lists all databases for a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>: Creates a new user in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>: Waits for a Cloud SQL operation to complete.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
 &lt;h2 id="cloud-sql-for-postgresql">Cloud SQL for PostgreSQL&lt;/h2>
 &lt;ul>
 &lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-postgres&lt;/code>&lt;/li>
@@ -4373,6 +4419,46 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
+&lt;h2 id="cloud-sql-for-postgresql-admin">Cloud SQL for PostgreSQL Admin&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-postgres-admin&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Cloud SQL Viewer&lt;/strong> (&lt;code>roles/cloudsql.viewer&lt;/code>): Provides read-only access to resources.
+&lt;ul>
+&lt;li>&lt;code>get_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Editor&lt;/strong> (&lt;code>roles/cloudsql.editor&lt;/code>): Provides permissions to manage existing resources.
+&lt;ul>
+&lt;li>All &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Admin&lt;/strong> (&lt;code>roles/cloudsql.admin&lt;/code>): Provides full control over all resources.
+&lt;ul>
+&lt;li>All &lt;code>editor&lt;/code> and &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>create_instance&lt;/code>: Creates a new Cloud SQL for PostgreSQL instance.&lt;/li>
+&lt;li>&lt;code>get_instance&lt;/code>: Gets information about a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>: Lists Cloud SQL instances in a project.&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>: Creates a new database in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>: Lists all databases for a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>: Creates a new user in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>: Waits for a Cloud SQL operation to complete.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
 &lt;h2 id="cloud-sql-for-sql-server">Cloud SQL for SQL Server&lt;/h2>
 &lt;ul>
 &lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mssql&lt;/code>&lt;/li>
@@ -4415,6 +4501,46 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
+&lt;h2 id="cloud-sql-for-sql-server-admin">Cloud SQL for SQL Server Admin&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mssql-admin&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Cloud SQL Viewer&lt;/strong> (&lt;code>roles/cloudsql.viewer&lt;/code>): Provides read-only access to resources.
+&lt;ul>
+&lt;li>&lt;code>get_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Editor&lt;/strong> (&lt;code>roles/cloudsql.editor&lt;/code>): Provides permissions to manage existing resources.
+&lt;ul>
+&lt;li>All &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Admin&lt;/strong> (&lt;code>roles/cloudsql.admin&lt;/code>): Provides full control over all resources.
+&lt;ul>
+&lt;li>All &lt;code>editor&lt;/code> and &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>create_instance&lt;/code>: Creates a new Cloud SQL for SQL Server instance.&lt;/li>
+&lt;li>&lt;code>get_instance&lt;/code>: Gets information about a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>: Lists Cloud SQL instances in a project.&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>: Creates a new database in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>: Lists all databases for a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>: Creates a new user in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>: Waits for a Cloud SQL operation to complete.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
 &lt;h2 id="dataplex">Dataplex&lt;/h2>
 &lt;ul>
 &lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>dataplex&lt;/code>&lt;/li>
@@ -4454,12 +4580,14 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;code>firestore-get-documents&lt;/code>: Gets multiple documents from Firestore by their paths.&lt;/li>
-&lt;li>&lt;code>firestore-list-collections&lt;/code>: Lists Firestore collections for a given parent path.&lt;/li>
-&lt;li>&lt;code>firestore-delete-documents&lt;/code>: Deletes multiple documents from Firestore.&lt;/li>
-&lt;li>&lt;code>firestore-query-collection&lt;/code>: Retrieves one or more Firestore documents from a collection.&lt;/li>
-&lt;li>&lt;code>firestore-get-rules&lt;/code>: Retrieves the active Firestore security rules.&lt;/li>
-&lt;li>&lt;code>firestore-validate-rules&lt;/code>: Checks the provided Firestore Rules source for syntax and validation errors.&lt;/li>
+&lt;li>&lt;code>get_documents&lt;/code>: Gets multiple documents from Firestore by their paths.&lt;/li>
+&lt;li>&lt;code>add_documents&lt;/code>: Adds a new document to a Firestore collection.&lt;/li>
+&lt;li>&lt;code>update_document&lt;/code>: Updates an existing document in Firestore.&lt;/li>
+&lt;li>&lt;code>list_collections&lt;/code>: Lists Firestore collections for a given parent path.&lt;/li>
+&lt;li>&lt;code>delete_documents&lt;/code>: Deletes multiple documents from Firestore.&lt;/li>
+&lt;li>&lt;code>query_collection&lt;/code>: Retrieves one or more Firestore documents from a collection.&lt;/li>
+&lt;li>&lt;code>get_rules&lt;/code>: Retrieves the active Firestore security rules.&lt;/li>
+&lt;li>&lt;code>validate_rules&lt;/code>: Checks the provided Firestore Rules source for syntax and validation errors.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>

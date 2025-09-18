@@ -148,25 +148,24 @@
 &lt;h2 id="alloydb-postgres-admin">AlloyDB Postgres Admin&lt;/h2>
 &lt;ul>
 &lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>alloydb-postgres-admin&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>API_KEY&lt;/code>: Your API key for the AlloyDB API.&lt;/li>
-&lt;/ul>
-&lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;strong>AlloyDB Admin&lt;/strong> (&lt;code>roles/alloydb.admin&lt;/code>) IAM role is required on the project.&lt;/li>
+&lt;li>&lt;strong>AlloyDB Viewer&lt;/strong> (&lt;code>roles/alloydb.viewer&lt;/code>) is required for &lt;code>list&lt;/code> and &lt;code>get&lt;/code> tools.&lt;/li>
+&lt;li>&lt;strong>AlloyDB Admin&lt;/strong> (&lt;code>roles/alloydb.admin&lt;/code>) is required for &lt;code>create&lt;/code> tools.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;code>alloydb-create-cluster&lt;/code>: Creates a new AlloyDB cluster.&lt;/li>
-&lt;li>&lt;code>alloydb-operations-get&lt;/code>: Polls the operations API to track the status of long-running operations.&lt;/li>
-&lt;li>&lt;code>alloydb-create-instance&lt;/code>: Creates a new AlloyDB instance within a cluster.&lt;/li>
-&lt;li>&lt;code>alloydb-list-clusters&lt;/code>: Lists all AlloyDB clusters in a project.&lt;/li>
-&lt;li>&lt;code>alloydb-list-instances&lt;/code>: Lists all instances within an AlloyDB cluster.&lt;/li>
-&lt;li>&lt;code>alloydb-list-users&lt;/code>: Lists all database users within an AlloyDB cluster.&lt;/li>
-&lt;li>&lt;code>alloydb-create-user&lt;/code>: Creates a new database user in an AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>create_cluster&lt;/code>: Creates a new AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>list_clusters&lt;/code>: Lists all AlloyDB clusters in a project.&lt;/li>
+&lt;li>&lt;code>get_cluster&lt;/code>: Gets information about a specified AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>create_instance&lt;/code>: Creates a new AlloyDB instance within a cluster.&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>: Lists all instances within an AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>get_instance&lt;/code>: Gets information about a specified AlloyDB instance.&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>: Creates a new database user in an AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>list_users&lt;/code>: Lists all database users within an AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>get_user&lt;/code>: Gets information about a specified database user in an AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>: Polls the operations API to track the status of long-running operations.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -260,6 +259,46 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
+&lt;h2 id="cloud-sql-for-mysql-admin">Cloud SQL for MySQL Admin&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mysql-admin&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Cloud SQL Viewer&lt;/strong> (&lt;code>roles/cloudsql.viewer&lt;/code>): Provides read-only access to resources.
+&lt;ul>
+&lt;li>&lt;code>get_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Editor&lt;/strong> (&lt;code>roles/cloudsql.editor&lt;/code>): Provides permissions to manage existing resources.
+&lt;ul>
+&lt;li>All &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Admin&lt;/strong> (&lt;code>roles/cloudsql.admin&lt;/code>): Provides full control over all resources.
+&lt;ul>
+&lt;li>All &lt;code>editor&lt;/code> and &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>create_instance&lt;/code>: Creates a new Cloud SQL for MySQL instance.&lt;/li>
+&lt;li>&lt;code>get_instance&lt;/code>: Gets information about a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>: Lists Cloud SQL instances in a project.&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>: Creates a new database in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>: Lists all databases for a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>: Creates a new user in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>: Waits for a Cloud SQL operation to complete.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
 &lt;h2 id="cloud-sql-for-postgresql">Cloud SQL for PostgreSQL&lt;/h2>
 &lt;ul>
 &lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-postgres&lt;/code>&lt;/li>
@@ -308,6 +347,46 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
+&lt;h2 id="cloud-sql-for-postgresql-admin">Cloud SQL for PostgreSQL Admin&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-postgres-admin&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Cloud SQL Viewer&lt;/strong> (&lt;code>roles/cloudsql.viewer&lt;/code>): Provides read-only access to resources.
+&lt;ul>
+&lt;li>&lt;code>get_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Editor&lt;/strong> (&lt;code>roles/cloudsql.editor&lt;/code>): Provides permissions to manage existing resources.
+&lt;ul>
+&lt;li>All &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Admin&lt;/strong> (&lt;code>roles/cloudsql.admin&lt;/code>): Provides full control over all resources.
+&lt;ul>
+&lt;li>All &lt;code>editor&lt;/code> and &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>create_instance&lt;/code>: Creates a new Cloud SQL for PostgreSQL instance.&lt;/li>
+&lt;li>&lt;code>get_instance&lt;/code>: Gets information about a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>: Lists Cloud SQL instances in a project.&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>: Creates a new database in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>: Lists all databases for a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>: Creates a new user in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>: Waits for a Cloud SQL operation to complete.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
 &lt;h2 id="cloud-sql-for-sql-server">Cloud SQL for SQL Server&lt;/h2>
 &lt;ul>
 &lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mssql&lt;/code>&lt;/li>
@@ -350,6 +429,46 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
+&lt;h2 id="cloud-sql-for-sql-server-admin">Cloud SQL for SQL Server Admin&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mssql-admin&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Cloud SQL Viewer&lt;/strong> (&lt;code>roles/cloudsql.viewer&lt;/code>): Provides read-only access to resources.
+&lt;ul>
+&lt;li>&lt;code>get_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Editor&lt;/strong> (&lt;code>roles/cloudsql.editor&lt;/code>): Provides permissions to manage existing resources.
+&lt;ul>
+&lt;li>All &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Admin&lt;/strong> (&lt;code>roles/cloudsql.admin&lt;/code>): Provides full control over all resources.
+&lt;ul>
+&lt;li>All &lt;code>editor&lt;/code> and &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>create_instance&lt;/code>: Creates a new Cloud SQL for SQL Server instance.&lt;/li>
+&lt;li>&lt;code>get_instance&lt;/code>: Gets information about a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>: Lists Cloud SQL instances in a project.&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>: Creates a new database in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>: Lists all databases for a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>: Creates a new user in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>: Waits for a Cloud SQL operation to complete.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
 &lt;h2 id="dataplex">Dataplex&lt;/h2>
 &lt;ul>
 &lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>dataplex&lt;/code>&lt;/li>
@@ -389,12 +508,14 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;code>firestore-get-documents&lt;/code>: Gets multiple documents from Firestore by their paths.&lt;/li>
-&lt;li>&lt;code>firestore-list-collections&lt;/code>: Lists Firestore collections for a given parent path.&lt;/li>
-&lt;li>&lt;code>firestore-delete-documents&lt;/code>: Deletes multiple documents from Firestore.&lt;/li>
-&lt;li>&lt;code>firestore-query-collection&lt;/code>: Retrieves one or more Firestore documents from a collection.&lt;/li>
-&lt;li>&lt;code>firestore-get-rules&lt;/code>: Retrieves the active Firestore security rules.&lt;/li>
-&lt;li>&lt;code>firestore-validate-rules&lt;/code>: Checks the provided Firestore Rules source for syntax and validation errors.&lt;/li>
+&lt;li>&lt;code>get_documents&lt;/code>: Gets multiple documents from Firestore by their paths.&lt;/li>
+&lt;li>&lt;code>add_documents&lt;/code>: Adds a new document to a Firestore collection.&lt;/li>
+&lt;li>&lt;code>update_document&lt;/code>: Updates an existing document in Firestore.&lt;/li>
+&lt;li>&lt;code>list_collections&lt;/code>: Lists Firestore collections for a given parent path.&lt;/li>
+&lt;li>&lt;code>delete_documents&lt;/code>: Deletes multiple documents from Firestore.&lt;/li>
+&lt;li>&lt;code>query_collection&lt;/code>: Retrieves one or more Firestore documents from a collection.&lt;/li>
+&lt;li>&lt;code>get_rules&lt;/code>: Retrieves the active Firestore security rules.&lt;/li>
+&lt;li>&lt;code>validate_rules&lt;/code>: Checks the provided Firestore Rules source for syntax and validation errors.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
