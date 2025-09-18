@@ -1438,7 +1438,7 @@ func RunMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.
 	wg.Wait()
 }
 
-func RunMySQLListTableFragmentationTest(t *testing.T, tableNameParam, tableNameAuth string) {
+func RunMySQLListTableFragmentationTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string) {
 	type tableFragmentationDetails struct {
 		TableSchema             string `json:"table_schema"`
 		TableName               string `json:"table_name"`
@@ -1449,7 +1449,7 @@ func RunMySQLListTableFragmentationTest(t *testing.T, tableNameParam, tableNameA
 	}
 
 	paramTableEntryWanted := tableFragmentationDetails{
-		TableSchema:             MySQLDatabase,
+		TableSchema:             databaseName,
 		TableName:               tableNameParam,
 		DataSize:                any(nil),
 		IndexSize:               any(nil),
@@ -1457,7 +1457,7 @@ func RunMySQLListTableFragmentationTest(t *testing.T, tableNameParam, tableNameA
 		FragmentationPercentage: any(nil),
 	}
 	authTableEntryWanted := tableFragmentationDetails{
-		TableSchema:             MySQLDatabase,
+		TableSchema:             databaseName,
 		TableName:               tableNameAuth,
 		DataSize:                any(nil),
 		IndexSize:               any(nil),
@@ -1491,13 +1491,13 @@ func RunMySQLListTableFragmentationTest(t *testing.T, tableNameParam, tableNameA
 		},
 		{
 			name:           "invoke list_table_fragmentation on 1 database and 1 specific table name, no data_free threshold, expected to have 1 result",
-			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s", "table_name": "%s", "data_free_threshold_bytes": 0}`, MySQLDatabase, tableNameParam)),
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s", "table_name": "%s", "data_free_threshold_bytes": 0}`, databaseName, tableNameParam)),
 			wantStatusCode: http.StatusOK,
 			want:           []tableFragmentationDetails{paramTableEntryWanted},
 		},
 		{
 			name:           "invoke list_table_fragmentation on 1 database and 1 specific table name, high data_free threshold, expected to have 0 result",
-			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s", "table_name": "%s", "data_free_threshold_bytes": 1000000000}`, MySQLDatabase, tableNameParam)),
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s", "table_name": "%s", "data_free_threshold_bytes": 1000000000}`, databaseName, tableNameParam)),
 			wantStatusCode: http.StatusOK,
 			want:           []tableFragmentationDetails(nil),
 		},

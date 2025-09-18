@@ -32,11 +32,11 @@ import (
 var (
 	MySQLSourceKind = "mysql"
 	MySQLToolKind   = "mysql-sql"
-	MySQLDatabase                   = os.Getenv("MYSQL_DATABASE")
-	MySQLHost                       = os.Getenv("MYSQL_HOST")
-	MySQLPort                       = os.Getenv("MYSQL_PORT")
-	MySQLUser                       = os.Getenv("MYSQL_USER")
-	MySQLPass                       = os.Getenv("MYSQL_PASS")
+	MySQLDatabase   = os.Getenv("MYSQL_DATABASE")
+	MySQLHost       = os.Getenv("MYSQL_HOST")
+	MySQLPort       = os.Getenv("MYSQL_PORT")
+	MySQLUser       = os.Getenv("MYSQL_USER")
+	MySQLPass       = os.Getenv("MYSQL_PASS")
 )
 
 func getMySQLVars(t *testing.T) map[string]any {
@@ -137,6 +137,6 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	// Run specific MySQL tool tests
 	tests.RunMySQLListTablesTest(t, MySQLDatabase, tableNameParam, tableNameAuth)
 	tests.RunMySQLListActiveQueriesTest(t, ctx, pool)
-	tests.RunMySQLListTableFragmentationTest(t, tableNameParam, tableNameAuth)
+	tests.RunMySQLListTableFragmentationTest(t, MySQLDatabase, tableNameParam, tableNameAuth)
 }
 
