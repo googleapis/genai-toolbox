@@ -54,8 +54,8 @@ echo "${DISPLAY_NAME} total coverage: $total_coverage"
 coverage_numeric=$(echo "$total_coverage" | sed 's/%//')
 
 # Check coverage threshold
-if awk -v coverage="$coverage_numeric" 'BEGIN {exit !(coverage < 40)}'; then
-    echo "Coverage failure: ${DISPLAY_NAME} total coverage($total_coverage) is below 40%."
+if awk -v coverage="$coverage_numeric" 'BEGIN {exit !(coverage < 50)}'; then
+    echo "Coverage failure: ${DISPLAY_NAME} total coverage($total_coverage) is below 50%."
     exit 1
 else
     echo "Coverage for ${DISPLAY_NAME} is sufficient."
