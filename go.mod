@@ -16,7 +16,7 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.53.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.29.0
 	github.com/cenkalti/backoff/v5 v5.0.3
-	github.com/couchbase/gocb/v2 v2.11.0
+	github.com/couchbase/gocb/v2 v2.11.1
 	github.com/couchbase/tools-common/http v1.0.9
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-chi/chi/v5 v5.2.3
@@ -87,11 +87,11 @@ require (
 	github.com/apache/arrow/go/v15 v15.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20250501225837-2ac532fd4443 // indirect
-	github.com/couchbase/gocbcore/v10 v10.8.0 // indirect
-	github.com/couchbase/gocbcoreps v0.1.3 // indirect
+	github.com/couchbase/gocbcore/v10 v10.8.1 // indirect
+	github.com/couchbase/gocbcoreps v0.1.4 // indirect
 	github.com/couchbase/goprotostellar v1.0.2 // indirect
 	github.com/couchbase/tools-common/errors v1.0.0 // indirect
-	github.com/couchbaselabs/gocbconnstr/v2 v2.0.0-20240607131231-fb385523de28 // indirect
+	github.com/couchbaselabs/gocbconnstr/v2 v2.0.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4 // indirect
