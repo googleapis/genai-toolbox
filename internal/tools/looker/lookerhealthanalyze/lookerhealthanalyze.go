@@ -76,9 +76,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	actionParameter := tools.NewStringParameterWithRequired("action", "The analysis to run. Can be 'projects', 'models', or 'explores'.", true)
-	projectParameter := tools.NewStringParameter("project", "The Looker project to analyze (optional).")
-	modelParameter := tools.NewStringParameter("model", "The Looker model to analyze (optional).")
-	exploreParameter := tools.NewStringParameter("explore", "The Looker explore to analyze (optional).")
+	projectParameter := tools.NewStringParameterWithRequired("project", "The Looker project to analyze (optional).", false)
+	modelParameter := tools.NewStringParameterWithRequired("model", "The Looker model to analyze (optional).", false)
+	exploreParameter := tools.NewStringParameterWithRequired("explore", "The Looker explore to analyze (optional).", false)
 	timeframeParameter := tools.NewIntParameterWithDefault("timeframe", 90, "The timeframe in days to analyze.")
 	minQueriesParameter := tools.NewIntParameterWithDefault("min_queries", 0, "The minimum number of queries for a model or explore to be considered used.")
 

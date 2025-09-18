@@ -684,6 +684,20 @@ toolsFile := map[string]any{
 						"required":    false,
 						"type":        "string",
 					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The timeframe in days to analyze.",
+						"name":        "timeframe",
+						"required":    false,
+						"type":        "integer",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The minimum number of queries for a model or explore to be considered used.",
+						"name":        "min_queries",
+						"required":    false,
+						"type":        "integer",
+					},
 				},
 			},
 		},
@@ -775,12 +789,12 @@ toolsFile := map[string]any{
 	wantResult = "null"
 	tests.RunToolInvokeParametersTest(t, "get_dashboards", []byte(`{"title": "FOO", "desc": "BAR"}`), wantResult)
 
-	wantResult = "[]"
+	wantResult = "[{\"Connection\":\"thelook\""
 	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_db_connections"}`), wantResult)
 
-	wantResult = "\"Project\":\"system__activity\""
+	wantResult = "\"Project\":\"the_look\""
 	tests.RunToolInvokeParametersTest(t, "health_analyze", []byte(`{"action": "projects"}`), wantResult)
 
-	wantResult = "\"Model\":\"system__activity\""
+	wantResult = "\"Model\":\"the_look\""
 	tests.RunToolInvokeParametersTest(t, "health_vacuum", []byte(`{"action": "models"}`), wantResult)
 }

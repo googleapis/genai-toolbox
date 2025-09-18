@@ -31,6 +31,8 @@ The `looker-health-analyze` tool performs various analysis tasks on a Looker ins
 
 ## Example
 
+Analyze all models in `thelook` project.
+
 ```yaml
 tools:
   analyze-tool:
@@ -42,3 +44,20 @@ tools:
     parameters:
       action: models
       project: "thelook"
+
+Analyze all the explores in the `ecomm` model of `thelook` project. Specifically look at usage within the past 20 days. Usage minimum should be at least 10 queries.
+
+```yaml
+tools:
+  analyze-tool:
+    kind: looker-health-analyze
+    source: looker-source
+    description: |
+      Analyzes Looker projects, models, and explores.
+      Specify the `action` parameter to select the type of analysis.
+    parameters:
+      action: explores
+      project: "thelook"
+      model: "ecomm"
+      timeframe: 20
+      min_queries: 10
