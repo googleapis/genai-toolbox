@@ -227,6 +227,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	createModelQuery := bqClient.Query(createModelSQL)
 	createModelQuery.CreateSession = true
+	createModelQuery.Labels = map[string]string{"task": "create_model_contribution_analysis"}
 	createModelJob, err := createModelQuery.Run(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start create model job: %w", err)
@@ -247,6 +248,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	getInsightsSQL := fmt.Sprintf("SELECT * FROM ML.GET_INSIGHTS(MODEL %s)", modelID)
 
 	getInsightsQuery := bqClient.Query(getInsightsSQL)
+	getInsightsQuery.Labels = map[string]string{"task": "get_insights"}
 	getInsightsQuery.QueryConfig.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
 		{Key: "session_id", Value: sessionID},
 	}
