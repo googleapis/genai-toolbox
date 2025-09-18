@@ -43,6 +43,7 @@ import (
 
 	// Import tool packages for side effect of registration
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreatecluster"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreateinstance"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreateuser"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetcluster"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetinstance"
@@ -60,6 +61,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerygettableinfo"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerylistdatasetids"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerylisttableids"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysearchcatalog"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigtable"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouseexecutesql"
@@ -120,6 +122,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqllisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllistactivequeries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jcypher"
