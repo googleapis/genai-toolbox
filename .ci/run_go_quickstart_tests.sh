@@ -18,10 +18,10 @@ set -e
 
 TABLE_NAME="hotels_go"
 QUICKSTART_GO_DIR="docs/en/getting-started/quickstart/go"
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-SQL_FILE="${SCRIPT_DIR}/setup_hotels_sample.sql"
-DEPS_FILE="${SCRIPT_DIR}/quickstart_dependencies.json"
+SQL_FILE=".ci/setup_hotels_sample.sql"
+DEPS_FILE=".ci/quickstart_dependencies.json"
 
+# Initialize process IDs to empty at the top of the script
 PROXY_PID=""
 TOOLBOX_PID=""
 
@@ -29,6 +29,7 @@ install_system_packages() {
   apt-get update
   apt-get install -y jq
 
+  # Define the jq filter
   jq_filter='
     .go
     | keys_unsorted
@@ -36,12 +37,14 @@ install_system_packages() {
     | select(. != "jq")
   '
 
+  # Process the file with the filter and load the results into an array
   mapfile -t install_list < <(jq -r "$jq_filter" "$DEPS_FILE")
 
   if (( ${#install_list[@]} > 0 )); then
     apt-get install -y "${install_list[@]}"
   fi
 }
+
 
 start_cloud_sql_proxy() {
   CLOUD_SQL_PROXY_VERSION=$(jq -r '.cloud_sql_proxy' "$DEPS_FILE")
@@ -90,21 +93,22 @@ run_orch_test() {
   
   (
     set -e
+    echo "--- Preparing to run tests for $orch_name ---"
+    setup_orch_table
+
     echo "--- Preparing module for $orch_name ---"
     cd "$orch_dir"
-
     if [ -f "go.mod" ]; then
       go mod tidy
     fi
+
+    cd ..
+
+    export ORCH_NAME="$orch_name"
+
+    echo "--- Running tests for $orch_name ---"
+    go test -v ./...
   )
-
-  echo "--- Preparing to run tests for $orch_name ---"
-  setup_orch_table
-
-  export ORCH_NAME="$orch_name"
-
-  echo "--- Running tests for $orch_name ---"
-  go test -v ./...
 }
 
 cleanup_all() {
@@ -129,8 +133,7 @@ export GOOGLE_API_KEY="$GOOGLE_API_KEY"
 
 setup_toolbox
 
-cd "$QUICKSTART_GO_DIR"
-for ORCH_DIR in ./*/; do
+for ORCH_DIR in "$QUICKSTART_GO_DIR"/*/; do
   if [ ! -d "$ORCH_DIR" ]; then
     continue
   fi
