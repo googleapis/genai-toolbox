@@ -10,15 +10,10 @@ tools:
     kind: elasticsearch-esql
     source: elasticsearch-source
     description: Use this tool to execute ES|QL queries.
-    query: |
-      FROM *
-      | LIMIT ?limit
     parameters:
-      - name: limit
-        type: integer
-        description: Limit the number of results returned.
-        required: true
-
+      - name: query
+        type: string
+        description: The ES|QL query to execute.
 toolsets:
   elasticsearch-tools:
     - execute_esql_query
