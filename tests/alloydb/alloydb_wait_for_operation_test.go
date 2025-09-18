@@ -66,7 +66,7 @@ type operation struct {
 type handler struct {
 	mu         sync.Mutex
 	operations map[string]*operation
-	t *testing.T
+	t          *testing.T
 }
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
