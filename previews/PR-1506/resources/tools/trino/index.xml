@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Trino on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1506/resources/tools/trino/</link><description>Recent content in Trino on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1506/resources/tools/trino/index.xml" rel="self" type="application/rss+xml"/><item><title>trino-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1506/resources/tools/trino/trino-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1506/resources/tools/trino/trino-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>trino-execute-sql&lt;/code> tool executes a SQL statement against a Trino
+database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1506/resources/sources/trino/">trino&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>trino-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and run the sql
+statement against the &lt;code>source&lt;/code>.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool is intended for developer assistant workflows with
+human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&lt;/blockquote>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">execute_sql_tool&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">trino-execute-sql&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-trino-instance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to execute sql statement.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;trino-execute-sql&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the source the SQL should execute on.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>trino-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1506/resources/tools/trino/trino-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1506/resources/tools/trino/trino-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>trino-sql&lt;/code> tool executes a pre-defined SQL statement against a Trino
+database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1506/resources/sources/trino/">trino&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>The specified SQL statement is executed as a &lt;a href="https://trino.io/docs/current/sql/prepare.html">prepared statement&lt;/a>,
+and specified parameters will be inserted according to their position: e.g. &lt;code>$1&lt;/code>
+will be the first parameter specified, &lt;code>$2&lt;/code> will be the second parameter, and so
+on. If template parameters are included, they will be resolved before execution
+of the prepared statement.&lt;/p></description></item></channel></rss>
