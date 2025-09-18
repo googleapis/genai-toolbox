@@ -54,6 +54,10 @@ tools:
     kind: mysql-list-tables-missing-unique-indexes
     source: mysql-source
     description: "Find tables that do not have primary or unique key constraint. A primary key or unique key is the only mechanism that guaranttes a row is unique. Without them, the database-level protection against data integrity issues will be missing."
+  list_table_fragmentation:
+    kind: mysql-list-table-fragmentation
+    source: mysql-source
+    description: List table fragmentation in MySQL, by calculating the size of the data and index files and free space allocated to each table. The query calculates fragmentation percentage which represents the proportion of free space relative to the total data and index size. Storage can be reclaimed for tables with high fragmentation using OPTIMIZE TABLE.
 
 toolsets:
   mysql_database_tools:
@@ -62,3 +66,4 @@ toolsets:
     - get_query_plan
     - list_active_queries
     - list_tables_missing_unique_indexes
+    - list_table_fragmentation

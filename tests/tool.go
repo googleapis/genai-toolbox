@@ -1669,6 +1669,134 @@ func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, p
 		})
 	}
 }
+
+func RunMySQLListTableFragmentationTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string) {
+	type tableFragmentationDetails struct {
+		TableSchema             string `json:"table_schema"`
+		TableName               string `json:"table_name"`
+		DataSize                any    `json:"data_size"`
+		IndexSize               any    `json:"index_size"`
+		DataFree                any    `json:"data_free"`
+		FragmentationPercentage any    `json:"fragmentation_percentage"`
+	}
+
+	paramTableEntryWanted := tableFragmentationDetails{
+		TableSchema:             databaseName,
+		TableName:               tableNameParam,
+		DataSize:                any(nil),
+		IndexSize:               any(nil),
+		DataFree:                any(nil),
+		FragmentationPercentage: any(nil),
+	}
+	authTableEntryWanted := tableFragmentationDetails{
+		TableSchema:             databaseName,
+		TableName:               tableNameAuth,
+		DataSize:                any(nil),
+		IndexSize:               any(nil),
+		DataFree:                any(nil),
+		FragmentationPercentage: any(nil),
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           any
+	}{
+		{
+			name:           "invoke list_table_fragmentation on all, no data_free threshold, expected to have 2 results",
+			requestBody:    bytes.NewBufferString(`{"data_free_threshold_bytes": 0}`),
+			wantStatusCode: http.StatusOK,
+			want:           []tableFragmentationDetails{authTableEntryWanted, paramTableEntryWanted},
+		},
+		{
+			name:           "invoke list_table_fragmentation on all, no data_free threshold, limit to 1, expected to have 1 results",
+			requestBody:    bytes.NewBufferString(`{"data_free_threshold_bytes": 0, "limit": 1}`),
+			wantStatusCode: http.StatusOK,
+			want:           []tableFragmentationDetails{authTableEntryWanted},
+		},
+		{
+			name:           "invoke list_table_fragmentation on all databases and 1 specific table name, no data_free threshold, expected to have 1 result",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_name": "%s","data_free_threshold_bytes": 0}`, tableNameAuth)),
+			wantStatusCode: http.StatusOK,
+			want:           []tableFragmentationDetails{authTableEntryWanted},
+		},
+		{
+			name:           "invoke list_table_fragmentation on 1 database and 1 specific table name, no data_free threshold, expected to have 1 result",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s", "table_name": "%s", "data_free_threshold_bytes": 0}`, databaseName, tableNameParam)),
+			wantStatusCode: http.StatusOK,
+			want:           []tableFragmentationDetails{paramTableEntryWanted},
+		},
+		{
+			name:           "invoke list_table_fragmentation on 1 database and 1 specific table name, high data_free threshold, expected to have 0 result",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s", "table_name": "%s", "data_free_threshold_bytes": 1000000000}`, databaseName, tableNameParam)),
+			wantStatusCode: http.StatusOK,
+			want:           []tableFragmentationDetails(nil),
+		},
+		{
+			name:           "invoke list_table_fragmentation on 1 non-exist database, no data_free threshold, expected to have 0 result",
+			requestBody:    bytes.NewBufferString(`{"table_schema": "non_existent_database", "data_free_threshold_bytes": 0}`),
+			wantStatusCode: http.StatusOK,
+			want:           []tableFragmentationDetails(nil),
+		},
+		{
+			name:           "invoke list_table_fragmentation on 1 non-exist table, no data_free threshold, expected to have 0 result",
+			requestBody:    bytes.NewBufferString(`{"table_name": "non_existent_table", "data_free_threshold_bytes": 0}`),
+			wantStatusCode: http.StatusOK,
+			want:           []tableFragmentationDetails(nil),
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_table_fragmentation/invoke"
+			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %v", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %v", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				body, _ := io.ReadAll(resp.Body)
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got any
+			var details []tableFragmentationDetails
+			if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+				t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
+			}
+			got = details
+
+			if diff := cmp.Diff(tc.want, got, cmp.Comparer(func(a, b tableFragmentationDetails) bool {
+				return a.TableSchema == b.TableSchema && a.TableName == b.TableName
+			})); diff != "" {
+				t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
+			}
+		})
+	}
+}
+
 // RunRequest is a helper function to send HTTP requests and return the response
 func RunRequest(t *testing.T, method, url string, body io.Reader, headers map[string]string) (*http.Response, []byte) {
 	// Send request

@@ -317,6 +317,11 @@ func AddMySQLPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]
 		"kind":        "mysql-list-tables-missing-unique-indexes",
 		"source":      "my-instance",
 		"description": "Lists tables that do not have primary or unique indexes in the database.",
+  }
+	tools["list_table_fragmentation"] = map[string]any{
+		"kind":        "mysql-list-table-fragmentation",
+		"source":      "my-instance",
+		"description": "Lists table fragmentation in the database.",
 	}
 	config["tools"] = tools
 	return config

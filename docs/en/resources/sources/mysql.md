@@ -31,6 +31,9 @@ reliability, performance, and ease of use.
 - [`mysql-list-tables-missing-unique-indexes`](../tools/mysql/mysql-list-tables-missing-unique-indexes.md)
   List tables in a MySQL database that do not have primary or unique indices.
 
+- [`mysql-list-table-fragmentation`](../tools/mysql/mysql-list-table-fragmentation.md)
+  List table fragmentation in MySQL tables.
+
 ## Requirements
 
 ### Database User
