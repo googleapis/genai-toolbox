@@ -9,7 +9,7 @@ require (
 	cloud.google.com/go/bigquery v1.70.0
 	cloud.google.com/go/bigtable v1.39.0
 	cloud.google.com/go/cloudsqlconn v1.18.1
-	cloud.google.com/go/dataplex v1.27.0
+	cloud.google.com/go/dataplex v1.27.1
 	cloud.google.com/go/firestore v1.18.0
 	cloud.google.com/go/spanner v1.85.1
 	github.com/ClickHouse/clickhouse-go/v2 v2.40.3
