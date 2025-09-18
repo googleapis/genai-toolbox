@@ -10,14 +10,18 @@ aliases:
 
 ## About
 
-A `mysql-list-tables-missing-unique-indexes` tool searches tables that do not have primary or unique indices in a MySQL database. It's compatible with:
+A `mysql-list-tables-missing-unique-indexes` tool searches tables that do not
+have primary or unique indices in a MySQL database. It's compatible with:
 
 - [cloud-sql-mysql](../../sources/cloud-sql-mysql.md)
 - [mysql](../../sources/mysql.md)
 
-`mysql-list-tables-missing-unique-indexes` outputs table names, including `table_schema` and `table_name` in JSON format. It takes 2 optional input parameters:
+`mysql-list-tables-missing-unique-indexes` outputs table names, including
+`table_schema` and `table_name` in JSON format. It takes 2 optional input
+parameters:
 
-- `table_schema` (optional): Only check tables in this specific schema/database. Search all visible tables in all visible databases if not specified.
+- `table_schema` (optional): Only check tables in this specific schema/database.
+  Search all visible tables in all visible databases if not specified.
 - `limit` (optional):  max number of queries to return, default `50`.
 
 ## Example
@@ -39,8 +43,8 @@ The response is a json array with the following fields:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "mysql-list-active-queries".                                                             |
-| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "mysql-list-active-queries".               |
+| source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

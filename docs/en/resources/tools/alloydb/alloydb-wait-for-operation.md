@@ -8,7 +8,8 @@ description: "Wait for a long-running AlloyDB operation to complete.\n"
 The `alloydb-wait-for-operation` tool is a utility tool that waits for a
 long-running AlloyDB operation to complete. It does this by polling the AlloyDB
 Admin API operation status endpoint until the operation is finished, using
-exponential backoff. It is compatible with [alloydb-admin](../../sources/alloydb-admin.md) source.
+exponential backoff. It is compatible with
+[alloydb-admin](../../sources/alloydb-admin.md) source.
 
 | Parameter   | Type   | Description                                          | Required |
 | :---------- | :----- | :--------------------------------------------------- | :------- |
