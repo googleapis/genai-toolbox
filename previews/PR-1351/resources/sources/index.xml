@@ -587,6 +587,10 @@ List active queries in MySQL.&lt;/p>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/mysql/mysql-list-tables/">&lt;code>mysql-list-tables&lt;/code>&lt;/a>
 List tables in a MySQL database.&lt;/p>
 &lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1351/resources/tools/mysql/mysql-list-table-fragmentation/">&lt;code>mysql-list-table-fragmentation&lt;/code>&lt;/a>
+List table fragmentation in MySQL tables.&lt;/p>
+&lt;/li>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-user">Database User&lt;/h3>
