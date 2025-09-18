@@ -24,8 +24,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"google.golang.org/api/option"
 	alloydbrestapi "google.golang.org/api/alloydb/v1"
+	"google.golang.org/api/option"
 )
 
 const SourceKind string = "alloydb-admin"
@@ -45,7 +45,7 @@ func (rt *userAgentRoundTripper) RoundTrip(req *http.Request) (*http.Response, e
 	if ua == "" {
 		newReq.Header.Set("User-Agent", rt.userAgent)
 	} else {
-		newReq.Header.Set("User-Agent", rt.userAgent+" "+ua)
+		newReq.Header.Set("User-Agent", ua+" "+rt.userAgent)
 	}
 	return rt.next.RoundTrip(&newReq)
 }
@@ -68,9 +68,9 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name                   string            `yaml:"name" validate:"required"`
-	Kind                   string            `yaml:"kind" validate:"required"`
-	UseClientOAuth         bool              `yaml:"useClientOAuth"`
+	Name           string `yaml:"name" validate:"required"`
+	Kind           string `yaml:"kind" validate:"required"`
+	UseClientOAuth bool   `yaml:"useClientOAuth"`
 }
 
 func (r Config) SourceConfigKind() string {
