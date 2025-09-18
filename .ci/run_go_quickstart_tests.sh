@@ -22,7 +22,6 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 SQL_FILE="${SCRIPT_DIR}/setup_hotels_sample.sql"
 DEPS_FILE="${SCRIPT_DIR}/quickstart_dependencies.json"
 
-# Initialize process IDs to empty at the top of the script
 PROXY_PID=""
 TOOLBOX_PID=""
 
@@ -30,7 +29,6 @@ install_system_packages() {
   apt-get update
   apt-get install -y jq
 
-  # Define the jq filter
   jq_filter='
     .go
     | keys_unsorted
@@ -38,7 +36,6 @@ install_system_packages() {
     | select(. != "jq")
   '
 
-  # Process the file with the filter and load the results into an array
   mapfile -t install_list < <(jq -r "$jq_filter" "$DEPS_FILE")
 
   if (( ${#install_list[@]} > 0 )); then
