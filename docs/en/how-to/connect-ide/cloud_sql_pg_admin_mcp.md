@@ -6,8 +6,9 @@ description: >
   Create and manage Cloud SQL for PostgreSQL (Admin) using Toolbox.
 ---
 
-This guide covers how to use [MCP Toolbox for Databases][toolbox]
-to expose your developer assistant tools to create and manage Cloud SQL for PostgreSQL instance, database and users:
+This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your
+developer assistant tools to create and manage Cloud SQL for PostgreSQL
+instance, database and users:
 
 * [Cursor][cursor]
 * [Windsurf][windsurf] (Codium)
@@ -235,8 +236,10 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
 
 {{% tab header="Gemini CLI" lang="en" %}}
 
-1.  Install the [Gemini CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
-1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  Install the [Gemini
+    CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
+1.  In your working directory, create a folder named `.gemini`. Within it,
+    create a `settings.json` file.
 1.  Add the following configuration and save:
 
     ```json
@@ -255,9 +258,12 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
 
 {{% tab header="Gemini Code Assist" lang="en" %}}
 
-1.  Install the [Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist) extension in Visual Studio Code.
+1.  Install the [Gemini Code
+    Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist)
+    extension in Visual Studio Code.
 1.  Enable Agent Mode in Gemini Code Assist chat.
-1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
+1.  In your working directory, create a folder named `.gemini`. Within it,
+    create a `settings.json` file.
 1.  Add the following configuration and save:
 
     ```json
@@ -279,7 +285,8 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
 
 Your AI tool is now connected to Cloud SQL for PostgreSQL using MCP.
 
-The `cloud-sql-postgres-admin` server provides tools for managing your Cloud SQL instances and interacting with your database:
+The `cloud-sql-postgres-admin` server provides tools for managing your Cloud SQL
+instances and interacting with your database:
 * **create_instance**: Creates a new Cloud SQL for PostgreSQL instance.
 * **get_instance**: Gets information about a Cloud SQL instance.
 * **list_instances**: Lists Cloud SQL instances in a project.

@@ -9,7 +9,10 @@ description: >
 
 ## About
 
-[Firebird][fb-docs] is a relational database management system offering many ANSI SQL standard features that runs on Linux, Windows, and a variety of Unix platforms. It is known for its small footprint, powerful features, and easy maintenance.
+[Firebird][fb-docs] is a relational database management system offering many
+ANSI SQL standard features that runs on Linux, Windows, and a variety of Unix
+platforms. It is known for its small footprint, powerful features, and easy
+maintenance.
 
 [fb-docs]: https://firebirdsql.org/
 
@@ -25,7 +28,8 @@ description: >
 
 ### Database User
 
-This source uses standard authentication. You will need to [create a Firebird user][fb-users] to login to the database with.
+This source uses standard authentication. You will need to [create a Firebird
+user][fb-users] to login to the database with.
 
 [fb-users]: https://firebirdsql.org/refdocs/langrefupd25-sql-create-user.html
 
@@ -49,11 +53,11 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                        |
-|-----------|:--------:|:------------:|------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "firebird".                                                    |
-| host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1")                            |
-| port      |  string  |     true     | Port to connect to (e.g. "3050")                                       |
+| **field** | **type** | **required** | **description**                                                              |
+|-----------|:--------:|:------------:|------------------------------------------------------------------------------|
+| kind      |  string  |     true     | Must be "firebird".                                                          |
+| host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1")                                  |
+| port      |  string  |     true     | Port to connect to (e.g. "3050")                                             |
 | database  |  string  |     true     | Path to the Firebird database file (e.g. "/var/lib/firebird/data/test.fdb"). |
-| user      |  string  |     true     | Name of the Firebird user to connect as (e.g. "SYSDBA").               |
-| password  |  string  |     true     | Password of the Firebird user (e.g. "masterkey").                      |
+| user      |  string  |     true     | Name of the Firebird user to connect as (e.g. "SYSDBA").                     |
+| password  |  string  |     true     | Password of the Firebird user (e.g. "masterkey").                            |

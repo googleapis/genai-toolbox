@@ -42,8 +42,9 @@ to a database by following these instructions][csql-mysql-quickstart].
 
 ### Pre-built Configurations
 
-- [Cloud SQL for MySQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mysql_mcp/)
-Connect your IDE to Cloud SQL for MySQL using Toolbox.
+- [Cloud SQL for MySQL using
+  MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mysql_mcp/)
+  Connect your IDE to Cloud SQL for MySQL using Toolbox.
 
 ## Requirements
 
