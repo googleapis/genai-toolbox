@@ -22,7 +22,7 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
-    "github.com/googleapis/genai-toolbox/internal/sources/mssql"
+	"github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
@@ -302,11 +302,11 @@ var _ compatibleSource = &mssql.Source{}
 var compatibleSources = [...]string{cloudsqlmssql.SourceKind, mssql.SourceKind}
 
 type Config struct {
-	Name               string           `yaml:"name" validate:"required"`
-	Kind               string           `yaml:"kind" validate:"required"`
-	Source             string           `yaml:"source" validate:"required"`
-	Description        string           `yaml:"description" validate:"required"`
-	AuthRequired       []string         `yaml:"authRequired"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description" validate:"required"`
+	AuthRequired []string `yaml:"authRequired"`
 }
 
 // validate interface
@@ -344,13 +344,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:               cfg.Name,
-		Kind:               kind,
-		AllParams:          allParameters,
-		AuthRequired:       cfg.AuthRequired,
-		Db:                 s.MSSQLDB(),
-		manifest:           tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:        mcpManifest,
+		Name:         cfg.Name,
+		Kind:         kind,
+		AllParams:    allParameters,
+		AuthRequired: cfg.AuthRequired,
+		Db:           s.MSSQLDB(),
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest:  mcpManifest,
 	}
 	return t, nil
 }
@@ -359,10 +359,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name               string           `yaml:"name"`
-	Kind               string           `yaml:"kind"`
-	AuthRequired       []string         `yaml:"authRequired"`
-	AllParams          tools.Parameters `yaml:"allParams"`
+	Name         string           `yaml:"name"`
+	Kind         string           `yaml:"kind"`
+	AuthRequired []string         `yaml:"authRequired"`
+	AllParams    tools.Parameters `yaml:"allParams"`
 
 	Db          *sql.DB
 	manifest    tools.Manifest
@@ -373,52 +373,52 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	paramsMap := params.AsMap()
 
 	outputFormat, _ := paramsMap["output_format"].(string)
-    if outputFormat != "simple" && outputFormat != "detailed" {
-        return nil, fmt.Errorf("invalid value for output_format: must be 'simple' or 'detailed', but got %q", outputFormat)
-    }
+	if outputFormat != "simple" && outputFormat != "detailed" {
+		return nil, fmt.Errorf("invalid value for output_format: must be 'simple' or 'detailed', but got %q", outputFormat)
+	}
 
 	namedArgs := []any{
-        sql.Named("table_names", paramsMap["table_names"]),
-        sql.Named("output_format", outputFormat),
-    }
+		sql.Named("table_names", paramsMap["table_names"]),
+		sql.Named("output_format", outputFormat),
+	}
 
-    rows, err := t.Db.QueryContext(ctx, listTablesStatement, namedArgs...)
-    if err != nil {
-        return nil, fmt.Errorf("unable to execute query: %w", err)
-    }
-    defer rows.Close()
+	rows, err := t.Db.QueryContext(ctx, listTablesStatement, namedArgs...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	defer rows.Close()
 
-    cols, err := rows.Columns()
-    if err != nil {
-        return nil, fmt.Errorf("unable to fetch column names: %w", err)
-    }
+	cols, err := rows.Columns()
+	if err != nil {
+		return nil, fmt.Errorf("unable to fetch column names: %w", err)
+	}
 
 	// create an array of values for each column, which can be re-used to scan each row
-    rawValues := make([]any, len(cols))
-    values := make([]any, len(cols))
-    for i := range rawValues {
-        values[i] = &rawValues[i]
-    }
+	rawValues := make([]any, len(cols))
+	values := make([]any, len(cols))
+	for i := range rawValues {
+		values[i] = &rawValues[i]
+	}
 
-    var out []any
-    for rows.Next() {
-        err = rows.Scan(values...)
-        if err != nil {
-            return nil, fmt.Errorf("unable to parse row: %w", err)
-        }
-        vMap := make(map[string]any)
-        for i, name := range cols {
-            vMap[name] = rawValues[i]
-        }
-        out = append(out, vMap)
-    }
+	var out []any
+	for rows.Next() {
+		err = rows.Scan(values...)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+		vMap := make(map[string]any)
+		for i, name := range cols {
+			vMap[name] = rawValues[i]
+		}
+		out = append(out, vMap)
+	}
 
 	// Check if error occurred during iteration
-    if err := rows.Err(); err != nil {
-        return nil, fmt.Errorf("errors encountered during row iteration: %w", err)
-    }
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("errors encountered during row iteration: %w", err)
+	}
 
-    return out, nil
+	return out, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {

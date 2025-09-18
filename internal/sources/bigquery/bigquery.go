@@ -145,17 +145,17 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	// BigQuery Google SQL struct with client
-	Name               string `yaml:"name"`
-	Kind               string `yaml:"kind"`
-	Project            string
-	Location           string
-	Client             *bigqueryapi.Client
-	RestService        *bigqueryrestapi.Service
-	TokenSource        oauth2.TokenSource
-	MaxQueryResultRows int
-	ClientCreator      BigqueryClientCreator
-	AllowedDatasets    map[string]struct{}
-	UseClientOAuth     bool
+	Name                      string `yaml:"name"`
+	Kind                      string `yaml:"kind"`
+	Project                   string
+	Location                  string
+	Client                    *bigqueryapi.Client
+	RestService               *bigqueryrestapi.Service
+	TokenSource               oauth2.TokenSource
+	MaxQueryResultRows        int
+	ClientCreator             BigqueryClientCreator
+	AllowedDatasets           map[string]struct{}
+	UseClientOAuth            bool
 	makeDataplexCatalogClient func() (*dataplexapi.CatalogClient, DataplexClientCreator, error)
 }
 
