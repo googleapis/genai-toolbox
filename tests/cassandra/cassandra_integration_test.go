@@ -60,10 +60,10 @@ func initCassandraSession() (*gocql.Session, error) {
 	}
 
 	// Create keyspace
-	err = session.Query(`
-		CREATE KEYSPACE IF NOT EXISTS example_keyspace
+	err = session.Query(fmt.Sprintf(`
+		CREATE KEYSPACE IF NOT EXISTS %s
 		WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}
-	`).Exec()
+	`, Keyspace)).Exec()
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create keyspace: %v", err)
 	}
@@ -75,7 +75,7 @@ func initTable(tableName string, session *gocql.Session) error {
 
 	// Create table with additional columns
 	err := session.Query(fmt.Sprintf(`
-		CREATE TABLE IF NOT EXISTS example_keyspace.%s (
+		CREATE TABLE IF NOT EXISTS %s.%s (
 			id int PRIMARY KEY,
 			name text,
 			email text,
@@ -83,7 +83,7 @@ func initTable(tableName string, session *gocql.Session) error {
 			is_active boolean,
 			created_at timestamp
 		)
-	`, tableName)).Exec()
+	`, Keyspace, tableName)).Exec()
 	if err != nil {
 		return fmt.Errorf("Failed to create table: %v", err)
 	}
@@ -95,32 +95,32 @@ func initTable(tableName string, session *gocql.Session) error {
 
 	// Insert minimal diverse data with fixed time.Time for timestamps
 	err = session.Query(fmt.Sprintf(`
-		INSERT INTO example_keyspace.%s (id, name,email, age, is_active, created_at)
-		VALUES (?, ?, ?, ?, ?, ?)`, tableName),
+		INSERT INTO %s.%s (id, name,email, age, is_active, created_at)
+		VALUES (?, ?, ?, ?, ?, ?)`, Keyspace, tableName),
 		3, "Alice", tests.ServiceAccountEmail, 25, true, dayAgo,
 	).Exec()
 	if err != nil {
 		return fmt.Errorf("Failed to insert user: %v", err)
 	}
 	err = session.Query(fmt.Sprintf(`
-		INSERT INTO example_keyspace.%s (id, name,email, age, is_active, created_at)
-		VALUES (?, ?, ?, ?, ?, ?)`, tableName),
+		INSERT INTO %s.%s (id, name,email, age, is_active, created_at)
+		VALUES (?, ?, ?, ?, ?, ?)`, Keyspace, tableName),
 		2, "Alex", "janedoe@gmail.com", 30, false, twelveHoursAgo,
 	).Exec()
 	if err != nil {
 		return fmt.Errorf("Failed to insert user: %v", err)
 	}
 	err = session.Query(fmt.Sprintf(`
-		INSERT INTO example_keyspace.%s (id, name,email, age, is_active, created_at)
-		VALUES (?, ?, ?, ?, ?, ?)`, tableName),
+		INSERT INTO %s.%s (id, name,email, age, is_active, created_at)
+		VALUES (?, ?, ?, ?, ?, ?)`, Keyspace, tableName),
 		1, "Sid", "sid@gmail.com", 10, true, fixedTime,
 	).Exec()
 	if err != nil {
 		return fmt.Errorf("Failed to insert user: %v", err)
 	}
 	err = session.Query(fmt.Sprintf(`
-		INSERT INTO example_keyspace.%s (id, name,email, age, is_active, created_at)
-		VALUES (?, ?, ?, ?, ?, ?)`, tableName),
+		INSERT INTO %s.%s (id, name,email, age, is_active, created_at)
+		VALUES (?, ?, ?, ?, ?, ?)`, Keyspace, tableName),
 		4, nil, "a@gmail.com", 40, false, fixedTime,
 	).Exec()
 	if err != nil {
@@ -140,7 +140,7 @@ func getCassandraVars() map[string]any {
 }
 
 func dropTable(session *gocql.Session, tableName string) {
-	err := session.Query(fmt.Sprintf("drop table example_keyspace.%s", tableName)).Exec()
+	err := session.Query(fmt.Sprintf("drop table %s.%s", Keyspace, tableName)).Exec()
 	if err != nil {
 		log.Printf("Failed to drop table %s: %v", tableName, err)
 	}
