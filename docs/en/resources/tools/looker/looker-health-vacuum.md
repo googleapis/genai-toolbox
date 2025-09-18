@@ -30,6 +30,8 @@ The `looker-health-vacuum` tool helps you identify unused LookML objects such as
 
 ## Example
 
+Identify unnused fields (*in this case, less than 1 query in the last 20 days*) and joins in the `order_items` explore and `thelook` model
+
 ```yaml
 tools:
   vacuum-tool:
@@ -39,8 +41,23 @@ tools:
       Vacuums the Looker instance by identifying unused explores, fields, and joins.
     parameters:
       action: explores
+      project: "thelook_core"
       model: "thelook"
       explore: "order_items"
       timeframe: 20
       min_queries: 1
 ```
+
+Identify unnused explores across all models in `thelook_core` project. 
+
+```yaml
+tools:
+  vacuum-tool:
+    kind: looker-health-vacuum
+    source: looker-source
+    description: |
+      Vacuums the Looker instance by identifying unused explores, fields, and joins.
+    parameters:
+      action: models
+      project: "thelook_core"
+     
