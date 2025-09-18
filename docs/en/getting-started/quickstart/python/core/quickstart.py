@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 from google import genai
 from google.genai.types import (
@@ -10,6 +11,8 @@ from google.genai.types import (
 )
 
 from toolbox_core import ToolboxClient
+
+project = os.environ.get("GCP_PROJECT") or "project-id"
 
 prompt = """
   You're a helpful hotel assistant. You handle hotel searching, booking and
@@ -39,7 +42,7 @@ async def main():
         # provided wrapper packages, which handle framework-specific boilerplate.
         toolbox_tools = await toolbox_client.load_toolset("my-toolset")
         genai_client = genai.Client(
-            vertexai=True, project="project-id", location="us-central1"
+            vertexai=True, project=project, location="us-central1"
         )
 
         genai_tools = [
@@ -68,41 +71,46 @@ async def main():
             )
             history.append(response.candidates[0].content)
             function_response_parts = []
-            for function_call in response.function_calls:
-                fn_name = function_call.name
-                # The tools are sorted alphabetically
-                if fn_name == "search-hotels-by-name":
-                    function_result = await toolbox_tools[3](**function_call.args)
-                elif fn_name == "search-hotels-by-location":
-                    function_result = await toolbox_tools[2](**function_call.args)
-                elif fn_name == "book-hotel":
-                    function_result = await toolbox_tools[0](**function_call.args)
-                elif fn_name == "update-hotel":
-                    function_result = await toolbox_tools[4](**function_call.args)
-                elif fn_name == "cancel-hotel":
-                    function_result = await toolbox_tools[1](**function_call.args)
-                else:
-                    raise ValueError("Function name not present.")
-                function_response = {"result": function_result}
-                function_response_part = Part.from_function_response(
-                    name=function_call.name,
-                    response=function_response,
-                )
-                function_response_parts.append(function_response_part)
+
+            if response.function_calls:
+                for function_call in response.function_calls:
+                    fn_name = function_call.name
+                    # The tools are sorted alphabetically
+                    if fn_name == "search-hotels-by-name":
+                        function_result = await toolbox_tools[3](**function_call.args)
+                    elif fn_name == "search-hotels-by-location":
+                        function_result = await toolbox_tools[2](**function_call.args)
+                    elif fn_name == "book-hotel":
+                        function_result = await toolbox_tools[0](**function_call.args)
+                    elif fn_name == "update-hotel":
+                        function_result = await toolbox_tools[4](**function_call.args)
+                    elif fn_name == "cancel-hotel":
+                        function_result = await toolbox_tools[1](**function_call.args)
+                    else:
+                        raise ValueError(f"Function name {fn_name} not present.")
+
+                    function_response = {"result": function_result}
+                    function_response_part = Part.from_function_response(
+                        name=function_call.name,
+                        response=function_response,
+                    )
+                    function_response_parts.append(function_response_part)
 
             if function_response_parts:
                 tool_response_content = Content(role="tool", parts=function_response_parts)
                 history.append(tool_response_content)
 
-            response2 = genai_client.models.generate_content(
-                model="gemini-2.0-flash-001",
-                contents=history,
-                config=GenerateContentConfig(
-                    tools=genai_tools,
-                ),
-            )
-            final_model_response_content = response2.candidates[0].content
-            history.append(final_model_response_content)
-            print(response2.text)
+                response2 = genai_client.models.generate_content(
+                    model="gemini-2.0-flash-001",
+                    contents=history,
+                    config=GenerateContentConfig(
+                        tools=genai_tools,
+                    ),
+                )
+                final_model_response_content = response2.candidates[0].content
+                history.append(final_model_response_content)
+                print(response2.text)
+            else:
+                print(response.text)
 
 asyncio.run(main())

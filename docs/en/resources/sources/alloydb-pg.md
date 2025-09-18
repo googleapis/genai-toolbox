@@ -39,6 +39,12 @@ cluster][alloydb-free-trial].
 - [`postgres-list-active-queries`](../tools/postgres/postgres-list-active-queries.md)
   List active queries in an AlloyDB for PostgreSQL database.
 
+- [`postgres-list-available-extensions`](../tools/postgres/postgres-list-available-extensions.md)
+  List available extensions for installation in a PostgreSQL database.
+
+- [`postgres-list-installed-extensions`](../tools/postgres/postgres-list-installed-extensions.md)
+  List installed extensions in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)

@@ -26,12 +26,23 @@ for instructions.
 
 It's compatible with the following sources:
 
-- [bigquery](../sources/bigquery.md)
+- [bigquery](../../sources/bigquery.md)
 
-The tool takes the following input parameters:
+`bigquery-conversational-analytics` accepts the following parameters:
 
-*   `user_query_with_context`: The user's question, potentially including conversation history and system instructions for context.
-*   `table_references`: A JSON string of a list of BigQuery tables to use as context. Each object in the list must contain `projectId`, `datasetId`, and `tableId`. Example: `'[{"projectId": "my-gcp-project", "datasetId": "my_dataset", "tableId": "my_table"}]'`
+- **`user_query_with_context`:** The user's question, potentially including conversation history and system 
+instructions for context.
+- **`table_references`:** A JSON string of a list of BigQuery tables to use as context. 
+Each object in the list must contain `projectId`, `datasetId`, and `tableId`. Example: 
+`'[{"projectId": "my-gcp-project", "datasetId": "my_dataset", "tableId": "my_table"}]'`
+
+The tool's behavior regarding these parameters is influenced by the `allowedDatasets` 
+restriction on the `bigquery` source:
+- **Without `allowedDatasets` restriction:** The tool can use tables from any 
+dataset specified in the `table_references` parameter.
+- **With `allowedDatasets` restriction:** Before processing the request, the tool 
+verifies that every table in `table_references` belongs to a dataset in the allowed 
+list. If any table is from a dataset that is not in the list, the request is denied.
 
 ## Example
 

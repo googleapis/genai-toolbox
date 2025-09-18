@@ -72,5 +72,5 @@ tools:
       32. `cloudsql.googleapis.com/database/sqlserver/transactions/full_scan_count`: Total number of unrestricted full scans (base-table or full-index). `cloudsql_database`. `database`, `project_id`, `database_id`.
 
 toolsets:
-  cloud-sql-mssql-cloud-monitoring-tools:
+  cloud_sql_mssql_cloud_monitoring_tools:
     - get_system_metrics

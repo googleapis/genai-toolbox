@@ -24,7 +24,7 @@ const queries = [
   "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ];
 
-async function main() {
+export async function main() {
   // Connect to MCP Toolbox
   const client = new ToolboxClient(TOOLBOX_URL);
   const toolboxTools = await client.loadToolset("my-toolset");
