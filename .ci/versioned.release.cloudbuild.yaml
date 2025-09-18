@@ -74,7 +74,7 @@ steps:
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=extensions -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.extensions.linux.amd64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=extensions.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.extensions.linux.amd64
 
   - id: "store-linux-amd64-extensions"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -83,7 +83,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=v$(cat ./cmd/version.txt)
-        gcloud storage cp toolbox.extensions.linux.amd64 gs://$_EXTENSIONS_BUCKET_NAME/$VERSION/linux/amd64/toolbox
+        gcloud storage cp toolbox.extensions.linux.amd64 gs://$_BUCKET_NAME/$VERSION/linux/amd64/toolbox-extensions
 
   - id: "build-darwin-arm64"
     name: golang:1
@@ -122,7 +122,7 @@ steps:
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
         CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=extensions -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.extensions.darwin.arm64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=extensions.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.extensions.darwin.arm64
 
   - id: "store-darwin-arm64-extensions"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -131,7 +131,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=v$(cat ./cmd/version.txt)
-        gcloud storage cp toolbox.extensions.darwin.arm64 gs://$_EXTENSIONS_BUCKET_NAME/$VERSION/darwin/arm64/toolbox
+        gcloud storage cp toolbox.extensions.darwin.arm64 gs://$_BUCKET_NAME/$VERSION/darwin/arm64/toolbox-extensions
 
   - id: "build-darwin-amd64"
     name: golang:1
@@ -170,7 +170,7 @@ steps:
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
         CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=extensions -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.extensions.darwin.amd64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=extensions.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.extensions.darwin.amd64
 
   - id: "store-darwin-amd64-extensions"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -179,7 +179,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=v$(cat ./cmd/version.txt)
-        gcloud storage cp toolbox.extensions.darwin.amd64 gs://$_EXTENSIONS_BUCKET_NAME/$VERSION/darwin/amd64/toolbox
+        gcloud storage cp toolbox.extensions.darwin.amd64 gs://$_BUCKET_NAME/$VERSION/darwin/amd64/toolbox-extensions
 
   - id: "build-windows-amd64"
     name: golang:1
@@ -218,7 +218,7 @@ steps:
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
         CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=extensions -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.extensions.windows.amd64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=extensions.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.extensions.windows.amd64
 
   - id: "store-windows-amd64-extensions"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -227,7 +227,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=v$(cat ./cmd/version.txt)
-        gcloud storage cp toolbox.extensions.windows.amd64 gs://$_EXTENSIONS_BUCKET_NAME/$VERSION/windows/amd64/toolbox.exe
+        gcloud storage cp toolbox.extensions.windows.amd64 gs://$_BUCKET_NAME/$VERSION/windows/amd64/toolbox-extensions.exe
 
 options:
   automapSubstitutions: true
@@ -240,6 +240,5 @@ substitutions:
   _AR_HOSTNAME: ${_REGION}-docker.pkg.dev
   _AR_REPO_NAME: toolbox
   _BUCKET_NAME: genai-toolbox
-  _EXTENSIONS_BUCKET_NAME: genai-toolbox-extensions
   _DOCKER_URI: ${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPO_NAME}/toolbox
   _PUSH_LATEST: "true"

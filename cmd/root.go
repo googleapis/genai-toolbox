@@ -191,7 +191,7 @@ var (
 	//go:embed version.txt
 	versionNum string
 	// metadataString indicates additional build or distribution metadata.
-	buildType string = "dev" // should be one of "dev", "binary", "container", or "extensions"
+	buildType string = "dev" // should be one of "dev", "binary", or "container"
 	// commitSha is the git commit it was built from
 	commitSha string
 )
