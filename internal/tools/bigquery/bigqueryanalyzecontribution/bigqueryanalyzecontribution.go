@@ -247,7 +247,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	getInsightsSQL := fmt.Sprintf("SELECT * FROM ML.GET_INSIGHTS(MODEL %s)", modelID)
 
 	getInsightsQuery := bqClient.Query(getInsightsSQL)
-	getInsightsQuery.QueryConfig.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
+	getInsightsQuery.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
 		{Key: "session_id", Value: sessionID},
 	}
 

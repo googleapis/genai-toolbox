@@ -8,14 +8,19 @@ aliases: [/resources/tools/alloydb-create-instance]
 
 ## About
 
-The `alloydb-create-instance` tool creates a new AlloyDB instance (PRIMARY or READ_POOL) within a specified cluster. It is compatible with [alloydb-admin](../../sources/alloydb-admin.md) source.
+The `alloydb-create-instance` tool creates a new AlloyDB instance (PRIMARY or
+READ_POOL) within a specified cluster. It is compatible with
+[alloydb-admin](../../sources/alloydb-admin.md) source.
 This tool provisions a new instance with a **public IP address**.
 
   **Permissions & APIs Required:**
   Before using, ensure the following on your GCP project:
 
-1.  The [AlloyDB API](https://console.cloud.google.com/apis/library/alloydb.googleapis.com) is enabled.
-2.  The user or service account executing the tool has one of the following IAM roles:
+1.  The [AlloyDB
+    API](https://console.cloud.google.com/apis/library/alloydb.googleapis.com)
+    is enabled.
+2.  The user or service account executing the tool has one of the following IAM
+    roles:
 
 
     - `roles/alloydb.admin` (the AlloyDB Admin predefined IAM role)
@@ -35,7 +40,8 @@ The tool takes the following input parameters:
 | `nodeCount`    | int    | The number of nodes for a read pool. Required only if `instanceType` is `READ_POOL`. Default: `1` | No       |
 
 > Note
-> The tool sets the `password.enforce_complexity` database flag to `on`, requiring new database passwords to meet complexity rules.
+> The tool sets the `password.enforce_complexity` database flag to `on`,
+> requiring new database passwords to meet complexity rules.
 
 ## Example
 
