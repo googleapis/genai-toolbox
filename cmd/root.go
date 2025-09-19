@@ -147,6 +147,8 @@ var (
 	buildType string = "dev" // should be one of "dev", "binary", or "container"
 	// commitSha is the git commit it was built from
 	commitSha string
+
+	envVarRegex = regexp.MustCompile(`\$\{(\w+)\}`)
 )
 
 func init() {
@@ -253,10 +255,8 @@ type ToolsFile struct {
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
 func parseEnv(input string) string {
-	re := regexp.MustCompile(`\$\{(\w+)\}`)
-
-	return re.ReplaceAllStringFunc(input, func(match string) string {
-		parts := re.FindStringSubmatch(match)
+	return envVarRegex.ReplaceAllStringFunc(input, func(match string) string {
+		parts := envVarRegex.FindStringSubmatch(match)
 		if len(parts) < 2 {
 			// technically shouldn't happen
 			return match
