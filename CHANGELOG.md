@@ -5,10 +5,7 @@
 
 ### ⚠ BREAKING CHANGES
 
-* **bigquery:** Add `Bearer` parsing to auth token ([#1386](https://github.com/googleapis/genai-toolbox/issues/1386))
 * **prebuilt:** update prebuilt tool names to use consistent guidance ([#1421](https://github.com/googleapis/genai-toolbox/issues/1421))
-* **tools/firestore-get-rules:** Add `databaseId` to the Firestore source and `firestore-get-rules` tool ([#1505](https://github.com/googleapis/genai-toolbox/issues/1505))
-* **tools/bigquery-conversational-analytics:** Add allowed datasets support ([#1411](https://github.com/googleapis/genai-toolbox/issues/1411))
 * **tools/alloydb-wait-for-operation:** Add `alloydb-admin` source to `alloydb-wait-for-operation` tool ([#1449](https://github.com/googleapis/genai-toolbox/issues/1449))
 
 ### Features
