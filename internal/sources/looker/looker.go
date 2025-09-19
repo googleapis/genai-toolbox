@@ -58,8 +58,8 @@ type Config struct {
 	Name               string `yaml:"name" validate:"required"`
 	Kind               string `yaml:"kind" validate:"required"`
 	BaseURL            string `yaml:"base_url" validate:"required"`
-	ClientId           string `yaml:"client_id" validate:"required"`
-	ClientSecret       string `yaml:"client_secret" validate:"required"`
+	ClientId           string `yaml:"client_id"`
+	ClientSecret       string `yaml:"client_secret"`
 	SslVerification    bool   `yaml:"verify_ssl"`
 	UseClientOAuth     bool   `yaml:"use_client_oauth"`
 	Timeout            string `yaml:"timeout"`
