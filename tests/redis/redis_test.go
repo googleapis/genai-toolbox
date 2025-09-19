@@ -104,6 +104,7 @@ func TestRedisToolEndpoints(t *testing.T) {
 	tests.RunToolGetTest(t)
 	tests.RunToolInvokeTest(t, select1Want,
 		tests.WithMyToolId3NameAliceWant(invokeParamWant),
+		tests.WithMyArrayToolWant(invokeParamWant),
 		tests.WithMyToolById4Want(invokeIdNullWant),
 		tests.WithNullWant(nullWant),
 	)

@@ -257,10 +257,13 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 	configs := &InvokeTestConfig{
 		myToolId3NameAliceWant:   "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
 		myToolById4Want:          "[{\"id\":4,\"name\":null}]",
+		myArrayToolWant:          "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
 		nullWant:                 "null",
 		supportOptionalNullParam: true,
 		supportArrayParam:        true,
 		supportClientAuth:        false,
+		supportSelect1Want:       true,
+		supportSelect1Auth:       true,
 	}
 
 	// Apply provided options
@@ -294,7 +297,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 		{
 			name:           "invoke my-simple-tool",
 			api:            "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
-			enabled:        true,
+			enabled:        configs.supportSelect1Want,
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
 			wantBody:       select1Want,
@@ -351,13 +354,13 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:        configs.supportArrayParam,
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(`{"idArray": [1,2,3], "nameArray": ["Alice", "Sid", "RandomName"], "cmdArray": ["HGETALL", "row3"]}`)),
-			wantBody:       configs.myToolId3NameAliceWant,
+			wantBody:       configs.myArrayToolWant,
 			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "Invoke my-auth-tool with auth token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
-			enabled:        true,
+			enabled:        configs.supportSelect1Auth,
 			requestHeader:  map[string]string{"my-google-auth_token": idToken},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
 			wantBody:       "[{\"name\":\"Alice\"}]",
@@ -366,7 +369,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 		{
 			name:           "Invoke my-auth-tool with invalid auth token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
-			enabled:        true,
+			enabled:        configs.supportSelect1Auth,
 			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
 			wantStatusCode: http.StatusUnauthorized,
@@ -382,7 +385,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 		{
 			name:          "Invoke my-auth-required-tool with auth token",
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
-			enabled:       true,
+			enabled:       configs.supportSelect1Auth,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 
@@ -491,6 +494,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		ddlWant:         "null",
 		selectAllWant:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]",
 		selectId1Want:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
+		selectNameWant:  "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
 		selectEmptyWant: "null",
 		insert1Want:     "null",
 
@@ -512,6 +516,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
+		enabled       bool
 		ddl           bool
 		insert        bool
 		api           string
@@ -573,6 +578,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		},
 		{
 			name:          "invoke select-fields-templateParams-tool",
+			enabled:       configs.supportSelectFields,
 			api:           "http://127.0.0.1:5000/api/tool/select-fields-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "fields":%s}`, tableName, configs.nameFieldArray))),
@@ -584,7 +590,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 			api:           "http://127.0.0.1:5000/api/tool/select-filter-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "%s"}`, tableName, configs.nameColFilter))),
-			want:          configs.selectId1Want,
+			want:          configs.selectNameWant,
 			isErr:         false,
 		},
 		{
@@ -599,6 +605,9 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
+			if !tc.enabled {
+				return
+			}
 			// if test case is DDL and source support ddl test cases
 			ddlAllow := !tc.ddl || (tc.ddl && configs.supportDdl)
 			// if test case is insert statement and source support insert test cases
@@ -834,6 +843,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 	configs := &MCPTestConfig{
 		myToolId3NameAliceWant: `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`,
 		supportClientAuth:      false,
+		supportSelect1Auth:     true,
 	}
 
 	// Apply provided options
@@ -947,7 +957,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 		{
 			name:          "MCP Invoke my-auth-required-tool",
 			api:           "http://127.0.0.1:5000/mcp",
-			enabled:       true,
+			enabled:       configs.supportSelect1Auth,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
