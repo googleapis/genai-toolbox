@@ -1399,7 +1399,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"bigquery_database_tools": tools.ToolsetConfig{
 					Name:      "bigquery_database_tools",
-					ToolNames: []string{"analyze_contribution", "ask_data_insights", "execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids"},
+					ToolNames: []string{"analyze_contribution", "ask_data_insights", "execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids", "search_catalog"},
 				},
 			},
 		},
@@ -1429,7 +1429,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_mysql_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mysql_database_tools",
-					ToolNames: []string{"execute_sql", "get_query_plan", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries", "list_tables_missing_unique_indexes", "list_table_fragmentation"},
 				},
 			},
 		},
@@ -1469,7 +1469,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"mysql_database_tools": tools.ToolsetConfig{
 					Name:      "mysql_database_tools",
-					ToolNames: []string{"execute_sql", "get_query_plan", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries", "list_tables_missing_unique_indexes", "list_table_fragmentation"},
 				},
 			},
 		},

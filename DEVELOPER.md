@@ -59,12 +59,14 @@ cancel_hotel: <- tool name
 
 Tool name is the identifier used by a Large Language Model (LLM) to invoke a
 specific tool.
+
 * Custom tools: The user can define any name they want. The below guidelines
   do not apply.
 * Pre-built tools: The tool name is predefined and cannot be changed. It
 should follow the guidelines.
 
 The following guidelines apply to tool names:
+
 * Should use underscores over hyphens (e.g., `list_collections` instead of
   `list-collections`).
 * Should not have the product name in the name (e.g., `list_collections` instead
@@ -79,6 +81,7 @@ The following guidelines apply to tool names:
 Tool kind serves as a category or type that a user can assign to a tool.
 
 The following guidelines apply to tool kinds:
+
 * Should user hyphens over underscores (e.g. `firestore-list-collections` or
   `firestore_list_colelctions`).
 * Should use product name in name (e.g. `firestore-list-collections` over
