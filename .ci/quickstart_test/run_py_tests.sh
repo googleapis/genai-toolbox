@@ -19,7 +19,7 @@ set -e
 TABLE_NAME="hotels_python"
 QUICKSTART_PYTHON_DIR="docs/en/getting-started/quickstart/python"
 SQL_FILE=".ci/quickstart_test/setup_hotels_sample.sql"
-DEPS_FILE=".ci/quickstart_test/quickstart_dependencies.json"
+DEPS_FILE=".ci/quickstart_test/deps.json"
 
 PROXY_PID=""
 TOOLBOX_PID=""
