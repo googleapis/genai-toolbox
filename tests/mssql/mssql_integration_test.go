@@ -37,14 +37,14 @@ import (
 )
 
 var (
-	MSSQLSourceKind = "mssql"
-	MSSQLToolKind   = "mssql-sql"
+	MSSQLSourceKind         = "mssql"
+	MSSQLToolKind           = "mssql-sql"
 	MSSQLListTablesToolKind = "mssql-list-tables"
-	MSSQLDatabase   = os.Getenv("MSSQL_DATABASE")
-	MSSQLHost       = os.Getenv("MSSQL_HOST")
-	MSSQLPort       = os.Getenv("MSSQL_PORT")
-	MSSQLUser       = os.Getenv("MSSQL_USER")
-	MSSQLPass       = os.Getenv("MSSQL_PASS")
+	MSSQLDatabase           = os.Getenv("MSSQL_DATABASE")
+	MSSQLHost               = os.Getenv("MSSQL_HOST")
+	MSSQLPort               = os.Getenv("MSSQL_PORT")
+	MSSQLUser               = os.Getenv("MSSQL_USER")
+	MSSQLPass               = os.Getenv("MSSQL_PASS")
 )
 
 func getMsSQLVars(t *testing.T) map[string]any {
@@ -234,13 +234,13 @@ func runMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 		{
 			name:           "invoke list_tables with invalid output format",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    fmt.Sprintf(`{"table_names": "", "output_format": "abcd"}`),
+			requestBody:    `{"table_names": "", "output_format": "abcd"}`,
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
 			name:           "invoke list_tables with malformed table_names parameter",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    fmt.Sprintf(`{"table_names": 12345, "output_format": "detailed"}`),
+			requestBody:    `{"table_names": 12345, "output_format": "detailed"}`,
 			wantStatusCode: http.StatusBadRequest,
 		},
 		{
@@ -253,7 +253,7 @@ func runMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 		{
 			name:           "invoke list_tables with non-existent table",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    fmt.Sprintf(`{"table_names": "non_existent_table"}`),
+			requestBody:    `{"table_names": "non_existent_table"}`,
 			wantStatusCode: http.StatusOK,
 			want:           `null`,
 		},

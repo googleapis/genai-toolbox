@@ -18,10 +18,9 @@ set -e
 
 TABLE_NAME="hotels_python"
 QUICKSTART_PYTHON_DIR="docs/en/getting-started/quickstart/python"
-SQL_FILE=".ci/setup_hotels_sample.sql"
-DEPS_FILE=".ci/quickstart_dependencies.json"
+SQL_FILE=".ci/quickstart_test/setup_hotels_sample.sql"
+DEPS_FILE=".ci/quickstart_test/quickstart_dependencies.json"
 
-# Initialize process IDs to empty at the top of the script
 PROXY_PID=""
 TOOLBOX_PID=""
 
@@ -29,7 +28,6 @@ install_system_packages() {
   apt-get update
   apt-get install -y jq
 
-  # Define the jq filter
   jq_filter='
     .python
     | to_entries
@@ -38,7 +36,6 @@ install_system_packages() {
     | "\(.key)=\(.value)"
   '
 
-  # Process the file with the filter and load the results into an array
   mapfile -t install_list < <(jq -r "$jq_filter" "$DEPS_FILE")
 
   if (( ${#install_list[@]} > 0 )); then
