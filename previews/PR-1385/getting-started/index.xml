@@ -3,7 +3,8 @@
 &lt;p>This guide assumes you have already done the following:&lt;/p>
 &lt;ol>
 &lt;li>Installed &lt;a href="https://wiki.python.org/moin/BeginnersGuide/Download">Python 3.9+&lt;/a> (including &lt;a href="https://pip.pypa.io/en/stable/installation/">pip&lt;/a> and
-your preferred virtual environment tool for managing dependencies e.g. &lt;a href="https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments">venv&lt;/a>).&lt;/li>
+your preferred virtual environment tool for managing dependencies e.g.
+&lt;a href="https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments">venv&lt;/a>).&lt;/li>
 &lt;li>Installed &lt;a href="https://www.postgresql.org/download/">PostgreSQL 16+ and the &lt;code>psql&lt;/code> client&lt;/a>.&lt;/li>
 &lt;/ol>
 &lt;h3 id="cloud-setup-optional">Cloud Setup (Optional)&lt;/h3>
@@ -27,24 +28,6 @@ your preferred virtual environment tool for managing dependencies e.g. &lt;a hre
 
  
 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
  
  
  
@@ -269,24 +252,6 @@ local development:&lt;/p>
  
  
 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
 
 
 
@@ -299,7 +264,8 @@ local development:&lt;/p>
 &lt;p>&lt;a href="https://cloud.google.com/sdk/docs/install">Install the Google Cloud CLI&lt;/a>&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment">Set up Application Default Credentials (ADC)&lt;/a>&lt;/p>
+&lt;p>&lt;a href="https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment">Set up Application Default Credentials
+(ADC)&lt;/a>&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>Set your project and enable Vertex AI&lt;/p></description></item><item><title>Go Quickstart (Local)</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/getting-started/local_quickstart_go/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/getting-started/local_quickstart_go/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
@@ -423,24 +389,6 @@ local development:&lt;/p>
  
  
 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
 
 
 
@@ -453,7 +401,8 @@ local development:&lt;/p>
 &lt;p>&lt;a href="https://cloud.google.com/sdk/docs/install">Install the Google Cloud CLI&lt;/a>&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment">Set up Application Default Credentials (ADC)&lt;/a>&lt;/p>
+&lt;p>&lt;a href="https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment">Set up Application Default Credentials
+(ADC)&lt;/a>&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>Set your project and enable Vertex AI&lt;/p></description></item><item><title>Configuration</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/getting-started/configure/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/getting-started/configure/</guid><description>&lt;p>The primary way to configure Toolbox is through the &lt;code>tools.yaml&lt;/code> file. If you

@@ -38,15 +38,45 @@ This tool provisions a cluster with a &lt;strong>private IP address&lt;/strong> 
 &lt;p>&lt;strong>Permissions &amp;amp; APIs Required:&lt;/strong>
 Before using, ensure the following on your GCP project:&lt;/p>
 &lt;ol>
-&lt;li>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/li>
-&lt;li>The user or service account executing the tool has the following IAM roles:
+&lt;li>
+&lt;p>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>The user or service account executing the tool has one of the following IAM roles:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>roles/alloydb.admin&lt;/code>: To create and manage the AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>roles/alloydb.admin&lt;/code> (the AlloyDB Admin predefined IAM role)&lt;/li>
+&lt;li>&lt;code>roles/owner&lt;/code> (the Owner basic IAM role)&lt;/li>
+&lt;li>&lt;code>roles/editor&lt;/code> (the Editor basic IAM role)&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ol>
+&lt;p>The tool takes the following input parameters:&lt;/p></description></item><item><title>alloydb-create-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/alloydb/alloydb-create-instance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/alloydb/alloydb-create-instance/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>alloydb-create-instance&lt;/code> tool creates a new AlloyDB instance (PRIMARY or
+READ_POOL) within a specified cluster. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.
+This tool provisions a new instance with a &lt;strong>public IP address&lt;/strong>.&lt;/p>
+&lt;p>&lt;strong>Permissions &amp;amp; APIs Required:&lt;/strong>
+Before using, ensure the following on your GCP project:&lt;/p>
+&lt;ol>
+&lt;li>
+&lt;p>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB
+API&lt;/a>
+is enabled.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>The user or service account executing the tool has one of the following IAM
+roles:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>roles/alloydb.admin&lt;/code> (the AlloyDB Admin predefined IAM role)&lt;/li>
+&lt;li>&lt;code>roles/owner&lt;/code> (the Owner basic IAM role)&lt;/li>
+&lt;li>&lt;code>roles/editor&lt;/code> (the Editor basic IAM role)&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ol>
 &lt;p>The tool takes the following input parameters:&lt;/p></description></item><item><title>alloydb-get-cluster</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/alloydb/alloydb-get-cluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/alloydb/alloydb-get-cluster/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-get-cluster&lt;/code> tool retrieves detailed information for a single, specified AlloyDB cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
+&lt;p>The &lt;code>alloydb-get-cluster&lt;/code> tool retrieves detailed information for a single,
+specified AlloyDB cluster. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;table>
  &lt;thead>
  &lt;tr>
@@ -188,7 +218,9 @@ Before using, ensure the following on your GCP project:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>alloydb-get-user</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/alloydb/alloydb-get-user/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/alloydb/alloydb-get-user/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-get-user&lt;/code> tool retrieves detailed information for a single, specified AlloyDB user. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
+&lt;p>The &lt;code>alloydb-get-user&lt;/code> tool retrieves detailed information for a single,
+specified AlloyDB user. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;table>
  &lt;thead>
  &lt;tr>
@@ -262,8 +294,12 @@ Before using, ensure the following on your GCP project:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>alloydb-list-clusters</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/alloydb/alloydb-list-clusters/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/alloydb/alloydb-list-clusters/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-list-clusters&lt;/code> tool retrieves AlloyDB cluster information for all or specified locations in a given project. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
-&lt;p>&lt;code>alloydb-list-clusters&lt;/code> tool lists the detailed information of AlloyDB cluster(cluster name, state, configuration, etc) for a given project and location. The tool takes the following input parameters:&lt;/p>
+&lt;p>The &lt;code>alloydb-list-clusters&lt;/code> tool retrieves AlloyDB cluster information for all
+or specified locations in a given project. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
+&lt;p>&lt;code>alloydb-list-clusters&lt;/code> tool lists the detailed information of AlloyDB
+cluster(cluster name, state, configuration, etc) for a given project and
+location. The tool takes the following input parameters:&lt;/p>
 &lt;table>
  &lt;thead>
  &lt;tr>
@@ -325,8 +361,13 @@ Before using, ensure the following on your GCP project:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>alloydb-list-instances</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/alloydb/alloydb-list-instances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/alloydb/alloydb-list-instances/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-list-instances&lt;/code> tool retrieves AlloyDB instance information for all or specified clusters and locations in a given project. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
-&lt;p>&lt;code>alloydb-list-instances&lt;/code> tool lists the detailed information of AlloyDB instances (instance name, type, IP address, state, configuration, etc) for a given project, cluster and location. The tool takes the following input parameters:&lt;/p>
+&lt;p>The &lt;code>alloydb-list-instances&lt;/code> tool retrieves AlloyDB instance information for all
+or specified clusters and locations in a given project. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
+&lt;p>&lt;code>alloydb-list-instances&lt;/code> tool lists the detailed information of AlloyDB
+instances (instance name, type, IP address, state, configuration, etc) for a
+given project, cluster and location. The tool takes the following input
+parameters:&lt;/p>
 &lt;table>
  &lt;thead>
  &lt;tr>
@@ -394,7 +435,9 @@ Before using, ensure the following on your GCP project:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>alloydb-list-users</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/alloydb/alloydb-list-users/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/alloydb/alloydb-list-users/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-list-users&lt;/code> tool lists all database users within an AlloyDB cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.
+&lt;p>The &lt;code>alloydb-list-users&lt;/code> tool lists all database users within an AlloyDB
+cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/">alloydb-admin&lt;/a>
+source.
 The tool takes the following input parameters:&lt;/p>
 &lt;table>
  &lt;thead>
@@ -471,19 +514,33 @@ insights using GoogleSQL and taking advantage of flexible pricing models
 across on-demand and flat-rate options.&lt;/p>
 &lt;p>If you are new to BigQuery, you can try to
 &lt;a href="https://cloud.google.com/bigquery/docs/quickstarts/quickstart-command-line">load and query data with the bq tool&lt;/a>.&lt;/p></description></item><item><title>bigquery-analyze-contribution</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/bigquery/bigquery-analyze-contribution/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/bigquery/bigquery-analyze-contribution/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>bigquery-analyze-contribution&lt;/code> tool performs contribution analysis in BigQuery by creating a temporary &lt;code>CONTRIBUTION_ANALYSIS&lt;/code> model and then querying it with &lt;code>ML.GET_INSIGHTS&lt;/code> to find top contributors for a given metric.&lt;/p>
+&lt;p>A &lt;code>bigquery-analyze-contribution&lt;/code> tool performs contribution analysis in
+BigQuery by creating a temporary &lt;code>CONTRIBUTION_ANALYSIS&lt;/code> model and then querying
+it with &lt;code>ML.GET_INSIGHTS&lt;/code> to find top contributors for a given metric.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>bigquery-analyze-contribution&lt;/code> takes the following parameters:&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>input_data&lt;/strong> (string, required): The data that contain the test and control data to analyze. This can be a fully qualified BigQuery table ID (e.g., &lt;code>my-project.my_dataset.my_table&lt;/code>) or a SQL query that returns the data.&lt;/li>
-&lt;li>&lt;strong>contribution_metric&lt;/strong> (string, required): The name of the column that contains the metric to analyze. This can be SUM(metric_column_name), SUM(numerator_metric_column_name)/SUM(denominator_metric_column_name) or SUM(metric_sum_column_name)/COUNT(DISTINCT categorical_column_name) depending the type of metric to analyze.&lt;/li>
-&lt;li>&lt;strong>is_test_col&lt;/strong> (string, required): The name of the column that identifies whether a row is in the test or control group. The column must contain boolean values.&lt;/li>
-&lt;li>&lt;strong>dimension_id_cols&lt;/strong> (array of strings, optional): An array of column names that uniquely identify each dimension.&lt;/li>
-&lt;li>&lt;strong>top_k_insights_by_apriori_support&lt;/strong> (integer, optional): The number of top insights to return, ranked by apriori support. Default to &amp;lsquo;30&amp;rsquo;.&lt;/li>
-&lt;li>&lt;strong>pruning_method&lt;/strong> (string, optional): The method to use for pruning redundant insights. Can be &lt;code>'NO_PRUNING'&lt;/code> or &lt;code>'PRUNE_REDUNDANT_INSIGHTS'&lt;/code>. Defaults to &lt;code>'PRUNE_REDUNDANT_INSIGHTS'&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>input_data&lt;/strong> (string, required): The data that contain the test and control
+data to analyze. This can be a fully qualified BigQuery table ID (e.g.,
+&lt;code>my-project.my_dataset.my_table&lt;/code>) or a SQL query that returns the data.&lt;/li>
+&lt;li>&lt;strong>contribution_metric&lt;/strong> (string, required): The name of the column that
+contains the metric to analyze. This can be SUM(metric_column_name),
+SUM(numerator_metric_column_name)/SUM(denominator_metric_column_name) or
+SUM(metric_sum_column_name)/COUNT(DISTINCT categorical_column_name) depending
+the type of metric to analyze.&lt;/li>
+&lt;li>&lt;strong>is_test_col&lt;/strong> (string, required): The name of the column that identifies
+whether a row is in the test or control group. The column must contain boolean
+values.&lt;/li>
+&lt;li>&lt;strong>dimension_id_cols&lt;/strong> (array of strings, optional): An array of column names
+that uniquely identify each dimension.&lt;/li>
+&lt;li>&lt;strong>top_k_insights_by_apriori_support&lt;/strong> (integer, optional): The number of top
+insights to return, ranked by apriori support. Default to &amp;lsquo;30&amp;rsquo;.&lt;/li>
+&lt;li>&lt;strong>pruning_method&lt;/strong> (string, optional): The method to use for pruning redundant
+insights. Can be &lt;code>'NO_PRUNING'&lt;/code> or &lt;code>'PRUNE_REDUNDANT_INSIGHTS'&lt;/code>. Defaults to
+&lt;code>'PRUNE_REDUNDANT_INSIGHTS'&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -492,15 +549,18 @@ across on-demand and flat-rate options.&lt;/p>
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-bigquery-source&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to run contribution analysis on a dataset in BigQuery.&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="sample-prompt">Sample Prompt&lt;/h2>
-&lt;p>You can prepare a sample table following &lt;a href="https://cloud.google.com/bigquery/docs/get-contribution-analysis-insights">https://cloud.google.com/bigquery/docs/get-contribution-analysis-insights&lt;/a>.
+&lt;p>You can prepare a sample table following
+&lt;a href="https://cloud.google.com/bigquery/docs/get-contribution-analysis-insights">https://cloud.google.com/bigquery/docs/get-contribution-analysis-insights&lt;/a>.
 And use the following sample prompts to call this tool:&lt;/p></description></item><item><title>bigquery-conversational-analytics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/bigquery/bigquery-conversational-analytics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/bigquery/bigquery-conversational-analytics/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>bigquery-conversational-analytics&lt;/code> tool allows you to ask questions about your data in natural language.&lt;/p>
-&lt;p>This function takes a user&amp;rsquo;s question (which can include conversational history for context)
-and references to specific BigQuery tables, and sends them to a stateless conversational API.&lt;/p>
-&lt;p>The API uses a GenAI agent to understand the question, generate and execute SQL queries
-and Python code, and formulate an answer. This function returns a detailed, sequential
-log of this entire process, which includes any generated SQL or Python code, the data
-retrieved, and the final text answer.&lt;/p></description></item><item><title>bigquery-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/bigquery/bigquery-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/bigquery/bigquery-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>bigquery-conversational-analytics&lt;/code> tool allows you to ask questions about
+your data in natural language.&lt;/p>
+&lt;p>This function takes a user&amp;rsquo;s question (which can include conversational history
+for context) and references to specific BigQuery tables, and sends them to a
+stateless conversational API.&lt;/p>
+&lt;p>The API uses a GenAI agent to understand the question, generate and execute SQL
+queries and Python code, and formulate an answer. This function returns a
+detailed, sequential log of this entire process, which includes any generated
+SQL or Python code, the data retrieved, and the final text answer.&lt;/p></description></item><item><title>bigquery-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/bigquery/bigquery-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/bigquery/bigquery-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-execute-sql&lt;/code> tool executes a SQL statement against BigQuery.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -551,13 +611,23 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>bigquery-forecast&lt;/code> constructs and executes a &lt;code>SELECT * FROM AI.FORECAST(...)&lt;/code> query based on the provided parameters:&lt;/p>
+&lt;p>&lt;code>bigquery-forecast&lt;/code> constructs and executes a &lt;code>SELECT * FROM AI.FORECAST(...)&lt;/code>
+query based on the provided parameters:&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>history_data&lt;/strong> (string, required): This specifies the source of the historical time series data. It can be either a fully qualified BigQuery table ID (e.g., my-project.my_dataset.my_table) or a SQL query that returns the data.&lt;/li>
-&lt;li>&lt;strong>timestamp_col&lt;/strong> (string, required): The name of the column in your history_data that contains the timestamps.&lt;/li>
-&lt;li>&lt;strong>data_col&lt;/strong> (string, required): The name of the column in your history_data that contains the numeric values to be forecasted.&lt;/li>
-&lt;li>&lt;strong>id_cols&lt;/strong> (array of strings, optional): If you are forecasting multiple time series at once (e.g., sales for different products), this parameter takes an array of column names that uniquely identify each series. It defaults to an empty array if not provided.&lt;/li>
-&lt;li>&lt;strong>horizon&lt;/strong> (integer, optional): The number of future time steps you want to predict. It defaults to 10 if not specified.&lt;/li>
+&lt;li>&lt;strong>history_data&lt;/strong> (string, required): This specifies the source of the
+historical time series data. It can be either a fully qualified BigQuery table
+ID (e.g., my-project.my_dataset.my_table) or a SQL query that returns the
+data.&lt;/li>
+&lt;li>&lt;strong>timestamp_col&lt;/strong> (string, required): The name of the column in your
+history_data that contains the timestamps.&lt;/li>
+&lt;li>&lt;strong>data_col&lt;/strong> (string, required): The name of the column in your history_data
+that contains the numeric values to be forecasted.&lt;/li>
+&lt;li>&lt;strong>id_cols&lt;/strong> (array of strings, optional): If you are forecasting multiple time
+series at once (e.g., sales for different products), this parameter takes an
+array of column names that uniquely identify each series. It defaults to an
+empty array if not provided.&lt;/li>
+&lt;li>&lt;strong>horizon&lt;/strong> (integer, optional): The number of future time steps you want to
+predict. It defaults to 10 if not specified.&lt;/li>
 &lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -716,7 +786,29 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 the tool defaults to the project from the source configuration.&lt;/li>
 &lt;/ul>
 &lt;p>The tool&amp;rsquo;s behavior regarding these parameters is influenced by the
-&lt;code>allowedDatasets&lt;/code> restriction on the &lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/bigquery/bigquery-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/bigquery/bigquery-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;code>allowedDatasets&lt;/code> restriction on the &lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-search-catalog</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/bigquery/bigquery-search-catalog/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/bigquery/bigquery-search-catalog/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>bigquery-search-catalog&lt;/code> tool returns all entries in Dataplex Catalog (e.g.
+tables, views, models) with system=bigquery that matches given user query.
+It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>bigquery-search-catalog&lt;/code> takes a required &lt;code>query&lt;/code> parameter based on which
+entries are filtered and returned to the user. It also optionally accepts
+following parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>datasetIds&lt;/code> - The IDs of the bigquery dataset.&lt;/li>
+&lt;li>&lt;code>projectIds&lt;/code> - The IDs of the bigquery project.&lt;/li>
+&lt;li>&lt;code>types&lt;/code> - The type of the data. Accepted values are: CONNECTION, POLICY,
+DATASET, MODEL, ROUTINE, TABLE, VIEW.&lt;/li>
+&lt;li>&lt;code>pageSize&lt;/code> - Number of results in the search page. Defaults to &lt;code>5&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
+&lt;p>Bigquery uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control">Identity and Access Management (IAM)&lt;/a> to control
+user and group access to Dataplex resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials (ADC)&lt;/a> to authorize and authenticate when
+interacting with [Dataplex][dataplex-docs].&lt;/p></description></item><item><title>bigquery-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/bigquery/bigquery-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/bigquery/bigquery-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-sql&lt;/code> tool executes a pre-defined SQL statement. It&amp;rsquo;s compatible with
 the following sources:&lt;/p>
 &lt;ul>
@@ -1000,12 +1092,14 @@ Execute SQL queries as prepared statements in ClickHouse.&lt;/p>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-user">Database User&lt;/h3>
 &lt;p>This source uses standard ClickHouse authentication. You will need to &lt;a href="https://clickhouse.com/docs/en/sql-reference/statements/create/user">create a
-ClickHouse user&lt;/a> (or with &lt;a href="https://clickhouse.com/docs/getting-started/quick-start/cloud#connect-with-your-app">ClickHouse Cloud&lt;/a>) to connect to the database with. The user
-should have appropriate permissions for the operations you plan to perform.&lt;/p>
+ClickHouse user&lt;/a> (or with &lt;a href="https://clickhouse.com/docs/getting-started/quick-start/cloud#connect-with-your-app">ClickHouse
+Cloud&lt;/a>) to connect to the database with. The user should have
+appropriate permissions for the operations you plan to perform.&lt;/p>
 &lt;h3 id="network-access">Network Access&lt;/h3>
 &lt;p>ClickHouse supports multiple protocols:&lt;/p></description></item><item><title>clickhouse-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/clickhouse/clickhouse-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/clickhouse/clickhouse-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>clickhouse-execute-sql&lt;/code> tool executes a SQL statement against a ClickHouse
-database. It&amp;rsquo;s compatible with the &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/clickhouse/">clickhouse&lt;/a> source.&lt;/p>
+database. It&amp;rsquo;s compatible with the &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/clickhouse/">clickhouse&lt;/a>
+source.&lt;/p>
 &lt;p>&lt;code>clickhouse-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the SQL
 statement against the specified &lt;code>source&lt;/code>. This tool includes query logging
 capabilities for monitoring and debugging purposes.&lt;/p>
@@ -1068,11 +1162,16 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>Cloud Monitoring</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-monitoring/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-monitoring/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>cloud-monitoring&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/monitoring/api">Google Cloud Monitoring API&lt;/a>. This allows tools to access cloud monitoring metrics explorer and run promql queries.&lt;/p>
+&lt;p>The &lt;code>cloud-monitoring&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/monitoring/api">Google
+Cloud Monitoring API&lt;/a>. This allows
+tools to access cloud monitoring metrics explorer and run promql queries.&lt;/p>
 &lt;p>Authentication can be handled in two ways:&lt;/p>
 &lt;ol>
-&lt;li>&lt;strong>Application Default Credentials (ADC):&lt;/strong> By default, the source uses ADC to authenticate with the API.&lt;/li>
-&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.&lt;/li>
+&lt;li>&lt;strong>Application Default Credentials (ADC):&lt;/strong> By default, the source uses ADC
+to authenticate with the API.&lt;/li>
+&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source will
+expect an OAuth 2.0 access token to be provided by the client (e.g., a web
+browser) for each request.&lt;/li>
 &lt;/ol>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -1115,16 +1214,12 @@ to a database by following these instructions&lt;/a>.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-sql/">&lt;code>mysql-sql&lt;/code>&lt;/a>&lt;br>
-Execute pre-defined prepared SQL queries in MySQL.&lt;/p>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-sql/">&lt;code>mysql-sql&lt;/code>&lt;/a>
+Execute pre-defined prepared SQL queries in Cloud SQL for MySQL.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-execute-sql/">&lt;code>mysql-execute-sql&lt;/code>&lt;/a>&lt;br>
-Run parameterized SQL queries in Cloud SQL for MySQL.&lt;/p>
-&lt;/li>
-&lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-tables/">&lt;code>mysql-list-tables&lt;/code>&lt;/a>&lt;br>
-List tables in a Cloud SQL for MySQL database.&lt;/p></description></item><item><title>Cloud SQL for PostgreSQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-pg/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-pg/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-execute-sql/">&lt;code>mysql-execute-sql&lt;/code>&lt;/a>
+Run parameterized SQL queries in Cloud SQL for MySQL.&lt;/p></description></item><item><title>Cloud SQL for PostgreSQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-pg/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-pg/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://cloud.google.com/sql/docs/postgres">Cloud SQL for PostgreSQL&lt;/a> is a fully-managed database service
 that helps you set up, maintain, manage, and administer your PostgreSQL
 relational databases on Google Cloud Platform.&lt;/p>
@@ -1157,11 +1252,17 @@ Execute pre-defined SQL Server queries with placeholder parameters.&lt;/p>
 &lt;li>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mssql/mssql-execute-sql/">&lt;code>mssql-execute-sql&lt;/code>&lt;/a>&lt;br>
 Run parameterized SQL Server queries in Cloud SQL for SQL Server.&lt;/p></description></item><item><title>Cloud SQL Admin</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-admin/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-admin/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>cloud-sql-admin&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/sql/docs/mysql/admin-api/v1">Google Cloud SQL Admin API&lt;/a>. This allows tools to perform administrative tasks on Cloud SQL instances, such as creating users and databases.&lt;/p>
+&lt;p>The &lt;code>cloud-sql-admin&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/sql/docs/mysql/admin-api/v1">Google
+Cloud SQL Admin API&lt;/a>. This
+allows tools to perform administrative tasks on Cloud SQL instances, such as
+creating users and databases.&lt;/p>
 &lt;p>Authentication can be handled in two ways:&lt;/p>
 &lt;ol>
-&lt;li>&lt;strong>Application Default Credentials (ADC):&lt;/strong> By default, the source uses ADC to authenticate with the API.&lt;/li>
-&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.&lt;/li>
+&lt;li>&lt;strong>Application Default Credentials (ADC):&lt;/strong> By default, the source uses ADC
+to authenticate with the API.&lt;/li>
+&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source will
+expect an OAuth 2.0 access token to be provided by the client (e.g., a web
+browser) for each request.&lt;/li>
 &lt;/ol>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -1318,7 +1419,52 @@ Google Cloud project.&lt;/p>
  &lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
 &lt;/svg>
 
- &lt;/span>Info&lt;/p></description></item><item><title>cloud-sql-list-databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqllistdatabases/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqllistdatabases/</guid><description>&lt;p>The &lt;code>cloud-sql-list-databases&lt;/code> tool lists all Cloud SQL databases in a specified
+ &lt;/span>Info&lt;/p></description></item><item><title>cloud-monitoring-query-prometheus</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudmonitoring/cloud-monitoring-query-prometheus/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudmonitoring/cloud-monitoring-query-prometheus/</guid><description>&lt;p>The &lt;code>cloud-monitoring-query-prometheus&lt;/code> tool fetches timeseries metrics data
+from Google Cloud Monitoring for a project using a given prometheus query.&lt;/p>
+&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>cloud-monitoring-query-prometheus&lt;/code> tool allows you to query all metrics
+available in Google Cloud Monitoring using the Prometheus Query Language
+(PromQL).
+It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-monitoring/">cloud-monitoring&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;h2 id="prerequisites">Prerequisites&lt;/h2>
+&lt;p>To use this tool, you need to have the following IAM role on your Google Cloud
+project:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>roles/monitoring.viewer&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h2 id="arguments">Arguments&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>Name&lt;/th>
+ &lt;th>Type&lt;/th>
+ &lt;th>Description&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>&lt;code>projectId&lt;/code>&lt;/td>
+ &lt;td>string&lt;/td>
+ &lt;td>The Google Cloud project ID.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>query&lt;/code>&lt;/td>
+ &lt;td>string&lt;/td>
+ &lt;td>The Prometheus query to execute.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h2 id="use-cases">Use Cases&lt;/h2>
+&lt;ul>
+&lt;li>&lt;strong>Ad-hoc analysis:&lt;/strong> Quickly investigate performance issues by executing
+direct promql queries for a database instance.&lt;/li>
+&lt;li>&lt;strong>Prebuilt Configs:&lt;/strong> Use the already added prebuilt tools mentioned in
+prebuilt-tools.md to query the databases system/query level metrics.&lt;/li>
+&lt;/ul>
+&lt;p>Here are some common use cases for the &lt;code>cloud-monitoring-query-prometheus&lt;/code> tool:&lt;/p></description></item><item><title>cloud-sql-list-databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqllistdatabases/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqllistdatabases/</guid><description>&lt;p>The &lt;code>cloud-sql-list-databases&lt;/code> tool lists all Cloud SQL databases in a specified
 Google Cloud project and instance.&lt;/p>
 &lt;style type="text/css">
  
@@ -1609,16 +1755,27 @@ centralized inventory of the data assets in your organization. Dataplex
 Universal Catalog holds business, technical, and runtime metadata for all of
 your data. It helps you discover relationships and semantics in the metadata by
 applying artificial intelligence and machine learning.&lt;/p></description></item><item><title>dataplex-lookup-entry</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/dataplex/dataplex-lookup-entry/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/dataplex/dataplex-lookup-entry/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>dataplex-lookup-entry&lt;/code> tool returns details of a particular entry in Dataplex Catalog.
-It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;p>A &lt;code>dataplex-lookup-entry&lt;/code> tool returns details of a particular entry in Dataplex
+Catalog. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="../sources/dataplex.md">dataplex&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>dataplex-lookup-entry&lt;/code> takes a required &lt;code>name&lt;/code> parameter which contains the project and location to which the request should be attributed in the following form: projects/{project}/locations/{location} and also a required &lt;code>entry&lt;/code> parameter which is the resource name of the entry in the following form: projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}. It also optionally accepts following parameters:&lt;/p>
+&lt;p>&lt;code>dataplex-lookup-entry&lt;/code> takes a required &lt;code>name&lt;/code> parameter which contains the
+project and location to which the request should be attributed in the following
+form: projects/{project}/locations/{location} and also a required &lt;code>entry&lt;/code>
+parameter which is the resource name of the entry in the following form:
+projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.
+It also optionally accepts following parameters:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>view&lt;/code> - View to control which parts of an entry the service should return. It takes integer values from 1-4 corresponding to type of view - BASIC, FULL, CUSTOM, ALL&lt;/li>
-&lt;li>&lt;code>aspectTypes&lt;/code> - Limits the aspects returned to the provided aspect types in the format &lt;code>projects/{project}/locations/{location}/aspectTypes/{aspectType}&lt;/code>. It only works for CUSTOM view.&lt;/li>
-&lt;li>&lt;code>paths&lt;/code> - Limits the aspects returned to those associated with the provided paths within the Entry. It only works for CUSTOM view.&lt;/li>
+&lt;li>&lt;code>view&lt;/code> - View to control which parts of an entry the service should return.
+It takes integer values from 1-4 corresponding to type of view - BASIC,
+FULL, CUSTOM, ALL&lt;/li>
+&lt;li>&lt;code>aspectTypes&lt;/code> - Limits the aspects returned to the provided aspect types in
+the format
+&lt;code>projects/{project}/locations/{location}/aspectTypes/{aspectType}&lt;/code>. It only
+works for CUSTOM view.&lt;/li>
+&lt;li>&lt;code>paths&lt;/code> - Limits the aspects returned to those associated with the provided
+paths within the Entry. It only works for CUSTOM view.&lt;/li>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
@@ -1626,16 +1783,19 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 user and group access to Dataplex resources. Toolbox will use your
 &lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials (ADC)&lt;/a> to authorize and authenticate when
 interacting with [Dataplex][dataplex-docs].&lt;/p></description></item><item><title>dataplex-search-aspect-types</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/dataplex/dataplex-search-aspect-types/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/dataplex/dataplex-search-aspect-types/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>dataplex-search-aspect-types&lt;/code> tool allows to fetch the metadata template of aspect types based on search query.
+&lt;p>A &lt;code>dataplex-search-aspect-types&lt;/code> tool allows to fetch the metadata template of
+aspect types based on search query.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/dataplex/">dataplex&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>dataplex-search-aspect-types&lt;/code> accepts following parameters optionally:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>query&lt;/code> - Narrows down the search of aspect types to value of this parameter. If not provided, it fetches all aspect types available to the user.&lt;/li>
+&lt;li>&lt;code>query&lt;/code> - Narrows down the search of aspect types to value of this parameter.
+If not provided, it fetches all aspect types available to the user.&lt;/li>
 &lt;li>&lt;code>pageSize&lt;/code> - Number of returned aspect types in the search page. Defaults to &lt;code>5&lt;/code>.&lt;/li>
-&lt;li>&lt;code>orderBy&lt;/code> - Specifies the ordering of results. Supported values are: relevance (default), last_modified_timestamp, last_modified_timestamp asc.&lt;/li>
+&lt;li>&lt;code>orderBy&lt;/code> - Specifies the ordering of results. Supported values are: relevance
+(default), last_modified_timestamp, last_modified_timestamp asc.&lt;/li>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
@@ -1650,7 +1810,8 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/dataplex/">dataplex&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>dataplex-search-entries&lt;/code> takes a required &lt;code>query&lt;/code> parameter based on which
-entries are filtered and returned to the user. It also optionally accepts following parameters:&lt;/p>
+entries are filtered and returned to the user. It also optionally accepts
+following parameters:&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>pageSize&lt;/code> - Number of results in the search page. Defaults to &lt;code>5&lt;/code>.&lt;/li>
 &lt;li>&lt;code>orderBy&lt;/code> - Specifies the ordering of results. Supported values are: relevance
@@ -1692,7 +1853,10 @@ query.&lt;/p>
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
 names, or other parts of the query.&lt;/p></description></item><item><title>Firebird</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/firebird/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/firebird/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://firebirdsql.org/">Firebird&lt;/a> is a relational database management system offering many ANSI SQL standard features that runs on Linux, Windows, and a variety of Unix platforms. It is known for its small footprint, powerful features, and easy maintenance.&lt;/p>
+&lt;p>&lt;a href="https://firebirdsql.org/">Firebird&lt;/a> is a relational database management system offering many
+ANSI SQL standard features that runs on Linux, Windows, and a variety of Unix
+platforms. It is known for its small footprint, powerful features, and easy
+maintenance.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
@@ -1706,7 +1870,8 @@ Run parameterized SQL statements in Firebird.&lt;/p>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-user">Database User&lt;/h3>
-&lt;p>This source uses standard authentication. You will need to &lt;a href="https://firebirdsql.org/refdocs/langrefupd25-sql-create-user.html">create a Firebird user&lt;/a> to login to the database with.&lt;/p></description></item><item><title>firebird-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/firebird/firebird-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/firebird/firebird-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>This source uses standard authentication. You will need to &lt;a href="https://firebirdsql.org/refdocs/langrefupd25-sql-create-user.html">create a Firebird
+user&lt;/a> to login to the database with.&lt;/p></description></item><item><title>firebird-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/firebird/firebird-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/firebird/firebird-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>firebird-execute-sql&lt;/code> tool executes a SQL statement against a Firebird
 database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
@@ -1783,7 +1948,10 @@ basics&lt;/a>.&lt;/p>
 user and group access to Firestore resources. Toolbox will use your &lt;a href="https://cloud.google.com/docs/authentication#adc">Application
 Default Credentials (ADC)&lt;/a> to authorize and authenticate when interacting
 with &lt;a href="https://cloud.google.com/firestore/docs">Firestore&lt;/a>.&lt;/p></description></item><item><title>firestore-add-documents</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/firestore/firestore-add-documents/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/firestore/firestore-add-documents/</guid><description>&lt;h2 id="description">Description&lt;/h2>
-&lt;p>The &lt;code>firestore-add-documents&lt;/code> tool allows you to add new documents to a Firestore collection. It supports all Firestore data types using Firestore&amp;rsquo;s native JSON format. The tool automatically generates a unique document ID for each new document.&lt;/p>
+&lt;p>The &lt;code>firestore-add-documents&lt;/code> tool allows you to add new documents to a
+Firestore collection. It supports all Firestore data types using Firestore&amp;rsquo;s
+native JSON format. The tool automatically generates a unique document ID for
+each new document.&lt;/p>
 &lt;h2 id="parameters">Parameters&lt;/h2>
 &lt;table>
  &lt;thead>
@@ -1964,9 +2132,9 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/firestore/">firestore&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>firestore-list-collections&lt;/code> takes an optional &lt;code>parentPath&lt;/code> parameter to specify a document
-path. If provided, it lists all subcollections of that document. If not provided, it lists
-all root-level collections in the database.&lt;/p>
+&lt;p>&lt;code>firestore-list-collections&lt;/code> takes an optional &lt;code>parentPath&lt;/code> parameter to specify
+a document path. If provided, it lists all subcollections of that document. If
+not provided, it lists all root-level collections in the database.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_firestore_collections&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -2004,7 +2172,13 @@ all root-level collections in the database.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>firestore-query</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/firestore/firestore-query/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/firestore/firestore-query/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
-&lt;p>The &lt;code>firestore-query&lt;/code> tool allows you to query Firestore collections with dynamic, parameterizable filters that support Firestore&amp;rsquo;s native JSON value types. This tool is designed for querying single collection, which is the standard pattern in Firestore. The collection path itself can be parameterized, making it flexible for various use cases. This tool is particularly useful when you need to create reusable query templates with parameters that can be substituted at runtime.&lt;/p></description></item><item><title>firestore-query-collection</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/firestore/firestore-query-collection/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/firestore/firestore-query-collection/</guid><description>&lt;h1 id="about">About&lt;/h1>
+&lt;p>The &lt;code>firestore-query&lt;/code> tool allows you to query Firestore collections with
+dynamic, parameterizable filters that support Firestore&amp;rsquo;s native JSON value
+types. This tool is designed for querying single collection, which is the
+standard pattern in Firestore. The collection path itself can be parameterized,
+making it flexible for various use cases. This tool is particularly useful when
+you need to create reusable query templates with parameters that can be
+substituted at runtime.&lt;/p></description></item><item><title>firestore-query-collection</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/firestore/firestore-query-collection/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/firestore/firestore-query-collection/</guid><description>&lt;h1 id="about">About&lt;/h1>
 &lt;p>The &lt;code>firestore-query-collection&lt;/code> tool allows you to query Firestore collections
 with filters, ordering, and limit capabilities.&lt;/p>
 &lt;h2 id="configuration">Configuration&lt;/h2>
@@ -2072,7 +2246,12 @@ with filters, ordering, and limit capabilities.&lt;/p>
 &lt;h3 id="filter-format">Filter Format&lt;/h3>
 &lt;p>Each filter in the &lt;code>filters&lt;/code> array should be a JSON string with the following
 structure:&lt;/p></description></item><item><title>firestore-update-document</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/firestore/firestore-update-document/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/firestore/firestore-update-document/</guid><description>&lt;h2 id="description">Description&lt;/h2>
-&lt;p>The &lt;code>firestore-update-document&lt;/code> tool allows you to update existing documents in Firestore. It supports all Firestore data types using Firestore&amp;rsquo;s native JSON format. The tool can perform both full document updates (replacing all fields) or selective field updates using an update mask. When using an update mask, fields referenced in the mask but not present in the document data will be deleted from the document, following Firestore&amp;rsquo;s native behavior.&lt;/p>
+&lt;p>The &lt;code>firestore-update-document&lt;/code> tool allows you to update existing documents in
+Firestore. It supports all Firestore data types using Firestore&amp;rsquo;s native JSON
+format. The tool can perform both full document updates (replacing all fields)
+or selective field updates using an update mask. When using an update mask,
+fields referenced in the mask but not present in the document data will be
+deleted from the document, following Firestore&amp;rsquo;s native behavior.&lt;/p>
 &lt;h2 id="parameters">Parameters&lt;/h2>
 &lt;table>
  &lt;thead>
@@ -3608,16 +3787,23 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>mssql-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mssql/mssql-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mssql/mssql-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>mssql-list-tables&lt;/code> tool retrieves schema information for all or specified tables in a SQL server database. It is compatible with any of the following sources:&lt;/p>
+&lt;p>The &lt;code>mssql-list-tables&lt;/code> tool retrieves schema information for all or specified
+tables in a SQL server database. It is compatible with any of the following
+sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-mssql/">cloud-sql-mssql&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/mssql/">mssql&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>mssql-list-tables&lt;/code> lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned).&lt;/p>
+&lt;p>&lt;code>mssql-list-tables&lt;/code> lists detailed schema information (object type, columns,
+constraints, indexes, triggers, owner, comment) as JSON for user-created tables
+(ordinary or partitioned).&lt;/p>
 &lt;p>The tool takes the following input parameters:&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>&lt;code>table_names&lt;/code>&lt;/strong> (string, optional): Filters by a comma-separated list of names. By default, it lists all tables in user schemas. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>.&lt;/li>
-&lt;li>&lt;strong>&lt;code>output_format&lt;/code>&lt;/strong> (string, optional): Indicate the output format of table schema. &lt;code>simple&lt;/code> will return only the table names, &lt;code>detailed&lt;/code> will return the full table information. Default: &lt;code>detailed&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>&lt;code>table_names&lt;/code>&lt;/strong> (string, optional): Filters by a comma-separated list of
+names. By default, it lists all tables in user schemas. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>&lt;code>output_format&lt;/code>&lt;/strong> (string, optional): Indicate the output format of table
+schema. &lt;code>simple&lt;/code> will return only the table names, &lt;code>detailed&lt;/code> will return the
+full table information. Default: &lt;code>detailed&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -3678,22 +3864,24 @@ reliability, performance, and ease of use.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-sql/">&lt;code>mysql-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-sql/">&lt;code>mysql-sql&lt;/code>&lt;/a>
 Execute pre-defined prepared SQL queries in MySQL.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-execute-sql/">&lt;code>mysql-execute-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-execute-sql/">&lt;code>mysql-execute-sql&lt;/code>&lt;/a>
 Run parameterized SQL queries in MySQL.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-tables/">&lt;code>mysql-list-tables&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-active-queries/">&lt;code>mysql-list-active-queries&lt;/code>&lt;/a>
+List active queries in MySQL.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-tables/">&lt;code>mysql-list-tables&lt;/code>&lt;/a>
 List tables in a MySQL database.&lt;/p>
 &lt;/li>
-&lt;/ul>
-&lt;h2 id="requirements">Requirements&lt;/h2>
-&lt;h3 id="database-user">Database User&lt;/h3>
-&lt;p>This source only uses standard authentication. You will need to &lt;a href="https://dev.mysql.com/doc/refman/8.4/en/user-names.html">create a
-MySQL user&lt;/a> to login to the database with.&lt;/p></description></item><item><title>mysql-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-tables-missing-unique-indexes/">&lt;code>mysql-list-tables-missing-unique-indexes&lt;/code>&lt;/a>
+List tables in a MySQL database that do not have primary or unique indices.&lt;/p></description></item><item><title>mysql-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>mysql-execute-sql&lt;/code> tool executes a SQL statement against a MySQL
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
@@ -3741,13 +3929,73 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>mysql-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>mysql-list-tables&lt;/code> tool retrieves schema information for all or specified tables in a MySQL database. It is compatible with any of the following sources:&lt;/p>
+&lt;/table></description></item><item><title>mysql-list-active-queries</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-active-queries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-active-queries/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mysql-list-active-queries&lt;/code> tool retrieves information about active queries in
+a MySQL database. It&amp;rsquo;s compatible with:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/mysql/">mysql&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>mysql-list-tables&lt;/code> lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, it lists all tables in user schemas. The output format can be set to &lt;code>simple&lt;/code> which will return only the table names or &lt;code>detailed&lt;/code> which is the default.&lt;/p></description></item><item><title>mysql-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;code>mysql-list-active-queries&lt;/code> outputs detailed information as JSON for current
+active queries, ordered by execution time in descending order.
+This tool takes 2 optional input parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>min_duration_secs&lt;/code> (optional): Only show queries running for at least this
+long in seconds, default &lt;code>0&lt;/code>.&lt;/li>
+&lt;li>&lt;code>limit&lt;/code> (optional): max number of queries to return, default &lt;code>10&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_active_queries&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">mysql-list-active-queries&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-mysql-instance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Lists top N (default 10) ongoing queries from processlist and innodb_trx, ordered by execution time in descending order. Returns detailed information of those queries in json format, including process id, query, transaction duration, transaction wait duration, process time, transaction state, process state, username with host, transaction rows locked, transaction rows modified, and db schema.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following fields:&lt;/p></description></item><item><title>mysql-list-table-fragmentation</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-table-fragmentation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-table-fragmentation/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mysql-list-table-fragmentation&lt;/code> tool checks table fragmentation of MySQL
+tables by calculating the size of the data and index files in bytes and
+comparing with free space allocated to each table. This tool calculates
+&lt;code>fragmentation_percentage&lt;/code> which represents the proportion of free space
+relative to the total data and index size. It&amp;rsquo;s compatible with&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/mysql/">mysql&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>mysql-list-table-fragmentation&lt;/code> outputs detailed information as JSON , ordered
+by the fragmentation percentage in descending order.
+This tool takes 4 optional input parameters:&lt;/p></description></item><item><title>mysql-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>mysql-list-tables&lt;/code> tool retrieves schema information for all or specified
+tables in a MySQL database. It is compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/mysql/">mysql&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>mysql-list-tables&lt;/code> lists detailed schema information (object type, columns,
+constraints, indexes, triggers, owner, comment) as JSON for user-created tables
+(ordinary or partitioned). Filters by a comma-separated list of names. If names
+are omitted, it lists all tables in user schemas. The output format can be set
+to &lt;code>simple&lt;/code> which will return only the table names or &lt;code>detailed&lt;/code> which is the
+default.&lt;/p></description></item><item><title>mysql-list-tables-missing-unique-indexes</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-tables-missing-unique-indexes/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-tables-missing-unique-indexes/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mysql-list-tables-missing-unique-indexes&lt;/code> tool searches tables that do not
+have primary or unique indices in a MySQL database. It&amp;rsquo;s compatible with:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/mysql/">mysql&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>mysql-list-tables-missing-unique-indexes&lt;/code> outputs table names, including
+&lt;code>table_schema&lt;/code> and &lt;code>table_name&lt;/code> in JSON format. It takes 2 optional input
+parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>table_schema&lt;/code> (optional): Only check tables in this specific schema/database.
+Search all visible tables in all visible databases if not specified.&lt;/li>
+&lt;li>&lt;code>limit&lt;/code> (optional): max number of queries to return, default &lt;code>50&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_tables_missing_unique_indexes&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">mysql-list-tables-missing-unique-indexes&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-mysql-instance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Find tables that do not have primary or unique key constraint. A primary key or unique key is the only mechanism that guaranttes a row is unique. Without them, the database-level protection against data integrity issues will be missing.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following fields:&lt;/p></description></item><item><title>mysql-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>mysql-sql&lt;/code> tool executes a pre-defined SQL statement against a MySQL
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
@@ -3798,19 +4046,33 @@ This tool is compatible with any of the following sources:&lt;/p>
 &lt;p>For security, the tool can be configured to be read-only. If the &lt;code>readOnly&lt;/code> flag
 is set to &lt;code>true&lt;/code>, the tool will analyze the incoming Cypher query and reject any
 write operations (like &lt;code>CREATE&lt;/code>, &lt;code>MERGE&lt;/code>, &lt;code>DELETE&lt;/code>, etc.) before execution.&lt;/p></description></item><item><title>neo4j-schema</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/neo4j/neo4j-schema/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/neo4j/neo4j-schema/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>neo4j-schema&lt;/code> tool connects to a Neo4j database and extracts its complete schema information. It runs multiple queries concurrently to efficiently gather details about node labels, relationships, properties, constraints, and indexes.&lt;/p>
-&lt;p>The tool automatically detects if the APOC (Awesome Procedures on Cypher) library is available. If so, it uses APOC procedures like &lt;code>apoc.meta.schema&lt;/code> for a highly detailed overview of the database structure; otherwise, it falls back to using native Cypher queries.&lt;/p></description></item><item><title>OceanBase</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/oceanbase/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/oceanbase/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://www.oceanbase.com/">OceanBase&lt;/a> is a distributed relational database management system (RDBMS) that provides high availability, scalability, and strong consistency. It&amp;rsquo;s designed to handle large-scale data processing and is compatible with MySQL, making it easy for developers to migrate from MySQL to OceanBase.&lt;/p>
+&lt;p>A &lt;code>neo4j-schema&lt;/code> tool connects to a Neo4j database and extracts its complete
+schema information. It runs multiple queries concurrently to efficiently gather
+details about node labels, relationships, properties, constraints, and indexes.&lt;/p>
+&lt;p>The tool automatically detects if the APOC (Awesome Procedures on Cypher)
+library is available. If so, it uses APOC procedures like &lt;code>apoc.meta.schema&lt;/code> for
+a highly detailed overview of the database structure; otherwise, it falls back
+to using native Cypher queries.&lt;/p></description></item><item><title>OceanBase</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/oceanbase/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/oceanbase/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://www.oceanbase.com/">OceanBase&lt;/a> is a distributed relational database management
+system (RDBMS) that provides high availability, scalability, and strong
+consistency. It&amp;rsquo;s designed to handle large-scale data processing and is
+compatible with MySQL, making it easy for developers to migrate from MySQL to
+OceanBase.&lt;/p>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-user">Database User&lt;/h3>
-&lt;p>This source only uses standard authentication. You will need to create an OceanBase user to login to the database with. OceanBase supports MySQL-compatible user management syntax.&lt;/p></description></item><item><title>oceanbase-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/oceanbase/oceanbase-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/oceanbase/oceanbase-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>An &lt;code>oceanbase-execute-sql&lt;/code> tool executes a SQL statement against an OceanBase database. It&amp;rsquo;s compatible with the following source:&lt;/p>
+&lt;p>This source only uses standard authentication. You will need to create an
+OceanBase user to login to the database with. OceanBase supports
+MySQL-compatible user management syntax.&lt;/p></description></item><item><title>oceanbase-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/oceanbase/oceanbase-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/oceanbase/oceanbase-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>An &lt;code>oceanbase-execute-sql&lt;/code> tool executes a SQL statement against an OceanBase
+database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="../sources/oceanbase.md">oceanbase&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>oceanbase-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the sql statement against the &lt;code>source&lt;/code>.&lt;/p>
+&lt;p>&lt;code>oceanbase-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the sql
+statement against the &lt;code>source&lt;/code>.&lt;/p>
 &lt;blockquote>
-&lt;p>&lt;strong>Note:&lt;/strong> This tool is intended for developer assistant workflows with human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&lt;/blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool is intended for developer assistant workflows with
+human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&lt;/blockquote>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">execute_sql_tool&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -3848,16 +4110,20 @@ write operations (like &lt;code>CREATE&lt;/code>, &lt;code>MERGE&lt;/code>, &lt;
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>oceanbase-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/oceanbase/oceanbase-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/oceanbase/oceanbase-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>An &lt;code>oceanbase-sql&lt;/code> tool executes a pre-defined SQL statement against an OceanBase database. It&amp;rsquo;s compatible with the following source:&lt;/p>
+&lt;p>An &lt;code>oceanbase-sql&lt;/code> tool executes a pre-defined SQL statement against an
+OceanBase database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="../sources/oceanbase.md">oceanbase&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>The specified SQL statement is executed as a &lt;a href="https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html">prepared statement&lt;/a>, and expects parameters in the SQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
+&lt;p>The specified SQL statement is executed as a &lt;a href="https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html">prepared
+statement&lt;/a>, and expects parameters in the SQL query to be in the
+form of placeholders &lt;code>?&lt;/code>.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;blockquote>
 &lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
 Query parameters can be used as substitutes for arbitrary expressions.
-Parameters cannot be used as substitutes for identifiers, column names, table names, or other parts of the query.&lt;/p></description></item><item><title>postgres-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/postgres/postgres-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/postgres/postgres-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+Parameters cannot be used as substitutes for identifiers, column names, table
+names, or other parts of the query.&lt;/p></description></item><item><title>postgres-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/postgres/postgres-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/postgres/postgres-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>postgres-execute-sql&lt;/code> tool executes a SQL statement against a Postgres
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
@@ -3907,16 +4173,24 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>postgres-list-active-queries</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/postgres/postgres-list-active-queries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/postgres/postgres-list-active-queries/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>postgres-list-active-queries&lt;/code> tool retrieves information about currently active queries in a Postgres database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;p>The &lt;code>postgres-list-active-queries&lt;/code> tool retrieves information about currently
+active queries in a Postgres database. It&amp;rsquo;s compatible with any of the following
+sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>postgres-list-active-queries&lt;/code> lists detailed information as JSON for currently active queries. The tool takes the following input parameters:&lt;/p>
+&lt;p>&lt;code>postgres-list-active-queries&lt;/code> lists detailed information as JSON for currently
+active queries. The tool takes the following input parameters:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>min_duraton&lt;/code> (optional): Only show queries running at least this long (e.g., &amp;lsquo;1 minute&amp;rsquo;, &amp;lsquo;1 second&amp;rsquo;, &amp;lsquo;2 seconds&amp;rsquo;). Default: &amp;lsquo;1 minute&amp;rsquo;.&lt;/li>
-&lt;li>&lt;code>exclude_application_names&lt;/code> (optional): A comma-separated list of application names to exclude from the query results. This is useful for filtering out queries from specific applications (e.g., &amp;lsquo;psql&amp;rsquo;, &amp;lsquo;pgAdmin&amp;rsquo;, &amp;lsquo;DBeaver&amp;rsquo;). The match is case-sensitive. Whitespace around commas and names is automatically handled. If this parameter is omitted, no applications are excluded.&lt;/li>
+&lt;li>&lt;code>min_duraton&lt;/code> (optional): Only show queries running at least this long (e.g.,
+&amp;lsquo;1 minute&amp;rsquo;, &amp;lsquo;1 second&amp;rsquo;, &amp;lsquo;2 seconds&amp;rsquo;). Default: &amp;lsquo;1 minute&amp;rsquo;.&lt;/li>
+&lt;li>&lt;code>exclude_application_names&lt;/code> (optional): A comma-separated list of application
+names to exclude from the query results. This is useful for filtering out
+queries from specific applications (e.g., &amp;lsquo;psql&amp;rsquo;, &amp;lsquo;pgAdmin&amp;rsquo;, &amp;lsquo;DBeaver&amp;rsquo;). The
+match is case-sensitive. Whitespace around commas and names is automatically
+handled. If this parameter is omitted, no applications are excluded.&lt;/li>
 &lt;li>&lt;code>limit&lt;/code> (optional): The maximum number of rows to return. Default: &lt;code>50&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
@@ -3926,13 +4200,17 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">List the top N (default 50) currently running queries (state=&amp;#39;active&amp;#39;) from pg_stat_activity, ordered by longest-running first. Returns pid, user, database, application_name, client_addr, state, wait_event_type/wait_event, backend/xact/query start times, computed query_duration, and the SQL text.&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>postgres-list-available-extensions</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/postgres/postgres-list-available-extensions/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/postgres/postgres-list-available-extensions/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>postgres-list-available-extensions&lt;/code> tool retrieves all PostgreSQL extensions available for installation on a Postgres database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;p>The &lt;code>postgres-list-available-extensions&lt;/code> tool retrieves all PostgreSQL
+extensions available for installation on a Postgres database. It&amp;rsquo;s compatible
+with any of the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>postgres-list-available-extensions&lt;/code> lists all PostgreSQL extensions available for installation (extension name, default version description) as JSON. The does not support any input parameter.&lt;/p>
+&lt;p>&lt;code>postgres-list-available-extensions&lt;/code> lists all PostgreSQL extensions available
+for installation (extension name, default version description) as JSON. The does
+not support any input parameter.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_available_extensions&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -3971,13 +4249,17 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>postgres-list-installed-extensions</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/postgres/postgres-list-installed-extensions/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/postgres/postgres-list-installed-extensions/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>postgres-list-installed-extensions&lt;/code> tool retrieves all PostgreSQL extensions installed on a Postgres database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;p>The &lt;code>postgres-list-installed-extensions&lt;/code> tool retrieves all PostgreSQL
+extensions installed on a Postgres database. It&amp;rsquo;s compatible with any of the
+following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>postgres-list-installed-extensions&lt;/code> lists all installed PostgreSQL extensions (extension name, version, schema, owner, description) as JSON. The does not support any input parameter.&lt;/p>
+&lt;p>&lt;code>postgres-list-installed-extensions&lt;/code> lists all installed PostgreSQL extensions
+(extension name, version, schema, owner, description) as JSON. The does not
+support any input parameter.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_installed_extensions&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -4015,15 +4297,22 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>postgres-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/postgres/postgres-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/postgres/postgres-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>postgres-list-tables&lt;/code> tool retrieves schema information for all or specified tables in a Postgres database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;p>The &lt;code>postgres-list-tables&lt;/code> tool retrieves schema information for all or
+specified tables in a Postgres database. It&amp;rsquo;s compatible with any of the
+following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>postgres-list-tables&lt;/code> lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). The tool takes the following input parameters:
-* &lt;code>table_names&lt;/code> (optional): Filters by a comma-separated list of names. By default, it lists all tables in user schemas.
-* &lt;code>output_format&lt;/code> (optional): Indicate the output format of table schema. &lt;code>simple&lt;/code> will return only the table names, &lt;code>detailed&lt;/code> will return the full table information. Default: &lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/postgres/postgres-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/postgres/postgres-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;code>postgres-list-tables&lt;/code> lists detailed schema information (object type, columns,
+constraints, indexes, triggers, owner, comment) as JSON for user-created tables
+(ordinary or partitioned). The tool takes the following input parameters:
+* &lt;code>table_names&lt;/code> (optional): Filters by a comma-separated list of names. By
+default, it lists all tables in user schemas.
+* &lt;code>output_format&lt;/code> (optional): Indicate the output format of table schema.
+&lt;code>simple&lt;/code> will return only the table names, &lt;code>detailed&lt;/code> will return the full
+table information. Default: &lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/postgres/postgres-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/postgres/postgres-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>postgres-sql&lt;/code> tool executes a pre-defined SQL statement against a Postgres
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
@@ -4059,8 +4348,11 @@ List active queries in a PostgreSQL database.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/postgres/postgres-list-available-extensions/">&lt;code>postgres-list-available-extensions&lt;/code>&lt;/a>
-List available extensions for installation in a PostgreSQL database.&lt;/p></description></item><item><title>Prebuilt Tools</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/reference/prebuilt-tools/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/reference/prebuilt-tools/</guid><description>&lt;p>Prebuilt tools are reusable, pre-packaged toolsets that are designed to extend the capabilities of agents. These tools are built to be generic and adaptable, allowing developers to interact with and take action on databases.&lt;/p>
-&lt;p>See guides, &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/">Connect from your IDE&lt;/a>, for details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.&lt;/p>
+List available extensions for installation in a PostgreSQL database.&lt;/p></description></item><item><title>Prebuilt Tools</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/reference/prebuilt-tools/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/reference/prebuilt-tools/</guid><description>&lt;p>Prebuilt tools are reusable, pre-packaged toolsets that are designed to extend
+the capabilities of agents. These tools are built to be generic and adaptable,
+allowing developers to interact with and take action on databases.&lt;/p>
+&lt;p>See guides, &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/">Connect from your IDE&lt;/a>, for
+details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.&lt;/p>
 &lt;h2 id="alloydb-postgres">AlloyDB Postgres&lt;/h2>
 &lt;ul>
 &lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>alloydb-postgres&lt;/code>&lt;/li>
@@ -4071,23 +4363,29 @@ List available extensions for installation in a PostgreSQL database.&lt;/p></des
 &lt;li>&lt;code>ALLOYDB_POSTGRES_CLUSTER&lt;/code>: The ID of your AlloyDB cluster.&lt;/li>
 &lt;li>&lt;code>ALLOYDB_POSTGRES_INSTANCE&lt;/code>: The ID of your AlloyDB instance.&lt;/li>
 &lt;li>&lt;code>ALLOYDB_POSTGRES_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_USER&lt;/code>: (Optional) The database username. Defaults to IAM authentication if unspecified.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_PASSWORD&lt;/code>: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_IP_TYPE&lt;/code>: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_USER&lt;/code>: (Optional) The database username. Defaults to
+IAM authentication if unspecified.&lt;/li>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_PASSWORD&lt;/code>: (Optional) The password for the database
+user. Defaults to IAM authentication if unspecified.&lt;/li>
+&lt;li>&lt;code>ALLOYDB_POSTGRES_IP_TYPE&lt;/code>: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or
+&amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;strong>AlloyDB Client&lt;/strong> (&lt;code>roles/alloydb.client&lt;/code>) to connect to the instance.&lt;/li>
-&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
+&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to
+execute queries.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
-&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the database.&lt;/li>
-&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the
+database.&lt;/li>
+&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the
+database.&lt;/li>
 &lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
 &lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
 &lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
@@ -4098,25 +4396,46 @@ List available extensions for installation in a PostgreSQL database.&lt;/p></des
 &lt;h2 id="alloydb-postgres-admin">AlloyDB Postgres Admin&lt;/h2>
 &lt;ul>
 &lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>alloydb-postgres-admin&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>API_KEY&lt;/code>: Your API key for the AlloyDB API.&lt;/li>
-&lt;/ul>
-&lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;strong>AlloyDB Admin&lt;/strong> (&lt;code>roles/alloydb.admin&lt;/code>) IAM role is required on the project.&lt;/li>
+&lt;li>&lt;strong>AlloyDB Viewer&lt;/strong> (&lt;code>roles/alloydb.viewer&lt;/code>) is required for &lt;code>list&lt;/code> and
+&lt;code>get&lt;/code> tools.&lt;/li>
+&lt;li>&lt;strong>AlloyDB Admin&lt;/strong> (&lt;code>roles/alloydb.admin&lt;/code>) is required for &lt;code>create&lt;/code> tools.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;code>alloydb-create-cluster&lt;/code>: Creates a new AlloyDB cluster.&lt;/li>
-&lt;li>&lt;code>alloydb-operations-get&lt;/code>: Polls the operations API to track the status of long-running operations.&lt;/li>
-&lt;li>&lt;code>alloydb-create-instance&lt;/code>: Creates a new AlloyDB instance within a cluster.&lt;/li>
-&lt;li>&lt;code>alloydb-list-clusters&lt;/code>: Lists all AlloyDB clusters in a project.&lt;/li>
-&lt;li>&lt;code>alloydb-list-instances&lt;/code>: Lists all instances within an AlloyDB cluster.&lt;/li>
-&lt;li>&lt;code>alloydb-list-users&lt;/code>: Lists all database users within an AlloyDB cluster.&lt;/li>
-&lt;li>&lt;code>alloydb-create-user&lt;/code>: Creates a new database user in an AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>create_cluster&lt;/code>: Creates a new AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>list_clusters&lt;/code>: Lists all AlloyDB clusters in a project.&lt;/li>
+&lt;li>&lt;code>get_cluster&lt;/code>: Gets information about a specified AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>create_instance&lt;/code>: Creates a new AlloyDB instance within a cluster.&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>: Lists all instances within an AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>get_instance&lt;/code>: Gets information about a specified AlloyDB instance.&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>: Creates a new database user in an AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>list_users&lt;/code>: Lists all database users within an AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>get_user&lt;/code>: Gets information about a specified database user in an
+AlloyDB cluster.&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>: Polls the operations API to track the status of
+long-running operations.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="alloydb-postgres-observability">AlloyDB Postgres Observability&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>alloydb-postgres-observability&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Monitoring Viewer&lt;/strong> (&lt;code>roles/monitoring.viewer&lt;/code>) is required on the
+project to view monitoring data.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>get_system_metrics&lt;/code>: Fetches system level cloud monitoring data
+(timeseries metrics) for an AlloyDB instance using a PromQL query.&lt;/li>
+&lt;li>&lt;code>get_query_metrics&lt;/code>: Fetches query level cloud monitoring data
+(timeseries metrics) for queries running in an AlloyDB instance using a
+PromQL query.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -4131,22 +4450,33 @@ List available extensions for installation in a PostgreSQL database.&lt;/p></des
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;strong>BigQuery User&lt;/strong> (&lt;code>roles/bigquery.user&lt;/code>) to execute queries and view metadata.&lt;/li>
-&lt;li>&lt;strong>BigQuery Metadata Viewer&lt;/strong> (&lt;code>roles/bigquery.metadataViewer&lt;/code>) to view all datasets.&lt;/li>
-&lt;li>&lt;strong>BigQuery Data Editor&lt;/strong> (&lt;code>roles/bigquery.dataEditor&lt;/code>) to create or modify datasets and tables.&lt;/li>
-&lt;li>&lt;strong>Gemini for Google Cloud&lt;/strong> (&lt;code>roles/cloudaicompanion.user&lt;/code>) to use the conversational analytics API.&lt;/li>
+&lt;li>&lt;strong>BigQuery User&lt;/strong> (&lt;code>roles/bigquery.user&lt;/code>) to execute queries and view
+metadata.&lt;/li>
+&lt;li>&lt;strong>BigQuery Metadata Viewer&lt;/strong> (&lt;code>roles/bigquery.metadataViewer&lt;/code>) to view
+all datasets.&lt;/li>
+&lt;li>&lt;strong>BigQuery Data Editor&lt;/strong> (&lt;code>roles/bigquery.dataEditor&lt;/code>) to create or
+modify datasets and tables.&lt;/li>
+&lt;li>&lt;strong>Gemini for Google Cloud&lt;/strong> (&lt;code>roles/cloudaicompanion.user&lt;/code>) to use the
+conversational analytics API.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;code>analyze_contribution&lt;/code>: Use this tool to perform contribution analysis, also called key driver analysis.&lt;/li>
-&lt;li>&lt;code>ask_data_insights&lt;/code>: Use this tool to perform data analysis, get insights, or answer complex questions about the contents of specific BigQuery tables. For more information on required roles, API setup, and IAM configuration, see the setup and authentication section of the &lt;a href="https://cloud.google.com/gemini/docs/conversational-analytics-api/overview">Conversational Analytics API documentation&lt;/a>.&lt;/li>
+&lt;li>&lt;code>analyze_contribution&lt;/code>: Use this tool to perform contribution analysis,
+also called key driver analysis.&lt;/li>
+&lt;li>&lt;code>ask_data_insights&lt;/code>: Use this tool to perform data analysis, get
+insights, or answer complex questions about the contents of specific
+BigQuery tables. For more information on required roles, API setup, and
+IAM configuration, see the setup and authentication section of the
+&lt;a href="https://cloud.google.com/gemini/docs/conversational-analytics-api/overview">Conversational Analytics API
+documentation&lt;/a>.&lt;/li>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL statement.&lt;/li>
 &lt;li>&lt;code>forecast&lt;/code>: Use this tool to forecast time series data.&lt;/li>
 &lt;li>&lt;code>get_dataset_info&lt;/code>: Gets dataset metadata.&lt;/li>
 &lt;li>&lt;code>get_table_info&lt;/code>: Gets table metadata.&lt;/li>
 &lt;li>&lt;code>list_dataset_ids&lt;/code>: Lists datasets.&lt;/li>
 &lt;li>&lt;code>list_table_ids&lt;/code>: Lists tables.&lt;/li>
+&lt;li>&lt;code>search_catalog&lt;/code>: Search for entries based on the provided query.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -4167,14 +4497,80 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;strong>Cloud SQL Client&lt;/strong> (&lt;code>roles/cloudsql.client&lt;/code>) to connect to the instance.&lt;/li>
-&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Client&lt;/strong> (&lt;code>roles/cloudsql.client&lt;/code>) to connect to the
+instance.&lt;/li>
+&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to
+execute queries.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;li>&lt;code>get_query_plan&lt;/code>: Provides information about how MySQL executes a SQL
+statement.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="cloud-sql-for-mysql-observability">Cloud SQL for MySQL Observability&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mysql-observability&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Monitoring Viewer&lt;/strong> (&lt;code>roles/monitoring.viewer&lt;/code>) is required on the
+project to view monitoring data.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>get_system_metrics&lt;/code>: Fetches system level cloud monitoring data
+(timeseries metrics) for a MySQL instance using a PromQL query.&lt;/li>
+&lt;li>&lt;code>get_query_metrics&lt;/code>: Fetches query level cloud monitoring data
+(timeseries metrics) for queries running in a MySQL instance using a
+PromQL query.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="cloud-sql-for-mysql-admin">Cloud SQL for MySQL Admin&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mysql-admin&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Cloud SQL Viewer&lt;/strong> (&lt;code>roles/cloudsql.viewer&lt;/code>): Provides read-only
+access to resources.
+&lt;ul>
+&lt;li>&lt;code>get_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Editor&lt;/strong> (&lt;code>roles/cloudsql.editor&lt;/code>): Provides permissions to
+manage existing resources.
+&lt;ul>
+&lt;li>All &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Admin&lt;/strong> (&lt;code>roles/cloudsql.admin&lt;/code>): Provides full control over
+all resources.
+&lt;ul>
+&lt;li>All &lt;code>editor&lt;/code> and &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>create_instance&lt;/code>: Creates a new Cloud SQL for MySQL instance.&lt;/li>
+&lt;li>&lt;code>get_instance&lt;/code>: Gets information about a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>: Lists Cloud SQL instances in a project.&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>: Creates a new database in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>: Lists all databases for a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>: Creates a new user in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>: Waits for a Cloud SQL operation to complete.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -4187,27 +4583,96 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_POSTGRES_REGION&lt;/code>: The region of your Cloud SQL instance.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_POSTGRES_INSTANCE&lt;/code>: The ID of your Cloud SQL instance.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_POSTGRES_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_POSTGRES_USER&lt;/code>: (Optional) The database username. Defaults to IAM authentication if unspecified.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_POSTGRES_PASSWORD&lt;/code>: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_POSTGRES_IP_TYPE&lt;/code>: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_POSTGRES_USER&lt;/code>: (Optional) The database username. Defaults to
+IAM authentication if unspecified.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_POSTGRES_PASSWORD&lt;/code>: (Optional) The password for the database
+user. Defaults to IAM authentication if unspecified.&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_POSTGRES_IP_TYPE&lt;/code>: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or
+&amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;strong>Cloud SQL Client&lt;/strong> (&lt;code>roles/cloudsql.client&lt;/code>) to connect to the instance.&lt;/li>
-&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Client&lt;/strong> (&lt;code>roles/cloudsql.client&lt;/code>) to connect to the
+instance.&lt;/li>
+&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to
+execute queries.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
-&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the database.&lt;/li>
-&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the
+database.&lt;/li>
+&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the
+database.&lt;/li>
 &lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
 &lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
 &lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="cloud-sql-for-postgresql-observability">Cloud SQL for PostgreSQL Observability&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-postgres-observability&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Monitoring Viewer&lt;/strong> (&lt;code>roles/monitoring.viewer&lt;/code>) is required on the
+project to view monitoring data.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>get_system_metrics&lt;/code>: Fetches system level cloud monitoring data
+(timeseries metrics) for a Postgres instance using a PromQL query.&lt;/li>
+&lt;li>&lt;code>get_query_metrics&lt;/code>: Fetches query level cloud monitoring data
+(timeseries metrics) for queries running in Postgres instance using a
+PromQL query.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="cloud-sql-for-postgresql-admin">Cloud SQL for PostgreSQL Admin&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-postgres-admin&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Cloud SQL Viewer&lt;/strong> (&lt;code>roles/cloudsql.viewer&lt;/code>): Provides read-only
+access to resources.
+&lt;ul>
+&lt;li>&lt;code>get_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Editor&lt;/strong> (&lt;code>roles/cloudsql.editor&lt;/code>): Provides permissions to
+manage existing resources.
+&lt;ul>
+&lt;li>All &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Admin&lt;/strong> (&lt;code>roles/cloudsql.admin&lt;/code>): Provides full control over
+all resources.
+&lt;ul>
+&lt;li>All &lt;code>editor&lt;/code> and &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>create_instance&lt;/code>: Creates a new Cloud SQL for PostgreSQL instance.&lt;/li>
+&lt;li>&lt;code>get_instance&lt;/code>: Gets information about a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>: Lists Cloud SQL instances in a project.&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>: Creates a new database in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>: Lists all databases for a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>: Creates a new user in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>: Waits for a Cloud SQL operation to complete.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -4223,19 +4688,81 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MSSQL_IP_ADDRESS&lt;/code>: The IP address of the Cloud SQL instance.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MSSQL_USER&lt;/code>: The database username.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MSSQL_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_MSSQL_IP_TYPE&lt;/code>: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
+&lt;li>&lt;code>CLOUD_SQL_MSSQL_IP_TYPE&lt;/code>: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or
+&amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;strong>Cloud SQL Client&lt;/strong> (&lt;code>roles/cloudsql.client&lt;/code>) to connect to the instance.&lt;/li>
-&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Client&lt;/strong> (&lt;code>roles/cloudsql.client&lt;/code>) to connect to the
+instance.&lt;/li>
+&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to
+execute queries.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="cloud-sql-for-sql-server-observability">Cloud SQL for SQL Server Observability&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mssql-observability&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Monitoring Viewer&lt;/strong> (&lt;code>roles/monitoring.viewer&lt;/code>) is required on the
+project to view monitoring data.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>get_system_metrics&lt;/code>: Fetches system level cloud monitoring data
+(timeseries metrics) for a SQL Server instance using a PromQL query.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="cloud-sql-for-sql-server-admin">Cloud SQL for SQL Server Admin&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mssql-admin&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Cloud SQL Viewer&lt;/strong> (&lt;code>roles/cloudsql.viewer&lt;/code>): Provides read-only
+access to resources.
+&lt;ul>
+&lt;li>&lt;code>get_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Editor&lt;/strong> (&lt;code>roles/cloudsql.editor&lt;/code>): Provides permissions to
+manage existing resources.
+&lt;ul>
+&lt;li>All &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Cloud SQL Admin&lt;/strong> (&lt;code>roles/cloudsql.admin&lt;/code>): Provides full control over
+all resources.
+&lt;ul>
+&lt;li>All &lt;code>editor&lt;/code> and &lt;code>viewer&lt;/code> tools&lt;/li>
+&lt;li>&lt;code>create_instance&lt;/code>&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>create_instance&lt;/code>: Creates a new Cloud SQL for SQL Server instance.&lt;/li>
+&lt;li>&lt;code>get_instance&lt;/code>: Gets information about a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_instances&lt;/code>: Lists Cloud SQL instances in a project.&lt;/li>
+&lt;li>&lt;code>create_database&lt;/code>: Creates a new database in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>list_databases&lt;/code>: Lists all databases for a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>create_user&lt;/code>: Creates a new user in a Cloud SQL instance.&lt;/li>
+&lt;li>&lt;code>wait_for_operation&lt;/code>: Waits for a Cloud SQL operation to complete.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -4249,15 +4776,18 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;strong>Dataplex Reader&lt;/strong> (&lt;code>roles/dataplex.viewer&lt;/code>) to search and look up entries.&lt;/li>
+&lt;li>&lt;strong>Dataplex Reader&lt;/strong> (&lt;code>roles/dataplex.viewer&lt;/code>) to search and look up
+entries.&lt;/li>
 &lt;li>&lt;strong>Dataplex Editor&lt;/strong> (&lt;code>roles/dataplex.editor&lt;/code>) to modify entries.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>dataplex_search_entries&lt;/code>: Searches for entries in Dataplex Catalog.&lt;/li>
-&lt;li>&lt;code>dataplex_lookup_entry&lt;/code>: Retrieves a specific entry from Dataplex Catalog.&lt;/li>
-&lt;li>&lt;code>dataplex_search_aspect_types&lt;/code>: Finds aspect types relevant to the query.&lt;/li>
+&lt;li>&lt;code>dataplex_lookup_entry&lt;/code>: Retrieves a specific entry from Dataplex
+Catalog.&lt;/li>
+&lt;li>&lt;code>dataplex_search_aspect_types&lt;/code>: Finds aspect types relevant to the
+query.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -4267,23 +4797,30 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>FIRESTORE_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
-&lt;li>&lt;code>FIRESTORE_DATABASE&lt;/code>: (Optional) The Firestore database ID. Defaults to &amp;ldquo;(default)&amp;rdquo;.&lt;/li>
+&lt;li>&lt;code>FIRESTORE_DATABASE&lt;/code>: (Optional) The Firestore database ID. Defaults to
+&amp;ldquo;(default)&amp;rdquo;.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;strong>Cloud Datastore User&lt;/strong> (&lt;code>roles/datastore.user&lt;/code>) to get documents, list collections, and query collections.&lt;/li>
-&lt;li>&lt;strong>Firebase Rules Viewer&lt;/strong> (&lt;code>roles/firebaserules.viewer&lt;/code>) to get and validate Firestore rules.&lt;/li>
+&lt;li>&lt;strong>Cloud Datastore User&lt;/strong> (&lt;code>roles/datastore.user&lt;/code>) to get documents, list
+collections, and query collections.&lt;/li>
+&lt;li>&lt;strong>Firebase Rules Viewer&lt;/strong> (&lt;code>roles/firebaserules.viewer&lt;/code>) to get and
+validate Firestore rules.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;code>firestore-get-documents&lt;/code>: Gets multiple documents from Firestore by their paths.&lt;/li>
-&lt;li>&lt;code>firestore-list-collections&lt;/code>: Lists Firestore collections for a given parent path.&lt;/li>
-&lt;li>&lt;code>firestore-delete-documents&lt;/code>: Deletes multiple documents from Firestore.&lt;/li>
-&lt;li>&lt;code>firestore-query-collection&lt;/code>: Retrieves one or more Firestore documents from a collection.&lt;/li>
-&lt;li>&lt;code>firestore-get-rules&lt;/code>: Retrieves the active Firestore security rules.&lt;/li>
-&lt;li>&lt;code>firestore-validate-rules&lt;/code>: Checks the provided Firestore Rules source for syntax and validation errors.&lt;/li>
+&lt;li>&lt;code>get_documents&lt;/code>: Gets multiple documents from Firestore by their paths.&lt;/li>
+&lt;li>&lt;code>add_documents&lt;/code>: Adds a new document to a Firestore collection.&lt;/li>
+&lt;li>&lt;code>update_document&lt;/code>: Updates an existing document in Firestore.&lt;/li>
+&lt;li>&lt;code>list_collections&lt;/code>: Lists Firestore collections for a given parent path.&lt;/li>
+&lt;li>&lt;code>delete_documents&lt;/code>: Deletes multiple documents from Firestore.&lt;/li>
+&lt;li>&lt;code>query_collection&lt;/code>: Retrieves one or more Firestore documents from a
+collection.&lt;/li>
+&lt;li>&lt;code>get_rules&lt;/code>: Retrieves the active Firestore security rules.&lt;/li>
+&lt;li>&lt;code>validate_rules&lt;/code>: Checks the provided Firestore Rules source for syntax
+and validation errors.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -4300,7 +4837,8 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
-&lt;li>A Looker account with permissions to access the desired models, explores, and data is required.&lt;/li>
+&lt;li>A Looker account with permissions to access the desired models,
+explores, and data is required.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
@@ -4337,7 +4875,8 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
-&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
+&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to
+execute queries.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
@@ -4361,13 +4900,16 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
-&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
+&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to
+execute queries.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
+&lt;li>&lt;code>get_query_plan&lt;/code>: Provides information about how MySQL executes a SQL
+statement.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -4385,7 +4927,8 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
-&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
+&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to
+execute queries.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
@@ -4405,20 +4948,24 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;code>POSTGRES_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
 &lt;li>&lt;code>POSTGRES_USER&lt;/code>: The database username.&lt;/li>
 &lt;li>&lt;code>POSTGRES_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
-&lt;li>&lt;code>POSTGRES_QUERY_PARAMS&lt;/code>: (Optional) Raw query to be added to the db connection string.&lt;/li>
+&lt;li>&lt;code>POSTGRES_QUERY_PARAMS&lt;/code>: (Optional) Raw query to be added to the db
+connection string.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
-&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to execute queries.&lt;/li>
+&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to
+execute queries.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
-&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the database.&lt;/li>
-&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the database.&lt;/li>
+&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the
+database.&lt;/li>
+&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the
+database.&lt;/li>
 &lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
 &lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
 &lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
@@ -4438,8 +4985,10 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;strong>Cloud Spanner Database Reader&lt;/strong> (&lt;code>roles/spanner.databaseReader&lt;/code>) to execute DQL queries and list tables.&lt;/li>
-&lt;li>&lt;strong>Cloud Spanner Database User&lt;/strong> (&lt;code>roles/spanner.databaseUser&lt;/code>) to execute DML queries.&lt;/li>
+&lt;li>&lt;strong>Cloud Spanner Database Reader&lt;/strong> (&lt;code>roles/spanner.databaseReader&lt;/code>) to
+execute DQL queries and list tables.&lt;/li>
+&lt;li>&lt;strong>Cloud Spanner Database User&lt;/strong> (&lt;code>roles/spanner.databaseUser&lt;/code>) to
+execute DML queries.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
@@ -4462,14 +5011,18 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;strong>Cloud Spanner Database Reader&lt;/strong> (&lt;code>roles/spanner.databaseReader&lt;/code>) to execute DQL queries and list tables.&lt;/li>
-&lt;li>&lt;strong>Cloud Spanner Database User&lt;/strong> (&lt;code>roles/spanner.databaseUser&lt;/code>) to execute DML queries.&lt;/li>
+&lt;li>&lt;strong>Cloud Spanner Database Reader&lt;/strong> (&lt;code>roles/spanner.databaseReader&lt;/code>) to
+execute DQL queries and list tables.&lt;/li>
+&lt;li>&lt;strong>Cloud Spanner Database User&lt;/strong> (&lt;code>roles/spanner.databaseUser&lt;/code>) to
+execute DML queries.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Tools:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;code>execute_sql&lt;/code>: Executes a DML SQL query using the PostgreSQL interface for Spanner.&lt;/li>
-&lt;li>&lt;code>execute_sql_dql&lt;/code>: Executes a DQL SQL query using the PostgreSQL interface for Spanner.&lt;/li>
+&lt;li>&lt;code>execute_sql&lt;/code>: Executes a DML SQL query using the PostgreSQL interface
+for Spanner.&lt;/li>
+&lt;li>&lt;code>execute_sql_dql&lt;/code>: Executes a DQL SQL query using the PostgreSQL
+interface for Spanner.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
@@ -4479,7 +5032,8 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>sqlite&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;code>SQLITE_DATABASE&lt;/code>: The path to the SQLite database file (e.g., &lt;code>./sample.db&lt;/code>).&lt;/li>
+&lt;li>&lt;code>SQLITE_DATABASE&lt;/code>: The path to the SQLite database file (e.g.,
+&lt;code>./sample.db&lt;/code>).&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -4499,7 +5053,8 @@ or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
 &lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>neo4j&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;code>NEO4J_URI&lt;/code>: The URI of the Neo4j instance (e.g., &lt;code>bolt://localhost:7687&lt;/code>).&lt;/li>
+&lt;li>&lt;code>NEO4J_URI&lt;/code>: The URI of the Neo4j instance (e.g.,
+&lt;code>bolt://localhost:7687&lt;/code>).&lt;/li>
 &lt;li>&lt;code>NEO4J_DATABASE&lt;/code>: The name of the Neo4j database to connect to.&lt;/li>
 &lt;li>&lt;code>NEO4J_USERNAME&lt;/code>: The username for the Neo4j instance.&lt;/li>
 &lt;li>&lt;code>NEO4J_PASSWORD&lt;/code>: The password for the Neo4j instance.&lt;/li>
@@ -4547,13 +5102,21 @@ on how to &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-138
 &lt;p>This guide assumes you have already done the following:&lt;/p>
 &lt;ol>
 &lt;li>
-&lt;p>&lt;a href="https://cloud.google.com/alloydb/docs/cluster-create">Create a AlloyDB cluster and instance&lt;/a> with a database and user.&lt;/p>
+&lt;p>&lt;a href="https://cloud.google.com/alloydb/docs/cluster-create">Create a AlloyDB cluster and
+instance&lt;/a> with a
+database and user.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Connect to the instance using &lt;a href="https://cloud.google.com/alloydb/docs/manage-data-using-studio">AlloyDB Studio&lt;/a>, &lt;a href="https://www.postgresql.org/download/">&lt;code>psql&lt;/code> command-line tool&lt;/a>, or any other PostgreSQL client.&lt;/p>
+&lt;p>Connect to the instance using &lt;a href="https://cloud.google.com/alloydb/docs/manage-data-using-studio">AlloyDB
+Studio&lt;/a>,
+&lt;a href="https://www.postgresql.org/download/">&lt;code>psql&lt;/code> command-line tool&lt;/a>, or any
+other PostgreSQL client.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Enable the &lt;code>pgvector&lt;/code> and &lt;code>google_ml_integration&lt;/code> &lt;a href="https://cloud.google.com/alloydb/docs/ai">extensions&lt;/a>. These are required for Semantic Search and Natural Language to SQL tools. Run the following SQL commands:&lt;/p></description></item><item><title>redis</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/redis/redis/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/redis/redis/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>Enable the &lt;code>pgvector&lt;/code> and &lt;code>google_ml_integration&lt;/code>
+&lt;a href="https://cloud.google.com/alloydb/docs/ai">extensions&lt;/a>. These are required
+for Semantic Search and Natural Language to SQL tools. Run the following SQL
+commands:&lt;/p></description></item><item><title>redis</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/redis/redis/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/redis/redis/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A redis tool executes a series of pre-defined Redis commands against a
 Redis source.&lt;/p>
 &lt;p>The specified Redis commands are executed sequentially. Each command is
@@ -4697,12 +5260,14 @@ setup, database administration, and required resources.&lt;/p>
 &lt;li>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/sqlite/sqlite-sql/">&lt;code>sqlite-sql&lt;/code>&lt;/a>&lt;br>
 Run SQL queries against a local SQLite database.&lt;/p></description></item><item><title>sqlite-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/sqlite/sqlite-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/sqlite/sqlite-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>sqlite-execute-sql&lt;/code> tool executes a single SQL statement against a SQLite database.
-It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;p>A &lt;code>sqlite-execute-sql&lt;/code> tool executes a single SQL statement against a SQLite
+database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/sqlite/">sqlite&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>This tool is designed for direct execution of SQL statements. It takes a single &lt;code>sql&lt;/code> input parameter and runs the SQL statement against the configured SQLite &lt;code>source&lt;/code>.&lt;/p>
+&lt;p>This tool is designed for direct execution of SQL statements. It takes a single
+&lt;code>sql&lt;/code> input parameter and runs the SQL statement against the configured SQLite
+&lt;code>source&lt;/code>.&lt;/p>
 &lt;blockquote>
 &lt;p>&lt;strong>Note:&lt;/strong> This tool is intended for developer assistant workflows with
 human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&lt;/blockquote>
@@ -4759,11 +5324,16 @@ DDL statements.&lt;/p>
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
 names, or other parts of the query.&lt;/p></description></item><item><title>TiDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/tidb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/tidb/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://docs.pingcap.com/tidb/stable">TiDB&lt;/a> is an open-source distributed SQL database that supports Hybrid Transactional and Analytical Processing (HTAP) workloads. It is MySQL-compatible and features horizontal scalability, strong consistency, and high availability.&lt;/p>
+&lt;p>&lt;a href="https://docs.pingcap.com/tidb/stable">TiDB&lt;/a> is an open-source distributed SQL database that supports
+Hybrid Transactional and Analytical Processing (HTAP) workloads. It is
+MySQL-compatible and features horizontal scalability, strong consistency, and
+high availability.&lt;/p>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-user">Database User&lt;/h3>
-&lt;p>This source uses standard MySQL protocol authentication. You will need to &lt;a href="https://docs.pingcap.com/tidb/stable/user-account-management">create a TiDB user&lt;/a> to login to the database with.&lt;/p>
-&lt;p>For TiDB Cloud users, you can create database users through the TiDB Cloud console.&lt;/p>
+&lt;p>This source uses standard MySQL protocol authentication. You will need to
+&lt;a href="https://docs.pingcap.com/tidb/stable/user-account-management">create a TiDB user&lt;/a> to login to the database with.&lt;/p>
+&lt;p>For TiDB Cloud users, you can create database users through the TiDB Cloud
+console.&lt;/p>
 &lt;h2 id="ssl-configuration">SSL Configuration&lt;/h2>
 &lt;ul>
 &lt;li>
@@ -4827,13 +5397,17 @@ and expects parameters in the SQL query to be in the form of placeholders &lt;co
 &lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
-names, or other parts of the query.&lt;/p></description></item><item><title>Toolbox UI</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/toolbox-ui/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/toolbox-ui/</guid><description>&lt;p>Toolbox UI is a built-in web interface that allows users to visually inspect and test out configured resources such as tools and toolsets.&lt;/p>
+names, or other parts of the query.&lt;/p></description></item><item><title>Toolbox UI</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/toolbox-ui/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/toolbox-ui/</guid><description>&lt;p>Toolbox UI is a built-in web interface that allows users to visually inspect and
+test out configured resources such as tools and toolsets.&lt;/p>
 &lt;h2 id="launching-toolbox-ui">Launching Toolbox UI&lt;/h2>
 &lt;p>To launch Toolbox&amp;rsquo;s interactive UI, use the &lt;code>--ui&lt;/code> flag.&lt;/p>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-sh" data-lang="sh">&lt;span class="line">&lt;span class="cl">./toolbox --ui
-&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Toolbox UI will be served from the same host and port as the Toolbox Server, with the &lt;code>/ui&lt;/code> suffix. Once Toolbox
-is launched, the following INFO log with Toolbox UI&amp;rsquo;s url will be shown:&lt;/p></description></item><item><title>Trino</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/trino/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/trino/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://trino.io/docs/">Trino&lt;/a> is a distributed SQL query engine designed for fast analytic queries against data of any size. It allows you to query data where it lives, including Hive, Cassandra, relational databases or even proprietary data stores.&lt;/p>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Toolbox UI will be served from the same host and port as the Toolbox Server,
+with the &lt;code>/ui&lt;/code> suffix. Once Toolbox is launched, the following INFO log with
+Toolbox UI&amp;rsquo;s url will be shown:&lt;/p></description></item><item><title>Trino</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/trino/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/trino/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://trino.io/docs/">Trino&lt;/a> is a distributed SQL query engine designed for fast analytic
+queries against data of any size. It allows you to query data where it lives,
+including Hive, Cassandra, relational databases or even proprietary data stores.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
@@ -4847,7 +5421,8 @@ Execute arbitrary SQL queries against Trino.&lt;/p>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="trino-cluster">Trino Cluster&lt;/h3>
-&lt;p>You need access to a running Trino cluster with appropriate user permissions for the catalogs and schemas you want to query.&lt;/p></description></item><item><title>trino-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/trino/trino-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/trino/trino-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>You need access to a running Trino cluster with appropriate user permissions for
+the catalogs and schemas you want to query.&lt;/p></description></item><item><title>trino-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/trino/trino-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/trino/trino-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>trino-execute-sql&lt;/code> tool executes a SQL statement against a Trino
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
@@ -5047,7 +5622,9 @@ time to wait (e.g., &amp;ldquo;10s&amp;rdquo;, &amp;ldquo;2m&amp;rdquo;, &amp;ld
 &lt;/svg>
 
  &lt;/span>Info&lt;/p></description></item><item><title>YugabyteDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/yugabytedb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/yugabytedb/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://www.yugabyte.com/">YugabyteDB&lt;/a> is a high-performance, distributed SQL database designed for global, internet-scale applications, with full PostgreSQL compatibility.&lt;/p>
+&lt;p>&lt;a href="https://www.yugabyte.com/">YugabyteDB&lt;/a> is a high-performance, distributed SQL database
+designed for global, internet-scale applications, with full PostgreSQL
+compatibility.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-yb-source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -5151,11 +5728,17 @@ of the prepared statement.&lt;/p>
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
 names, or other parts of the query.&lt;/p></description></item><item><title>AlloyDB Admin</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-admin&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/alloydb/docs/reference/rest">Google AlloyDB API&lt;/a>. This allows tools to perform administrative tasks on AlloyDB resources, such as managing clusters, instances, and users.&lt;/p>
+&lt;p>The &lt;code>alloydb-admin&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/alloydb/docs/reference/rest">Google
+AlloyDB API&lt;/a>. This allows
+tools to perform administrative tasks on AlloyDB resources, such as managing
+clusters, instances, and users.&lt;/p>
 &lt;p>Authentication can be handled in two ways:&lt;/p>
 &lt;ol>
-&lt;li>&lt;strong>Application Default Credentials (ADC):&lt;/strong> By default, the source uses ADC to authenticate with the API.&lt;/li>
-&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.&lt;/li>
+&lt;li>&lt;strong>Application Default Credentials (ADC):&lt;/strong> By default, the source uses ADC
+to authenticate with the API.&lt;/li>
+&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source will
+expect an OAuth 2.0 access token to be provided by the client (e.g., a web
+browser) for each request.&lt;/li>
 &lt;/ol>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -5200,116 +5783,33 @@ names, or other parts of the query.&lt;/p></description></item><item><title>Allo
  &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/connect-ide-using-mcp-toolbox"/>
  &lt;/head>
 &lt;/html></description></item><item><title>alloydb-create-user</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/alloydb/alloydb-create-user/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/alloydb/alloydb-create-user/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-create-user&lt;/code> tool creates a new database user (&lt;code>ALLOYDB_BUILT_IN&lt;/code> or &lt;code>ALLOYDB_IAM_USER&lt;/code>) within a specified cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
+&lt;p>The &lt;code>alloydb-create-user&lt;/code> tool creates a new database user (&lt;code>ALLOYDB_BUILT_IN&lt;/code>
+or &lt;code>ALLOYDB_IAM_USER&lt;/code>) within a specified cluster. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;p>&lt;strong>Permissions &amp;amp; APIs Required:&lt;/strong>
 Before using, ensure the following on your GCP project:&lt;/p>
 &lt;ol>
-&lt;li>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/li>
-&lt;li>The user or service account executing the tool has the following IAM roles:
+&lt;li>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB
+API&lt;/a>
+is enabled.&lt;/li>
+&lt;li>The user or service account executing the tool has one of the following IAM
+roles:
 &lt;ul>
-&lt;li>&lt;code>roles/alloydb.admin&lt;/code>: To create and manage AlloyDB users.&lt;/li>
+&lt;li>&lt;code>roles/alloydb.admin&lt;/code> (the AlloyDB Admin predefined IAM role)&lt;/li>
+&lt;li>&lt;code>roles/owner&lt;/code> (the Owner basic IAM role)&lt;/li>
+&lt;li>&lt;code>roles/editor&lt;/code> (the Editor basic IAM role)&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ol>
-&lt;p>The tool takes the following input parameters:&lt;/p>
-&lt;table>
- &lt;thead>
- &lt;tr>
- &lt;th style="text-align: left">Parameter&lt;/th>
- &lt;th style="text-align: left">Type&lt;/th>
- &lt;th style="text-align: left">Description&lt;/th>
- &lt;th style="text-align: left">Required&lt;/th>
- &lt;/tr>
- &lt;/thead>
- &lt;tbody>
- &lt;tr>
- &lt;td style="text-align: left">&lt;code>project&lt;/code>&lt;/td>
- &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">The GCP project ID where the cluster exists.&lt;/td>
- &lt;td style="text-align: left">Yes&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td style="text-align: left">&lt;code>cluster&lt;/code>&lt;/td>
- &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">The ID of the existing cluster where the user will be created.&lt;/td>
- &lt;td style="text-align: left">Yes&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td style="text-align: left">&lt;code>location&lt;/code>&lt;/td>
- &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">The GCP location where the cluster exists (e.g., &lt;code>us-central1&lt;/code>).&lt;/td>
- &lt;td style="text-align: left">Yes&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td style="text-align: left">&lt;code>user&lt;/code>&lt;/td>
- &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">The name for the new user. Must be unique within the cluster.&lt;/td>
- &lt;td style="text-align: left">Yes&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td style="text-align: left">&lt;code>userType&lt;/code>&lt;/td>
- &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">The type of user. Valid values: &lt;code>ALLOYDB_BUILT_IN&lt;/code> and &lt;code>ALLOYDB_IAM_USER&lt;/code>. &lt;code>ALLOYDB_IAM_USER&lt;/code> is recommended.&lt;/td>
- &lt;td style="text-align: left">Yes&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td style="text-align: left">&lt;code>password&lt;/code>&lt;/td>
- &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">A secure password for the user. Required only if &lt;code>userType&lt;/code> is &lt;code>ALLOYDB_BUILT_IN&lt;/code>.&lt;/td>
- &lt;td style="text-align: left">No&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td style="text-align: left">&lt;code>databaseRoles&lt;/code>&lt;/td>
- &lt;td style="text-align: left">array(string)&lt;/td>
- &lt;td style="text-align: left">Optional. A list of database roles to grant to the new user (e.g., &lt;code>pg_read_all_data&lt;/code>).&lt;/td>
- &lt;td style="text-align: left">No&lt;/td>
- &lt;/tr>
- &lt;/tbody>
-&lt;/table>
-&lt;h2 id="example">Example&lt;/h2>
-&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">create_user&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-create-user&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">alloydb-admin-source&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to create a new database user for an AlloyDB cluster.&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
-&lt;table>
- &lt;thead>
- &lt;tr>
- &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
- &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
- &lt;/tr>
- &lt;/thead>
- &lt;tbody>
- &lt;tr>
- &lt;td>kind&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Must be alloydb-create-user.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>source&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>The name of an &lt;code>alloydb-admin&lt;/code> source.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>description&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">false&lt;/td>
- &lt;td>Description of the tool that is passed to the agent.&lt;/td>
- &lt;/tr>
- &lt;/tbody>
-&lt;/table></description></item><item><title>BigQuery using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/bigquery_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/bigquery_mcp/</guid><description>&lt;html>
+&lt;p>The tool takes the following input parameters:&lt;/p></description></item><item><title>BigQuery using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/bigquery_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/bigquery_mcp/</guid><description>&lt;html>
  &lt;head>
  &lt;link rel="canonical" href="https://cloud.google.com/bigquery/docs/pre-built-tools-with-mcp-toolbox"/>
  &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/bigquery/docs/pre-built-tools-with-mcp-toolbox"/>
  &lt;/head>
 &lt;/html></description></item><item><title>clickhouse-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/clickhouse/clickhouse-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/clickhouse/clickhouse-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>clickhouse-sql&lt;/code> tool executes SQL queries as prepared statements against a
-ClickHouse database. It&amp;rsquo;s compatible with the &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/clickhouse/">clickhouse&lt;/a> source.&lt;/p>
+ClickHouse database. It&amp;rsquo;s compatible with the
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/clickhouse/">clickhouse&lt;/a> source.&lt;/p>
 &lt;p>This tool supports both template parameters (for SQL statement customization)
 and regular parameters (for prepared statement values), providing flexible
 query execution capabilities.&lt;/p>
@@ -5420,7 +5920,8 @@ query execution capabilities.&lt;/p>
  &lt;link rel="canonical" href="https://cloud.google.com/sql/docs/sqlserver/pre-built-tools-with-mcp-toolbox"/>
  &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/sql/docs/sqlserver/pre-built-tools-with-mcp-toolbox"/>
  &lt;/head>
-&lt;/html></description></item><item><title>cloud-sql-mysql-create-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlmysqlcreateinstance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlmysqlcreateinstance/</guid><description>&lt;p>The &lt;code>cloud-sql-mysql-create-instance&lt;/code> tool creates a new Cloud SQL for MySQL instance in a specified Google Cloud project.&lt;/p>
+&lt;/html></description></item><item><title>cloud-sql-mysql-create-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlmysqlcreateinstance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlmysqlcreateinstance/</guid><description>&lt;p>The &lt;code>cloud-sql-mysql-create-instance&lt;/code> tool creates a new Cloud SQL for MySQL
+instance in a specified Google Cloud project.&lt;/p>
 &lt;style type="text/css">
  
  .notice {
@@ -5592,7 +6093,10 @@ to expose your developer assistant tools to a Looker instance:&lt;/p>
 &lt;p>Have the base URL of your Looker instance available. It is likely
 something like &lt;code>https://looker.example.com&lt;/code>. In some cases the API is
 listening at a different port, and you will need to use
-&lt;code>https://looker.example.com:19999&lt;/code> instead.&lt;/p></description></item><item><title>MySQL using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/mysql_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/mysql_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is an open protocol for connecting Large Language Models (LLMs) to data sources like MySQL. This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a> to expose your developer assistant tools to a MySQL instance:&lt;/p>
+&lt;code>https://looker.example.com:19999&lt;/code> instead.&lt;/p></description></item><item><title>MySQL using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/mysql_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/mysql_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is
+an open protocol for connecting Large Language Models (LLMs) to data sources
+like MySQL. This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a> to
+expose your developer assistant tools to a MySQL instance:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/mysql_mcp/#configure-your-mcp-client">Cursor&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/mysql_mcp/#configure-your-mcp-client">Windsurf&lt;/a> (Codium)&lt;/li>
@@ -5610,7 +6114,13 @@ listening at a different port, and you will need to use
 &lt;h2 id="install-mcp-toolbox">Install MCP Toolbox&lt;/h2>
 &lt;ol>
 &lt;li>
-&lt;p>Download the latest version of Toolbox as a binary. Select the &lt;a href="https://github.com/googleapis/genai-toolbox/releases">correct binary&lt;/a> corresponding to your OS and CPU architecture. You are required to use Toolbox version V0.10.0+:&lt;/p></description></item><item><title>Neo4j using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/neo4j_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/neo4j_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is an open protocol for connecting Large Language Models (LLMs) to data sources like Neo4j. This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a> to expose your developer assistant tools to a Neo4j instance:&lt;/p>
+&lt;p>Download the latest version of Toolbox as a binary. Select the &lt;a href="https://github.com/googleapis/genai-toolbox/releases">correct
+binary&lt;/a> corresponding
+to your OS and CPU architecture. You are required to use Toolbox version
+V0.10.0+:&lt;/p></description></item><item><title>Neo4j using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/neo4j_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/neo4j_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is
+an open protocol for connecting Large Language Models (LLMs) to data sources
+like Neo4j. This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a> to
+expose your developer assistant tools to a Neo4j instance:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/neo4j_mcp/#configure-your-mcp-client">Cursor&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/neo4j_mcp/#configure-your-mcp-client">Windsurf&lt;/a> (Codium)&lt;/li>
@@ -5623,12 +6133,16 @@ listening at a different port, and you will need to use
 &lt;/ul>
 &lt;h2 id="set-up-the-database">Set up the database&lt;/h2>
 &lt;ol>
-&lt;li>&lt;a href="https://neo4j.com/cloud/platform/aura-graph-database/">Create or select a Neo4j instance.&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://neo4j.com/cloud/platform/aura-graph-database/">Create or select a Neo4j
+instance.&lt;/a>&lt;/li>
 &lt;/ol>
 &lt;h2 id="install-mcp-toolbox">Install MCP Toolbox&lt;/h2>
 &lt;ol>
 &lt;li>
-&lt;p>Download the latest version of Toolbox as a binary. Select the &lt;a href="https://github.com/googleapis/genai-toolbox/releases">correct binary&lt;/a> corresponding to your OS and CPU architecture. You are required to use Toolbox version v0.15.0+:&lt;/p></description></item><item><title>PostgreSQL using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/postgres_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/postgres_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is
+&lt;p>Download the latest version of Toolbox as a binary. Select the &lt;a href="https://github.com/googleapis/genai-toolbox/releases">correct
+binary&lt;/a> corresponding
+to your OS and CPU architecture. You are required to use Toolbox version
+v0.15.0+:&lt;/p></description></item><item><title>PostgreSQL using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/postgres_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/postgres_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is
 an open protocol for connecting Large Language Models (LLMs) to data sources
 like Postgres. This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a>
 to expose your developer assistant tools to a Postgres instance:&lt;/p>
@@ -5768,7 +6282,8 @@ to expose your developer assistant tools to a Postgres instance:&lt;/p>
 &lt;p>This guide assumes you have already done the following:&lt;/p>
 &lt;ol>
 &lt;li>Installed &lt;a href="https://wiki.python.org/moin/BeginnersGuide/Download">Python 3.9+&lt;/a> (including &lt;a href="https://pip.pypa.io/en/stable/installation/">pip&lt;/a> and
-your preferred virtual environment tool for managing dependencies e.g. &lt;a href="https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments">venv&lt;/a>).&lt;/li>
+your preferred virtual environment tool for managing dependencies e.g.
+&lt;a href="https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments">venv&lt;/a>).&lt;/li>
 &lt;li>Installed &lt;a href="https://www.postgresql.org/download/">PostgreSQL 16+ and the &lt;code>psql&lt;/code> client&lt;/a>.&lt;/li>
 &lt;/ol>
 &lt;h3 id="cloud-setup-optional">Cloud Setup (Optional)&lt;/h3>
@@ -5792,24 +6307,6 @@ your preferred virtual environment tool for managing dependencies e.g. &lt;a hre
 
  
 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
  
  
  
@@ -5932,7 +6429,11 @@ for you.&lt;/p></description></item><item><title>Spanner using MCP</title><link>
  &lt;link rel="canonical" href="https://cloud.google.com/spanner/docs/pre-built-tools-with-mcp-toolbox"/>
  &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/spanner/docs/pre-built-tools-with-mcp-toolbox"/>
  &lt;/head>
-&lt;/html></description></item><item><title>SQL Server using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/mssql_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/mssql_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is an open protocol for connecting Large Language Models (LLMs) to data sources like SQL Server. This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a> to expose your developer assistant tools to a SQL Server instance:&lt;/p>
+&lt;/html></description></item><item><title>SQL Server using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/mssql_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/mssql_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is
+an open protocol for connecting Large Language Models (LLMs) to data sources
+like SQL Server. This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for
+Databases&lt;/a> to expose your developer assistant tools to a SQL Server
+instance:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/mssql_mcp/#configure-your-mcp-client">Cursor&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/mssql_mcp/#configure-your-mcp-client">Windsurf&lt;/a> (Codium)&lt;/li>
@@ -5945,12 +6446,19 @@ for you.&lt;/p></description></item><item><title>Spanner using MCP</title><link>
 &lt;/ul>
 &lt;h2 id="set-up-the-database">Set up the database&lt;/h2>
 &lt;ol>
-&lt;li>&lt;a href="https://www.microsoft.com/en-us/sql-server/sql-server-downloads">Create or select a SQL Server instance.&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://www.microsoft.com/en-us/sql-server/sql-server-downloads">Create or select a SQL Server
+instance.&lt;/a>&lt;/li>
 &lt;/ol>
 &lt;h2 id="install-mcp-toolbox">Install MCP Toolbox&lt;/h2>
 &lt;ol>
 &lt;li>
-&lt;p>Download the latest version of Toolbox as a binary. Select the &lt;a href="https://github.com/googleapis/genai-toolbox/releases">correct binary&lt;/a> corresponding to your OS and CPU architecture. You are required to use Toolbox version V0.10.0+:&lt;/p></description></item><item><title>SQLite using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/sqlite_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/sqlite_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is an open protocol for connecting Large Language Models (LLMs) to data sources like SQLite. This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a> to expose your developer assistant tools to a SQLite instance:&lt;/p>
+&lt;p>Download the latest version of Toolbox as a binary. Select the &lt;a href="https://github.com/googleapis/genai-toolbox/releases">correct
+binary&lt;/a> corresponding
+to your OS and CPU architecture. You are required to use Toolbox version
+V0.10.0+:&lt;/p></description></item><item><title>SQLite using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/sqlite_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/sqlite_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is
+an open protocol for connecting Large Language Models (LLMs) to data sources
+like SQLite. This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a>
+to expose your developer assistant tools to a SQLite instance:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/sqlite_mcp/#configure-your-mcp-client">Cursor&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/sqlite_mcp/#configure-your-mcp-client">Windsurf&lt;/a> (Codium)&lt;/li>
@@ -5968,7 +6476,10 @@ for you.&lt;/p></description></item><item><title>Spanner using MCP</title><link>
 &lt;h2 id="install-mcp-toolbox">Install MCP Toolbox&lt;/h2>
 &lt;ol>
 &lt;li>
-&lt;p>Download the latest version of Toolbox as a binary. Select the &lt;a href="https://github.com/googleapis/genai-toolbox/releases">correct binary&lt;/a> corresponding to your OS and CPU architecture. You are required to use Toolbox version V0.10.0+:&lt;/p></description></item><item><title>Telemetry</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/concepts/telemetry/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/concepts/telemetry/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>Download the latest version of Toolbox as a binary. Select the &lt;a href="https://github.com/googleapis/genai-toolbox/releases">correct
+binary&lt;/a> corresponding
+to your OS and CPU architecture. You are required to use Toolbox version
+V0.10.0+:&lt;/p></description></item><item><title>Telemetry</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/concepts/telemetry/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/concepts/telemetry/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>Telemetry data such as logs, metrics, and traces will help developers understand
 the internal state of the system. This page walks though different types of
 telemetry and observability available in Toolbox.&lt;/p>
@@ -5978,8 +6489,9 @@ passed to Toolbox to enable different logging behavior, or to export metrics
 through a specific &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/concepts/telemetry/#exporter">exporter&lt;/a>.&lt;/p>
 &lt;h2 id="logging">Logging&lt;/h2>
 &lt;p>The following flags can be used to customize Toolbox logging:&lt;/p></description></item><item><title>clickhouse-list-databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/clickhouse/clickhouse-list-databases/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/clickhouse/clickhouse-list-databases/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>clickhouse-list-databases&lt;/code> tool lists all available databases in a
-ClickHouse instance. It&amp;rsquo;s compatible with the &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/clickhouse/">clickhouse&lt;/a> source.&lt;/p>
+&lt;p>A &lt;code>clickhouse-list-databases&lt;/code> tool lists all available databases in a ClickHouse
+instance. It&amp;rsquo;s compatible with the &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/clickhouse/">clickhouse&lt;/a>
+source.&lt;/p>
 &lt;p>This tool executes the &lt;code>SHOW DATABASES&lt;/code> command and returns a list of all
 databases accessible to the configured user, making it useful for database
 discovery and exploration tasks.&lt;/p>
@@ -5990,7 +6502,29 @@ discovery and exploration tasks.&lt;/p>
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-clickhouse-instance&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">List all available databases in the ClickHouse instance&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="return-value">Return Value&lt;/h2>
-&lt;p>The tool returns an array of objects, where each object contains:&lt;/p></description></item><item><title>Deploy to Cloud Run</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/deploy_toolbox/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/deploy_toolbox/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+&lt;p>The tool returns an array of objects, where each object contains:&lt;/p></description></item><item><title>Cloud SQL for PostgreSQL Admin using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_pg_admin_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_pg_admin_mcp/</guid><description>&lt;p>This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a> to expose your
+developer assistant tools to create and manage Cloud SQL for PostgreSQL
+instance, database and users:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_pg_admin_mcp/#configure-your-mcp-client">Cursor&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_pg_admin_mcp/#configure-your-mcp-client">Windsurf&lt;/a> (Codium)&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_pg_admin_mcp/#configure-your-mcp-client">Visual Studio Code&lt;/a> (Copilot)&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_pg_admin_mcp/#configure-your-mcp-client">Cline&lt;/a> (VS Code extension)&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_pg_admin_mcp/#configure-your-mcp-client">Claude desktop&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_pg_admin_mcp/#configure-your-mcp-client">Claude code&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_pg_admin_mcp/#configure-your-mcp-client">Gemini CLI&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_pg_admin_mcp/#configure-your-mcp-client">Gemini Code Assist&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+&lt;ol>
+&lt;li>
+&lt;p>In the Google Cloud console, on the &lt;a href="https://console.cloud.google.com/projectselector2/home/dashboard">project selector
+page&lt;/a>,
+select or create a Google Cloud project.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#confirm_billing_is_enabled_on_a_project">Make sure that billing is enabled for your Google Cloud
+project&lt;/a>.&lt;/p></description></item><item><title>Deploy to Cloud Run</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/deploy_toolbox/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/deploy_toolbox/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
 &lt;ol>
 &lt;li>
 &lt;p>&lt;a href="https://cloud.google.com/sdk/docs/install">Install&lt;/a> the Google Cloud CLI.&lt;/p>
@@ -6144,24 +6678,6 @@ roles):&lt;/p>
  
  
 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
 
 
 
@@ -6174,7 +6690,8 @@ local development:&lt;/p>
 &lt;p>&lt;a href="https://cloud.google.com/sdk/docs/install">Install the Google Cloud CLI&lt;/a>&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment">Set up Application Default Credentials (ADC)&lt;/a>&lt;/p>
+&lt;p>&lt;a href="https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment">Set up Application Default Credentials
+(ADC)&lt;/a>&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>Set your project and enable Vertex AI&lt;/p></description></item><item><title>spanner-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/spanner/spanner-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/spanner/spanner-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
@@ -6188,7 +6705,29 @@ columns, constraints, and indexes. It&amp;rsquo;s compatible with:&lt;/p>
 &lt;p>This tool is read-only and executes pre-defined SQL queries against the
 &lt;code>INFORMATION_SCHEMA&lt;/code> tables to gather metadata. The tool automatically detects
 the database dialect from the source configuration and uses the appropriate SQL
-syntax.&lt;/p></description></item><item><title>Deploy to Kubernetes</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/deploy_gke/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/deploy_gke/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+syntax.&lt;/p></description></item><item><title>Cloud SQL for MySQL Admin using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mysql_admin_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mysql_admin_mcp/</guid><description>&lt;p>This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a> to expose your
+developer assistant tools to create and manage Cloud SQL for MySQL instance,
+database and users:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mysql_admin_mcp/#configure-your-mcp-client">Cursor&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mysql_admin_mcp/#configure-your-mcp-client">Windsurf&lt;/a> (Codium)&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mysql_admin_mcp/#configure-your-mcp-client">Visual Studio Code&lt;/a> (Copilot)&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mysql_admin_mcp/#configure-your-mcp-client">Cline&lt;/a> (VS Code extension)&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mysql_admin_mcp/#configure-your-mcp-client">Claude desktop&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mysql_admin_mcp/#configure-your-mcp-client">Claude code&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mysql_admin_mcp/#configure-your-mcp-client">Gemini CLI&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mysql_admin_mcp/#configure-your-mcp-client">Gemini Code Assist&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+&lt;ol>
+&lt;li>
+&lt;p>In the Google Cloud console, on the &lt;a href="https://console.cloud.google.com/projectselector2/home/dashboard">project selector
+page&lt;/a>,
+select or create a Google Cloud project.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#confirm_billing_is_enabled_on_a_project">Make sure that billing is enabled for your Google Cloud
+project&lt;/a>.&lt;/p></description></item><item><title>Deploy to Kubernetes</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/deploy_gke/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/deploy_gke/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
 &lt;ol>
 &lt;li>
 &lt;p>Set the PROJECT_ID environment variable:&lt;/p>
@@ -6392,24 +6931,6 @@ section.&lt;/p>
  
  
 
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
- 
- 
- 
- 
- 
-
 
 
 
@@ -6422,10 +6943,33 @@ local development:&lt;/p>
 &lt;p>&lt;a href="https://cloud.google.com/sdk/docs/install">Install the Google Cloud CLI&lt;/a>&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment">Set up Application Default Credentials (ADC)&lt;/a>&lt;/p>
+&lt;p>&lt;a href="https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment">Set up Application Default Credentials
+(ADC)&lt;/a>&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Set your project and enable Vertex AI&lt;/p></description></item><item><title>Export Telemetry</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/export_telemetry/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/export_telemetry/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>Set your project and enable Vertex AI&lt;/p></description></item><item><title>Cloud SQL for SQL Server Admin using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mssql_admin_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mssql_admin_mcp/</guid><description>&lt;p>This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a> to expose your
+developer assistant tools to create and manage Cloud SQL for SQL Server
+instance, database and users:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mssql_admin_mcp/#configure-your-mcp-client">Cursor&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mssql_admin_mcp/#configure-your-mcp-client">Windsurf&lt;/a> (Codium)&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mssql_admin_mcp/#configure-your-mcp-client">Visual Studio Code&lt;/a> (Copilot)&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mssql_admin_mcp/#configure-your-mcp-client">Cline&lt;/a> (VS Code extension)&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mssql_admin_mcp/#configure-your-mcp-client">Claude desktop&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mssql_admin_mcp/#configure-your-mcp-client">Claude code&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mssql_admin_mcp/#configure-your-mcp-client">Gemini CLI&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/connect-ide/cloud_sql_mssql_admin_mcp/#configure-your-mcp-client">Gemini Code Assist&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+&lt;ol>
+&lt;li>
+&lt;p>In the Google Cloud console, on the &lt;a href="https://console.cloud.google.com/projectselector2/home/dashboard">project selector
+page&lt;/a>,
+select or create a Google Cloud project.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#confirm_billing_is_enabled_on_a_project">Make sure that billing is enabled for your Google Cloud
+project&lt;/a>.&lt;/p></description></item><item><title>Export Telemetry</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/export_telemetry/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/how-to/export_telemetry/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;a href="https://opentelemetry.io/docs/collector/">OpenTelemetry Collector&lt;/a> offers a vendor-agnostic
 implementation of how to receive, process and export telemetry data. It removes
 the need to run, operate, and maintain multiple agents/collectors.&lt;/p>
@@ -6452,7 +6996,8 @@ etc., you could use environment variables instead with the format &lt;code>${ENV
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>A default value can be specified like &lt;code>${ENV_NAME:default}&lt;/code>.&lt;/p></description></item><item><title>alloydb-wait-for-operation</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/alloydb/alloydb-wait-for-operation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/alloydb/alloydb-wait-for-operation/</guid><description>&lt;p>The &lt;code>alloydb-wait-for-operation&lt;/code> tool is a utility tool that waits for a
 long-running AlloyDB operation to complete. It does this by polling the AlloyDB
 Admin API operation status endpoint until the operation is finished, using
-exponential backoff. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
+exponential backoff. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;table>
  &lt;thead>
  &lt;tr>
@@ -6604,7 +7149,8 @@ exponential backoff. It is compatible with &lt;a href="https://googleapis.github
  &lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
 &lt;/svg>
 
- &lt;/span>Info&lt;/p></description></item><item><title>cloud-sql-create-database</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlcreatedatabase/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlcreatedatabase/</guid><description>&lt;p>The &lt;code>cloud-sql-create-database&lt;/code> tool creates a new database in a specified Cloud SQL instance.&lt;/p>
+ &lt;/span>Info&lt;/p></description></item><item><title>cloud-sql-create-database</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlcreatedatabase/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlcreatedatabase/</guid><description>&lt;p>The &lt;code>cloud-sql-create-database&lt;/code> tool creates a new database in a specified Cloud
+SQL instance.&lt;/p>
 &lt;style type="text/css">
  
  .notice {
@@ -6726,7 +7272,8 @@ exponential backoff. It is compatible with &lt;a href="https://googleapis.github
  &lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
 &lt;/svg>
 
- &lt;/span>Info&lt;/p></description></item><item><title>cloud-sql-create-users</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlcreateusers/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlcreateusers/</guid><description>&lt;p>The &lt;code>cloud-sql-create-users&lt;/code> tool creates a new user in a specified Cloud SQL instance. It can create both built-in and IAM users.&lt;/p>
+ &lt;/span>Info&lt;/p></description></item><item><title>cloud-sql-create-users</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlcreateusers/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlcreateusers/</guid><description>&lt;p>The &lt;code>cloud-sql-create-users&lt;/code> tool creates a new user in a specified Cloud SQL
+instance. It can create both built-in and IAM users.&lt;/p>
 &lt;style type="text/css">
  
  .notice {
@@ -6848,7 +7395,8 @@ exponential backoff. It is compatible with &lt;a href="https://googleapis.github
  &lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
 &lt;/svg>
 
- &lt;/span>Info&lt;/p></description></item><item><title>cloud-sql-get-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlgetinstances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlgetinstances/</guid><description>&lt;p>The &lt;code>cloud-sql-get-instance&lt;/code> tool retrieves a Cloud SQL instance resource using the Cloud SQL Admin API.&lt;/p>
+ &lt;/span>Info&lt;/p></description></item><item><title>cloud-sql-get-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlgetinstances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlgetinstances/</guid><description>&lt;p>The &lt;code>cloud-sql-get-instance&lt;/code> tool retrieves a Cloud SQL instance resource using
+the Cloud SQL Admin API.&lt;/p>
 &lt;style type="text/css">
  
  .notice {
@@ -6970,7 +7518,8 @@ exponential backoff. It is compatible with &lt;a href="https://googleapis.github
  &lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
 &lt;/svg>
 
- &lt;/span>Info&lt;/p></description></item><item><title>cloud-sql-mssql-create-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlmssqlcreateinstance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlmssqlcreateinstance/</guid><description>&lt;p>The &lt;code>cloud-sql-mssql-create-instance&lt;/code> tool creates a Cloud SQL for SQL Server instance using the Cloud SQL Admin API.&lt;/p>
+ &lt;/span>Info&lt;/p></description></item><item><title>cloud-sql-mssql-create-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlmssqlcreateinstance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlmssqlcreateinstance/</guid><description>&lt;p>The &lt;code>cloud-sql-mssql-create-instance&lt;/code> tool creates a Cloud SQL for SQL Server
+instance using the Cloud SQL Admin API.&lt;/p>
 &lt;style type="text/css">
  
  .notice {
@@ -7092,7 +7641,8 @@ exponential backoff. It is compatible with &lt;a href="https://googleapis.github
  &lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
 &lt;/svg>
 
- &lt;/span>Info&lt;/p></description></item><item><title>cloud-sql-postgres-create-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlpgcreateinstances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlpgcreateinstances/</guid><description>&lt;p>The &lt;code>cloud-sql-postgres-create-instance&lt;/code> tool creates a Cloud SQL for PostgreSQL instance using the Cloud SQL Admin API.&lt;/p>
+ &lt;/span>Info&lt;/p></description></item><item><title>cloud-sql-postgres-create-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlpgcreateinstances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/cloudsql/cloudsqlpgcreateinstances/</guid><description>&lt;p>The &lt;code>cloud-sql-postgres-create-instance&lt;/code> tool creates a Cloud SQL for PostgreSQL
+instance using the Cloud SQL Admin API.&lt;/p>
 &lt;style type="text/css">
  
  .notice {

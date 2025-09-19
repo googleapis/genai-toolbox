@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>SQLite on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/sqlite/</link><description>Recent content in SQLite on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/sqlite/index.xml" rel="self" type="application/rss+xml"/><item><title>sqlite-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/sqlite/sqlite-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/sqlite/sqlite-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>sqlite-execute-sql&lt;/code> tool executes a single SQL statement against a SQLite database.
-It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;p>A &lt;code>sqlite-execute-sql&lt;/code> tool executes a single SQL statement against a SQLite
+database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/sqlite/">sqlite&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>This tool is designed for direct execution of SQL statements. It takes a single &lt;code>sql&lt;/code> input parameter and runs the SQL statement against the configured SQLite &lt;code>source&lt;/code>.&lt;/p>
+&lt;p>This tool is designed for direct execution of SQL statements. It takes a single
+&lt;code>sql&lt;/code> input parameter and runs the SQL statement against the configured SQLite
+&lt;code>source&lt;/code>.&lt;/p>
 &lt;blockquote>
 &lt;p>&lt;strong>Note:&lt;/strong> This tool is intended for developer assistant workflows with
 human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&lt;/blockquote>

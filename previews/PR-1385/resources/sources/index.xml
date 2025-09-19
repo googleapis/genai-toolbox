@@ -48,15 +48,21 @@ Execute SQL queries as prepared statements in ClickHouse.&lt;/p>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-user">Database User&lt;/h3>
 &lt;p>This source uses standard ClickHouse authentication. You will need to &lt;a href="https://clickhouse.com/docs/en/sql-reference/statements/create/user">create a
-ClickHouse user&lt;/a> (or with &lt;a href="https://clickhouse.com/docs/getting-started/quick-start/cloud#connect-with-your-app">ClickHouse Cloud&lt;/a>) to connect to the database with. The user
-should have appropriate permissions for the operations you plan to perform.&lt;/p>
+ClickHouse user&lt;/a> (or with &lt;a href="https://clickhouse.com/docs/getting-started/quick-start/cloud#connect-with-your-app">ClickHouse
+Cloud&lt;/a>) to connect to the database with. The user should have
+appropriate permissions for the operations you plan to perform.&lt;/p>
 &lt;h3 id="network-access">Network Access&lt;/h3>
 &lt;p>ClickHouse supports multiple protocols:&lt;/p></description></item><item><title>Cloud Monitoring</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-monitoring/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-monitoring/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>cloud-monitoring&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/monitoring/api">Google Cloud Monitoring API&lt;/a>. This allows tools to access cloud monitoring metrics explorer and run promql queries.&lt;/p>
+&lt;p>The &lt;code>cloud-monitoring&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/monitoring/api">Google
+Cloud Monitoring API&lt;/a>. This allows
+tools to access cloud monitoring metrics explorer and run promql queries.&lt;/p>
 &lt;p>Authentication can be handled in two ways:&lt;/p>
 &lt;ol>
-&lt;li>&lt;strong>Application Default Credentials (ADC):&lt;/strong> By default, the source uses ADC to authenticate with the API.&lt;/li>
-&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.&lt;/li>
+&lt;li>&lt;strong>Application Default Credentials (ADC):&lt;/strong> By default, the source uses ADC
+to authenticate with the API.&lt;/li>
+&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source will
+expect an OAuth 2.0 access token to be provided by the client (e.g., a web
+browser) for each request.&lt;/li>
 &lt;/ol>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -99,16 +105,12 @@ to a database by following these instructions&lt;/a>.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-sql/">&lt;code>mysql-sql&lt;/code>&lt;/a>&lt;br>
-Execute pre-defined prepared SQL queries in MySQL.&lt;/p>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-sql/">&lt;code>mysql-sql&lt;/code>&lt;/a>
+Execute pre-defined prepared SQL queries in Cloud SQL for MySQL.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-execute-sql/">&lt;code>mysql-execute-sql&lt;/code>&lt;/a>&lt;br>
-Run parameterized SQL queries in Cloud SQL for MySQL.&lt;/p>
-&lt;/li>
-&lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-tables/">&lt;code>mysql-list-tables&lt;/code>&lt;/a>&lt;br>
-List tables in a Cloud SQL for MySQL database.&lt;/p></description></item><item><title>Cloud SQL for PostgreSQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-pg/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-pg/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-execute-sql/">&lt;code>mysql-execute-sql&lt;/code>&lt;/a>
+Run parameterized SQL queries in Cloud SQL for MySQL.&lt;/p></description></item><item><title>Cloud SQL for PostgreSQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-pg/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-pg/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://cloud.google.com/sql/docs/postgres">Cloud SQL for PostgreSQL&lt;/a> is a fully-managed database service
 that helps you set up, maintain, manage, and administer your PostgreSQL
 relational databases on Google Cloud Platform.&lt;/p>
@@ -141,11 +143,17 @@ Execute pre-defined SQL Server queries with placeholder parameters.&lt;/p>
 &lt;li>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mssql/mssql-execute-sql/">&lt;code>mssql-execute-sql&lt;/code>&lt;/a>&lt;br>
 Run parameterized SQL Server queries in Cloud SQL for SQL Server.&lt;/p></description></item><item><title>Cloud SQL Admin</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-admin/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/cloud-sql-admin/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>cloud-sql-admin&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/sql/docs/mysql/admin-api/v1">Google Cloud SQL Admin API&lt;/a>. This allows tools to perform administrative tasks on Cloud SQL instances, such as creating users and databases.&lt;/p>
+&lt;p>The &lt;code>cloud-sql-admin&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/sql/docs/mysql/admin-api/v1">Google
+Cloud SQL Admin API&lt;/a>. This
+allows tools to perform administrative tasks on Cloud SQL instances, such as
+creating users and databases.&lt;/p>
 &lt;p>Authentication can be handled in two ways:&lt;/p>
 &lt;ol>
-&lt;li>&lt;strong>Application Default Credentials (ADC):&lt;/strong> By default, the source uses ADC to authenticate with the API.&lt;/li>
-&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.&lt;/li>
+&lt;li>&lt;strong>Application Default Credentials (ADC):&lt;/strong> By default, the source uses ADC
+to authenticate with the API.&lt;/li>
+&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source will
+expect an OAuth 2.0 access token to be provided by the client (e.g., a web
+browser) for each request.&lt;/li>
 &lt;/ol>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -343,7 +351,10 @@ Run DQL (Dgraph Query Language) queries.&lt;/li>
 &lt;p>When &lt;strong>connecting to a hosted Dgraph database&lt;/strong>, this source uses the API key
 for access. If you are using a dedicated environment, you will additionally need
 the namespace and user credentials for that namespace.&lt;/p></description></item><item><title>Firebird</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/firebird/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/firebird/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://firebirdsql.org/">Firebird&lt;/a> is a relational database management system offering many ANSI SQL standard features that runs on Linux, Windows, and a variety of Unix platforms. It is known for its small footprint, powerful features, and easy maintenance.&lt;/p>
+&lt;p>&lt;a href="https://firebirdsql.org/">Firebird&lt;/a> is a relational database management system offering many
+ANSI SQL standard features that runs on Linux, Windows, and a variety of Unix
+platforms. It is known for its small footprint, powerful features, and easy
+maintenance.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
@@ -357,7 +368,8 @@ Run parameterized SQL statements in Firebird.&lt;/p>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-user">Database User&lt;/h3>
-&lt;p>This source uses standard authentication. You will need to &lt;a href="https://firebirdsql.org/refdocs/langrefupd25-sql-create-user.html">create a Firebird user&lt;/a> to login to the database with.&lt;/p></description></item><item><title>Firestore</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/firestore/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/firestore/</guid><description>&lt;h1 id="firestore-source">Firestore Source&lt;/h1>
+&lt;p>This source uses standard authentication. You will need to &lt;a href="https://firebirdsql.org/refdocs/langrefupd25-sql-create-user.html">create a Firebird
+user&lt;/a> to login to the database with.&lt;/p></description></item><item><title>Firestore</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/firestore/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/firestore/</guid><description>&lt;h1 id="firestore-source">Firestore Source&lt;/h1>
 &lt;p>&lt;a href="https://cloud.google.com/firestore/docs">Firestore&lt;/a> is a NoSQL document database built for automatic
 scaling, high performance, and ease of application development. While the
 Firestore interface has many of the same features as traditional databases,
@@ -572,22 +584,24 @@ reliability, performance, and ease of use.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-sql/">&lt;code>mysql-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-sql/">&lt;code>mysql-sql&lt;/code>&lt;/a>
 Execute pre-defined prepared SQL queries in MySQL.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-execute-sql/">&lt;code>mysql-execute-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-execute-sql/">&lt;code>mysql-execute-sql&lt;/code>&lt;/a>
 Run parameterized SQL queries in MySQL.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-tables/">&lt;code>mysql-list-tables&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-active-queries/">&lt;code>mysql-list-active-queries&lt;/code>&lt;/a>
+List active queries in MySQL.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-tables/">&lt;code>mysql-list-tables&lt;/code>&lt;/a>
 List tables in a MySQL database.&lt;/p>
 &lt;/li>
-&lt;/ul>
-&lt;h2 id="requirements">Requirements&lt;/h2>
-&lt;h3 id="database-user">Database User&lt;/h3>
-&lt;p>This source only uses standard authentication. You will need to &lt;a href="https://dev.mysql.com/doc/refman/8.4/en/user-names.html">create a
-MySQL user&lt;/a> to login to the database with.&lt;/p></description></item><item><title>Neo4j</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/neo4j/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/neo4j/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/mysql/mysql-list-tables-missing-unique-indexes/">&lt;code>mysql-list-tables-missing-unique-indexes&lt;/code>&lt;/a>
+List tables in a MySQL database that do not have primary or unique indices.&lt;/p></description></item><item><title>Neo4j</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/neo4j/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/neo4j/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://neo4j.com/docs">Neo4j&lt;/a> is a powerful, open source graph database system with over
 15 years of active development that has earned it a strong reputation for
 reliability, feature robustness, and performance.&lt;/p>
@@ -601,10 +615,16 @@ Run Cypher queries against your Neo4j graph database.&lt;/li>
 &lt;p>This source only uses standard authentication. You will need to &lt;a href="https://neo4j.com/docs/operations-manual/current/authentication-authorization/manage-users/">create a Neo4j
 user&lt;/a> to log in to the database with, or use the default &lt;code>neo4j&lt;/code>
 user if available.&lt;/p></description></item><item><title>OceanBase</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/oceanbase/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/oceanbase/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://www.oceanbase.com/">OceanBase&lt;/a> is a distributed relational database management system (RDBMS) that provides high availability, scalability, and strong consistency. It&amp;rsquo;s designed to handle large-scale data processing and is compatible with MySQL, making it easy for developers to migrate from MySQL to OceanBase.&lt;/p>
+&lt;p>&lt;a href="https://www.oceanbase.com/">OceanBase&lt;/a> is a distributed relational database management
+system (RDBMS) that provides high availability, scalability, and strong
+consistency. It&amp;rsquo;s designed to handle large-scale data processing and is
+compatible with MySQL, making it easy for developers to migrate from MySQL to
+OceanBase.&lt;/p>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-user">Database User&lt;/h3>
-&lt;p>This source only uses standard authentication. You will need to create an OceanBase user to login to the database with. OceanBase supports MySQL-compatible user management syntax.&lt;/p></description></item><item><title>PostgreSQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/postgres/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/postgres/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>This source only uses standard authentication. You will need to create an
+OceanBase user to login to the database with. OceanBase supports
+MySQL-compatible user management syntax.&lt;/p></description></item><item><title>PostgreSQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/postgres/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/postgres/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://www.postgresql.org/">PostgreSQL&lt;/a> is a powerful, open source object-relational database
 system with over 35 years of active development that has earned it a strong
 reputation for reliability, feature robustness, and performance.&lt;/p>
@@ -695,16 +715,23 @@ setup, database administration, and required resources.&lt;/p>
 &lt;li>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/tools/sqlite/sqlite-sql/">&lt;code>sqlite-sql&lt;/code>&lt;/a>&lt;br>
 Run SQL queries against a local SQLite database.&lt;/p></description></item><item><title>TiDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/tidb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/tidb/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://docs.pingcap.com/tidb/stable">TiDB&lt;/a> is an open-source distributed SQL database that supports Hybrid Transactional and Analytical Processing (HTAP) workloads. It is MySQL-compatible and features horizontal scalability, strong consistency, and high availability.&lt;/p>
+&lt;p>&lt;a href="https://docs.pingcap.com/tidb/stable">TiDB&lt;/a> is an open-source distributed SQL database that supports
+Hybrid Transactional and Analytical Processing (HTAP) workloads. It is
+MySQL-compatible and features horizontal scalability, strong consistency, and
+high availability.&lt;/p>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-user">Database User&lt;/h3>
-&lt;p>This source uses standard MySQL protocol authentication. You will need to &lt;a href="https://docs.pingcap.com/tidb/stable/user-account-management">create a TiDB user&lt;/a> to login to the database with.&lt;/p>
-&lt;p>For TiDB Cloud users, you can create database users through the TiDB Cloud console.&lt;/p>
+&lt;p>This source uses standard MySQL protocol authentication. You will need to
+&lt;a href="https://docs.pingcap.com/tidb/stable/user-account-management">create a TiDB user&lt;/a> to login to the database with.&lt;/p>
+&lt;p>For TiDB Cloud users, you can create database users through the TiDB Cloud
+console.&lt;/p>
 &lt;h2 id="ssl-configuration">SSL Configuration&lt;/h2>
 &lt;ul>
 &lt;li>
 &lt;p>TiDB Cloud&lt;/p></description></item><item><title>Trino</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/trino/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/trino/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://trino.io/docs/">Trino&lt;/a> is a distributed SQL query engine designed for fast analytic queries against data of any size. It allows you to query data where it lives, including Hive, Cassandra, relational databases or even proprietary data stores.&lt;/p>
+&lt;p>&lt;a href="https://trino.io/docs/">Trino&lt;/a> is a distributed SQL query engine designed for fast analytic
+queries against data of any size. It allows you to query data where it lives,
+including Hive, Cassandra, relational databases or even proprietary data stores.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
@@ -718,7 +745,8 @@ Execute arbitrary SQL queries against Trino.&lt;/p>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="trino-cluster">Trino Cluster&lt;/h3>
-&lt;p>You need access to a running Trino cluster with appropriate user permissions for the catalogs and schemas you want to query.&lt;/p></description></item><item><title>Valkey</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/valkey/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/valkey/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>You need access to a running Trino cluster with appropriate user permissions for
+the catalogs and schemas you want to query.&lt;/p></description></item><item><title>Valkey</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/valkey/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/valkey/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>Valkey is an open-source, in-memory data structure store that originated as a
 fork of Redis. It&amp;rsquo;s designed to be used as a database, cache, and message
 broker, supporting a wide range of data structures like strings, hashes, lists,
@@ -726,7 +754,9 @@ sets, sorted sets with range queries, bitmaps, hyperloglogs, and geospatial
 indexes with radius queries.&lt;/p>
 &lt;p>If you&amp;rsquo;re new to Valkey, you can find installation and getting started guides on
 the &lt;a href="https://valkey.io/topics/quickstart/">official Valkey website&lt;/a>.&lt;/p></description></item><item><title>YugabyteDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/yugabytedb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/yugabytedb/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://www.yugabyte.com/">YugabyteDB&lt;/a> is a high-performance, distributed SQL database designed for global, internet-scale applications, with full PostgreSQL compatibility.&lt;/p>
+&lt;p>&lt;a href="https://www.yugabyte.com/">YugabyteDB&lt;/a> is a high-performance, distributed SQL database
+designed for global, internet-scale applications, with full PostgreSQL
+compatibility.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-yb-source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -817,11 +847,17 @@ the &lt;a href="https://valkey.io/topics/quickstart/">official Valkey website&lt
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>AlloyDB Admin</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/resources/sources/alloydb-admin/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-admin&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/alloydb/docs/reference/rest">Google AlloyDB API&lt;/a>. This allows tools to perform administrative tasks on AlloyDB resources, such as managing clusters, instances, and users.&lt;/p>
+&lt;p>The &lt;code>alloydb-admin&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/alloydb/docs/reference/rest">Google
+AlloyDB API&lt;/a>. This allows
+tools to perform administrative tasks on AlloyDB resources, such as managing
+clusters, instances, and users.&lt;/p>
 &lt;p>Authentication can be handled in two ways:&lt;/p>
 &lt;ol>
-&lt;li>&lt;strong>Application Default Credentials (ADC):&lt;/strong> By default, the source uses ADC to authenticate with the API.&lt;/li>
-&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.&lt;/li>
+&lt;li>&lt;strong>Application Default Credentials (ADC):&lt;/strong> By default, the source uses ADC
+to authenticate with the API.&lt;/li>
+&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source will
+expect an OAuth 2.0 access token to be provided by the client (e.g., a web
+browser) for each request.&lt;/li>
 &lt;/ol>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">

@@ -6,13 +6,21 @@ on how to &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-138
 &lt;p>This guide assumes you have already done the following:&lt;/p>
 &lt;ol>
 &lt;li>
-&lt;p>&lt;a href="https://cloud.google.com/alloydb/docs/cluster-create">Create a AlloyDB cluster and instance&lt;/a> with a database and user.&lt;/p>
+&lt;p>&lt;a href="https://cloud.google.com/alloydb/docs/cluster-create">Create a AlloyDB cluster and
+instance&lt;/a> with a
+database and user.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Connect to the instance using &lt;a href="https://cloud.google.com/alloydb/docs/manage-data-using-studio">AlloyDB Studio&lt;/a>, &lt;a href="https://www.postgresql.org/download/">&lt;code>psql&lt;/code> command-line tool&lt;/a>, or any other PostgreSQL client.&lt;/p>
+&lt;p>Connect to the instance using &lt;a href="https://cloud.google.com/alloydb/docs/manage-data-using-studio">AlloyDB
+Studio&lt;/a>,
+&lt;a href="https://www.postgresql.org/download/">&lt;code>psql&lt;/code> command-line tool&lt;/a>, or any
+other PostgreSQL client.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Enable the &lt;code>pgvector&lt;/code> and &lt;code>google_ml_integration&lt;/code> &lt;a href="https://cloud.google.com/alloydb/docs/ai">extensions&lt;/a>. These are required for Semantic Search and Natural Language to SQL tools. Run the following SQL commands:&lt;/p></description></item><item><title>Getting started with alloydb-ai-nl tool</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/samples/alloydb/ai-nl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/samples/alloydb/ai-nl/</guid><description>&lt;div class="notebook-markdown">
+&lt;p>Enable the &lt;code>pgvector&lt;/code> and &lt;code>google_ml_integration&lt;/code>
+&lt;a href="https://cloud.google.com/alloydb/docs/ai">extensions&lt;/a>. These are required
+for Semantic Search and Natural Language to SQL tools. Run the following SQL
+commands:&lt;/p></description></item><item><title>Getting started with alloydb-ai-nl tool</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1385/samples/alloydb/ai-nl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1385/samples/alloydb/ai-nl/</guid><description>&lt;div class="notebook-markdown">
  
  
  &lt;p>&lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/alloydb/ai-nl/alloydb_ai_nl.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In
