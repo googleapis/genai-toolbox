@@ -125,7 +125,7 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 	}
 
 	// Get configs for tests
-	select1Want, myToolId3NameAliceWant, myToolById4Want, nullWant, mcpMyToolId3NameAliceWant := getElasticsearchWants()
+	select1Want, myToolId3NameAliceWant, myToolById4Want, nullWant, mcpMyfailToolWant, mcpMyToolId3NameAliceWant := getElasticsearchWants()
 
 	tests.RunToolGetTest(t)
 	tests.RunToolInvokeTest(t, select1Want,
@@ -135,7 +135,7 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 		tests.WithMyToolById4Want(myToolById4Want),
 		tests.WithNullWant(nullWant),
 	)
-	tests.RunMCPToolCallMethod(t, "", "", tests.WithMcpMyToolId3NameAliceWant(mcpMyToolId3NameAliceWant))
+	tests.RunMCPToolCallMethod(t, mcpMyfailToolWant, "", tests.WithMcpMyToolId3NameAliceWant(mcpMyToolId3NameAliceWant))
 }
 
 func getElasticsearchQueries(index string) (string, string, string, string, string) {
@@ -147,15 +147,16 @@ func getElasticsearchQueries(index string) (string, string, string, string, stri
 	return paramToolStatement, idParamToolStatement, nameParamToolStatement, arrayParamToolStatement, authToolStatement
 }
 
-func getElasticsearchWants() (string, string, string, string, string) {
+func getElasticsearchWants() (string, string, string, string, string, string) {
 	select1Want := `[["test@elastic.co","test@elastic.co",1,"Alice","Alice"],["janedoe@gmail.com","janedoe@gmail.com",2,"Jane","Jane"],[null,null,3,"Sid","Sid"],[null,null,4,"null","null"]]`
 	myToolId3NameAliceWant := `[["test@elastic.co","test@elastic.co",1,"Alice","Alice"],[null,null,3,"Sid","Sid"]]`
 	myToolById4Want := `[[null,null,4,"null","null"]]`
 	nullWant := `{"error":{"root_cause":[{"type":"verification_exception","reason":"Found 1 problem\nline 1:25: first argument of [name == ?name] is [text] so second argument must also be [text] but was [null]"}],"type":"verification_exception","reason":"Found 1 problem\nline 1:25: first argument of [name == ?name] is [text] so second argument must also be [text] but was [null]"},"status":400}`
 
+	mcpMyFailToolWant := `{"content":[{"type":"text","text":"{\"error\":{\"root_cause\":[{\"type\":\"parsing_exception\",\"reason\":\"line 1:1: mismatched input 'SELEC' expecting {, 'row', 'from', 'show'}\"}],\"type\":\"parsing_exception\",\"reason\":\"line 1:1: mismatched input 'SELEC' expecting {, 'row', 'from', 'show'}\",\"caused_by\":{\"type\":\"input_mismatch_exception\",\"reason\":null}},\"status\":400}"}]`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"[[\"test@elastic.co\",\"test@elastic.co\",1,\"Alice\",\"Alice\"],[null,null,3,\"Sid\",\"Sid\"]]"}]}}`
 
-	return select1Want, myToolId3NameAliceWant, myToolById4Want, nullWant, mcpSelect1Want
+	return select1Want, myToolId3NameAliceWant, myToolById4Want, nullWant, mcpMyFailToolWant, mcpSelect1Want
 }
 
 func getElasticsearchToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
