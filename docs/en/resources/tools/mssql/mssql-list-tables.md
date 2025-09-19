@@ -10,17 +10,24 @@ aliases:
 
 ## About
 
-The `mssql-list-tables` tool retrieves schema information for all or specified tables in a SQL server database. It is compatible with any of the following sources:
+The `mssql-list-tables` tool retrieves schema information for all or specified
+tables in a SQL server database. It is compatible with any of the following
+sources:
 
 - [cloud-sql-mssql](../../sources/cloud-sql-mssql.md)
 - [mssql](../../sources/mssql.md)
 
-`mssql-list-tables` lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned).
+`mssql-list-tables` lists detailed schema information (object type, columns,
+constraints, indexes, triggers, owner, comment) as JSON for user-created tables
+(ordinary or partitioned).
 
 The tool takes the following input parameters:
 
-- **`table_names`** (string, optional): Filters by a comma-separated list of names. By default, it lists all tables in user schemas. Default: `""`.
-- **`output_format`** (string, optional): Indicate the output format of table schema. `simple` will return only the table names, `detailed` will return the full table information. Default: `detailed`.
+- **`table_names`** (string, optional): Filters by a comma-separated list of
+  names. By default, it lists all tables in user schemas. Default: `""`.
+- **`output_format`** (string, optional): Indicate the output format of table
+  schema. `simple` will return only the table names, `detailed` will return the
+  full table information. Default: `detailed`.
 
 ## Example
 
@@ -34,8 +41,8 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "mssql-list-tables".                                                          |
-| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
-| description |                   string                   |     true     | Description of the tool that is passed to the agent.                                             |
+| **field**   | **type** | **required** | **description**                                      |
+|-------------|:--------:|:------------:|------------------------------------------------------|
+| kind        |  string  |     true     | Must be "mssql-list-tables".                         |
+| source      |  string  |     true     | Name of the source the SQL should execute on.        |
+| description |  string  |     true     | Description of the tool that is passed to the agent. |

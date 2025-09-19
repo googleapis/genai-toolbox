@@ -8,7 +8,9 @@ aliases: [/resources/tools/alloydb-list-users]
 
 ## About
 
-The `alloydb-list-users` tool lists all database users within an AlloyDB cluster. It is compatible with [alloydb-admin](../../sources/alloydb-admin.md) source.
+The `alloydb-list-users` tool lists all database users within an AlloyDB
+cluster. It is compatible with [alloydb-admin](../../sources/alloydb-admin.md)
+source.
 The tool takes the following input parameters:
 
 | Parameter  | Type   | Description                                        | Required |

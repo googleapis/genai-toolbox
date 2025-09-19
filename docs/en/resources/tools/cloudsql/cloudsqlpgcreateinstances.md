@@ -5,7 +5,8 @@ weight: 10
 description: Create a Cloud SQL for PostgreSQL instance.
 ---
 
-The `cloud-sql-postgres-create-instance` tool creates a Cloud SQL for PostgreSQL instance using the Cloud SQL Admin API.
+The `cloud-sql-postgres-create-instance` tool creates a Cloud SQL for PostgreSQL
+instance using the Cloud SQL Admin API.
 
 {{< notice info >}}
 This tool uses a `source` of kind `cloud-sql-admin`.
@@ -34,9 +35,9 @@ tools:
 ### Tool Inputs
 
 | **parameter**   | **type** | **required** | **description**                                                                                                                                          |
-| --------------- | :------: | :----------: | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|-----------------|:--------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------|
 | project         |  string  |     true     | The project ID.                                                                                                                                          |
 | name            |  string  |     true     | The name of the instance.                                                                                                                                |
-| databaseVersion |  string  |     false    | The database version for Postgres. If not specified, defaults to the latest available version (e.g., POSTGRES_17).                                       |
+| databaseVersion |  string  |    false     | The database version for Postgres. If not specified, defaults to the latest available version (e.g., POSTGRES_17).                                       |
 | rootPassword    |  string  |     true     | The root password for the instance.                                                                                                                      |
-| editionPreset   |  string  |     false    | The edition of the instance. Can be `Production` or `Development`. This determines the default machine type and availability. Defaults to `Development`. |
+| editionPreset   |  string  |    false     | The edition of the instance. Can be `Production` or `Development`. This determines the default machine type and availability. Defaults to `Development`. |

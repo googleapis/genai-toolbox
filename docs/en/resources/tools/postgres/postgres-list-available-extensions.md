@@ -10,13 +10,17 @@ aliases:
 
 ## About
 
-The `postgres-list-available-extensions` tool retrieves all PostgreSQL extensions available for installation on a Postgres database. It's compatible with any of the following sources:
+The `postgres-list-available-extensions` tool retrieves all PostgreSQL
+extensions available for installation on a Postgres database. It's compatible
+with any of the following sources:
 
 - [alloydb-postgres](../../sources/alloydb-pg.md)
 - [cloud-sql-postgres](../../sources/cloud-sql-pg.md)
 - [postgres](../../sources/postgres.md)
 
-`postgres-list-available-extensions` lists all PostgreSQL extensions available for installation (extension name, default version description) as JSON. The does not support any input parameter.
+`postgres-list-available-extensions` lists all PostgreSQL extensions available
+for installation (extension name, default version description) as JSON. The does
+not support any input parameter.
 
 ## Example
 
@@ -30,9 +34,9 @@ tools:
 
 ## Reference
 
-|**name**              |**default_version**|**description**                                                                                                        |
-|--------------------|---------------|-------------------------------------------------------------------------------------------------------------------|
-|address_standardizer|3.5.2          |Used to parse an address into constituent elements. Generally used to support geocoding address normalization step.|
-|amcheck             |1.4            |functions for verifying relation integrity                                                                         |
-|anon                |1.0.0          |Data anonymization tools                                                                                           |
-|autoinc             |1.0            |functions for autoincrementing fields                                                                              |
+| **name**             | **default_version** | **description**                                                                                                     |
+|----------------------|---------------------|---------------------------------------------------------------------------------------------------------------------|
+| address_standardizer | 3.5.2               | Used to parse an address into constituent elements. Generally used to support geocoding address normalization step. |
+| amcheck              | 1.4                 | functions for verifying relation integrity                                                                          |
+| anon                 | 1.0.0               | Data anonymization tools                                                                                            |
+| autoinc              | 1.0                 | functions for autoincrementing fields                                                                               |
