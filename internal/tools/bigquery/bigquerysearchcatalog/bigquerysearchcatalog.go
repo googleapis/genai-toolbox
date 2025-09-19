@@ -99,18 +99,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
-		Description: description, 
+		Description: description,
 		InputSchema: parameters.McpManifest(),
 	}
 
 	t := Tool{
-		Name:          cfg.Name,
-		Kind:          kind,
-		Parameters:    parameters,
-		AuthRequired:  cfg.AuthRequired,
-		UseClientOAuth: s.UseClientAuthorization(),
+		Name:              cfg.Name,
+		Kind:              kind,
+		Parameters:        parameters,
+		AuthRequired:      cfg.AuthRequired,
+		UseClientOAuth:    s.UseClientAuthorization(),
 		MakeCatalogClient: makeCatalogClient,
-		ProjectID:     s.BigQueryProject(),
+		ProjectID:         s.BigQueryProject(),
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   parameters.Manifest(),
@@ -122,15 +122,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 }
 
 type Tool struct {
-	Name          		string
-	Kind         		string
-	Parameters    		tools.Parameters
-	AuthRequired  		[]string
-	UseClientOAuth	 	bool
-	MakeCatalogClient 	func() (*dataplexapi.CatalogClient, bigqueryds.DataplexClientCreator, error)
-	ProjectID     		string
-	manifest      		tools.Manifest
-	mcpManifest   		tools.McpManifest
+	Name              string
+	Kind              string
+	Parameters        tools.Parameters
+	AuthRequired      []string
+	UseClientOAuth    bool
+	MakeCatalogClient func() (*dataplexapi.CatalogClient, bigqueryds.DataplexClientCreator, error)
+	ProjectID         string
+	manifest          tools.Manifest
+	mcpManifest       tools.McpManifest
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {

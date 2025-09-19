@@ -35,15 +35,14 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
-
 )
 
 var (
-	AlloyDBProject                = os.Getenv("ALLOYDB_PROJECT")
-	AlloyDBLocation               = os.Getenv("ALLOYDB_REGION")
-	AlloyDBCluster                = os.Getenv("ALLOYDB_CLUSTER")
-	AlloyDBInstance               = os.Getenv("ALLOYDB_INSTANCE")
-	AlloyDBUser                   = os.Getenv("ALLOYDB_POSTGRES_USER")
+	AlloyDBProject  = os.Getenv("ALLOYDB_PROJECT")
+	AlloyDBLocation = os.Getenv("ALLOYDB_REGION")
+	AlloyDBCluster  = os.Getenv("ALLOYDB_CLUSTER")
+	AlloyDBInstance = os.Getenv("ALLOYDB_INSTANCE")
+	AlloyDBUser     = os.Getenv("ALLOYDB_POSTGRES_USER")
 )
 
 func getAlloyDBVars(t *testing.T) map[string]string {
@@ -258,8 +257,8 @@ func runAlloyDBMCPToolCallMethod(t *testing.T, vars map[string]string) {
 					},
 				},
 			},
-			wantContains:  fmt.Sprintf(`"name\":\"projects/%s/locations/%s/clusters/%s\"`, vars["project"], vars["location"], vars["cluster"]),
-			isErr: false,
+			wantContains: fmt.Sprintf(`"name\":\"projects/%s/locations/%s/clusters/%s\"`, vars["project"], vars["location"], vars["cluster"]),
+			isErr:        false,
 		},
 		{
 			name: "MCP Invoke my-fail-tool",
@@ -274,8 +273,8 @@ func runAlloyDBMCPToolCallMethod(t *testing.T, vars map[string]string) {
 					},
 				},
 			},
-			wantContains:  `parameter \"project\" is required`,
-			isErr: true,
+			wantContains: `parameter \"project\" is required`,
+			isErr:        true,
 		},
 		{
 			name: "MCP Invoke invalid tool",
@@ -302,8 +301,8 @@ func runAlloyDBMCPToolCallMethod(t *testing.T, vars map[string]string) {
 					"arguments": map[string]any{"location": vars["location"]},
 				},
 			},
-			wantContains:  `parameter \"project\" is required`,
-			isErr: true,
+			wantContains: `parameter \"project\" is required`,
+			isErr:        true,
 		},
 		{
 			name: "MCP Invoke my-auth-required-tool",
@@ -357,30 +356,30 @@ func runAlloyDBMCPToolCallMethod(t *testing.T, vars map[string]string) {
 func runAlloyDBListClustersTest(t *testing.T, vars map[string]string) {
 
 	type ListClustersResponse struct {
-        Clusters []struct {
-            Name string `json:"name"`
-        } `json:"clusters"`
-    }
+		Clusters []struct {
+			Name string `json:"name"`
+		} `json:"clusters"`
+	}
 
 	type ToolResponse struct {
 		Result string `json:"result"`
 	}
 
 	// NOTE: If clusters are added, removed or changed in the test project,
-    // this list must be updated for the "list clusters specific locations" test to pass
+	// this list must be updated for the "list clusters specific locations" test to pass
 	wantForSpecificLocation := []string{
-        fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-ai-nl-testing", vars["project"]),
-        fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-pg-testing", vars["project"]),
-    }
+		fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-ai-nl-testing", vars["project"]),
+		fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-pg-testing", vars["project"]),
+	}
 
 	// NOTE: If clusters are added, removed, or changed in the test project,
-    // this list must be updated for the "list clusters all locations" test to pass
+	// this list must be updated for the "list clusters all locations" test to pass
 	wantForAllLocations := []string{
-        fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-ai-nl-testing", vars["project"]),
-        fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-pg-testing", vars["project"]),
-        fmt.Sprintf("projects/%s/locations/us-east4/clusters/alloydb-private-pg-testing", vars["project"]),
-        fmt.Sprintf("projects/%s/locations/us-east4/clusters/colab-testing", vars["project"]),
-    }
+		fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-ai-nl-testing", vars["project"]),
+		fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-pg-testing", vars["project"]),
+		fmt.Sprintf("projects/%s/locations/us-east4/clusters/alloydb-private-pg-testing", vars["project"]),
+		fmt.Sprintf("projects/%s/locations/us-east4/clusters/colab-testing", vars["project"]),
+	}
 
 	invokeTcs := []struct {
 		name           string
@@ -496,7 +495,7 @@ func runAlloyDBListUsersTest(t *testing.T, vars map[string]string) {
 			name:           "list users success",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s"}`, vars["project"], vars["location"], vars["cluster"])),
 			wantContains:   fmt.Sprintf("projects/%s/locations/%s/clusters/%s/users/%s", vars["project"], vars["location"], vars["cluster"], AlloyDBUser),
-			wantCount:      3,   // NOTE: If users are added or removed in the test project, update the number of users here must be updated for this test to pass 
+			wantCount:      3, // NOTE: If users are added or removed in the test project, update the number of users here must be updated for this test to pass
 			wantStatusCode: http.StatusOK,
 		},
 		{
@@ -613,7 +612,7 @@ func runAlloyDBListInstancesTest(t *testing.T, vars map[string]string) {
 		fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-ai-nl-testing/instances/alloydb-ai-nl-testing-instance", vars["project"]),
 		fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-pg-testing/instances/alloydb-pg-testing-instance", vars["project"]),
 		fmt.Sprintf("projects/%s/locations/us-east4/clusters/alloydb-private-pg-testing/instances/alloydb-private-pg-testing-instance", vars["project"]),
-        fmt.Sprintf("projects/%s/locations/us-east4/clusters/colab-testing/instances/colab-testing-primary", vars["project"]),
+		fmt.Sprintf("projects/%s/locations/us-east4/clusters/colab-testing/instances/colab-testing-primary", vars["project"]),
 	}
 
 	invokeTcs := []struct {
@@ -721,12 +720,12 @@ func runAlloyDBGetClusterTest(t *testing.T, vars map[string]string) {
 		wantStatusCode int
 	}{
 		{
-			name:           "get cluster success",
-			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s"}`, vars["project"], vars["location"], vars["cluster"])),
-			want:           map[string]any{
-								"clusterType": "PRIMARY",
-								"name":        fmt.Sprintf("projects/%s/locations/%s/clusters/%s", vars["project"], vars["location"], vars["cluster"]),
-							},
+			name:        "get cluster success",
+			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s"}`, vars["project"], vars["location"], vars["cluster"])),
+			want: map[string]any{
+				"clusterType": "PRIMARY",
+				"name":        fmt.Sprintf("projects/%s/locations/%s/clusters/%s", vars["project"], vars["location"], vars["cluster"]),
+			},
 			wantStatusCode: http.StatusOK,
 		},
 		{
@@ -811,12 +810,12 @@ func runAlloyDBGetInstanceTest(t *testing.T, vars map[string]string) {
 		wantStatusCode int
 	}{
 		{
-			name:           "get instance success",
-			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s", "instance": "%s"}`, vars["project"], vars["location"], vars["cluster"], vars["instance"])),
-			want:           map[string]any{
-								"instanceType": "PRIMARY",
-								"name":         fmt.Sprintf("projects/%s/locations/%s/clusters/%s/instances/%s", vars["project"], vars["location"], vars["cluster"], vars["instance"]),
-							},
+			name:        "get instance success",
+			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s", "instance": "%s"}`, vars["project"], vars["location"], vars["cluster"], vars["instance"])),
+			want: map[string]any{
+				"instanceType": "PRIMARY",
+				"name":         fmt.Sprintf("projects/%s/locations/%s/clusters/%s/instances/%s", vars["project"], vars["location"], vars["cluster"], vars["instance"]),
+			},
 			wantStatusCode: http.StatusOK,
 		},
 		{
@@ -906,12 +905,12 @@ func runAlloyDBGetUserTest(t *testing.T, vars map[string]string) {
 		wantStatusCode int
 	}{
 		{
-			name:           "get user success",
-			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s", "user": "%s"}`, vars["project"], vars["location"], vars["cluster"], vars["user"])),
-			want:           map[string]any{
-								"name": fmt.Sprintf("projects/%s/locations/%s/clusters/%s/users/%s", vars["project"], vars["location"], vars["cluster"], vars["user"]),
-								"userType": "ALLOYDB_BUILT_IN",
-							},
+			name:        "get user success",
+			requestBody: bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s", "user": "%s"}`, vars["project"], vars["location"], vars["cluster"], vars["user"])),
+			want: map[string]any{
+				"name":     fmt.Sprintf("projects/%s/locations/%s/clusters/%s/users/%s", vars["project"], vars["location"], vars["cluster"], vars["user"]),
+				"userType": "ALLOYDB_BUILT_IN",
+			},
 			wantStatusCode: http.StatusOK,
 		},
 		{
@@ -1003,7 +1002,7 @@ func (t *mockAlloyDBTransport) RoundTrip(req *http.Request) (*http.Response, err
 }
 
 type mockAlloyDBHandler struct {
-	t      *testing.T
+	t       *testing.T
 	idParam string
 }
 
@@ -1122,9 +1121,9 @@ func TestAlloyDBCreateCluster(t *testing.T) {
 	}
 
 	tcs := []struct {
-		name        string
-		body        string
-		want        string
+		name           string
+		body           string
+		want           string
 		wantStatusCode int
 	}{
 		{
@@ -1330,7 +1329,7 @@ func TestAlloyDBCreateInstance(t *testing.T) {
 			if !reflect.DeepEqual(want, got) {
 				t.Errorf("unexpected result:\n- want: %+v\n-  got: %+v", want, got)
 			}
-     	})
+		})
 	}
 }
 

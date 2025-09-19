@@ -11,11 +11,19 @@ aliases:
 
 ## About
 
-A `neo4j-schema` tool connects to a Neo4j database and extracts its complete schema information. It runs multiple queries concurrently to efficiently gather details about node labels, relationships, properties, constraints, and indexes.
+A `neo4j-schema` tool connects to a Neo4j database and extracts its complete
+schema information. It runs multiple queries concurrently to efficiently gather
+details about node labels, relationships, properties, constraints, and indexes.
 
-The tool automatically detects if the APOC (Awesome Procedures on Cypher) library is available. If so, it uses APOC procedures like `apoc.meta.schema` for a highly detailed overview of the database structure; otherwise, it falls back to using native Cypher queries.
+The tool automatically detects if the APOC (Awesome Procedures on Cypher)
+library is available. If so, it uses APOC procedures like `apoc.meta.schema` for
+a highly detailed overview of the database structure; otherwise, it falls back
+to using native Cypher queries.
 
-The extracted schema is **cached** to improve performance for subsequent requests. The output is a structured JSON object containing all the schema details, which can be invaluable for providing database context to an LLM. This tool is compatible with a `neo4j` source and takes no parameters.
+The extracted schema is **cached** to improve performance for subsequent
+requests. The output is a structured JSON object containing all the schema
+details, which can be invaluable for providing database context to an LLM. This
+tool is compatible with a `neo4j` source and takes no parameters.
 
 ## Example
 
@@ -34,9 +42,9 @@ tools:
 ```
 
 ## Reference
-| **field**           | **type**   | **required** | **description**                                                                                 |
-|---------------------|:----------:|:------------:|-------------------------------------------------------------------------------------------------|
-| kind                | string     |     true     | Must be `neo4j-schema`.                                                                         |
-| source              | string     |     true     | Name of the source the schema should be extracted from.                                         |
-| description         | string     |     true     | Description of the tool that is passed to the LLM.                                              |
-| cacheExpireMinutes  | integer    |    false     | Cache expiration time in minutes. Defaults to 60.                                               |
+| **field**          | **type** | **required** | **description**                                         |
+|--------------------|:--------:|:------------:|---------------------------------------------------------|
+| kind               |  string  |     true     | Must be `neo4j-schema`.                                 |
+| source             |  string  |     true     | Name of the source the schema should be extracted from. |
+| description        |  string  |     true     | Description of the tool that is passed to the LLM.      |
+| cacheExpireMinutes | integer  |    false     | Cache expiration time in minutes. Defaults to 60.       |

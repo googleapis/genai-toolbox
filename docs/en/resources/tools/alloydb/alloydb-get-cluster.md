@@ -8,7 +8,9 @@ aliases: [/resources/tools/alloydb-get-cluster]
 
 ## About
 
-The `alloydb-get-cluster` tool retrieves detailed information for a single, specified AlloyDB cluster. It is compatible with [alloydb-admin](../../sources/alloydb-admin.md) source.
+The `alloydb-get-cluster` tool retrieves detailed information for a single,
+specified AlloyDB cluster. It is compatible with
+[alloydb-admin](../../sources/alloydb-admin.md) source.
 
 | Parameter  | Type   | Description                                        | Required |
 | :--------- | :----- | :------------------------------------------------- | :------- |
