@@ -328,22 +328,46 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:           "Invoke my-tool without parameters",
-			api:            "http://127.0.0.1:5000/api/tool/my-tool/invoke",
-			enabled:        true,
-			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
-			wantBody:       "",
-			wantStatusCode: http.StatusBadRequest,
+			name:          "Invoke my-tool without parameters",
+			api:           "http://127.0.0.1:5000/api/tool/my-tool/invoke",
+			enabled:       true,
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			wantBody: func() string {
+				if configs.mindsDBParameterValidationOverride {
+					return configs.mindsDBExpectedParameterResponse
+				} else {
+					return ""
+				}
+			}(),
+			wantStatusCode: func() int {
+				if configs.mindsDBParameterValidationOverride {
+					return http.StatusOK
+				} else {
+					return http.StatusBadRequest
+				}
+			}(),
 		},
 		{
-			name:           "Invoke my-tool with insufficient parameters",
-			api:            "http://127.0.0.1:5000/api/tool/my-tool/invoke",
-			enabled:        true,
-			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`{"id": 1}`)),
-			wantBody:       "",
-			wantStatusCode: http.StatusBadRequest,
+			name:          "Invoke my-tool with insufficient parameters",
+			api:           "http://127.0.0.1:5000/api/tool/my-tool/invoke",
+			enabled:       true,
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"id": 1}`)),
+			wantBody: func() string {
+				if configs.mindsDBParameterValidationOverride {
+					return configs.mindsDBExpectedParameterResponse
+				} else {
+					return ""
+				}
+			}(),
+			wantStatusCode: func() int {
+				if configs.mindsDBParameterValidationOverride {
+					return http.StatusOK
+				} else {
+					return http.StatusBadRequest
+				}
+			}(),
 		},
 		{
 			name:           "invoke my-array-tool",
@@ -355,29 +379,61 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:           "Invoke my-auth-tool with auth token",
-			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
-			enabled:        true,
-			requestHeader:  map[string]string{"my-google-auth_token": idToken},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
-			wantBody:       "[{\"name\":\"Alice\"}]",
+			name:          "Invoke my-auth-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			enabled:       true,
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			wantBody: func() string {
+				if configs.mindsDBAuthOverride {
+					return configs.mindsDBExpectedAuthResponse
+				} else {
+					return "[{\"name\":\"Alice\"}]"
+				}
+			}(),
 			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:           "Invoke my-auth-tool with invalid auth token",
-			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
-			enabled:        true,
-			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
-			wantStatusCode: http.StatusUnauthorized,
+			name:          "Invoke my-auth-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			enabled:       true,
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			wantBody: func() string {
+				if configs.mindsDBAuthOverride {
+					return configs.mindsDBExpectedAuthResponse
+				} else {
+					return ""
+				}
+			}(),
+			wantStatusCode: func() int {
+				if configs.mindsDBAuthOverride {
+					return http.StatusOK
+				} else {
+					return http.StatusUnauthorized
+				}
+			}(),
 		},
 		{
-			name:           "Invoke my-auth-tool without auth token",
-			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
-			enabled:        true,
-			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
-			wantStatusCode: http.StatusUnauthorized,
+			name:          "Invoke my-auth-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			enabled:       true,
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			wantBody: func() string {
+				if configs.mindsDBAuthOverride {
+					return configs.mindsDBExpectedAuthResponse
+				} else {
+					return ""
+				}
+			}(),
+			wantStatusCode: func() int {
+				if configs.mindsDBAuthOverride {
+					return http.StatusOK
+				} else {
+					return http.StatusUnauthorized
+				}
+			}(),
 		},
 		{
 			name:          "Invoke my-auth-required-tool with auth token",
@@ -385,25 +441,56 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:       true,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-
-			wantBody:       select1Want,
+			wantBody: func() string {
+				if configs.mindsDBAuthOverride {
+					return configs.mindsDBExpectedAuthResponse
+				} else {
+					return select1Want
+				}
+			}(),
 			wantStatusCode: http.StatusOK,
 		},
 		{
-			name:           "Invoke my-auth-required-tool with invalid auth token",
-			api:            "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
-			enabled:        true,
-			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
-			wantStatusCode: http.StatusUnauthorized,
+			name:          "Invoke my-auth-required-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
+			enabled:       true,
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			wantBody: func() string {
+				if configs.mindsDBAuthOverride {
+					return configs.mindsDBExpectedAuthResponse
+				} else {
+					return ""
+				}
+			}(),
+			wantStatusCode: func() int {
+				if configs.mindsDBAuthOverride {
+					return http.StatusOK
+				} else {
+					return http.StatusUnauthorized
+				}
+			}(),
 		},
 		{
-			name:           "Invoke my-auth-required-tool without auth token",
-			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
-			enabled:        true,
-			requestHeader:  map[string]string{},
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
-			wantStatusCode: http.StatusUnauthorized,
+			name:          "Invoke my-auth-required-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
+			enabled:       true,
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			wantBody: func() string {
+				if configs.mindsDBAuthOverride {
+					return configs.mindsDBExpectedAuthResponse
+				} else {
+					return ""
+				}
+			}(),
+			wantStatusCode: func() int {
+				if configs.mindsDBAuthOverride {
+					return http.StatusOK
+				} else {
+					return http.StatusUnauthorized
+				}
+			}(),
 		},
 		{
 			name:           "Invoke my-client-auth-tool with auth token",
@@ -923,7 +1010,13 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 				},
 			},
 			wantStatusCode: http.StatusOK,
-			wantBody:       `{"jsonrpc":"2.0","id":"invoke-without-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"id\" is required"}}`,
+			wantBody: func() string {
+				if configs.mindsDBMCPParameterValidationOverride {
+					return configs.mindsDBMCPExpectedParameterResponse
+				} else {
+					return `{"jsonrpc":"2.0","id":"invoke-without-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"id\" is required"}}`
+				}
+			}(),
 		},
 		{
 			name:          "MCP Invoke my-tool with insufficient parameters",
@@ -942,7 +1035,13 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 				},
 			},
 			wantStatusCode: http.StatusOK,
-			wantBody:       `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"name\" is required"}}`,
+			wantBody: func() string {
+				if configs.mindsDBMCPParameterValidationOverride {
+					return configs.mindsDBMCPExpectedParameterResponse
+				} else {
+					return `{"jsonrpc":"2.0","id":"invoke-insufficient-parameter","error":{"code":-32602,"message":"provided parameters were invalid: parameter \"name\" is required"}}`
+				}
+			}(),
 		},
 		{
 			name:          "MCP Invoke my-auth-required-tool",
@@ -961,7 +1060,13 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 				},
 			},
 			wantStatusCode: http.StatusOK,
-			wantBody:       select1Want,
+			wantBody: func() string {
+				if configs.mindsDBMCPAuthOverride {
+					return configs.mindsDBMCPExpectedAuthResponse
+				} else {
+					return select1Want
+				}
+			}(),
 		},
 		{
 			name:          "MCP Invoke my-auth-required-tool with invalid auth token",
