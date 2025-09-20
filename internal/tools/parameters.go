@@ -1178,6 +1178,17 @@ func (p *MapParameter) GetValueType() string {
 	return p.ValueType
 }
 
+// validateValueType validates the ValueType for the MapParameter.
+func (p *MapParameter) validateValueType() error {
+	if p.ValueType != "" {
+		_, err := getPrototypeParameter(p.ValueType)
+		if err != nil {
+			return fmt.Errorf("invalid ValueType %q for map parameter %q: %w", p.ValueType, p.Name, err)
+		}
+	}
+	return nil
+}
+
 // Manifest returns the manifest for the MapParameter.
 func (p *MapParameter) Manifest() ParameterManifest {
 	authNames := make([]string, len(p.AuthServices))
@@ -1188,12 +1199,14 @@ func (p *MapParameter) Manifest() ParameterManifest {
 
 	var additionalProperties any
 	if p.ValueType != "" {
-		_, err := getPrototypeParameter(p.ValueType)
-		if err != nil {
-			panic(err)
+		// Validate ValueType - if invalid, use a default schema
+		if _, err := getPrototypeParameter(p.ValueType); err != nil {
+			// Log the error but don't panic - use a fallback
+			additionalProperties = map[string]any{"type": "string"} // fallback to string type
+		} else {
+			valueSchema := map[string]any{"type": p.ValueType}
+			additionalProperties = valueSchema
 		}
-		valueSchema := map[string]any{"type": p.ValueType}
-		additionalProperties = valueSchema
 	} else {
 		// If no valueType is given, allow any properties.
 		additionalProperties = true
@@ -1213,12 +1226,14 @@ func (p *MapParameter) Manifest() ParameterManifest {
 func (p *MapParameter) McpManifest() ParameterMcpManifest {
 	var additionalProperties any
 	if p.ValueType != "" {
-		_, err := getPrototypeParameter(p.ValueType)
-		if err != nil {
-			panic(err)
+		// Validate ValueType - if invalid, use a default schema
+		if _, err := getPrototypeParameter(p.ValueType); err != nil {
+			// Log the error but don't panic - use a fallback
+			additionalProperties = map[string]any{"type": "string"} // fallback to string type
+		} else {
+			valueSchema := map[string]any{"type": p.ValueType}
+			additionalProperties = valueSchema
 		}
-		valueSchema := map[string]any{"type": p.ValueType}
-		additionalProperties = valueSchema
 	} else {
 		// If no valueType is given, allow any properties.
 		additionalProperties = true

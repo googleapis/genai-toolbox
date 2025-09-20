@@ -16,7 +16,6 @@ package valkey
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -96,14 +95,14 @@ func initValkeyClient(ctx context.Context, r Config) (valkey.Client, error) {
 	})
 
 	if err != nil {
-		log.Fatalf("error creating Valkey client: %v", err)
+		return nil, fmt.Errorf("error creating Valkey client: %w", err)
 	}
 
 	// Ping the server to check connectivity
 	pingCmd := client.B().Ping().Build()
 	_, err = client.Do(ctx, pingCmd).ToString()
 	if err != nil {
-		log.Fatalf("Failed to execute PING command: %v", err)
+		return nil, fmt.Errorf("failed to execute PING command: %w", err)
 	}
 	return client, nil
 }

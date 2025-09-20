@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"regexp"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -161,4 +162,120 @@ func InstrumentationFromContext(ctx context.Context) (*telemetry.Instrumentation
 		return instrumentation, nil
 	}
 	return nil, fmt.Errorf("unable to retrieve instrumentation")
+}
+
+// SQLValidationResult contains the result of SQL validation
+type SQLValidationResult struct {
+	IsValid     bool     `json:"isValid"`
+	Warnings    []string `json:"warnings,omitempty"`
+	Suggestions []string `json:"suggestions,omitempty"`
+}
+
+// ValidateSQLQuery performs basic validation on SQL queries to help prevent common issues
+func ValidateSQLQuery(query string) SQLValidationResult {
+	result := SQLValidationResult{
+		IsValid:     true,
+		Warnings:    []string{},
+		Suggestions: []string{},
+	}
+
+	// Normalize the query for analysis
+	normalizedQuery := strings.TrimSpace(strings.ToUpper(query))
+	
+	// Check for empty query
+	if normalizedQuery == "" {
+		result.IsValid = false
+		result.Warnings = append(result.Warnings, "Query is empty")
+		return result
+	}
+
+	// Check for potentially dangerous patterns
+	dangerousPatterns := []struct {
+		pattern string
+		message string
+	}{
+		{`--.*`, "Query contains SQL comments"},
+		{`/\*.*\*/`, "Query contains block comments"},
+		{`DROP\s+`, "Query contains DROP statement"},
+		{`DELETE\s+FROM\s+`, "Query contains DELETE statement"},
+		{`UPDATE\s+.*SET\s+`, "Query contains UPDATE statement"},
+		{`INSERT\s+INTO\s+`, "Query contains INSERT statement"},
+		{`CREATE\s+`, "Query contains CREATE statement"},
+		{`ALTER\s+`, "Query contains ALTER statement"},
+		{`TRUNCATE\s+`, "Query contains TRUNCATE statement"},
+		{`EXEC\s+`, "Query contains EXEC statement"},
+		{`EXECUTE\s+`, "Query contains EXECUTE statement"},
+		{`CALL\s+`, "Query contains CALL statement"},
+	}
+
+	for _, dp := range dangerousPatterns {
+		matched, _ := regexp.MatchString(dp.pattern, normalizedQuery)
+		if matched {
+			result.Warnings = append(result.Warnings, dp.message)
+		}
+	}
+
+	// Check for suspicious patterns that might indicate injection attempts
+	suspiciousPatterns := []struct {
+		pattern string
+		message string
+	}{
+		{`UNION\s+`, "Query contains UNION statement"},
+		{`OR\s+1\s*=\s*1`, "Query contains suspicious OR condition"},
+		{`AND\s+1\s*=\s*1`, "Query contains suspicious AND condition"},
+		{`'\s*OR\s*'`, "Query contains suspicious OR with quotes"},
+		{`'\s*AND\s*'`, "Query contains suspicious AND with quotes"},
+		{`;\s*DROP`, "Query contains semicolon followed by DROP"},
+		{`;\s*DELETE`, "Query contains semicolon followed by DELETE"},
+		{`;\s*UPDATE`, "Query contains semicolon followed by UPDATE"},
+		{`;\s*INSERT`, "Query contains semicolon followed by INSERT"},
+	}
+
+	for _, sp := range suspiciousPatterns {
+		matched, _ := regexp.MatchString(sp.pattern, normalizedQuery)
+		if matched {
+			result.Warnings = append(result.Warnings, sp.message)
+		}
+	}
+
+	// Check for missing WHERE clause in SELECT statements
+	if strings.HasPrefix(normalizedQuery, "SELECT") && !strings.Contains(normalizedQuery, "WHERE") {
+		result.Suggestions = append(result.Suggestions, "Consider adding a WHERE clause to limit the result set")
+	}
+
+	// Check for SELECT * usage
+	if strings.Contains(normalizedQuery, "SELECT *") {
+		result.Suggestions = append(result.Suggestions, "Consider specifying column names instead of using SELECT *")
+	}
+
+	// Check for missing LIMIT clause in SELECT statements
+	if strings.HasPrefix(normalizedQuery, "SELECT") && !strings.Contains(normalizedQuery, "LIMIT") {
+		result.Suggestions = append(result.Suggestions, "Consider adding a LIMIT clause to prevent large result sets")
+	}
+
+	// If there are warnings, mark as potentially invalid
+	if len(result.Warnings) > 0 {
+		result.IsValid = false
+	}
+
+	return result
+}
+
+// SanitizeSQLQuery performs basic sanitization on SQL queries
+func SanitizeSQLQuery(query string) string {
+	// Remove leading/trailing whitespace
+	query = strings.TrimSpace(query)
+	
+	// Remove multiple consecutive spaces
+	spaceRegex := regexp.MustCompile(`\s+`)
+	query = spaceRegex.ReplaceAllString(query, " ")
+	
+	// Remove comments
+	commentRegex := regexp.MustCompile(`--.*$`)
+	query = commentRegex.ReplaceAllString(query, "")
+	
+	blockCommentRegex := regexp.MustCompile(`/\*.*?\*/`)
+	query = blockCommentRegex.ReplaceAllString(query, "")
+	
+	return strings.TrimSpace(query)
 }
