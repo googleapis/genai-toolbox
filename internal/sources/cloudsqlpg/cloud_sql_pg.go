@@ -102,7 +102,7 @@ func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string
 
 	// If username and password both provided, use password authentication
 	if user != "" && pass != "" {
-		dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
+		dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable application_name=mcp-toolbox", user, pass, dbname)
 		useIAM = false
 		return dsn, useIAM, nil
 	}
@@ -122,7 +122,7 @@ func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string
 	}
 
 	// Construct IAM connection string with username
-	dsn := fmt.Sprintf("user=%s dbname=%s sslmode=disable", user, dbname)
+	dsn := fmt.Sprintf("user=%s dbname=%s sslmode=disable application_name=mcp-toolbox", user, dbname)
 	return dsn, useIAM, nil
 }
 
