@@ -166,3 +166,115 @@ func TestSanitizeSQLQuery(t *testing.T) {
 		})
 	}
 }
+
+func TestAnalyzeQueryPerformance(t *testing.T) {
+	tests := []struct {
+		name     string
+		query    string
+		expected QueryPerformanceAnalysis
+	}{
+		{
+			name:  "Simple SELECT query",
+			query: "SELECT id, name FROM users WHERE active = true",
+			expected: QueryPerformanceAnalysis{
+				ComplexityScore: 1,
+				Issues:          []string{},
+				Optimizations:   []string{"Consider adding a LIMIT clause to prevent large result sets"},
+				EstimatedCost:   "Low",
+			},
+		},
+		{
+			name:  "Query with JOINs",
+			query: "SELECT u.id, u.name, p.title FROM users u JOIN profiles p ON u.id = p.user_id",
+			expected: QueryPerformanceAnalysis{
+				ComplexityScore: 3, // 1 base + 2 for JOIN
+				Issues:          []string{},
+				Optimizations:   []string{"Consider using appropriate indexes for JOIN columns", "Consider adding a LIMIT clause to prevent large result sets"},
+				EstimatedCost:   "Low",
+			},
+		},
+		{
+			name:  "Query with LIKE wildcard",
+			query: "SELECT * FROM users WHERE name LIKE '%john%'",
+			expected: QueryPerformanceAnalysis{
+				ComplexityScore: 3, // 1 base + 1 for SELECT * + 2 for LIKE wildcard
+				Issues:          []string{"LIKE queries with leading wildcards cannot use indexes efficiently"},
+				Optimizations:   []string{"SELECT * can impact performance - specify only needed columns", "Consider full-text search or different query pattern", "Consider adding a LIMIT clause to prevent large result sets"},
+				EstimatedCost:   "Low",
+			},
+		},
+		{
+			name:  "Query with functions in WHERE",
+			query: "SELECT id FROM users WHERE UPPER(name) = 'JOHN'",
+			expected: QueryPerformanceAnalysis{
+				ComplexityScore: 3, // 1 base + 2 for function in WHERE
+				Issues:          []string{"Functions in WHERE clause prevent index usage"},
+				Optimizations:   []string{"Consider restructuring to avoid functions in WHERE clause", "Consider adding a LIMIT clause to prevent large result sets"},
+				EstimatedCost:   "Low",
+			},
+		},
+		{
+			name:  "Query with multiple OR conditions",
+			query: "SELECT id FROM users WHERE status = 'active' OR status = 'pending' OR status = 'verified' OR status = 'approved'",
+			expected: QueryPerformanceAnalysis{
+				ComplexityScore: 5, // 1 base + 4 for OR conditions
+				Issues:          []string{},
+				Optimizations:   []string{"Multiple OR conditions can be slow - consider UNION or different approach", "Consider adding a LIMIT clause to prevent large result sets"},
+				EstimatedCost:   "Medium",
+			},
+		},
+		{
+			name:  "Query with GROUP BY and HAVING",
+			query: "SELECT department, COUNT(*) FROM users GROUP BY department HAVING COUNT(*) > 10",
+			expected: QueryPerformanceAnalysis{
+				ComplexityScore: 5, // 1 base + 2 for GROUP BY + 2 for HAVING
+				Issues:          []string{},
+				Optimizations:   []string{"Consider adding indexes on GROUP BY columns", "HAVING clauses can be expensive - consider filtering in WHERE instead", "Consider adding a LIMIT clause to prevent large result sets"},
+				EstimatedCost:   "Medium",
+			},
+		},
+		{
+			name:  "Empty query",
+			query: "",
+			expected: QueryPerformanceAnalysis{
+				ComplexityScore: 1,
+				Issues:          []string{"Query is empty"},
+				Optimizations:   []string{},
+				EstimatedCost:   "Low",
+			},
+		},
+		{
+			name:  "Well-optimized query",
+			query: "SELECT id, name FROM users WHERE active = true AND created_at > '2023-01-01' ORDER BY name LIMIT 100",
+			expected: QueryPerformanceAnalysis{
+				ComplexityScore: 2, // 1 base + 1 for ORDER BY
+				Issues:          []string{},
+				Optimizations:   []string{"Ensure ORDER BY columns are indexed"},
+				EstimatedCost:   "Low",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := AnalyzeQueryPerformance(tt.query)
+			
+			if result.ComplexityScore != tt.expected.ComplexityScore {
+				t.Errorf("AnalyzeQueryPerformance() ComplexityScore = %d, want %d", result.ComplexityScore, tt.expected.ComplexityScore)
+			}
+			
+			if result.EstimatedCost != tt.expected.EstimatedCost {
+				t.Errorf("AnalyzeQueryPerformance() EstimatedCost = %s, want %s", result.EstimatedCost, tt.expected.EstimatedCost)
+			}
+			
+			// Check that we have the expected number of issues and optimizations
+			if len(result.Issues) != len(tt.expected.Issues) {
+				t.Errorf("AnalyzeQueryPerformance() Issues length = %d, want %d", len(result.Issues), len(tt.expected.Issues))
+			}
+			
+			if len(result.Optimizations) != len(tt.expected.Optimizations) {
+				t.Errorf("AnalyzeQueryPerformance() Optimizations length = %d, want %d", len(result.Optimizations), len(tt.expected.Optimizations))
+			}
+		})
+	}
+}

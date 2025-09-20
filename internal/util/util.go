@@ -279,3 +279,133 @@ func SanitizeSQLQuery(query string) string {
 	
 	return strings.TrimSpace(query)
 }
+
+// QueryPerformanceAnalysis contains performance analysis results
+type QueryPerformanceAnalysis struct {
+	ComplexityScore int      `json:"complexityScore"` // 1-10 scale, higher = more complex
+	Issues          []string `json:"issues,omitempty"`
+	Optimizations   []string `json:"optimizations,omitempty"`
+	EstimatedCost   string   `json:"estimatedCost"` // "Low", "Medium", "High"
+}
+
+// AnalyzeQueryPerformance analyzes SQL query performance and provides optimization suggestions
+func AnalyzeQueryPerformance(query string) QueryPerformanceAnalysis {
+	analysis := QueryPerformanceAnalysis{
+		ComplexityScore: 1,
+		Issues:          []string{},
+		Optimizations:   []string{},
+		EstimatedCost:   "Low",
+	}
+
+	normalizedQuery := strings.TrimSpace(strings.ToUpper(query))
+	
+	// Skip analysis for empty queries
+	if normalizedQuery == "" {
+		analysis.Issues = append(analysis.Issues, "Query is empty")
+		analysis.EstimatedCost = "Low"
+		return analysis
+	}
+
+	// Analyze query complexity
+	complexityScore := 1
+
+	// Check for JOINs
+	joinCount := strings.Count(normalizedQuery, " JOIN ")
+	if joinCount > 0 {
+		complexityScore += joinCount * 2
+		analysis.Optimizations = append(analysis.Optimizations, "Consider using appropriate indexes for JOIN columns")
+	}
+
+	// Check for subqueries
+	subqueryCount := strings.Count(normalizedQuery, " SELECT ") - 1
+	if subqueryCount > 0 {
+		complexityScore += subqueryCount * 3
+		analysis.Optimizations = append(analysis.Optimizations, "Consider if subqueries can be converted to JOINs for better performance")
+	}
+
+	// Check for ORDER BY
+	if strings.Contains(normalizedQuery, " ORDER BY ") {
+		complexityScore += 1
+		analysis.Optimizations = append(analysis.Optimizations, "Ensure ORDER BY columns are indexed")
+	}
+
+	// Check for GROUP BY
+	if strings.Contains(normalizedQuery, " GROUP BY ") {
+		complexityScore += 2
+		analysis.Optimizations = append(analysis.Optimizations, "Consider adding indexes on GROUP BY columns")
+	}
+
+	// Check for HAVING
+	if strings.Contains(normalizedQuery, " HAVING ") {
+		complexityScore += 2
+		analysis.Optimizations = append(analysis.Optimizations, "HAVING clauses can be expensive - consider filtering in WHERE instead")
+	}
+
+	// Check for DISTINCT
+	if strings.Contains(normalizedQuery, " DISTINCT ") {
+		complexityScore += 1
+		analysis.Optimizations = append(analysis.Optimizations, "DISTINCT can be expensive - ensure it's necessary")
+	}
+
+	// Check for LIKE with leading wildcard
+	likePattern := regexp.MustCompile(`LIKE\s+['"]%`)
+	if likePattern.MatchString(normalizedQuery) {
+		complexityScore += 2
+		analysis.Issues = append(analysis.Issues, "LIKE queries with leading wildcards cannot use indexes efficiently")
+		analysis.Optimizations = append(analysis.Optimizations, "Consider full-text search or different query pattern")
+	}
+
+	// Check for SELECT *
+	if strings.Contains(normalizedQuery, "SELECT *") {
+		complexityScore += 1
+		analysis.Optimizations = append(analysis.Optimizations, "SELECT * can impact performance - specify only needed columns")
+	}
+
+	// Check for functions in WHERE clause
+	whereFuncPattern := regexp.MustCompile(`WHERE\s+[A-Z_]+\([^)]+\)`)
+	if whereFuncPattern.MatchString(normalizedQuery) {
+		complexityScore += 2
+		analysis.Issues = append(analysis.Issues, "Functions in WHERE clause prevent index usage")
+		analysis.Optimizations = append(analysis.Optimizations, "Consider restructuring to avoid functions in WHERE clause")
+	}
+
+	// Check for OR conditions
+	orCount := strings.Count(normalizedQuery, " OR ")
+	if orCount > 2 {
+		complexityScore += orCount
+		analysis.Optimizations = append(analysis.Optimizations, "Multiple OR conditions can be slow - consider UNION or different approach")
+	}
+
+	// Check for missing WHERE clause on large tables
+	if strings.HasPrefix(normalizedQuery, "SELECT") && !strings.Contains(normalizedQuery, "WHERE") {
+		analysis.Optimizations = append(analysis.Optimizations, "Consider adding WHERE clause to limit result set")
+	}
+
+	// Check for missing LIMIT
+	if strings.HasPrefix(normalizedQuery, "SELECT") && !strings.Contains(normalizedQuery, "LIMIT") {
+		analysis.Optimizations = append(analysis.Optimizations, "Consider adding LIMIT clause to prevent large result sets")
+	}
+
+	// Set complexity score (cap at 10)
+	if complexityScore > 10 {
+		complexityScore = 10
+	}
+	analysis.ComplexityScore = complexityScore
+
+	// Determine estimated cost
+	switch {
+	case complexityScore <= 3:
+		analysis.EstimatedCost = "Low"
+	case complexityScore <= 6:
+		analysis.EstimatedCost = "Medium"
+	default:
+		analysis.EstimatedCost = "High"
+	}
+
+	// Add performance warnings for high complexity
+	if complexityScore >= 8 {
+		analysis.Issues = append(analysis.Issues, "Query has high complexity - consider breaking into smaller queries")
+	}
+
+	return analysis
+}

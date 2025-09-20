@@ -100,4 +100,40 @@ func main() {
 	
 	// If valid, proceed with execution
 	fmt.Println("Query is safe to execute")
+
+	// Performance Analysis Examples
+	fmt.Println("\n\nSQL Query Performance Analysis Examples")
+	fmt.Println("=======================================")
+
+	performanceQueries := []string{
+		"SELECT id, name FROM users WHERE active = true LIMIT 10",                    // Well-optimized
+		"SELECT * FROM users u JOIN profiles p ON u.id = p.user_id",                 // With JOINs
+		"SELECT id FROM users WHERE UPPER(name) = 'JOHN'",                           // Function in WHERE
+		"SELECT * FROM users WHERE name LIKE '%john%'",                              // LIKE with wildcard
+		"SELECT department, COUNT(*) FROM users GROUP BY department HAVING COUNT(*) > 10", // Complex query
+	}
+
+	for i, query := range performanceQueries {
+		fmt.Printf("\n%d. Query: %q\n", i+1, query)
+		
+		// Analyze performance
+		analysis := util.AnalyzeQueryPerformance(query)
+		
+		fmt.Printf("   📊 Complexity Score: %d/10\n", analysis.ComplexityScore)
+		fmt.Printf("   💰 Estimated Cost: %s\n", analysis.EstimatedCost)
+		
+		if len(analysis.Issues) > 0 {
+			fmt.Println("   ⚠️  Performance Issues:")
+			for _, issue := range analysis.Issues {
+				fmt.Printf("      - %s\n", issue)
+			}
+		}
+		
+		if len(analysis.Optimizations) > 0 {
+			fmt.Println("   🚀 Optimization Suggestions:")
+			for _, opt := range analysis.Optimizations {
+				fmt.Printf("      - %s\n", opt)
+			}
+		}
+	}
 }
