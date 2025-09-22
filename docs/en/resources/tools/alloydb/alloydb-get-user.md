@@ -8,7 +8,9 @@ aliases: [/resources/tools/alloydb-get-user]
 
 ## About
 
-The `alloydb-get-user` tool retrieves detailed information for a single, specified AlloyDB user. It is compatible with [alloydb-admin](../../sources/alloydb-admin.md) source.
+The `alloydb-get-user` tool retrieves detailed information for a single,
+specified AlloyDB user. It is compatible with
+[alloydb-admin](../../sources/alloydb-admin.md) source.
 
 | Parameter  | Type   | Description                                        | Required |
 | :--------- | :----- | :------------------------------------------------- | :------- |
