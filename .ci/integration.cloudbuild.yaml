@@ -670,8 +670,7 @@ steps:
     env:
       - "GOPATH=/gopath"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-      - "CASSANDRA_HOSTS=$_CASSANDRA_HOST"
-    secretEnv: ["CLIENT_ID", "CASSANDRA_USER", "CASSANDRA_PASS"]
+    secretEnv: ["CLIENT_ID", "CASSANDRA_USER", "CASSANDRA_PASS", "CASSANDRA_HOST"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -822,4 +821,3 @@ substitutions:
   _YUGABYTEDB_DATABASE: "yugabyte"
   _YUGABYTEDB_PORT: "5433"
   _YUGABYTEDB_LOADBALANCE: "false"
-  _CASSANDRA_HOSTS: 127.0.0.1
