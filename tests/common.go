@@ -859,7 +859,9 @@ func CleanupMySQLTables(t *testing.T, ctx context.Context, pool *sql.DB) {
 	
 	if _, err := pool.ExecContext(ctx, dropQuery); err != nil {
 		// Try to re-enable checks even if drop fails
-		pool.ExecContext(ctx, "SET FOREIGN_KEY_CHECKS = 1;")
+		if _, err := pool.ExecContext(ctx, "SET FOREIGN_KEY_CHECKS = 1;"); err != nil {
+			t.Logf("Also failed to re-enable foreign key checks: %v", err)
+		}
 		t.Fatalf("Failed to drop all MySQL tables: %v", err)
 	}
 
