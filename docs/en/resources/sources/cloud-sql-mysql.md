@@ -23,24 +23,28 @@ to a database by following these instructions][csql-mysql-quickstart].
 ## Available Tools
 
 - [`mysql-sql`](../tools/mysql/mysql-sql.md)
-  Execute pre-defined prepared SQL queries in MySQL.
+  Execute pre-defined prepared SQL queries in Cloud SQL for MySQL.
 
 - [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)
   Run parameterized SQL queries in Cloud SQL for MySQL.
 
 - [`mysql-list-active-queries`](../tools/mysql/mysql-list-active-queries.md)
-  List active queries in MySQL.
+  List active queries in Cloud SQL for MySQL.
 
 - [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)
   List tables in a Cloud SQL for MySQL database.
 
+- [`mysql-list-tables-missing-unique-indexes`](../tools/mysql/mysql-list-tables-missing-unique-indexes.md)
+  List tables in a Cloud SQL for MySQL database that do not have primary or unique indices.
+
 - [`mysql-list-table-fragmentation`](../tools/mysql/mysql-list-table-fragmentation.md)
-  List table fragmentation in MySQL tables.
+  List table fragmentation in Cloud SQL for MySQL tables.
 
 ### Pre-built Configurations
 
-- [Cloud SQL for MySQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mysql_mcp/)
-Connect your IDE to Cloud SQL for MySQL using Toolbox.
+- [Cloud SQL for MySQL using
+  MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mysql_mcp/)
+  Connect your IDE to Cloud SQL for MySQL using Toolbox.
 
 ## Requirements
 

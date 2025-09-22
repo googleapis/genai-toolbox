@@ -190,10 +190,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name               string           `yaml:"name"`
-	Kind               string           `yaml:"kind"`
-	AuthRequired       []string         `yaml:"authRequired"`
-	AllParams          tools.Parameters `yaml:"allParams"`
+	Name         string           `yaml:"name"`
+	Kind         string           `yaml:"kind"`
+	AuthRequired []string         `yaml:"authRequired"`
+	AllParams    tools.Parameters `yaml:"allParams"`
 
 	Pool        *pgxpool.Pool
 	manifest    tools.Manifest
@@ -208,9 +208,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("invalid 'table_names' parameter; expected a string")
 	}
 	outputFormat, _ := paramsMap["output_format"].(string)
-    if outputFormat != "simple" && outputFormat != "detailed" {
-        return nil, fmt.Errorf("invalid value for output_format: must be 'simple' or 'detailed', but got %q", outputFormat)
-    }
+	if outputFormat != "simple" && outputFormat != "detailed" {
+		return nil, fmt.Errorf("invalid value for output_format: must be 'simple' or 'detailed', but got %q", outputFormat)
+	}
 
 	results, err := t.Pool.Query(ctx, listTablesStatement, tableNames, outputFormat)
 	if err != nil {

@@ -1409,7 +1409,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"clickhouse_database_tools": tools.ToolsetConfig{
 					Name:      "clickhouse_database_tools",
-					ToolNames: []string{"execute_sql", "list_databases"},
+					ToolNames: []string{"execute_sql", "list_databases", "list_tables"},
 				},
 			},
 		},
@@ -1429,7 +1429,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_mysql_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mysql_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries", "list_table_fragmentation"},
+					ToolNames: []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries", "list_tables_missing_unique_indexes", "list_table_fragmentation"},
 				},
 			},
 		},
@@ -1469,7 +1469,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"mysql_database_tools": tools.ToolsetConfig{
 					Name:      "mysql_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries", "list_table_fragmentation"},
+					ToolNames: []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries", "list_tables_missing_unique_indexes", "list_table_fragmentation"},
 				},
 			},
 		},

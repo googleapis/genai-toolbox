@@ -16,13 +16,13 @@ package alloydbcreateuser
 
 import (
 	"context"
-    "fmt"
+	"fmt"
 
-    yaml "github.com/goccy/go-yaml"
-    "github.com/googleapis/genai-toolbox/internal/sources"
-    alloydbadmin "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
-    "github.com/googleapis/genai-toolbox/internal/tools"
-    "google.golang.org/api/alloydb/v1"
+	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/sources"
+	alloydbadmin "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
+	"github.com/googleapis/genai-toolbox/internal/tools"
+	"google.golang.org/api/alloydb/v1"
 )
 
 const kind string = "alloydb-create-user"
@@ -43,11 +43,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 // Configuration for the create-user tool.
 type Config struct {
-    Name        string   `yaml:"name" validate:"required"`
-    Kind        string   `yaml:"kind" validate:"required"`
-    Source      string   `yaml:"source" validate:"required"`
-    Description string   `yaml:"description"`
-    AuthRequired []string `yaml:"authRequired"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description"`
+	AuthRequired []string `yaml:"authRequired"`
 }
 
 // validate interface
@@ -61,14 +61,14 @@ func (cfg Config) ToolConfigKind() string {
 // Initialize initializes the tool from the configuration.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	rawS, ok := srcs[cfg.Source]
-    if !ok {
-        return nil, fmt.Errorf("source %q not found", cfg.Source)
-    }
+	if !ok {
+		return nil, fmt.Errorf("source %q not found", cfg.Source)
+	}
 
-    s, ok := rawS.(*alloydbadmin.Source)
-    if !ok {
-        return nil, fmt.Errorf("invalid source for %q tool: source kind must be `alloydb-admin`", kind)
-    }
+	s, ok := rawS.(*alloydbadmin.Source)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `alloydb-admin`", kind)
+	}
 
 	allParameters := tools.Parameters{
 		tools.NewStringParameter("project", "The GCP project ID."),
@@ -96,26 +96,26 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	return Tool{
-        Name:        cfg.Name,
-        Kind:        kind,
-        Source:      s,
-        AllParams:   allParameters,
-        manifest:    tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-        mcpManifest: mcpManifest,
-    }, nil
+		Name:        cfg.Name,
+		Kind:        kind,
+		Source:      s,
+		AllParams:   allParameters,
+		manifest:    tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
+	}, nil
 }
 
 // Tool represents the create-user tool.
 type Tool struct {
-	Name         string   `yaml:"name"`
-    Kind         string   `yaml:"kind"`
-    Description  string   `yaml:"description"`
+	Name        string `yaml:"name"`
+	Kind        string `yaml:"kind"`
+	Description string `yaml:"description"`
 
-    Source    *alloydbadmin.Source
-    AllParams tools.Parameters `yaml:"allParams"`
+	Source    *alloydbadmin.Source
+	AllParams tools.Parameters `yaml:"allParams"`
 
-    manifest    tools.Manifest
-    mcpManifest tools.McpManifest
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 // Invoke executes the tool's logic.

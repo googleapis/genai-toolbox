@@ -17,12 +17,15 @@ This guide assumes you have already done the following:
 [install-postgres]: https://www.postgresql.org/download/
 
 ### Cloud Setup (Optional)
+
 {{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
 ## Step 1: Set up your database
+
 {{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
 ## Step 2: Install and configure Toolbox
+
 {{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
 
 ## Step 3: Connect your agent to Toolbox
@@ -36,7 +39,8 @@ from Toolbox.
     npm init -y
     ```
 
-1. In a new terminal, install the [SDK](https://www.npmjs.com/package/@toolbox-sdk/core).
+1. In a new terminal, install the
+   [SDK](https://www.npmjs.com/package/@toolbox-sdk/core).
 
     ```bash
     npm install @toolbox-sdk/core
@@ -59,7 +63,8 @@ npm install @google/genai
 {{< /tab >}}
 {{< /tabpane >}}
 
-1. Create a new file named `hotelAgent.js` and copy the following code to create an agent:
+1. Create a new file named `hotelAgent.js` and copy the following code to create
+   an agent:
 
     {{< tabpane persist=header >}}
 {{< tab header="LangChain" lang="js" >}}
@@ -95,5 +100,6 @@ npm install @google/genai
     ```
 
 {{< notice info >}}
-For more information, visit the [JS SDK repo](https://github.com/googleapis/mcp-toolbox-sdk-js).
+For more information, visit the [JS SDK
+repo](https://github.com/googleapis/mcp-toolbox-sdk-js).
 {{</ notice >}}

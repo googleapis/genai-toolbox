@@ -1,4 +1,3 @@
-
 // Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,12 +42,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 // Configuration for the get-user tool.
 type Config struct {
-	Name         string            `yaml:"name" validate:"required"`
-	Kind         string            `yaml:"kind" validate:"required"`
-	Source       string            `yaml:"source" validate:"required"`
-	Description  string            `yaml:"description"`
-	AuthRequired []string          `yaml:"authRequired"`
-	BaseURL      string            `yaml:"baseURL"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description"`
+	AuthRequired []string `yaml:"authRequired"`
+	BaseURL      string   `yaml:"baseURL"`
 }
 
 // validate interface
@@ -94,12 +93,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Source:       s,
-		AllParams:    allParameters,
-		manifest:     tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Name:        cfg.Name,
+		Kind:        kind,
+		Source:      s,
+		AllParams:   allParameters,
+		manifest:    tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}, nil
 }
 
