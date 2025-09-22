@@ -6,7 +6,8 @@ description: >
   Create a new database in a Cloud SQL instance.
 ---
 
-The `cloud-sql-create-database` tool creates a new database in a specified Cloud SQL instance.
+The `cloud-sql-create-database` tool creates a new database in a specified Cloud
+SQL instance.
 
 {{< notice info >}}
 This tool uses a `source` of kind `cloud-sql-admin`.

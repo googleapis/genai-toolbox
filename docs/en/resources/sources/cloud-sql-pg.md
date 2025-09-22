@@ -18,7 +18,8 @@ If you are new to Cloud SQL for PostgreSQL, you can try [creating and connecting
 to a database by following these instructions][csql-pg-quickstart].
 
 [csql-pg-docs]: https://cloud.google.com/sql/docs/postgres
-[csql-pg-quickstart]: https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer
+[csql-pg-quickstart]:
+    https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer
 
 ## Available Tools
 
@@ -42,7 +43,8 @@ to a database by following these instructions][csql-pg-quickstart].
 
 ### Pre-built Configurations
 
-- [Cloud SQL for Postgres using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/)
+- [Cloud SQL for Postgres using
+  MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/)
 Connect your IDE to Cloud SQL for Postgres using Toolbox.
 
 

@@ -15,11 +15,13 @@ It's compatible with the following sources:
 - [bigquery](../../sources/bigquery.md)
 
 `bigquery-search-catalog` takes a required `query` parameter based on which
-entries are filtered and returned to the user. It also optionally accepts following parameters:
+entries are filtered and returned to the user. It also optionally accepts
+following parameters:
 
 - `datasetIds` - The IDs of the bigquery dataset.
 - `projectIds` - The IDs of the bigquery project.
-- `types` - The type of the data. Accepted values are: CONNECTION, POLICY, DATASET, MODEL, ROUTINE, TABLE, VIEW.
+- `types` - The type of the data. Accepted values are: CONNECTION, POLICY,
+  DATASET, MODEL, ROUTINE, TABLE, VIEW.
 - `pageSize` - Number of results in the search page. Defaults to `5`.
 
 ## Requirements
