@@ -48,7 +48,6 @@ func getCassandraVars(t *testing.T) map[string]any {
 	case Password:
 		t.Fatal("'Password' not set")
 	}
-	t.Log("hosts:" + Hosts)
 	return map[string]any{
 		"kind":     CassandraSourceKind,
 		"hosts":    strings.Split(Hosts, ","),
@@ -59,13 +58,29 @@ func getCassandraVars(t *testing.T) map[string]any {
 }
 
 func initCassandraSession() (*gocql.Session, error) {
-	hosts := strings.Split(Hosts, ",")
+	hostStrings := strings.Split(Hosts, ",")
+
+	var hosts []string
+    for _, h := range hostStrings {
+        trimmedHost := strings.TrimSpace(h)
+        if trimmedHost != "" {
+            hosts = append(hosts, trimmedHost)
+        }
+    }
+    if len(hosts) == 0 {
+        return nil, fmt.Errorf("no valid hosts found in CASSANDRA_HOSTS env var")
+    }
 	// Configure cluster connection
 	cluster := gocql.NewCluster(hosts...)
 	cluster.Consistency = gocql.Quorum
 	cluster.ProtoVersion = 4
+	cluster.DisableInitialHostLookup = true
 	cluster.ConnectTimeout = 10 * time.Second
 	cluster.NumConns = 2
+	cluster.Authenticator = gocql.PasswordAuthenticator{
+	Username: Username,
+	Password: Password,
+	}
 	cluster.RetryPolicy = &gocql.ExponentialBackoffRetryPolicy{
 		NumRetries: 3,
 		Min:        200 * time.Millisecond,
