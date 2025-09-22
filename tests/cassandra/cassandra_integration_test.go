@@ -33,11 +33,30 @@ import (
 var (
 	CassandraSourceKind = "cassandra"
 	CassandraToolKind   = "cassandra-cql"
-	Hosts               = os.Getenv("CASSANDRA_HOSTS") //Comma separated string with host IPs (default: []string{"localhost"})
+	Hosts               = os.Getenv("CASSANDRA_HOSTS")
 	Keyspace            = "example_keyspace"
 	Username            = os.Getenv("CASSANDRA_USER")
 	Password            = os.Getenv("CASSANDRA_PASS")
 )
+
+func getCassandraVars(t *testing.T) map[string]any {
+	switch "" {
+	case Hosts:
+		t.Fatal("'Hosts' not set")
+	case Username:
+		t.Fatal("'Username' not set")
+	case Password:
+		t.Fatal("'Password' not set")
+	}
+	t.Log("hosts:" + Hosts)
+	return map[string]any{
+		"kind":     CassandraSourceKind,
+		"hosts":    strings.Split(Hosts, ","),
+		"keyspace": Keyspace,
+		"username": Username,
+		"password": Password,
+	}
+}
 
 func initCassandraSession() (*gocql.Session, error) {
 	hosts := strings.Split(Hosts, ",")
@@ -129,15 +148,7 @@ func initTable(tableName string, session *gocql.Session) error {
 	return nil
 }
 
-func getCassandraVars() map[string]any {
-	return map[string]any{
-		"kind":     CassandraSourceKind,
-		"hosts":    strings.Split(Hosts, ","),
-		"keyspace": Keyspace,
-		"username": Username,
-		"password": Password,
-	}
-}
+
 
 func dropTable(session *gocql.Session, tableName string) {
 	err := session.Query(fmt.Sprintf("drop table %s.%s", Keyspace, tableName)).Exec()
@@ -152,7 +163,7 @@ func TestCassandra(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer session.Close()
-	sourceConfig := getCassandraVars()
+	sourceConfig := getCassandraVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
