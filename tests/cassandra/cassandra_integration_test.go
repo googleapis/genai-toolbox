@@ -33,7 +33,7 @@ import (
 var (
 	CassandraSourceKind = "cassandra"
 	CassandraToolKind   = "cassandra-cql"
-	Hosts               = os.Getenv("CASSANDRA_HOSTS")
+	Hosts               = os.Getenv("CASSANDRA_HOST")
 	Keyspace            = "example_keyspace"
 	Username            = os.Getenv("CASSANDRA_USER")
 	Password            = os.Getenv("CASSANDRA_PASS")
