@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>MySQL on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/tools/mysql/</link><description>Recent content in MySQL on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/tools/mysql/index.xml" rel="self" type="application/rss+xml"/><item><title>mysql-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/tools/mysql/mysql-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/tools/mysql/mysql-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mysql-execute-sql&lt;/code> tool executes a SQL statement against a MySQL
+database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/sources/mysql/">mysql&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>mysql-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and run the sql
+statement against the &lt;code>source&lt;/code>.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool is intended for developer assistant workflows with
+human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&lt;/blockquote>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">execute_sql_tool&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">mysql-execute-sql&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-mysql-instance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to execute sql statement.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;mysql-execute-sql&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the source the SQL should execute on.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>mysql-list-active-queries</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/tools/mysql/mysql-list-active-queries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/tools/mysql/mysql-list-active-queries/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mysql-list-active-queries&lt;/code> tool retrieves information about active queries in
+a MySQL database. It&amp;rsquo;s compatible with:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/sources/mysql/">mysql&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>mysql-list-active-queries&lt;/code> outputs detailed information as JSON for current
+active queries, ordered by execution time in descending order.
+This tool takes 2 optional input parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>min_duration_secs&lt;/code> (optional): Only show queries running for at least this
+long in seconds, default &lt;code>0&lt;/code>.&lt;/li>
+&lt;li>&lt;code>limit&lt;/code> (optional): max number of queries to return, default &lt;code>10&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_active_queries&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">mysql-list-active-queries&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-mysql-instance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Lists top N (default 10) ongoing queries from processlist and innodb_trx, ordered by execution time in descending order. Returns detailed information of those queries in json format, including process id, query, transaction duration, transaction wait duration, process time, transaction state, process state, username with host, transaction rows locked, transaction rows modified, and db schema.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following fields:&lt;/p></description></item><item><title>mysql-list-table-fragmentation</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/tools/mysql/mysql-list-table-fragmentation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/tools/mysql/mysql-list-table-fragmentation/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mysql-list-table-fragmentation&lt;/code> tool checks table fragmentation of MySQL
+tables by calculating the size of the data and index files in bytes and
+comparing with free space allocated to each table. This tool calculates
+&lt;code>fragmentation_percentage&lt;/code> which represents the proportion of free space
+relative to the total data and index size. It&amp;rsquo;s compatible with&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/sources/mysql/">mysql&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>mysql-list-table-fragmentation&lt;/code> outputs detailed information as JSON , ordered
+by the fragmentation percentage in descending order.
+This tool takes 4 optional input parameters:&lt;/p></description></item><item><title>mysql-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/tools/mysql/mysql-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/tools/mysql/mysql-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>mysql-list-tables&lt;/code> tool retrieves schema information for all or specified
+tables in a MySQL database. It is compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/sources/mysql/">mysql&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>mysql-list-tables&lt;/code> lists detailed schema information (object type, columns,
+constraints, indexes, triggers, owner, comment) as JSON for user-created tables
+(ordinary or partitioned). Filters by a comma-separated list of names. If names
+are omitted, it lists all tables in user schemas. The output format can be set
+to &lt;code>simple&lt;/code> which will return only the table names or &lt;code>detailed&lt;/code> which is the
+default.&lt;/p></description></item><item><title>mysql-list-tables-missing-unique-indexes</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/tools/mysql/mysql-list-tables-missing-unique-indexes/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/tools/mysql/mysql-list-tables-missing-unique-indexes/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mysql-list-tables-missing-unique-indexes&lt;/code> tool searches tables that do not
+have primary or unique indices in a MySQL database. It&amp;rsquo;s compatible with:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/sources/mysql/">mysql&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>mysql-list-tables-missing-unique-indexes&lt;/code> outputs table names, including
+&lt;code>table_schema&lt;/code> and &lt;code>table_name&lt;/code> in JSON format. It takes 2 optional input
+parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>table_schema&lt;/code> (optional): Only check tables in this specific schema/database.
+Search all visible tables in all visible databases if not specified.&lt;/li>
+&lt;li>&lt;code>limit&lt;/code> (optional): max number of queries to return, default &lt;code>50&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_tables_missing_unique_indexes&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">mysql-list-tables-missing-unique-indexes&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-mysql-instance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Find tables that do not have primary or unique key constraint. A primary key or unique key is the only mechanism that guaranttes a row is unique. Without them, the database-level protection against data integrity issues will be missing.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following fields:&lt;/p></description></item><item><title>mysql-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/tools/mysql/mysql-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/tools/mysql/mysql-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mysql-sql&lt;/code> tool executes a pre-defined SQL statement against a MySQL
+database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1012/resources/sources/mysql/">mysql&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>The specified SQL statement is executed as a &lt;a href="https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html">prepared statement&lt;/a>,
+and expects parameters in the SQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
+Query parameters can be used as substitutes for arbitrary expressions.
+Parameters cannot be used as substitutes for identifiers, column names, table
+names, or other parts of the query.&lt;/p></description></item></channel></rss>
