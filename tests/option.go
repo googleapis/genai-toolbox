@@ -88,7 +88,7 @@ func DisableSelect1Test() InvokeTestOption {
 	}
 }
 
-// DisableSelect1Test disables auth tests for sources that do not support SELECT 1 query.
+// DisableSelect1AuthTest disables auth tests for sources that do not support SELECT 1 query.
 // e.g. tests.RunToolInvokeTest(t, "", tests.DisableSelect1AuthTest())
 func DisableSelect1AuthTest() InvokeTestOption {
 	return func(c *InvokeTestConfig) {
