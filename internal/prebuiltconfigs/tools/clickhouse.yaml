@@ -32,7 +32,13 @@ tools:
     source: clickhouse-source
     description: Use this tool to list all databases in ClickHouse.
 
+  list_tables:
+    kind: clickhouse-list-tables
+    source: clickhouse-source
+    description: Use this tool to list all tables in a specific ClickHouse database.
+
 toolsets:
   clickhouse_database_tools:
     - execute_sql
     - list_databases
+    - list_tables
