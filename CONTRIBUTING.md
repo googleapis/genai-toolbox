@@ -27,7 +27,6 @@ This project follows
 
 > [!NOTE]
 > New contributions should always include both unit and integration tests.
- 
 
 All submissions, including submissions by project members, require review. We
 use GitHub pull requests for this purpose. Consult
@@ -37,14 +36,14 @@ information on using pull requests.
 ### Code reviews
 
 * Within 2-5 days, a reviewer will review your PR. They may approve it, or request
-changes. 
+changes.
 * When requesting changes, reviewers should self-assign the PR to ensure
 they are aware of any updates.
 * If additional changes are needed, push additional commits to your PR branch -
-this helps the reviewer know which parts of the PR have changed. 
+this helps the reviewer know which parts of the PR have changed.
 * Commits will be
 squashed when merged.
-* Please follow up with changes promptly. 
+* Please follow up with changes promptly.
 * If a PR is awaiting changes by the
 author for more than 10 days, maintainers may mark that PR as Draft. PRs that
 are inactive for more than 30 days may be closed.
@@ -53,12 +52,16 @@ are inactive for more than 30 days may be closed.
 
 Please create an
 [issue](https://github.com/googleapis/genai-toolbox/issues) before
-implementation to ensure we can accept the contribution and no duplicated work. This issue
-should include an overview of the API design. If you have any questions, reach out on our
-[Discord](https://discord.gg/Dmm69peqjh) to chat directly with the team.  
+implementation to ensure we can accept the contribution and no duplicated work.
+This issue should include an overview of the API design. If you have any
+questions, reach out on our [Discord](https://discord.gg/Dmm69peqjh) to chat
+directly with the team.
 
 > [!NOTE]
-> New tools can be added for [pre-existing data sources](https://github.com/googleapis/genai-toolbox/tree/main/internal/sources). However, any new database source should also include at least one new tool type.
+> New tools can be added for [pre-existing data
+> sources](https://github.com/googleapis/genai-toolbox/tree/main/internal/sources).
+> However, any new database source should also include at least one new tool
+> type.
 
 ### Adding a New Database Source
 
@@ -196,7 +199,7 @@ detailed description of your changes and any requests for long term testing
 resources.
 
 * **Title:** All pull request title should follow the formatting of
-  [Conventional 
+  [Conventional
   Commit](https://www.conventionalcommits.org/) guidelines: `<type>[optional
   scope]: description`. For example, if you are adding a new field in postgres
   source, the title should be `feat(source/postgres): add support for

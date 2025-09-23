@@ -17,12 +17,15 @@ This guide assumes you have already done the following:
 [install-postgres]: https://www.postgresql.org/download/
 
 ### Cloud Setup (Optional)
+
 {{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
 ## Step 1: Set up your database
+
 {{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
 ## Step 2: Install and configure Toolbox
+
 {{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
 
 ## Step 3: Connect your agent to Toolbox
@@ -51,13 +54,11 @@ from Toolbox.
 
 {{< include "quickstart/go/langchain/quickstart.go" >}}
 
-
 {{< /tab >}}
 
 {{< tab header="Genkit Go" lang="go" >}}
 
 {{< include "quickstart/go/genkit/quickstart.go" >}}
-
 
 {{< /tab >}}
 
@@ -70,7 +71,6 @@ from Toolbox.
 {{< tab header="OpenAI Go" lang="go" >}}
 
 {{< include "quickstart/go/openAI/quickstart.go" >}}
-
 
 {{< /tab >}}
 {{< /tabpane >}}

@@ -10,15 +10,26 @@ aliases:
 
 ## About
 
-A `dataplex-lookup-entry` tool returns details of a particular entry in Dataplex Catalog.
-It's compatible with the following sources:
+A `dataplex-lookup-entry` tool returns details of a particular entry in Dataplex
+Catalog. It's compatible with the following sources:
 
 - [dataplex](../sources/dataplex.md)
 
-`dataplex-lookup-entry` takes a required `name` parameter which contains the project and location to which the request should be attributed in the following form: projects/{project}/locations/{location} and also a required `entry` parameter which is the resource name of the entry in the following form: projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}. It also optionally accepts following parameters:
-  - `view` - View to control which parts of an entry the service should return. It takes integer values from 1-4 corresponding to type of view - BASIC, FULL, CUSTOM, ALL
-  - `aspectTypes` - Limits the aspects returned to the provided aspect types in the format `projects/{project}/locations/{location}/aspectTypes/{aspectType}`. It only works for CUSTOM view.
-  - `paths` - Limits the aspects returned to those associated with the provided paths within the Entry. It only works for CUSTOM view.
+`dataplex-lookup-entry` takes a required `name` parameter which contains the
+project and location to which the request should be attributed in the following
+form: projects/{project}/locations/{location} and also a required `entry`
+parameter which is the resource name of the entry in the following form:
+projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.
+It also optionally accepts following parameters:
+  - `view` - View to control which parts of an entry the service should return.
+    It takes integer values from 1-4 corresponding to type of view - BASIC,
+    FULL, CUSTOM, ALL
+  - `aspectTypes` - Limits the aspects returned to the provided aspect types in
+    the format
+    `projects/{project}/locations/{location}/aspectTypes/{aspectType}`. It only
+    works for CUSTOM view.
+  - `paths` - Limits the aspects returned to those associated with the provided
+    paths within the Entry. It only works for CUSTOM view.
 
 ## Requirements
 
@@ -53,8 +64,8 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "dataplex-lookup-entry".                                                                 |
-| source      |                   string                   |     true     | Name of the source the tool should execute on.                                                   |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "dataplex-lookup-entry".                   |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
