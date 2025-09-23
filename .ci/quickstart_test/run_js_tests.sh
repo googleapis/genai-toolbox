@@ -76,7 +76,6 @@ run_orch_test() {
     echo "--- Preparing environment for $orch_name ---"
     setup_orch_table
 
-    # Go into the specific framework directory to install dependencies
     cd "$orch_dir"
     if [ -f "package.json" ]; then
       echo "Installing dependencies for $orch_name..."
