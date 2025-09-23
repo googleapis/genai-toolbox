@@ -160,6 +160,17 @@ go install github.com/googleapis/genai-toolbox@v0.15.0
 
 </details>
 
+<details>
+<summary>Gemini CLI Extensions</summary>
+
+To install Gemini CLI Extensions for MCP Toolbox, run the following command:
+
+```sh
+gemini extensions install https://github.com/gemini-cli-extensions/mcp-toolbox
+```
+
+</details>
+
 ### Running the server
 
 [Configure](#configuration) a `tools.yaml` to define your tools, and then
@@ -230,6 +241,16 @@ command:
 ```sh
 toolbox --tools-file "tools.yaml"
 ```
+
+</details>
+
+<details>
+
+<summary>Gemini CLI</summary>
+
+Interact with your custom tools using natural language. Check
+[gemini-cli-extensions/mcp-toolbox](https://github.com/gemini-cli-extensions/mcp-toolbox)
+for more information.
 
 </details>
 
