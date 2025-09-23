@@ -61,15 +61,15 @@ func initCassandraSession() (*gocql.Session, error) {
 	hostStrings := strings.Split(Hosts, ",")
 
 	var hosts []string
-    for _, h := range hostStrings {
-        trimmedHost := strings.TrimSpace(h)
-        if trimmedHost != "" {
-            hosts = append(hosts, trimmedHost)
-        }
-    }
-    if len(hosts) == 0 {
-        return nil, fmt.Errorf("no valid hosts found in CASSANDRA_HOSTS env var")
-    }
+	for _, h := range hostStrings {
+		trimmedHost := strings.TrimSpace(h)
+		if trimmedHost != "" {
+			hosts = append(hosts, trimmedHost)
+		}
+	}
+	if len(hosts) == 0 {
+		return nil, fmt.Errorf("no valid hosts found in CASSANDRA_HOSTS env var")
+	}
 	// Configure cluster connection
 	cluster := gocql.NewCluster(hosts...)
 	cluster.Consistency = gocql.Quorum
@@ -78,8 +78,8 @@ func initCassandraSession() (*gocql.Session, error) {
 	cluster.ConnectTimeout = 10 * time.Second
 	cluster.NumConns = 2
 	cluster.Authenticator = gocql.PasswordAuthenticator{
-	Username: Username,
-	Password: Password,
+		Username: Username,
+		Password: Password,
 	}
 	cluster.RetryPolicy = &gocql.ExponentialBackoffRetryPolicy{
 		NumRetries: 3,
@@ -162,8 +162,6 @@ func initTable(tableName string, session *gocql.Session) error {
 	}
 	return nil
 }
-
-
 
 func dropTable(session *gocql.Session, tableName string) {
 	err := session.Query(fmt.Sprintf("drop table %s.%s", Keyspace, tableName)).Exec()
