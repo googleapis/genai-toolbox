@@ -98,15 +98,24 @@ func initCassandraSession(ctx context.Context, tracer trace.Tracer, c Config) (*
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, c.Name)
 	defer span.End()
 
+	// Validate authentication configuration
+	if c.Password != "" && c.Username == "" {
+		return nil, fmt.Errorf("invalid Cassandra configuration: password provided without a username")
+	}
+
 	cluster := gocql.NewCluster(c.Hosts...)
 	cluster.ProtoVersion = c.ProtoVersion
 	cluster.Keyspace = c.Keyspace
-	if c.Username != "" && c.Password != "" {
+
+	// Configure authentication if username is provided
+	if c.Username != "" {
 		cluster.Authenticator = gocql.PasswordAuthenticator{
 			Username: c.Username,
-			Password: c.Password,
+			Password: c.Password, // Password can be empty if the server allows it
 		}
 	}
+
+	// Configure SSL options if any are specified
 	if c.CAPath != "" || c.CertPath != "" || c.KeyPath != "" || c.EnableHostVerification {
 		cluster.SslOpts = &gocql.SslOptions{
 			CaPath:                 c.CAPath,
@@ -115,10 +124,11 @@ func initCassandraSession(ctx context.Context, tracer trace.Tracer, c Config) (*
 			EnableHostVerification: c.EnableHostVerification,
 		}
 	}
+
 	// Create session
 	session, err := cluster.CreateSession()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create Cassandra session: %w", err)
 	}
 	return session, nil
 }
