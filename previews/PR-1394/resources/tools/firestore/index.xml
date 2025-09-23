@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Firestore on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1394/resources/tools/firestore/</link><description>Recent content in Firestore on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1394/resources/tools/firestore/index.xml" rel="self" type="application/rss+xml"/><item><title>firestore-add-documents</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1394/resources/tools/firestore/firestore-add-documents/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1394/resources/tools/firestore/firestore-add-documents/</guid><description>&lt;h2 id="description">Description&lt;/h2>
-&lt;p>The &lt;code>firestore-add-documents&lt;/code> tool allows you to add new documents to a Firestore collection. It supports all Firestore data types using Firestore&amp;rsquo;s native JSON format. The tool automatically generates a unique document ID for each new document.&lt;/p>
+&lt;p>The &lt;code>firestore-add-documents&lt;/code> tool allows you to add new documents to a
+Firestore collection. It supports all Firestore data types using Firestore&amp;rsquo;s
+native JSON format. The tool automatically generates a unique document ID for
+each new document.&lt;/p>
 &lt;h2 id="parameters">Parameters&lt;/h2>
 &lt;table>
  &lt;thead>
@@ -180,9 +183,9 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1394/resources/sources/firestore/">firestore&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>firestore-list-collections&lt;/code> takes an optional &lt;code>parentPath&lt;/code> parameter to specify a document
-path. If provided, it lists all subcollections of that document. If not provided, it lists
-all root-level collections in the database.&lt;/p>
+&lt;p>&lt;code>firestore-list-collections&lt;/code> takes an optional &lt;code>parentPath&lt;/code> parameter to specify
+a document path. If provided, it lists all subcollections of that document. If
+not provided, it lists all root-level collections in the database.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_firestore_collections&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -220,7 +223,13 @@ all root-level collections in the database.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>firestore-query</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1394/resources/tools/firestore/firestore-query/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1394/resources/tools/firestore/firestore-query/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
-&lt;p>The &lt;code>firestore-query&lt;/code> tool allows you to query Firestore collections with dynamic, parameterizable filters that support Firestore&amp;rsquo;s native JSON value types. This tool is designed for querying single collection, which is the standard pattern in Firestore. The collection path itself can be parameterized, making it flexible for various use cases. This tool is particularly useful when you need to create reusable query templates with parameters that can be substituted at runtime.&lt;/p></description></item><item><title>firestore-query-collection</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1394/resources/tools/firestore/firestore-query-collection/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1394/resources/tools/firestore/firestore-query-collection/</guid><description>&lt;h1 id="about">About&lt;/h1>
+&lt;p>The &lt;code>firestore-query&lt;/code> tool allows you to query Firestore collections with
+dynamic, parameterizable filters that support Firestore&amp;rsquo;s native JSON value
+types. This tool is designed for querying single collection, which is the
+standard pattern in Firestore. The collection path itself can be parameterized,
+making it flexible for various use cases. This tool is particularly useful when
+you need to create reusable query templates with parameters that can be
+substituted at runtime.&lt;/p></description></item><item><title>firestore-query-collection</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1394/resources/tools/firestore/firestore-query-collection/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1394/resources/tools/firestore/firestore-query-collection/</guid><description>&lt;h1 id="about">About&lt;/h1>
 &lt;p>The &lt;code>firestore-query-collection&lt;/code> tool allows you to query Firestore collections
 with filters, ordering, and limit capabilities.&lt;/p>
 &lt;h2 id="configuration">Configuration&lt;/h2>
@@ -288,7 +297,12 @@ with filters, ordering, and limit capabilities.&lt;/p>
 &lt;h3 id="filter-format">Filter Format&lt;/h3>
 &lt;p>Each filter in the &lt;code>filters&lt;/code> array should be a JSON string with the following
 structure:&lt;/p></description></item><item><title>firestore-update-document</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1394/resources/tools/firestore/firestore-update-document/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1394/resources/tools/firestore/firestore-update-document/</guid><description>&lt;h2 id="description">Description&lt;/h2>
-&lt;p>The &lt;code>firestore-update-document&lt;/code> tool allows you to update existing documents in Firestore. It supports all Firestore data types using Firestore&amp;rsquo;s native JSON format. The tool can perform both full document updates (replacing all fields) or selective field updates using an update mask. When using an update mask, fields referenced in the mask but not present in the document data will be deleted from the document, following Firestore&amp;rsquo;s native behavior.&lt;/p>
+&lt;p>The &lt;code>firestore-update-document&lt;/code> tool allows you to update existing documents in
+Firestore. It supports all Firestore data types using Firestore&amp;rsquo;s native JSON
+format. The tool can perform both full document updates (replacing all fields)
+or selective field updates using an update mask. When using an update mask,
+fields referenced in the mask but not present in the document data will be
+deleted from the document, following Firestore&amp;rsquo;s native behavior.&lt;/p>
 &lt;h2 id="parameters">Parameters&lt;/h2>
 &lt;table>
  &lt;thead>

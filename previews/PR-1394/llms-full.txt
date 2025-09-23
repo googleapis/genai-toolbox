@@ -89,7 +89,7 @@ To install Toolbox as a binary:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.14.0
+export VERSION=0.15.0
 curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -100,7 +100,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.14.0
+export VERSION=0.15.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -111,6 +111,7 @@ To install Toolbox using Homebrew on macOS or Linux:
 ```sh
 brew install mcp-toolbox
 ```
+
 {{% /tab %}}
 {{% tab header="Compile from source" lang="en" %}}
 
@@ -118,7 +119,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.14.0
+go install github.com/googleapis/genai-toolbox@v0.15.0
 ```
 
 {{% /tab %}}
@@ -141,8 +142,9 @@ Toolbox enables dynamic reloading by default. To disable, use the
 
 #### Launching Toolbox UI
 
-To launch Toolbox's interactive UI, use the `--ui` flag. This allows you to test tools and toolsets
-with features such as authorized parameters. To learn more, visit [Toolbox UI](../../how-to/toolbox-ui/index.md).
+To launch Toolbox's interactive UI, use the `--ui` flag. This allows you to test
+tools and toolsets with features such as authorized parameters. To learn more,
+visit [Toolbox UI](../../how-to/toolbox-ui/index.md).
 
 ```sh
 ./toolbox --ui
@@ -150,7 +152,8 @@ with features such as authorized parameters. To learn more, visit [Toolbox UI](.
 
 #### Homebrew Users
 
-If you installed Toolbox using Homebrew, the `toolbox` binary is available in your system path. You can start the server with the same command:
+If you installed Toolbox using Homebrew, the `toolbox` binary is available in
+your system path. You can start the server with the same command:
 
 ```sh
 toolbox --tools-file "tools.yaml"
@@ -188,7 +191,8 @@ async with ToolboxClient("http://127.0.0.1:5000") as client:
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox Core SDK, see the
-[project's README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-core/README.md).
+[project's
+README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-core/README.md).
 
 {{% /tab %}}
 {{% tab header="LangChain" lang="en" %}}
@@ -209,7 +213,8 @@ async with ToolboxClient("http://127.0.0.1:5000") as client:
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox LangChain SDK, see the
-[project's README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-langchain/README.md).
+[project's
+README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-langchain/README.md).
 
 {{% /tab %}}
 {{% tab header="Llamaindex" lang="en" %}}
@@ -231,7 +236,8 @@ async with ToolboxClient("http://127.0.0.1:5000") as client:
 {{< /highlight >}}
 
 For more detailed instructions on using the Toolbox Llamaindex SDK, see the
-[project's README](https://github.com/googleapis/genai-toolbox-llamaindex-python/blob/main/README.md).
+[project's
+README](https://github.com/googleapis/genai-toolbox-llamaindex-python/blob/main/README.md).
 
 {{% /tab %}}
 {{< /tabpane >}}
@@ -346,7 +352,8 @@ const tools = toolboxTools.map(getTool);
 {{< /tabpane >}}
 
 For more detailed instructions on using the Toolbox Core SDK, see the
-[project's README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
+[project's
+README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
 
 #### Go
 
@@ -593,7 +600,8 @@ func main() {
 {{< /tabpane >}}
 
 For more detailed instructions on using the Toolbox Go SDK, see the
-[project's README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md).
+[project's
+README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md).
 
 For end-to-end samples on using the Toolbox Go SDK with orchestration
 frameworks, see the [project's
@@ -611,12 +619,14 @@ How to get started running Toolbox locally with [Python](https://github.com/goog
 This guide assumes you have already done the following:
 
 1. Installed [Python 3.9+][install-python] (including [pip][install-pip] and
-   your preferred virtual environment tool for managing dependencies e.g. [venv][install-venv]).
+   your preferred virtual environment tool for managing dependencies e.g.
+   [venv][install-venv]).
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
 
 [install-python]: https://wiki.python.org/moin/BeginnersGuide/Download
 [install-pip]: https://pip.pypa.io/en/stable/installation/
-[install-venv]: https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments
+[install-venv]:
+    https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments
 [install-postgres]: https://www.postgresql.org/download/
 
 ### Cloud Setup (Optional)
@@ -633,9 +643,10 @@ This guide assumes you have already done the following:
 In this section, we will write and run an agent that will load the Tools
 from Toolbox.
 
-{{< notice tip>}} If you prefer to experiment within a Google Colab environment,
-you can connect to a
-[local runtime](https://research.google.com/colaboratory/local-runtimes.html).
+{{< notice tip>}}
+If you prefer to experiment within a Google Colab environment, you can connect
+to a [local
+runtime](https://research.google.com/colaboratory/local-runtimes.html).
 {{< /notice >}}
 
 1. In a new terminal, install the SDK package.
@@ -745,7 +756,8 @@ Documentation](https://github.com/googleapis/python-genai?tab=readme-ov-file#man
     ```
 
 {{< notice info >}}
-For more information, visit the [Python SDK repo](https://github.com/googleapis/mcp-toolbox-sdk-python).
+For more information, visit the [Python SDK
+repo](https://github.com/googleapis/mcp-toolbox-sdk-python).
 {{</ notice >}}
 
 
@@ -764,12 +776,15 @@ This guide assumes you have already done the following:
 [install-postgres]: https://www.postgresql.org/download/
 
 ### Cloud Setup (Optional)
+
 {{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
 ## Step 1: Set up your database
+
 {{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
 ## Step 2: Install and configure Toolbox
+
 {{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
 
 ## Step 3: Connect your agent to Toolbox
@@ -783,7 +798,8 @@ from Toolbox.
     npm init -y
     ```
 
-1. In a new terminal, install the [SDK](https://www.npmjs.com/package/@toolbox-sdk/core).
+1. In a new terminal, install the
+   [SDK](https://www.npmjs.com/package/@toolbox-sdk/core).
 
     ```bash
     npm install @toolbox-sdk/core
@@ -806,7 +822,8 @@ npm install @google/genai
 {{< /tab >}}
 {{< /tabpane >}}
 
-1. Create a new file named `hotelAgent.js` and copy the following code to create an agent:
+1. Create a new file named `hotelAgent.js` and copy the following code to create
+   an agent:
 
     {{< tabpane persist=header >}}
 {{< tab header="LangChain" lang="js" >}}
@@ -842,7 +859,8 @@ npm install @google/genai
     ```
 
 {{< notice info >}}
-For more information, visit the [JS SDK repo](https://github.com/googleapis/mcp-toolbox-sdk-js).
+For more information, visit the [JS SDK
+repo](https://github.com/googleapis/mcp-toolbox-sdk-js).
 {{</ notice >}}
 
 
@@ -861,12 +879,15 @@ This guide assumes you have already done the following:
 [install-postgres]: https://www.postgresql.org/download/
 
 ### Cloud Setup (Optional)
+
 {{< regionInclude "quickstart/shared/cloud_setup.md" "cloud_setup" >}}
 
 ## Step 1: Set up your database
+
 {{< regionInclude "quickstart/shared/database_setup.md" "database_setup" >}}
 
 ## Step 2: Install and configure Toolbox
+
 {{< regionInclude "quickstart/shared/configure_toolbox.md" "configure_toolbox" >}}
 
 ## Step 3: Connect your agent to Toolbox
@@ -895,13 +916,11 @@ from Toolbox.
 
 {{< include "quickstart/go/langchain/quickstart.go" >}}
 
-
 {{< /tab >}}
 
 {{< tab header="Genkit Go" lang="go" >}}
 
 {{< include "quickstart/go/genkit/quickstart.go" >}}
-
 
 {{< /tab >}}
 
@@ -914,7 +933,6 @@ from Toolbox.
 {{< tab header="OpenAI Go" lang="go" >}}
 
 {{< include "quickstart/go/openAI/quickstart.go" >}}
-
 
 {{< /tab >}}
 {{< /tabpane >}}
@@ -1040,7 +1058,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -1206,6 +1224,7 @@ etc., you could use environment variables instead with the format `${ENV_NAME}`.
   user: ${USER_NAME}
   password: ${PASSWORD}
 ```
+
 A default value can be specified like `${ENV_NAME:default}`.
 
 ```yaml
@@ -1514,6 +1533,7 @@ Create your AlloyDB database with MCP Toolbox.
   </head>
 </html>
 
+
 # AlloyDB using MCP
 Connect your IDE to AlloyDB using Toolbox.
 
@@ -1627,19 +1647,19 @@ to expose your developer assistant tools to a Looker instance:
    <!-- {x-release-please-start-version} -->
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -1893,7 +1913,10 @@ will adapt to the tools available, so this shouldn't affect most users.
 # MySQL using MCP
 Connect your IDE to MySQL using Toolbox.
 
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like MySQL. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a MySQL instance:
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is
+an open protocol for connecting Large Language Models (LLMs) to data sources
+like MySQL. This guide covers how to use [MCP Toolbox for Databases][toolbox] to
+expose your developer assistant tools to a MySQL instance:
 
 * [Cursor][cursor]
 * [Windsurf][windsurf] (Codium)
@@ -1920,292 +1943,10 @@ Connect your IDE to MySQL using Toolbox.
 
 ## Install MCP Toolbox
 
-1. Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version V0.10.0+:
-
-   <!-- {x-release-please-start-version} -->
-   {{< tabpane persist=header >}}
-{{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/linux/amd64/toolbox
-{{< /tab >}}
-
-{{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/arm64/toolbox
-{{< /tab >}}
-
-{{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/amd64/toolbox
-{{< /tab >}}
-
-{{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolbox.exe
-{{< /tab >}}
-{{< /tabpane >}}
-    <!-- {x-release-please-end} -->
-
-1. Make the binary executable:
-
-    ```bash
-    chmod +x toolbox
-    ```
-
-1. Verify the installation:
-
-    ```bash
-    ./toolbox --version
-    ```
-
-## Configure your MCP Client
-
-{{< tabpane text=true >}}
-{{% tab header="Claude code" lang="en" %}}
-
-1.  Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
-1.  Create a `.mcp.json` file in your project root if it doesn't exist.
-1.  Add the following configuration, replace the environment variables with your values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "mysql": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt", "mysql", "--stdio"],
-          "env": {
-            "MYSQL_HOST": "",
-            "MYSQL_PORT": "",
-            "MYSQL_DATABASE": "",
-            "MYSQL_USER": "",
-            "MYSQL_PASSWORD": ""
-          }
-        }
-      }
-    }
-    ```
-
-1.  Restart Claude code to apply the new configuration.
-{{% /tab %}}
-{{% tab header="Claude desktop" lang="en" %}}
-
-1.  Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
-1.  Under the Developer tab, tap Edit Config to open the configuration file.
-1.  Add the following configuration, replace the environment variables with your values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "mysql": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt", "mysql", "--stdio"],
-          "env": {
-            "MYSQL_HOST": "",
-            "MYSQL_PORT": "",
-            "MYSQL_DATABASE": "",
-            "MYSQL_USER": "",
-            "MYSQL_PASSWORD": ""
-          }
-        }
-      }
-    }
-    ```
-
-1.  Restart Claude desktop.
-1.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
-{{% /tab %}}
-{{% tab header="Cline" lang="en" %}}
-
-1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
-1.  Tap Configure MCP Servers to open the configuration file.
-1.  Add the following configuration, replace the environment variables with your values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "mysql": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt", "mysql", "--stdio"],
-          "env": {
-            "MYSQL_HOST": "",
-            "MYSQL_PORT": "",
-            "MYSQL_DATABASE": "",
-            "MYSQL_USER": "",
-            "MYSQL_PASSWORD": ""
-          }
-        }
-      }
-    }
-    ```
-
-1.  You should see a green active status after the server is successfully connected.
-{{% /tab %}}
-{{% tab header="Cursor" lang="en" %}}
-
-1.  Create a `.cursor` directory in your project root if it doesn't exist.
-1.  Create a `.cursor/mcp.json` file if it doesn't exist and open it.
-1.  Add the following configuration, replace the environment variables with your values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "mysql": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt", "mysql", "--stdio"],
-          "env": {
-            "MYSQL_HOST": "",
-            "MYSQL_PORT": "",
-            "MYSQL_DATABASE": "",
-            "MYSQL_USER": "",
-            "MYSQL_PASSWORD": ""
-          }
-        }
-      }
-    }
-    ```
-
-1.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
-{{% /tab %}}
-{{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
-
-1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
-1.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
-1.  Add the following configuration, replace the environment variables with your values, and save:
-
-    ```json
-    {
-      "servers": {
-        "mysql": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","mysql","--stdio"],
-          "env": {
-            "MYSQL_HOST": "",
-            "MYSQL_PORT": "",
-            "MYSQL_DATABASE": "",
-            "MYSQL_USER": "",
-            "MYSQL_PASSWORD": ""
-          }
-        }
-      }
-    }
-    ```
-{{% /tab %}}
-{{% tab header="Windsurf" lang="en" %}}
-
-1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the Cascade assistant.
-1.  Tap on the hammer (MCP) icon, then Configure to open the configuration file.
-1.  Add the following configuration, replace the environment variables with your values, and save:
-
-    ```json
-    {
-      "mcpServers": {
-        "mysql": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","mysql","--stdio"],
-          "env": {
-            "MYSQL_HOST": "",
-            "MYSQL_PORT": "",
-            "MYSQL_DATABASE": "",
-            "MYSQL_USER": "",
-            "MYSQL_PASSWORD": ""
-          }
-        }
-      }
-    }
-    ```
-{{% /tab %}}
-{{% tab header="Gemini CLI" lang="en" %}}
-
-1.  Install the [Gemini CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
-1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
-1.  Add the following configuration, replace the environment variables with your values, and then save:
-
-    ```json
-    {
-      "mcpServers": {
-        "mysql": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","mysql","--stdio"],
-          "env": {
-            "MYSQL_HOST": "",
-            "MYSQL_PORT": "",
-            "MYSQL_DATABASE": "",
-            "MYSQL_USER": "",
-            "MYSQL_PASSWORD": ""
-          }
-        }
-      }
-    }
-    ```
-{{% /tab %}}
-{{% tab header="Gemini Code Assist" lang="en" %}}
-
-1.  Install the [Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist) extension in Visual Studio Code.
-1.  Enable Agent Mode in Gemini Code Assist chat.
-1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
-1.  Add the following configuration, replace the environment variables with your values, and then save:
-
-    ```json
-    {
-      "mcpServers": {
-        "mysql": {
-          "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","mysql","--stdio"],
-          "env": {
-            "MYSQL_HOST": "",
-            "MYSQL_PORT": "",
-            "MYSQL_DATABASE": "",
-            "MYSQL_USER": "",
-            "MYSQL_PASSWORD": ""
-          }
-        }
-      }
-    }
-    ```
-{{% /tab %}}
-{{< /tabpane >}}
-
-## Use Tools
-
-Your AI tool is now connected to MySQL using MCP. Try asking your AI assistant to list tables, create a table, or define and execute other SQL statements.
-
-The following tools are available to the LLM:
-
-1.  **list_tables**: lists tables and descriptions
-1.  **execute_sql**: execute any SQL statement
-
-{{< notice note >}}
-Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
-{{< /notice >}}
-
-
-# Neo4j using MCP
-Connect your IDE to Neo4j using Toolbox.
-
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like Neo4j. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a Neo4j instance:
-
-* [Cursor][cursor]
-* [Windsurf][windsurf] (Codium)
-* [Visual Studio Code][vscode] (Copilot)
-* [Cline][cline] (VS Code extension)
-* [Claude desktop][claudedesktop]
-* [Claude code][claudecode]
-* [Gemini CLI][geminicli]
-* [Gemini Code Assist][geminicodeassist]
-
-[toolbox]: https://github.com/googleapis/genai-toolbox
-[cursor]: #configure-your-mcp-client
-[windsurf]: #configure-your-mcp-client
-[vscode]: #configure-your-mcp-client
-[cline]: #configure-your-mcp-client
-[claudedesktop]: #configure-your-mcp-client
-[claudecode]: #configure-your-mcp-client
-[geminicli]: #configure-your-mcp-client
-[geminicodeassist]: #configure-your-mcp-client
-
-## Set up the database
-
-1.  [Create or select a Neo4j instance.](https://neo4j.com/cloud/platform/aura-graph-database/)
-
-## Install MCP Toolbox
-
-1. Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version v0.15.0+:
+1. Download the latest version of Toolbox as a binary. Select the [correct
+   binary](https://github.com/googleapis/genai-toolbox/releases) corresponding
+   to your OS and CPU architecture. You are required to use Toolbox version
+   V0.10.0+:
 
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
@@ -2244,9 +1985,326 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
 {{< tabpane text=true >}}
 {{% tab header="Claude code" lang="en" %}}
 
-1.  Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
+1.  Install [Claude
+    Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
 1.  Create a `.mcp.json` file in your project root if it doesn't exist.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "mysql": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt", "mysql", "--stdio"],
+          "env": {
+            "MYSQL_HOST": "",
+            "MYSQL_PORT": "",
+            "MYSQL_DATABASE": "",
+            "MYSQL_USER": "",
+            "MYSQL_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  Restart Claude code to apply the new configuration.
+{{% /tab %}}
+{{% tab header="Claude desktop" lang="en" %}}
+
+1.  Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
+1.  Under the Developer tab, tap Edit Config to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "mysql": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt", "mysql", "--stdio"],
+          "env": {
+            "MYSQL_HOST": "",
+            "MYSQL_PORT": "",
+            "MYSQL_DATABASE": "",
+            "MYSQL_USER": "",
+            "MYSQL_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  Restart Claude desktop.
+1.  From the new chat screen, you should see a hammer (MCP) icon appear with the
+    new MCP server available.
+{{% /tab %}}
+{{% tab header="Cline" lang="en" %}}
+
+1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and
+    tap the **MCP Servers** icon.
+1.  Tap Configure MCP Servers to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "mysql": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt", "mysql", "--stdio"],
+          "env": {
+            "MYSQL_HOST": "",
+            "MYSQL_PORT": "",
+            "MYSQL_DATABASE": "",
+            "MYSQL_USER": "",
+            "MYSQL_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  You should see a green active status after the server is successfully
+    connected.
+{{% /tab %}}
+{{% tab header="Cursor" lang="en" %}}
+
+1.  Create a `.cursor` directory in your project root if it doesn't exist.
+1.  Create a `.cursor/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "mysql": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt", "mysql", "--stdio"],
+          "env": {
+            "MYSQL_HOST": "",
+            "MYSQL_PORT": "",
+            "MYSQL_DATABASE": "",
+            "MYSQL_USER": "",
+            "MYSQL_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+
+1.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor
+    Settings > MCP**. You should see a green active status after the server is
+    successfully connected.
+{{% /tab %}}
+{{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
+
+1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and
+    create a `.vscode` directory in your project root if it doesn't exist.
+1.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
+
+    ```json
+    {
+      "servers": {
+        "mysql": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","mysql","--stdio"],
+          "env": {
+            "MYSQL_HOST": "",
+            "MYSQL_PORT": "",
+            "MYSQL_DATABASE": "",
+            "MYSQL_USER": "",
+            "MYSQL_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Windsurf" lang="en" %}}
+
+1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the
+    Cascade assistant.
+1.  Tap on the hammer (MCP) icon, then Configure to open the configuration file.
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "mysql": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","mysql","--stdio"],
+          "env": {
+            "MYSQL_HOST": "",
+            "MYSQL_PORT": "",
+            "MYSQL_DATABASE": "",
+            "MYSQL_USER": "",
+            "MYSQL_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Gemini CLI" lang="en" %}}
+
+1.  Install the [Gemini
+    CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
+1.  In your working directory, create a folder named `.gemini`. Within it,
+    create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your
+    values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "mysql": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","mysql","--stdio"],
+          "env": {
+            "MYSQL_HOST": "",
+            "MYSQL_PORT": "",
+            "MYSQL_DATABASE": "",
+            "MYSQL_USER": "",
+            "MYSQL_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{% tab header="Gemini Code Assist" lang="en" %}}
+
+1.  Install the [Gemini Code
+    Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist)
+    extension in Visual Studio Code.
+1.  Enable Agent Mode in Gemini Code Assist chat.
+1.  In your working directory, create a folder named `.gemini`. Within it,
+    create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your
+    values, and then save:
+
+    ```json
+    {
+      "mcpServers": {
+        "mysql": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","mysql","--stdio"],
+          "env": {
+            "MYSQL_HOST": "",
+            "MYSQL_PORT": "",
+            "MYSQL_DATABASE": "",
+            "MYSQL_USER": "",
+            "MYSQL_PASSWORD": ""
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{< /tabpane >}}
+
+## Use Tools
+
+Your AI tool is now connected to MySQL using MCP. Try asking your AI assistant
+to list tables, create a table, or define and execute other SQL statements.
+
+The following tools are available to the LLM:
+
+1.  **list_tables**: lists tables and descriptions
+1.  **execute_sql**: execute any SQL statement
+
+{{< notice note >}}
+Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
+will adapt to the tools available, so this shouldn't affect most users.
+{{< /notice >}}
+
+
+# Neo4j using MCP
+Connect your IDE to Neo4j using Toolbox.
+
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is
+an open protocol for connecting Large Language Models (LLMs) to data sources
+like Neo4j. This guide covers how to use [MCP Toolbox for Databases][toolbox] to
+expose your developer assistant tools to a Neo4j instance:
+
+* [Cursor][cursor]
+* [Windsurf][windsurf] (Codium)
+* [Visual Studio Code][vscode] (Copilot)
+* [Cline][cline] (VS Code extension)
+* [Claude desktop][claudedesktop]
+* [Claude code][claudecode]
+* [Gemini CLI][geminicli]
+* [Gemini Code Assist][geminicodeassist]
+
+[toolbox]: https://github.com/googleapis/genai-toolbox
+[cursor]: #configure-your-mcp-client
+[windsurf]: #configure-your-mcp-client
+[vscode]: #configure-your-mcp-client
+[cline]: #configure-your-mcp-client
+[claudedesktop]: #configure-your-mcp-client
+[claudecode]: #configure-your-mcp-client
+[geminicli]: #configure-your-mcp-client
+[geminicodeassist]: #configure-your-mcp-client
+
+## Set up the database
+
+1.  [Create or select a Neo4j
+    instance.](https://neo4j.com/cloud/platform/aura-graph-database/)
+
+## Install MCP Toolbox
+
+1. Download the latest version of Toolbox as a binary. Select the [correct
+   binary](https://github.com/googleapis/genai-toolbox/releases) corresponding
+   to your OS and CPU architecture. You are required to use Toolbox version
+   v0.15.0+:
+
+   <!-- {x-release-please-start-version} -->
+   {{< tabpane persist=header >}}
+{{< tab header="linux/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/linux/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/arm64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="windows/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+{{< /tabpane >}}
+    <!-- {x-release-please-end} -->
+
+1. Make the binary executable:
+
+    ```bash
+    chmod +x toolbox
+    ```
+
+1. Verify the installation:
+
+    ```bash
+    ./toolbox --version
+    ```
+
+## Configure your MCP Client
+
+{{< tabpane text=true >}}
+{{% tab header="Claude code" lang="en" %}}
+
+1.  Install [Claude
+    Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview). 
+1.  Create a `.mcp.json` file in your project root if it doesn't exist.
+1.  Add the following configuration, replace the environment variables with your
+    values, and save: 
 
     ```json
     {
@@ -2271,7 +2329,8 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
 
 1.  Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
 1.  Under the Developer tab, tap Edit Config to open the configuration file.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save: 
 
     ```json
     {
@@ -2291,13 +2350,16 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
     ```
 
 1.  Restart Claude desktop.
-1.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
+1.  From the new chat screen, you should see a hammer (MCP) icon appear with the
+    new MCP server available. 
 {{% /tab %}}
 {{% tab header="Cline" lang="en" %}}
 
-1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
+1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and
+    tap the **MCP Servers** icon. 
 1.  Tap Configure MCP Servers to open the configuration file.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save: 
 
     ```json
     {
@@ -2341,13 +2403,17 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
     }
     ```
 
-1.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
+1.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor
+    Settings > MCP**. You should see a green active status after the server is
+    successfully connected.
 {{% /tab %}}
 {{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
 
-1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
+1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and
+    create a `.vscode` directory in your project root if it doesn't exist.
 1.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
 
     ```json
     {
@@ -2370,9 +2436,11 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
 {{% /tab %}}
 {{% tab header="Windsurf" lang="en" %}}
 
-1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the Cascade assistant.
+1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the
+    Cascade assistant.
 1.  Tap on the hammer (MCP) icon, then Configure to open the configuration file.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
 
     ```json
     {
@@ -2393,9 +2461,12 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
 {{% /tab %}}
 {{% tab header="Gemini CLI" lang="en" %}}
 
-1.  Install the [Gemini CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
-1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
-1.  Add the following configuration, replace the environment variables with your values, and then save:
+1.  Install the [Gemini
+    CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
+1.  In your working directory, create a folder named `.gemini`. Within it,
+    create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your
+    values, and then save:
 
     ```json
     {
@@ -2416,10 +2487,14 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
 {{% /tab %}}
 {{% tab header="Gemini Code Assist" lang="en" %}}
 
-1.  Install the [Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist) extension in Visual Studio Code.
+1.  Install the [Gemini Code
+    Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist)
+    extension in Visual Studio Code.
 1.  Enable Agent Mode in Gemini Code Assist chat.
-1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
-1.  Add the following configuration, replace the environment variables with your values, and then save:
+1.  In your working directory, create a folder named `.gemini`. Within it,
+    create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your
+    values, and then save:
 
     ```json
     {
@@ -2442,15 +2517,18 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
 
 ## Use Tools
 
-Your AI tool is now connected to Neo4j using MCP. Try asking your AI assistant to get the graph schema or execute Cypher statements.
+Your AI tool is now connected to Neo4j using MCP. Try asking your AI assistant
+to get the graph schema or execute Cypher statements.
 
 The following tools are available to the LLM:
 
-1.  **get_schema**: extracts the complete database schema, including details about node labels, relationships, properties, constraints, and indexes.
+1.  **get_schema**: extracts the complete database schema, including details
+    about node labels, relationships, properties, constraints, and indexes.
 1.  **execute_cypher**: executes any arbitrary Cypher statement.
 
 {{< notice note >}}
-Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
+Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
+will adapt to the tools available, so this shouldn't affect most users.
 {{< /notice >}}
 
 
@@ -2508,19 +2586,19 @@ Omni](https://cloud.google.com/alloydb/omni/current/docs/overview).
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -2799,7 +2877,11 @@ Connect your IDE to Spanner using Toolbox.
 # SQL Server using MCP
 Connect your IDE to SQL Server using Toolbox.
 
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like SQL Server. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a SQL Server instance:
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is
+an open protocol for connecting Large Language Models (LLMs) to data sources
+like SQL Server. This guide covers how to use [MCP Toolbox for
+Databases][toolbox] to expose your developer assistant tools to a SQL Server
+instance:
 
 * [Cursor][cursor]
 * [Windsurf][windsurf] (Codium)
@@ -2822,28 +2904,32 @@ Connect your IDE to SQL Server using Toolbox.
 
 ## Set up the database
 
-1.  [Create or select a SQL Server instance.](https://www.microsoft.com/en-us/sql-server/sql-server-downloads)
+1.  [Create or select a SQL Server
+    instance.](https://www.microsoft.com/en-us/sql-server/sql-server-downloads)
 
 ## Install MCP Toolbox
 
-1. Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version V0.10.0+:
+1. Download the latest version of Toolbox as a binary. Select the [correct
+   binary](https://github.com/googleapis/genai-toolbox/releases) corresponding
+   to your OS and CPU architecture. You are required to use Toolbox version
+   V0.10.0+:
 
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -2865,9 +2951,11 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
 {{< tabpane text=true >}}
 {{% tab header="Claude code" lang="en" %}}
 
-1.  Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
+1.  Install [Claude
+    Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
 1.  Create a `.mcp.json` file in your project root if it doesn't exist.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
 
     ```json
     {
@@ -2893,7 +2981,8 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
 
 1.  Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
 1.  Under the Developer tab, tap Edit Config to open the configuration file.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
 
     ```json
     {
@@ -2914,13 +3003,16 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
     ```
 
 1.  Restart Claude desktop.
-1.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
+1.  From the new chat screen, you should see a hammer (MCP) icon appear with the
+    new MCP server available.
 {{% /tab %}}
 {{% tab header="Cline" lang="en" %}}
 
-1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
+1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and
+    tap the **MCP Servers** icon.
 1.  Tap Configure MCP Servers to open the configuration file.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
 
     ```json
     {
@@ -2940,13 +3032,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
     }
     ```
 
-1.  You should see a green active status after the server is successfully connected.
+1.  You should see a green active status after the server is successfully
+    connected.
 {{% /tab %}}
 {{% tab header="Cursor" lang="en" %}}
 
 1.  Create a `.cursor` directory in your project root if it doesn't exist.
 1.  Create a `.cursor/mcp.json` file if it doesn't exist and open it.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
 
     ```json
     {
@@ -2966,13 +3060,17 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
     }
     ```
 
-1.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
+1.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor
+    Settings > MCP**. You should see a green active status after the server is
+    successfully connected.
 {{% /tab %}}
 {{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
 
-1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
+1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and
+    create a `.vscode` directory in your project root if it doesn't exist.
 1.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
 
     ```json
     {
@@ -2994,9 +3092,11 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
 {{% /tab %}}
 {{% tab header="Windsurf" lang="en" %}}
 
-1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the Cascade assistant.
+1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the
+    Cascade assistant.
 1.  Tap on the hammer (MCP) icon, then Configure to open the configuration file.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
 
     ```json
     {
@@ -3018,9 +3118,12 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
 {{% /tab %}}
 {{% tab header="Gemini CLI" lang="en" %}}
 
-1.  Install the [Gemini CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
-1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
-1.  Add the following configuration, replace the environment variables with your values, and then save:
+1.  Install the [Gemini
+    CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
+1.  In your working directory, create a folder named `.gemini`. Within it,
+    create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your
+    values, and then save:
 
     ```json
     {
@@ -3042,10 +3145,14 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
 {{% /tab %}}
 {{% tab header="Gemini Code Assist" lang="en" %}}
 
-1.  Install the [Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist) extension in Visual Studio Code.
+1.  Install the [Gemini Code
+    Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist)
+    extension in Visual Studio Code.
 1.  Enable Agent Mode in Gemini Code Assist chat.
-1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
-1.  Add the following configuration, replace the environment variables with your values, and then save:
+1.  In your working directory, create a folder named `.gemini`. Within it,
+    create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your
+    values, and then save:
 
     ```json
     {
@@ -3069,7 +3176,9 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/windows/amd64/toolb
 
 ## Use Tools
 
-Your AI tool is now connected to SQL Server using MCP. Try asking your AI assistant to list tables, create a table, or define and execute other SQL statements.
+Your AI tool is now connected to SQL Server using MCP. Try asking your AI
+assistant to list tables, create a table, or define and execute other SQL
+statements.
 
 The following tools are available to the LLM:
 
@@ -3077,14 +3186,18 @@ The following tools are available to the LLM:
 1.  **execute_sql**: execute any SQL statement
 
 {{< notice note >}}
-Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
+Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
+will adapt to the tools available, so this shouldn't affect most users.
 {{< /notice >}}
 
 
 # SQLite using MCP
 Connect your IDE to SQLite using Toolbox.
 
-[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is an open protocol for connecting Large Language Models (LLMs) to data sources like SQLite. This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your developer assistant tools to a SQLite instance:
+[Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) is
+an open protocol for connecting Large Language Models (LLMs) to data sources
+like SQLite. This guide covers how to use [MCP Toolbox for Databases][toolbox]
+to expose your developer assistant tools to a SQLite instance:
 
 * [Cursor][cursor]
 * [Windsurf][windsurf] (Codium)
@@ -3111,24 +3224,27 @@ Connect your IDE to SQLite using Toolbox.
 
 ## Install MCP Toolbox
 
-1. Download the latest version of Toolbox as a binary. Select the [correct binary](https://github.com/googleapis/genai-toolbox/releases) corresponding to your OS and CPU architecture. You are required to use Toolbox version V0.10.0+:
+1. Download the latest version of Toolbox as a binary. Select the [correct
+   binary](https://github.com/googleapis/genai-toolbox/releases) corresponding
+   to your OS and CPU architecture. You are required to use Toolbox version
+   V0.10.0+:
 
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3150,9 +3266,11 @@ curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/windows/amd64/toolbo
 {{< tabpane text=true >}}
 {{% tab header="Claude code" lang="en" %}}
 
-1.  Install [Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
+1.  Install [Claude
+    Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
 1.  Create a `.mcp.json` file in your project root if it doesn't exist.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
 
     ```json
     {
@@ -3174,7 +3292,8 @@ curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/windows/amd64/toolbo
 
 1.  Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
 1.  Under the Developer tab, tap Edit Config to open the configuration file.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
 
     ```json
     {
@@ -3191,13 +3310,16 @@ curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/windows/amd64/toolbo
     ```
 
 1.  Restart Claude desktop.
-1.  From the new chat screen, you should see a hammer (MCP) icon appear with the new MCP server available.
+1.  From the new chat screen, you should see a hammer (MCP) icon appear with the
+    new MCP server available.
 {{% /tab %}}
 {{% tab header="Cline" lang="en" %}}
 
-1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap the **MCP Servers** icon.
+1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and
+    tap the **MCP Servers** icon.
 1.  Tap Configure MCP Servers to open the configuration file.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
 
     ```json
     {
@@ -3213,13 +3335,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/windows/amd64/toolbo
     }
     ```
 
-1.  You should see a green active status after the server is successfully connected.
+1.  You should see a green active status after the server is successfully
+    connected.
 {{% /tab %}}
 {{% tab header="Cursor" lang="en" %}}
 
 1.  Create a `.cursor` directory in your project root if it doesn't exist.
 1.  Create a `.cursor/mcp.json` file if it doesn't exist and open it.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
 
     ```json
     {
@@ -3235,13 +3359,17 @@ curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/windows/amd64/toolbo
     }
     ```
 
-1.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor Settings > MCP**. You should see a green active status after the server is successfully connected.
+1.  Open [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor
+    Settings > MCP**. You should see a green active status after the server is
+    successfully connected.
 {{% /tab %}}
 {{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
 
-1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and create a `.vscode` directory in your project root if it doesn't exist.
+1.  Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and
+    create a `.vscode` directory in your project root if it doesn't exist.
 1.  Create a `.vscode/mcp.json` file if it doesn't exist and open it.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
 
     ```json
     {
@@ -3259,9 +3387,11 @@ curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/windows/amd64/toolbo
 {{% /tab %}}
 {{% tab header="Windsurf" lang="en" %}}
 
-1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the Cascade assistant.
+1.  Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the
+    Cascade assistant.
 1.  Tap on the hammer (MCP) icon, then Configure to open the configuration file.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
 
     ```json
     {
@@ -3279,9 +3409,12 @@ curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/windows/amd64/toolbo
 {{% /tab %}}
 {{% tab header="Gemini CLI" lang="en" %}}
 
-1.  Install the [Gemini CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
-1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
-1.  Add the following configuration, replace the environment variables with your values, and then save:
+1.  Install the [Gemini
+    CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
+1.  In your working directory, create a folder named `.gemini`. Within it,
+    create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your
+    values, and then save:
 
     ```json
     {
@@ -3299,10 +3432,14 @@ curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/windows/amd64/toolbo
 {{% /tab %}}
 {{% tab header="Gemini Code Assist" lang="en" %}}
 
-1.  Install the [Gemini Code Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist) extension in Visual Studio Code.
+1.  Install the [Gemini Code
+    Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist)
+    extension in Visual Studio Code.
 1.  Enable Agent Mode in Gemini Code Assist chat.
-1.  In your working directory, create a folder named `.gemini`. Within it, create a `settings.json` file.
-1.  Add the following configuration, replace the environment variables with your values, and then save:
+1.  In your working directory, create a folder named `.gemini`. Within it,
+    create a `settings.json` file.
+1.  Add the following configuration, replace the environment variables with your
+    values, and then save:
 
     ```json
     {
@@ -3322,7 +3459,8 @@ curl -O https://storage.googleapis.com/genai-toolbox/v1.0.0/windows/amd64/toolbo
 
 ## Use Tools
 
-Your AI tool is now connected to SQLite using MCP. Try asking your AI assistant to list tables, create a table, or define and execute other SQL statements.
+Your AI tool is now connected to SQLite using MCP. Try asking your AI assistant
+to list tables, create a table, or define and execute other SQL statements.
 
 The following tools are available to the LLM:
 
@@ -3330,7 +3468,905 @@ The following tools are available to the LLM:
 1.  **execute_sql**: execute any SQL statement
 
 {{< notice note >}}
-Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs will adapt to the tools available, so this shouldn't affect most users.
+Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
+will adapt to the tools available, so this shouldn't affect most users.
+{{< /notice >}}
+
+
+# Cloud SQL for PostgreSQL Admin using MCP
+Create and manage Cloud SQL for PostgreSQL (Admin) using Toolbox.
+
+
+This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your
+developer assistant tools to create and manage Cloud SQL for PostgreSQL
+instance, database and users:
+
+* [Cursor][cursor]
+* [Windsurf][windsurf] (Codium)
+* [Visual Studio Code][vscode] (Copilot)
+* [Cline][cline]  (VS Code extension)
+* [Claude desktop][claudedesktop]
+* [Claude code][claudecode]
+* [Gemini CLI][geminicli]
+* [Gemini Code Assist][geminicodeassist]
+
+[toolbox]: https://github.com/googleapis/genai-toolbox
+[cursor]: #configure-your-mcp-client
+[windsurf]: #configure-your-mcp-client
+[vscode]: #configure-your-mcp-client
+[cline]: #configure-your-mcp-client
+[claudedesktop]: #configure-your-mcp-client
+[claudecode]: #configure-your-mcp-client
+[geminicli]: #configure-your-mcp-client
+[geminicodeassist]: #configure-your-mcp-client
+
+## Before you begin
+
+1. In the Google Cloud console, on the [project selector
+   page](https://console.cloud.google.com/projectselector2/home/dashboard),
+   select or create a Google Cloud project.
+
+1. [Make sure that billing is enabled for your Google Cloud
+   project](https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#confirm_billing_is_enabled_on_a_project).
+
+1. Grant the necessary IAM roles to the user that will be running the MCP
+   server. The tools available will depend on the roles granted:
+    * `roles/cloudsql.viewer`: Provides read-only access to resources.
+        * `get_instance`
+        * `list_instances`
+        * `list_databases`
+        * `wait_for_operation`
+    * `roles/cloudsql.editor`: Provides permissions to manage existing resources.
+        * All `viewer` tools
+        * `create_database`
+    * `roles/cloudsql.admin`: Provides full control over all resources.
+        * All `editor` and `viewer` tools
+        * `create_instance`
+        * `create_user`
+
+## Install MCP Toolbox
+
+1. Download the latest version of Toolbox as a binary. Select the [correct
+   binary](https://github.com/googleapis/genai-toolbox/releases) corresponding
+   to your OS and CPU architecture. You are required to use Toolbox version
+   V0.15.0+:
+
+   <!-- {x-release-please-start-version} -->
+   {{< tabpane persist=header >}}
+{{< tab header="linux/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/linux/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/arm64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="windows/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+{{< /tabpane >}}
+    <!-- {x-release-please-end} -->
+
+1. Make the binary executable:
+
+    ```bash
+    chmod +x toolbox
+    ```
+
+1. Verify the installation:
+
+    ```bash
+    ./toolbox --version
+    ```
+
+## Configure your MCP Client
+
+{{< tabpane text=true >}}
+{{% tab header="Claude code" lang="en" %}}
+
+1. Install [Claude
+   Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
+1. Create a `.mcp.json` file in your project root if it doesn't exist.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-postgres-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-postgres-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+1. Restart Claude code to apply the new configuration.
+{{% /tab %}}
+
+{{% tab header="Claude desktop" lang="en" %}}
+
+1. Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
+1. Under the Developer tab, tap Edit Config to open the configuration file.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-postgres-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-postgres-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+1. Restart Claude desktop.
+1. From the new chat screen, you should see a hammer (MCP) icon appear with the
+   new MCP server available.
+{{% /tab %}}
+
+{{% tab header="Cline" lang="en" %}}
+
+1. Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap
+   the **MCP Servers** icon.
+1. Tap Configure MCP Servers to open the configuration file.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-postgres-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-postgres-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+1. You should see a green active status after the server is successfully
+   connected.
+{{% /tab %}}
+
+{{% tab header="Cursor" lang="en" %}}
+
+1. Create a `.cursor` directory in your project root if it doesn't exist.
+1. Create a `.cursor/mcp.json` file if it doesn't exist and open it.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-postgres-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-postgres-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+1. [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor
+   Settings > MCP**. You should see a green active status after the server is
+   successfully connected.
+{{% /tab %}}
+
+{{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
+
+1. Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and
+   create a `.vscode` directory in your project root if it doesn't exist.
+1. Create a `.vscode/mcp.json` file if it doesn't exist and open it.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "servers": {
+        "cloud-sql-postgres-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-postgres-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+{{% /tab %}}
+
+{{% tab header="Windsurf" lang="en" %}}
+
+1. Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the
+   Cascade assistant.
+1. Tap on the hammer (MCP) icon, then Configure to open the configuration file.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-postgres-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-postgres-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+{{% /tab %}}
+
+{{% tab header="Gemini CLI" lang="en" %}}
+
+1.  Install the [Gemini
+    CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
+1.  In your working directory, create a folder named `.gemini`. Within it,
+    create a `settings.json` file.
+1.  Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-postgres-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-postgres-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+
+{{% tab header="Gemini Code Assist" lang="en" %}}
+
+1.  Install the [Gemini Code
+    Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist)
+    extension in Visual Studio Code.
+1.  Enable Agent Mode in Gemini Code Assist chat.
+1.  In your working directory, create a folder named `.gemini`. Within it,
+    create a `settings.json` file.
+1.  Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-postgres-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-postgres-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{< /tabpane >}}
+
+## Use Tools
+
+Your AI tool is now connected to Cloud SQL for PostgreSQL using MCP.
+
+The `cloud-sql-postgres-admin` server provides tools for managing your Cloud SQL
+instances and interacting with your database:
+* **create_instance**: Creates a new Cloud SQL for PostgreSQL instance.
+* **get_instance**: Gets information about a Cloud SQL instance.
+* **list_instances**: Lists Cloud SQL instances in a project.
+* **create_database**: Creates a new database in a Cloud SQL instance.
+* **list_databases**: Lists all databases for a Cloud SQL instance.
+* **create_user**: Creates a new user in a Cloud SQL instance.
+* **wait_for_operation**: Waits for a Cloud SQL operation to complete.
+
+{{< notice note >}}
+Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
+will adapt to the tools available, so this shouldn't affect most users.
+{{< /notice >}}
+
+
+# Cloud SQL for MySQL Admin using MCP
+Create and manage Cloud SQL for MySQL (Admin) using Toolbox.
+
+
+This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your
+developer assistant tools to create and manage Cloud SQL for MySQL instance,
+database and users:
+
+* [Cursor][cursor]
+* [Windsurf][windsurf] (Codium)
+* [Visual Studio Code][vscode] (Copilot)
+* [Cline][cline]  (VS Code extension)
+* [Claude desktop][claudedesktop]
+* [Claude code][claudecode]
+* [Gemini CLI][geminicli]
+* [Gemini Code Assist][geminicodeassist]
+
+[toolbox]: https://github.com/googleapis/genai-toolbox
+[cursor]: #configure-your-mcp-client
+[windsurf]: #configure-your-mcp-client
+[vscode]: #configure-your-mcp-client
+[cline]: #configure-your-mcp-client
+[claudedesktop]: #configure-your-mcp-client
+[claudecode]: #configure-your-mcp-client
+[geminicli]: #configure-your-mcp-client
+[geminicodeassist]: #configure-your-mcp-client
+
+## Before you begin
+
+1. In the Google Cloud console, on the [project selector
+   page](https://console.cloud.google.com/projectselector2/home/dashboard),
+   select or create a Google Cloud project.
+
+1. [Make sure that billing is enabled for your Google Cloud
+   project](https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#confirm_billing_is_enabled_on_a_project).
+
+1. Grant the necessary IAM roles to the user that will be running the MCP
+   server. The tools available will depend on the roles granted:
+    * `roles/cloudsql.viewer`: Provides read-only access to resources.
+        * `get_instance`
+        * `list_instances`
+        * `list_databases`
+        * `wait_for_operation`
+    * `roles/cloudsql.editor`: Provides permissions to manage existing resources.
+        * All `viewer` tools
+        * `create_database`
+    * `roles/cloudsql.admin`: Provides full control over all resources.
+        * All `editor` and `viewer` tools
+        * `create_instance`
+        * `create_user`
+
+## Install MCP Toolbox
+
+1. Download the latest version of Toolbox as a binary. Select the [correct
+   binary](https://github.com/googleapis/genai-toolbox/releases) corresponding
+   to your OS and CPU architecture. You are required to use Toolbox version
+   V0.15.0+:
+
+   <!-- {x-release-please-start-version} -->
+   {{< tabpane persist=header >}}
+{{< tab header="linux/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/linux/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/arm64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="windows/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+{{< /tabpane >}}
+    <!-- {x-release-please-end} -->
+
+1. Make the binary executable:
+
+    ```bash
+    chmod +x toolbox
+    ```
+
+1. Verify the installation:
+
+    ```bash
+    ./toolbox --version
+    ```
+
+## Configure your MCP Client
+
+{{< tabpane text=true >}}
+{{% tab header="Claude code" lang="en" %}}
+
+1. Install [Claude
+   Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
+1. Create a `.mcp.json` file in your project root if it doesn't exist.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-mysql-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-mysql-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+1. Restart Claude code to apply the new configuration.
+{{% /tab %}}
+
+{{% tab header="Claude desktop" lang="en" %}}
+
+1. Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
+1. Under the Developer tab, tap Edit Config to open the configuration file.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-mysql-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-mysql-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+1. Restart Claude desktop.
+1. From the new chat screen, you should see a hammer (MCP) icon appear with the
+   new MCP server available.
+{{% /tab %}}
+
+{{% tab header="Cline" lang="en" %}}
+
+1. Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap
+   the **MCP Servers** icon.
+1. Tap Configure MCP Servers to open the configuration file.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-mysql-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-mysql-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+1. You should see a green active status after the server is successfully
+   connected.
+{{% /tab %}}
+
+{{% tab header="Cursor" lang="en" %}}
+
+1. Create a `.cursor` directory in your project root if it doesn't exist.
+1. Create a `.cursor/mcp.json` file if it doesn't exist and open it.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-mysql-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-mysql-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+1. [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor
+   Settings > MCP**. You should see a green active status after the server is
+   successfully connected.
+{{% /tab %}}
+
+{{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
+
+1. Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and
+   create a `.vscode` directory in your project root if it doesn't exist.
+1. Create a `.vscode/mcp.json` file if it doesn't exist and open it.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "servers": {
+        "cloud-sql-mysql-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-mysql-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+{{% /tab %}}
+
+{{% tab header="Windsurf" lang="en" %}}
+
+1. Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the
+   Cascade assistant.
+1. Tap on the hammer (MCP) icon, then Configure to open the configuration file.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-mysql-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-mysql-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+{{% /tab %}}
+
+{{% tab header="Gemini CLI" lang="en" %}}
+
+1.  Install the [Gemini
+    CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
+1.  In your working directory, create a folder named `.gemini`. Within it,
+    create a `settings.json` file.
+1.  Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-mysql-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-mysql-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+
+{{% tab header="Gemini Code Assist" lang="en" %}}
+
+1.  Install the [Gemini Code
+    Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist)
+    extension in Visual Studio Code.
+1.  Enable Agent Mode in Gemini Code Assist chat.
+1.  In your working directory, create a folder named `.gemini`. Within it,
+    create a `settings.json` file.
+1.  Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-mysql-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-mysql-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{< /tabpane >}}
+
+## Use Tools
+
+Your AI tool is now connected to Cloud SQL for MySQL using MCP.
+
+The `cloud-sql-mysql-admin` server provides tools for managing your Cloud SQL
+instances and interacting with your database:
+* **create_instance**: Creates a new Cloud SQL for MySQL instance.
+* **get_instance**: Gets information about a Cloud SQL instance.
+* **list_instances**: Lists Cloud SQL instances in a project.
+* **create_database**: Creates a new database in a Cloud SQL instance.
+* **list_databases**: Lists all databases for a Cloud SQL instance.
+* **create_user**: Creates a new user in a Cloud SQL instance.
+* **wait_for_operation**: Waits for a Cloud SQL operation to complete.
+
+{{< notice note >}}
+Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
+will adapt to the tools available, so this shouldn't affect most users.
+{{< /notice >}}
+
+
+# Cloud SQL for SQL Server Admin using MCP
+Create and manage Cloud SQL for SQL Server (Admin) using Toolbox.
+
+
+This guide covers how to use [MCP Toolbox for Databases][toolbox] to expose your
+developer assistant tools to create and manage Cloud SQL for SQL Server
+instance, database and users:
+
+* [Cursor][cursor]
+* [Windsurf][windsurf] (Codium)
+* [Visual Studio Code][vscode] (Copilot)
+* [Cline][cline]  (VS Code extension)
+* [Claude desktop][claudedesktop]
+* [Claude code][claudecode]
+* [Gemini CLI][geminicli]
+* [Gemini Code Assist][geminicodeassist]
+
+[toolbox]: https://github.com/googleapis/genai-toolbox
+[cursor]: #configure-your-mcp-client
+[windsurf]: #configure-your-mcp-client
+[vscode]: #configure-your-mcp-client
+[cline]: #configure-your-mcp-client
+[claudedesktop]: #configure-your-mcp-client
+[claudecode]: #configure-your-mcp-client
+[geminicli]: #configure-your-mcp-client
+[geminicodeassist]: #configure-your-mcp-client
+
+## Before you begin
+
+1. In the Google Cloud console, on the [project selector
+   page](https://console.cloud.google.com/projectselector2/home/dashboard),
+   select or create a Google Cloud project.
+
+1. [Make sure that billing is enabled for your Google Cloud
+   project](https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#confirm_billing_is_enabled_on_a_project).
+
+1. Grant the necessary IAM roles to the user that will be running the MCP
+   server. The tools available will depend on the roles granted:
+    * `roles/cloudsql.viewer`: Provides read-only access to resources.
+        * `get_instance`
+        * `list_instances`
+        * `list_databases`
+        * `wait_for_operation`
+    * `roles/cloudsql.editor`: Provides permissions to manage existing resources.
+        * All `viewer` tools
+        * `create_database`
+    * `roles/cloudsql.admin`: Provides full control over all resources.
+        * All `editor` and `viewer` tools
+        * `create_instance`
+        * `create_user`
+
+## Install MCP Toolbox
+
+1. Download the latest version of Toolbox as a binary. Select the [correct
+   binary](https://github.com/googleapis/genai-toolbox/releases) corresponding
+   to your OS and CPU architecture. You are required to use Toolbox version
+   V0.15.0+:
+
+   <!-- {x-release-please-start-version} -->
+   {{< tabpane persist=header >}}
+{{< tab header="linux/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/linux/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/arm64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/arm64/toolbox
+{{< /tab >}}
+
+{{< tab header="darwin/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/darwin/amd64/toolbox
+{{< /tab >}}
+
+{{< tab header="windows/amd64" lang="bash" >}}
+curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolbox.exe
+{{< /tab >}}
+{{< /tabpane >}}
+    <!-- {x-release-please-end} -->
+
+1. Make the binary executable:
+
+    ```bash
+    chmod +x toolbox
+    ```
+
+1. Verify the installation:
+
+    ```bash
+    ./toolbox --version
+    ```
+
+## Configure your MCP Client
+
+{{< tabpane text=true >}}
+{{% tab header="Claude code" lang="en" %}}
+
+1. Install [Claude
+   Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
+1. Create a `.mcp.json` file in your project root if it doesn't exist.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-mssql-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-mssql-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+1. Restart Claude code to apply the new configuration.
+{{% /tab %}}
+
+{{% tab header="Claude desktop" lang="en" %}}
+
+1. Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
+1. Under the Developer tab, tap Edit Config to open the configuration file.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-mssql-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-mssql-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+1. Restart Claude desktop.
+1. From the new chat screen, you should see a hammer (MCP) icon appear with the
+   new MCP server available.
+{{% /tab %}}
+
+{{% tab header="Cline" lang="en" %}}
+
+1. Open the [Cline](https://github.com/cline/cline) extension in VS Code and tap
+   the **MCP Servers** icon.
+1. Tap Configure MCP Servers to open the configuration file.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-mssql-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-mssql-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+1. You should see a green active status after the server is successfully
+   connected.
+{{% /tab %}}
+
+{{% tab header="Cursor" lang="en" %}}
+
+1. Create a `.cursor` directory in your project root if it doesn't exist.
+1. Create a `.cursor/mcp.json` file if it doesn't exist and open it.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-mssql-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-mssql-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+1. [Cursor](https://www.cursor.com/) and navigate to **Settings > Cursor
+   Settings > MCP**. You should see a green active status after the server is
+   successfully connected.
+{{% /tab %}}
+
+{{% tab header="Visual Studio Code (Copilot)" lang="en" %}}
+
+1. Open [VS Code](https://code.visualstudio.com/docs/copilot/overview) and
+   create a `.vscode` directory in your project root if it doesn't exist.
+1. Create a `.vscode/mcp.json` file if it doesn't exist and open it.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "servers": {
+        "cloud-sql-mssql-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-mssql-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+{{% /tab %}}
+
+{{% tab header="Windsurf" lang="en" %}}
+
+1. Open [Windsurf](https://docs.codeium.com/windsurf) and navigate to the
+   Cascade assistant.
+1. Tap on the hammer (MCP) icon, then Configure to open the configuration file.
+1. Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-mssql-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-mssql-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+
+{{% /tab %}}
+
+{{% tab header="Gemini CLI" lang="en" %}}
+
+1.  Install the [Gemini
+    CLI](https://github.com/google-gemini/gemini-cli?tab=readme-ov-file#quickstart).
+1.  In your working directory, create a folder named `.gemini`. Within it,
+    create a `settings.json` file.
+1.  Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-mssql-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-mssql-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+
+{{% tab header="Gemini Code Assist" lang="en" %}}
+
+1.  Install the [Gemini Code
+    Assist](https://marketplace.visualstudio.com/items?itemName=Google.geminicodeassist)
+    extension in Visual Studio Code.
+1.  Enable Agent Mode in Gemini Code Assist chat.
+1.  In your working directory, create a folder named `.gemini`. Within it,
+    create a `settings.json` file.
+1.  Add the following configuration and save:
+
+    ```json
+    {
+      "mcpServers": {
+        "cloud-sql-mssql-admin": {
+          "command": "./PATH/TO/toolbox",
+          "args": ["--prebuilt","cloud-sql-mssql-admin","--stdio"],
+          "env": {
+          }
+        }
+      }
+    }
+    ```
+{{% /tab %}}
+{{< /tabpane >}}
+
+## Use Tools
+
+Your AI tool is now connected to Cloud SQL for SQL Server using MCP.
+
+The `cloud-sql-mssql-admin` server provides tools for managing your Cloud SQL
+instances and interacting with your database:
+* **create_instance**: Creates a new Cloud SQL for SQL Server instance.
+* **get_instance**: Gets information about a Cloud SQL instance.
+* **list_instances**: Lists Cloud SQL instances in a project.
+* **create_database**: Creates a new database in a Cloud SQL instance.
+* **list_databases**: Lists all databases for a Cloud SQL instance.
+* **create_user**: Creates a new user in a Cloud SQL instance.
+* **wait_for_operation**: Waits for a Cloud SQL operation to complete.
+
+{{< notice note >}}
+Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
+will adapt to the tools available, so this shouldn't affect most users.
 {{< /notice >}}
 
 
@@ -3514,7 +4550,8 @@ testing and debugging Toolbox server.
 How to effectively use Toolbox UI.
 
 
-Toolbox UI is a built-in web interface that allows users to visually inspect and test out configured resources such as tools and toolsets.
+Toolbox UI is a built-in web interface that allows users to visually inspect and
+test out configured resources such as tools and toolsets.
 
 ## Launching Toolbox UI
 
@@ -3524,8 +4561,9 @@ To launch Toolbox's interactive UI, use the `--ui` flag.
 ./toolbox --ui
 ```
 
-Toolbox UI will be served from the same host and port as the Toolbox Server, with the `/ui` suffix. Once Toolbox
-is launched, the following INFO log with Toolbox UI's url will be shown:
+Toolbox UI will be served from the same host and port as the Toolbox Server,
+with the `/ui` suffix. Once Toolbox is launched, the following INFO log with
+Toolbox UI's url will be shown:
 
 ```bash
 INFO "Toolbox UI is up and running at: http://localhost:5000/ui"
@@ -3533,11 +4571,13 @@ INFO "Toolbox UI is up and running at: http://localhost:5000/ui"
 
 ## Navigating the Tools Page
 
-The tools page shows all tools loaded from your configuration file. This corresponds to the default toolset (represented by an empty string). Each tool's name on this page will exactly match its name in the configuration 
-file.
+The tools page shows all tools loaded from your configuration file. This
+corresponds to the default toolset (represented by an empty string). Each tool's
+name on this page will exactly match its name in the configuration file.
 
-To view details for a specific tool, click on the tool name. The main content area will be populated
-with the tool name, description, and available parameters.
+To view details for a specific tool, click on the tool name. The main content
+area will be populated with the tool name, description, and available
+parameters.
 
 ![Tools Page](./tools.png)
 
@@ -3553,12 +4593,17 @@ with the tool name, description, and available parameters.
 
 ### Optional Parameters
 
-Toolbox allows users to add [optional parameters](../../resources/tools/#basic-parameters) with or without a default value. 
+Toolbox allows users to add [optional
+parameters](../../resources/tools/#basic-parameters) with or without a default
+value.
 
-To exclude a parameter, uncheck the box to the right of an associated parameter, and that parameter will not be
-included in the request body. If the parameter is not sent, Toolbox will either use it as `nil` value or the `default` value, if configured. If the parameter is required, Toolbox will throw an error.
+To exclude a parameter, uncheck the box to the right of an associated parameter,
+and that parameter will not be included in the request body. If the parameter is
+not sent, Toolbox will either use it as `nil` value or the `default` value, if
+configured. If the parameter is required, Toolbox will throw an error.
 
-When the box is checked, parameter will be sent exactly as entered in the response field (e.g. empty string).
+When the box is checked, parameter will be sent exactly as entered in the
+response field (e.g. empty string).
 
 ![Optional Parameter checked example](./optional-param-checked.png)
 
@@ -3566,34 +4611,41 @@ When the box is checked, parameter will be sent exactly as entered in the respon
 
 ### Editing Headers
 
-To edit headers, press the "Edit Headers" button to display the header modal. Within this modal,
-users can make direct edits by typing into the header's text area. 
+To edit headers, press the "Edit Headers" button to display the header modal.
+Within this modal, users can make direct edits by typing into the header's text
+area. 
 
-Toolbox UI validates that the headers are in correct JSON format. Other header-related errors (e.g.,
-incorrect header names or values required by the tool) will be reported in the Response section 
-after running the tool.
+Toolbox UI validates that the headers are in correct JSON format. Other
+header-related errors (e.g., incorrect header names or values required by the
+tool) will be reported in the Response section after running the tool.
 
 ![Edit Headers](./edit-headers.png)
 
 #### Google OAuth
 
-Currently, Toolbox supports Google OAuth 2.0 as an AuthService, which allows tools to utilize 
-authorized parameters. When a tool uses an authorized parameter, the parameter will be displayed
-but not editable, as it will be populated from the authentication token.  
+Currently, Toolbox supports Google OAuth 2.0 as an AuthService, which allows
+tools to utilize authorized parameters. When a tool uses an authorized
+parameter, the parameter will be displayed but not editable, as it will be
+populated from the authentication token.
 
-To provide the token, add your Google OAuth ID Token to the request header using the "Edit Headers"
-button and modal described above. The key should be the name of your AuthService as defined in 
-your tool configuration file, suffixed with `_token`. The value should be your ID token as a string.
+To provide the token, add your Google OAuth ID Token to the request header using
+the "Edit Headers" button and modal described above. The key should be the name
+of your AuthService as defined in your tool configuration file, suffixed with
+`_token`. The value should be your ID token as a string.
 
 1. Select a tool that requires [authenticated parameters]()
-1. The auth parameter's text field is greyed out. This is because it cannot be entered manually and will
-be parsed from the resolved auth token
+1. The auth parameter's text field is greyed out. This is because it cannot be
+   entered manually and will be parsed from the resolved auth token
 1. To update request headers with the token, select "Edit Headers"
-1. (Optional) If you wish to manually edit the header, checkout the dropdown "How to extract Google OAuth ID Token manually" for guidance on retrieving ID token
-1. To edit the header automatically, click the "Auto Setup" button that is associated with your Auth Profile
+1. (Optional) If you wish to manually edit the header, checkout the dropdown
+   "How to extract Google OAuth ID Token manually" for guidance on retrieving ID
+   token
+1. To edit the header automatically, click the "Auto Setup" button that is
+   associated with your Auth Profile
 1. Enter the Client ID defined in your tools configuration file
 1. Click "Continue"
-1. Click "Sign in With Google" and login with your associated google account. This should automatically populate the header text area with your token
+1. Click "Sign in With Google" and login with your associated google account.
+   This should automatically populate the header text area with your token
 1. Click "Save"
 1. Click "Run Tool"
 
@@ -3608,11 +4660,12 @@ be parsed from the resolved auth token
 
 ## Navigating the Toolsets Page
 
-Through the toolsets page, users can search for a specific toolset to retrieve tools from. Simply
-enter the toolset name in the search bar, and press "Enter" to retrieve the associated tools.
+Through the toolsets page, users can search for a specific toolset to retrieve
+tools from. Simply enter the toolset name in the search bar, and press "Enter"
+to retrieve the associated tools.
 
-If the toolset name is not defined within the tools configuration file, an error message will be 
-displayed.
+If the toolset name is not defined within the tools configuration file, an error
+message will be displayed.
 
 ![Toolsets Page](./toolsets.png)
 
@@ -3718,10 +4771,11 @@ section.
     ```bash
     export IMAGE=us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
     ```
+
 {{< notice note >}}  
 **The `$PORT` Environment Variable**  
-Google Cloud Run dictates the port your application must listen on by setting the
-`$PORT` environment variable inside your container. This value defaults to
+Google Cloud Run dictates the port your application must listen on by setting
+the `$PORT` environment variable inside your container. This value defaults to
 **8080**. Your application's `--port` argument **must** be set to listen on this
 port. If there is a mismatch, the container will fail to start and the
 deployment will time out.  
@@ -3824,22 +4878,29 @@ Now, you can use this client to connect to the deployed Cloud Run instance!
 ## Troubleshooting
 
 {{< notice note >}}  
-For any deployment or runtime error, the best first step is to check the logs for your service in the Google Cloud Console's Cloud Run section. They often contain the specific error message needed to diagnose the problem.  
+For any deployment or runtime error, the best first step is to check the logs
+for your service in the Google Cloud Console's Cloud Run section. They often
+contain the specific error message needed to diagnose the problem.
 {{< /notice >}}
 
 * **Deployment Fails with "Container failed to start":** This is almost always
     caused by a port mismatch. Ensure your container's `--port` argument is set to
     `8080` to match the `$PORT` environment variable provided by Cloud Run.
 
-* **Client Receives Permission Denied Error (401 or 403):** If your client application (e.g., your local SDK) gets a `401 Unauthorized` or `403 Forbidden` error when trying to call your Cloud Run service, it means the client is not properly authenticated as an invoker.
-    * Ensure the user or service account calling the service has the **Cloud Run Invoker** (`roles/run.invoker`) IAM role.
-    * If running locally, make sure your Application Default Credentials are set up correctly by running `gcloud auth application-default login`.
+* **Client Receives Permission Denied Error (401 or 403):** If your client
+  application (e.g., your local SDK) gets a `401 Unauthorized` or `403
+  Forbidden` error when trying to call your Cloud Run service, it means the
+  client is not properly authenticated as an invoker.
+    * Ensure the user or service account calling the service has the **Cloud Run
+      Invoker** (`roles/run.invoker`) IAM role.
+    * If running locally, make sure your Application Default Credentials are set
+      up correctly by running `gcloud auth application-default login`.
 
-* **Service Fails to Access Secrets (in logs):** If your application starts but the logs show errors like "permission denied" when trying to access Secret Manager, it means the Toolbox service account is missing permissions.
-    * Ensure the `toolbox-identity` service account has the **Secret Manager Secret Accessor** (`roles/secretmanager.secretAccessor`) IAM role.
-
-
-
+* **Service Fails to Access Secrets (in logs):** If your application starts but
+  the logs show errors like "permission denied" when trying to access Secret
+  Manager, it means the Toolbox service account is missing permissions.
+    * Ensure the `toolbox-identity` service account has the **Secret Manager
+      Secret Accessor** (`roles/secretmanager.secretAccessor`) IAM role.
 
 # Deploy to Kubernetes
 How to set up and configure Toolbox to deploy on Kubernetes with Google Kubernetes Engine (GKE).
@@ -4530,7 +5591,9 @@ func main() {
 ### Specifying tokens for existing tools
 
 #### Python
-Use the [Python SDK](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main).
+
+Use the [Python
+SDK](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main).
 
 {{< tabpane persist=header >}}
 {{< tab header="Core" lang="Python" >}}
@@ -4896,8 +5959,10 @@ apply when creating SQL queries to run against your BigQuery data, such as
 avoiding full table scans or complex filters.
 
 [bigquery-docs]: https://cloud.google.com/bigquery/docs
-[bigquery-quickstart-cli]: https://cloud.google.com/bigquery/docs/quickstarts/quickstart-command-line
-[bigquery-googlesql]: https://cloud.google.com/bigquery/docs/reference/standard-sql/
+[bigquery-quickstart-cli]:
+    https://cloud.google.com/bigquery/docs/quickstarts/quickstart-command-line
+[bigquery-googlesql]:
+    https://cloud.google.com/bigquery/docs/reference/standard-sql/
 
 ## Available Tools
 
@@ -4928,10 +5993,15 @@ avoiding full table scans or complex filters.
 - [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
   Run SQL queries directly against BigQuery datasets.
 
+- [`bigquery-search-catalog`](../tools/bigquery/bigquery-search_catalog.md)
+  List all entries in Dataplex Catalog (e.g. tables, views, models) that matches
+  given user query.
+
 ### Pre-built Configurations
 
-- [BigQuery using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/bigquery_mcp/)  
-Connect your IDE to BigQuery using Toolbox.
+- [BigQuery using
+  MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/bigquery_mcp/)
+  Connect your IDE to BigQuery using Toolbox.
 
 ## Requirements
 
@@ -4942,7 +6012,9 @@ user and group access to BigQuery resources like projects, datasets, and tables.
 
 ### Authentication via Application Default Credentials (ADC)
 
-By **default**, Toolbox will use your [Application Default Credentials (ADC)][adc] to authorize and authenticate when interacting with [BigQuery][bigquery-docs].
+By **default**, Toolbox will use your [Application Default Credentials
+(ADC)][adc] to authorize and authenticate when interacting with
+[BigQuery][bigquery-docs].
 
 When using this method, you need to ensure the IAM identity associated with your
 ADC (such as a service account) has the correct permissions for the queries you
@@ -5083,7 +6155,7 @@ ClickHouse is an open-source, OLTP database.
 
 ## About
 
-[ClickHouse][clickhouse-docs] is a fast, open-source, column-oriented database 
+[ClickHouse][clickhouse-docs] is a fast, open-source, column-oriented database
 
 [clickhouse-docs]: https://clickhouse.com/docs
 
@@ -5101,10 +6173,12 @@ ClickHouse is an open-source, OLTP database.
 ### Database User
 
 This source uses standard ClickHouse authentication. You will need to [create a
-ClickHouse user][clickhouse-users] (or with [ClickHouse Cloud][clickhouse-cloud]) to connect to the database with. The user
-should have appropriate permissions for the operations you plan to perform.
+ClickHouse user][clickhouse-users] (or with [ClickHouse
+Cloud][clickhouse-cloud]) to connect to the database with. The user should have
+appropriate permissions for the operations you plan to perform.
 
-[clickhouse-cloud]: https://clickhouse.com/docs/getting-started/quick-start/cloud#connect-with-your-app
+[clickhouse-cloud]:
+    https://clickhouse.com/docs/getting-started/quick-start/cloud#connect-with-your-app
 [clickhouse-users]: https://clickhouse.com/docs/en/sql-reference/statements/create/user
 
 ### Network Access
@@ -5153,16 +6227,16 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field**   | **type** | **required** | **description**                                                                    |
-|-------------|:--------:|:------------:|------------------------------------------------------------------------------------|
-| kind        |  string  |     true     | Must be "clickhouse".                                                              |
-| host        |  string  |     true     | IP address or hostname to connect to (e.g. "127.0.0.1" or "clickhouse.example.com") |
-| port        |  string  |     true     | Port to connect to (e.g. "8443" for HTTPS, "8123" for HTTP)                     |
-| database    |  string  |     true     | Name of the ClickHouse database to connect to (e.g. "my_database").              |
-| user        |  string  |     true     | Name of the ClickHouse user to connect as (e.g. "analytics_user").               |
-| password    |  string  |    false     | Password of the ClickHouse user (e.g. "my-password").                             |
-| protocol    |  string  |    false     | Connection protocol: "https" (default) or "http".                      |
-| secure      |  boolean |    false     | Whether to use a secure connection (TLS). Default: false.                         |
+| **field** | **type** | **required** | **description**                                                                     |
+|-----------|:--------:|:------------:|-------------------------------------------------------------------------------------|
+| kind      |  string  |     true     | Must be "clickhouse".                                                               |
+| host      |  string  |     true     | IP address or hostname to connect to (e.g. "127.0.0.1" or "clickhouse.example.com") |
+| port      |  string  |     true     | Port to connect to (e.g. "8443" for HTTPS, "8123" for HTTP)                         |
+| database  |  string  |     true     | Name of the ClickHouse database to connect to (e.g. "my_database").                 |
+| user      |  string  |     true     | Name of the ClickHouse user to connect as (e.g. "analytics_user").                  |
+| password  |  string  |    false     | Password of the ClickHouse user (e.g. "my-password").                               |
+| protocol  |  string  |    false     | Connection protocol: "https" (default) or "http".                                   |
+| secure    | boolean  |    false     | Whether to use a secure connection (TLS). Default: false.                           |
 
 
 # Cloud Monitoring
@@ -5171,11 +6245,16 @@ A "cloud-monitoring" source provides a client for the Cloud Monitoring API.
 
 ## About
 
-The `cloud-monitoring` source provides a client to interact with the [Google Cloud Monitoring API](https://cloud.google.com/monitoring/api). This allows tools to access cloud monitoring metrics explorer and run promql queries.
+The `cloud-monitoring` source provides a client to interact with the [Google
+Cloud Monitoring API](https://cloud.google.com/monitoring/api). This allows
+tools to access cloud monitoring metrics explorer and run promql queries.
 
 Authentication can be handled in two ways:
-1.  **Application Default Credentials (ADC):** By default, the source uses ADC to authenticate with the API.
-2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.
+1.  **Application Default Credentials (ADC):** By default, the source uses ADC
+    to authenticate with the API.
+2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will
+    expect an OAuth 2.0 access token to be provided by the client (e.g., a web
+    browser) for each request.
 
 ## Example
 
@@ -5191,9 +6270,9 @@ sources:
 
 ## Reference
 
-| **field**      | **type** | **required** | **description**                                                                                                                                                           |
-|----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind           |  string  |     true     | Must be "cloud-monitoring".                                                                                                                                                |
+| **field**      | **type** | **required** | **description**                                                                                                                                |
+|----------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind           |  string  |     true     | Must be "cloud-monitoring".                                                                                                                    |
 | useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
 
 
@@ -5215,19 +6294,29 @@ to a database by following these instructions][csql-mysql-quickstart].
 
 ## Available Tools
 
-- [`mysql-sql`](../tools/mysql/mysql-sql.md)  
-  Execute pre-defined prepared SQL queries in MySQL.
+- [`mysql-sql`](../tools/mysql/mysql-sql.md)
+  Execute pre-defined prepared SQL queries in Cloud SQL for MySQL.
 
-- [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
+- [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)
   Run parameterized SQL queries in Cloud SQL for MySQL.
 
-- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)  
+- [`mysql-list-active-queries`](../tools/mysql/mysql-list-active-queries.md)
+  List active queries in Cloud SQL for MySQL.
+
+- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)
   List tables in a Cloud SQL for MySQL database.
+
+- [`mysql-list-tables-missing-unique-indexes`](../tools/mysql/mysql-list-tables-missing-unique-indexes.md)
+  List tables in a Cloud SQL for MySQL database that do not have primary or unique indices.
+
+- [`mysql-list-table-fragmentation`](../tools/mysql/mysql-list-table-fragmentation.md)
+  List table fragmentation in Cloud SQL for MySQL tables.
 
 ### Pre-built Configurations
 
-- [Cloud SQL for MySQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mysql_mcp/)  
-Connect your IDE to Cloud SQL for MySQL using Toolbox.
+- [Cloud SQL for MySQL using
+  MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mysql_mcp/)
+  Connect your IDE to Cloud SQL for MySQL using Toolbox.
 
 ## Requirements
 
@@ -5326,7 +6415,8 @@ If you are new to Cloud SQL for PostgreSQL, you can try [creating and connecting
 to a database by following these instructions][csql-pg-quickstart].
 
 [csql-pg-docs]: https://cloud.google.com/sql/docs/postgres
-[csql-pg-quickstart]: https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer
+[csql-pg-quickstart]:
+    https://cloud.google.com/sql/docs/postgres/connect-instance-local-computer
 
 ## Available Tools
 
@@ -5350,7 +6440,8 @@ to a database by following these instructions][csql-pg-quickstart].
 
 ### Pre-built Configurations
 
-- [Cloud SQL for Postgres using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/)
+- [Cloud SQL for Postgres using
+  MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/)
 Connect your IDE to Cloud SQL for Postgres using Toolbox.
 
 
@@ -5584,11 +6675,17 @@ A "cloud-sql-admin" source provides a client for the Cloud SQL Admin API.
 
 ## About
 
-The `cloud-sql-admin` source provides a client to interact with the [Google Cloud SQL Admin API](https://cloud.google.com/sql/docs/mysql/admin-api/v1). This allows tools to perform administrative tasks on Cloud SQL instances, such as creating users and databases.
+The `cloud-sql-admin` source provides a client to interact with the [Google
+Cloud SQL Admin API](https://cloud.google.com/sql/docs/mysql/admin-api/v1). This
+allows tools to perform administrative tasks on Cloud SQL instances, such as
+creating users and databases.
 
 Authentication can be handled in two ways:
-1.  **Application Default Credentials (ADC):** By default, the source uses ADC to authenticate with the API.
-2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.
+1.  **Application Default Credentials (ADC):** By default, the source uses ADC
+    to authenticate with the API.
+2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will
+    expect an OAuth 2.0 access token to be provided by the client (e.g., a web
+    browser) for each request.
 
 ## Example
 
@@ -5604,9 +6701,9 @@ sources:
 
 ## Reference
 
-| **field**      | **type** | **required** | **description**                                                                                                                                                           |
-|----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind           |  string  |     true     | Must be "cloud-sql-admin".                                                                                                                                                |
+| **field**      | **type** | **required** | **description**                                                                                                                                |
+|----------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind           |  string  |     true     | Must be "cloud-sql-admin".                                                                                                                     |
 | useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
 
 
@@ -5705,7 +6802,7 @@ Your primary objective is to help discover, organize and manage metadata related
         Example (Incorrect): Hi there! I see that you are looking for...  
         Example (Correct): This problem likely stems from...
 3. Do not reiterate or summarize the question in the answer.
-4. Crucially, always convey a tone of uncertainty and caution. Since you are interpreting metadata and have no way to externally verify your answers, never express complete confidence. Frame your responses as interpretations based solely on the provided metadata. Use a suggestive tone, not a prescriptive one:  
+4. Crucially, always convey a tone of uncertainty and caution. Since you are interpreting metadata and have no way to externally verify your answers, never express complete confidence. Frame your responses as interpretations based solely on the provided metadata. Use a suggestive tone, not a prescriptive one:
     Example (Correct): "The entry describes..."  
     Example (Correct): "According to catalog,..."  
     Example (Correct): "Based on the metadata,..."  
@@ -6052,7 +7149,10 @@ Firebird is a powerful, cross-platform, and open-source relational database.
 
 ## About
 
-[Firebird][fb-docs] is a relational database management system offering many ANSI SQL standard features that runs on Linux, Windows, and a variety of Unix platforms. It is known for its small footprint, powerful features, and easy maintenance.
+[Firebird][fb-docs] is a relational database management system offering many
+ANSI SQL standard features that runs on Linux, Windows, and a variety of Unix
+platforms. It is known for its small footprint, powerful features, and easy
+maintenance.
 
 [fb-docs]: https://firebirdsql.org/
 
@@ -6068,7 +7168,8 @@ Firebird is a powerful, cross-platform, and open-source relational database.
 
 ### Database User
 
-This source uses standard authentication. You will need to [create a Firebird user][fb-users] to login to the database with.
+This source uses standard authentication. You will need to [create a Firebird
+user][fb-users] to login to the database with.
 
 [fb-users]: https://firebirdsql.org/refdocs/langrefupd25-sql-create-user.html
 
@@ -6092,14 +7193,14 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                        |
-|-----------|:--------:|:------------:|------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "firebird".                                                    |
-| host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1")                            |
-| port      |  string  |     true     | Port to connect to (e.g. "3050")                                       |
+| **field** | **type** | **required** | **description**                                                              |
+|-----------|:--------:|:------------:|------------------------------------------------------------------------------|
+| kind      |  string  |     true     | Must be "firebird".                                                          |
+| host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1")                                  |
+| port      |  string  |     true     | Port to connect to (e.g. "3050")                                             |
 | database  |  string  |     true     | Path to the Firebird database file (e.g. "/var/lib/firebird/data/test.fdb"). |
-| user      |  string  |     true     | Name of the Firebird user to connect as (e.g. "SYSDBA").               |
-| password  |  string  |     true     | Password of the Firebird user (e.g. "masterkey").                      |
+| user      |  string  |     true     | Name of the Firebird user to connect as (e.g. "SYSDBA").                     |
+| password  |  string  |     true     | Password of the Firebird user (e.g. "masterkey").                            |
 
 # Firestore
 Firestore is a NoSQL document database built for automatic scaling, high performance, and ease of application development. It's a fully managed, serverless database that supports mobile, web, and server development.
@@ -6338,14 +7439,23 @@ reliability, performance, and ease of use.
 
 ## Available Tools
 
-- [`mysql-sql`](../tools/mysql/mysql-sql.md)  
+- [`mysql-sql`](../tools/mysql/mysql-sql.md)
   Execute pre-defined prepared SQL queries in MySQL.
 
-- [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
+- [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)
   Run parameterized SQL queries in MySQL.
 
-- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)  
+- [`mysql-list-active-queries`](../tools/mysql/mysql-list-active-queries.md)
+  List active queries in MySQL.
+
+- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)
   List tables in a MySQL database.
+
+- [`mysql-list-tables-missing-unique-indexes`](../tools/mysql/mysql-list-tables-missing-unique-indexes.md)
+  List tables in a MySQL database that do not have primary or unique indices.
+
+- [`mysql-list-table-fragmentation`](../tools/mysql/mysql-list-table-fragmentation.md)
+  List table fragmentation in MySQL tables.
 
 ## Requirements
 
@@ -6453,7 +7563,11 @@ OceanBase is a distributed relational database that provides high availability, 
 
 ## About
 
-[OceanBase][oceanbase-docs] is a distributed relational database management system (RDBMS) that provides high availability, scalability, and strong consistency. It's designed to handle large-scale data processing and is compatible with MySQL, making it easy for developers to migrate from MySQL to OceanBase.
+[OceanBase][oceanbase-docs] is a distributed relational database management
+system (RDBMS) that provides high availability, scalability, and strong
+consistency. It's designed to handle large-scale data processing and is
+compatible with MySQL, making it easy for developers to migrate from MySQL to
+OceanBase.
 
 [oceanbase-docs]: https://www.oceanbase.com/
 
@@ -6461,11 +7575,15 @@ OceanBase is a distributed relational database that provides high availability, 
 
 ### Database User
 
-This source only uses standard authentication. You will need to create an OceanBase user to login to the database with. OceanBase supports MySQL-compatible user management syntax.
+This source only uses standard authentication. You will need to create an
+OceanBase user to login to the database with. OceanBase supports
+MySQL-compatible user management syntax.
 
 ### Network Connectivity
 
-Ensure that your application can connect to the OceanBase cluster. OceanBase typically runs on ports 2881 (for MySQL protocol) or 3881 (for MySQL protocol with SSL).
+Ensure that your application can connect to the OceanBase cluster. OceanBase
+typically runs on ports 2881 (for MySQL protocol) or 3881 (for MySQL protocol
+with SSL).
 
 ## Example
 
@@ -6502,19 +7620,24 @@ instead of hardcoding your secrets into the configuration file.
 
 ### MySQL Compatibility
 
-OceanBase is highly compatible with MySQL, supporting most MySQL SQL syntax, data types, and functions. This makes it easy to migrate existing MySQL applications to OceanBase.
+OceanBase is highly compatible with MySQL, supporting most MySQL SQL syntax,
+data types, and functions. This makes it easy to migrate existing MySQL
+applications to OceanBase.
 
 ### High Availability
 
-OceanBase provides automatic failover and data replication across multiple nodes, ensuring high availability and data durability.
+OceanBase provides automatic failover and data replication across multiple
+nodes, ensuring high availability and data durability.
 
 ### Scalability
 
-OceanBase can scale horizontally by adding more nodes to the cluster, making it suitable for large-scale applications.
+OceanBase can scale horizontally by adding more nodes to the cluster, making it
+suitable for large-scale applications.
 
 ### Strong Consistency
 
-OceanBase provides strong consistency guarantees, ensuring that all transactions are ACID compliant. 
+OceanBase provides strong consistency guarantees, ensuring that all transactions
+are ACID compliant.
 
 # PostgreSQL
 PostgreSQL is a powerful, open source object-relational database.
@@ -6911,7 +8034,10 @@ TiDB is a distributed SQL database that combines the best of traditional RDBMS a
 
 ## About
 
-[TiDB][tidb-docs] is an open-source distributed SQL database that supports Hybrid Transactional and Analytical Processing (HTAP) workloads. It is MySQL-compatible and features horizontal scalability, strong consistency, and high availability.
+[TiDB][tidb-docs] is an open-source distributed SQL database that supports
+Hybrid Transactional and Analytical Processing (HTAP) workloads. It is
+MySQL-compatible and features horizontal scalability, strong consistency, and
+high availability.
 
 [tidb-docs]: https://docs.pingcap.com/tidb/stable
 
@@ -6919,9 +8045,11 @@ TiDB is a distributed SQL database that combines the best of traditional RDBMS a
 
 ### Database User
 
-This source uses standard MySQL protocol authentication. You will need to [create a TiDB user][tidb-users] to login to the database with.
+This source uses standard MySQL protocol authentication. You will need to
+[create a TiDB user][tidb-users] to login to the database with.
 
-For TiDB Cloud users, you can create database users through the TiDB Cloud console.
+For TiDB Cloud users, you can create database users through the TiDB Cloud
+console.
 
 [tidb-users]: https://docs.pingcap.com/tidb/stable/user-account-management
 
@@ -6929,11 +8057,14 @@ For TiDB Cloud users, you can create database users through the TiDB Cloud conso
 
 - TiDB Cloud
 
-    For TiDB Cloud instances, SSL is automatically enabled when the hostname matches the TiDB Cloud pattern (`gateway*.*.*.tidbcloud.com`). You don't need to explicitly set `ssl: true` for TiDB Cloud connections.
+    For TiDB Cloud instances, SSL is automatically enabled when the hostname
+    matches the TiDB Cloud pattern (`gateway*.*.*.tidbcloud.com`). You don't
+    need to explicitly set `ssl: true` for TiDB Cloud connections.
 
 - Self-Hosted TiDB
 
-    For self-hosted TiDB instances, you can optionally enable SSL by setting `ssl: true` in your configuration.
+    For self-hosted TiDB instances, you can optionally enable SSL by setting
+    `ssl: true` in your configuration.
 
 ## Example
 
@@ -6989,7 +8120,9 @@ Trino is a distributed SQL query engine for big data analytics.
 
 ## About
 
-[Trino][trino-docs] is a distributed SQL query engine designed for fast analytic queries against data of any size. It allows you to query data where it lives, including Hive, Cassandra, relational databases or even proprietary data stores.
+[Trino][trino-docs] is a distributed SQL query engine designed for fast analytic
+queries against data of any size. It allows you to query data where it lives,
+including Hive, Cassandra, relational databases or even proprietary data stores.
 
 [trino-docs]: https://trino.io/docs/
 
@@ -7005,7 +8138,8 @@ Trino is a distributed SQL query engine for big data analytics.
 
 ### Trino Cluster
 
-You need access to a running Trino cluster with appropriate user permissions for the catalogs and schemas you want to query.
+You need access to a running Trino cluster with appropriate user permissions for
+the catalogs and schemas you want to query.
 
 ## Example
 
@@ -7028,19 +8162,19 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-|  **field**  |      **type**      | **required** | **description**                                                        |
-|-------------|:------------------:|:------------:|------------------------------------------------------------------------|
-| kind        |       string       |     true     | Must be "trino".                                                       |
-| host        |       string       |     true     | Trino coordinator hostname (e.g. "trino.example.com")                 |
-| port        |       string       |     true     | Trino coordinator port (e.g. "8080", "8443")                          |
-| user        |       string       |     false    | Username for authentication (e.g. "analyst"). Optional for anonymous access. |
-| password    |       string       |     false    | Password for basic authentication                                      |
-| catalog     |       string       |     true     | Default catalog to use for queries (e.g. "hive")                      |
-| schema      |       string       |     true     | Default schema to use for queries (e.g. "default")                    |
-| queryTimeout|       string       |     false    | Query timeout duration (e.g. "30m", "1h")                             |
-| accessToken |       string       |     false    | JWT access token for authentication                                    |
-| kerberosEnabled | boolean        |     false    | Enable Kerberos authentication (default: false)                       |
-| sslEnabled  |       boolean      |     false    | Enable SSL/TLS (default: false)                                       |
+| **field**       | **type** | **required** | **description**                                                              |
+|-----------------|:--------:|:------------:|------------------------------------------------------------------------------|
+| kind            |  string  |     true     | Must be "trino".                                                             |
+| host            |  string  |     true     | Trino coordinator hostname (e.g. "trino.example.com")                        |
+| port            |  string  |     true     | Trino coordinator port (e.g. "8080", "8443")                                 |
+| user            |  string  |    false     | Username for authentication (e.g. "analyst"). Optional for anonymous access. |
+| password        |  string  |    false     | Password for basic authentication                                            |
+| catalog         |  string  |     true     | Default catalog to use for queries (e.g. "hive")                             |
+| schema          |  string  |     true     | Default schema to use for queries (e.g. "default")                           |
+| queryTimeout    |  string  |    false     | Query timeout duration (e.g. "30m", "1h")                                    |
+| accessToken     |  string  |    false     | JWT access token for authentication                                          |
+| kerberosEnabled | boolean  |    false     | Enable Kerberos authentication (default: false)                              |
+| sslEnabled      | boolean  |    false     | Enable SSL/TLS (default: false)                                              |
 
 
 # Valkey
@@ -7119,7 +8253,9 @@ YugabyteDB is a high-performance, distributed SQL database.
 
 ## About
 
-[YugabyteDB][yugabytedb] is a high-performance, distributed SQL database designed for global, internet-scale applications, with full PostgreSQL compatibility.
+[YugabyteDB][yugabytedb] is a high-performance, distributed SQL database
+designed for global, internet-scale applications, with full PostgreSQL
+compatibility.
 
 [yugabytedb]: https://www.yugabyte.com/
 
@@ -7140,19 +8276,19 @@ sources:
 
 ## Reference
 
-| **field**                         | **type** | **required** | **description**                                                        |
-|-----------------------------------|:--------:|:------------:|------------------------------------------------------------------------|
-| kind                              |  string  |     true     | Must be "yugabytedb".                                                    |
-| host                              |  string  |     true     | IP address to connect to.                           |
-| port                              |  integer  |     true     | Port to connect to. The default port is 5433.                                      |
-| database                          |  string  |     true     | Name of the YugabyteDB database to connect to. The default database name is yugabyte.           |
-| user                              |  string  |     true     | Name of the YugabyteDB user to connect as. The default user is yugabyte.          |
-| password                          |  string  |     true     | Password of the YugabyteDB user. The default password is yugabyte.                   |
-| loadBalance                      |  boolean  |     false     | If true, enable uniform load balancing. The default loadBalance value is false.                   |
-| topologyKeys                     |  string  |     false     | Comma-separated geo-locations in the form cloud.region.zone:priority to enable topology-aware load balancing. Ignored if loadBalance is false. It is null by default.                   |
-| ybServersRefreshInterval       |  integer  |     false     | The interval (in seconds) to refresh the servers list; ignored if loadBalance is false. The default value of ybServersRefreshInterval is 300.                    |
-| fallbackToTopologyKeysOnly    |  boolean  |     false     | If set to true and topologyKeys are specified, only connect to nodes specified in topologyKeys. By defualt, this is set to false.                    |
-| failedHostReconnectDelaySecs  |  integer  |     false     | Time (in seconds) to wait before trying to connect to failed nodes. The default value of is 5.                   |
+| **field**                    | **type** | **required** | **description**                                                                                                                                                       |
+|------------------------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind                         |  string  |     true     | Must be "yugabytedb".                                                                                                                                                 |
+| host                         |  string  |     true     | IP address to connect to.                                                                                                                                             |
+| port                         | integer  |     true     | Port to connect to. The default port is 5433.                                                                                                                         |
+| database                     |  string  |     true     | Name of the YugabyteDB database to connect to. The default database name is yugabyte.                                                                                 |
+| user                         |  string  |     true     | Name of the YugabyteDB user to connect as. The default user is yugabyte.                                                                                              |
+| password                     |  string  |     true     | Password of the YugabyteDB user. The default password is yugabyte.                                                                                                    |
+| loadBalance                  | boolean  |    false     | If true, enable uniform load balancing. The default loadBalance value is false.                                                                                       |
+| topologyKeys                 |  string  |    false     | Comma-separated geo-locations in the form cloud.region.zone:priority to enable topology-aware load balancing. Ignored if loadBalance is false. It is null by default. |
+| ybServersRefreshInterval     | integer  |    false     | The interval (in seconds) to refresh the servers list; ignored if loadBalance is false. The default value of ybServersRefreshInterval is 300.                         |
+| fallbackToTopologyKeysOnly   | boolean  |    false     | If set to true and topologyKeys are specified, only connect to nodes specified in topologyKeys. By defualt, this is set to false.                                     |
+| failedHostReconnectDelaySecs | integer  |    false     | Time (in seconds) to wait before trying to connect to failed nodes. The default value of is 5.                                                                        |
 
 
 # AlloyDB Admin
@@ -7161,11 +8297,17 @@ The "alloydb-admin" source provides a client for the AlloyDB API.
 
 ## About
 
-The `alloydb-admin` source provides a client to interact with the [Google AlloyDB API](https://cloud.google.com/alloydb/docs/reference/rest). This allows tools to perform administrative tasks on AlloyDB resources, such as managing clusters, instances, and users.
+The `alloydb-admin` source provides a client to interact with the [Google
+AlloyDB API](https://cloud.google.com/alloydb/docs/reference/rest). This allows
+tools to perform administrative tasks on AlloyDB resources, such as managing
+clusters, instances, and users.
 
 Authentication can be handled in two ways:
-1.  **Application Default Credentials (ADC):** By default, the source uses ADC to authenticate with the API.
-2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.
+1.  **Application Default Credentials (ADC):** By default, the source uses ADC
+    to authenticate with the API.
+2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will
+    expect an OAuth 2.0 access token to be provided by the client (e.g., a web
+    browser) for each request.
 
 ## Example
 
@@ -7180,9 +8322,9 @@ sources:
 ```
 
 ## Reference
-| **field**      | **type** | **required** | **description**                                                                                                                                                           |
-|----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind           |  string  |     true     | Must be "alloydb-admin".                                                                                                                                                |
+| **field**      | **type** | **required** | **description**                                                                                                                                |
+|----------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind           |  string  |     true     | Must be "alloydb-admin".                                                                                                                       |
 | useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
 
 # Tools
@@ -7469,6 +8611,11 @@ Tools for interacting with ClickHouse databases and tables.
 
 
 
+# Cloud Monitoring
+Tools that work with Cloud Monitoring source.
+
+
+
 # Cloud SQL
 Tools that work with Cloud SQL. 
 
@@ -7636,10 +8783,11 @@ tools:
 
 ### Example with Template Parameters
 
-> **Note:** This tool allows direct modifications to the SQL statement, including identifiers, column names,
-> and table names. **This makes it more vulnerable to SQL injections**. Using basic parameters 
-> only (see above) is recommended for performance and safety reasons. For more details, please
-> check [templateParameters](_index#template-parameters).
+> **Note:** This tool allows direct modifications to the SQL statement,
+> including identifiers, column names, and table names. **This makes it more
+> vulnerable to SQL injections**. Using basic parameters  only (see above) is
+> recommended for performance and safety reasons. For more details, please check
+> [templateParameters](_index#template-parameters).
 
 ```yaml
 tools:
@@ -7662,14 +8810,14 @@ tools:
 
 ## Reference
 
-| **field**           |                  **type**                                 | **required** | **description**                                                                                                                            |
-|---------------------|:---------------------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
-| kind                |                   string                                  |     true     | Must be "yugabytedb-sql".                                                                                                                    |
-| source              |                   string                                  |     true     | Name of the source the SQL should execute on.                                                                                              |
-| description         |                   string                                  |     true     | Description of the tool that is passed to the LLM.                                                                                         |
-| statement           |                   string                                  |     true     | SQL statement to execute on.                                                                                                               |
-| parameters          | [parameters](_index#specifying-parameters)                |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
-| templateParameters  |  [templateParameters](_index#template-parameters)         |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| **field**          |                     **type**                     | **required** | **description**                                                                                                                            |
+|--------------------|:------------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
+| kind               |                      string                      |     true     | Must be "yugabytedb-sql".                                                                                                                  |
+| source             |                      string                      |     true     | Name of the source the SQL should execute on.                                                                                              |
+| description        |                      string                      |     true     | Description of the tool that is passed to the LLM.                                                                                         |
+| statement          |                      string                      |     true     | SQL statement to execute on.                                                                                                               |
+| parameters         |    [parameters](_index#specifying-parameters)    |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
+| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
 
 
 # Samples
@@ -7695,10 +8843,18 @@ on how to [connect to Toolbox via MCP](../../how-to/connect_via_mcp.md).
 
 This guide assumes you have already done the following:
 
-1.  [Create a AlloyDB cluster and instance](https://cloud.google.com/alloydb/docs/cluster-create) with a database and user.
-1. Connect to the instance using [AlloyDB Studio](https://cloud.google.com/alloydb/docs/manage-data-using-studio), [`psql` command-line tool](https://www.postgresql.org/download/), or any other PostgreSQL client.
+1.  [Create a AlloyDB cluster and
+    instance](https://cloud.google.com/alloydb/docs/cluster-create) with a
+    database and user.
+1. Connect to the instance using [AlloyDB
+   Studio](https://cloud.google.com/alloydb/docs/manage-data-using-studio),
+   [`psql` command-line tool](https://www.postgresql.org/download/), or any
+   other PostgreSQL client.
 
-2.  Enable the `pgvector` and `google_ml_integration` [extensions](https://cloud.google.com/alloydb/docs/ai). These are required for Semantic Search and Natural Language to SQL tools. Run the following SQL commands:
+1.  Enable the `pgvector` and `google_ml_integration`
+    [extensions](https://cloud.google.com/alloydb/docs/ai). These are required
+    for Semantic Search and Natural Language to SQL tools. Run the following SQL
+    commands:
 
     ```sql
     CREATE EXTENSION IF NOT EXISTS "vector";
@@ -7709,7 +8865,8 @@ This guide assumes you have already done the following:
 
 ## Step 1: Set up your AlloyDB database
 
-In this section, we will create the necessary tables and functions in your AlloyDB instance.
+In this section, we will create the necessary tables and functions in your
+AlloyDB instance.
 
 1.  Create tables using the following commands:
 
@@ -7793,7 +8950,7 @@ In this section, we will download and install the Toolbox binary.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    export VERSION="0.14.0"
+    export VERSION="0.15.0"
     curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -7806,9 +8963,11 @@ In this section, we will download and install the Toolbox binary.
 
 ## Step 3: Configure the tools
 
-Create a `tools.yaml` file and add the following content. You must replace the placeholders with your actual AlloyDB configuration.
+Create a `tools.yaml` file and add the following content. You must replace the
+placeholders with your actual AlloyDB configuration.
 
-First, define the data source for your tools. This tells Toolbox how to connect to your AlloyDB instance.
+First, define the data source for your tools. This tells Toolbox how to connect
+to your AlloyDB instance.
 
 ```yaml
 sources:
@@ -7823,11 +8982,14 @@ sources:
     password: YOUR_PASSWORD
 ```
 
-Next, define the tools the agent can use. We will categorize them into three types:
+Next, define the tools the agent can use. We will categorize them into three
+types:
 
 ### 1. Structured Queries Tools
 
-These tools execute predefined SQL statements. They are ideal for common, structured queries like managing a shopping cart. Add the following to your `tools.yaml` file:
+These tools execute predefined SQL statements. They are ideal for common,
+structured queries like managing a shopping cart. Add the following to your
+`tools.yaml` file:
 
 ```yaml
 tools:
@@ -7904,7 +9066,9 @@ tools:
 
 ### 2. Semantic Search Tools
 
-These tools use vector embeddings to find the most relevant results based on the meaning of a user's query, rather than just keywords. Append the following tools to the `tools` section in your `tools.yaml`:
+These tools use vector embeddings to find the most relevant results based on the
+meaning of a user's query, rather than just keywords. Append the following tools
+to the `tools` section in your `tools.yaml`:
 
 ```yaml
   search-product-recommendations:
@@ -7932,14 +9096,21 @@ These tools use vector embeddings to find the most relevant results based on the
 
 ### 3. Natural Language to SQL (NL2SQL) Tools
 
-1. Create a [natural language configuration](https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#create-config) for your AlloyDB cluster.
+1. Create a [natural language
+   configuration](https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#create-config)
+   for your AlloyDB cluster.
 
     {{< notice tip >}}Before using NL2SQL tools,
     you must first install the `alloydb_ai_nl` extension and
-    create the [semantic layer](https://cloud.google.com/alloydb/docs/ai/natural-language-overview) under a configuration named `flower_shop`.
+    create the [semantic
+    layer](https://cloud.google.com/alloydb/docs/ai/natural-language-overview)
+    under a configuration named `flower_shop`.
     {{< /notice >}}
 
-2. Configure your NL2SQL tool to use your configuration. These tools translate natural language questions into SQL queries, allowing users to interact with the database conversationally. Append the following tool to the `tools` section:
+2. Configure your NL2SQL tool to use your configuration. These tools translate
+   natural language questions into SQL queries, allowing users to interact with
+   the database conversationally. Append the following tool to the `tools`
+   section:
 
 ```yaml
   ask-questions-about-products:
@@ -7952,7 +9123,8 @@ These tools use vector embeddings to find the most relevant results based on the
       Always SELECT the IDs of objects when generating queries.
 ```
 
-Finally, group the tools into a `toolset` to make them available to the model. Add the following to the end of your `tools.yaml` file:
+Finally, group the tools into a `toolset` to make them available to the model.
+Add the following to the end of your `tools.yaml` file:
 
 ```yaml
 toolsets:
@@ -7985,7 +9157,8 @@ Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
 1. Type `y` when it asks to install the inspector package.
 
-1. It should show the following when the MCP Inspector is up and running (please take note of `<YOUR_SESSION_TOKEN>`):
+1. It should show the following when the MCP Inspector is up and running (please
+   take note of `<YOUR_SESSION_TOKEN>`):
 
     ```bash
     Starting MCP inspector...
@@ -8204,7 +9377,7 @@ to use BigQuery, and then run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -8838,7 +10011,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -9032,7 +10205,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -9156,7 +10329,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -9266,7 +10439,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -9471,24 +10644,24 @@ This page describes the `toolbox` command-line options.
 
 ## Reference
 
-| Flag (Short) | Flag (Long) | Description | Default |
-|---|---|---|---|
-| `-a` | `--address` | Address of the interface the server will listen on. | `127.0.0.1` |
-| | `--disable-reload` | Disables dynamic reloading of tools file. | |
-| `-h` | `--help` | help for toolbox | |
-| | `--log-level` | Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'. | `info` |
-| | `--logging-format` | Specify logging format to use. Allowed: 'standard' or 'JSON'. | `standard` |
-| `-p` | `--port` | Port the server will listen on. | `5000` |
-| | `--prebuilt` | Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values. | |
-| | `--stdio` | Listens via MCP STDIO instead of acting as a remote HTTP server. | |
-| | `--telemetry-gcp` | Enable exporting directly to Google Cloud Monitoring. | |
-| | `--telemetry-otlp` | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318') | |
-| | `--telemetry-service-name` | Sets the value of the service.name resource attribute for telemetry data. | `toolbox` |
-| | `--tools-file` | File path specifying the tool configuration. Cannot be used with --prebuilt, --tools-files, or --tools-folder. | |
-| | `--tools-files` | Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --prebuilt, --tools-file, or --tools-folder. | |
-| | `--tools-folder` | Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --prebuilt, --tools-file, or --tools-files. | |
-| | `--ui` | Launches the Toolbox UI web server. | |
-| `-v` | `--version` | version for toolbox | |
+| Flag (Short) | Flag (Long)                | Description                                                                                                                                                                                   | Default     |
+|--------------|----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
+| `-a`         | `--address`                | Address of the interface the server will listen on.                                                                                                                                           | `127.0.0.1` |
+|              | `--disable-reload`         | Disables dynamic reloading of tools file.                                                                                                                                                     |             |
+| `-h`         | `--help`                   | help for toolbox                                                                                                                                                                              |             |
+|              | `--log-level`              | Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.                                                                                                                  | `info`      |
+|              | `--logging-format`         | Specify logging format to use. Allowed: 'standard' or 'JSON'.                                                                                                                                 | `standard`  |
+| `-p`         | `--port`                   | Port the server will listen on.                                                                                                                                                               | `5000`      |
+|              | `--prebuilt`               | Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values.                                     |             |
+|              | `--stdio`                  | Listens via MCP STDIO instead of acting as a remote HTTP server.                                                                                                                              |             |
+|              | `--telemetry-gcp`          | Enable exporting directly to Google Cloud Monitoring.                                                                                                                                         |             |
+|              | `--telemetry-otlp`         | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')                                                                                 |             |
+|              | `--telemetry-service-name` | Sets the value of the service.name resource attribute for telemetry data.                                                                                                                     | `toolbox`   |
+|              | `--tools-file`             | File path specifying the tool configuration. Cannot be used with --prebuilt, --tools-files, or --tools-folder.                                                                                |             |
+|              | `--tools-files`            | Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --prebuilt, --tools-file, or --tools-folder.                                                    |             |
+|              | `--tools-folder`           | Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --prebuilt, --tools-file, or --tools-files. |             |
+|              | `--ui`                     | Launches the Toolbox UI web server.                                                                                                                                                           |             |
+| `-v`         | `--version`                | version for toolbox                                                                                                                                                                           |             |
 
 ## Examples
 
@@ -9522,10 +10695,15 @@ The CLI supports multiple mutually exclusive ways to specify tool configurations
 - `--tools-folder`: Directory containing YAML files to load and merge
 
 **Prebuilt Configurations:**
-- `--prebuilt`: Use predefined configurations for specific database types (e.g., 'bigquery', 'postgres', 'spanner'). See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values.
+- `--prebuilt`: Use predefined configurations for specific database types (e.g.,
+  'bigquery', 'postgres', 'spanner'). See [Prebuilt Tools
+  Reference](prebuilt-tools.md) for allowed values.
 
 {{< notice tip >}}
-The CLI enforces mutual exclusivity between configuration source flags, preventing simultaneous use of `--prebuilt` with file-based options, and ensuring only one of `--tools-file`, `--tools-files`, or `--tools-folder` is used at a time.
+The CLI enforces mutual exclusivity between configuration source flags,
+preventing simultaneous use of `--prebuilt` with file-based options, and
+ensuring only one of `--tools-file`, `--tools-files`, or `--tools-folder` is
+used at a time.
 {{< /notice >}}
 
 ### Hot Reload
@@ -9535,15 +10713,20 @@ Toolbox enables dynamic reloading by default. To disable, use the
 
 ### Toolbox UI
 
-To launch Toolbox's interactive UI, use the `--ui` flag. This allows you to test tools and toolsets with features such as authorized parameters. To learn more, visit [Toolbox UI](../how-to/toolbox-ui/index.md).
+To launch Toolbox's interactive UI, use the `--ui` flag. This allows you to test
+tools and toolsets with features such as authorized parameters. To learn more,
+visit [Toolbox UI](../how-to/toolbox-ui/index.md).
 
 # Prebuilt Tools
 This page lists all the prebuilt tools available.
 
 
-Prebuilt tools are reusable, pre-packaged toolsets that are designed to extend the capabilities of agents. These tools are built to be generic and adaptable, allowing developers to interact with and take action on databases.
+Prebuilt tools are reusable, pre-packaged toolsets that are designed to extend
+the capabilities of agents. These tools are built to be generic and adaptable,
+allowing developers to interact with and take action on databases.
 
-See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
+See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for
+details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 
 ## AlloyDB Postgres
 
@@ -9554,17 +10737,23 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `ALLOYDB_POSTGRES_CLUSTER`: The ID of your AlloyDB cluster.
     *   `ALLOYDB_POSTGRES_INSTANCE`: The ID of your AlloyDB instance.
     *   `ALLOYDB_POSTGRES_DATABASE`: The name of the database to connect to.
-    *   `ALLOYDB_POSTGRES_USER`: (Optional) The database username. Defaults to IAM authentication if unspecified.
-    *   `ALLOYDB_POSTGRES_PASSWORD`: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.
-    *   `ALLOYDB_POSTGRES_IP_TYPE`: (Optional) The IP type i.e. "Public" or "Private" (Default: Public).
+    *   `ALLOYDB_POSTGRES_USER`: (Optional) The database username. Defaults to
+        IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_PASSWORD`: (Optional) The password for the database
+        user. Defaults to IAM authentication if unspecified.
+    *   `ALLOYDB_POSTGRES_IP_TYPE`: (Optional) The IP type i.e. "Public" or
+        "Private" (Default: Public).
 *   **Permissions:**
     *   **AlloyDB Client** (`roles/alloydb.client`) to connect to the instance.
-    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to
+        execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
-    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
-    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the
+        database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the
+        database.
     *   `list_top_bloated_tables`: List top bloated tables in the database.
     *   `list_replication_slots`: Lists replication slots in the database.
     *   `list_invalid_indexes`: Lists invalid indexes in the database.
@@ -9573,18 +10762,36 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 ## AlloyDB Postgres Admin
 
 * `--prebuilt` value: `alloydb-postgres-admin`
-*   **Environment Variables:**
-    *   `API_KEY`: Your API key for the AlloyDB API.
 *   **Permissions:**
-    *   **AlloyDB Admin** (`roles/alloydb.admin`) IAM role is required on the project.
+    *   **AlloyDB Viewer** (`roles/alloydb.viewer`) is required for `list` and
+        `get` tools.
+    *   **AlloyDB Admin** (`roles/alloydb.admin`) is required for `create` tools.
 *   **Tools:**
-    *   `alloydb-create-cluster`: Creates a new AlloyDB cluster.
-    *   `alloydb-operations-get`: Polls the operations API to track the status of long-running operations.
-    *   `alloydb-create-instance`: Creates a new AlloyDB instance within a cluster.
-    *   `alloydb-list-clusters`: Lists all AlloyDB clusters in a project.
-    *   `alloydb-list-instances`: Lists all instances within an AlloyDB cluster.
-    *   `alloydb-list-users`: Lists all database users within an AlloyDB cluster.
-    *   `alloydb-create-user`: Creates a new database user in an AlloyDB cluster.
+    *   `create_cluster`: Creates a new AlloyDB cluster.
+    *   `list_clusters`: Lists all AlloyDB clusters in a project.
+    *   `get_cluster`: Gets information about a specified AlloyDB cluster.
+    *   `create_instance`: Creates a new AlloyDB instance within a cluster.
+    *   `list_instances`: Lists all instances within an AlloyDB cluster.
+    *   `get_instance`: Gets information about a specified AlloyDB instance.
+    *   `create_user`: Creates a new database user in an AlloyDB cluster.
+    *   `list_users`: Lists all database users within an AlloyDB cluster.
+    *   `get_user`: Gets information about a specified database user in an
+        AlloyDB cluster.
+    *   `wait_for_operation`: Polls the operations API to track the status of
+        long-running operations.
+
+## AlloyDB Postgres Observability
+
+*   `--prebuilt` value: `alloydb-postgres-observability`
+*   **Permissions:**
+    *   **Monitoring Viewer** (`roles/monitoring.viewer`) is required on the
+        project to view monitoring data.
+*   **Tools:**
+    *   `get_system_metrics`: Fetches system level cloud monitoring data
+        (timeseries metrics) for an AlloyDB instance using a PromQL query.
+    *   `get_query_metrics`: Fetches query level cloud monitoring data
+        (timeseries metrics) for queries running in an AlloyDB instance using a
+        PromQL query.
 
 ## BigQuery
 
@@ -9593,19 +10800,30 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `BIGQUERY_PROJECT`: The GCP project ID.
     *   `BIGQUERY_LOCATION`: (Optional) The dataset location.
 *   **Permissions:**
-    *   **BigQuery User** (`roles/bigquery.user`) to execute queries and view metadata.
-    *   **BigQuery Metadata Viewer** (`roles/bigquery.metadataViewer`) to view all datasets.
-    *   **BigQuery Data Editor** (`roles/bigquery.dataEditor`) to create or modify datasets and tables.
-    *   **Gemini for Google Cloud** (`roles/cloudaicompanion.user`) to use the conversational analytics API.
+    *   **BigQuery User** (`roles/bigquery.user`) to execute queries and view
+        metadata.
+    *   **BigQuery Metadata Viewer** (`roles/bigquery.metadataViewer`) to view
+        all datasets.
+    *   **BigQuery Data Editor** (`roles/bigquery.dataEditor`) to create or
+        modify datasets and tables.
+    *   **Gemini for Google Cloud** (`roles/cloudaicompanion.user`) to use the
+        conversational analytics API.
 *   **Tools:**
-    *   `analyze_contribution`: Use this tool to perform contribution analysis, also called key driver analysis.
-    *   `ask_data_insights`: Use this tool to perform data analysis, get insights, or answer complex questions about the contents of specific BigQuery tables. For more information on required roles, API setup, and IAM configuration, see the setup and authentication section of the [Conversational Analytics API documentation](https://cloud.google.com/gemini/docs/conversational-analytics-api/overview).
+    *   `analyze_contribution`: Use this tool to perform contribution analysis,
+        also called key driver analysis.
+    *   `ask_data_insights`: Use this tool to perform data analysis, get
+        insights, or answer complex questions about the contents of specific
+        BigQuery tables. For more information on required roles, API setup, and
+        IAM configuration, see the setup and authentication section of the
+        [Conversational Analytics API
+        documentation](https://cloud.google.com/gemini/docs/conversational-analytics-api/overview).
     *   `execute_sql`: Executes a SQL statement.
     *   `forecast`: Use this tool to forecast time series data.
     *   `get_dataset_info`: Gets dataset metadata.
     *   `get_table_info`: Gets table metadata.
     *   `list_dataset_ids`: Lists datasets.
     *   `list_table_ids`: Lists tables.
+    *   `search_catalog`: Search for entries based on the provided query.
 
 ## Cloud SQL for MySQL
 
@@ -9620,11 +10838,56 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `CLOUD_SQL_MYSQL_IP_TYPE`: The IP type i.e. "Public
      or "Private" (Default: Public).
 *   **Permissions:**
-    *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
-    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+    *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the
+        instance.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to
+        execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `get_query_plan`: Provides information about how MySQL executes a SQL
+        statement.
+
+## Cloud SQL for MySQL Observability
+
+*   `--prebuilt` value: `cloud-sql-mysql-observability`
+*   **Permissions:**
+    *   **Monitoring Viewer** (`roles/monitoring.viewer`) is required on the
+        project to view monitoring data.
+*   **Tools:**
+    *   `get_system_metrics`: Fetches system level cloud monitoring data
+        (timeseries metrics) for a MySQL instance using a PromQL query.
+    *   `get_query_metrics`: Fetches query level cloud monitoring data
+        (timeseries metrics) for queries running in a MySQL instance using a
+        PromQL query.
+
+## Cloud SQL for MySQL Admin
+
+*   `--prebuilt` value: `cloud-sql-mysql-admin`
+*   **Permissions:**
+    *   **Cloud SQL Viewer** (`roles/cloudsql.viewer`): Provides read-only
+        access to resources.
+        * `get_instance`
+        * `list_instances`
+        * `list_databases`
+        * `wait_for_operation`
+    *   **Cloud SQL Editor** (`roles/cloudsql.editor`): Provides permissions to
+        manage existing resources.
+        * All `viewer` tools
+        * `create_database`
+    *   **Cloud SQL Admin** (`roles/cloudsql.admin`): Provides full control over
+        all resources.
+        * All `editor` and `viewer` tools
+        * `create_instance`
+        * `create_user`
+*   **Tools:**
+    *   `create_instance`: Creates a new Cloud SQL for MySQL instance.
+    *   `get_instance`: Gets information about a Cloud SQL instance.
+    *   `list_instances`: Lists Cloud SQL instances in a project.
+    *   `create_database`: Creates a new database in a Cloud SQL instance.
+    *   `list_databases`: Lists all databases for a Cloud SQL instance.
+    *   `create_user`: Creates a new user in a Cloud SQL instance.
+    *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
 
 ## Cloud SQL for PostgreSQL
 
@@ -9634,21 +10897,69 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `CLOUD_SQL_POSTGRES_REGION`: The region of your Cloud SQL instance.
     *   `CLOUD_SQL_POSTGRES_INSTANCE`: The ID of your Cloud SQL instance.
     *   `CLOUD_SQL_POSTGRES_DATABASE`: The name of the database to connect to.
-    *   `CLOUD_SQL_POSTGRES_USER`: (Optional) The database username. Defaults to IAM authentication if unspecified.
-    *   `CLOUD_SQL_POSTGRES_PASSWORD`: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.
-    *   `CLOUD_SQL_POSTGRES_IP_TYPE`: (Optional) The IP type i.e. "Public" or "Private" (Default: Public).
+    *   `CLOUD_SQL_POSTGRES_USER`: (Optional) The database username. Defaults to
+        IAM authentication if unspecified.
+    *   `CLOUD_SQL_POSTGRES_PASSWORD`: (Optional) The password for the database
+        user. Defaults to IAM authentication if unspecified.
+    *   `CLOUD_SQL_POSTGRES_IP_TYPE`: (Optional) The IP type i.e. "Public" or
+        "Private" (Default: Public).
 *   **Permissions:**
-    *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
-    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+    *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the
+        instance.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to
+        execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
-    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
-    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the
+        database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the
+        database.
     *   `list_top_bloated_tables`: List top bloated tables in the database.
     *   `list_replication_slots`: Lists replication slots in the database.
     *   `list_invalid_indexes`: Lists invalid indexes in the database.
     *   `get_query_plan`: Generate the execution plan of a statement.
+
+## Cloud SQL for PostgreSQL Observability
+
+*   `--prebuilt` value: `cloud-sql-postgres-observability`
+*   **Permissions:**
+    *   **Monitoring Viewer** (`roles/monitoring.viewer`) is required on the
+        project to view monitoring data.
+*   **Tools:**
+    *   `get_system_metrics`: Fetches system level cloud monitoring data
+        (timeseries metrics) for a Postgres instance using a PromQL query.
+    *   `get_query_metrics`: Fetches query level cloud monitoring data
+        (timeseries metrics) for queries running in Postgres instance using a
+        PromQL query.
+
+## Cloud SQL for PostgreSQL Admin
+
+*   `--prebuilt` value: `cloud-sql-postgres-admin`
+*   **Permissions:**
+    *   **Cloud SQL Viewer** (`roles/cloudsql.viewer`): Provides read-only
+        access to resources.
+        * `get_instance`
+        * `list_instances`
+        * `list_databases`
+        * `wait_for_operation`
+    *   **Cloud SQL Editor** (`roles/cloudsql.editor`): Provides permissions to
+        manage existing resources.
+        * All `viewer` tools
+        * `create_database`
+    *   **Cloud SQL Admin** (`roles/cloudsql.admin`): Provides full control over
+        all resources.
+        * All `editor` and `viewer` tools
+        * `create_instance`
+        * `create_user`
+*   **Tools:**
+    *   `create_instance`: Creates a new Cloud SQL for PostgreSQL instance.
+    *   `get_instance`: Gets information about a Cloud SQL instance.
+    *   `list_instances`: Lists Cloud SQL instances in a project.
+    *   `create_database`: Creates a new database in a Cloud SQL instance.
+    *   `list_databases`: Lists all databases for a Cloud SQL instance.
+    *   `create_user`: Creates a new user in a Cloud SQL instance.
+    *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
 
 ## Cloud SQL for SQL Server
 
@@ -9661,13 +10972,54 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `CLOUD_SQL_MSSQL_IP_ADDRESS`: The IP address of the Cloud SQL instance.
     *   `CLOUD_SQL_MSSQL_USER`: The database username.
     *   `CLOUD_SQL_MSSQL_PASSWORD`: The password for the database user.
-    *   `CLOUD_SQL_MSSQL_IP_TYPE`: (Optional) The IP type i.e. "Public" or "Private" (Default: Public).
+    *   `CLOUD_SQL_MSSQL_IP_TYPE`: (Optional) The IP type i.e. "Public" or
+        "Private" (Default: Public).
 *   **Permissions:**
-    *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the instance.
-    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+    *   **Cloud SQL Client** (`roles/cloudsql.client`) to connect to the
+        instance.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to
+        execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+
+## Cloud SQL for SQL Server Observability
+
+*   `--prebuilt` value: `cloud-sql-mssql-observability`
+*   **Permissions:**
+    *   **Monitoring Viewer** (`roles/monitoring.viewer`) is required on the
+        project to view monitoring data.
+*   **Tools:**
+    *   `get_system_metrics`: Fetches system level cloud monitoring data
+        (timeseries metrics) for a SQL Server instance using a PromQL query.
+
+## Cloud SQL for SQL Server Admin
+
+*   `--prebuilt` value: `cloud-sql-mssql-admin`
+*   **Permissions:**
+    *   **Cloud SQL Viewer** (`roles/cloudsql.viewer`): Provides read-only
+        access to resources.
+        * `get_instance`
+        * `list_instances`
+        * `list_databases`
+        * `wait_for_operation`
+    *   **Cloud SQL Editor** (`roles/cloudsql.editor`): Provides permissions to
+        manage existing resources.
+        * All `viewer` tools
+        * `create_database`
+    *   **Cloud SQL Admin** (`roles/cloudsql.admin`): Provides full control over
+        all resources.
+        * All `editor` and `viewer` tools
+        * `create_instance`
+        * `create_user`
+*   **Tools:**
+    *   `create_instance`: Creates a new Cloud SQL for SQL Server instance.
+    *   `get_instance`: Gets information about a Cloud SQL instance.
+    *   `list_instances`: Lists Cloud SQL instances in a project.
+    *   `create_database`: Creates a new database in a Cloud SQL instance.
+    *   `list_databases`: Lists all databases for a Cloud SQL instance.
+    *   `create_user`: Creates a new user in a Cloud SQL instance.
+    *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
 
 ## Dataplex
 
@@ -9675,29 +11027,39 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 *   **Environment Variables:**
     *   `DATAPLEX_PROJECT`: The GCP project ID.
 *   **Permissions:**
-    *   **Dataplex Reader** (`roles/dataplex.viewer`) to search and look up entries.
+    *   **Dataplex Reader** (`roles/dataplex.viewer`) to search and look up
+        entries.
     *   **Dataplex Editor** (`roles/dataplex.editor`) to modify entries.
 *   **Tools:**
     *   `dataplex_search_entries`: Searches for entries in Dataplex Catalog.
-    *   `dataplex_lookup_entry`: Retrieves a specific entry from Dataplex Catalog.
-    *   `dataplex_search_aspect_types`: Finds aspect types relevant to the query.
+    *   `dataplex_lookup_entry`: Retrieves a specific entry from Dataplex
+        Catalog.
+    *   `dataplex_search_aspect_types`: Finds aspect types relevant to the
+        query.
 
 ## Firestore
 
 *   `--prebuilt` value: `firestore`
 *   **Environment Variables:**
     *   `FIRESTORE_PROJECT`: The GCP project ID.
-    *   `FIRESTORE_DATABASE`: (Optional) The Firestore database ID. Defaults to "(default)".
+    *   `FIRESTORE_DATABASE`: (Optional) The Firestore database ID. Defaults to
+        "(default)".
 *   **Permissions:**
-    *   **Cloud Datastore User** (`roles/datastore.user`) to get documents, list collections, and query collections.
-    *   **Firebase Rules Viewer** (`roles/firebaserules.viewer`) to get and validate Firestore rules.
+    *   **Cloud Datastore User** (`roles/datastore.user`) to get documents, list
+        collections, and query collections.
+    *   **Firebase Rules Viewer** (`roles/firebaserules.viewer`) to get and
+        validate Firestore rules.
 *   **Tools:**
-    *   `firestore-get-documents`: Gets multiple documents from Firestore by their paths.
-    *   `firestore-list-collections`: Lists Firestore collections for a given parent path.
-    *   `firestore-delete-documents`: Deletes multiple documents from Firestore.
-    *   `firestore-query-collection`: Retrieves one or more Firestore documents from a collection.
-    *   `firestore-get-rules`: Retrieves the active Firestore security rules.
-    *   `firestore-validate-rules`: Checks the provided Firestore Rules source for syntax and validation errors.
+    *   `get_documents`: Gets multiple documents from Firestore by their paths.
+    *   `add_documents`: Adds a new document to a Firestore collection.
+    *   `update_document`: Updates an existing document in Firestore.
+    *   `list_collections`: Lists Firestore collections for a given parent path.
+    *   `delete_documents`: Deletes multiple documents from Firestore.
+    *   `query_collection`: Retrieves one or more Firestore documents from a
+        collection.
+    *   `get_rules`: Retrieves the active Firestore security rules.
+    *   `validate_rules`: Checks the provided Firestore Rules source for syntax
+        and validation errors.
 
 ## Looker
 
@@ -9708,7 +11070,8 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `LOOKER_CLIENT_SECRET`: The client secret for the Looker API.
     *   `LOOKER_VERIFY_SSL`: Whether to verify SSL certificates.
 *   **Permissions:**
-    *   A Looker account with permissions to access the desired models, explores, and data is required.
+    *   A Looker account with permissions to access the desired models,
+        explores, and data is required.
 *   **Tools:**
     *   `get_models`: Retrieves the list of LookML models.
     *   `get_explores`: Retrieves the list of explores in a model.
@@ -9736,7 +11099,8 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `MSSQL_USER`: The database username.
     *   `MSSQL_PASSWORD`: The password for the database user.
 *   **Permissions:**
-    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to
+        execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
@@ -9751,10 +11115,13 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `MYSQL_USER`: The database username.
     *   `MYSQL_PASSWORD`: The password for the database user.
 *   **Permissions:**
-    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to
+        execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `get_query_plan`: Provides information about how MySQL executes a SQL
+        statement.
 
 ## OceanBase
 
@@ -9766,7 +11133,8 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `OCEANBASE_USER`: The database username.
     *   `OCEANBASE_PASSWORD`: The password for the database user.
 *   **Permissions:**
-    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to
+        execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
@@ -9780,14 +11148,18 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `POSTGRES_DATABASE`: The name of the database to connect to.
     *   `POSTGRES_USER`: The database username.
     *   `POSTGRES_PASSWORD`: The password for the database user.
-    *   `POSTGRES_QUERY_PARAMS`: (Optional) Raw query to be added to the db connection string.
+    *   `POSTGRES_QUERY_PARAMS`: (Optional) Raw query to be added to the db
+        connection string.
 *   **Permissions:**
-    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to
+        execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
-    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the database.
-    *   `list_memory_configurations`: Lists memory-related configurations in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the
+        database.
+    *   `list_memory_configurations`: Lists memory-related configurations in the
+        database.
     *   `list_top_bloated_tables`: List top bloated tables in the database.
     *   `list_replication_slots`: Lists replication slots in the database.
     *   `list_invalid_indexes`: Lists invalid indexes in the database.
@@ -9801,8 +11173,10 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `SPANNER_INSTANCE`: The Spanner instance ID.
     *   `SPANNER_DATABASE`: The Spanner database ID.
 *   **Permissions:**
-    *   **Cloud Spanner Database Reader** (`roles/spanner.databaseReader`) to execute DQL queries and list tables.
-    *   **Cloud Spanner Database User** (`roles/spanner.databaseUser`) to execute DML queries.
+    *   **Cloud Spanner Database Reader** (`roles/spanner.databaseReader`) to
+        execute DQL queries and list tables.
+    *   **Cloud Spanner Database User** (`roles/spanner.databaseUser`) to
+        execute DML queries.
 *   **Tools:**
     *   `execute_sql`: Executes a DML SQL query.
     *   `execute_sql_dql`: Executes a DQL SQL query.
@@ -9816,18 +11190,23 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
     *   `SPANNER_INSTANCE`: The Spanner instance ID.
     *   `SPANNER_DATABASE`: The Spanner database ID.
 *   **Permissions:**
-    *   **Cloud Spanner Database Reader** (`roles/spanner.databaseReader`) to execute DQL queries and list tables.
-    *   **Cloud Spanner Database User** (`roles/spanner.databaseUser`) to execute DML queries.
+    *   **Cloud Spanner Database Reader** (`roles/spanner.databaseReader`) to
+        execute DQL queries and list tables.
+    *   **Cloud Spanner Database User** (`roles/spanner.databaseUser`) to
+        execute DML queries.
 *   **Tools:**
-    *   `execute_sql`: Executes a DML SQL query using the PostgreSQL interface for Spanner.
-    *   `execute_sql_dql`: Executes a DQL SQL query using the PostgreSQL interface for Spanner.
+    *   `execute_sql`: Executes a DML SQL query using the PostgreSQL interface
+        for Spanner.
+    *   `execute_sql_dql`: Executes a DQL SQL query using the PostgreSQL
+        interface for Spanner.
     *   `list_tables`: Lists tables in the database.
 
 ## SQLite
 
 *   `--prebuilt` value: `sqlite`
 *   **Environment Variables:**
-    *   `SQLITE_DATABASE`: The path to the SQLite database file (e.g., `./sample.db`).
+    *   `SQLITE_DATABASE`: The path to the SQLite database file (e.g.,
+        `./sample.db`).
 *   **Permissions:**
     *   File system read/write permissions for the specified database file.
 *   **Tools:**
@@ -9838,7 +11217,8 @@ See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for detail
 
 *   `--prebuilt` value: `neo4j`
 *   **Environment Variables:**
-    *   `NEO4J_URI`: The URI of the Neo4j instance (e.g., `bolt://localhost:7687`).
+    *   `NEO4J_URI`: The URI of the Neo4j instance (e.g.,
+        `bolt://localhost:7687`).
     *   `NEO4J_DATABASE`: The name of the Neo4j database to connect to.
     *   `NEO4J_USERNAME`: The username for the Neo4j instance.
     *   `NEO4J_PASSWORD`: The password for the Neo4j instance.
