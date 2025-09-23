@@ -114,7 +114,7 @@ func newTracerProvider(ctx context.Context, r *resource.Resource, telemetryOTLP 
 	if telemetryOTLP != "" {
 		// otlptracehttp provides an OTLP span exporter using HTTP with protobuf payloads.
 		// By default, the telemetry is sent to https://localhost:4318/v1/traces.
-		otlpExporter, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpoint(telemetryOTLP))
+		otlpExporter, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL(telemetryOTLP))
 		if err != nil {
 			return nil, err
 		}
@@ -140,7 +140,7 @@ func newMeterProvider(ctx context.Context, r *resource.Resource, telemetryOTLP s
 	if telemetryOTLP != "" {
 		// otlpmetrichttp provides an OTLP metrics exporter using HTTP with protobuf payloads.
 		// By default, the telemetry is sent to https://localhost:4318/v1/metrics.
-		otlpExporter, err := otlpmetrichttp.New(ctx, otlpmetrichttp.WithEndpoint(telemetryOTLP))
+		otlpExporter, err := otlpmetrichttp.New(ctx, otlpmetrichttp.WithEndpointURL(telemetryOTLP))
 		if err != nil {
 			return nil, err
 		}
