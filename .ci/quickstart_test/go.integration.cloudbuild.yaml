@@ -23,8 +23,8 @@ steps:
       - |
         set -ex
         export VERSION=$(cat ./cmd/version.txt)
-        chmod +x .ci/run_go_quickstart_tests.sh
-        .ci/run_go_quickstart_tests.sh
+        chmod +x .ci/quickstart_test/run_go_tests.sh
+        .ci/quickstart_test/run_go_tests.sh
     env:
       - 'CLOUD_SQL_INSTANCE=${_CLOUD_SQL_INSTANCE}'
       - 'GCP_PROJECT=${_GCP_PROJECT}'
