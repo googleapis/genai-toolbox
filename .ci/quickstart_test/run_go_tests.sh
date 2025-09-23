@@ -18,7 +18,7 @@ set -e
 
 TABLE_NAME="hotels_go"
 QUICKSTART_GO_DIR="docs/en/getting-started/quickstart/go"
-SQL_FILE=".ci/setup_hotels_sample.sql"
+SQL_FILE=".ci/quickstart_test/setup_hotels_sample.sql"
 
 # Initialize process IDs to empty at the top of the script
 PROXY_PID=""
