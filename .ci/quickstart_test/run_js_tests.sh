@@ -84,7 +84,6 @@ run_orch_test() {
 
     cd ..
 
-    # Export the framework name as an environment variable and run the test
     echo "--- Running tests for $orch_name ---"
     export ORCH_NAME="$orch_name"
     node --test quickstart.test.js
