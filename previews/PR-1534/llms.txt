@@ -52,6 +52,7 @@ List of reference documentation for resources in Toolbox.
   - [AlloyDB for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-1534/resources/sources/alloydb-pg/): AlloyDB for PostgreSQL is a fully-managed, PostgreSQL-compatible database for demanding transactional workloads.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/previews/PR-1534/resources/sources/bigquery/): BigQuery is Google Cloud's fully managed, petabyte-scale, and cost-effective analytics data warehouse that lets you run analytics over vast amounts of  data in near real time. With BigQuery, there's no infrastructure to set  up or manage, letting you focus on finding meaningful insights using  GoogleSQL and taking advantage of flexible pricing models across on-demand  and flat-rate options.
   - [Bigtable](https://googleapis.github.io/genai-toolbox/previews/PR-1534/resources/sources/bigtable/): Bigtable is a low-latency NoSQL database service for machine learning, operational analytics, and user-facing operations. It's a wide-column, key-value store that can scale to billions of rows and thousands of columns. With Bigtable, you can replicate your data to regions across the world for high availability and data resiliency.
+  - [Cassandra](https://googleapis.github.io/genai-toolbox/previews/PR-1534/resources/sources/cassandra/): Cassandra is a NoSQL distributed database known for its horizontal scalability, distributed architecture, and flexible schema definition.
   - [ClickHouse](https://googleapis.github.io/genai-toolbox/previews/PR-1534/resources/sources/clickhouse/): ClickHouse is an open-source, OLTP database.
   - [Cloud Monitoring](https://googleapis.github.io/genai-toolbox/previews/PR-1534/resources/sources/cloud-monitoring/): A "cloud-monitoring" source provides a client for the Cloud Monitoring API.
   - [Cloud SQL for MySQL](https://googleapis.github.io/genai-toolbox/previews/PR-1534/resources/sources/cloud-sql-mysql/): Cloud SQL for MySQL is a fully-managed database service for MySQL.
@@ -84,6 +85,7 @@ List of reference documentation for resources in Toolbox.
   - [AlloyDB for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-1534/resources/tools/alloydb/): Tools for AlloyDB for PostgreSQL.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/previews/PR-1534/resources/tools/bigquery/): Tools that work with BigQuery Sources.
   - [Bigtable](https://googleapis.github.io/genai-toolbox/previews/PR-1534/resources/tools/bigtable/): Tools that work with Bigtable Sources.
+  - [Cassandra](https://googleapis.github.io/genai-toolbox/previews/PR-1534/resources/tools/cassandra/): Tools that work with Cassandra Sources.
   - [ClickHouse](https://googleapis.github.io/genai-toolbox/previews/PR-1534/resources/tools/clickhouse/): Tools for interacting with ClickHouse databases and tables.
   - [Cloud Monitoring](https://googleapis.github.io/genai-toolbox/previews/PR-1534/resources/tools/cloudmonitoring/): Tools that work with Cloud Monitoring source.
   - [Cloud SQL](https://googleapis.github.io/genai-toolbox/previews/PR-1534/resources/tools/cloudsql/): Tools that work with Cloud SQL. 
