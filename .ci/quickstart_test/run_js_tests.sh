@@ -82,7 +82,6 @@ run_orch_test() {
       npm install
     fi
 
-    # Go back to the parent directory ('js/') to run the test
     cd ..
 
     # Export the framework name as an environment variable and run the test
