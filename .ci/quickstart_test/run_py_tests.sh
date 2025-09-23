@@ -25,27 +25,16 @@ PROXY_PID=""
 TOOLBOX_PID=""
 
 install_system_packages() {
-  apt-get update
-  apt-get install -y jq
-
-  jq_filter='
-    .python
-    | to_entries
-    | .[]
-    | select(.key != "jq" and .value != null)
-    | "\(.key)=\(.value)"
-  '
-
-  mapfile -t install_list < <(jq -r "$jq_filter" "$DEPS_FILE")
-
-  if (( ${#install_list[@]} > 0 )); then
-    apt-get install -y "${install_list[@]}"
-  fi
+  apt-get update && apt-get install -y \
+    postgresql-client \
+    python3-venv \
+    wget \
+    gettext-base  \
+    netcat-openbsd
 }
 
 start_cloud_sql_proxy() {
-  CLOUD_SQL_PROXY_VERSION=$(jq -r '.cloud_sql_proxy' "$DEPS_FILE")
-  wget "https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/${CLOUD_SQL_PROXY_VERSION}/cloud-sql-proxy.linux.amd64" -O /usr/local/bin/cloud-sql-proxy
+  wget "https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.10.0/cloud-sql-proxy.linux.amd64" -O /usr/local/bin/cloud-sql-proxy
   chmod +x /usr/local/bin/cloud-sql-proxy
   cloud-sql-proxy "${CLOUD_SQL_INSTANCE}" &
   PROXY_PID=$!
