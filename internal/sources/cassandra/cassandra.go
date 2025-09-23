@@ -111,7 +111,7 @@ func initCassandraSession(ctx context.Context, tracer trace.Tracer, c Config) (*
 	if c.Username != "" {
 		cluster.Authenticator = gocql.PasswordAuthenticator{
 			Username: c.Username,
-			Password: c.Password, // Password can be empty if the server allows it
+			Password: c.Password,
 		}
 	}
 
