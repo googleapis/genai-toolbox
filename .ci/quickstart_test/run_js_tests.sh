@@ -18,37 +18,22 @@ set -e
 
 TABLE_NAME="hotels_js"
 QUICKSTART_JS_DIR="docs/en/getting-started/quickstart/js"
-SQL_FILE=".ci/setup_hotels_sample.sql"
-DEPS_FILE=".ci/quickstart_dependencies.json"
+SQL_FILE=".ci/quickstart_test/setup_hotels_sample.sql"
 
 # Initialize process IDs to empty at the top of the script
 PROXY_PID=""
 TOOLBOX_PID=""
 
 install_system_packages() {
-  apt-get update
-  apt-get install -y jq
-
-  # Define the jq filter
-  jq_filter='
-    .js
-    | to_entries
-    | .[]
-    | select(.key != "jq" and .value != null)
-    | "\(.key)=\(.value)"
-  '
-
-  # Process the file with the filter and load the results into an array
-  mapfile -t install_list < <(jq -r "$jq_filter" "$DEPS_FILE")
-
-  if (( ${#install_list[@]} > 0 )); then
-    apt-get install -y "${install_list[@]}"
-  fi
+  apt-get update && apt-get install -y \
+    postgresql-client \
+    wget \
+    gettext-base  \
+    netcat-openbsd
 }
 
 start_cloud_sql_proxy() {
-  CLOUD_SQL_PROXY_VERSION=$(jq -r '.cloud_sql_proxy' "$DEPS_FILE")
-  wget "https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/${CLOUD_SQL_PROXY_VERSION}/cloud-sql-proxy.linux.amd64" -O /usr/local/bin/cloud-sql-proxy
+  wget "https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.10.0/cloud-sql-proxy.linux.amd64" -O /usr/local/bin/cloud-sql-proxy
   chmod +x /usr/local/bin/cloud-sql-proxy
   cloud-sql-proxy "${CLOUD_SQL_INSTANCE}" &
   PROXY_PID=$!
