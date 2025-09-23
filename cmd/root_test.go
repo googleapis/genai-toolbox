@@ -1409,7 +1409,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"clickhouse_database_tools": tools.ToolsetConfig{
 					Name:      "clickhouse_database_tools",
-					ToolNames: []string{"execute_sql", "list_databases"},
+					ToolNames: []string{"execute_sql", "list_databases", "list_tables"},
 				},
 			},
 		},
