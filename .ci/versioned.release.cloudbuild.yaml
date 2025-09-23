@@ -24,7 +24,7 @@ steps:
         if [[ $_PUSH_LATEST == 'true' ]]; then
           export TAGS="$TAGS -t ${_DOCKER_URI}:latest"
         fi
-        docker buildx build --platform linux/amd64,linux/arm64 --build-arg BUILD_TYPE=container.release --build-arg COMMIT_SHA=$(git rev-parse HEAD) $TAGS --push .
+        docker buildx build --platform linux/amd64,linux/arm64 --build-arg BUILD_TYPE=container.release --build-arg COMMIT_SHA=$(git rev-parse --short HEAD) $TAGS --push .
 
   - id: "install-dependencies"
     name: golang:1
@@ -50,7 +50,7 @@ steps:
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.linux.amd64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.linux.amd64
 
   - id: "store-linux-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -74,7 +74,7 @@ steps:
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=geminicli.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.geminicli.linux.amd64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=geminicli.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.linux.amd64
 
   - id: "store-linux-amd64-geminicli"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -98,7 +98,7 @@ steps:
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
         CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.darwin.arm64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.darwin.arm64
 
   - id: "store-darwin-arm64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -122,7 +122,7 @@ steps:
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
         CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=geminicli.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.geminicli.darwin.arm64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=geminicli.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.darwin.arm64
 
   - id: "store-darwin-arm64-geminicli"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -146,7 +146,7 @@ steps:
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
         CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.darwin.amd64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.darwin.amd64
 
   - id: "store-darwin-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -170,7 +170,7 @@ steps:
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
         CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=geminicli.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.geminicli.darwin.amd64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=geminicli.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.darwin.amd64
 
   - id: "store-darwin-amd64-geminicli"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -194,7 +194,7 @@ steps:
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
         CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.windows.amd64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.windows.amd64
 
   - id: "store-windows-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -218,7 +218,7 @@ steps:
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
         CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=geminicli.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.geminicli.windows.amd64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=geminicli.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.windows.amd64
 
   - id: "store-windows-amd64-geminicli"
     name: "gcr.io/cloud-builders/gcloud:latest"
