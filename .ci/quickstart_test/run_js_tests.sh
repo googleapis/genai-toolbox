@@ -88,7 +88,6 @@ run_orch_test() {
     export ORCH_NAME="$orch_name"
     node --test quickstart.test.js
 
-    # Clean up the installed dependencies directly without changing directories
     echo "--- Cleaning environment for $orch_name ---"
     rm -rf "${orch_name}/node_modules"
   )
