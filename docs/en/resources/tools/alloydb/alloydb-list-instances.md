@@ -8,9 +8,14 @@ aliases: [/resources/tools/alloydb-list-instances]
 
 ## About
 
-The `alloydb-list-instances` tool retrieves AlloyDB instance information for all or specified clusters and locations in a given project. It is compatible with [alloydb-admin](../../sources/alloydb-admin.md) source.
+The `alloydb-list-instances` tool retrieves AlloyDB instance information for all
+or specified clusters and locations in a given project. It is compatible with
+[alloydb-admin](../../sources/alloydb-admin.md) source.
 
-`alloydb-list-instances` tool lists the detailed information of AlloyDB instances (instance name, type, IP address, state, configuration, etc) for a given project, cluster and location. The tool takes the following input parameters:
+`alloydb-list-instances` tool lists the detailed information of AlloyDB
+instances (instance name, type, IP address, state, configuration, etc) for a
+given project, cluster and location. The tool takes the following input
+parameters:
 
 | Parameter  | Type   | Description                                                                                                | Required |
 | :--------- | :----- | :--------------------------------------------------------------------------------------------------------- | :------- |

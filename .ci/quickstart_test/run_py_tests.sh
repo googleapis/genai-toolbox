@@ -16,39 +16,24 @@
 
 set -e
 
-TABLE_NAME="hotels_js"
-QUICKSTART_JS_DIR="docs/en/getting-started/quickstart/js"
-SQL_FILE=".ci/setup_hotels_sample.sql"
-DEPS_FILE=".ci/quickstart_dependencies.json"
+TABLE_NAME="hotels_python"
+QUICKSTART_PYTHON_DIR="docs/en/getting-started/quickstart/python"
+SQL_FILE=".ci/quickstart_test/setup_hotels_sample.sql"
 
-# Initialize process IDs to empty at the top of the script
 PROXY_PID=""
 TOOLBOX_PID=""
 
 install_system_packages() {
-  apt-get update
-  apt-get install -y jq
-
-  # Define the jq filter
-  jq_filter='
-    .js
-    | to_entries
-    | .[]
-    | select(.key != "jq" and .value != null)
-    | "\(.key)=\(.value)"
-  '
-
-  # Process the file with the filter and load the results into an array
-  mapfile -t install_list < <(jq -r "$jq_filter" "$DEPS_FILE")
-
-  if (( ${#install_list[@]} > 0 )); then
-    apt-get install -y "${install_list[@]}"
-  fi
+  apt-get update && apt-get install -y \
+    postgresql-client \
+    python3-venv \
+    wget \
+    gettext-base  \
+    netcat-openbsd
 }
 
 start_cloud_sql_proxy() {
-  CLOUD_SQL_PROXY_VERSION=$(jq -r '.cloud_sql_proxy' "$DEPS_FILE")
-  wget "https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/${CLOUD_SQL_PROXY_VERSION}/cloud-sql-proxy.linux.amd64" -O /usr/local/bin/cloud-sql-proxy
+  wget "https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.10.0/cloud-sql-proxy.linux.amd64" -O /usr/local/bin/cloud-sql-proxy
   chmod +x /usr/local/bin/cloud-sql-proxy
   cloud-sql-proxy "${CLOUD_SQL_INSTANCE}" &
   PROXY_PID=$!
@@ -85,30 +70,18 @@ run_orch_test() {
   local orch_dir="$1"
   local orch_name
   orch_name=$(basename "$orch_dir")
-
   (
     set -e
-    echo "--- Preparing environment for $orch_name ---"
     setup_orch_table
-
-    # Go into the specific framework directory to install dependencies
     cd "$orch_dir"
-    if [ -f "package.json" ]; then
-      echo "Installing dependencies for $orch_name..."
-      npm install
-    fi
-
-    # Go back to the parent directory ('js/') to run the test
-    cd ..
-
-    # Export the framework name as an environment variable and run the test
+    local VENV_DIR=".venv"
+    python3 -m venv "$VENV_DIR"
+    source "$VENV_DIR/bin/activate"
+    pip install -r requirements.txt
     echo "--- Running tests for $orch_name ---"
-    export ORCH_NAME="$orch_name"
-    node --test quickstart.test.js
-
-    # Clean up the installed dependencies directly without changing directories
-    echo "--- Cleaning environment for $orch_name ---"
-    rm -rf "${orch_name}/node_modules"
+    cd ..
+    ORCH_NAME="$orch_name" pytest
+    rm -rf "$VENV_DIR"
   )
 }
 
@@ -134,7 +107,7 @@ export GOOGLE_API_KEY="$GOOGLE_API_KEY"
 
 setup_toolbox
 
-for ORCH_DIR in "$QUICKSTART_JS_DIR"/*/; do
+for ORCH_DIR in "$QUICKSTART_PYTHON_DIR"/*/; do
   if [ ! -d "$ORCH_DIR" ]; then
     continue
   fi

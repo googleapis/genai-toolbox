@@ -19,9 +19,9 @@ It's compatible with the following sources:
 
 - [firestore](../../sources/firestore.md)
 
-`firestore-list-collections` takes an optional `parentPath` parameter to specify a document
-path. If provided, it lists all subcollections of that document. If not provided, it lists
-all root-level collections in the database.
+`firestore-list-collections` takes an optional `parentPath` parameter to specify
+a document path. If provided, it lists all subcollections of that document. If
+not provided, it lists all root-level collections in the database.
 
 ## Example
 
