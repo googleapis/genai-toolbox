@@ -97,12 +97,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		}
 
 		if len(datasetIDs) == 1 {
-			datasetFQN := allowedDatasets[0]
-			parts := strings.Split(datasetFQN, ".")
-			datasetID := datasetFQN
-			if len(parts) == 2 {
-				datasetID = parts[1]
+			parts := strings.Split(allowedDatasets[0], ".")
+			if len(parts) <2 {
+				return nil, fmt.Errorf("expected split to have 2 parts: %s", allowedDatasets[0])
 			}
+			datasetID := parts[1]
 			sqlDescription += fmt.Sprintf(" The query must only access the %s dataset. "+
 				"To query a table within this dataset (e.g., `my_table`), "+
 				"qualify it with the dataset id (e.g., `%s.my_table`).", datasetIDs[0], datasetID)
