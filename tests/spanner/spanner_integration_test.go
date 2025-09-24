@@ -164,6 +164,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	tests.RunToolGetTest(t)
 	tests.RunToolInvokeTest(t, select1Want,
 		tests.WithMyToolId3NameAliceWant(invokeParamWant),
+		tests.WithMyArrayToolWant(invokeParamWant),
 		tests.WithMyToolById4Want(toolInvokeMyToolById4Want),
 	)
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want, tests.WithMcpMyToolId3NameAliceWant(mcpMyToolId3NameAliceWant))
@@ -311,14 +312,14 @@ func addSpannerListTablesConfig(t *testing.T, config map[string]any) map[string]
 	if !ok {
 		t.Fatalf("unable to get tools from config")
 	}
-	
+
 	// Add spanner-list-tables tool
 	tools["list-tables-tool"] = map[string]any{
 		"kind":        "spanner-list-tables",
 		"source":      "my-instance",
 		"description": "Lists tables with their schema information",
 	}
-	
+
 	config["tools"] = tools
 	return config
 }
@@ -547,7 +548,6 @@ func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWa
 	}
 }
 
-
 // Helper function to verify table list results
 func verifyTableListResult(t *testing.T, body map[string]interface{}, expectedTables []string, expectedSimpleFormat bool) {
 	// Parse the result
@@ -555,13 +555,13 @@ func verifyTableListResult(t *testing.T, body map[string]interface{}, expectedTa
 	if !ok {
 		t.Fatalf("unable to find result in response body")
 	}
-	
+
 	var tables []interface{}
 	err := json.Unmarshal([]byte(result), &tables)
 	if err != nil {
 		t.Fatalf("unable to parse result as JSON array: %s", err)
 	}
-	
+
 	// If we expect specific tables, verify they exist
 	if len(expectedTables) > 0 {
 		tableNames := make(map[string]bool)
@@ -575,7 +575,7 @@ func verifyTableListResult(t *testing.T, body map[string]interface{}, expectedTa
 			if !ok {
 				continue
 			}
-			
+
 			// Parse object_details JSON string into map[string]interface{}
 			if objectDetailsStr, ok := tableMap["object_details"].(string); ok {
 				var objectDetails map[string]interface{}
@@ -586,7 +586,7 @@ func verifyTableListResult(t *testing.T, body map[string]interface{}, expectedTa
 
 				for _, reqKey := range requiredKeys {
 					if _, hasKey := objectDetails[reqKey]; !hasKey {
-						t.Errorf("missing required key '%s', for object_details: %v",reqKey, objectDetails)
+						t.Errorf("missing required key '%s', for object_details: %v", reqKey, objectDetails)
 					}
 				}
 			}
@@ -595,7 +595,7 @@ func verifyTableListResult(t *testing.T, body map[string]interface{}, expectedTa
 				tableNames[name] = true
 			}
 		}
-		
+
 		for _, expected := range expectedTables {
 			if !tableNames[expected] {
 				t.Errorf("expected table %s not found in results", expected)
@@ -607,46 +607,45 @@ func verifyTableListResult(t *testing.T, body map[string]interface{}, expectedTa
 // runSpannerListTablesTest tests the spanner-list-tables tool
 func runSpannerListTablesTest(t *testing.T, tableNameParam, tableNameAuth, tableNameTemplateParam string) {
 	invokeTcs := []struct {
-		name               string
-		requestBody        io.Reader
-		expectedTables     []string // empty means don't check specific tables
-		useSimpleFormat    bool
+		name            string
+		requestBody     io.Reader
+		expectedTables  []string // empty means don't check specific tables
+		useSimpleFormat bool
 	}{
 		{
-			name:               "list all tables with detailed format",
-			requestBody:        bytes.NewBuffer([]byte(`{}`)),
-			expectedTables:     []string{tableNameParam, tableNameAuth, tableNameTemplateParam},
+			name:           "list all tables with detailed format",
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			expectedTables: []string{tableNameParam, tableNameAuth, tableNameTemplateParam},
 		},
 		{
-			name:               "list tables with simple format",
-			requestBody:        bytes.NewBuffer([]byte(`{"output_format": "simple"}`)),
-			expectedTables:     []string{tableNameParam, tableNameAuth, tableNameTemplateParam},
-			useSimpleFormat:    true,
+			name:            "list tables with simple format",
+			requestBody:     bytes.NewBuffer([]byte(`{"output_format": "simple"}`)),
+			expectedTables:  []string{tableNameParam, tableNameAuth, tableNameTemplateParam},
+			useSimpleFormat: true,
 		},
 		{
-			name:               "list specific tables",
-			requestBody:        bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s,%s"}`, tableNameParam, tableNameAuth))),
-			expectedTables:     []string{tableNameParam, tableNameAuth},
+			name:           "list specific tables",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s,%s"}`, tableNameParam, tableNameAuth))),
+			expectedTables: []string{tableNameParam, tableNameAuth},
 		},
 		{
-			name:               "list non-existent table",
-			requestBody:        bytes.NewBuffer([]byte(`{"table_names": "non_existent_table_xyz"}`)),
-			expectedTables:     []string{},
+			name:           "list non-existent table",
+			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "non_existent_table_xyz"}`)),
+			expectedTables: []string{},
 		},
 	}
-	
+
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
 			// Use RunRequest helper function from tests package
 			url := "http://127.0.0.1:5000/api/tool/list-tables-tool/invoke"
 			headers := map[string]string{}
-			
+
 			resp, respBody := tests.RunRequest(t, http.MethodPost, url, tc.requestBody, headers)
-			
+
 			if resp.StatusCode != http.StatusOK {
 				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
 			}
-
 
 			// Check response body
 			var body map[string]interface{}

@@ -45,10 +45,10 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"list-my-clusters": alloydblistclusters.Config{
-					Name:        "list-my-clusters",
-					Kind:        "alloydb-list-clusters",
-					Source:      "my-alloydb-admin-source",
-					Description: "some description",
+					Name:         "list-my-clusters",
+					Kind:         "alloydb-list-clusters",
+					Source:       "my-alloydb-admin-source",
+					Description:  "some description",
 					AuthRequired: []string{},
 				},
 			},
@@ -67,10 +67,10 @@ func TestParseFromYaml(t *testing.T) {
 			`,
 			want: server.ToolConfigs{
 				"list-my-clusters-auth": alloydblistclusters.Config{
-					Name:        "list-my-clusters-auth",
-					Kind:        "alloydb-list-clusters",
-					Source:      "my-alloydb-admin-source",
-					Description: "some description",
+					Name:         "list-my-clusters-auth",
+					Kind:         "alloydb-list-clusters",
+					Source:       "my-alloydb-admin-source",
+					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 				},
 			},
