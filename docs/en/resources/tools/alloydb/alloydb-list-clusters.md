@@ -8,9 +8,13 @@ aliases: [/resources/tools/alloydb-list-clusters]
 
 ## About
 
-The `alloydb-list-clusters` tool retrieves AlloyDB cluster information for all or specified locations in a given project. It is compatible with [alloydb-admin](../../sources/alloydb-admin.md) source.
+The `alloydb-list-clusters` tool retrieves AlloyDB cluster information for all
+or specified locations in a given project. It is compatible with
+[alloydb-admin](../../sources/alloydb-admin.md) source.
 
-`alloydb-list-clusters` tool lists the detailed information of AlloyDB cluster(cluster name, state, configuration, etc) for a given project and location. The tool takes the following input parameters:
+`alloydb-list-clusters` tool lists the detailed information of AlloyDB
+cluster(cluster name, state, configuration, etc) for a given project and
+location. The tool takes the following input parameters:
 
 | Parameter  | Type   | Description                                                                                      | Required |
 | :--------- | :----- | :----------------------------------------------------------------------------------------------- | :------- |

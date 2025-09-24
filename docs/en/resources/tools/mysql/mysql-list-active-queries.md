@@ -10,15 +10,18 @@ aliases:
 
 ## About
 
-A `mysql-list-active-queries` tool retrieves information about active queries in a MySQL database. It's compatible with
+A `mysql-list-active-queries` tool retrieves information about active queries in
+a MySQL database. It's compatible with:
 
 - [cloud-sql-mysql](../../sources/cloud-sql-mysql.md)
 - [mysql](../../sources/mysql.md)
 
-`mysql-list-active-queries` outputs detailed information as JSON for current active queries, ordered by execution time in descending order.
+`mysql-list-active-queries` outputs detailed information as JSON for current
+active queries, ordered by execution time in descending order.
 This tool takes 2 optional input parameters:
 
-- `min_duration_secs` (optional): Only show queries running for at least this long in seconds, default `0`.
+- `min_duration_secs` (optional): Only show queries running for at least this
+  long in seconds, default `0`.
 - `limit` (optional):  max number of queries to return, default `10`.
 
 ## Example
@@ -52,8 +55,8 @@ The response is a json array with the following fields:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "mysql-list-active-queries".                                                             |
-| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "mysql-list-active-queries".               |
+| source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
