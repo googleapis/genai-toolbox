@@ -34,7 +34,7 @@ func main() {
 	ctx := context.Background()
 
 	// Create Toolbox Client
-	toolboxClient, err := core.NewToolboxClient("http://127.0.0.1:5000")
+	toolboxClient, err := core.NewToolboxClient("http://localhost:5000")
 	if err != nil {
 		log.Fatalf("Failed to create Toolbox client: %v", err)
 	}
