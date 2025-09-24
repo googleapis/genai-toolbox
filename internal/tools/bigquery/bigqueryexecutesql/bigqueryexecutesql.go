@@ -26,6 +26,7 @@ import (
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
@@ -98,7 +99,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 		if len(datasetIDs) == 1 {
 			parts := strings.Split(allowedDatasets[0], ".")
-			if len(parts) <2 {
+			if len(parts) < 2 {
 				return nil, fmt.Errorf("expected split to have 2 parts: %s", allowedDatasets[0])
 			}
 			datasetID := parts[1]
@@ -262,6 +263,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	query := bqClient.Query(sql)
 	query.Location = bqClient.Location
+
+	// Log the query executed for debugging.
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error getting logger: %s", err)
+	}
+	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
 
 	// This block handles SELECT statements, which return a row set.
 	// We iterate through the results, convert each row into a map of
