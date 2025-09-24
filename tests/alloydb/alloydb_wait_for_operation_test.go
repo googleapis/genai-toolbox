@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utility
+package alloydb
 
 import (
 	"bytes"
@@ -22,19 +22,36 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"reflect"
 	"regexp"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
+
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbwaitforoperation"
 )
 
 var (
 	waitToolKind = "alloydb-wait-for-operation"
 )
+
+type waitForOperationTransport struct {
+	transport http.RoundTripper
+	url       *url.URL
+}
+
+func (t *waitForOperationTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if strings.HasPrefix(req.URL.String(), "https://alloydb.googleapis.com") {
+		req.URL.Scheme = t.url.Scheme
+		req.URL.Host = t.url.Host
+	}
+	return t.transport.RoundTrip(req)
+}
 
 type operation struct {
 	Name     string `json:"name"`
@@ -49,30 +66,39 @@ type operation struct {
 type handler struct {
 	mu         sync.Mutex
 	operations map[string]*operation
+	t          *testing.T
 }
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	// The format is projects/{project}/locations/{location}/operations/{operation_id}
-	// We only care about the operation_id for the test
-	parts := regexp.MustCompile("/").Split(r.URL.Path, -1)
-	opName := parts[len(parts)-1]
+	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
+		h.t.Errorf("User-Agent header not found")
+	}
 
-	op, ok := h.operations[opName]
-	if !ok {
+	// The format is projects/{project}/locations/{location}/operations/{operation}
+	// The tool will call something like /v1/projects/p1/locations/l1/operations/op1
+	if match, _ := regexp.MatchString("/v1/projects/.*/locations/.*/operations/.*", r.URL.Path); match {
+		parts := regexp.MustCompile("/").Split(r.URL.Path, -1)
+		opName := parts[len(parts)-1]
+
+		op, ok := h.operations[opName]
+		if !ok {
+			http.NotFound(w, r)
+			return
+		}
+
+		if !op.Done {
+			op.Done = true
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(op); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	} else {
 		http.NotFound(w, r)
-		return
-	}
-
-	if !op.Done {
-		op.Done = true
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(op); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -85,16 +111,34 @@ func TestWaitToolEndpoints(t *testing.T) {
 				Message string `json:"message"`
 			}{Code: 1, Message: "failed"}},
 		},
+		t: t,
 	}
 	server := httptest.NewServer(h)
 	defer server.Close()
+
+	serverURL, err := url.Parse(server.URL)
+	if err != nil {
+		t.Fatalf("failed to parse server URL: %v", err)
+	}
+
+	originalTransport := http.DefaultClient.Transport
+	if originalTransport == nil {
+		originalTransport = http.DefaultTransport
+	}
+	http.DefaultClient.Transport = &waitForOperationTransport{
+		transport: originalTransport,
+		url:       serverURL,
+	}
+	t.Cleanup(func() {
+		http.DefaultClient.Transport = originalTransport
+	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	toolsFile := getWaitToolsConfig(server.URL)
+	toolsFile := getWaitToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -120,13 +164,13 @@ func TestWaitToolEndpoints(t *testing.T) {
 		{
 			name:     "successful operation",
 			toolName: "wait-for-op1",
-			body:     `{"project": "p1", "location": "l1", "operation_id": "op1"}`,
+			body:     `{"project": "p1", "location": "l1", "operation": "op1"}`,
 			want:     `{"name":"op1","done":true,"response":"success"}`,
 		},
 		{
 			name:        "failed operation",
 			toolName:    "wait-for-op2",
-			body:        `{"project": "p1", "location": "l1", "operation_id": "op2"}`,
+			body:        `{"project": "p1", "location": "l1", "operation": "op2"}`,
 			expectError: true,
 		},
 	}
@@ -172,13 +216,13 @@ func TestWaitToolEndpoints(t *testing.T) {
 			}
 
 			// The result is a JSON-encoded string, so we need to unmarshal it twice.
-			var unmarshaledResult string
-			if err := json.Unmarshal([]byte(result.Result), &unmarshaledResult); err != nil {
+			var tempString string
+			if err := json.Unmarshal([]byte(result.Result), &tempString); err != nil {
 				t.Fatalf("failed to unmarshal result string: %v", err)
 			}
 
 			var got, want map[string]any
-			if err := json.Unmarshal([]byte(unmarshaledResult), &got); err != nil {
+			if err := json.Unmarshal([]byte(tempString), &got); err != nil {
 				t.Fatalf("failed to unmarshal result: %v", err)
 			}
 			if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
@@ -192,20 +236,23 @@ func TestWaitToolEndpoints(t *testing.T) {
 	}
 }
 
-func getWaitToolsConfig(baseURL string) map[string]any {
+func getWaitToolsConfig() map[string]any {
 	return map[string]any{
+		"sources": map[string]any{
+			"my-alloydb-source": map[string]any{
+				"kind": "alloydb-admin",
+			},
+		},
 		"tools": map[string]any{
 			"wait-for-op1": map[string]any{
-				"kind":         waitToolKind,
-				"description":  "wait for op1",
-				"baseURL":      baseURL,
-				"authRequired": []string{},
+				"kind":        waitToolKind,
+				"source":      "my-alloydb-source",
+				"description": "wait for op1",
 			},
 			"wait-for-op2": map[string]any{
-				"kind":         waitToolKind,
-				"description":  "wait for op2",
-				"baseURL":      baseURL,
-				"authRequired": []string{},
+				"kind":        waitToolKind,
+				"source":      "my-alloydb-source",
+				"description": "wait for op2",
 			},
 		},
 	}
