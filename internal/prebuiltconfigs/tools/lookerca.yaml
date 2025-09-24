@@ -1,0 +1,38 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+sources:
+    lookerca-source:
+        kind: lookerca
+        base_url: ${LOOKERCA_BASE_URL}
+        client_id: ${LOOKERCA_CLIENT_ID:}
+        client_secret: ${LOOKERCA_CLIENT_SECRET:}
+        verify_ssl: ${LOOKERCA_VERIFY_SSL:true}
+        timeout: 600s
+        use_client_oauth: ${LOOKERCA_USE_CLIENT_OAUTH:false}
+        project: ${LOOKERCA_PROJECT:}
+        location: ${LOOKERCA_LOCATION:}
+
+tools:
+    ask_data_insights:
+        kind: lookerca-conversational-analytics
+        source: lookerca-source
+        description: |
+          Use this tool to perform data analysis, get insights,
+          or answer complex questions about the contents of specific
+          Looker explores.
+
+toolsets:
+    lookerca_tools:
+        - ask_data_insights

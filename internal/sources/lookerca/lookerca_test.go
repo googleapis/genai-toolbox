@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package looker_test
+package lookerca_test
 
 import (
 	"testing"
@@ -21,11 +21,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/looker"
+	"github.com/googleapis/genai-toolbox/internal/sources/lookerca"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
-func TestParseFromYamlLooker(t *testing.T) {
+func TestParseFromYamlLookerCA(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
@@ -36,24 +36,21 @@ func TestParseFromYamlLooker(t *testing.T) {
 			in: `
 			sources:
 				my-looker-instance:
-					kind: looker
+					kind: lookerca
 					base_url: http://example.looker.com/
 					client_id: jasdl;k;tjl
 					client_secret: sdakl;jgflkasdfkfg
 			`,
 			want: map[string]sources.SourceConfig{
-				"my-looker-instance": looker.Config{
-					Name:               "my-looker-instance",
-					Kind:               looker.SourceKind,
-					BaseURL:            "http://example.looker.com/",
-					ClientId:           "jasdl;k;tjl",
-					ClientSecret:       "sdakl;jgflkasdfkfg",
-					Timeout:            "600s",
-					SslVerification:    true,
-					UseClientOAuth:     false,
-					ShowHiddenModels:   true,
-					ShowHiddenExplores: true,
-					ShowHiddenFields:   true,
+				"my-looker-instance": lookerca.Config{
+					Name:            "my-looker-instance",
+					Kind:            lookerca.SourceKind,
+					BaseURL:         "http://example.looker.com/",
+					ClientId:        "jasdl;k;tjl",
+					ClientSecret:    "sdakl;jgflkasdfkfg",
+					Timeout:         "600s",
+					SslVerification: true,
+					UseClientOAuth:  false,
 				},
 			},
 		},
@@ -75,7 +72,7 @@ func TestParseFromYamlLooker(t *testing.T) {
 	}
 }
 
-func TestFailParseFromYamlLooker(t *testing.T) {
+func TestFailParseFromYamlLookerCA(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
@@ -86,23 +83,23 @@ func TestFailParseFromYamlLooker(t *testing.T) {
 			in: `
 			sources:
 				my-looker-instance:
-					kind: looker
+					kind: lookerca
 					base_url: http://example.looker.com/
 					client_id: jasdl;k;tjl
 					client_secret: sdakl;jgflkasdfkfg
-					project: test-project
+					foo: test-foo
 			`,
-			err: "unable to parse source \"my-looker-instance\" as \"looker\": [5:1] unknown field \"project\"\n   2 | client_id: jasdl;k;tjl\n   3 | client_secret: sdakl;jgflkasdfkfg\n   4 | kind: looker\n>  5 | project: test-project\n       ^\n",
+			err: "unable to parse source \"my-looker-instance\" as \"lookerca\": [4:1] unknown field \"foo\"\n   1 | base_url: http://example.looker.com/\n   2 | client_id: jasdl;k;tjl\n   3 | client_secret: sdakl;jgflkasdfkfg\n>  4 | foo: test-foo\n       ^\n   5 | kind: lookerca",
 		},
 		{
 			desc: "missing required field",
 			in: `
 			sources:
 				my-looker-instance:
-					kind: looker
+					kind: lookerca
 					client_id: jasdl;k;tjl
 			`,
-			err: "unable to parse source \"my-looker-instance\" as \"looker\": Key: 'Config.BaseURL' Error:Field validation for 'BaseURL' failed on the 'required' tag",
+			err: "unable to parse source \"my-looker-instance\" as \"lookerca\": Key: 'Config.BaseURL' Error:Field validation for 'BaseURL' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

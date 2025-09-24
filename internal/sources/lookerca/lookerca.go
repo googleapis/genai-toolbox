@@ -11,23 +11,26 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package looker
+package lookerca
 
 import (
 	"context"
 	"fmt"
 	"time"
 
+	bigqueryapi "cloud.google.com/go/bigquery"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const SourceKind string = "looker"
+const SourceKind string = "lookerca"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
@@ -40,13 +43,12 @@ func init() {
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
 	actual := Config{
-		Name:               name,
-		SslVerification:    true,
-		Timeout:            "600s",
-		UseClientOAuth:     false,
-		ShowHiddenModels:   true,
-		ShowHiddenExplores: true,
-		ShowHiddenFields:   true,
+		Name:            name,
+		SslVerification: true,
+		Timeout:         "600s",
+		UseClientOAuth:  false,
+		Project:         "default",
+		Location:        "us",
 	} // Default Ssl,timeout, ShowHidden
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
@@ -55,17 +57,16 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name               string `yaml:"name" validate:"required"`
-	Kind               string `yaml:"kind" validate:"required"`
-	BaseURL            string `yaml:"base_url" validate:"required"`
-	ClientId           string `yaml:"client_id"`
-	ClientSecret       string `yaml:"client_secret"`
-	SslVerification    bool   `yaml:"verify_ssl"`
-	UseClientOAuth     bool   `yaml:"use_client_oauth"`
-	Timeout            string `yaml:"timeout"`
-	ShowHiddenModels   bool   `yaml:"show_hidden_models"`
-	ShowHiddenExplores bool   `yaml:"show_hidden_explores"`
-	ShowHiddenFields   bool   `yaml:"show_hidden_fields"`
+	Name            string `yaml:"name" validate:"required"`
+	Kind            string `yaml:"kind" validate:"required"`
+	BaseURL         string `yaml:"base_url" validate:"required"`
+	ClientId        string `yaml:"client_id"`
+	ClientSecret    string `yaml:"client_secret"`
+	SslVerification bool   `yaml:"verify_ssl"`
+	UseClientOAuth  bool   `yaml:"use_client_oauth"`
+	Timeout         string `yaml:"timeout"`
+	Project         string `yaml:"project"`
+	Location        string `yaml:"location"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -102,15 +103,18 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		ClientSecret: r.ClientSecret,
 	}
 
+	var tokenSource oauth2.TokenSource
+	tokenSource, _ = initBigQueryConnection(ctx)
+
 	s := &Source{
-		Name:               r.Name,
-		Kind:               SourceKind,
-		Timeout:            r.Timeout,
-		UseClientOAuth:     r.UseClientOAuth,
-		ApiSettings:        &cfg,
-		ShowHiddenModels:   r.ShowHiddenModels,
-		ShowHiddenExplores: r.ShowHiddenExplores,
-		ShowHiddenFields:   r.ShowHiddenFields,
+		Name:           r.Name,
+		Kind:           SourceKind,
+		Timeout:        r.Timeout,
+		UseClientOAuth: r.UseClientOAuth,
+		ApiSettings:    &cfg,
+		Project:        r.Project,
+		Location:       r.Location,
+		TokenSource:    tokenSource,
 	}
 
 	if !r.UseClientOAuth {
@@ -132,17 +136,50 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name               string `yaml:"name"`
-	Kind               string `yaml:"kind"`
-	Timeout            string `yaml:"timeout"`
-	Client             *v4.LookerSDK
-	ApiSettings        *rtl.ApiSettings
-	UseClientOAuth     bool `yaml:"use_client_oauth"`
-	ShowHiddenModels   bool `yaml:"show_hidden_models"`
-	ShowHiddenExplores bool `yaml:"show_hidden_explores"`
-	ShowHiddenFields   bool `yaml:"show_hidden_fields"`
+	Name           string `yaml:"name"`
+	Kind           string `yaml:"kind"`
+	Timeout        string `yaml:"timeout"`
+	Client         *v4.LookerSDK
+	ApiSettings    *rtl.ApiSettings
+	UseClientOAuth bool   `yaml:"use_client_oauth"`
+	Project        string `yaml:"project"`
+	Location       string `yaml:"location"`
+	TokenSource    oauth2.TokenSource
+}
+
+func (s *Source) GetApiSettings() *rtl.ApiSettings {
+	return s.ApiSettings
+}
+
+func (s *Source) UseClientAuthorization() bool {
+	return s.UseClientOAuth
+}
+
+func (s *Source) BigQueryProject() string {
+	return s.Project
+}
+
+func (s *Source) BigQueryLocation() string {
+	return s.Location
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) BigQueryTokenSource() oauth2.TokenSource {
+	return s.TokenSource
+}
+
+func (s *Source) BigQueryTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error) {
+	return google.DefaultTokenSource(ctx, scope)
+}
+
+func initBigQueryConnection(ctx context.Context) (oauth2.TokenSource, error) {
+	cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
+	}
+
+	return cred.TokenSource, nil
 }
