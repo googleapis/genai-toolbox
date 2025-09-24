@@ -2190,6 +2190,12 @@ func runExecuteSqlWithRestriction(t *testing.T, allowedTableFullName, disallowed
 			wantInError:    "dataset-level operations like 'CREATE_SCHEMA' are not allowed",
 		},
 		{
+			name:           "disallowed alter schema",
+			sql:            fmt.Sprintf("ALTER SCHEMA %s SET OPTIONS(description='new one')", allowedDatasetID),
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    "dataset-level operations like 'ALTER_SCHEMA' are not allowed",
+		},
+		{
 			name:           "disallowed create function",
 			sql:            fmt.Sprintf("CREATE FUNCTION %s.my_func() RETURNS INT64 AS (1)", allowedDatasetID),
 			wantStatusCode: http.StatusBadRequest,
