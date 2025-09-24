@@ -9,30 +9,36 @@ aliases:
 ---
 ## Description
 
-The `firestore-update-document` tool allows you to update existing documents in Firestore. It supports all Firestore data types using Firestore's native JSON format. The tool can perform both full document updates (replacing all fields) or selective field updates using an update mask. When using an update mask, fields referenced in the mask but not present in the document data will be deleted from the document, following Firestore's native behavior.
+The `firestore-update-document` tool allows you to update existing documents in
+Firestore. It supports all Firestore data types using Firestore's native JSON
+format. The tool can perform both full document updates (replacing all fields)
+or selective field updates using an update mask. When using an update mask,
+fields referenced in the mask but not present in the document data will be
+deleted from the document, following Firestore's native behavior.
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `documentPath` | string | Yes | The path of the document which needs to be updated |
-| `documentData` | map | Yes | The data to update in the document. Must use [Firestore's native JSON format](https://cloud.google.com/firestore/docs/reference/rest/Shared.Types/ArrayValue#Value) with typed values |
-| `updateMask` | array | No | The selective fields to update. If not provided, all fields in documentData will be updated. When provided, only the specified fields will be updated. Fields referenced in the mask but not present in documentData will be deleted from the document |
-| `returnData` | boolean | No | If set to true, the output will include the data of the updated document. Defaults to false to help avoid overloading the context |
+| Parameter      | Type    | Required | Description                                                                                                                                                                                                                                            |
+|----------------|---------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `documentPath` | string  | Yes      | The path of the document which needs to be updated                                                                                                                                                                                                     |
+| `documentData` | map     | Yes      | The data to update in the document. Must use [Firestore's native JSON format](https://cloud.google.com/firestore/docs/reference/rest/Shared.Types/ArrayValue#Value) with typed values                                                                  |
+| `updateMask`   | array   | No       | The selective fields to update. If not provided, all fields in documentData will be updated. When provided, only the specified fields will be updated. Fields referenced in the mask but not present in documentData will be deleted from the document |
+| `returnData`   | boolean | No       | If set to true, the output will include the data of the updated document. Defaults to false to help avoid overloading the context                                                                                                                      |
 
 ## Output
 
 The tool returns a map containing:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `documentPath` | string | The full path of the updated document |
-| `updateTime` | string | The timestamp when the document was updated |
-| `documentData` | map | The current data of the document after the update (only included when `returnData` is true) |
+| Field          | Type   | Description                                                                                 |
+|----------------|--------|---------------------------------------------------------------------------------------------|
+| `documentPath` | string | The full path of the updated document                                                       |
+| `updateTime`   | string | The timestamp when the document was updated                                                 |
+| `documentData` | map    | The current data of the document after the update (only included when `returnData` is true) |
 
 ## Data Type Format
 
-The tool requires Firestore's native JSON format for document data. Each field must be wrapped with its type indicator:
+The tool requires Firestore's native JSON format for document data. Each field
+must be wrapped with its type indicator:
 
 ### Basic Types
 - **String**: `{"stringValue": "your string"}`
@@ -53,11 +59,16 @@ The tool requires Firestore's native JSON format for document data. Each field m
 
 ### Full Document Update (Merge All)
 
-When `updateMask` is not provided, the tool performs a merge operation that updates all fields specified in `documentData` while preserving other existing fields in the document.
+When `updateMask` is not provided, the tool performs a merge operation that
+updates all fields specified in `documentData` while preserving other existing
+fields in the document.
 
 ### Selective Field Update
 
-When `updateMask` is provided, only the fields listed in the mask are updated. This allows for precise control over which fields are modified, added, or deleted. To delete a field, include it in the `updateMask` but omit it from `documentData`.
+When `updateMask` is provided, only the fields listed in the mask are updated.
+This allows for precise control over which fields are modified, added, or
+deleted. To delete a field, include it in the `updateMask` but omit it from
+`documentData`.
 
 ## Reference
 

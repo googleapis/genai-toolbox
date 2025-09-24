@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -73,7 +74,7 @@ func initBigQueryConnection(project string) (*bigqueryapi.Client, error) {
 
 func TestBigQueryToolEndpoints(t *testing.T) {
 	sourceConfig := getBigQueryVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Minute)
 	defer cancel()
 
 	var args []string
@@ -112,6 +113,12 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 		strings.ReplaceAll(uuid.New().String(), "-", ""),
 	)
 
+	tableNameAnalyzeContribution := fmt.Sprintf("`%s.%s.analyze_contribution_table_%s`",
+		BigqueryProject,
+		datasetName,
+		strings.ReplaceAll(uuid.New().String(), "-", ""),
+	)
+
 	// set up data for param tool
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := getBigQueryParamToolInfo(tableNameParam)
 	teardownTable1 := setupBigQueryTable(t, ctx, client, createParamTableStmt, insertParamTableStmt, datasetName, tableNameParam, paramTestParams)
@@ -131,6 +138,11 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	createForecastTableStmt, insertForecastTableStmt, forecastTestParams := getBigQueryForecastToolInfo(tableNameForecast)
 	teardownTable4 := setupBigQueryTable(t, ctx, client, createForecastTableStmt, insertForecastTableStmt, datasetName, tableNameForecast, forecastTestParams)
 	defer teardownTable4(t)
+
+	// set up data for analyze contribution tool
+	createAnalyzeContributionTableStmt, insertAnalyzeContributionTableStmt, analyzeContributionTestParams := getBigQueryAnalyzeContributionToolInfo(tableNameAnalyzeContribution)
+	teardownTable5 := setupBigQueryTable(t, ctx, client, createAnalyzeContributionTableStmt, insertAnalyzeContributionTableStmt, datasetName, tableNameAnalyzeContribution, analyzeContributionTestParams)
+	defer teardownTable5(t)
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, BigqueryToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
@@ -181,12 +193,117 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	runBigQueryExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, ddlWant)
 	runBigQueryExecuteSqlToolInvokeDryRunTest(t, datasetName)
 	runBigQueryForecastToolInvokeTest(t, tableNameForecast)
+	runBigQueryAnalyzeContributionToolInvokeTest(t, tableNameAnalyzeContribution)
 	runBigQueryDataTypeTests(t)
 	runBigQueryListDatasetToolInvokeTest(t, datasetName)
 	runBigQueryGetDatasetInfoToolInvokeTest(t, datasetName, datasetInfoWant)
 	runBigQueryListTableIdsToolInvokeTest(t, datasetName, tableName)
 	runBigQueryGetTableInfoToolInvokeTest(t, datasetName, tableName, tableInfoWant)
 	runBigQueryConversationalAnalyticsInvokeTest(t, datasetName, tableName, dataInsightsWant)
+	runBigQuerySearchCatalogToolInvokeTest(t, datasetName, tableName)
+}
+
+func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	client, err := initBigQueryConnection(BigqueryProject)
+	if err != nil {
+		t.Fatalf("unable to create BigQuery client: %s", err)
+	}
+
+	// Create two datasets, one allowed, one not.
+	baseName := strings.ReplaceAll(uuid.New().String(), "-", "")
+	allowedDatasetName1 := fmt.Sprintf("allowed_dataset_1_%s", baseName)
+	allowedDatasetName2 := fmt.Sprintf("allowed_dataset_2_%s", baseName)
+	disallowedDatasetName := fmt.Sprintf("disallowed_dataset_%s", baseName)
+	allowedTableName1 := "allowed_table_1"
+	allowedTableName2 := "allowed_table_2"
+	disallowedTableName := "disallowed_table"
+	allowedForecastTableName1 := "allowed_forecast_table_1"
+	allowedForecastTableName2 := "allowed_forecast_table_2"
+	disallowedForecastTableName := "disallowed_forecast_table"
+
+	// Setup allowed table
+	allowedTableNameParam1 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName1, allowedTableName1)
+	createAllowedTableStmt1 := fmt.Sprintf("CREATE TABLE %s (id INT64)", allowedTableNameParam1)
+	teardownAllowed1 := setupBigQueryTable(t, ctx, client, createAllowedTableStmt1, "", allowedDatasetName1, allowedTableNameParam1, nil)
+	defer teardownAllowed1(t)
+
+	allowedTableNameParam2 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName2, allowedTableName2)
+	createAllowedTableStmt2 := fmt.Sprintf("CREATE TABLE %s (id INT64)", allowedTableNameParam2)
+	teardownAllowed2 := setupBigQueryTable(t, ctx, client, createAllowedTableStmt2, "", allowedDatasetName2, allowedTableNameParam2, nil)
+	defer teardownAllowed2(t)
+
+	// Setup allowed forecast table
+	allowedForecastTableFullName1 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName1, allowedForecastTableName1)
+	createForecastStmt1, insertForecastStmt1, forecastParams1 := getBigQueryForecastToolInfo(allowedForecastTableFullName1)
+	teardownAllowedForecast1 := setupBigQueryTable(t, ctx, client, createForecastStmt1, insertForecastStmt1, allowedDatasetName1, allowedForecastTableFullName1, forecastParams1)
+	defer teardownAllowedForecast1(t)
+
+	allowedForecastTableFullName2 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName2, allowedForecastTableName2)
+	createForecastStmt2, insertForecastStmt2, forecastParams2 := getBigQueryForecastToolInfo(allowedForecastTableFullName2)
+	teardownAllowedForecast2 := setupBigQueryTable(t, ctx, client, createForecastStmt2, insertForecastStmt2, allowedDatasetName2, allowedForecastTableFullName2, forecastParams2)
+	defer teardownAllowedForecast2(t)
+
+	// Setup disallowed table
+	disallowedTableNameParam := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, disallowedDatasetName, disallowedTableName)
+	createDisallowedTableStmt := fmt.Sprintf("CREATE TABLE %s (id INT64)", disallowedTableNameParam)
+	teardownDisallowed := setupBigQueryTable(t, ctx, client, createDisallowedTableStmt, "", disallowedDatasetName, disallowedTableNameParam, nil)
+	defer teardownDisallowed(t)
+
+	// Setup disallowed forecast table
+	disallowedForecastTableFullName := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, disallowedDatasetName, disallowedForecastTableName)
+	createDisallowedForecastStmt, insertDisallowedForecastStmt, disallowedForecastParams := getBigQueryForecastToolInfo(disallowedForecastTableFullName)
+	teardownDisallowedForecast := setupBigQueryTable(t, ctx, client, createDisallowedForecastStmt, insertDisallowedForecastStmt, disallowedDatasetName, disallowedForecastTableFullName, disallowedForecastParams)
+	defer teardownDisallowedForecast(t)
+
+	// Configure source with dataset restriction.
+	sourceConfig := getBigQueryVars(t)
+	sourceConfig["allowedDatasets"] = []string{allowedDatasetName1, allowedDatasetName2}
+
+	// Configure tool
+	toolsConfig := map[string]any{
+		"list-table-ids-restricted": map[string]any{
+			"kind":        "bigquery-list-table-ids",
+			"source":      "my-instance",
+			"description": "Tool to list table within a dataset",
+		},
+		"conversational-analytics-restricted": map[string]any{
+			"kind":        "bigquery-conversational-analytics",
+			"source":      "my-instance",
+			"description": "Tool to ask BigQuery conversational analytics",
+		},
+	}
+
+	// Create config file
+	config := map[string]any{
+		"sources": map[string]any{
+			"my-instance": sourceConfig,
+		},
+		"tools": toolsConfig,
+	}
+
+	// Start server
+	cmd, cleanup, err := tests.StartCmd(ctx, config)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+
+	// Run tests
+	runListTableIdsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, allowedForecastTableName1)
+	runListTableIdsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, allowedForecastTableName2)
+	runConversationalAnalyticsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, disallowedTableName)
+	runConversationalAnalyticsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, disallowedTableName)
 }
 
 // getBigQueryParamToolInfo returns statements and param for my-tool for bigquery kind
@@ -244,7 +361,7 @@ func getBigQueryForecastToolInfo(tableName string) (string, string, []bigqueryap
 	createStatement := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (ts TIMESTAMP, data FLOAT64, id STRING);`, tableName)
 	insertStatement := fmt.Sprintf(`
-		INSERT INTO %s (ts, data, id) VALUES 
+		INSERT INTO %s (ts, data, id) VALUES
 		(?, ?, ?), (?, ?, ?), (?, ?, ?), 
 		(?, ?, ?), (?, ?, ?), (?, ?, ?);`, tableName)
 	params := []bigqueryapi.QueryParameter{
@@ -254,6 +371,26 @@ func getBigQueryForecastToolInfo(tableName string) (string, string, []bigqueryap
 		{Value: "2025-01-01T00:00:00Z"}, {Value: 20.0}, {Value: "b"},
 		{Value: "2025-01-01T01:00:00Z"}, {Value: 21.0}, {Value: "b"},
 		{Value: "2025-01-01T02:00:00Z"}, {Value: 22.0}, {Value: "b"},
+	}
+	return createStatement, insertStatement, params
+}
+
+// getBigQueryAnalyzeContributionToolInfo returns statements and params for the analyze-contribution tool.
+func getBigQueryAnalyzeContributionToolInfo(tableName string) (string, string, []bigqueryapi.QueryParameter) {
+	createStatement := fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %s (dim1 STRING, dim2 STRING, is_test BOOL, metric FLOAT64);`, tableName)
+	insertStatement := fmt.Sprintf(`
+		INSERT INTO %s (dim1, dim2, is_test, metric) VALUES 
+		(?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?);`, tableName)
+	params := []bigqueryapi.QueryParameter{
+		{Value: "a"}, {Value: "x"}, {Value: true}, {Value: 100.0},
+		{Value: "a"}, {Value: "x"}, {Value: false}, {Value: 110.0},
+		{Value: "a"}, {Value: "y"}, {Value: true}, {Value: 120.0},
+		{Value: "a"}, {Value: "y"}, {Value: false}, {Value: 100.0},
+		{Value: "b"}, {Value: "x"}, {Value: true}, {Value: 40.0},
+		{Value: "b"}, {Value: "x"}, {Value: false}, {Value: 100.0},
+		{Value: "b"}, {Value: "y"}, {Value: true}, {Value: 60.0},
+		{Value: "b"}, {Value: "y"}, {Value: false}, {Value: 60.0},
 	}
 	return createStatement, insertStatement, params
 }
@@ -295,19 +432,21 @@ func setupBigQueryTable(t *testing.T, ctx context.Context, client *bigqueryapi.C
 		t.Fatalf("Create table job for %s failed: %v", tableName, err)
 	}
 
-	// Insert test data
-	insertQuery := client.Query(insertStatement)
-	insertQuery.Parameters = params
-	insertJob, err := insertQuery.Run(ctx)
-	if err != nil {
-		t.Fatalf("Failed to start insert job for %s: %v", tableName, err)
-	}
-	insertStatus, err := insertJob.Wait(ctx)
-	if err != nil {
-		t.Fatalf("Failed to wait for insert job for %s: %v", tableName, err)
-	}
-	if err := insertStatus.Err(); err != nil {
-		t.Fatalf("Insert job for %s failed: %v", tableName, err)
+	if len(params) > 0 {
+		// Insert test data
+		insertQuery := client.Query(insertStatement)
+		insertQuery.Parameters = params
+		insertJob, err := insertQuery.Run(ctx)
+		if err != nil {
+			t.Fatalf("Failed to start insert job for %s: %v", tableName, err)
+		}
+		insertStatus, err := insertJob.Wait(ctx)
+		if err != nil {
+			t.Fatalf("Failed to wait for insert job for %s: %v", tableName, err)
+		}
+		if err := insertStatus.Err(); err != nil {
+			t.Fatalf("Insert job for %s failed: %v", tableName, err)
+		}
 	}
 
 	return func(t *testing.T) {
@@ -382,6 +521,24 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		"kind":        "bigquery-forecast",
 		"source":      "my-client-auth-source",
 		"description": "Tool to forecast time series data with auth.",
+	}
+	tools["my-analyze-contribution-tool"] = map[string]any{
+		"kind":        "bigquery-analyze-contribution",
+		"source":      "my-instance",
+		"description": "Tool to analyze contribution.",
+	}
+	tools["my-auth-analyze-contribution-tool"] = map[string]any{
+		"kind":        "bigquery-analyze-contribution",
+		"source":      "my-instance",
+		"description": "Tool to analyze contribution with auth.",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	tools["my-client-auth-analyze-contribution-tool"] = map[string]any{
+		"kind":        "bigquery-analyze-contribution",
+		"source":      "my-client-auth-source",
+		"description": "Tool to analyze contribution with auth.",
 	}
 	tools["my-list-dataset-ids-tool"] = map[string]any{
 		"kind":        "bigquery-list-dataset-ids",
@@ -473,6 +630,24 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		"source":      "my-client-auth-source",
 		"description": "Tool to ask BigQuery conversational analytics",
 	}
+	tools["my-search-catalog-tool"] = map[string]any{
+		"kind":        "bigquery-search-catalog",
+		"source":      "my-instance",
+		"description": "Tool to search the BiqQuery catalog",
+	}
+	tools["my-auth-search-catalog-tool"] = map[string]any{
+		"kind":        "bigquery-search-catalog",
+		"source":      "my-instance",
+		"description": "Tool to search the BiqQuery catalog",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	tools["my-client-auth-search-catalog-tool"] = map[string]any{
+		"kind":        "bigquery-search-catalog",
+		"source":      "my-client-auth-source",
+		"description": "Tool to search the BiqQuery catalog",
+	}
 	config["tools"] = tools
 	return config
 }
@@ -542,6 +717,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 	if err != nil {
 		t.Fatalf("error getting access token from ADC: %s", err)
 	}
+	accessToken = "Bearer " + accessToken
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
@@ -824,6 +1000,7 @@ func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
 	if err != nil {
 		t.Fatalf("error getting access token from ADC: %s", err)
 	}
+	accessToken = "Bearer " + accessToken
 
 	historyDataTable := strings.ReplaceAll(tableName, "`", "")
 	historyDataQuery := fmt.Sprintf("SELECT ts, data, id FROM %s", tableName)
@@ -903,6 +1080,127 @@ func runBigQueryForecastToolInvokeTest(t *testing.T, tableName string) {
 			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-forecast-tool/invoke",
 			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"history_data": "%s", "timestamp_col": "ts", "data_col": "data"}`, historyDataTable))),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if !strings.Contains(got, tc.want) {
+				t.Fatalf("expected %q to contain %q, but it did not", got, tc.want)
+			}
+		})
+	}
+}
+
+func runBigQueryAnalyzeContributionToolInvokeTest(t *testing.T, tableName string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	// Get access token
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	dataTable := strings.ReplaceAll(tableName, "`", "")
+
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-analyze-contribution-tool without required params",
+			api:           "http://127.0.0.1:5000/api/tool/my-analyze-contribution-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s"}`, dataTable))),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-analyze-contribution-tool with table",
+			api:           "http://127.0.0.1:5000/api/tool/my-analyze-contribution-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
+			want:          `"relative_difference"`,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-analyze-contribution-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-analyze-contribution-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
+			want:          `"relative_difference"`,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-analyze-contribution-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-analyze-contribution-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-client-auth-analyze-contribution-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-analyze-contribution-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
+			want:          `"relative_difference"`,
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-client-auth-analyze-contribution-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-analyze-contribution-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
+			isErr:         true,
+		},
+		{
+
+			name:          "Invoke my-client-auth-analyze-contribution-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-analyze-contribution-tool/invoke",
+			requestHeader: map[string]string{"Authorization": "Bearer invalid-token"},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"input_data": "%s", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1", "dim2"]}`, dataTable))),
 			isErr:         true,
 		},
 	}
@@ -1040,6 +1338,7 @@ func runBigQueryListDatasetToolInvokeTest(t *testing.T, datasetWant string) {
 	if err != nil {
 		t.Fatalf("error getting access token from ADC: %s", err)
 	}
+	accessToken = "Bearer " + accessToken
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
@@ -1161,6 +1460,7 @@ func runBigQueryGetDatasetInfoToolInvokeTest(t *testing.T, datasetName, datasetI
 	if err != nil {
 		t.Fatalf("error getting access token from ADC: %s", err)
 	}
+	accessToken = "Bearer " + accessToken
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
@@ -1310,6 +1610,7 @@ func runBigQueryListTableIdsToolInvokeTest(t *testing.T, datasetName, tablename_
 	if err != nil {
 		t.Fatalf("error getting access token from ADC: %s", err)
 	}
+	accessToken = "Bearer " + accessToken
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
@@ -1459,6 +1760,7 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 	if err != nil {
 		t.Fatalf("error getting access token from ADC: %s", err)
 	}
+	accessToken = "Bearer " + accessToken
 
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
@@ -1597,6 +1899,9 @@ func runBigQueryGetTableInfoToolInvokeTest(t *testing.T, datasetName, tableName,
 }
 
 func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tableName, dataInsightsWant string) {
+	// Each test is expected to complete in under 10s, we set a 25s timeout with retries to avoid flaky tests.
+	const maxRetries = 3
+	const requestTimeout = 25 * time.Second
 	// Get ID token
 	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
@@ -1608,6 +1913,7 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 	if err != nil {
 		t.Fatalf("error getting access token from ADC: %s", err)
 	}
+	accessToken = "Bearer " + accessToken
 
 	tableRefsJSON := fmt.Sprintf(`[{"projectId":"%s","datasetId":"%s","tableId":"%s"}]`, BigqueryProject, datasetName, tableName)
 
@@ -1683,18 +1989,53 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			// Send Tool invocation request
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			var resp *http.Response
+			var err error
+
+			bodyBytes, err := io.ReadAll(tc.requestBody)
+			if err != nil {
+				t.Fatalf("failed to read request body: %v", err)
+			}
+
+			req, err := http.NewRequest(http.MethodPost, tc.api, nil)
 			if err != nil {
 				t.Fatalf("unable to create request: %s", err)
 			}
-			req.Header.Add("Content-type", "application/json")
+			req.Header.Set("Content-type", "application/json")
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
-			resp, err := http.DefaultClient.Do(req)
+
+			for i := 0; i < maxRetries; i++ {
+				ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
+				defer cancel()
+
+				req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+				req.GetBody = func() (io.ReadCloser, error) {
+					return io.NopCloser(bytes.NewReader(bodyBytes)), nil
+				}
+				reqWithCtx := req.WithContext(ctx)
+
+				resp, err = http.DefaultClient.Do(reqWithCtx)
+				if err != nil {
+					// Retry on time out.
+					if os.IsTimeout(err) {
+						t.Logf("Request timed out (attempt %d/%d), retrying...", i+1, maxRetries)
+						time.Sleep(5 * time.Second)
+						continue
+					}
+					t.Fatalf("unable to send request: %s", err)
+				}
+				if resp.StatusCode == http.StatusServiceUnavailable {
+					t.Logf("Received 503 Service Unavailable (attempt %d/%d), retrying...", i+1, maxRetries)
+					time.Sleep(15 * time.Second)
+					continue
+				}
+				break
+			}
+
 			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
+				t.Fatalf("Request failed after %d retries: %v", maxRetries, err)
 			}
 			defer resp.Body.Close()
 
@@ -1720,6 +2061,325 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 			wantPattern := regexp.MustCompile(tc.want)
 			if !wantPattern.MatchString(got) {
 				t.Fatalf("response did not match the expected pattern.\nFull response:\n%s", got)
+			}
+		})
+	}
+}
+
+func runListTableIdsWithRestriction(t *testing.T, allowedDatasetName, disallowedDatasetName string, allowedTableNames ...string) {
+	sort.Strings(allowedTableNames)
+	var quotedNames []string
+	for _, name := range allowedTableNames {
+		quotedNames = append(quotedNames, fmt.Sprintf(`"%s"`, name))
+	}
+	wantResult := fmt.Sprintf(`[%s]`, strings.Join(quotedNames, ","))
+
+	testCases := []struct {
+		name           string
+		dataset        string
+		wantStatusCode int
+		wantInResult   string
+		wantInError    string
+	}{
+		{
+			name:           "invoke on allowed dataset",
+			dataset:        allowedDatasetName,
+			wantStatusCode: http.StatusOK,
+			wantInResult:   wantResult,
+		},
+		{
+			name:           "invoke on disallowed dataset",
+			dataset:        disallowedDatasetName,
+			wantStatusCode: http.StatusBadRequest, // Or the specific error code returned
+			wantInError:    fmt.Sprintf("access denied to dataset '%s'", disallowedDatasetName),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			body := bytes.NewBuffer([]byte(fmt.Sprintf(`{"dataset":"%s"}`, tc.dataset)))
+			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/api/tool/list-table-ids-restricted/invoke", body)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
+			}
+
+			if tc.wantInResult != "" {
+				var respBody map[string]interface{}
+				if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
+					t.Fatalf("error parsing response body: %v", err)
+				}
+				got, ok := respBody["result"].(string)
+				if !ok {
+					t.Fatalf("unable to find result in response body")
+				}
+
+				var gotSlice []string
+				if err := json.Unmarshal([]byte(got), &gotSlice); err != nil {
+					t.Fatalf("error unmarshalling result: %v", err)
+				}
+				sort.Strings(gotSlice)
+				sortedGotBytes, err := json.Marshal(gotSlice)
+				if err != nil {
+					t.Fatalf("error marshalling sorted result: %v", err)
+				}
+
+				if string(sortedGotBytes) != tc.wantInResult {
+					t.Errorf("unexpected result: got %q, want %q", string(sortedGotBytes), tc.wantInResult)
+				}
+			}
+
+			if tc.wantInError != "" {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				if !strings.Contains(string(bodyBytes), tc.wantInError) {
+					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
+				}
+			}
+		})
+	}
+}
+
+func runConversationalAnalyticsWithRestriction(t *testing.T, allowedDatasetName, disallowedDatasetName, allowedTableName, disallowedTableName string) {
+	allowedTableRefsJSON := fmt.Sprintf(`[{"projectId":"%s","datasetId":"%s","tableId":"%s"}]`, BigqueryProject, allowedDatasetName, allowedTableName)
+	disallowedTableRefsJSON := fmt.Sprintf(`[{"projectId":"%s","datasetId":"%s","tableId":"%s"}]`, BigqueryProject, disallowedDatasetName, disallowedTableName)
+
+	testCases := []struct {
+		name           string
+		tableRefs      string
+		wantStatusCode int
+		wantInResult   string
+		wantInError    string
+	}{
+		{
+			name:           "invoke with allowed table",
+			tableRefs:      allowedTableRefsJSON,
+			wantStatusCode: http.StatusOK,
+			wantInResult:   `Answer`,
+		},
+		{
+			name:           "invoke with disallowed table",
+			tableRefs:      disallowedTableRefsJSON,
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    fmt.Sprintf("access to dataset '%s.%s' (from table '%s') is not allowed", BigqueryProject, disallowedDatasetName, disallowedTableName),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			requestBodyMap := map[string]any{
+				"user_query_with_context": "What is in the table?",
+				"table_references":        tc.tableRefs,
+			}
+			bodyBytes, err := json.Marshal(requestBodyMap)
+			if err != nil {
+				t.Fatalf("failed to marshal request body: %v", err)
+			}
+			body := bytes.NewBuffer(bodyBytes)
+
+			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/api/tool/conversational-analytics-restricted/invoke", body)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
+			}
+
+			if tc.wantInResult != "" {
+				var respBody map[string]interface{}
+				if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
+					t.Fatalf("error parsing response body: %v", err)
+				}
+				got, ok := respBody["result"].(string)
+				if !ok {
+					t.Fatalf("unable to find result in response body")
+				}
+				if !strings.Contains(got, tc.wantInResult) {
+					t.Errorf("unexpected result: got %q, want to contain %q", got, tc.wantInResult)
+				}
+			}
+
+			if tc.wantInError != "" {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				if !strings.Contains(string(bodyBytes), tc.wantInError) {
+					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
+				}
+			}
+		})
+	}
+}
+
+func runBigQuerySearchCatalogToolInvokeTest(t *testing.T, datasetName string, tableName string) {
+	// Get ID token
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	// Get access token
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		wantKey       string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-search-catalog-tool without body",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-search-catalog-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			wantKey:       "DisplayName",
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			wantKey:       "DisplayName",
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with correct project",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"projectIds\":[\"%s\"], \"datasetIds\":[\"%s\"]}", tableName, BigqueryProject, datasetName))),
+			wantKey:       "DisplayName",
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with non-existent project",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"projectIds\":[\"%s-%s\"], \"datasetIds\":[\"%s\"]}", tableName, BigqueryProject, uuid.NewString(), datasetName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-client-auth-search-catalog-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-client-auth-search-catalog-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			wantKey:       "DisplayName",
+			isErr:         false,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			var result map[string]interface{}
+			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+				t.Fatalf("error parsing response body: %s", err)
+			}
+			resultStr, ok := result["result"].(string)
+			if !ok {
+				if result["result"] == nil && tc.isErr {
+					return
+				}
+				t.Fatalf("expected 'result' field to be a string, got %T", result["result"])
+			}
+			if tc.isErr && (resultStr == "" || resultStr == "[]") {
+				return
+			}
+			var entries []interface{}
+			if err := json.Unmarshal([]byte(resultStr), &entries); err != nil {
+				t.Fatalf("error unmarshalling result string: %v", err)
+			}
+
+			if !tc.isErr {
+				if len(entries) != 1 {
+					t.Fatalf("expected exactly one entry, but got %d", len(entries))
+				}
+				entry, ok := entries[0].(map[string]interface{})
+				if !ok {
+					t.Fatalf("expected first entry to be a map, got %T", entries[0])
+				}
+				respTable, ok := entry[tc.wantKey]
+				if !ok {
+					t.Fatalf("expected entry to have key '%s', but it was not found in %v", tc.wantKey, entry)
+				}
+				if respTable != tableName {
+					t.Fatalf("expected key '%s' to have value '%s', but got %s", tc.wantKey, tableName, respTable)
+				}
+			} else {
+				if len(entries) != 0 {
+					t.Fatalf("expected 0 entries, but got %d", len(entries))
+				}
 			}
 		})
 	}

@@ -1,3 +1,17 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 sources:
   mysql-source:
     kind: mysql
@@ -6,177 +20,50 @@ sources:
     database: ${MYSQL_DATABASE}
     user: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
+    # Optional: supply additional DSN parameters (e.g. TLS, charset) via env var.
+    # Provide a YAML-encoded map in MYSQL_QUERY_PARAMS, for example:
+    #   export MYSQL_QUERY_PARAMS="{tls: preferred, charset: utf8mb4}"
+    # When the variable is empty/undefined, queryParams will be treated as nil.
+    queryParams: ${MYSQL_QUERY_PARAMS:}
     queryTimeout: 30s # Optional
 tools:
   execute_sql:
     kind: mysql-execute-sql
     source: mysql-source
     description: Use this tool to execute SQL.
-  list_tables:
+  list_active_queries:
+    kind: mysql-list-active-queries
+    source: mysql-source
+    description: Lists top N (default 10) ongoing queries from processlist and innodb_trx, ordered by execution time in descending order. Returns detailed information of those queries in json format, including process id, query, transaction duration, transaction wait duration, process time, transaction state, process state, username with host, transaction rows locked, transaction rows modified, and db schema.
+  get_query_plan:
     kind: mysql-sql
     source: mysql-source
-    description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
+    description: "Provide information about how MySQL executes a SQL statement. Common use cases include: 1) analyze query plan to improve its performance, and 2) determine effectiveness of existing indexes and evalueate new ones."
     statement: |
-      SELECT
-          T.TABLE_SCHEMA AS schema_name,
-          T.TABLE_NAME AS object_name,
-          CASE
-              WHEN @output_format = 'simple' THEN
-                  JSON_OBJECT('name', T.TABLE_NAME)
-              ELSE
-                CONVERT( JSON_OBJECT(
-                    'schema_name', T.TABLE_SCHEMA,
-                    'object_name', T.TABLE_NAME,
-                    'object_type', 'TABLE',
-                    'owner', (
-                        SELECT
-                            IFNULL(U.GRANTEE, 'N/A')
-                        FROM
-                            INFORMATION_SCHEMA.SCHEMA_PRIVILEGES U
-                        WHERE
-                            U.TABLE_SCHEMA = T.TABLE_SCHEMA
-                        LIMIT 1
-                    ),
-                    'comment', IFNULL(T.TABLE_COMMENT, ''),
-                    'columns', (
-                        SELECT
-                            IFNULL(
-                                JSON_ARRAYAGG(
-                                    JSON_OBJECT(
-                                        'column_name', C.COLUMN_NAME,
-                                        'data_type', C.COLUMN_TYPE,
-                                        'ordinal_position', C.ORDINAL_POSITION,
-                                        'is_not_nullable', IF(C.IS_NULLABLE = 'NO', TRUE, FALSE),
-                                        'column_default', C.COLUMN_DEFAULT,
-                                        'column_comment', IFNULL(C.COLUMN_COMMENT, '')
-                                    )
-                                ),
-                                JSON_ARRAY()
-                            )
-                        FROM
-                            INFORMATION_SCHEMA.COLUMNS C
-                        WHERE
-                            C.TABLE_SCHEMA = T.TABLE_SCHEMA AND C.TABLE_NAME = T.TABLE_NAME
-                        ORDER BY C.ORDINAL_POSITION
-                    ),
-                    'constraints', (
-                        SELECT
-                            IFNULL(
-                                JSON_ARRAYAGG(
-                                    JSON_OBJECT(
-                                        'constraint_name', TC.CONSTRAINT_NAME,
-                                        'constraint_type',
-                                            CASE TC.CONSTRAINT_TYPE
-                                                WHEN 'PRIMARY KEY' THEN 'PRIMARY KEY'
-                                                WHEN 'FOREIGN KEY' THEN 'FOREIGN KEY'
-                                                WHEN 'UNIQUE' THEN 'UNIQUE'
-                                                ELSE TC.CONSTRAINT_TYPE
-                                            END,
-                                        'constraint_definition', '',
-                                        'constraint_columns', (
-                                            SELECT
-                                                IFNULL(JSON_ARRAYAGG(KCU.COLUMN_NAME), JSON_ARRAY())
-                                            FROM
-                                                INFORMATION_SCHEMA.KEY_COLUMN_USAGE KCU
-                                            WHERE
-                                                KCU.CONSTRAINT_SCHEMA = TC.CONSTRAINT_SCHEMA
-                                                AND KCU.CONSTRAINT_NAME = TC.CONSTRAINT_NAME
-                                                AND KCU.TABLE_NAME = TC.TABLE_NAME
-                                            ORDER BY KCU.ORDINAL_POSITION
-                                        ),
-                                        'foreign_key_referenced_table', IF(TC.CONSTRAINT_TYPE = 'FOREIGN KEY', RC.REFERENCED_TABLE_NAME, NULL),
-                                        'foreign_key_referenced_columns', IF(TC.CONSTRAINT_TYPE = 'FOREIGN KEY',
-                                            (SELECT IFNULL(JSON_ARRAYAGG(FKCU.REFERENCED_COLUMN_NAME), JSON_ARRAY())
-                                            FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE FKCU
-                                            WHERE FKCU.CONSTRAINT_SCHEMA = TC.CONSTRAINT_SCHEMA
-                                                AND FKCU.CONSTRAINT_NAME = TC.CONSTRAINT_NAME
-                                                AND FKCU.TABLE_NAME = TC.TABLE_NAME
-                                                AND FKCU.REFERENCED_TABLE_NAME IS NOT NULL
-                                            ORDER BY FKCU.ORDINAL_POSITION),
-                                            NULL
-                                        )
-                                    )
-                                ),
-                                JSON_ARRAY()
-                            )
-                        FROM
-                            INFORMATION_SCHEMA.TABLE_CONSTRAINTS TC
-                        LEFT JOIN
-                            INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS RC
-                            ON TC.CONSTRAINT_SCHEMA = RC.CONSTRAINT_SCHEMA
-                            AND TC.CONSTRAINT_NAME = RC.CONSTRAINT_NAME
-                            AND TC.TABLE_NAME = RC.TABLE_NAME
-                        WHERE
-                            TC.TABLE_SCHEMA = T.TABLE_SCHEMA AND TC.TABLE_NAME = T.TABLE_NAME
-                    ),
-                    'indexes', (
-                        SELECT
-                            IFNULL(
-                                JSON_ARRAYAGG(
-                                    JSON_OBJECT(
-                                        'index_name', IndexData.INDEX_NAME,
-                                        'is_unique', IF(IndexData.NON_UNIQUE = 0, TRUE, FALSE),
-                                        'is_primary', IF(IndexData.INDEX_NAME = 'PRIMARY', TRUE, FALSE),
-                                        'index_columns', IFNULL(IndexData.INDEX_COLUMNS_ARRAY, JSON_ARRAY())
-                                    )
-                                ),
-                                JSON_ARRAY()
-                            )
-                        FROM (
-                            SELECT
-                                S.TABLE_SCHEMA,
-                                S.TABLE_NAME,
-                                S.INDEX_NAME,
-                                MIN(S.NON_UNIQUE) AS NON_UNIQUE, -- Aggregate NON_UNIQUE here to get unique status for the index
-                                JSON_ARRAYAGG(S.COLUMN_NAME) AS INDEX_COLUMNS_ARRAY -- Aggregate columns into an array for this index
-                            FROM
-                                INFORMATION_SCHEMA.STATISTICS S
-                            WHERE
-                                S.TABLE_SCHEMA = T.TABLE_SCHEMA AND S.TABLE_NAME = T.TABLE_NAME
-                            GROUP BY
-                                S.TABLE_SCHEMA, S.TABLE_NAME, S.INDEX_NAME
-                        ) AS IndexData
-                        ORDER BY IndexData.INDEX_NAME
-                    ),
-                    'triggers', (
-                        SELECT
-                            IFNULL(
-                                JSON_ARRAYAGG(
-                                    JSON_OBJECT(
-                                        'trigger_name', TR.TRIGGER_NAME,
-                                        'trigger_definition', TR.ACTION_STATEMENT
-                                    )
-                                ),
-                                JSON_ARRAY()
-                            )
-                        FROM
-                            INFORMATION_SCHEMA.TRIGGERS TR
-                        WHERE
-                            TR.EVENT_OBJECT_SCHEMA = T.TABLE_SCHEMA AND TR.EVENT_OBJECT_TABLE = T.TABLE_NAME
-                        ORDER BY TR.TRIGGER_NAME
-                    )
-                ) USING utf8mb4)
-            END AS object_details
-      FROM
-          INFORMATION_SCHEMA.TABLES T
-      CROSS JOIN (SELECT @table_names := ?, @output_format := ?) AS variables
-      WHERE
-          T.TABLE_SCHEMA NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys')
-          AND (NULLIF(TRIM(@table_names), '') IS NULL OR FIND_IN_SET(T.TABLE_NAME, @table_names))
-          AND T.TABLE_TYPE = 'BASE TABLE'
-      ORDER BY
-          T.TABLE_SCHEMA, T.TABLE_NAME;
-    parameters:
-      - name: table_names
+      EXPLAIN FORMAT=JSON {{.sql_statement}};
+    templateParameters:
+      - name: sql_statement
         type: string
-        description: "Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed."
-        default: ""
-      - name: output_format
-        type: string
-        description: "Optional: Use 'simple' to return table names only or use 'detailed' to return the full information schema."
-        default: "detailed"
+        description: "the SQL statement to explain"
+        required: true
+  list_tables:
+    kind: mysql-list-tables
+    source: mysql-source
+    description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
+  list_tables_missing_unique_indexes:
+    kind: mysql-list-tables-missing-unique-indexes
+    source: mysql-source
+    description: "Find tables that do not have primary or unique key constraint. A primary key or unique key is the only mechanism that guaranttes a row is unique. Without them, the database-level protection against data integrity issues will be missing."
+  list_table_fragmentation:
+    kind: mysql-list-table-fragmentation
+    source: mysql-source
+    description: List table fragmentation in MySQL, by calculating the size of the data and index files and free space allocated to each table. The query calculates fragmentation percentage which represents the proportion of free space relative to the total data and index size. Storage can be reclaimed for tables with high fragmentation using OPTIMIZE TABLE.
 
 toolsets:
-  mysql-database-tools:
+  mysql_database_tools:
     - execute_sql
     - list_tables
+    - get_query_plan
+    - list_active_queries
+    - list_tables_missing_unique_indexes
+    - list_table_fragmentation

@@ -696,7 +696,7 @@ tools:
           and the resulting tiles will be added in order.
 
 toolsets:
-    looker-tools:
+    looker_tools:
         - get_models
         - get_explores
         - get_dimensions
