@@ -207,7 +207,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		// Use a map to avoid duplicate table names.
 		tableIDSet := make(map[string]struct{})
 
-		// Stage 1: Get all tables from the dry run result. This is the most reliable method.
+		// Get all tables from the dry run result. This is the most reliable method.
 		queryStats := dryRunJob.Statistics.Query
 		if queryStats != nil {
 			for _, tableRef := range queryStats.ReferencedTables {
