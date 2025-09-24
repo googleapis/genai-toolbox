@@ -14,7 +14,7 @@ api_key = os.environ.get("GOOGLE_API_KEY") or "your-api-key" # Set your API key 
 os.environ["GOOGLE_API_KEY"] = api_key
 
 async def main():
-  with ToolboxSyncClient("http://127.0.0.1:5000") as toolbox_client:
+  with ToolboxSyncClient("http://localhost:5000") as toolbox_client:
 
       prompt = """
         You're a helpful hotel assistant. You handle hotel searching, booking and
