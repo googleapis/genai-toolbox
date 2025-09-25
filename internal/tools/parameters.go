@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"slices"
 	"strings"
 	"text/template"
@@ -1353,9 +1354,11 @@ func (p *EnumParameter) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 
 // Parse validates and parses an incoming value for enum parameter.
 func (p *EnumParameter) Parse(v any) (any, error) {
+	input := fmt.Sprintf("%v", v)
 	var exists bool
 	for _, av := range p.AllowedValues {
-		if av == v {
+		target := fmt.Sprintf("%v", av)
+		if MatchStringOrRegex(input, target) {
 			exists = true
 			break
 		}
@@ -1365,6 +1368,15 @@ func (p *EnumParameter) Parse(v any) (any, error) {
 	}
 
 	return p.EnumItem.Parse(v)
+}
+
+// MatchStringOrRegex checks if the input matches the target
+func MatchStringOrRegex(input, target string) bool {
+	re, err := regexp.Compile(target)
+	if err != nil {
+		return strings.Contains(input, target)
+	}
+	return re.MatchString(input)
 }
 
 func (p *EnumParameter) GetAuthServices() []ParamAuthService {

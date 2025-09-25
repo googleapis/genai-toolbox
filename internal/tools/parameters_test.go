@@ -17,6 +17,7 @@ package tools_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"math"
 	"strings"
 	"testing"
@@ -858,6 +859,16 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"enum_string": "invalid",
 			},
+		},
+		{
+			name: "enum with integer",
+			params: tools.Parameters{
+				tools.NewEnumParameter(tools.NewIntParameter("enum_int", "enum of int"), false, []any{"^[1-5]$"}),
+			},
+			in: map[string]any{
+				"enum_int": 4,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "enum_int", Value: 4}},
 		},
 		{
 			name: "string default",
@@ -2020,6 +2031,78 @@ func TestCheckParamRequired(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			got := tools.CheckParamRequired(tc.required, tc.defaultV)
+			if got != tc.want {
+				t.Fatalf("got %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestMatchStringOrRegex(t *testing.T) {
+	tcs := []struct {
+		name   string
+		input  string
+		target string
+		want   bool
+	}{
+		{
+			name:   "exact string",
+			input:  "foo",
+			target: "foo",
+			want:   true,
+		},
+		{
+			name:   "exact integer",
+			input:  fmt.Sprintf("%v", 5),
+			target: fmt.Sprintf("%v", 5),
+			want:   true,
+		},
+		{
+			name:   "wrong integer",
+			input:  fmt.Sprintf("%v", 4),
+			target: fmt.Sprintf("%v", 5),
+			want:   false,
+		},
+		{
+			name:   "exact boolean",
+			input:  fmt.Sprintf("%v", true),
+			target: fmt.Sprintf("%v", true),
+			want:   true,
+		},
+		{
+			name:   "target contains input",
+			input:  "foo",
+			target: "foo bar",
+			want:   false,
+		},
+		{
+			name:   "regex any string",
+			input:  "foo",
+			target: ".*",
+			want:   true,
+		},
+		{
+			name:   "regex",
+			input:  "foo6",
+			target: `foo\d+`,
+			want:   true,
+		},
+		{
+			name:   "regex of numbers",
+			input:  "4",
+			target: "^[1-5]$",
+			want:   true,
+		},
+		{
+			name:   "regex of numbers invalid",
+			input:  "7",
+			target: "^[1-5]$",
+			want:   false,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tools.MatchStringOrRegex(tc.input, tc.target)
 			if got != tc.want {
 				t.Fatalf("got %v, want %v", got, tc.want)
 			}
