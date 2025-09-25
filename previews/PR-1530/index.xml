@@ -566,9 +566,29 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1530/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>bigquery-execute-sql&lt;/code> takes a required &lt;code>sql&lt;/code> input parameter and runs the SQL
-statement against the configured &lt;code>source&lt;/code>. It also supports an optional &lt;code>dry_run&lt;/code>
-parameter to validate a query without executing it.&lt;/p>
+&lt;p>&lt;code>bigquery-execute-sql&lt;/code> accepts the following parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>sql&lt;/code>&lt;/strong> (required): The GoogleSQL statement to execute.&lt;/li>
+&lt;li>&lt;strong>&lt;code>dry_run&lt;/code>&lt;/strong> (optional): If set to &lt;code>true&lt;/code>, the query is validated but not run,
+returning information about the execution instead. Defaults to &lt;code>false&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;p>The tool&amp;rsquo;s behavior is influenced by the &lt;code>allowedDatasets&lt;/code> restriction on the
+&lt;code>bigquery&lt;/code> source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Without &lt;code>allowedDatasets&lt;/code> restriction:&lt;/strong> The tool can execute any valid GoogleSQL
+query.&lt;/li>
+&lt;li>&lt;strong>With &lt;code>allowedDatasets&lt;/code> restriction:&lt;/strong> Before execution, the tool performs a dry run
+to analyze the query.
+It will reject the query if it attempts to access any table outside the
+allowed &lt;code>datasets&lt;/code> list. To enforce this restriction, the following operations
+are also disallowed:
+&lt;ul>
+&lt;li>&lt;strong>Dataset-level operations&lt;/strong> (e.g., &lt;code>CREATE SCHEMA&lt;/code>, &lt;code>ALTER SCHEMA&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Unanalyzable operations&lt;/strong> where the accessed tables cannot be determined
+statically (e.g., &lt;code>EXECUTE IMMEDIATE&lt;/code>, &lt;code>CREATE PROCEDURE&lt;/code>, &lt;code>CALL&lt;/code>).&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">execute_sql_tool&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
