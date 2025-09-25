@@ -104,6 +104,10 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 	if err != nil {
 		userAgent = "genai-toolbox"
 	}
+	if queryParams == nil {
+		// Initialize the map before using it
+		queryParams = make(map[string]string)
+	}
 	if _, ok := queryParams["application_name"]; !ok {
 		queryParams["application_name"] = userAgent
 	}
