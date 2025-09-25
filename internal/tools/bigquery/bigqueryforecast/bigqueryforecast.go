@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
@@ -190,6 +191,27 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	var historyDataSource string
 	trimmedUpperHistoryData := strings.TrimSpace(strings.ToUpper(historyData))
 	if strings.HasPrefix(trimmedUpperHistoryData, "SELECT") || strings.HasPrefix(trimmedUpperHistoryData, "WITH") {
+		if len(t.AllowedDatasets) > 0 {
+			dryRunJob, err := bqutil.DryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, historyData, nil, nil)
+			if err != nil {
+				return nil, fmt.Errorf("query validation failed during dry run: %w", err)
+			}
+			statementType := dryRunJob.Statistics.Query.StatementType
+			if statementType != "SELECT" {
+				return nil, fmt.Errorf("the 'history_data' parameter only supports a table ID or a SELECT query. The provided query has statement type '%s'", statementType)
+			}
+
+			queryStats := dryRunJob.Statistics.Query
+			if queryStats != nil {
+				for _, tableRef := range queryStats.ReferencedTables {
+					if !t.IsDatasetAllowed(tableRef.ProjectId, tableRef.DatasetId) {
+						return nil, fmt.Errorf("query in history_data accesses dataset '%s.%s', which is not in the allowed list", tableRef.ProjectId, tableRef.DatasetId)
+					}
+				}
+			} else {
+				return nil, fmt.Errorf("could not analyze query in history_data to validate against allowed datasets")
+			}
+		}
 		historyDataSource = fmt.Sprintf("(%s)", historyData)
 		if len(t.AllowedDatasets) > 0 {
 			dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, historyData)
@@ -213,6 +235,25 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			}
 		}
 	} else {
+		if len(t.AllowedDatasets) > 0 {
+			parts := strings.Split(historyData, ".")
+			var projectID, datasetID string
+
+			switch len(parts) {
+			case 3: // project.dataset.table
+				projectID = parts[0]
+				datasetID = parts[1]
+			case 2: // dataset.table
+				projectID = t.Client.Project()
+				datasetID = parts[0]
+			default:
+				return nil, fmt.Errorf("invalid table ID format for 'history_data': %q. Expected 'dataset.table' or 'project.dataset.table'", historyData)
+			}
+
+			if !t.IsDatasetAllowed(projectID, datasetID) {
+				return nil, fmt.Errorf("access to dataset '%s.%s' (from table '%s') is not allowed", projectID, datasetID, historyData)
+			}
+		}
 		historyDataSource = fmt.Sprintf("TABLE `%s`", historyData)
 		if len(t.AllowedDatasets) > 0 {
 			parts := strings.Split(historyData, ".")

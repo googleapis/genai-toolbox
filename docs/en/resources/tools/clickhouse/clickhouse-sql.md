@@ -10,8 +10,9 @@ aliases:
 
 ## About
 
-A `clickhouse-sql` tool executes SQL queries as prepared statements against a 
-ClickHouse database. It's compatible with the [clickhouse](../../sources/clickhouse.md) source.
+A `clickhouse-sql` tool executes SQL queries as prepared statements against a
+ClickHouse database. It's compatible with the
+[clickhouse](../../sources/clickhouse.md) source.
 
 This tool supports both template parameters (for SQL statement customization) 
 and regular parameters (for prepared statement values), providing flexible 
@@ -71,11 +72,11 @@ tools:
 
 ## Reference
 
-| **field**          | **type**           | **required** | **description**                                           |
-|--------------------|:------------------:|:------------:|-----------------------------------------------------------|
-| kind               | string             | true         | Must be "clickhouse-sql".                                |
-| source             | string             | true         | Name of the ClickHouse source to execute SQL against.    |
-| description        | string             | true         | Description of the tool that is passed to the LLM.       |
-| statement          | string             | true         | The SQL statement template to execute.                    |
-| parameters         | array of Parameter | false        | Parameters for prepared statement values.                 |
-| templateParameters | array of Parameter | false        | Parameters for SQL statement template customization.     |
+| **field**          |      **type**      | **required** | **description**                                       |
+|--------------------|:------------------:|:------------:|-------------------------------------------------------|
+| kind               |       string       |     true     | Must be "clickhouse-sql".                             |
+| source             |       string       |     true     | Name of the ClickHouse source to execute SQL against. |
+| description        |       string       |     true     | Description of the tool that is passed to the LLM.    |
+| statement          |       string       |     true     | The SQL statement template to execute.                |
+| parameters         | array of Parameter |    false     | Parameters for prepared statement values.             |
+| templateParameters | array of Parameter |    false     | Parameters for SQL statement template customization.  |

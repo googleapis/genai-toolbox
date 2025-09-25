@@ -71,10 +71,10 @@ tools:
 
 The tool accepts two optional parameters:
 
-| **parameter**   | **type** | **default** | **description**                                                                                      |
-|-----------------|:--------:|:-----------:|------------------------------------------------------------------------------------------------------|
-| table_names     | string   | ""          | Comma-separated list of table names to filter. If empty, lists all tables in user-accessible schemas |
-| output_format   | string   | "detailed"  | Output format: "simple" returns only table names, "detailed" returns full schema information         |
+| **parameter** | **type** | **default** | **description**                                                                                      |
+|---------------|:--------:|:-----------:|------------------------------------------------------------------------------------------------------|
+| table_names   |  string  |     ""      | Comma-separated list of table names to filter. If empty, lists all tables in user-accessible schemas |
+| output_format |  string  | "detailed"  | Output format: "simple" returns only table names, "detailed" returns full schema information         |
 
 ## Output Format
 
@@ -99,7 +99,8 @@ When `output_format` is set to "simple", the tool returns a minimal JSON structu
 
 ### Detailed Format
 
-When `output_format` is set to "detailed" (default), the tool returns comprehensive schema information:
+When `output_format` is set to "detailed" (default), the tool returns
+comprehensive schema information:
 
 ```json
 [
@@ -194,12 +195,12 @@ tools:
 
 ## Reference
 
-| **field**     | **type** | **required** | **description**                                                    |
-|---------------|:--------:|:------------:|--------------------------------------------------------------------|
-| kind          | string   | true         | Must be "spanner-list-tables"                                     |
-| source        | string   | true         | Name of the Spanner source to query                               |
-| description   | string   | false        | Description of the tool that is passed to the LLM                 |
-| authRequired  | string[] | false        | List of auth services required to invoke this tool                |
+| **field**    | **type** | **required** | **description**                                    |
+|--------------|:--------:|:------------:|----------------------------------------------------|
+| kind         |  string  |     true     | Must be "spanner-list-tables"                      |
+| source       |  string  |     true     | Name of the Spanner source to query                |
+| description  |  string  |    false     | Description of the tool that is passed to the LLM  |
+| authRequired | string[] |    false     | List of auth services required to invoke this tool |
 
 ## Notes
 

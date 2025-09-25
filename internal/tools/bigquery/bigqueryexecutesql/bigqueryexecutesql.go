@@ -25,6 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
@@ -96,12 +97,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		}
 
 		if len(datasetIDs) == 1 {
-			datasetFQN := allowedDatasets[0]
-			parts := strings.Split(datasetFQN, ".")
-			datasetID := datasetFQN
-			if len(parts) == 2 {
-				datasetID = parts[1]
+			parts := strings.Split(allowedDatasets[0], ".")
+			if len(parts) < 2 {
+				return nil, fmt.Errorf("expected split to have 2 parts: %s", allowedDatasets[0])
 			}
+			datasetID := parts[1]
 			sqlDescription += fmt.Sprintf(" The query must only access the %s dataset. "+
 				"To query a table within this dataset (e.g., `my_table`), "+
 				"qualify it with the dataset id (e.g., `%s.my_table`).", datasetIDs[0], datasetID)
@@ -188,7 +188,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		}
 	}
 
-	dryRunJob, err := dryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, sql)
+	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, sql, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("query validation failed during dry run: %w", err)
 	}
@@ -207,7 +207,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		// Use a map to avoid duplicate table names.
 		tableIDSet := make(map[string]struct{})
 
-		// Stage 1: Get all tables from the dry run result. This is the most reliable method.
+		// Get all tables from the dry run result. This is the most reliable method.
 		queryStats := dryRunJob.Statistics.Query
 		if queryStats != nil {
 			for _, tableRef := range queryStats.ReferencedTables {
@@ -229,7 +229,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		} else if statementType != "SELECT" {
 			// If dry run yields no tables, fall back to the parser for non-SELECT statements
 			// to catch unsafe operations like EXECUTE IMMEDIATE.
-			parsedTables, parseErr := TableParser(sql, t.Client.Project())
+			parsedTables, parseErr := bqutil.TableParser(sql, t.Client.Project())
 			if parseErr != nil {
 				// If parsing fails (e.g., EXECUTE IMMEDIATE), we cannot guarantee safety, so we must fail.
 				return nil, fmt.Errorf("could not parse tables from query to validate against allowed datasets: %w", parseErr)
@@ -321,28 +321,4 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return t.UseClientOAuth
-}
-
-// dryRunQuery performs a dry run of the SQL query to validate it and get metadata.
-func dryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, projectID string, location string, sql string) (*bigqueryrestapi.Job, error) {
-	useLegacySql := false
-	jobToInsert := &bigqueryrestapi.Job{
-		JobReference: &bigqueryrestapi.JobReference{
-			ProjectId: projectID,
-			Location:  location,
-		},
-		Configuration: &bigqueryrestapi.JobConfiguration{
-			DryRun: true,
-			Query: &bigqueryrestapi.JobConfigurationQuery{
-				Query:        sql,
-				UseLegacySql: &useLegacySql,
-			},
-		},
-	}
-
-	insertResponse, err := restService.Jobs.Insert(projectID, jobToInsert).Context(ctx).Do()
-	if err != nil {
-		return nil, fmt.Errorf("failed to insert dry run job: %w", err)
-	}
-	return insertResponse, nil
 }
