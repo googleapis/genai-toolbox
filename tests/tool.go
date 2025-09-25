@@ -16,14 +16,20 @@ package tests
 
 import (
 	"bytes"
+	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 )
@@ -251,10 +257,13 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 	configs := &InvokeTestConfig{
 		myToolId3NameAliceWant:   "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
 		myToolById4Want:          "[{\"id\":4,\"name\":null}]",
+		myArrayToolWant:          "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]",
 		nullWant:                 "null",
 		supportOptionalNullParam: true,
 		supportArrayParam:        true,
 		supportClientAuth:        false,
+		supportSelect1Want:       true,
+		supportSelect1Auth:       true,
 	}
 
 	// Apply provided options
@@ -288,7 +297,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 		{
 			name:           "invoke my-simple-tool",
 			api:            "http://127.0.0.1:5000/api/tool/my-simple-tool/invoke",
-			enabled:        true,
+			enabled:        configs.supportSelect1Want,
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
 			wantBody:       select1Want,
@@ -345,13 +354,13 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:        configs.supportArrayParam,
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(`{"idArray": [1,2,3], "nameArray": ["Alice", "Sid", "RandomName"], "cmdArray": ["HGETALL", "row3"]}`)),
-			wantBody:       configs.myToolId3NameAliceWant,
+			wantBody:       configs.myArrayToolWant,
 			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "Invoke my-auth-tool with auth token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
-			enabled:        true,
+			enabled:        configs.supportSelect1Auth,
 			requestHeader:  map[string]string{"my-google-auth_token": idToken},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
 			wantBody:       "[{\"name\":\"Alice\"}]",
@@ -360,7 +369,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 		{
 			name:           "Invoke my-auth-tool with invalid auth token",
 			api:            "http://127.0.0.1:5000/api/tool/my-auth-tool/invoke",
-			enabled:        true,
+			enabled:        configs.supportSelect1Auth,
 			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
 			wantStatusCode: http.StatusUnauthorized,
@@ -376,7 +385,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 		{
 			name:          "Invoke my-auth-required-tool with auth token",
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
-			enabled:       true,
+			enabled:       configs.supportSelect1Auth,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 
@@ -485,6 +494,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		ddlWant:         "null",
 		selectAllWant:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]",
 		selectId1Want:   "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
+		selectNameWant:  "[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]",
 		selectEmptyWant: "null",
 		insert1Want:     "null",
 
@@ -506,6 +516,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
+		enabled       bool
 		ddl           bool
 		insert        bool
 		api           string
@@ -567,6 +578,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 		},
 		{
 			name:          "invoke select-fields-templateParams-tool",
+			enabled:       configs.supportSelectFields,
 			api:           "http://127.0.0.1:5000/api/tool/select-fields-templateParams-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"tableName": "%s", "fields":%s}`, tableName, configs.nameFieldArray))),
@@ -578,7 +590,7 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 			api:           "http://127.0.0.1:5000/api/tool/select-filter-templateParams-combined-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"name": "Alex", "tableName": "%s", "columnFilter": "%s"}`, tableName, configs.nameColFilter))),
-			want:          configs.selectId1Want,
+			want:          configs.selectNameWant,
 			isErr:         false,
 		},
 		{
@@ -593,6 +605,9 @@ func RunToolInvokeWithTemplateParameters(t *testing.T, tableName string, options
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
+			if !tc.enabled {
+				return
+			}
 			// if test case is DDL and source support ddl test cases
 			ddlAllow := !tc.ddl || (tc.ddl && configs.supportDdl)
 			// if test case is insert statement and source support insert test cases
@@ -792,7 +807,7 @@ func RunInitialize(t *testing.T, protocolVersion string) string {
 		t.Fatalf("unexpected error during marshaling of body")
 	}
 
-	resp, _ := runRequest(t, http.MethodPost, url, bytes.NewBuffer(reqMarshal), nil)
+	resp, _ := RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqMarshal), nil)
 	if resp.StatusCode != 200 {
 		t.Fatalf("response status code is not 200")
 	}
@@ -817,7 +832,7 @@ func RunInitialize(t *testing.T, protocolVersion string) string {
 		t.Fatalf("unexpected error during marshaling of notifications body")
 	}
 
-	_, _ = runRequest(t, http.MethodPost, url, bytes.NewBuffer(notiMarshal), header)
+	_, _ = RunRequest(t, http.MethodPost, url, bytes.NewBuffer(notiMarshal), header)
 	return sessionId
 }
 
@@ -828,6 +843,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 	configs := &MCPTestConfig{
 		myToolId3NameAliceWant: `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`,
 		supportClientAuth:      false,
+		supportSelect1Auth:     true,
 	}
 
 	// Apply provided options
@@ -941,7 +957,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 		{
 			name:          "MCP Invoke my-auth-required-tool",
 			api:           "http://127.0.0.1:5000/mcp",
-			enabled:       true,
+			enabled:       configs.supportSelect1Auth,
 			requestHeader: map[string]string{"my-google-auth_token": idToken},
 			requestBody: jsonrpc.JSONRPCRequest{
 				Jsonrpc: "2.0",
@@ -1089,7 +1105,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 				headers[key] = value
 			}
 
-			httpResponse, respBody := runRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal), headers)
+			httpResponse, respBody := RunRequest(t, http.MethodPost, tc.api, bytes.NewBuffer(reqMarshal), headers)
 
 			// Check status code
 			if httpResponse.StatusCode != tc.wantStatusCode {
@@ -1105,7 +1121,694 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 	}
 }
 
-func runRequest(t *testing.T, method, url string, body io.Reader, headers map[string]string) (*http.Response, []byte) {
+// RunMySQLListTablesTest run tests against the mysql-list-tables tool
+func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string) {
+	type tableInfo struct {
+		ObjectName    string `json:"object_name"`
+		SchemaName    string `json:"schema_name"`
+		ObjectDetails string `json:"object_details"`
+	}
+
+	type column struct {
+		DataType        string `json:"data_type"`
+		ColumnName      string `json:"column_name"`
+		ColumnComment   string `json:"column_comment"`
+		ColumnDefault   any    `json:"column_default"`
+		IsNotNullable   int    `json:"is_not_nullable"`
+		OrdinalPosition int    `json:"ordinal_position"`
+	}
+
+	type objectDetails struct {
+		Owner       any      `json:"owner"`
+		Columns     []column `json:"columns"`
+		Comment     string   `json:"comment"`
+		Indexes     []any    `json:"indexes"`
+		Triggers    []any    `json:"triggers"`
+		Constraints []any    `json:"constraints"`
+		ObjectName  string   `json:"object_name"`
+		ObjectType  string   `json:"object_type"`
+		SchemaName  string   `json:"schema_name"`
+	}
+
+	paramTableWant := objectDetails{
+		ObjectName: tableNameParam,
+		SchemaName: databaseName,
+		ObjectType: "TABLE",
+		Columns: []column{
+			{DataType: "int", ColumnName: "id", IsNotNullable: 1, OrdinalPosition: 1},
+			{DataType: "varchar(255)", ColumnName: "name", OrdinalPosition: 2},
+		},
+		Indexes:     []any{map[string]any{"index_columns": []any{"id"}, "index_name": "PRIMARY", "is_primary": float64(1), "is_unique": float64(1)}},
+		Triggers:    []any{},
+		Constraints: []any{map[string]any{"constraint_columns": []any{"id"}, "constraint_name": "PRIMARY", "constraint_type": "PRIMARY KEY", "foreign_key_referenced_columns": any(nil), "foreign_key_referenced_table": any(nil), "constraint_definition": ""}},
+	}
+
+	authTableWant := objectDetails{
+		ObjectName: tableNameAuth,
+		SchemaName: databaseName,
+		ObjectType: "TABLE",
+		Columns: []column{
+			{DataType: "int", ColumnName: "id", IsNotNullable: 1, OrdinalPosition: 1},
+			{DataType: "varchar(255)", ColumnName: "name", OrdinalPosition: 2},
+			{DataType: "varchar(255)", ColumnName: "email", OrdinalPosition: 3},
+		},
+		Indexes:     []any{map[string]any{"index_columns": []any{"id"}, "index_name": "PRIMARY", "is_primary": float64(1), "is_unique": float64(1)}},
+		Triggers:    []any{},
+		Constraints: []any{map[string]any{"constraint_columns": []any{"id"}, "constraint_name": "PRIMARY", "constraint_type": "PRIMARY KEY", "foreign_key_referenced_columns": any(nil), "foreign_key_referenced_table": any(nil), "constraint_definition": ""}},
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           any
+		isSimple       bool
+	}{
+		{
+			name:           "invoke list_tables detailed output",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_names": "%s"}`, tableNameAuth)),
+			wantStatusCode: http.StatusOK,
+			want:           []objectDetails{authTableWant},
+		},
+		{
+			name:           "invoke list_tables simple output",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_names": "%s", "output_format": "simple"}`, tableNameAuth)),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{{"name": tableNameAuth}},
+			isSimple:       true,
+		},
+		{
+			name:           "invoke list_tables with multiple table names",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_names": "%s,%s"}`, tableNameParam, tableNameAuth)),
+			wantStatusCode: http.StatusOK,
+			want:           []objectDetails{authTableWant, paramTableWant},
+		},
+		{
+			name:           "invoke list_tables with one existing and one non-existent table",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_names": "%s,non_existent_table"}`, tableNameAuth)),
+			wantStatusCode: http.StatusOK,
+			want:           []objectDetails{authTableWant},
+		},
+		{
+			name:           "invoke list_tables with non-existent table",
+			requestBody:    bytes.NewBufferString(`{"table_names": "non_existent_table"}`),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_tables/invoke"
+			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %v", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %v", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				body, _ := io.ReadAll(resp.Body)
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got any
+			if tc.isSimple {
+				var tables []tableInfo
+				if err := json.Unmarshal([]byte(resultString), &tables); err != nil {
+					t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
+				}
+				var details []map[string]any
+				for _, table := range tables {
+					var d map[string]any
+					if err := json.Unmarshal([]byte(table.ObjectDetails), &d); err != nil {
+						t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
+					}
+					details = append(details, d)
+				}
+				got = details
+			} else {
+				if resultString == "null" {
+					got = nil
+				} else {
+					var tables []tableInfo
+					if err := json.Unmarshal([]byte(resultString), &tables); err != nil {
+						t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
+					}
+					var details []objectDetails
+					for _, table := range tables {
+						var d objectDetails
+						if err := json.Unmarshal([]byte(table.ObjectDetails), &d); err != nil {
+							t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
+						}
+						details = append(details, d)
+					}
+					got = details
+				}
+			}
+
+			opts := []cmp.Option{
+				cmpopts.SortSlices(func(a, b objectDetails) bool { return a.ObjectName < b.ObjectName }),
+				cmpopts.SortSlices(func(a, b column) bool { return a.ColumnName < b.ColumnName }),
+				cmpopts.SortSlices(func(a, b map[string]any) bool { return a["name"].(string) < b["name"].(string) }),
+			}
+
+			if diff := cmp.Diff(tc.want, got, opts...); diff != "" {
+				t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
+			}
+		})
+	}
+}
+
+// RunMySQLListActiveQueriesTest run tests against the mysql-list-active-queries tests
+func RunMySQLListActiveQueriesTest(t *testing.T, ctx context.Context, pool *sql.DB) {
+	type queryListDetails struct {
+		ProcessId       any    `json:"process_id"`
+		Query           string `json:"query"`
+		TrxStarted      any    `json:"trx_started"`
+		TrxDuration     any    `json:"trx_duration_seconds"`
+		TrxWaitDuration any    `json:"trx_wait_duration_seconds"`
+		QueryTime       any    `json:"query_time"`
+		TrxState        string `json:"trx_state"`
+		ProcessState    string `json:"process_state"`
+		User            string `json:"user"`
+		TrxRowsLocked   any    `json:"trx_rows_locked"`
+		TrxRowsModified any    `json:"trx_rows_modified"`
+		Db              string `json:"db"`
+	}
+
+	singleQueryWanted := queryListDetails{
+		ProcessId:       any(nil),
+		Query:           "SELECT sleep(10)",
+		TrxStarted:      any(nil),
+		TrxDuration:     any(nil),
+		TrxWaitDuration: any(nil),
+		QueryTime:       any(nil),
+		TrxState:        "",
+		ProcessState:    "User sleep",
+		User:            "",
+		TrxRowsLocked:   any(nil),
+		TrxRowsModified: any(nil),
+		Db:              "",
+	}
+
+	invokeTcs := []struct {
+		name                string
+		requestBody         io.Reader
+		clientSleepSecs     int
+		waitSecsBeforeCheck int
+		wantStatusCode      int
+		want                any
+	}{
+		{
+			name:                "invoke list_active_queries when the system is idle",
+			requestBody:         bytes.NewBufferString(`{}`),
+			clientSleepSecs:     0,
+			waitSecsBeforeCheck: 0,
+			wantStatusCode:      http.StatusOK,
+			want:                []queryListDetails(nil),
+		},
+		{
+			name:                "invoke list_active_queries when there is 1 ongoing but lower than the threshold",
+			requestBody:         bytes.NewBufferString(`{"min_duration_secs": 100}`),
+			clientSleepSecs:     10,
+			waitSecsBeforeCheck: 1,
+			wantStatusCode:      http.StatusOK,
+			want:                []queryListDetails(nil),
+		},
+		{
+			name:                "invoke list_active_queries when 1 ongoing query should show up",
+			requestBody:         bytes.NewBufferString(`{"min_duration_secs": 5}`),
+			clientSleepSecs:     0,
+			waitSecsBeforeCheck: 5,
+			wantStatusCode:      http.StatusOK,
+			want:                []queryListDetails{singleQueryWanted},
+		},
+		{
+			name:                "invoke list_active_queries when 2 ongoing query should show up",
+			requestBody:         bytes.NewBufferString(`{"min_duration_secs": 2}`),
+			clientSleepSecs:     10,
+			waitSecsBeforeCheck: 3,
+			wantStatusCode:      http.StatusOK,
+			want:                []queryListDetails{singleQueryWanted, singleQueryWanted},
+		},
+	}
+
+	var wg sync.WaitGroup
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.clientSleepSecs > 0 {
+				wg.Add(1)
+
+				go func() {
+					defer wg.Done()
+
+					err := pool.PingContext(ctx)
+					if err != nil {
+						t.Errorf("unable to connect to test database: %s", err)
+						return
+					}
+					_, err = pool.ExecContext(ctx, fmt.Sprintf("SELECT sleep(%d);", tc.clientSleepSecs))
+					if err != nil {
+						t.Errorf("Executing 'SELECT sleep' failed: %s", err)
+					}
+				}()
+			}
+
+			if tc.waitSecsBeforeCheck > 0 {
+				time.Sleep(time.Duration(tc.waitSecsBeforeCheck) * time.Second)
+			}
+
+			const api = "http://127.0.0.1:5000/api/tool/list_active_queries/invoke"
+			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %v", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %v", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				body, _ := io.ReadAll(resp.Body)
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got any
+			var details []queryListDetails
+			if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+				t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
+			}
+			got = details
+
+			if diff := cmp.Diff(tc.want, got, cmp.Comparer(func(a, b queryListDetails) bool {
+				return a.Query == b.Query && a.ProcessState == b.ProcessState
+			})); diff != "" {
+				t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
+			}
+		})
+	}
+	wg.Wait()
+}
+
+func RunMySQLListTablesMissingUniqueIndexes(t *testing.T, ctx context.Context, pool *sql.DB, databaseName string) {
+	type listDetails struct {
+		TableSchema string `json:"table_schema"`
+		TableName   string `json:"table_name"`
+	}
+
+	// bunch of wanted
+	nonUniqueKeyTableName := "t03_non_unqiue_key_table"
+	noKeyTableName := "t04_no_key_table"
+	nonUniqueKeyTableWant := listDetails{
+		TableSchema: databaseName,
+		TableName:   nonUniqueKeyTableName,
+	}
+	noKeyTableWant := listDetails{
+		TableSchema: databaseName,
+		TableName:   noKeyTableName,
+	}
+
+	invokeTcs := []struct {
+		name                 string
+		requestBody          io.Reader
+		newTableName         string
+		newTablePrimaryKey   bool
+		newTableUniqueKey    bool
+		newTableNonUniqueKey bool
+		wantStatusCode       int
+		want                 any
+	}{
+		{
+			name:                 "invoke list_tables_missing_unique_indexes when nothing to be found",
+			requestBody:          bytes.NewBufferString(`{}`),
+			newTableName:         "",
+			newTablePrimaryKey:   false,
+			newTableUniqueKey:    false,
+			newTableNonUniqueKey: false,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails(nil),
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes pk table will not show",
+			requestBody:          bytes.NewBufferString(`{}`),
+			newTableName:         "t01",
+			newTablePrimaryKey:   true,
+			newTableUniqueKey:    false,
+			newTableNonUniqueKey: false,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails(nil),
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes uk table will not show",
+			requestBody:          bytes.NewBufferString(`{}`),
+			newTableName:         "t02",
+			newTablePrimaryKey:   false,
+			newTableUniqueKey:    true,
+			newTableNonUniqueKey: false,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails(nil),
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes non-unique key only table will show",
+			requestBody:          bytes.NewBufferString(`{}`),
+			newTableName:         nonUniqueKeyTableName,
+			newTablePrimaryKey:   false,
+			newTableUniqueKey:    false,
+			newTableNonUniqueKey: true,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails{nonUniqueKeyTableWant},
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes table with no key at all will show",
+			requestBody:          bytes.NewBufferString(`{}`),
+			newTableName:         noKeyTableName,
+			newTablePrimaryKey:   false,
+			newTableUniqueKey:    false,
+			newTableNonUniqueKey: false,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails{nonUniqueKeyTableWant, noKeyTableWant},
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes table w/ both pk & uk will not show",
+			requestBody:          bytes.NewBufferString(`{}`),
+			newTableName:         "t05",
+			newTablePrimaryKey:   true,
+			newTableUniqueKey:    true,
+			newTableNonUniqueKey: false,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails{nonUniqueKeyTableWant, noKeyTableWant},
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes table w/ uk & nk will not show",
+			requestBody:          bytes.NewBufferString(`{}`),
+			newTableName:         "t06",
+			newTablePrimaryKey:   false,
+			newTableUniqueKey:    true,
+			newTableNonUniqueKey: true,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails{nonUniqueKeyTableWant, noKeyTableWant},
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes table w/ pk & nk will not show",
+			requestBody:          bytes.NewBufferString(`{}`),
+			newTableName:         "t07",
+			newTablePrimaryKey:   true,
+			newTableUniqueKey:    false,
+			newTableNonUniqueKey: true,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails{nonUniqueKeyTableWant, noKeyTableWant},
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes with a non-exist database, nothing to show",
+			requestBody:          bytes.NewBufferString(`{"table_schema": "non-exist-database"}`),
+			newTableName:         "",
+			newTablePrimaryKey:   false,
+			newTableUniqueKey:    false,
+			newTableNonUniqueKey: false,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails(nil),
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes with the right database, show everything",
+			requestBody:          bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s"}`, databaseName)),
+			newTableName:         "",
+			newTablePrimaryKey:   false,
+			newTableUniqueKey:    false,
+			newTableNonUniqueKey: false,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails{nonUniqueKeyTableWant, noKeyTableWant},
+		},
+		{
+			name:                 "invoke list_tables_missing_unique_indexes with limited output",
+			requestBody:          bytes.NewBufferString(`{"limit": 1}`),
+			newTableName:         "",
+			newTablePrimaryKey:   false,
+			newTableUniqueKey:    false,
+			newTableNonUniqueKey: false,
+			wantStatusCode:       http.StatusOK,
+			want:                 []listDetails{nonUniqueKeyTableWant},
+		},
+	}
+
+	createTableHelper := func(t *testing.T, tableName, databaseName string, primaryKey, uniqueKey, nonUniqueKey bool, ctx context.Context, pool *sql.DB) func() {
+		var stmt strings.Builder
+		stmt.WriteString(fmt.Sprintf("CREATE TABLE %s (", tableName))
+		stmt.WriteString("c1 INT")
+		if primaryKey {
+			stmt.WriteString(" PRIMARY KEY")
+		}
+		stmt.WriteString(", c2 INT, c3 CHAR(8)")
+		if uniqueKey {
+			stmt.WriteString(", UNIQUE(c2)")
+		}
+		if nonUniqueKey {
+			stmt.WriteString(", INDEX(c3)")
+		}
+		stmt.WriteString(")")
+
+		t.Logf("Creating table: %s", stmt.String())
+		if _, err := pool.ExecContext(ctx, stmt.String()); err != nil {
+			t.Fatalf("failed executing %s: %v", stmt.String(), err)
+		}
+
+		return func() {
+			t.Logf("Dropping table: %s", tableName)
+			if _, err := pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s", tableName)); err != nil {
+				t.Errorf("failed to drop table %s: %v", tableName, err)
+			}
+		}
+	}
+
+	var cleanups []func()
+	defer func() {
+		for i := len(cleanups) - 1; i >= 0; i-- {
+			cleanups[i]()
+		}
+	}()
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.newTableName != "" {
+				cleanup := createTableHelper(t, tc.newTableName, databaseName, tc.newTablePrimaryKey, tc.newTableUniqueKey, tc.newTableNonUniqueKey, ctx, pool)
+				cleanups = append(cleanups, cleanup)
+			}
+
+			const api = "http://127.0.0.1:5000/api/tool/list_tables_missing_unique_indexes/invoke"
+			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %v", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %v", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				body, _ := io.ReadAll(resp.Body)
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got any
+			var details []listDetails
+			if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+				t.Fatalf("failed to unmarshal nested listDetails string: %v", err)
+			}
+			got = details
+
+			if diff := cmp.Diff(tc.want, got, cmp.Comparer(func(a, b listDetails) bool {
+				return a.TableSchema == b.TableSchema && a.TableName == b.TableName
+			})); diff != "" {
+				t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
+			}
+		})
+	}
+}
+
+func RunMySQLListTableFragmentationTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string) {
+	type tableFragmentationDetails struct {
+		TableSchema             string `json:"table_schema"`
+		TableName               string `json:"table_name"`
+		DataSize                any    `json:"data_size"`
+		IndexSize               any    `json:"index_size"`
+		DataFree                any    `json:"data_free"`
+		FragmentationPercentage any    `json:"fragmentation_percentage"`
+	}
+
+	paramTableEntryWanted := tableFragmentationDetails{
+		TableSchema:             databaseName,
+		TableName:               tableNameParam,
+		DataSize:                any(nil),
+		IndexSize:               any(nil),
+		DataFree:                any(nil),
+		FragmentationPercentage: any(nil),
+	}
+	authTableEntryWanted := tableFragmentationDetails{
+		TableSchema:             databaseName,
+		TableName:               tableNameAuth,
+		DataSize:                any(nil),
+		IndexSize:               any(nil),
+		DataFree:                any(nil),
+		FragmentationPercentage: any(nil),
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           any
+	}{
+		{
+			name:           "invoke list_table_fragmentation on all, no data_free threshold, expected to have 2 results",
+			requestBody:    bytes.NewBufferString(`{"data_free_threshold_bytes": 0}`),
+			wantStatusCode: http.StatusOK,
+			want:           []tableFragmentationDetails{authTableEntryWanted, paramTableEntryWanted},
+		},
+		{
+			name:           "invoke list_table_fragmentation on all, no data_free threshold, limit to 1, expected to have 1 results",
+			requestBody:    bytes.NewBufferString(`{"data_free_threshold_bytes": 0, "limit": 1}`),
+			wantStatusCode: http.StatusOK,
+			want:           []tableFragmentationDetails{authTableEntryWanted},
+		},
+		{
+			name:           "invoke list_table_fragmentation on all databases and 1 specific table name, no data_free threshold, expected to have 1 result",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_name": "%s","data_free_threshold_bytes": 0}`, tableNameAuth)),
+			wantStatusCode: http.StatusOK,
+			want:           []tableFragmentationDetails{authTableEntryWanted},
+		},
+		{
+			name:           "invoke list_table_fragmentation on 1 database and 1 specific table name, no data_free threshold, expected to have 1 result",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s", "table_name": "%s", "data_free_threshold_bytes": 0}`, databaseName, tableNameParam)),
+			wantStatusCode: http.StatusOK,
+			want:           []tableFragmentationDetails{paramTableEntryWanted},
+		},
+		{
+			name:           "invoke list_table_fragmentation on 1 database and 1 specific table name, high data_free threshold, expected to have 0 result",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_schema": "%s", "table_name": "%s", "data_free_threshold_bytes": 1000000000}`, databaseName, tableNameParam)),
+			wantStatusCode: http.StatusOK,
+			want:           []tableFragmentationDetails(nil),
+		},
+		{
+			name:           "invoke list_table_fragmentation on 1 non-exist database, no data_free threshold, expected to have 0 result",
+			requestBody:    bytes.NewBufferString(`{"table_schema": "non_existent_database", "data_free_threshold_bytes": 0}`),
+			wantStatusCode: http.StatusOK,
+			want:           []tableFragmentationDetails(nil),
+		},
+		{
+			name:           "invoke list_table_fragmentation on 1 non-exist table, no data_free threshold, expected to have 0 result",
+			requestBody:    bytes.NewBufferString(`{"table_name": "non_existent_table", "data_free_threshold_bytes": 0}`),
+			wantStatusCode: http.StatusOK,
+			want:           []tableFragmentationDetails(nil),
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_table_fragmentation/invoke"
+			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %v", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %v", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				body, _ := io.ReadAll(resp.Body)
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got any
+			var details []tableFragmentationDetails
+			if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+				t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
+			}
+			got = details
+
+			if diff := cmp.Diff(tc.want, got, cmp.Comparer(func(a, b tableFragmentationDetails) bool {
+				return a.TableSchema == b.TableSchema && a.TableName == b.TableName
+			})); diff != "" {
+				t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
+			}
+		})
+	}
+}
+
+// RunRequest is a helper function to send HTTP requests and return the response
+func RunRequest(t *testing.T, method, url string, body io.Reader, headers map[string]string) (*http.Response, []byte) {
 	// Send request
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {

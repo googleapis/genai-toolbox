@@ -18,6 +18,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -163,4 +165,107 @@ func TestSQLiteToolEndpoint(t *testing.T) {
 	tests.RunToolInvokeTest(t, select1Want, tests.DisableArrayTest())
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+}
+
+func TestSQLiteExecuteSqlTool(t *testing.T) {
+	db, teardownDb, sqliteDb, err := initSQLiteDb(t, SQLiteDatabase)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer teardownDb(t)
+	defer db.Close()
+
+	sourceConfig := getSQLiteVars(t)
+	sourceConfig["database"] = sqliteDb
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	// Create a table and insert data
+	tableName := "exec_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	createStmt := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (id INTEGER PRIMARY KEY, name TEXT);", tableName)
+	insertStmt := fmt.Sprintf("INSERT INTO %s (name) VALUES (?);", tableName)
+	params := []any{"Bob"}
+	setupSQLiteTestDB(t, ctx, db, createStmt, insertStmt, tableName, params)
+
+	// Add sqlite-execute-sql tool config
+	toolConfig := map[string]any{
+		"tools": map[string]any{
+			"my-exec-sql-tool": map[string]any{
+				"kind":        "sqlite-execute-sql",
+				"source":      "my-instance",
+				"description": "Tool to execute SQL statements",
+			},
+		},
+		"sources": map[string]any{
+			"my-instance": sourceConfig,
+		},
+	}
+
+	cmd, cleanup, err := tests.StartCmd(ctx, toolConfig)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+
+	// Table-driven test cases
+	testCases := []struct {
+		name       string
+		sql        string
+		wantStatus int
+		wantBody   string
+	}{
+		{
+			name:       "select existing row",
+			sql:        fmt.Sprintf("SELECT name FROM %s WHERE id = 1", tableName),
+			wantStatus: 200,
+			wantBody:   "Bob",
+		},
+		{
+			name:       "select no rows",
+			sql:        fmt.Sprintf("SELECT name FROM %s WHERE id = 999", tableName),
+			wantStatus: 200,
+			wantBody:   "null",
+		},
+		{
+			name:       "invalid SQL",
+			sql:        "SELEC name FROM not_a_table",
+			wantStatus: 400,
+			wantBody:   "SQL logic error",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			api := "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke"
+			reqBody := strings.NewReader(fmt.Sprintf(`{"sql":"%s"}`, tc.sql))
+			req, err := http.NewRequest("POST", api, reqBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Set("Content-Type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+			bodyBytes, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Fatalf("unable to read response: %s", err)
+			}
+			if resp.StatusCode != tc.wantStatus {
+				t.Fatalf("unexpected status: %d, body: %s", resp.StatusCode, string(bodyBytes))
+			}
+			if tc.wantBody != "" && !strings.Contains(string(bodyBytes), tc.wantBody) {
+				t.Fatalf("expected body to contain %q, got: %s", tc.wantBody, string(bodyBytes))
+			}
+		})
+	}
 }

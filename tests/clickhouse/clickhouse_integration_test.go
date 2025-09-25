@@ -31,6 +31,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	clickhouseexecutesql "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouseexecutesql"
+	clickhouselistdatabases "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouselistdatabases"
+	clickhouselisttables "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouselisttables"
 	clickhousesql "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhousesql"
 	"github.com/googleapis/genai-toolbox/tests"
 	"go.opentelemetry.io/otel/trace/noop"
@@ -1011,4 +1013,252 @@ func setupClickHouseSQLTable(t *testing.T, ctx context.Context, pool *sql.DB, cr
 			t.Errorf("Teardown failed: %s", err)
 		}
 	}
+}
+
+func TestClickHouseListDatabasesTool(t *testing.T) {
+	_ = getClickHouseVars(t)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	pool, err := initClickHouseConnectionPool(ClickHouseHost, ClickHousePort, ClickHouseUser, ClickHousePass, ClickHouseDatabase, ClickHouseProtocol)
+	if err != nil {
+		t.Fatalf("unable to create ClickHouse connection pool: %s", err)
+	}
+	defer pool.Close()
+
+	// Create a test database
+	testDBName := "test_list_db_" + strings.ReplaceAll(uuid.New().String(), "-", "")[:8]
+	_, err = pool.ExecContext(ctx, fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s", testDBName))
+	if err != nil {
+		t.Fatalf("Failed to create test database: %v", err)
+	}
+	defer func() {
+		_, _ = pool.ExecContext(ctx, fmt.Sprintf("DROP DATABASE IF EXISTS %s", testDBName))
+	}()
+
+	t.Run("ListDatabases", func(t *testing.T) {
+		toolConfig := clickhouselistdatabases.Config{
+			Name:        "test-list-databases",
+			Kind:        "clickhouse-list-databases",
+			Source:      "test-clickhouse",
+			Description: "Test listing databases",
+		}
+
+		source := createMockSource(t, pool)
+		sourcesMap := map[string]sources.Source{
+			"test-clickhouse": source,
+		}
+
+		tool, err := toolConfig.Initialize(sourcesMap)
+		if err != nil {
+			t.Fatalf("Failed to initialize tool: %v", err)
+		}
+
+		params := tools.ParamValues{}
+
+		result, err := tool.Invoke(ctx, params, "")
+		if err != nil {
+			t.Fatalf("Failed to list databases: %v", err)
+		}
+
+		databases, ok := result.([]map[string]any)
+		if !ok {
+			t.Fatalf("Expected result to be []map[string]any, got %T", result)
+		}
+
+		// Should contain at least the default database and our test database - system and default
+		if len(databases) < 2 {
+			t.Errorf("Expected at least 2 databases, got %d", len(databases))
+		}
+
+		found := false
+		foundDefault := false
+		for _, db := range databases {
+			if name, ok := db["name"].(string); ok {
+				if name == testDBName {
+					found = true
+				}
+				if name == "default" || name == "system" {
+					foundDefault = true
+				}
+			}
+		}
+
+		if !found {
+			t.Errorf("Test database %s not found in list", testDBName)
+		}
+		if !foundDefault {
+			t.Errorf("Default/system database not found in list")
+		}
+
+		t.Logf("Successfully listed %d databases", len(databases))
+	})
+
+	t.Run("ListDatabasesWithInvalidSource", func(t *testing.T) {
+		toolConfig := clickhouselistdatabases.Config{
+			Name:        "test-invalid-source",
+			Kind:        "clickhouse-list-databases",
+			Source:      "non-existent-source",
+			Description: "Test with invalid source",
+		}
+
+		sourcesMap := map[string]sources.Source{}
+
+		_, err := toolConfig.Initialize(sourcesMap)
+		if err == nil {
+			t.Error("Expected error for non-existent source, got nil")
+		} else {
+			t.Logf("Got expected error for invalid source: %v", err)
+		}
+	})
+
+	t.Logf("✅ clickhouse-list-databases tool tests completed successfully")
+}
+
+func TestClickHouseListTablesTool(t *testing.T) {
+	_ = getClickHouseVars(t)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	pool, err := initClickHouseConnectionPool(ClickHouseHost, ClickHousePort, ClickHouseUser, ClickHousePass, ClickHouseDatabase, ClickHouseProtocol)
+	if err != nil {
+		t.Fatalf("unable to create ClickHouse connection pool: %s", err)
+	}
+	defer pool.Close()
+
+	// Create a test database with tables
+	testDBName := "test_list_tables_db_" + strings.ReplaceAll(uuid.New().String(), "-", "")[:8]
+	_, err = pool.ExecContext(ctx, fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s", testDBName))
+	if err != nil {
+		t.Fatalf("Failed to create test database: %v", err)
+	}
+	defer func() {
+		_, _ = pool.ExecContext(ctx, fmt.Sprintf("DROP DATABASE IF EXISTS %s", testDBName))
+	}()
+
+	// Create test tables in the test database
+	testTable1 := "test_table_1"
+	testTable2 := "test_table_2"
+	_, err = pool.ExecContext(ctx, fmt.Sprintf("CREATE TABLE %s.%s (id UInt32, name String) ENGINE = Memory", testDBName, testTable1))
+	if err != nil {
+		t.Fatalf("Failed to create test table 1: %v", err)
+	}
+	_, err = pool.ExecContext(ctx, fmt.Sprintf("CREATE TABLE %s.%s (id UInt32, value Float64) ENGINE = Memory", testDBName, testTable2))
+	if err != nil {
+		t.Fatalf("Failed to create test table 2: %v", err)
+	}
+
+	t.Run("ListTables", func(t *testing.T) {
+		toolConfig := clickhouselisttables.Config{
+			Name:        "test-list-tables",
+			Kind:        "clickhouse-list-tables",
+			Source:      "test-clickhouse",
+			Description: "Test listing tables",
+		}
+
+		source := createMockSource(t, pool)
+		sourcesMap := map[string]sources.Source{
+			"test-clickhouse": source,
+		}
+
+		tool, err := toolConfig.Initialize(sourcesMap)
+		if err != nil {
+			t.Fatalf("Failed to initialize tool: %v", err)
+		}
+
+		params := tools.ParamValues{
+			{Name: "database", Value: testDBName},
+		}
+
+		result, err := tool.Invoke(ctx, params, "")
+		if err != nil {
+			t.Fatalf("Failed to list tables: %v", err)
+		}
+
+		tables, ok := result.([]map[string]any)
+		if !ok {
+			t.Fatalf("Expected result to be []map[string]any, got %T", result)
+		}
+
+		// Should contain exactly 2 tables that we created
+		if len(tables) != 2 {
+			t.Errorf("Expected 2 tables, got %d", len(tables))
+		}
+
+		foundTable1 := false
+		foundTable2 := false
+		for _, table := range tables {
+			if name, ok := table["name"].(string); ok {
+				if name == testTable1 {
+					foundTable1 = true
+				}
+				if name == testTable2 {
+					foundTable2 = true
+				}
+				// Verify database field is set correctly
+				if db, ok := table["database"].(string); ok {
+					if db != testDBName {
+						t.Errorf("Expected database to be %s, got %s", testDBName, db)
+					}
+				}
+			}
+		}
+
+		if !foundTable1 {
+			t.Errorf("Test table %s not found in list", testTable1)
+		}
+		if !foundTable2 {
+			t.Errorf("Test table %s not found in list", testTable2)
+		}
+
+		t.Logf("Successfully listed %d tables from database %s", len(tables), testDBName)
+	})
+
+	t.Run("ListTablesWithMissingDatabase", func(t *testing.T) {
+		toolConfig := clickhouselisttables.Config{
+			Name:        "test-list-tables-missing-db",
+			Kind:        "clickhouse-list-tables",
+			Source:      "test-clickhouse",
+			Description: "Test listing tables without database parameter",
+		}
+
+		source := createMockSource(t, pool)
+		sourcesMap := map[string]sources.Source{
+			"test-clickhouse": source,
+		}
+
+		tool, err := toolConfig.Initialize(sourcesMap)
+		if err != nil {
+			t.Fatalf("Failed to initialize tool: %v", err)
+		}
+
+		params := tools.ParamValues{}
+
+		_, err = tool.Invoke(ctx, params, "")
+		if err == nil {
+			t.Error("Expected error for missing database parameter, got nil")
+		} else {
+			t.Logf("Got expected error for missing database: %v", err)
+		}
+	})
+
+	t.Run("ListTablesWithInvalidSource", func(t *testing.T) {
+		toolConfig := clickhouselisttables.Config{
+			Name:        "test-invalid-source",
+			Kind:        "clickhouse-list-tables",
+			Source:      "non-existent-source",
+			Description: "Test with invalid source",
+		}
+
+		sourcesMap := map[string]sources.Source{}
+
+		_, err := toolConfig.Initialize(sourcesMap)
+		if err == nil {
+			t.Error("Expected error for non-existent source, got nil")
+		} else {
+			t.Logf("Got expected error for invalid source: %v", err)
+		}
+	})
+
+	t.Logf("✅ clickhouse-list-tables tool tests completed successfully")
 }

@@ -4,8 +4,7 @@ import { tool } from "@langchain/core/tools";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { MemorySaver } from "@langchain/langgraph";
 
-// Replace it with your API key
-process.env.GOOGLE_API_KEY = 'your-api-key';
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || 'your-api-key'; // Replace it with your API key
 
 const prompt = `
 You're a helpful hotel assistant. You handle hotel searching, booking, and
@@ -24,7 +23,7 @@ const queries = [
   "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ];
 
-async function main() {
+export async function main() {
   const model = new ChatGoogleGenerativeAI({
     model: "gemini-2.0-flash",
   });

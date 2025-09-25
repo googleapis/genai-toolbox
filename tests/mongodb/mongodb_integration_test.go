@@ -110,6 +110,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	tests.RunToolGetTest(t)
 	tests.RunToolInvokeTest(t, select1Want,
 		tests.WithMyToolId3NameAliceWant(myToolId3NameAliceWant),
+		tests.WithMyArrayToolWant(myToolId3NameAliceWant),
 		tests.WithMyToolById4Want(myToolById4Want),
 	)
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, select1Want,
@@ -665,8 +666,14 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"authRequired":  []string{},
 				"collection":    "test_collection",
 				"canonical":     true,
-				"filterPayload": `{ "id" : 300 }`,
-				"filterParams":  []any{},
+				"filterPayload": `{ "id" : {{ .id }} }`,
+				"filterParams": []map[string]any{
+					{
+						"name":        "id",
+						"type":        "integer",
+						"description": "id",
+					},
+				},
 				"updatePayload": `{ "$set" : { "name": {{json .name}} } }`,
 				"updateParams": []map[string]any{
 					{

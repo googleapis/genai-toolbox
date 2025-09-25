@@ -31,10 +31,15 @@ apply when creating SQL queries to run against your BigQuery data, such as
 avoiding full table scans or complex filters.
 
 [bigquery-docs]: https://cloud.google.com/bigquery/docs
-[bigquery-quickstart-cli]: https://cloud.google.com/bigquery/docs/quickstarts/quickstart-command-line
-[bigquery-googlesql]: https://cloud.google.com/bigquery/docs/reference/standard-sql/
+[bigquery-quickstart-cli]:
+    https://cloud.google.com/bigquery/docs/quickstarts/quickstart-command-line
+[bigquery-googlesql]:
+    https://cloud.google.com/bigquery/docs/reference/standard-sql/
 
 ## Available Tools
+
+- [`bigquery-analyze-contribution`](../tools/bigquery/bigquery-analyze-contribution.md)
+  Performs contribution analysis, also called key driver analysis in BigQuery.
 
 - [`bigquery-conversational-analytics`](../tools/bigquery/bigquery-conversational-analytics.md)
   Allows conversational interaction with a BigQuery source.
@@ -60,10 +65,15 @@ avoiding full table scans or complex filters.
 - [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
   Run SQL queries directly against BigQuery datasets.
 
+- [`bigquery-search-catalog`](../tools/bigquery/bigquery-search_catalog.md)
+  List all entries in Dataplex Catalog (e.g. tables, views, models) that matches
+  given user query.
+
 ### Pre-built Configurations
 
-- [BigQuery using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/bigquery_mcp/)  
-Connect your IDE to BigQuery using Toolbox.
+- [BigQuery using
+  MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/bigquery_mcp/)
+  Connect your IDE to BigQuery using Toolbox.
 
 ## Requirements
 
@@ -74,7 +84,9 @@ user and group access to BigQuery resources like projects, datasets, and tables.
 
 ### Authentication via Application Default Credentials (ADC)
 
-By **default**, Toolbox will use your [Application Default Credentials (ADC)][adc] to authorize and authenticate when interacting with [BigQuery][bigquery-docs].
+By **default**, Toolbox will use your [Application Default Credentials
+(ADC)][adc] to authorize and authenticate when interacting with
+[BigQuery][bigquery-docs].
 
 When using this method, you need to ensure the IAM identity associated with your
 ADC (such as a service account) has the correct permissions for the queries you
@@ -91,15 +103,11 @@ allows Toolbox to make queries to [BigQuery][bigquery-docs] on behalf of the
 client or the end-user.
 
 When using this on-behalf-of authentication, you must ensure that the
-identity used has been granted the correct IAM permissions. Currently,
-this option is only supported by the following BigQuery tools:
+identity used has been granted the correct IAM permissions.
 
-- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
-  Run SQL queries directly against BigQuery datasets.
-
-[iam-overview]: https://cloud.google.com/bigquery/docs/access-control
-[adc]: https://cloud.google.com/docs/authentication#adc
-[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
+[iam-overview]: <https://cloud.google.com/bigquery/docs/access-control>
+[adc]: <https://cloud.google.com/docs/authentication#adc>
+[set-adc]: <https://cloud.google.com/docs/authentication/provide-credentials-adc>
 
 ## Example
 
@@ -111,6 +119,9 @@ sources:
     kind: "bigquery"
     project: "my-project-id"
     # location: "US" # Optional: Specifies the location for query jobs.
+    # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
+    #   - "my_dataset_1"
+    #   - "other_project.my_dataset_2"
 ```
 
 Initialize a BigQuery source that uses the client's access token:
@@ -122,13 +133,17 @@ sources:
     project: "my-project-id"
     useClientOAuth: true
     # location: "US" # Optional: Specifies the location for query jobs.
+    # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
+    #   - "my_dataset_1"
+    #   - "other_project.my_dataset_2"
 ```
 
 ## Reference
 
-| **field**      | **type** | **required** | **description**                                                                                                                                                                                                                         |
-|----------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind           |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                     |
-| project        |  string  |     true     | Id of the Google Cloud project to use for billing and as the default project for BigQuery resources.                                                                               |
-| location       |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. Defaults to the table's location or 'US' if the location cannot be determined. [Learn More](https://cloud.google.com/bigquery/docs/locations) |
-| useClientOAuth |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries.                                                                                                                                |
+| **field**       | **type** | **required** | **description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|-----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind            |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| project         |  string  |     true     | Id of the Google Cloud project to use for billing and as the default project for BigQuery resources.                                                                                                                                                                                                                                                                                                                                                                                                                |
+| location        |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. Defaults to the table's location or 'US' if the location cannot be determined. [Learn More](https://cloud.google.com/bigquery/docs/locations)                                                                                                                                                                                                    |
+| allowedDatasets | []string |    false     | An optional list of dataset IDs that tools using this source are allowed to access. If provided, any tool operation attempting to access a dataset not in this list will be rejected. To enforce this, two types of operations are also disallowed: 1) Dataset-level operations (e.g., `CREATE SCHEMA`), and 2) operations where table access cannot be statically analyzed (e.g., `EXECUTE IMMEDIATE`, `CREATE PROCEDURE`). If a single dataset is provided, it will be treated as the default for prebuilt tools. |
+| useClientOAuth  |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries.                                                                                                                                                                                                                                                                                                                                                                                                            |
