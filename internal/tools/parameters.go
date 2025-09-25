@@ -23,6 +23,7 @@ import (
 	"strings"
 	"text/template"
 
+	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
@@ -33,6 +34,7 @@ const (
 	typeBool   = "boolean"
 	typeArray  = "array"
 	typeMap    = "map"
+	typeEnum   = "enum"
 )
 
 // ParamValues is an ordered list of ParamValue
@@ -179,6 +181,11 @@ func GetParams(params Parameters, paramValuesMap map[string]any) (ParamValues, e
 		if !ok {
 			return nil, fmt.Errorf("missing parameter %s", k)
 		}
+		if p.GetType() == typeEnum {
+			if p.(*EnumParameter).GetEscape() {
+				v = fmt.Sprintf(`"%s"`, v)
+			}
+		}
 		resultParamValues = append(resultParamValues, ParamValue{Name: k, Value: v})
 	}
 	return resultParamValues, nil
@@ -233,6 +240,7 @@ type Parameter interface {
 	// but this is done to differentiate it from the fields in CommonParameter.
 	GetName() string
 	GetType() string
+	GetDesc() string
 	GetDefault() any
 	GetRequired() bool
 	GetAuthServices() []ParamAuthService
@@ -278,7 +286,7 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 
 	t, ok := p["type"]
 	if !ok {
-		return nil, fmt.Errorf("parameter is missing 'type' field: %w", err)
+		return nil, fmt.Errorf("parameter is missing 'type' field")
 	}
 
 	dec, err := util.NewStrictDecoder(p)
@@ -347,6 +355,17 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 		return a, nil
 	case typeMap:
 		a := &MapParameter{}
+		if err := dec.DecodeContext(ctx, a); err != nil {
+			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
+		}
+		if a.AuthSources != nil {
+			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
+			a.AuthServices = append(a.AuthServices, a.AuthSources...)
+			a.AuthSources = nil
+		}
+		return a, nil
+	case typeEnum:
+		a := &EnumParameter{}
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
 		}
@@ -425,6 +444,11 @@ func (p *CommonParameter) GetName() string {
 // GetType returns the type specified for the Parameter.
 func (p *CommonParameter) GetType() string {
 	return p.Type
+}
+
+// GetDesc returns the description specified for the Parameter.
+func (p *CommonParameter) GetDesc() string {
+	return p.Desc
 }
 
 // GetRequired returns the type specified for the Parameter.
@@ -1229,4 +1253,145 @@ func (p *MapParameter) McpManifest() ParameterMcpManifest {
 		Description:          p.Desc,
 		AdditionalProperties: additionalProperties,
 	}
+}
+
+// NewEnumParameter is a convenience function for initializing a EnumParameter.
+func NewEnumParameter(param Parameter, escape bool, allowedValues []any) *EnumParameter {
+	d := param.GetDefault()
+	r := param.GetRequired()
+	return &EnumParameter{
+		CommonParameter: CommonParameter{
+			Name:         param.GetName(),
+			Type:         typeEnum,
+			Desc:         param.GetDesc(),
+			Required:     &r,
+			AuthServices: param.GetAuthServices(),
+		},
+		EnumType:      param.GetType(),
+		Escape:        escape,
+		AllowedValues: allowedValues,
+		EnumItem:      param,
+		Default:       &d,
+	}
+}
+
+// EnumParameter is a parameter that allow users to specify
+// allowedValues to provide a fixed set of values. This will
+// make parameter, especially templateParameter more secure and safe.
+type EnumParameter struct {
+	CommonParameter `yaml:",inline"`
+	Default         *any   `yaml:"default"`
+	EnumType        string `yaml:"enumType"`
+	Escape          bool   `yaml:"escape"`
+	AllowedValues   []any  `yaml:"allowedValues"`
+	EnumItem        Parameter
+}
+
+// Ensure EnumParameter implements the Parameter interface.
+var _ Parameter = &EnumParameter{}
+
+// UnmarshalYAML handles parsing the EnumParameter from YAML input.
+func (p *EnumParameter) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
+	var rawItem map[string]any
+	if err := unmarshal(&rawItem); err != nil {
+		return fmt.Errorf("error parsing enum parameter: %w", err)
+	}
+
+	// extract enum parameter known fields
+	enumType, ok := rawItem["enumType"].(string)
+	if !ok {
+		return fmt.Errorf("error parsing 'enumType' field")
+	}
+	escape := false
+	if v, ok := rawItem["escape"]; ok {
+		if escape, ok = v.(bool); !ok {
+			return fmt.Errorf("error parsing 'escape' field")
+		}
+	}
+	allowedValues, ok := rawItem["allowedValues"].([]any)
+	if !ok {
+		return fmt.Errorf("error parsing 'allowedValues' field")
+	}
+	rawItem["type"] = enumType
+
+	// remove the extracted field from the map
+	delete(rawItem, "enumType")
+	delete(rawItem, "escape")
+	delete(rawItem, "allowedValues")
+
+	// create a util.DelayedUnmarshaler from the remaining fields
+	m, err := yaml.Marshal(rawItem)
+	if err != nil {
+		return fmt.Errorf("error marshaling remaining fields from enum parameter")
+	}
+	var delayedUnmarshaler util.DelayedUnmarshaler
+	if err = yaml.UnmarshalContext(ctx, m, &delayedUnmarshaler); err != nil {
+		return fmt.Errorf("error unmarhaling into DelayedUnmarshaler")
+	}
+	parameter, err := parseParamFromDelayedUnmarshaler(ctx, &delayedUnmarshaler)
+	if err != nil {
+		return err
+	}
+
+	d := parameter.GetDefault()
+	r := parameter.GetRequired()
+
+	p.Default = &d
+	p.CommonParameter = CommonParameter{
+		Name:         parameter.GetName(),
+		Type:         "enum",
+		Desc:         parameter.GetDesc(),
+		Required:     &r,
+		AuthServices: parameter.GetAuthServices(),
+	}
+	p.EnumType = enumType
+	p.Escape = escape
+	p.AllowedValues = allowedValues
+	p.EnumItem = parameter
+	return nil
+}
+
+// Parse validates and parses an incoming value for enum parameter.
+func (p *EnumParameter) Parse(v any) (any, error) {
+	var exists bool
+	for _, av := range p.AllowedValues {
+		if av == v {
+			exists = true
+			break
+		}
+	}
+	if !exists {
+		return nil, fmt.Errorf("unable to parse enum parameter: input is not part of allowed values")
+	}
+
+	return p.EnumItem.Parse(v)
+}
+
+func (p *EnumParameter) GetAuthServices() []ParamAuthService {
+	return p.AuthServices
+}
+
+func (p *EnumParameter) GetDefault() any {
+	if p.Default == nil {
+		return nil
+	}
+	return *p.Default
+}
+
+func (p *EnumParameter) GetEnumType() string {
+	return p.EnumType
+}
+
+func (p *EnumParameter) GetEscape() bool {
+	return p.Escape
+}
+
+// Manifest returns the manifest for the EnumParameter.
+func (p *EnumParameter) Manifest() ParameterManifest {
+	return p.EnumItem.Manifest()
+}
+
+// McpManifest returns the MCP manifest for EnumParameter.
+func (p *EnumParameter) McpManifest() ParameterMcpManifest {
+	return p.EnumItem.McpManifest()
 }

@@ -351,6 +351,37 @@ func TestParametersMarshal(t *testing.T) {
 				tools.NewMapParameter("my_generic_map", "this param is a generic map", ""),
 			},
 		},
+		{
+			name: "enum string",
+			in: []map[string]any{
+				{
+					"name":          "enum_string",
+					"type":          "enum",
+					"enumType":      "string",
+					"description":   "enum string parameter",
+					"allowedValues": []any{"foo", "bar"},
+				},
+			},
+			want: tools.Parameters{
+				tools.NewEnumParameter(tools.NewStringParameter("enum_string", "enum string parameter"), false, []any{"foo", "bar"}),
+			},
+		},
+		{
+			name: "enum string with escape",
+			in: []map[string]any{
+				{
+					"name":          "enum_string",
+					"type":          "enum",
+					"enumType":      "string",
+					"description":   "enum string parameter",
+					"allowedValues": []any{"foo", "bar"},
+					"escape":        true,
+				},
+			},
+			want: tools.Parameters{
+				tools.NewEnumParameter(tools.NewStringParameter("enum_string", "enum string parameter"), true, []any{"foo", "bar"}),
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
@@ -669,6 +700,31 @@ func TestAuthParametersMarshal(t *testing.T) {
 				tools.NewMapParameterWithAuth("my_map", "this param is a map of strings", "string", authServices),
 			},
 		},
+		{
+			name: "enum",
+			in: []map[string]any{
+				{
+					"name":          "enum_string",
+					"type":          "enum",
+					"description":   "enum of strings",
+					"enumType":      "string",
+					"allowedValues": []any{"foo", "bar"},
+					"authServices": []map[string]string{
+						{
+							"name":  "my-google-auth-service",
+							"field": "user_id",
+						},
+						{
+							"name":  "other-auth-service",
+							"field": "user_id",
+						},
+					},
+				},
+			},
+			want: tools.Parameters{
+				tools.NewEnumParameter(tools.NewStringParameterWithAuth("enum_string", "enum of strings", authServices), false, []any{"foo", "bar"}),
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
@@ -785,6 +841,25 @@ func TestParametersParse(t *testing.T) {
 			},
 		},
 		{
+			name: "enum",
+			params: tools.Parameters{
+				tools.NewEnumParameter(tools.NewStringParameter("enum_string", "enum of strings"), false, []any{"foo", "bar"}),
+			},
+			in: map[string]any{
+				"enum_string": "foo",
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "enum_string", Value: "foo"}},
+		},
+		{
+			name: "enum not allowed",
+			params: tools.Parameters{
+				tools.NewEnumParameter(tools.NewStringParameter("enum_string", "enum of strings"), false, []any{"foo", "bar"}),
+			},
+			in: map[string]any{
+				"enum_string": "invalid",
+			},
+		},
+		{
 			name: "string default",
 			params: tools.Parameters{
 				tools.NewStringParameterWithDefault("my_string", "foo", "this param is a string"),
@@ -825,6 +900,14 @@ func TestParametersParse(t *testing.T) {
 			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}},
 		},
 		{
+			name: "enum default",
+			params: tools.Parameters{
+				tools.NewEnumParameter(tools.NewStringParameterWithDefault("enum_string", "foo", "enum of strings"), false, []any{"foo", "bar"}),
+			},
+			in:   map[string]any{},
+			want: tools.ParamValues{tools.ParamValue{Name: "enum_string", Value: "foo"}},
+		},
+		{
 			name: "string not required",
 			params: tools.Parameters{
 				tools.NewStringParameterWithRequired("my_string", "this param is a string", false),
@@ -855,6 +938,14 @@ func TestParametersParse(t *testing.T) {
 			},
 			in:   map[string]any{},
 			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: nil}},
+		},
+		{
+			name: "enum not required",
+			params: tools.Parameters{
+				tools.NewEnumParameter(tools.NewStringParameterWithRequired("enum_string", "enum of strings", false), true, []any{"foo", "bar"}),
+			},
+			in:   map[string]any{},
+			want: tools.ParamValues{tools.ParamValue{Name: "enum_string", Value: nil}},
 		},
 		{
 			name: "map",
@@ -1198,6 +1289,17 @@ func TestParamManifest(t *testing.T) {
 			},
 		},
 		{
+			name: "enum with string",
+			in:   tools.NewEnumParameter(tools.NewStringParameter("foo-enum", "enum of strings"), false, []any{"foo", "bar"}),
+			want: tools.ParameterManifest{
+				Name:         "foo-enum",
+				Type:         "string",
+				Required:     true,
+				Description:  "enum of strings",
+				AuthServices: []string{},
+			},
+		},
+		{
 			name: "string default",
 			in:   tools.NewStringParameterWithDefault("foo-string", "foo", "bar"),
 			want: tools.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
@@ -1230,6 +1332,17 @@ func TestParamManifest(t *testing.T) {
 			},
 		},
 		{
+			name: "enum with string default",
+			in:   tools.NewEnumParameter(tools.NewStringParameterWithDefault("foo-enum", "foo", "enum of strings"), false, []any{"foo", "bar"}),
+			want: tools.ParameterManifest{
+				Name:         "foo-enum",
+				Type:         "string",
+				Required:     false,
+				Description:  "enum of strings",
+				AuthServices: []string{},
+			},
+		},
+		{
 			name: "string not required",
 			in:   tools.NewStringParameterWithRequired("foo-string", "bar", false),
 			want: tools.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
@@ -1259,6 +1372,17 @@ func TestParamManifest(t *testing.T) {
 				Description:  "bar",
 				AuthServices: []string{},
 				Items:        &tools.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
+			},
+		},
+		{
+			name: "enum with string not required",
+			in:   tools.NewEnumParameter(tools.NewStringParameterWithRequired("foo-enum", "enum of strings", false), false, []any{"foo", "bar"}),
+			want: tools.ParameterManifest{
+				Name:         "foo-enum",
+				Type:         "string",
+				Required:     false,
+				Description:  "enum of strings",
+				AuthServices: []string{},
 			},
 		},
 		{
@@ -1343,7 +1467,6 @@ func TestParamMcpManifest(t *testing.T) {
 				Items:       &tools.ParameterMcpManifest{Type: "string", Description: "bar"},
 			},
 		},
-
 		{
 			name: "map with string values",
 			in:   tools.NewMapParameter("foo-map", "bar", "string"),
@@ -1361,6 +1484,11 @@ func TestParamMcpManifest(t *testing.T) {
 				Description:          "bar",
 				AdditionalProperties: true,
 			},
+		},
+		{
+			name: "enum param",
+			in:   tools.NewEnumParameter(tools.NewStringParameter("foo-enum", "enum of strings"), false, []any{"foo", "bar"}),
+			want: tools.ParameterMcpManifest{Type: "string", Description: "enum of strings"},
 		},
 	}
 	for _, tc := range tcs {
@@ -1389,6 +1517,7 @@ func TestMcpManifest(t *testing.T) {
 				tools.NewArrayParameter("foo-array2", "bar", tools.NewStringParameter("foo-string", "bar")),
 				tools.NewMapParameter("foo-map-int", "a map of ints", "integer"),
 				tools.NewMapParameter("foo-map-any", "a map of any", ""),
+				tools.NewEnumParameter(tools.NewStringParameter("foo-enum-string", "enum of strings"), false, []any{"foo", "bar"}),
 			},
 			want: tools.McpToolsSchema{
 				Type: "object",
@@ -1412,8 +1541,12 @@ func TestMcpManifest(t *testing.T) {
 						Description:          "a map of any",
 						AdditionalProperties: true,
 					},
+					"foo-enum-string": {
+						Type:        "string",
+						Description: "enum of strings",
+					},
 				},
-				Required: []string{"foo-string2", "foo-int2", "foo-float", "foo-array2", "foo-map-int", "foo-map-any"},
+				Required: []string{"foo-string2", "foo-int2", "foo-float", "foo-array2", "foo-map-int", "foo-map-any", "foo-enum-string"},
 			},
 		},
 	}
@@ -1455,7 +1588,7 @@ func TestFailParametersUnmarshal(t *testing.T) {
 					"description": "this is a param for string",
 				},
 			},
-			err: "parameter is missing 'type' field: %!w(<nil>)",
+			err: "parameter is missing 'type' field",
 		},
 		{
 			name: "common parameter missing description",
@@ -1662,6 +1795,18 @@ func TestGetParams(t *testing.T) {
 			params: tools.Parameters{},
 			in:     map[string]any{},
 			want:   tools.ParamValues{},
+		},
+		{
+			name: "enum with escape",
+			params: tools.Parameters{
+				tools.NewEnumParameter(tools.NewStringParameter("my_string_enum", "string of enums"), true, []any{"foo", "bar"}),
+			},
+			in: map[string]any{
+				"my_string_enum": "foo",
+			},
+			want: tools.ParamValues{
+				tools.ParamValue{Name: "my_string_enum", Value: `"foo"`},
+			},
 		},
 	}
 	for _, tc := range tcs {

@@ -153,6 +153,32 @@ will be thrown in case of value type mismatch.
         valueType: integer # This enforces the value type for all entries.
 ```
 
+### Enum Parameters
+
+The `enum` type allow users to specify a set of allowed values with that
+parameter. When toolbox parse the input of parameters, it will check against the
+allowed values.
+
+```yaml
+parameter:
+    - name: airline
+      type: enum
+      description: name of airline.
+      enumType: string
+      allowedValues:
+        - cymbalair
+        - delta
+```
+
+Other than the regular fields required with the `enumType` specified, below are
+the additional fields that are needed when using `enum` type.
+
+| **field**     | **type** | **required** | **description**                                                                                                                                                                                                           |
+|---------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| enumType      |  string  |     true     | This indicates the type of the value. Must be one of the supported parameter type (e.g. `string`/ `integer` / `float` / `boolean` / `array` / `map`).                                                                     |
+| escape        |   bool   |    false     | Indicates if the value will be escaped if used with `templateParameters`. Escaping will add double quotes (or backticks/square brackets depending on the source) depending on the database. This is defaulted to `false`. |
+| allowedValues | []string |     true     | Input value will be checked against this field.                                                                                                                                                                           |
+
 ### Authenticated Parameters
 
 Authenticated parameters are automatically populated with user
