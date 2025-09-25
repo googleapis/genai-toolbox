@@ -23,6 +23,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/goccy/go-yaml"
+	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -287,6 +292,36 @@ func AddMySqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 		"authRequired": []string{
 			"my-google-auth",
 		},
+	}
+	config["tools"] = tools
+	return config
+}
+
+// AddMySQLPrebuiltToolConfig gets the tools config for mysql prebuilt tools
+func AddMySQLPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["list_tables"] = map[string]any{
+		"kind":        "mysql-list-tables",
+		"source":      "my-instance",
+		"description": "Lists tables in the database.",
+	}
+	tools["list_active_queries"] = map[string]any{
+		"kind":        "mysql-list-active-queries",
+		"source":      "my-instance",
+		"description": "Lists active queries in the database.",
+	}
+	tools["list_tables_missing_unique_indexes"] = map[string]any{
+		"kind":        "mysql-list-tables-missing-unique-indexes",
+		"source":      "my-instance",
+		"description": "Lists tables that do not have primary or unique indexes in the database.",
+	}
+	tools["list_table_fragmentation"] = map[string]any{
+		"kind":        "mysql-list-table-fragmentation",
+		"source":      "my-instance",
+		"description": "Lists table fragmentation in the database.",
 	}
 	config["tools"] = tools
 	return config
@@ -644,4 +679,113 @@ func GetRedisValkeyToolsConfig(sourceConfig map[string]any, toolKind string) map
 		},
 	}
 	return toolsFile
+}
+
+// TestCloudSQLMySQL_IPTypeParsingFromYAML verifies the IPType field parsing from YAML
+// for the cloud-sql-mysql source, mimicking the structure of tests in cloudsql_mysql_test.go.
+func TestCloudSQLMySQL_IPTypeParsingFromYAML(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		want server.SourceConfigs
+	}{
+		{
+			desc: "IPType Defaulting to Public",
+			in: `
+			sources:
+				my-mysql-instance:
+					kind: cloud-sql-mysql
+					project: my-project
+					region: my-region
+					instance: my-instance
+					database: my_db
+					user: my_user
+					password: my_pass
+			`,
+			want: server.SourceConfigs{
+				"my-mysql-instance": cloudsqlmysql.Config{
+					Name:     "my-mysql-instance",
+					Kind:     cloudsqlmysql.SourceKind,
+					Project:  "my-project",
+					Region:   "my-region",
+					Instance: "my-instance",
+					IPType:   "public", // Default value
+					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
+				},
+			},
+		},
+		{
+			desc: "IPType Explicit Public",
+			in: `
+			sources:
+				my-mysql-instance:
+					kind: cloud-sql-mysql
+					project: my-project
+					region: my-region
+					instance: my-instance
+					ipType: Public
+					database: my_db
+					user: my_user
+					password: my_pass
+			`,
+			want: server.SourceConfigs{
+				"my-mysql-instance": cloudsqlmysql.Config{
+					Name:     "my-mysql-instance",
+					Kind:     cloudsqlmysql.SourceKind,
+					Project:  "my-project",
+					Region:   "my-region",
+					Instance: "my-instance",
+					IPType:   "public",
+					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
+				},
+			},
+		},
+		{
+			desc: "IPType Explicit Private",
+			in: `
+			sources:
+				my-mysql-instance:
+					kind: cloud-sql-mysql
+					project: my-project
+					region: my-region
+					instance: my-instance
+					ipType: private 
+					database: my_db
+					user: my_user
+					password: my_pass
+			`,
+			want: server.SourceConfigs{
+				"my-mysql-instance": cloudsqlmysql.Config{
+					Name:     "my-mysql-instance",
+					Kind:     cloudsqlmysql.SourceKind,
+					Project:  "my-project",
+					Region:   "my-region",
+					Instance: "my-instance",
+					IPType:   "private",
+					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
+				},
+			},
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Sources server.SourceConfigs `yaml:"sources"`
+			}{}
+			// Parse contents
+			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+			if !cmp.Equal(tc.want, got.Sources) {
+				t.Fatalf("incorrect parse: diff (-want +got):\n%s", cmp.Diff(tc.want, got.Sources))
+			}
+		})
+	}
 }

@@ -108,6 +108,8 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MySQLToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
+	toolsFile = tests.AddMySQLPrebuiltToolConfig(t, toolsFile)
+
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -131,4 +133,10 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+
+	// Run specific MySQL tool tests
+	tests.RunMySQLListTablesTest(t, MySQLDatabase, tableNameParam, tableNameAuth)
+	tests.RunMySQLListActiveQueriesTest(t, ctx, pool)
+	tests.RunMySQLListTablesMissingUniqueIndexes(t, ctx, pool, MySQLDatabase)
+	tests.RunMySQLListTableFragmentationTest(t, MySQLDatabase, tableNameParam, tableNameAuth)
 }

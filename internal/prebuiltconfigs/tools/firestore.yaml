@@ -1,68 +1,82 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 sources:
   firestore-source:
     kind: firestore
     project: ${FIRESTORE_PROJECT}
-    database: ${FIRESTORE_DATABASE}
+    database: ${FIRESTORE_DATABASE:}
 
 tools:
-  firestore-get-documents:
+  get_documents:
     kind: firestore-get-documents
     source: firestore-source
     description: Gets multiple documents from Firestore by their paths
-  firestore-add-documents:
+  add_documents:
     kind: firestore-add-documents
     source: firestore-source
     description: |
-     Adds a new document to a Firestore collection. Please follow the best practices :
-      1. Always use typed values in the documentData: Every field must be wrapped with its appropriate type indicator (e.g., {"stringValue": "text"})
-      2. Integer values can be strings in the documentData: The tool accepts integer values as strings (e.g., {"integerValue": "1500"})
-      3. Use returnData sparingly: Only set to true when you need to verify the exact data that was written
-      4. Validate data before sending: Ensure your data matches Firestore's native JSON format
-      5. Handle timestamps properly: Use RFC3339 format for timestamp strings
-      6. Base64 encode binary data: Binary data must be base64 encoded in the bytesValue field
-      7. Consider security rules: Ensure your Firestore security rules allow document creation in the target collection
-  firestore-update-document:
+      Adds a new document to a Firestore collection. Please follow the best practices :
+       1. Always use typed values in the documentData: Every field must be wrapped with its appropriate type indicator (e.g., {"stringValue": "text"})
+       2. Integer values can be strings in the documentData: The tool accepts integer values as strings (e.g., {"integerValue": "1500"})
+       3. Use returnData sparingly: Only set to true when you need to verify the exact data that was written
+       4. Validate data before sending: Ensure your data matches Firestore's native JSON format
+       5. Handle timestamps properly: Use RFC3339 format for timestamp strings
+       6. Base64 encode binary data: Binary data must be base64 encoded in the bytesValue field
+       7. Consider security rules: Ensure your Firestore security rules allow document creation in the target collection
+  update_document:
     kind: firestore-update-document
     source: firestore-source
     description: |
-     Updates an existing document in Firestore. Supports both full document updates and selective field updates using an update mask. Please follow the best practices:
-      1. Use update masks for precision: When you only need to update specific fields, use the updateMask parameter to avoid unintended changes
-      2. Always use typed values in the documentData: Every field must be wrapped with its appropriate type indicator (e.g., {"stringValue": "text"})
-      3. Delete fields using update mask: To delete fields, include them in the updateMask but omit them from documentData
-      4. Integer values can be strings: The tool accepts integer values as strings (e.g., {"integerValue": "1500"})
-      5. Use returnData sparingly: Only set to true when you need to verify the exact data after the update
-      6. Handle timestamps properly: Use RFC3339 format for timestamp strings
-      7. Consider security rules: Ensure your Firestore security rules allow document updates
-  firestore-list-collections:
+      Updates an existing document in Firestore. Supports both full document updates and selective field updates using an update mask. Please follow the best practices:
+       1. Use update masks for precision: When you only need to update specific fields, use the updateMask parameter to avoid unintended changes
+       2. Always use typed values in the documentData: Every field must be wrapped with its appropriate type indicator (e.g., {"stringValue": "text"})
+       3. Delete fields using update mask: To delete fields, include them in the updateMask but omit them from documentData
+       4. Integer values can be strings: The tool accepts integer values as strings (e.g., {"integerValue": "1500"})
+       5. Use returnData sparingly: Only set to true when you need to verify the exact data after the update
+       6. Handle timestamps properly: Use RFC3339 format for timestamp strings
+       7. Consider security rules: Ensure your Firestore security rules allow document updates
+  list_collections:
     kind: firestore-list-collections
     source: firestore-source
     description: List Firestore collections for a given parent path
-  firestore-delete-documents:
+  delete_documents:
     kind: firestore-delete-documents
     source: firestore-source
     description: Delete multiple documents from Firestore
-  firestore-query-collection:
+  query_collection:
     kind: firestore-query-collection
     source: firestore-source
-    description: | 
-      Retrieves one or more Firestore documents from a collection in a database in the current project by a collection with a full document path. 
+    description: |
+      Retrieves one or more Firestore documents from a collection in a database in the current project by a collection with a full document path.
       Use this if you know the exact path of a collection and the filtering clause you would like for the document.
-  firestore-get-rules:
+  get_rules:
     kind: firestore-get-rules
     source: firestore-source
     description: Retrieves the active Firestore security rules for the current project
-  firestore-validate-rules:
+  validate_rules:
     kind: firestore-validate-rules
     source: firestore-source
     description: Checks the provided Firestore Rules source for syntax and validation errors. Provide the source code to validate.
 
 toolsets:
-  firestore-database-tools:
-    - firestore-get-documents
-    - firestore-add-documents
-    - firestore-update-document
-    - firestore-list-collections
-    - firestore-delete-documents
-    - firestore-query-collection
-    - firestore-get-rules
-    - firestore-validate-rules
+  firestore_database_tools:
+    - get_documents
+    - add_documents
+    - update_document
+    - list_collections
+    - delete_documents
+    - query_collection
+    - get_rules
+    - validate_rules

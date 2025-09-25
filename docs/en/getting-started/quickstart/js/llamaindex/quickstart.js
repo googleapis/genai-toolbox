@@ -4,7 +4,7 @@ import { createMemory, staticBlock, tool } from "llamaindex";
 import { ToolboxClient } from "@toolbox-sdk/core";
 
 const TOOLBOX_URL = "http://127.0.0.1:5000"; // Update if needed
-process.env.GOOGLE_API_KEY = 'your-api-key'; // Replace it with your API key
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || 'your-api-key'; // Replace it with your API key
 
 const prompt = `
 
@@ -24,7 +24,7 @@ const queries = [
   "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ];
 
-async function main() {
+export async function main() {
   // Connect to MCP Toolbox
   const client = new ToolboxClient(TOOLBOX_URL);
   const toolboxTools = await client.loadToolset("my-toolset");
@@ -40,7 +40,7 @@ async function main() {
   // Initialize LLM
   const llm = gemini({
     model: GEMINI_MODEL.GEMINI_2_0_FLASH,
-    apiKey: process.env.GOOGLE_API_KEY,
+    apiKey: GOOGLE_API_KEY,
   });
 
   const memory = createMemory({

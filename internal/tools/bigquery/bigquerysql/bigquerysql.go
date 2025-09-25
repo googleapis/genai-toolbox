@@ -26,6 +26,7 @@ import (
 
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
@@ -222,7 +223,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	// Initialize new client if using user OAuth token
 	if t.UseClientOAuth {
-		bqClient, restService, err = t.ClientCreator(accessToken, true)
+		tokenStr, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
+		bqClient, restService, err = t.ClientCreator(tokenStr, true)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
 		}
@@ -232,7 +237,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	query.Parameters = highLevelParams
 	query.Location = bqClient.Location
 
-	dryRunJob, err := dryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, newStatement, lowLevelParams, query.ConnectionProperties)
+	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, newStatement, lowLevelParams, query.ConnectionProperties)
 	if err != nil {
 		// This is a fallback check in case the switch logic was bypassed.
 		return nil, fmt.Errorf("final query validation failed: %w", err)
@@ -314,43 +319,4 @@ func BQTypeStringFromToolType(toolType string) (string, error) {
 	default:
 		return "", fmt.Errorf("unsupported tool parameter type for BigQuery: %s", toolType)
 	}
-}
-
-func dryRunQuery(
-	ctx context.Context,
-	restService *bigqueryrestapi.Service,
-	projectID string,
-	location string,
-	sql string,
-	params []*bigqueryrestapi.QueryParameter,
-	connProps []*bigqueryapi.ConnectionProperty,
-) (*bigqueryrestapi.Job, error) {
-	useLegacySql := false
-
-	restConnProps := make([]*bigqueryrestapi.ConnectionProperty, len(connProps))
-	for i, prop := range connProps {
-		restConnProps[i] = &bigqueryrestapi.ConnectionProperty{Key: prop.Key, Value: prop.Value}
-	}
-
-	jobToInsert := &bigqueryrestapi.Job{
-		JobReference: &bigqueryrestapi.JobReference{
-			ProjectId: projectID,
-			Location:  location,
-		},
-		Configuration: &bigqueryrestapi.JobConfiguration{
-			DryRun: true,
-			Query: &bigqueryrestapi.JobConfigurationQuery{
-				Query:                sql,
-				UseLegacySql:         &useLegacySql,
-				ConnectionProperties: restConnProps,
-				QueryParameters:      params,
-			},
-		},
-	}
-
-	insertResponse, err := restService.Jobs.Insert(projectID, jobToInsert).Context(ctx).Do()
-	if err != nil {
-		return nil, fmt.Errorf("failed to insert dry run job: %w", err)
-	}
-	return insertResponse, nil
 }

@@ -2,8 +2,7 @@ import { ToolboxClient } from "@toolbox-sdk/core";
 import { genkit } from "genkit";
 import { googleAI } from '@genkit-ai/googleai';
 
-// Replace it with your API key
-process.env.GOOGLE_API_KEY = 'your-api-key';
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY || 'your-api-key'; // Replace it with your API key
 
 const systemPrompt = `
 You're a helpful hotel assistant. You handle hotel searching, booking, and
@@ -22,13 +21,13 @@ const queries = [
   "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ];
 
-async function main() {
+export async function main() {
   const toolboxClient = new ToolboxClient("http://127.0.0.1:5000");
 
   const ai = genkit({
     plugins: [
       googleAI({
-        apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
+        apiKey: process.env.GEMINI_API_KEY || GOOGLE_API_KEY
       })
     ],
     model: googleAI.model('gemini-2.0-flash'),
