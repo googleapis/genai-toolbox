@@ -289,11 +289,6 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 			"source":      "my-instance",
 			"description": "Tool to execute SQL",
 		},
-		"forecast-restricted": map[string]any{
-			"kind":        "bigquery-forecast",
-			"source":      "my-instance",
-			"description": "Tool to forecast",
-		},
 		"conversational-analytics-restricted": map[string]any{
 			"kind":        "bigquery-conversational-analytics",
 			"source":      "my-instance",
