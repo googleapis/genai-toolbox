@@ -620,6 +620,27 @@ steps:
           trino \
           trinosql trinoexecutesql
 
+  - id: "kdb"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "KDB_HOST=$_KDB_HOST"
+      - "KDB_PORT=$_KDB_PORT"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID", "KDB_USER", "KDB_PASS"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "KDB" \
+          kdb \
+          kdb
+
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_user/versions/latest
@@ -692,6 +713,10 @@ availableSecrets:
       env: FIREBIRD_PASS
     - versionName: projects/$PROJECT_ID/secrets/trino_user/versions/latest
       env: TRINO_USER
+    - versionName: projects/$PROJECT_ID/secrets/kdb_user/versions/latest
+      env: KDB_USER
+    - versionName: projects/$PROJECT_ID/secrets/kdb_pass/versions/latest
+      env: KDB_PASS
     - versionName: projects/$PROJECT_ID/secrets/oceanbase_host/versions/latest
       env: OCEANBASE_HOST
     - versionName: projects/$PROJECT_ID/secrets/oceanbase_user/versions/latest
@@ -742,5 +767,7 @@ substitutions:
   _TRINO_PORT: "8080"
   _TRINO_CATALOG: "memory"
   _TRINO_SCHEMA: "default"
+  _KDB_HOST: 127.0.0.1
+  _KDB_PORT: "5001"
   _OCEANBASE_PORT: "2883"
   _OCEANBASE_DATABASE: "oceanbase"
