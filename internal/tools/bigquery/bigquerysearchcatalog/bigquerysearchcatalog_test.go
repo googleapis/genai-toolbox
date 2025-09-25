@@ -12,13 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 package bigquerysearchcatalog_test
-
 
 import (
 	"testing"
-
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
@@ -26,7 +23,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysearchcatalog"
 )
-
 
 func TestParseFromYamlBigQuerySearch(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()

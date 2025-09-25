@@ -1,4 +1,4 @@
-llama-index==0.13.6
-llama-index-llms-google-genai==0.3.0
-toolbox-llamaindex==0.5.0
+llama-index==0.14.3
+llama-index-llms-google-genai==0.6.0
+toolbox-llamaindex==0.5.2
 pytest==8.4.2
