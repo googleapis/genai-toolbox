@@ -350,6 +350,21 @@ func AddMSSQLExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 	return config
 }
 
+// AddMSSQLPrebuiltToolConfig gets the tools config for mssql prebuilt tools
+func AddMSSQLPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["list_tables"] = map[string]any{
+		"kind":        "mssql-list-tables",
+		"source":      "my-instance",
+		"description": "Lists tables in the database.",
+	}
+	config["tools"] = tools
+	return config
+}
+
 // GetPostgresSQLParamToolInfo returns statements and param for my-tool postgres-sql kind
 func GetPostgresSQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT);", tableName)
