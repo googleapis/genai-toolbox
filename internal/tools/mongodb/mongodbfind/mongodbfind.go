@@ -21,6 +21,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	mongosrc "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -54,7 +55,7 @@ type Config struct {
 	Database       string           `yaml:"database" validate:"required"`
 	Collection     string           `yaml:"collection" validate:"required"`
 	FilterPayload  string           `yaml:"filterPayload" validate:"required"`
-	FilterParams   tools.Parameters `yaml:"filterParams" validate:"required"`
+	FilterParams   tools.Parameters `yaml:"filterParams"`
 	ProjectPayload string           `yaml:"projectPayload"`
 	ProjectParams  tools.Parameters `yaml:"projectParams"`
 	SortPayload    string           `yaml:"sortPayload"`
@@ -89,6 +90,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	err := tools.CheckDuplicateParameters(allParameters)
 	if err != nil {
 		return nil, err
+	}
+
+	// Verify 'limit' value
+	if cfg.Limit <= 0 {
+		return nil, fmt.Errorf("limit must be a positive number, but got %d", cfg.Limit)
 	}
 
 	// Create Toolbox manifest
@@ -147,7 +153,12 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func getOptions(sortParameters tools.Parameters, projectPayload string, limit int64, paramsMap map[string]any) (*options.FindOptions, error) {
+func getOptions(ctx context.Context, sortParameters tools.Parameters, projectPayload string, limit int64, paramsMap map[string]any) (*options.FindOptions, error) {
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	opts := options.Find()
 
 	sort := bson.M{}
@@ -156,28 +167,28 @@ func getOptions(sortParameters tools.Parameters, projectPayload string, limit in
 	}
 	opts = opts.SetSort(sort)
 
-	if len(projectPayload) == 0 {
-		return opts, nil
+	if len(projectPayload) > 0{
+		
+		result, err := tools.PopulateTemplateWithJSON("MongoDBFindProjectString", projectPayload, paramsMap)
+
+		if err != nil {
+			return nil, fmt.Errorf("error populating project payload: %s", err)
+		}
+
+		var projection any
+		err = bson.UnmarshalExtJSON([]byte(result), false, &projection)
+		if err != nil {
+			return nil, fmt.Errorf("error unmarshalling projection: %s", err)
+		}
+
+		opts = opts.SetProjection(projection)
+		logger.DebugContext(ctx, "Projection is set to %v", projection)
 	}
-
-	result, err := tools.PopulateTemplateWithJSON("MongoDBFindProjectString", projectPayload, paramsMap)
-
-	if err != nil {
-		return nil, fmt.Errorf("error populating project payload: %s", err)
-	}
-
-	var projection any
-	err = bson.UnmarshalExtJSON([]byte(result), false, &projection)
-	if err != nil {
-		return nil, fmt.Errorf("error unmarshalling projection: %s", err)
-	}
-
-	opts = opts.SetProjection(projection)
 
 	if limit > 0 {
 		opts = opts.SetLimit(limit)
+		logger.DebugContext(ctx, "Limit is being set to %d", limit)
 	}
-
 	return opts, nil
 }
 
@@ -189,12 +200,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, fmt.Errorf("error populating filter: %s", err)
 	}
-
-	opts, err := getOptions(t.SortParams, t.ProjectPayload, t.Limit, paramsMap)
+	
+	opts, err := getOptions(ctx, t.SortParams, t.ProjectPayload, t.Limit, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error populating options: %s", err)
 	}
-
+	
 	var filter = bson.D{}
 	err = bson.UnmarshalExtJSON([]byte(filterString), false, &filter)
 	if err != nil {
