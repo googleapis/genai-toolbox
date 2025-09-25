@@ -22,6 +22,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -99,6 +100,13 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
+	userAgent, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		userAgent = "genai-toolbox"
+	}
+	if _, ok := queryParams["application_name"]; !ok {
+		queryParams["application_name"] = userAgent
+	}
 
 	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
 	url := &url.URL{
