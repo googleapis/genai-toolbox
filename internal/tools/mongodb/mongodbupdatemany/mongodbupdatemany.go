@@ -80,7 +80,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Create a slice for all parameters
-	allParameters := slices.Concat(cfg.FilterParams, cfg.FilterParams, cfg.UpdateParams)
+	allParameters := slices.Concat(cfg.FilterParams, cfg.UpdateParams)
 
 	// Verify no duplicate parameter names
 	err := tools.CheckDuplicateParameters(allParameters)

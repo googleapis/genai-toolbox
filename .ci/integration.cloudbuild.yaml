@@ -662,6 +662,26 @@ steps:
       - |
         ./yugabytedb.test -test.v
 
+ 
+  - id: "cassandra"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID", "CASSANDRA_USER", "CASSANDRA_PASS", "CASSANDRA_HOST"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Cassandra" \
+          cassandra \
+          cassandra
+          
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_user/versions/latest
@@ -746,6 +766,12 @@ availableSecrets:
       env: YUGABYTEDB_USER
     - versionName: projects/$PROJECT_ID/secrets/yugabytedb_pass/versions/latest
       env: YUGABYTEDB_PASS
+    - versionName: projects/$PROJECT_ID/secrets/cassandra_user/versions/latest
+      env: CASSANDRA_USER
+    - versionName: projects/$PROJECT_ID/secrets/cassandra_pass/versions/latest
+      env: CASSANDRA_PASS
+    - versionName: projects/$PROJECT_ID/secrets/cassandra_host/versions/latest
+      env: CASSANDRA_HOST
 
 options:
   logging: CLOUD_LOGGING_ONLY
