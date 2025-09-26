@@ -54,11 +54,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
-	BigQueryTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error)
 	BigQueryProject() string
 	BigQueryLocation() string
 	GetMaxQueryResultRows() int
 	UseClientAuthorization() bool
+	BigQueryCloudPlatformTokenSource() oauth2.TokenSource
 	IsDatasetAllowed(projectID, datasetID string) bool
 	BigQueryAllowedDatasets() []string
 }
@@ -156,17 +156,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		InputSchema: parameters.McpManifest(),
 	}
 
-	// Get cloud-platform token source for Gemini Data Analytics API during initialization
-	var bigQueryTokenSourceWithScope oauth2.TokenSource
-	if !s.UseClientAuthorization() {
-		ctx := context.Background()
-		ts, err := s.BigQueryTokenSourceWithScope(ctx, "https://www.googleapis.com/auth/cloud-platform")
-		if err != nil {
-			return nil, fmt.Errorf("failed to get cloud-platform token source: %w", err)
-		}
-		bigQueryTokenSourceWithScope = ts
-	}
-
 	// finish tool setup
 	t := Tool{
 		Name:               cfg.Name,
@@ -177,7 +166,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AuthRequired:       cfg.AuthRequired,
 		Client:             s.BigQueryClient(),
 		UseClientOAuth:     s.UseClientAuthorization(),
-		TokenSource:        bigQueryTokenSourceWithScope,
+		TokenSource:        s.BigQueryCloudPlatformTokenSource(),
 		manifest:           tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:        mcpManifest,
 		MaxQueryResultRows: s.GetMaxQueryResultRows(),
