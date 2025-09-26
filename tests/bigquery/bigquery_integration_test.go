@@ -264,6 +264,11 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 
 	// Configure tool
 	toolsConfig := map[string]any{
+		"list-dataset-ids-restricted": map[string]any{
+			"kind":        "bigquery-list-dataset-ids",
+			"source":      "my-instance",
+			"description": "Tool to list dataset ids",
+		},
 		"list-table-ids-restricted": map[string]any{
 			"kind":        "bigquery-list-table-ids",
 			"source":      "my-instance",
@@ -310,6 +315,7 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	}
 
 	// Run tests
+	runListDatasetIdsWithRestriction(t, allowedDatasetName1, allowedDatasetName2, disallowedDatasetName)
 	runListTableIdsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, allowedForecastTableName1)
 	runListTableIdsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, allowedForecastTableName2)
 	runExecuteSqlWithRestriction(t, allowedTableNameParam1, disallowedTableNameParam)
@@ -2075,6 +2081,53 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 			wantPattern := regexp.MustCompile(tc.want)
 			if !wantPattern.MatchString(got) {
 				t.Fatalf("response did not match the expected pattern.\nFull response:\n%s", got)
+			}
+		})
+	}
+}
+
+func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName1, allowedDataset2, disallowedDatasetName string) {
+	testCases := []struct {
+		name           string
+		wantStatusCode int
+		wantResult     string
+	}{
+		{
+			name:           "invoke list-dataset-ids with restriction",
+			wantStatusCode: http.StatusOK,
+			wantResult:     fmt.Sprintf(`["%s.%s","%s.%s"]`, BigqueryProject, allowedDatasetName1, BigqueryProject, allowedDataset2),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			body := bytes.NewBuffer([]byte(`{}`))
+			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/api/tool/list-dataset-ids-restricted/invoke", body)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
+			}
+
+			var respBody map[string]interface{}
+			if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+			got, ok := respBody["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+			if got != tc.wantResult {
+				t.Errorf("unexpected result: got %q, want %q", got, tc.wantResult)
 			}
 		})
 	}
