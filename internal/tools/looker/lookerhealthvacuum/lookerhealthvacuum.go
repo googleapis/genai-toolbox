@@ -50,11 +50,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
+	Name         string         `yaml:"name" validate:"required"`
+	Kind         string         `yaml:"kind" validate:"required"`
+	Source       string         `yaml:"source" validate:"required"`
+	Description  string         `yaml:"description" validate:"required"`
+	AuthRequired []string       `yaml:"authRequired"`
 	Parameters   map[string]any `yaml:"parameters"`
 }
 
@@ -76,9 +76,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	actionParameter := tools.NewStringParameterWithRequired("action", "The vacuum action to run. Can be 'models', or 'explores'.", true)
-	projectParameter := tools.NewStringParameterWithDefault("project","", "The Looker project to vacuum (optional).")
-	modelParameter := tools.NewStringParameterWithDefault("model","", "The Looker model to vacuum (optional).")
-	exploreParameter := tools.NewStringParameterWithDefault("explore","", "The Looker explore to vacuum (optional).")
+	projectParameter := tools.NewStringParameterWithDefault("project", "", "The Looker project to vacuum (optional).")
+	modelParameter := tools.NewStringParameterWithDefault("model", "", "The Looker model to vacuum (optional).")
+	exploreParameter := tools.NewStringParameterWithDefault("explore", "", "The Looker explore to vacuum (optional).")
 	timeframeParameter := tools.NewIntParameterWithDefault("timeframe", 90, "The timeframe in days to analyze.")
 	minQueriesParameter := tools.NewIntParameterWithDefault("min_queries", 1, "The minimum number of queries for a model or explore to be considered used.")
 
@@ -382,15 +382,15 @@ func (t *vacuumTool) getUnusedExplores(ctx context.Context, modelName string) ([
 		for _, e := range *lookmlModel.Explores {
 			limit := "1"
 			queryCountQueryBody := &v4.WriteQuery{
-				Model: "system__activity",
-				View:  "history",
+				Model:  "system__activity",
+				View:   "history",
 				Fields: &[]string{"history.query_run_count"},
 				Filters: &map[string]any{
-					"query.model":  modelName,
-					"query.view": *e.Name,
-					"history.created_date": fmt.Sprintf("%d days", t.timeframe),
+					"query.model":             modelName,
+					"query.view":              *e.Name,
+					"history.created_date":    fmt.Sprintf("%d days", t.timeframe),
 					"history.query_run_count": fmt.Sprintf(">%d", t.minQueries-1),
-					"user.dev_branch_name": "NULL",
+					"user.dev_branch_name":    "NULL",
 				},
 				Limit: &limit,
 			}
@@ -457,6 +457,7 @@ func (t *vacuumTool) getUsedExploreFields(ctx context.Context, model, explore st
 	}
 	return results, nil
 }
+
 // =================================================================================================================
 // END LOOKER HEALTH VACUUM CORE LOGIC
 // =================================================================================================================

@@ -17,7 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	
+
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
@@ -116,7 +116,7 @@ type Tool struct {
 	UseClientOAuth bool
 	Client         *v4.LookerSDK
 	ApiSettings    *rtl.ApiSettings
-	AuthRequired   []string `yaml:"authRequired"`
+	AuthRequired   []string         `yaml:"authRequired"`
 	Parameters     tools.Parameters `yaml:"parameters"`
 	manifest       tools.Manifest
 	mcpManifest    tools.McpManifest
@@ -230,7 +230,7 @@ func (t *pulseTool) checkDBConnections(ctx context.Context) (interface{}, error)
 		"looker__ilooker":                      {},
 	}
 
-	connections, err := t.SdkClient.AllConnections("",t.ApiSettings)
+	connections, err := t.SdkClient.AllConnections("", t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error fetching connections: %w", err)
 	}
@@ -268,8 +268,8 @@ func (t *pulseTool) checkDBConnections(ctx context.Context) (interface{}, error)
 			Fields: &[]string{"history.query_run_count"},
 			Filters: &map[string]any{
 				"history.connection_name": *conn.Name,
-				"history.created_date":  "90 days",
-				"user.dev_branch_name": "NULL",
+				"history.created_date":    "90 days",
+				"user.dev_branch_name":    "NULL",
 			},
 			Limit: &limit,
 		}
@@ -307,10 +307,10 @@ func (t *pulseTool) checkDashboardPerformance(ctx context.Context) (interface{},
 		View:   "history",
 		Fields: &[]string{"dashboard.title", "query.count"},
 		Filters: &map[string]any{
-			"history.created_date":   "7 days",
-			"history.real_dash_id":   "-NULL",
-			"history.runtime":        ">30",
-			"history.status":         "complete",
+			"history.created_date": "7 days",
+			"history.real_dash_id": "-NULL",
+			"history.runtime":      ">30",
+			"history.status":       "complete",
 		},
 		Sorts: &[]string{"query.count desc"},
 		Limit: &limit,
@@ -339,10 +339,10 @@ func (t *pulseTool) checkDashboardErrors(ctx context.Context) (interface{}, erro
 		View:   "history",
 		Fields: &[]string{"dashboard.title", "history.query_run_count"},
 		Filters: &map[string]any{
-			"dashboard.title":         "-NULL",
-			"history.created_date":    "7 days",
+			"dashboard.title":           "-NULL",
+			"history.created_date":      "7 days",
 			"history.dashboard_session": "-NULL",
-			"history.status":          "error",
+			"history.status":            "error",
 		},
 		Sorts: &[]string{"history.query_run_count desc"},
 		Limit: &limit,
