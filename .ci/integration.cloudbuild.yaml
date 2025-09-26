@@ -194,6 +194,26 @@ steps:
           dataplex \
           dataplex
 
+  - id: "dataform"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        apt-get update && apt-get install -y npm && \
+        npm install -g @dataform/cli && \
+        .ci/test_with_coverage.sh \
+          "Dataform" \
+          dataform \
+          dataform
+
   - id: "postgres"
     name: golang:1
     waitFor: ["compile-test-binary"]
