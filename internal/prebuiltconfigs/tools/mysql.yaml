@@ -34,11 +34,11 @@ tools:
   list_active_queries:
     kind: mysql-list-active-queries
     source: mysql-source
-    description: "Lists top N (default 10) ongoing queries from processlist and innodb_trx, ordered by execution time in descending order. Returns detailed information of those queries in json format, including process id, query, transaction duration, transaction wait duration, process time, transaction state, process state, username with host, transaction rows locked, transaction rows modified, and db schema."
+    description: Lists top N (default 10) ongoing queries from processlist and innodb_trx, ordered by execution time in descending order. Returns detailed information of those queries in json format, including process id, query, transaction duration, transaction wait duration, process time, transaction state, process state, username with host, transaction rows locked, transaction rows modified, and db schema.
   get_query_plan:
     kind: mysql-sql
     source: mysql-source
-    description: "Provides information about how MySQL executes a SQL statement. Common use cases include: 1) analyze query plan to improve its performance, and 2) determine effectiveness of existing indexes and evalueate new ones."
+    description: "Provide information about how MySQL executes a SQL statement. Common use cases include: 1) analyze query plan to improve its performance, and 2) determine effectiveness of existing indexes and evalueate new ones."
     statement: |
       EXPLAIN FORMAT=JSON {{.sql_statement}};
     templateParameters:
@@ -53,11 +53,11 @@ tools:
   list_tables_missing_unique_indexes:
     kind: mysql-list-tables-missing-unique-indexes
     source: mysql-source
-    description: "Looks for tables that do not have primary or unique key constraint. A primary key or unique key is the only mechanism that guaranttes a row is unique. Without them, the database-level protection against data integrity issues will be missing."
+    description: "Find tables that do not have primary or unique key constraint. A primary key or unique key is the only mechanism that guaranttes a row is unique. Without them, the database-level protection against data integrity issues will be missing."
   list_table_fragmentation:
     kind: mysql-list-table-fragmentation
     source: mysql-source
-    description: "Displays table fragmentation in MySQL, by calculating the size of the data and index files and free space allocated to each table. The query calculates fragmentation percentage which represents the proportion of free space relative to the total data and index size. Storage can be reclaimed for tables with high fragmentation using OPTIMIZE TABLE."
+    description: List table fragmentation in MySQL, by calculating the size of the data and index files and free space allocated to each table. The query calculates fragmentation percentage which represents the proportion of free space relative to the total data and index size. Storage can be reclaimed for tables with high fragmentation using OPTIMIZE TABLE.
 
 toolsets:
   mysql_database_tools:
