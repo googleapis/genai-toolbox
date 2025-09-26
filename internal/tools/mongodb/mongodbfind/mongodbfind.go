@@ -163,8 +163,8 @@ func getOptions(ctx context.Context, sortParameters tools.Parameters, projectPay
 	}
 	opts = opts.SetSort(sort)
 
-	if len(projectPayload) > 0{
-		
+	if len(projectPayload) > 0 {
+
 		result, err := tools.PopulateTemplateWithJSON("MongoDBFindProjectString", projectPayload, paramsMap)
 
 		if err != nil {
@@ -196,12 +196,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, fmt.Errorf("error populating filter: %s", err)
 	}
-	
+
 	opts, err := getOptions(ctx, t.SortParams, t.ProjectPayload, t.Limit, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error populating options: %s", err)
 	}
-	
+
 	var filter = bson.D{}
 	err = bson.UnmarshalExtJSON([]byte(filterString), false, &filter)
 	if err != nil {

@@ -96,12 +96,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if cfg.Description != "" {
 		description = cfg.Description
 	}
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, parameters)
 
 	t := Tool{
 		Name:              cfg.Name,
