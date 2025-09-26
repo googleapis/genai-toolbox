@@ -1833,3 +1833,40 @@ func RunRequest(t *testing.T, method, url string, body io.Reader, headers map[st
 	defer resp.Body.Close()
 	return resp, respBody
 }
+
+// CheckToolResponse sends a request to a tool and checks the response.
+func CheckToolResponse(t *testing.T, req *http.Request, want string, isErr bool) {
+	t.Helper()
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("unable to send request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		if isErr {
+			return
+		}
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	if isErr {
+		t.Fatalf("expected an error, but got status 200 OK")
+	}
+
+	var body map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatalf("error parsing response body: %v", err)
+	}
+
+	got, ok := body["result"].(string)
+	if !ok {
+		t.Fatalf("unable to find result in response body")
+	}
+
+	if got != want {
+		t.Fatalf("unexpected value: got %q, want %q", got, want)
+	}
+}

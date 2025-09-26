@@ -90,6 +90,42 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with credentialsJson",
+			in: `
+			sources:
+				my-instance:
+					kind: bigquery
+					project: my-project
+					credentialsJson: "{...}"
+			`,
+			want: server.SourceConfigs{
+				"my-instance": bigquery.Config{
+					Name:            "my-instance",
+					Kind:            bigquery.SourceKind,
+					Project:         "my-project",
+					CredentialsJSON: "{...}",
+				},
+			},
+		},
+		{
+			desc: "with credentialsPath",
+			in: `
+			sources:
+				my-instance:
+					kind: bigquery
+					project: my-project
+					credentialsPath: "/path/to/creds.json"
+			`,
+			want: server.SourceConfigs{
+				"my-instance": bigquery.Config{
+					Name:            "my-instance",
+					Kind:            bigquery.SourceKind,
+					Project:         "my-project",
+					CredentialsPath: "/path/to/creds.json",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {

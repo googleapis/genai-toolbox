@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 
@@ -65,6 +66,26 @@ type Config struct {
 	Location        string   `yaml:"location"`
 	AllowedDatasets []string `yaml:"allowedDatasets"`
 	UseClientOAuth  bool     `yaml:"useClientOAuth"`
+	CredentialsJSON string   `yaml:"credentialsJson"`
+	CredentialsPath string   `yaml:"credentialsPath"`
+}
+
+// validateCredentials ensures that only one credential method is provided.
+func (r Config) validateCredentials() error {
+	provided := 0
+	if r.UseClientOAuth {
+		provided++
+	}
+	if r.CredentialsJSON != "" {
+		provided++
+	}
+	if r.CredentialsPath != "" {
+		provided++
+	}
+	if provided > 1 {
+		return fmt.Errorf("for source %q, you can only set one of useClientOAuth, credentialsJson, or credentialsPath", r.Name)
+	}
+	return nil
 }
 
 func (r Config) SourceConfigKind() string {
@@ -73,20 +94,38 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	if err := r.validateCredentials(); err != nil {
+		return nil, err
+	}
+
 	var client *bigqueryapi.Client
 	var restService *bigqueryrestapi.Service
 	var tokenSource oauth2.TokenSource
 	var clientCreator BigqueryClientCreator
 	var err error
+	var credsJSON []byte
 
 	if r.UseClientOAuth {
 		clientCreator, err = newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.Name)
 		if err != nil {
 			return nil, fmt.Errorf("error constructing client creator: %w", err)
 		}
-	} else {
+	} else { // Use service account (JSON/path) or ADC
+		if r.CredentialsPath != "" {
+			credsJSON, err = os.ReadFile(r.CredentialsPath)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read credentials from path %q: %w", r.CredentialsPath, err)
+			}
+		} else if r.CredentialsJSON != "" {
+			credsJSON = []byte(r.CredentialsJSON)
+		}
+
 		// Initializes a BigQuery Google SQL source
-		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location)
+		opts := []option.ClientOption{}
+		if len(credsJSON) > 0 {
+			opts = append(opts, option.WithCredentialsJSON(credsJSON))
+		}
+		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from ADC: %w", err)
 		}
@@ -128,6 +167,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Kind:               SourceKind,
 		Project:            r.Project,
 		Location:           r.Location,
+		CredentialsJSON:    string(credsJSON),
 		Client:             client,
 		RestService:        restService,
 		TokenSource:        tokenSource,
@@ -149,6 +189,7 @@ type Source struct {
 	Kind                      string `yaml:"kind"`
 	Project                   string
 	Location                  string
+	CredentialsJSON           string
 	Client                    *bigqueryapi.Client
 	RestService               *bigqueryrestapi.Service
 	TokenSource               oauth2.TokenSource
@@ -253,29 +294,35 @@ func initBigQueryConnection(
 	name string,
 	project string,
 	location string,
+	opts ...option.ClientOption,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
+	// Add user agent to the options
+	userAgent, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	opts = append(opts, option.WithUserAgent(userAgent))
 	cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
 	}
 
-	userAgent, err := util.UserAgentFromContext(ctx)
-	if err != nil {
-		return nil, nil, nil, err
-	}
+	// The credentials from FindDefaultCredentials should be passed as an option
+	// to the client, along with any other options.
+	opts = append(opts, option.WithCredentials(cred))
 
 	// Initialize the high-level BigQuery client
-	client, err := bigqueryapi.NewClient(ctx, project, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+	client, err := bigqueryapi.NewClient(ctx, project, opts...)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
 	}
 	client.Location = location
 
 	// Initialize the low-level BigQuery REST service using the same credentials
-	restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+	restService, err := bigqueryrestapi.NewService(ctx, opts...)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
 	}

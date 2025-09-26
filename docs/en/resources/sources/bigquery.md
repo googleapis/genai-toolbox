@@ -138,12 +138,43 @@ sources:
     #   - "other_project.my_dataset_2"
 ```
 
+Initialize a BigQuery source using an inline service account JSON key:
+```yaml
+sources:
+  my-bigquery-client-auth-source:
+    kind: "bigquery"
+    project: "my-project-id"
+    # location: "US" # Optional: Specifies the location for query jobs.
+    # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
+    #   - "my_dataset_1"
+    #   - "other_project.my_dataset_2"
+    credentialsJson: |
+    {
+      "type": "service_account",
+      "project_id": "some-project-id",
+      "private_key_id": "...",
+      "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",
+      "client_email": "agent-test@garrettwu-joonix.iam.gserviceaccount.com",
+      "client_id": "113853959499038140346",
+      "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+      "token_uri": "https://oauth2.googleapis.com/token",
+      "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+      "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/agent-test%40garrettwu-joonix.iam.gserviceaccount.com",
+      "universe_domain": "googleapis.com"
+    }
+
+```
+
+Initialize a BigQuery source using a service account key from a file path: 
+
 ## Reference
 
-| **field**       | **type** | **required** | **description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-|-----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind            |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| project         |  string  |     true     | Id of the Google Cloud project to use for billing and as the default project for BigQuery resources.                                                                                                                                                                                                                                                                                                                                                                                                                |
-| location        |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. Defaults to the table's location or 'US' if the location cannot be determined. [Learn More](https://cloud.google.com/bigquery/docs/locations)                                                                                                                                                                                                    |
+| **field**         | **type** | **required** | **description**                                                                                                                                                                                                                         |
+|-------------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind              |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                     |
+| project           |  string  |     true     | Id of the Google Cloud project to use for billing and as the default project for BigQuery resources.                                                                                                                                    |
+| location          |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. Defaults to the table's location or 'US' if the location cannot be determined. [Learn More](https://cloud.google.com/bigquery/docs/locations) |
 | allowedDatasets | []string |    false     | An optional list of dataset IDs that tools using this source are allowed to access. If provided, any tool operation attempting to access a dataset not in this list will be rejected. To enforce this, two types of operations are also disallowed: 1) Dataset-level operations (e.g., `CREATE SCHEMA`), and 2) operations where table access cannot be statically analyzed (e.g., `EXECUTE IMMEDIATE`, `CREATE PROCEDURE`). If a single dataset is provided, it will be treated as the default for prebuilt tools. |
-| useClientOAuth  |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries.                                                                                                                                                                                                                                                                                                                                                                                                            |
+| useClientOAuth    |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries.                                                                                                                                |
+| credentialsJson   |  string  |    false     | A JSON string containing the service account key. If provided, this will be used for authentication instead of Application Default Credentials (ADC). Cannot be used with `credentialsPath`.                                            |
+| credentialsPath   |  string  |    false     | Path to a service account key file. If provided, this will be used for authentication instead of Application Default Credentials (ADC). Cannot be used with `credentialsJson`.                                                          |
