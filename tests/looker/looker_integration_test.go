@@ -71,7 +71,7 @@ func TestLooker(t *testing.T) {
 
 	// Write config into a file and pass it to command
 
-toolsFile := map[string]any{
+	toolsFile := map[string]any{
 		"sources": map[string]any{
 			"my-instance": sourceConfig,
 		},
