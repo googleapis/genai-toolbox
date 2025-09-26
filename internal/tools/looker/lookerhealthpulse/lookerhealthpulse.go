@@ -262,7 +262,7 @@ func (t *pulseTool) checkDBConnections(ctx context.Context) (interface{}, error)
 
 		// Run inline query for connection activity
 		limit := "1"
-		query := v4.WriteQuery{
+		query := &v4.WriteQuery{
 			Model:  "system__activity",
 			View:   "history",
 			Fields: &[]string{"history.query_run_count"},
@@ -273,32 +273,15 @@ func (t *pulseTool) checkDBConnections(ctx context.Context) (interface{}, error)
 			},
 			Limit: &limit,
 		}
-		req2 := lookercommon.RequestRunInlineQuery2{
-			Query: query,
-			RenderOpts: lookercommon.RenderOptions{
-				Format: "json",
-			},
-			QueryApiClientCtx: lookercommon.QueryApiClientContext{
-				Name: "MCP Toolbox",
-			},
-		}
-		raw, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, t.ApiSettings)
+		raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", t.ApiSettings)
 		if err != nil {
-			raw, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-				Body:         query,
-				ResultFormat: "json",
-			}, t.ApiSettings)
-			if err != nil {
-				return nil, err
-			}
+			return nil, err
 		}
 		var queryRunCount interface{}
-		if err == nil {
-			var data []map[string]interface{}
-			_ = json.Unmarshal([]byte(raw), &data)
-			if len(data) > 0 {
-				queryRunCount = data[0]["history.query_run_count"]
-			}
+		var data []map[string]interface{}
+		_ = json.Unmarshal([]byte(raw), &data)
+		if len(data) > 0 {
+			queryRunCount = data[0]["history.query_run_count"]
 		}
 
 		results = append(results, map[string]interface{}{
@@ -319,7 +302,7 @@ func (t *pulseTool) checkDashboardPerformance(ctx context.Context) (interface{},
 	logger.InfoContext(ctx, "Test 2/6: Checking for dashboards with queries slower than 30 seconds in the last 7 days")
 
 	limit := "20"
-	query := v4.WriteQuery{
+	query := &v4.WriteQuery{
 		Model:  "system__activity",
 		View:   "history",
 		Fields: &[]string{"dashboard.title", "query.count"},
@@ -332,24 +315,9 @@ func (t *pulseTool) checkDashboardPerformance(ctx context.Context) (interface{},
 		Sorts: &[]string{"query.count desc"},
 		Limit: &limit,
 	}
-	req2 := lookercommon.RequestRunInlineQuery2{
-		Query: query,
-		RenderOpts: lookercommon.RenderOptions{
-			Format: "json",
-		},
-		QueryApiClientCtx: lookercommon.QueryApiClientContext{
-			Name: "MCP Toolbox",
-		},
-	}
-	raw, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, t.ApiSettings)
+	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", t.ApiSettings)
 	if err != nil {
-		raw, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-			Body:         query,
-			ResultFormat: "json",
-		}, t.ApiSettings)
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 	var dashboards []map[string]interface{}
 	if err := json.Unmarshal([]byte(raw), &dashboards); err != nil {
@@ -366,7 +334,7 @@ func (t *pulseTool) checkDashboardErrors(ctx context.Context) (interface{}, erro
 	logger.InfoContext(ctx, "Test 3/6: Checking for dashboards with erroring queries in the last 7 days")
 
 	limit := "20"
-	query := v4.WriteQuery{
+	query := &v4.WriteQuery{
 		Model:  "system__activity",
 		View:   "history",
 		Fields: &[]string{"dashboard.title", "history.query_run_count"},
@@ -379,24 +347,9 @@ func (t *pulseTool) checkDashboardErrors(ctx context.Context) (interface{}, erro
 		Sorts: &[]string{"history.query_run_count desc"},
 		Limit: &limit,
 	}
-	req2 := lookercommon.RequestRunInlineQuery2{
-		Query: query,
-		RenderOpts: lookercommon.RenderOptions{
-			Format: "json",
-		},
-		QueryApiClientCtx: lookercommon.QueryApiClientContext{
-			Name: "MCP Toolbox",
-		},
-	}
-	raw, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, t.ApiSettings)
+	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", t.ApiSettings)
 	if err != nil {
-		raw, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-			Body:         query,
-			ResultFormat: "json",
-		}, t.ApiSettings)
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 	var dashboards []map[string]interface{}
 	if err := json.Unmarshal([]byte(raw), &dashboards); err != nil {
@@ -413,7 +366,7 @@ func (t *pulseTool) checkExplorePerformance(ctx context.Context) (interface{}, e
 	logger.InfoContext(ctx, "Test 4/6: Checking for the slowest explores in the past 7 days")
 
 	limit := "20"
-	query := v4.WriteQuery{
+	query := &v4.WriteQuery{
 		Model:  "system__activity",
 		View:   "history",
 		Fields: &[]string{"query.model", "query.view", "history.average_runtime"},
@@ -424,24 +377,9 @@ func (t *pulseTool) checkExplorePerformance(ctx context.Context) (interface{}, e
 		Sorts: &[]string{"history.average_runtime desc"},
 		Limit: &limit,
 	}
-	req2 := lookercommon.RequestRunInlineQuery2{
-		Query: query,
-		RenderOpts: lookercommon.RenderOptions{
-			Format: "json",
-		},
-		QueryApiClientCtx: lookercommon.QueryApiClientContext{
-			Name: "MCP Toolbox",
-		},
-	}
-	raw, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, t.ApiSettings)
+	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", t.ApiSettings)
 	if err != nil {
-		raw, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-			Body:         query,
-			ResultFormat: "json",
-		}, t.ApiSettings)
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 	var explores []map[string]interface{}
 	if err := json.Unmarshal([]byte(raw), &explores); err != nil {
@@ -450,24 +388,9 @@ func (t *pulseTool) checkExplorePerformance(ctx context.Context) (interface{}, e
 
 	// Average query runtime
 	query.Fields = &[]string{"history.average_runtime"}
-	req3 := lookercommon.RequestRunInlineQuery2{
-		Query: query,
-		RenderOpts: lookercommon.RenderOptions{
-			Format: "json",
-		},
-		QueryApiClientCtx: lookercommon.QueryApiClientContext{
-			Name: "MCP Toolbox",
-		},
-	}
-	rawAvg, err := lookercommon.RunInlineQuery2(t.SdkClient, req3, t.ApiSettings)
+	rawAvg, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", t.ApiSettings)
 	if err != nil {
-		rawAvg, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-			Body:         query,
-			ResultFormat: "json",
-		}, t.ApiSettings)
-		if err != nil {
-			return nil, err
-		} 
+		return nil, err
 	}
 	var avgData []map[string]interface{}
 	if err := json.Unmarshal([]byte(rawAvg), &avgData); err == nil {
@@ -488,7 +411,7 @@ func (t *pulseTool) checkScheduleFailures(ctx context.Context) (interface{}, err
 	logger.InfoContext(ctx, "Test 5/6: Checking for failing schedules")
 
 	limit := "500"
-	query := v4.WriteQuery{
+	query := &v4.WriteQuery{
 		Model:  "system__activity",
 		View:   "scheduled_plan",
 		Fields: &[]string{"scheduled_job.name", "scheduled_job.count"},
@@ -499,24 +422,9 @@ func (t *pulseTool) checkScheduleFailures(ctx context.Context) (interface{}, err
 		Sorts: &[]string{"scheduled_job.count desc"},
 		Limit: &limit,
 	}
-	req2 := lookercommon.RequestRunInlineQuery2{
-		Query: query,
-		RenderOpts: lookercommon.RenderOptions{
-			Format: "json",
-		},
-		QueryApiClientCtx: lookercommon.QueryApiClientContext{
-			Name: "MCP Toolbox",
-		},
-	}
-	raw, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, t.ApiSettings)
+	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", t.ApiSettings)
 	if err != nil {
-		raw, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-			Body:         query,
-			ResultFormat: "json",
-		}, t.ApiSettings)
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 	var schedules []map[string]interface{}
 	if err := json.Unmarshal([]byte(raw), &schedules); err != nil {
