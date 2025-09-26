@@ -79,8 +79,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	projectParameter := tools.NewStringParameterWithDefault("project","", "The Looker project to vacuum (optional).")
 	modelParameter := tools.NewStringParameterWithDefault("model","", "The Looker model to vacuum (optional).")
 	exploreParameter := tools.NewStringParameterWithDefault("explore","", "The Looker explore to vacuum (optional).")
-timeframeParameter := tools.NewIntParameterWithDefault("timeframe", 90, "The timeframe in days to analyze.")
-minQueriesParameter := tools.NewIntParameterWithDefault("min_queries", 1, "The minimum number of queries for a model or explore to be considered used.")
+	timeframeParameter := tools.NewIntParameterWithDefault("timeframe", 90, "The timeframe in days to analyze.")
+	minQueriesParameter := tools.NewIntParameterWithDefault("min_queries", 1, "The minimum number of queries for a model or explore to be considered used.")
 
 	parameters := tools.Parameters{
 		actionParameter,
@@ -313,11 +313,7 @@ func (t *vacuumTool) explores(ctx context.Context, model, explore string) ([]map
 			if exploreDetail.Joins != nil {
 				for field, queryCount := range usedFields {
 					join := strings.Split(field, ".")[0]
-					if _, ok := joinStats[join]; ok {
-						joinStats[join] += queryCount
-					} else {
-						joinStats[join] = queryCount
-					}
+					joinStats[join] += queryCount
 				}
 				for _, join := range *exploreDetail.Joins {
 					if _, ok := joinStats[*join.Name]; !ok {
@@ -346,7 +342,7 @@ func (t *vacuumTool) explores(ctx context.Context, model, explore string) ([]map
 
 func (t *vacuumTool) getUsedModels(ctx context.Context) (map[string]int, error) {
 	limit := "5000"
-	query := v4.WriteQuery{
+	query := &v4.WriteQuery{
 		Model:  "system__activity",
 		View:   "history",
 		Fields: &[]string{"history.query_run_count", "query.model"},
@@ -358,24 +354,9 @@ func (t *vacuumTool) getUsedModels(ctx context.Context) (map[string]int, error) 
 		},
 		Limit: &limit,
 	}
-	req2 := lookercommon.RequestRunInlineQuery2{
-		Query: query,
-		RenderOpts: lookercommon.RenderOptions{
-			Format: "json",
-		},
-		QueryApiClientCtx: lookercommon.QueryApiClientContext{
-			Name: "MCP Toolbox",
-		},
-	}
-	raw, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, nil)
+	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", nil)
 	if err != nil {
-		raw, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-			Body:         query,
-			ResultFormat: "json",
-		}, nil)
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	var data []map[string]interface{}
@@ -400,7 +381,7 @@ func (t *vacuumTool) getUnusedExplores(ctx context.Context, modelName string) ([
 	if lookmlModel.Explores != nil {
 		for _, e := range *lookmlModel.Explores {
 			limit := "1"
-			queryCountQueryBody := v4.WriteQuery{
+			queryCountQueryBody := &v4.WriteQuery{
 				Model: "system__activity",
 				View:  "history",
 				Fields: &[]string{"history.query_run_count"},
@@ -414,25 +395,10 @@ func (t *vacuumTool) getUnusedExplores(ctx context.Context, modelName string) ([
 				Limit: &limit,
 			}
 
-			req2 := lookercommon.RequestRunInlineQuery2{
-				Query: queryCountQueryBody,
-				RenderOpts: lookercommon.RenderOptions{
-					Format: "json",
-				},
-				QueryApiClientCtx: lookercommon.QueryApiClientContext{
-					Name: "MCP Toolbox",
-				},
-			}
-			rawQueryCount, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, nil)
+			rawQueryCount, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, queryCountQueryBody, "json", nil)
 			if err != nil {
-				rawQueryCount, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-					Body:         queryCountQueryBody,
-					ResultFormat: "json",
-				}, nil)
-				if err != nil {
-					// Log the error but continue
-					continue
-				}
+				// Log the error but continue
+				continue
 			}
 
 			var data []map[string]interface{}
@@ -447,7 +413,7 @@ func (t *vacuumTool) getUnusedExplores(ctx context.Context, modelName string) ([
 
 func (t *vacuumTool) getUsedExploreFields(ctx context.Context, model, explore string) (map[string]int, error) {
 	limit := "5000"
-	query := v4.WriteQuery{
+	query := &v4.WriteQuery{
 		Model:  "system__activity",
 		View:   "history",
 		Fields: &[]string{"query.formatted_fields", "query.filters", "history.query_run_count"},
@@ -460,24 +426,9 @@ func (t *vacuumTool) getUsedExploreFields(ctx context.Context, model, explore st
 		},
 		Limit: &limit,
 	}
-	req2 := lookercommon.RequestRunInlineQuery2{
-		Query: query,
-		RenderOpts: lookercommon.RenderOptions{
-			Format: "json",
-		},
-		QueryApiClientCtx: lookercommon.QueryApiClientContext{
-			Name: "MCP Toolbox",
-		},
-	}
-	raw, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, nil)
+	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", nil)
 	if err != nil {
-		raw, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-			Body:         query,
-			ResultFormat: "json",
-		}, nil)
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	var data []map[string]interface{}
@@ -494,21 +445,13 @@ func (t *vacuumTool) getUsedExploreFields(ctx context.Context, model, explore st
 		usedFields := make(map[string]bool)
 
 		for _, field := range fieldRegex.FindAllString(formattedFields, -1) {
-			if _, ok := results[field]; ok {
-				results[field] += int(count)
-			} else {
-				results[field] = int(count)
-			}
+			results[field] += int(count)
 			usedFields[field] = true
 		}
 
 		for _, field := range fieldRegex.FindAllString(filters, -1) {
 			if _, ok := usedFields[field]; !ok {
-				if _, ok := results[field]; ok {
-					results[field] += int(count)
-				} else {
-					results[field] = int(count)
-				}
+				results[field] += int(count)
 			}
 		}
 	}

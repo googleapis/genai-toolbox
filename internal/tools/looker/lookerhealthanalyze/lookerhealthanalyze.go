@@ -279,11 +279,11 @@ func (t *analyzeTool) projects(ctx context.Context, id string) ([]map[string]int
 		}
 
 		results = append(results, map[string]interface{}{
-			"Project":             pName,
-			"# Models":            modelCount,
-			"# View Files":        viewFileCount,
-			"Git Connection Status": gitConnectionStatus,
-			"PR Mode":             string(*p.PullRequestMode),
+			"Project":                pName,
+			"# Models":               modelCount,
+			"# View Files":           viewFileCount,
+			"Git Connection Status":  gitConnectionStatus,
+			"PR Mode":                string(*p.PullRequestMode),
 			"Is Validation Required": *p.ValidationRequired,
 		})
 	}
@@ -311,7 +311,7 @@ func (t *analyzeTool) models(ctx context.Context, project, model string) ([]map[
 	for _, m := range lookmlModels {
 		if (project == "" || (m.ProjectName != nil && *m.ProjectName == project)) &&
 			(model == "" || (m.Name != nil && *m.Name == model)) {
-			
+
 			queryCount := 0
 			if qc, ok := usedModels[*m.Name]; ok {
 				queryCount = qc
@@ -323,10 +323,10 @@ func (t *analyzeTool) models(ctx context.Context, project, model string) ([]map[
 			}
 
 			results = append(results, map[string]interface{}{
-				"Project":          *m.ProjectName,
-				"Model":            *m.Name,
-				"# Explores":       exploreCount,
-				"Query Count":      queryCount,
+				"Project":     *m.ProjectName,
+				"Model":       *m.Name,
+				"# Explores":  exploreCount,
+				"Query Count": queryCount,
 			})
 		}
 	}
@@ -335,36 +335,21 @@ func (t *analyzeTool) models(ctx context.Context, project, model string) ([]map[
 
 func (t *analyzeTool) getUsedModels(ctx context.Context) (map[string]int, error) {
 	limit := "5000"
-	query := v4.WriteQuery{
+	query := &v4.WriteQuery{
 		Model:  "system__activity",
 		View:   "history",
 		Fields: &[]string{"history.query_run_count", "query.model"},
 		Filters: &map[string]any{
-			"history.created_date":      fmt.Sprintf("%d days", t.timeframe),
-			"query.model":               "-system__activity, -i__looker",
-			"history.query_run_count":   fmt.Sprintf(">%d", t.minQueries-1),
-			"user.dev_branch_name":      "NULL",
+			"history.created_date":    fmt.Sprintf("%d days", t.timeframe),
+			"query.model":             "-system__activity, -i__looker",
+			"history.query_run_count": fmt.Sprintf(">%d", t.minQueries-1),
+			"user.dev_branch_name":    "NULL",
 		},
 		Limit: &limit,
 	}
-	req2 := lookercommon.RequestRunInlineQuery2{
-		Query: query,
-		RenderOpts: lookercommon.RenderOptions{
-			Format: "json",
-		},
-		QueryApiClientCtx: lookercommon.QueryApiClientContext{
-			Name: "MCP Toolbox",
-		},
-	}
-	raw, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, nil)
+	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", nil)
 	if err != nil {
-		raw, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-			Body:         query,
-			ResultFormat: "json",
-		}, nil)
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	var data []map[string]interface{}
@@ -381,37 +366,22 @@ func (t *analyzeTool) getUsedModels(ctx context.Context) (map[string]int, error)
 
 func (t *analyzeTool) getUsedExploreFields(ctx context.Context, model, explore string) (map[string]int, error) {
 	limit := "5000"
-	query := v4.WriteQuery{
+	query := &v4.WriteQuery{
 		Model:  "system__activity",
 		View:   "history",
 		Fields: &[]string{"query.formatted_fields", "query.filters", "history.query_run_count"},
 		Filters: &map[string]any{
-			"history.created_date":      fmt.Sprintf("%d days", t.timeframe),
-			"query.model":               strings.ReplaceAll(model, "_", "^_"),
-			"query.view":                strings.ReplaceAll(explore, "_", "^_"),
-			"query.formatted_fields":    "-NULL",
-			"history.workspace_id":      "production",
+			"history.created_date":   fmt.Sprintf("%d days", t.timeframe),
+			"query.model":            strings.ReplaceAll(model, "_", "^_"),
+			"query.view":             strings.ReplaceAll(explore, "_", "^_"),
+			"query.formatted_fields": "-NULL",
+			"history.workspace_id":   "production",
 		},
 		Limit: &limit,
 	}
-	req2 := lookercommon.RequestRunInlineQuery2{
-		Query: query,
-		RenderOpts: lookercommon.RenderOptions{
-			Format: "json",
-		},
-		QueryApiClientCtx: lookercommon.QueryApiClientContext{
-			Name: "MCP Toolbox",
-		},
-	}
-	raw, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, nil)
+	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", nil)
 	if err != nil {
-		raw, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-			Body:         query,
-			ResultFormat: "json",
-		}, nil)
-		if err != nil {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	var data []map[string]interface{}
@@ -428,21 +398,13 @@ func (t *analyzeTool) getUsedExploreFields(ctx context.Context, model, explore s
 		usedFields := make(map[string]bool)
 
 		for _, field := range fieldRegex.FindAllString(formattedFields, -1) {
-			if _, ok := results[field]; ok {
-				results[field] += int(count)
-			} else {
-				results[field] = int(count)
-			}
+			results[field] += int(count)
 			usedFields[field] = true
 		}
 
 		for _, field := range fieldRegex.FindAllString(filters, -1) {
 			if _, ok := usedFields[field]; !ok {
-				if _, ok := results[field]; ok {
-					results[field] += int(count)
-				} else {
-					results[field] = int(count)
-				}
+				results[field] += int(count)
 			}
 		}
 	}
@@ -499,7 +461,7 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 			if exploreDetail.Joins != nil {
 				joinCount = len(*exploreDetail.Joins)
 			}
-			
+
 			usedFields, err := t.getUsedExploreFields(ctx, *m.Name, *e.Name)
 			if err != nil {
 				logger.ErrorContext(ctx, fmt.Sprintf("Error fetching used fields for explore %s.%s: %v", *m.Name, *e.Name, err))
@@ -531,11 +493,7 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 			if exploreDetail.Joins != nil {
 				for field, queryCount := range usedFields {
 					join := strings.Split(field, ".")[0]
-					if _, ok := joinStats[join]; ok {
-						joinStats[join] += queryCount
-					} else {
-						joinStats[join] = queryCount
-					}
+					joinStats[join] += queryCount
 				}
 				for _, join := range *exploreDetail.Joins {
 					if _, ok := joinStats[*join.Name]; !ok {
@@ -553,65 +511,49 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 
 			// Use an inline query to get query count for the explore
 			limit := "1"
-			queryCountQueryBody := v4.WriteQuery{
-				Model: "system__activity",
-				View: "history",
+			queryCountQueryBody := &v4.WriteQuery{
+				Model:  "system__activity",
+				View:   "history",
 				Fields: &[]string{"history.query_run_count"},
 				Filters: &map[string]any{
-					"query.model":  *m.Name,
-					"query.view": *e.Name,
-					"history.created_date": fmt.Sprintf("%d days", t.timeframe),
+					"query.model":             *m.Name,
+					"query.view":              *e.Name,
+					"history.created_date":    fmt.Sprintf("%d days", t.timeframe),
 					"history.query_run_count": fmt.Sprintf(">%d", t.minQueries-1),
-                    "user.dev_branch_name": "NULL",
+					"user.dev_branch_name":    "NULL",
 				},
 				Limit: &limit,
 			}
-			
-			req2 := lookercommon.RequestRunInlineQuery2{
-				Query: queryCountQueryBody,
-				RenderOpts: lookercommon.RenderOptions{
-					Format: "json",
-				},
-				QueryApiClientCtx: lookercommon.QueryApiClientContext{
-					Name: "MCP Toolbox",
-				},
-			}
-			rawQueryCount, err := lookercommon.RunInlineQuery2(t.SdkClient, req2, nil)
+
+			rawQueryCount, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, queryCountQueryBody, "json", nil)
 			if err != nil {
-				rawQueryCount, err = t.SdkClient.RunInlineQuery(v4.RequestRunInlineQuery{
-					Body:         queryCountQueryBody,
-					ResultFormat: "json",
-				}, nil)
-				if err != nil {
-					return nil, err
-				}
+				return nil, err
 			}
 			queryCount := 0
-			if err == nil {
-				var data []map[string]interface{}
-				_ = json.Unmarshal([]byte(rawQueryCount), &data)
-				if len(data) > 0 {
-					if count, ok := data[0]["history.query_run_count"].(float64); ok {
-						queryCount = int(count)
-					}
+			var data []map[string]interface{}
+			_ = json.Unmarshal([]byte(rawQueryCount), &data)
+			if len(data) > 0 {
+				if count, ok := data[0]["history.query_run_count"].(float64); ok {
+					queryCount = int(count)
 				}
 			}
 
 			results = append(results, map[string]interface{}{
-				"Model":            *m.Name,
-				"Explore":          *e.Name,
-				"Is Hidden":        *e.Hidden,
-				"Has Description":  e.Description != nil && *e.Description != "",
-				"# Joins":          joinCount,
-				"# Unused Joins":   unusedJoinsCount,
-				"# Unused Fields":  unusedFieldsCount,
-				"# Fields":         fieldCount,
-				"Query Count":      queryCount,
+				"Model":           *m.Name,
+				"Explore":         *e.Name,
+				"Is Hidden":       *e.Hidden,
+				"Has Description": e.Description != nil && *e.Description != "",
+				"# Joins":         joinCount,
+				"# Unused Joins":  unusedJoinsCount,
+				"# Unused Fields": unusedFieldsCount,
+				"# Fields":        fieldCount,
+				"Query Count":     queryCount,
 			})
 		}
 	}
 	return results, nil
 }
+
 // =================================================================================================================
 // END LOOKER HEALTH ANALYZE CORE LOGIC
 // =================================================================================================================
