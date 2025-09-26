@@ -6,14 +6,14 @@
 ### ⚠ BREAKING CHANGES
 
 * **tool/bigquery-execute-sql:** add allowed datasets support ([#1443](https://github.com/googleapis/genai-toolbox/issues/1443))
-* **tool/bigquery-forecast:** add allowed datasets support to forecast ([#1412](https://github.com/googleapis/genai-toolbox/issues/1412))
+* **tool/bigquery-forecast:** add allowed datasets support ([#1412](https://github.com/googleapis/genai-toolbox/issues/1412))
 
 ### Features
 
 * **cassandra:** Add Cassandra Source and Tool ([#1012](https://github.com/googleapis/genai-toolbox/issues/1012)) ([6e42053](https://github.com/googleapis/genai-toolbox/commit/6e420534ee894da4a8d226acb6cdb63d0d5d9ce5))
 * **sources/postgres:** Add application_name ([#1504](https://github.com/googleapis/genai-toolbox/issues/1504)) ([72a2366](https://github.com/googleapis/genai-toolbox/commit/72a2366b28870aa6f81c4f890f4770ec5ecffdba))
 * **tool/bigquery-execute-sql:** Add allowed datasets support ([#1443](https://github.com/googleapis/genai-toolbox/issues/1443)) ([9501ebb](https://github.com/googleapis/genai-toolbox/commit/9501ebbdbcba871b98663185c690308dda1729b5))
-* **tool/bigquery-forecast:** Add allowed datasets support to forecast ([#1412](https://github.com/googleapis/genai-toolbox/issues/1412)) ([88bac7e](https://github.com/googleapis/genai-toolbox/commit/88bac7e36f5ebb6ad18773bff30b85ef678431e7))
+* **tool/bigquery-forecast:** Add allowed datasets support ([#1412](https://github.com/googleapis/genai-toolbox/issues/1412)) ([88bac7e](https://github.com/googleapis/genai-toolbox/commit/88bac7e36f5ebb6ad18773bff30b85ef678431e7))
 * **tools/clickhouse-list-tables:** Add list-tables tool ([#1446](https://github.com/googleapis/genai-toolbox/issues/1446)) ([69a3caf](https://github.com/googleapis/genai-toolbox/commit/69a3cafabec5a40e2776d71de3587c0d16c722a2))
 
 
@@ -21,11 +21,6 @@
 
 * **tool/mongodb-find:** Fix find tool `limit` field ([#1570](https://github.com/googleapis/genai-toolbox/issues/1570)) ([4166bf7](https://github.com/googleapis/genai-toolbox/commit/4166bf7ab85732f64b877d5f20235057df919049))
 * **tools/mongodb:** Concat filter params only once in mongodb update tools ([#1545](https://github.com/googleapis/genai-toolbox/issues/1545)) ([295f9dc](https://github.com/googleapis/genai-toolbox/commit/295f9dc41a43f0a4bdbd99e465bf2be01249084e))
-
-
-### Miscellaneous Chores
-
-* Release 0.16.0 ([#1569](https://github.com/googleapis/genai-toolbox/issues/1569)) ([8dfcbfd](https://github.com/googleapis/genai-toolbox/commit/8dfcbfd5b352c6ce369f6499ba07c650ebd0d164))
 
 ## [0.15.0](https://github.com/googleapis/genai-toolbox/compare/v0.14.0...v0.15.0) (2025-09-18)
 
