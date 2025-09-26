@@ -17,16 +17,21 @@ Before using, ensure the following on your GCP project:&lt;/p>
 &lt;/li>
 &lt;/ol>
 &lt;p>The tool takes the following input parameters:&lt;/p></description></item><item><title>alloydb-create-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/tools/alloydb/alloydb-create-instance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/tools/alloydb/alloydb-create-instance/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-create-instance&lt;/code> tool creates a new AlloyDB instance (PRIMARY or READ_POOL) within a specified cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.
+&lt;p>The &lt;code>alloydb-create-instance&lt;/code> tool creates a new AlloyDB instance (PRIMARY or
+READ_POOL) within a specified cluster. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.
 This tool provisions a new instance with a &lt;strong>public IP address&lt;/strong>.&lt;/p>
 &lt;p>&lt;strong>Permissions &amp;amp; APIs Required:&lt;/strong>
 Before using, ensure the following on your GCP project:&lt;/p>
 &lt;ol>
 &lt;li>
-&lt;p>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/p>
+&lt;p>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB
+API&lt;/a>
+is enabled.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>The user or service account executing the tool has one of the following IAM roles:&lt;/p>
+&lt;p>The user or service account executing the tool has one of the following IAM
+roles:&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>roles/alloydb.admin&lt;/code> (the AlloyDB Admin predefined IAM role)&lt;/li>
 &lt;li>&lt;code>roles/owner&lt;/code> (the Owner basic IAM role)&lt;/li>
@@ -35,7 +40,9 @@ Before using, ensure the following on your GCP project:&lt;/p>
 &lt;/li>
 &lt;/ol>
 &lt;p>The tool takes the following input parameters:&lt;/p></description></item><item><title>alloydb-get-cluster</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/tools/alloydb/alloydb-get-cluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/tools/alloydb/alloydb-get-cluster/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-get-cluster&lt;/code> tool retrieves detailed information for a single, specified AlloyDB cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
+&lt;p>The &lt;code>alloydb-get-cluster&lt;/code> tool retrieves detailed information for a single,
+specified AlloyDB cluster. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;table>
  &lt;thead>
  &lt;tr>
@@ -177,7 +184,9 @@ Before using, ensure the following on your GCP project:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>alloydb-get-user</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/tools/alloydb/alloydb-get-user/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/tools/alloydb/alloydb-get-user/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-get-user&lt;/code> tool retrieves detailed information for a single, specified AlloyDB user. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
+&lt;p>The &lt;code>alloydb-get-user&lt;/code> tool retrieves detailed information for a single,
+specified AlloyDB user. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;table>
  &lt;thead>
  &lt;tr>
@@ -251,8 +260,12 @@ Before using, ensure the following on your GCP project:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>alloydb-list-clusters</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/tools/alloydb/alloydb-list-clusters/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/tools/alloydb/alloydb-list-clusters/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-list-clusters&lt;/code> tool retrieves AlloyDB cluster information for all or specified locations in a given project. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
-&lt;p>&lt;code>alloydb-list-clusters&lt;/code> tool lists the detailed information of AlloyDB cluster(cluster name, state, configuration, etc) for a given project and location. The tool takes the following input parameters:&lt;/p>
+&lt;p>The &lt;code>alloydb-list-clusters&lt;/code> tool retrieves AlloyDB cluster information for all
+or specified locations in a given project. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
+&lt;p>&lt;code>alloydb-list-clusters&lt;/code> tool lists the detailed information of AlloyDB
+cluster(cluster name, state, configuration, etc) for a given project and
+location. The tool takes the following input parameters:&lt;/p>
 &lt;table>
  &lt;thead>
  &lt;tr>
@@ -314,8 +327,13 @@ Before using, ensure the following on your GCP project:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>alloydb-list-instances</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/tools/alloydb/alloydb-list-instances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/tools/alloydb/alloydb-list-instances/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-list-instances&lt;/code> tool retrieves AlloyDB instance information for all or specified clusters and locations in a given project. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
-&lt;p>&lt;code>alloydb-list-instances&lt;/code> tool lists the detailed information of AlloyDB instances (instance name, type, IP address, state, configuration, etc) for a given project, cluster and location. The tool takes the following input parameters:&lt;/p>
+&lt;p>The &lt;code>alloydb-list-instances&lt;/code> tool retrieves AlloyDB instance information for all
+or specified clusters and locations in a given project. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
+&lt;p>&lt;code>alloydb-list-instances&lt;/code> tool lists the detailed information of AlloyDB
+instances (instance name, type, IP address, state, configuration, etc) for a
+given project, cluster and location. The tool takes the following input
+parameters:&lt;/p>
 &lt;table>
  &lt;thead>
  &lt;tr>
@@ -383,7 +401,9 @@ Before using, ensure the following on your GCP project:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>alloydb-list-users</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/tools/alloydb/alloydb-list-users/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/tools/alloydb/alloydb-list-users/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-list-users&lt;/code> tool lists all database users within an AlloyDB cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.
+&lt;p>The &lt;code>alloydb-list-users&lt;/code> tool lists all database users within an AlloyDB
+cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/sources/alloydb-admin/">alloydb-admin&lt;/a>
+source.
 The tool takes the following input parameters:&lt;/p>
 &lt;table>
  &lt;thead>
@@ -452,12 +472,17 @@ The tool takes the following input parameters:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>alloydb-create-user</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/tools/alloydb/alloydb-create-user/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/tools/alloydb/alloydb-create-user/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-create-user&lt;/code> tool creates a new database user (&lt;code>ALLOYDB_BUILT_IN&lt;/code> or &lt;code>ALLOYDB_IAM_USER&lt;/code>) within a specified cluster. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
+&lt;p>The &lt;code>alloydb-create-user&lt;/code> tool creates a new database user (&lt;code>ALLOYDB_BUILT_IN&lt;/code>
+or &lt;code>ALLOYDB_IAM_USER&lt;/code>) within a specified cluster. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;p>&lt;strong>Permissions &amp;amp; APIs Required:&lt;/strong>
 Before using, ensure the following on your GCP project:&lt;/p>
 &lt;ol>
-&lt;li>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/li>
-&lt;li>The user or service account executing the tool has one of the following IAM roles:
+&lt;li>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB
+API&lt;/a>
+is enabled.&lt;/li>
+&lt;li>The user or service account executing the tool has one of the following IAM
+roles:
 &lt;ul>
 &lt;li>&lt;code>roles/alloydb.admin&lt;/code> (the AlloyDB Admin predefined IAM role)&lt;/li>
 &lt;li>&lt;code>roles/owner&lt;/code> (the Owner basic IAM role)&lt;/li>
@@ -468,7 +493,8 @@ Before using, ensure the following on your GCP project:&lt;/p>
 &lt;p>The tool takes the following input parameters:&lt;/p></description></item><item><title>alloydb-wait-for-operation</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/tools/alloydb/alloydb-wait-for-operation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/tools/alloydb/alloydb-wait-for-operation/</guid><description>&lt;p>The &lt;code>alloydb-wait-for-operation&lt;/code> tool is a utility tool that waits for a
 long-running AlloyDB operation to complete. It does this by polling the AlloyDB
 Admin API operation status endpoint until the operation is finished, using
-exponential backoff. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
+exponential backoff. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1496/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;table>
  &lt;thead>
  &lt;tr>
