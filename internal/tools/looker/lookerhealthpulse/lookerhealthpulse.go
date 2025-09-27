@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -438,6 +439,9 @@ func (t *pulseTool) checkLegacyFeatures(ctx context.Context) (interface{}, error
 
 	features, err := t.SdkClient.AllLegacyFeatures(t.ApiSettings)
 	if err != nil {
+		if strings.Contains(err.Error(), "Unsupported in Looker (Google Cloud core)") {
+			return []map[string]string{{"Feature": "Unsupported in Looker (Google Cloud core)"}}, nil
+		}
 		logger.ErrorContext(ctx, err.Error())
 		return []map[string]string{{"Feature": "Unable to pull legacy features due to SDK error"}}, nil
 	}
