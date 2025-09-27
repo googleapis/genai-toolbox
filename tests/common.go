@@ -297,6 +297,52 @@ func AddMySqlExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 	return config
 }
 
+// AddMindsDBExecuteSqlConfig gets the tools config for `mindsdb-execute-sql`
+func AddMindsDBExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["my-exec-sql-tool"] = map[string]any{
+		"kind":        "mindsdb-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+	}
+	tools["my-auth-exec-sql-tool"] = map[string]any{
+		"kind":        "mindsdb-execute-sql",
+		"source":      "my-instance",
+		"description": "Tool to execute sql",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	config["tools"] = tools
+	return config
+}
+
+// GetMindsDBParamToolInfo returns statements and param for my-tool mindsdb-sql kind (MindsDB compatible)
+func GetMindsDBParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
+	// MindsDB doesn't support AUTO_INCREMENT, use simple INT PRIMARY KEY
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT PRIMARY KEY, name VARCHAR(255));", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, ?), (2, ?), (3, ?), (4, ?);", tableName)
+	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
+	idParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ?;", tableName)
+	nameParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE name = ?;", tableName)
+	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY(?) AND name = ANY(?);", tableName)
+	params := []any{"Alice", "Jane", "Sid", nil}
+	return createStatement, insertStatement, toolStatement, idParamStatement, nameParamStatement, arrayToolStatement, params
+}
+
+// GetMindsDBAuthToolInfo returns statements and param of my-auth-tool for mindsdb-sql kind (MindsDB compatible)
+func GetMindsDBAuthToolInfo(tableName string) (string, string, string, []any) {
+	// MindsDB doesn't support AUTO_INCREMENT, use simple INT PRIMARY KEY
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255));", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name, email) VALUES (1, ?, ?), (2, ?, ?)", tableName)
+	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = ?;", tableName)
+	params := []any{"Alice", ServiceAccountEmail, "Jane", "janedoe@gmail.com"}
+	return createStatement, insertStatement, toolStatement, params
+}
+
 // AddMySQLPrebuiltToolConfig gets the tools config for mysql prebuilt tools
 func AddMySQLPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]any {
 	tools, ok := config["tools"].(map[string]any)
