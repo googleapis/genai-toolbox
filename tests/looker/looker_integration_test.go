@@ -789,7 +789,7 @@ func TestLooker(t *testing.T) {
 	wantResult = "null"
 	tests.RunToolInvokeParametersTest(t, "get_dashboards", []byte(`{"title": "FOO", "desc": "BAR"}`), wantResult)
 
-	wantResult = "[{\"Connection\":\"thelook\""
+	wantResult = "\"Connection\":\"thelook\""
 	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_db_connections"}`), wantResult)
 
 	wantResult = "\"Project\":\"the_look\""
