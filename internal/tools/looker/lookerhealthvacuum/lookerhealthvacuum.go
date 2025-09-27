@@ -232,7 +232,7 @@ func (t *vacuumTool) models(ctx context.Context, project, model string) ([]map[s
 
 			results = append(results, map[string]interface{}{
 				"Model":             *m.Name,
-				"Unused Explores":   strings.Join(unusedExplores, "\n"),
+				"Unused Explores":   unusedExplores,
 				"Model Query Count": queryCount,
 			})
 		}
@@ -328,8 +328,8 @@ func (t *vacuumTool) explores(ctx context.Context, model, explore string) ([]map
 			results = append(results, map[string]interface{}{
 				"Model":         *m.Name,
 				"Explore":       *e.Name,
-				"Unused Joins":  strings.Join(unusedJoins, "\n"),
-				"Unused Fields": strings.Join(unusedFields, "\n"),
+				"Unused Joins":  unusedJoins,
+				"Unused Fields": unusedFields,
 			})
 		}
 	}
