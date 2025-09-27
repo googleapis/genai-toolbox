@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.17.0](https://github.com/googleapis/genai-toolbox/compare/v0.16.0...v0.17.0) (2025-09-27)
+
+
+### Features
+
+* Add metadata in MCP Manifest for Toolbox auth ([#1395](https://github.com/googleapis/genai-toolbox/issues/1395)) ([0b3dac4](https://github.com/googleapis/genai-toolbox/commit/0b3dac41322f7aaa5a19df571686fa8fd4338ca5))
+
+
+### Bug Fixes
+
+* **sources/looker:** Allow Looker to be configured without setting a Client Id or Secret ([#1496](https://github.com/googleapis/genai-toolbox/issues/1496)) ([67d8221](https://github.com/googleapis/genai-toolbox/commit/67d8221a2e780df54a81f0f7e8f7e41e4bf1a82e))
+* **tools/looker:** Refactor run-inline-query logic to helper function ([#1497](https://github.com/googleapis/genai-toolbox/issues/1497)) ([62af39d](https://github.com/googleapis/genai-toolbox/commit/62af39d751443eb758586663969b162c868a233f))
+
 ## [0.16.0](https://github.com/googleapis/genai-toolbox/compare/v0.15.0...v0.16.0) (2025-09-25)
 
 
