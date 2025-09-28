@@ -44,7 +44,10 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
+	BigQueryProject() string
 	BigQueryClient() *bigqueryapi.Client
+	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
+	UseClientAuthorization() bool
 }
 
 // validate compatible sources are still compatible
@@ -80,25 +83,23 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryClient().Project(), "The Google Cloud project to list dataset ids.")
+	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryProject(), "The Google Cloud project to list dataset ids.")
 
 	parameters := tools.Parameters{projectParameter}
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.BigQueryClient(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Name:           cfg.Name,
+		Kind:           kind,
+		Parameters:     parameters,
+		AuthRequired:   cfg.AuthRequired,
+		UseClientOAuth: s.UseClientAuthorization(),
+		ClientCreator:  s.BigQueryClientCreator(),
+		Client:         s.BigQueryClient(),
+		manifest:       tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:    mcpManifest,
 	}
 	return t, nil
 }
@@ -107,24 +108,39 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Name           string           `yaml:"name"`
+	Kind           string           `yaml:"kind"`
+	AuthRequired   []string         `yaml:"authRequired"`
+	UseClientOAuth bool             `yaml:"useClientOAuth"`
+	Parameters     tools.Parameters `yaml:"parameters"`
 
-	Client      *bigqueryapi.Client
-	Statement   string
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	Client        *bigqueryapi.Client
+	ClientCreator bigqueryds.BigqueryClientCreator
+	Statement     string
+	manifest      tools.Manifest
+	mcpManifest   tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	mapParams := params.AsMap()
 	projectId, ok := mapParams[projectKey].(string)
 	if !ok {
 		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", projectKey)
 	}
-	datasetIterator := t.Client.Datasets(ctx)
+
+	bqClient := t.Client
+	// Initialize new client if using user OAuth token
+	if t.UseClientOAuth {
+		tokenStr, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
+		bqClient, _, err = t.ClientCreator(tokenStr, false)
+		if err != nil {
+			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
+		}
+	}
+	datasetIterator := bqClient.Datasets(ctx)
 	datasetIterator.ProjectID = projectId
 
 	var datasetIds []any
@@ -162,4 +178,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return t.UseClientOAuth
 }

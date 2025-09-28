@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
 )
 
 const kind string = "firestore-get-documents"
@@ -79,14 +80,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	documentPathsParameter := tools.NewArrayParameter(documentPathsKey, "Array of document paths to retrieve from Firestore.", tools.NewStringParameter("item", "Document path"))
+	documentPathsParameter := tools.NewArrayParameter(documentPathsKey, "Array of relative document paths to retrieve from Firestore (e.g., 'users/userId' or 'users/userId/posts/postId'). Note: These are relative paths, NOT absolute paths like 'projects/{project_id}/databases/{database_id}/documents/...'", tools.NewStringParameter("item", "Relative document path"))
 	parameters := tools.Parameters{documentPathsParameter}
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
 
 	// finish tool setup
 	t := Tool{
@@ -115,7 +112,7 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	mapParams := params.AsMap()
 	documentPathsRaw, ok := mapParams[documentPathsKey].([]any)
 	if !ok {
@@ -135,6 +132,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	documentPaths, ok := typedSlice.([]string)
 	if !ok {
 		return nil, fmt.Errorf("unexpected type conversion error for document paths")
+	}
+
+	// Validate each document path
+	for i, path := range documentPaths {
+		if err := util.ValidateDocumentPath(path); err != nil {
+			return nil, fmt.Errorf("invalid document path at index %d: %w", i, err)
+		}
 	}
 
 	// Create document references from paths
@@ -183,4 +187,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
 }

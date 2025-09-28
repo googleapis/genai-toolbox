@@ -43,13 +43,17 @@ func TestParseFromYamlLooker(t *testing.T) {
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-looker-instance": looker.Config{
-					Name:            "my-looker-instance",
-					Kind:            looker.SourceKind,
-					BaseURL:         "http://example.looker.com/",
-					ClientId:        "jasdl;k;tjl",
-					ClientSecret:    "sdakl;jgflkasdfkfg",
-					Timeout:         "600s",
-					SslVerification: "true",
+					Name:               "my-looker-instance",
+					Kind:               looker.SourceKind,
+					BaseURL:            "http://example.looker.com/",
+					ClientId:           "jasdl;k;tjl",
+					ClientSecret:       "sdakl;jgflkasdfkfg",
+					Timeout:            "600s",
+					SslVerification:    true,
+					UseClientOAuth:     false,
+					ShowHiddenModels:   true,
+					ShowHiddenExplores: true,
+					ShowHiddenFields:   true,
 				},
 			},
 		},
@@ -96,10 +100,8 @@ func TestFailParseFromYamlLooker(t *testing.T) {
 			sources:
 				my-looker-instance:
 					kind: looker
-					base_url: http://example.looker.com/
-					client_id: jasdl;k;tjl
 			`,
-			err: "unable to parse source \"my-looker-instance\" as \"looker\": Key: 'Config.ClientSecret' Error:Field validation for 'ClientSecret' failed on the 'required' tag",
+			err: "unable to parse source \"my-looker-instance\" as \"looker\": Key: 'Config.BaseURL' Error:Field validation for 'BaseURL' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

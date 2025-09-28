@@ -1,11 +1,29 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 sources:
     looker-source:
         kind: looker
         base_url: ${LOOKER_BASE_URL}
-        client_id: ${LOOKER_CLIENT_ID}
-        client_secret: ${LOOKER_CLIENT_SECRET}
-        verify_ssl: ${LOOKER_VERIFY_SSL}
+        client_id: ${LOOKER_CLIENT_ID:}
+        client_secret: ${LOOKER_CLIENT_SECRET:}
+        verify_ssl: ${LOOKER_VERIFY_SSL:true}
         timeout: 600s
+        use_client_oauth: ${LOOKER_USE_CLIENT_OAUTH:false}
+        show_hidden_models: ${LOOKER_SHOW_HIDDEN_MODELS:true}
+        show_hidden_explores: ${LOOKER_SHOW_HIDDEN_EXPLORES:true}
+        show_hidden_fields: ${LOOKER_SHOW_HIDDEN_FIELDS:true}
 
 tools:
     get_models:
@@ -35,6 +53,11 @@ tools:
           It takes two parameters, the model_name looked up from get_models and the
           explore_name looked up from get_explores.
 
+          If this returns a suggestions field for a dimension, the contents of suggestions
+          can be used as filters for this field. If this returns a suggest_explore and
+          suggest_dimension, a query against that explore and dimension can be used to find
+          valid filters for this field.
+
     get_measures:
         kind: looker-get-measures
         source: looker-source
@@ -44,6 +67,11 @@ tools:
 
           It takes two parameters, the model_name looked up from get_models and the
           explore_name looked up from get_explores.
+
+          If this returns a suggestions field for a measure, the contents of suggestions
+          can be used as filters for this field. If this returns a suggest_explore and
+          suggest_dimension, a query against that explore and dimension can be used to find
+          valid filters for this field.
 
     get_filters:
         kind: looker-get-filters
@@ -88,7 +116,8 @@ tools:
           Filters are provided as a map of {"field.id": "condition",
           "field.id2": "condition2", ...}. Do not put the field.id in
           quotes. Filter expressions can be found at
-          https://cloud.google.com/looker/docs/filter-expressions.
+          https://cloud.google.com/looker/docs/filter-expressions. There
+          is one mistake in that, however, Use `not null` instead of `-NULL`.
 
           Sorts can be specified like [ "field.id desc 0" ].
 
@@ -127,8 +156,122 @@ tools:
           parameter.
 
           The vis_config is optional. If provided, it will be used to
-          control the default visualization for the query. These are
-          some sample vis_config settings.
+          control the default visualization for the query. Here are
+          some notes on making visualizations.
+
+          ### Cartesian Charts (Area, Bar, Column, Line, Scatter)
+
+          These chart types share a large number of configuration options.
+
+          **General**
+          *   `type`: The type of visualization (`looker_area`, `looker_bar`, `looker_column`, `looker_line`, `looker_scatter`).
+          *   `series_types`: Override the chart type for individual series.
+          *   `show_view_names`: Display view names in labels and tooltips (`true`/`false`).
+          *   `series_labels`: Provide custom names for series.
+
+          **Styling & Colors**
+          *   `colors`: An array of color values to be used for the chart series.
+          *   `series_colors`: A mapping of series names to specific color values.
+          *   `color_application`: Advanced controls for color palette application (collection, palette, reverse, etc.).
+          *   `font_size`: Font size for labels (e.g., '12px').
+
+          **Legend**
+          *   `hide_legend`: Show or hide the chart legend (`true`/`false`).
+          *   `legend_position`: Placement of the legend (`'center'`, `'left'`, `'right'`).
+
+          **Axes**
+          *   `swap_axes`: Swap the X and Y axes (`true`/`false`).
+          *   `x_axis_scale`: Scale of the x-axis (`'auto'`, `'ordinal'`, `'linear'`, `'time'`).
+          *   `x_axis_reversed`, `y_axis_reversed`: Reverse the direction of an axis (`true`/`false`).
+          *   `x_axis_gridlines`, `y_axis_gridlines`: Display gridlines for an axis (`true`/`false`).
+          *   `show_x_axis_label`, `show_y_axis_label`: Show or hide the axis title (`true`/`false`).
+          *   `show_x_axis_ticks`, `show_y_axis_ticks`: Show or hide axis tick marks (`true`/`false`).
+          *   `x_axis_label`, `y_axis_label`: Set a custom title for an axis.
+          *   `x_axis_datetime_label`: A format string for datetime labels on the x-axis (e.g., `'%Y-%m'`).
+          *   `x_padding_left`, `x_padding_right`: Adjust padding on the ends of the x-axis.
+          *   `x_axis_label_rotation`, `x_axis_label_rotation_bar`: Set rotation for x-axis labels.
+          *   `x_axis_zoom`, `y_axis_zoom`: Enable zooming on an axis (`true`/`false`).
+          *   `y_axes`: An array of configuration objects for multiple y-axes.
+
+          **Data & Series**
+          *   `stacking`: How to stack series (`''` for none, `'normal'`, `'percent'`).
+          *   `ordering`: Order of series in a stack (`'none'`, etc.).
+          *   `limit_displayed_rows`: Enable or disable limiting the number of rows displayed (`true`/`false`).
+          *   `limit_displayed_rows_values`: Configuration for the row limit (e.g., `{ "first_last": "first", "show_hide": "show", "num_rows": 10 }`).
+          *   `discontinuous_nulls`: How to render null values in line charts (`true`/`false`).
+          *   `point_style`: Style for points on line and area charts (`'none'`, `'circle'`, `'circle_outline'`).
+          *   `series_point_styles`: Override point styles for individual series.
+          *   `interpolation`: Line interpolation style (`'linear'`, `'monotone'`, `'step'`, etc.).
+          *   `show_value_labels`: Display values on data points (`true`/`false`).
+          *   `label_value_format`: A format string for value labels.
+          *   `show_totals_labels`: Display total labels on stacked charts (`true`/`false`).
+          *   `totals_color`: Color for total labels.
+          *   `show_silhouette`: Display a "silhouette" of hidden series in stacked charts (`true`/`false`).
+          *   `hidden_series`: An array of series names to hide from the visualization.
+
+          **Scatter/Bubble Specific**
+          *   `size_by_field`: The field used to determine the size of bubbles.
+          *   `color_by_field`: The field used to determine the color of bubbles.
+          *   `plot_size_by_field`: Whether to display the size-by field in the legend.
+          *   `cluster_points`: Group nearby points into clusters (`true`/`false`).
+          *   `quadrants_enabled`: Display quadrants on the chart (`true`/`false`).
+          *   `quadrant_properties`: Configuration for quadrant labels and colors.
+          *   `custom_quadrant_value_x`, `custom_quadrant_value_y`: Set quadrant boundaries as a percentage.
+          *   `custom_quadrant_point_x`, `custom_quadrant_point_y`: Set quadrant boundaries to a specific value.
+
+          **Miscellaneous**
+          *   `reference_lines`: Configuration for displaying reference lines.
+          *   `trend_lines`: Configuration for displaying trend lines.
+          *   `trellis`: Configuration for creating trellis (small multiple) charts.
+          *   `crossfilterEnabled`, `crossfilters`: Configuration for cross-filtering interactions.
+
+          ### Boxplot
+
+          *   Inherits most of the Cartesian chart options.
+          *   `type`: Must be `looker_boxplot`.
+
+          ### Funnel
+
+          *   `type`: Must be `looker_funnel`.
+          *   `orientation`: How data is read (`'automatic'`, `'dataInRows'`, `'dataInColumns'`).
+          *   `percentType`: How percentages are calculated (`'percentOfMaxValue'`, `'percentOfPriorRow'`).
+          *   `labelPosition`, `valuePosition`, `percentPosition`: Placement of labels (`'left'`, `'right'`, `'inline'`, `'hidden'`).
+          *   `labelColor`, `labelColorEnabled`: Set a custom color for labels.
+          *   `labelOverlap`: Allow labels to overlap (`true`/`false`).
+          *   `barColors`: An array of colors for the funnel steps.
+          *   `color_application`: Advanced color palette controls.
+          *   `crossfilterEnabled`, `crossfilters`: Configuration for cross-filtering.
+
+          ### Pie / Donut
+
+          *   Pie charts must have exactly one dimension and one numerical measure.
+          *   `type`: Must be `looker_pie`.
+          *   `value_labels`: Where to display values (`'legend'`, `'labels'`).
+          *   `label_type`: The format of data labels (`'labPer'`, `'labVal'`, `'lab'`, `'val'`, `'per'`).
+          *   `start_angle`, `end_angle`: The start and end angles of the pie chart.
+          *   `inner_radius`: The inner radius, used to create a donut chart.
+          *   `series_colors`, `series_labels`: Override colors and labels for specific slices.
+          *   `color_application`: Advanced color palette controls.
+          *   `crossfilterEnabled`, `crossfilters`: Configuration for cross-filtering.
+          *   `advanced_vis_config`: A string containing JSON for advanced Highcharts configuration.
+
+          ### Waterfall
+
+          *   Inherits most of the Cartesian chart options.
+          *   `type`: Must be `looker_waterfall`.
+          *   `up_color`: Color for positive (increasing) values.
+          *   `down_color`: Color for negative (decreasing) values.
+          *   `total_color`: Color for the total bar.
+
+          ### Word Cloud
+
+          *   `type`: Must be `looker_wordcloud`.
+          *   `rotation`: Enable random word rotation (`true`/`false`).
+          *   `colors`: An array of colors for the words.
+          *   `color_application`: Advanced color palette controls.
+          *   `crossfilterEnabled`, `crossfilters`: Configuration for cross-filtering.
+
+          These are some sample vis_config settings.
 
           A bar chart -
           {{
@@ -388,11 +531,27 @@ tools:
             "y_axis_zoom": true
           }}
 
-          A single value visualization -
+          A single record visualization -
           {{
             "defaults_version": 1,
             "show_view_names": false,
             "type": "looker_single_record"
+          }}
+
+          A single value visualization -
+          {{
+            "comparison_reverse_colors": false,
+            "comparison_type": "value",                                                                                                                                            "conditional_formatting_include_nulls": false,                                                                                                                         "conditional_formatting_include_totals": false,
+            "custom_color": "#1A73E8",
+            "custom_color_enabled": true,
+            "defaults_version": 1,
+            "enable_conditional_formatting": false,
+            "series_types": {},
+            "show_comparison": false,
+            "show_comparison_label": true,
+            "show_single_value_title": true,
+            "single_value_title": "Total Clicks",
+            "type": "single_value"
           }}
 
           A Pie chart -
@@ -483,8 +642,61 @@ tools:
           The result is a json document with a link to the newly
           created look.
 
+    get_dashboards:
+        kind: looker-get-dashboards
+        source: looker-source
+        description: |
+          get_dashboards Tool
+
+          This tool is used to search for saved dashboards in a Looker instance.
+          String search params use case-insensitive matching. String search
+          params can contain % and '_' as SQL LIKE pattern match wildcard
+          expressions. example="dan%" will match "danger" and "Danzig" but
+          not "David" example="D_m%" will match "Damage" and "dump".
+          Most search params can accept "IS NULL" and "NOT NULL" as special
+          expressions to match or exclude (respectively) rows where the
+          column is null.
+
+          The limit and offset are used to paginate the results.
+
+          The result of the get_dashboards tool is a list of json objects.
+
+    make_dashboard:
+        kind: looker-make-dashboard
+        source: looker-source
+        description: |
+          make_dashboard Tool
+
+          This tool creates a new dashboard in Looker. The dashboard is
+          initially empty and the add_dashboard_element tool is used to
+          add content to the dashboard.
+
+          The newly created dashboard will be created in the user's
+          personal folder in looker. The dashboard name must be unique.
+
+          The result is a json document with a link to the newly
+          created dashboard and the id of the dashboard. Use the id
+          when calling add_dashboard_element.
+
+    add_dashboard_element:
+        kind: looker-add-dashboard-element
+        source: looker-source
+        description: |
+          add_dashboard_element Tool
+
+          This tool creates a new tile in a Looker dashboard using
+          the query parameters and the vis_config specified.
+
+          Most of the parameters are the same as the query_url
+          tool. In addition, there is a title that may be provided.
+          The dashboard_id must be specified. That is obtained
+          from calling make_dashboard.
+
+          This tool can be called many times for one dashboard_id
+          and the resulting tiles will be added in order.
+
 toolsets:
-    looker-tools:
+    looker_tools:
         - get_models
         - get_explores
         - get_dimensions
@@ -497,3 +709,6 @@ toolsets:
         - get_looks
         - run_look
         - make_look
+        - get_dashboards
+        - make_dashboard
+        - add_dashboard_element

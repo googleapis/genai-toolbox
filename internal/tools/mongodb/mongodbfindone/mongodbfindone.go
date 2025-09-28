@@ -98,11 +98,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Create MCP manifest
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: allParameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	// finish tool setup
 	return Tool{
@@ -159,13 +155,12 @@ func getOptions(sortParameters tools.Parameters, projectPayload string, paramsMa
 	}
 
 	result, err := tools.PopulateTemplateWithJSON("MongoDBFindOneProjectString", projectPayload, paramsMap)
-
 	if err != nil {
 		return nil, fmt.Errorf("error populating project payload: %s", err)
 	}
 
 	var projection any
-	err = bson.Unmarshal([]byte(result), &projection)
+	err = bson.UnmarshalExtJSON([]byte(result), false, &projection)
 	if err != nil {
 		return nil, fmt.Errorf("error unmarshalling projection: %s", err)
 	}
@@ -174,7 +169,7 @@ func getOptions(sortParameters tools.Parameters, projectPayload string, paramsMa
 	return opts, nil
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
 	filterString, err := tools.PopulateTemplateWithJSON("MongoDBFindOneFilterString", t.FilterPayload, paramsMap)
@@ -231,4 +226,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
 }

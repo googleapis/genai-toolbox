@@ -104,6 +104,15 @@ section.
     export IMAGE=us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
     ```
 
+{{< notice note >}}  
+**The `$PORT` Environment Variable**  
+Google Cloud Run dictates the port your application must listen on by setting
+the `$PORT` environment variable inside your container. This value defaults to
+**8080**. Your application's `--port` argument **must** be set to listen on this
+port. If there is a mismatch, the container will fail to start and the
+deployment will time out.  
+{{< /notice >}}
+
 1. Deploy Toolbox to Cloud Run using the following command:
 
     ```bash
@@ -141,7 +150,7 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 
 1. (Only for local runs) Set up [Application Default
    Credentials](https://cloud.google.com/docs/authentication/set-up-adc-local-dev-environment)
-   for the principle you set up the `Cloud Run Invoker` role access to.
+   for the principal you set up the `Cloud Run Invoker` role access to.
 
 1. Run the following to retrieve a non-deterministic URL for the cloud run service:
 
@@ -151,18 +160,76 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 
 1. Import and initialize the toolbox client with the URL retrieved above:
 
-    ```python
-    from toolbox_core import ToolboxClient, auth_methods
+    {{< tabpane persist=header >}}
+{{< tab header="Python" lang="python" >}}
+from toolbox_core import ToolboxClient, auth_methods
 
-    # Replace with the Cloud Run service URL generated in the previous step.
-    URL = "https://cloud-run-url.app"
+# Replace with the Cloud Run service URL generated in the previous step.
+URL = "https://cloud-run-url.app"
 
-    auth_token_provider = auth_methods.aget_google_id_token(URL) # can also use sync method
+auth_token_provider = auth_methods.aget_google_id_token(URL) # can also use sync method
 
-    async with ToolboxClient(
+async with ToolboxClient(
+    URL,
+    client_headers={"Authorization": auth_token_provider},
+) as toolbox:
+{{< /tab >}}
+{{< tab header="Javascript" lang="javascript" >}}
+import { ToolboxClient } from '@toolbox-sdk/core';
+import {getGoogleIdToken} from '@toolbox-sdk/core/auth'
+
+// Replace with the Cloud Run service URL generated in the previous step.
+const URL = 'http://127.0.0.1:5000';
+const authTokenProvider = () => getGoogleIdToken(URL);
+
+const client = new ToolboxClient(URL, null, {"Authorization": authTokenProvider});
+{{< /tab >}}
+{{< tab header="Go" lang="go" >}}
+import "github.com/googleapis/mcp-toolbox-sdk-go/core"
+
+func main() {
+    // Replace with the Cloud Run service URL generated in the previous step.
+    URL := "http://127.0.0.1:5000"
+    auth_token_provider, err := core.GetGoogleIDToken(ctx, URL)
+    if err != nil {
+        log.Fatalf("Failed to fetch token %v", err)
+    }
+    toolboxClient, err := core.NewToolboxClient(
         URL,
-        client_headers={"Authorization": auth_token_provider},
-    ) as toolbox:
-    ```
+        core.WithClientHeaderString("Authorization", auth_token_provider))
+    if err != nil {
+        log.Fatalf("Failed to create Toolbox client: %v", err)
+    }
+}
+{{< /tab >}}
+{{< /tabpane >}}
+
 
 Now, you can use this client to connect to the deployed Cloud Run instance!
+
+## Troubleshooting
+
+{{< notice note >}}  
+For any deployment or runtime error, the best first step is to check the logs
+for your service in the Google Cloud Console's Cloud Run section. They often
+contain the specific error message needed to diagnose the problem.
+{{< /notice >}}
+
+* **Deployment Fails with "Container failed to start":** This is almost always
+    caused by a port mismatch. Ensure your container's `--port` argument is set to
+    `8080` to match the `$PORT` environment variable provided by Cloud Run.
+
+* **Client Receives Permission Denied Error (401 or 403):** If your client
+  application (e.g., your local SDK) gets a `401 Unauthorized` or `403
+  Forbidden` error when trying to call your Cloud Run service, it means the
+  client is not properly authenticated as an invoker.
+    * Ensure the user or service account calling the service has the **Cloud Run
+      Invoker** (`roles/run.invoker`) IAM role.
+    * If running locally, make sure your Application Default Credentials are set
+      up correctly by running `gcloud auth application-default login`.
+
+* **Service Fails to Access Secrets (in logs):** If your application starts but
+  the logs show errors like "permission denied" when trying to access Secret
+  Manager, it means the Toolbox service account is missing permissions.
+    * Ensure the `toolbox-identity` service account has the **Secret Manager
+      Secret Accessor** (`roles/secretmanager.secretAccessor`) IAM role.

@@ -17,15 +17,27 @@ reputation for reliability, feature robustness, and performance.
 
 ## Available Tools
 
-- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
+- [`postgres-sql`](../tools/postgres/postgres-sql.md)
   Execute SQL queries as prepared statements in PostgreSQL.
 
-- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
+- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)
   Run parameterized SQL statements in PostgreSQL.
+
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)
+  List tables in a PostgreSQL database.
+
+- [`postgres-list-active-queries`](../tools/postgres/postgres-list-active-queries.md)
+  List active queries in a PostgreSQL database.
+
+- [`postgres-list-available-extensions`](../tools/postgres/postgres-list-available-extensions.md)
+  List available extensions for installation in a PostgreSQL database.
+
+- [`postgres-list-installed-extensions`](../tools/postgres/postgres-list-installed-extensions.md)
+  List installed extensions in a PostgreSQL database.
 
 ### Pre-built Configurations
 
-- [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)  
+- [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)
 Connect your IDE to PostgreSQL using Toolbox.
 
 ## Requirements
@@ -57,11 +69,12 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                        |
-|-----------|:--------:|:------------:|------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "postgres".                                                    |
-| host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1")                            |
-| port      |  string  |     true     | Port to connect to (e.g. "5432")                                       |
-| database  |  string  |     true     | Name of the Postgres database to connect to (e.g. "my_db").            |
-| user      |  string  |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").           |
-| password  |  string  |     true     | Password of the Postgres user (e.g. "my-password").                    |
+|  **field**  |      **type**      | **required** | **description**                                                        |
+|-------------|:------------------:|:------------:|------------------------------------------------------------------------|
+| kind        |       string       |     true     | Must be "postgres".                                                    |
+| host        |       string       |     true     | IP address to connect to (e.g. "127.0.0.1")                            |
+| port        |       string       |     true     | Port to connect to (e.g. "5432")                                       |
+| database    |       string       |     true     | Name of the Postgres database to connect to (e.g. "my_db").            |
+| user        |       string       |     true     | Name of the Postgres user to connect as (e.g. "my-pg-user").           |
+| password    |       string       |     true     | Password of the Postgres user (e.g. "my-password").                    |
+| queryParams |  map[string]string |     false    | Raw query to be added to the db connection string.                     |

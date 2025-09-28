@@ -58,11 +58,7 @@ func (cfg Config) Initialize(_ map[string]sources.Source) (tools.Tool, error) {
 	durationParameter := tools.NewStringParameter("duration", "The duration to wait for, specified as a string (e.g., '10s', '2m', '1h').")
 	parameters := tools.Parameters{durationParameter}
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
 
 	t := Tool{
 		Name:        cfg.Name,
@@ -85,7 +81,7 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
 	durationStr, ok := paramsMap["duration"].(string)
@@ -117,4 +113,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return true
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
 }

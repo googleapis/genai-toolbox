@@ -18,6 +18,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"math"
+	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -1270,7 +1272,7 @@ func TestParamManifest(t *testing.T) {
 				Required:             true,
 				Description:          "bar",
 				AuthServices:         []string{},
-				AdditionalProperties: &tools.ParameterManifest{Name: "", Type: "string", Required: true, Description: "", AuthServices: []string{}},
+				AdditionalProperties: map[string]any{"type": "string"},
 			},
 		},
 		{
@@ -1282,7 +1284,7 @@ func TestParamManifest(t *testing.T) {
 				Required:             false,
 				Description:          "bar",
 				AuthServices:         []string{},
-				AdditionalProperties: &tools.ParameterManifest{Name: "", Type: "string", Required: true, Description: "", AuthServices: []string{}},
+				AdditionalProperties: map[string]any{"type": "string"},
 			},
 		},
 		{
@@ -1310,29 +1312,34 @@ func TestParamManifest(t *testing.T) {
 
 func TestParamMcpManifest(t *testing.T) {
 	tcs := []struct {
-		name string
-		in   tools.Parameter
-		want tools.ParameterMcpManifest
+		name          string
+		in            tools.Parameter
+		want          tools.ParameterMcpManifest
+		wantAuthParam []string
 	}{
 		{
-			name: "string",
-			in:   tools.NewStringParameter("foo-string", "bar"),
-			want: tools.ParameterMcpManifest{Type: "string", Description: "bar"},
+			name:          "string",
+			in:            tools.NewStringParameter("foo-string", "bar"),
+			want:          tools.ParameterMcpManifest{Type: "string", Description: "bar"},
+			wantAuthParam: []string{},
 		},
 		{
-			name: "int",
-			in:   tools.NewIntParameter("foo-int", "bar"),
-			want: tools.ParameterMcpManifest{Type: "integer", Description: "bar"},
+			name:          "int",
+			in:            tools.NewIntParameter("foo-int", "bar"),
+			want:          tools.ParameterMcpManifest{Type: "integer", Description: "bar"},
+			wantAuthParam: []string{},
 		},
 		{
-			name: "float",
-			in:   tools.NewFloatParameter("foo-float", "bar"),
-			want: tools.ParameterMcpManifest{Type: "number", Description: "bar"},
+			name:          "float",
+			in:            tools.NewFloatParameter("foo-float", "bar"),
+			want:          tools.ParameterMcpManifest{Type: "number", Description: "bar"},
+			wantAuthParam: []string{},
 		},
 		{
-			name: "boolean",
-			in:   tools.NewBooleanParameter("foo-bool", "bar"),
-			want: tools.ParameterMcpManifest{Type: "boolean", Description: "bar"},
+			name:          "boolean",
+			in:            tools.NewBooleanParameter("foo-bool", "bar"),
+			want:          tools.ParameterMcpManifest{Type: "boolean", Description: "bar"},
+			wantAuthParam: []string{},
 		},
 		{
 			name: "array",
@@ -1342,6 +1349,7 @@ func TestParamMcpManifest(t *testing.T) {
 				Description: "bar",
 				Items:       &tools.ParameterMcpManifest{Type: "string", Description: "bar"},
 			},
+			wantAuthParam: []string{},
 		},
 
 		{
@@ -1350,8 +1358,9 @@ func TestParamMcpManifest(t *testing.T) {
 			want: tools.ParameterMcpManifest{
 				Type:                 "object",
 				Description:          "bar",
-				AdditionalProperties: &tools.ParameterMcpManifest{Type: "string", Description: ""},
+				AdditionalProperties: map[string]any{"type": "string"},
 			},
+			wantAuthParam: []string{},
 		},
 		{
 			name: "generic map (additionalProperties true)",
@@ -1361,42 +1370,59 @@ func TestParamMcpManifest(t *testing.T) {
 				Description:          "bar",
 				AdditionalProperties: true,
 			},
+			wantAuthParam: []string{},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got := tc.in.McpManifest()
+			got, gotAuthParam := tc.in.McpManifest()
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("unexpected manifest (-want +got):\n%s", diff)
+			}
+			slices.Sort(gotAuthParam)
+			if !reflect.DeepEqual(gotAuthParam, tc.wantAuthParam) {
+				t.Fatalf("unexpected auth param list: got %s, want %s", gotAuthParam, tc.wantAuthParam)
 			}
 		})
 	}
 }
 
 func TestMcpManifest(t *testing.T) {
+	authServices := []tools.ParamAuthService{
+		{
+			Name:  "my-google-auth-service",
+			Field: "auth_field",
+		},
+		{
+			Name:  "other-auth-service",
+			Field: "other_auth_field",
+		}}
 	tcs := []struct {
-		name string
-		in   tools.Parameters
-		want tools.McpToolsSchema
+		name          string
+		in            tools.Parameters
+		wantSchema    tools.McpToolsSchema
+		wantAuthParam map[string][]string
 	}{
 		{
 			name: "all types",
 			in: tools.Parameters{
 				tools.NewStringParameterWithDefault("foo-string", "foo", "bar"),
 				tools.NewStringParameter("foo-string2", "bar"),
+				tools.NewStringParameterWithAuth("foo-string3-auth", "bar", authServices),
 				tools.NewIntParameter("foo-int2", "bar"),
 				tools.NewFloatParameter("foo-float", "bar"),
 				tools.NewArrayParameter("foo-array2", "bar", tools.NewStringParameter("foo-string", "bar")),
 				tools.NewMapParameter("foo-map-int", "a map of ints", "integer"),
 				tools.NewMapParameter("foo-map-any", "a map of any", ""),
 			},
-			want: tools.McpToolsSchema{
+			wantSchema: tools.McpToolsSchema{
 				Type: "object",
 				Properties: map[string]tools.ParameterMcpManifest{
-					"foo-string":  {Type: "string", Description: "bar"},
-					"foo-string2": {Type: "string", Description: "bar"},
-					"foo-int2":    {Type: "integer", Description: "bar"},
-					"foo-float":   {Type: "number", Description: "bar"},
+					"foo-string":       {Type: "string", Description: "bar"},
+					"foo-string2":      {Type: "string", Description: "bar"},
+					"foo-string3-auth": {Type: "string", Description: "bar"},
+					"foo-int2":         {Type: "integer", Description: "bar"},
+					"foo-float":        {Type: "number", Description: "bar"},
 					"foo-array2": {
 						Type:        "array",
 						Description: "bar",
@@ -1405,7 +1431,7 @@ func TestMcpManifest(t *testing.T) {
 					"foo-map-int": {
 						Type:                 "object",
 						Description:          "a map of ints",
-						AdditionalProperties: &tools.ParameterMcpManifest{Type: "integer", Description: ""},
+						AdditionalProperties: map[string]any{"type": "integer"},
 					},
 					"foo-map-any": {
 						Type:                 "object",
@@ -1413,15 +1439,31 @@ func TestMcpManifest(t *testing.T) {
 						AdditionalProperties: true,
 					},
 				},
-				Required: []string{"foo-string2", "foo-int2", "foo-float", "foo-array2", "foo-map-int", "foo-map-any"},
+				Required: []string{"foo-string2", "foo-string3-auth", "foo-int2", "foo-float", "foo-array2", "foo-map-int", "foo-map-any"},
+			},
+			wantAuthParam: map[string][]string{
+				"foo-string3-auth": []string{"my-google-auth-service", "other-auth-service"},
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got := tc.in.McpManifest()
-			if diff := cmp.Diff(tc.want, got); diff != "" {
+			gotSchema, gotAuthParam := tc.in.McpManifest()
+			if diff := cmp.Diff(tc.wantSchema, gotSchema); diff != "" {
 				t.Fatalf("unexpected manifest (-want +got):\n%s", diff)
+			}
+			if len(gotAuthParam) != len(tc.wantAuthParam) {
+				t.Fatalf("got %d items in auth param map, want %d", len(gotAuthParam), len(tc.wantAuthParam))
+			}
+			for k, want := range tc.wantAuthParam {
+				got, ok := gotAuthParam[k]
+				if !ok {
+					t.Fatalf("missing auth param: %s", k)
+				}
+				slices.Sort(got)
+				if !reflect.DeepEqual(got, want) {
+					t.Fatalf("unexpected auth param, got %s, want %s", got, want)
+				}
 			}
 		})
 	}

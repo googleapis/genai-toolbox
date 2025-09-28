@@ -20,6 +20,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	neo4jsc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
+	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/helpers"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -82,11 +83,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: cfg.Parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, cfg.Parameters)
 
 	// finish tool setup
 	t := Tool{
@@ -119,7 +116,7 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
 	config := neo4j.ExecuteQueryWithDatabase(t.Database)
@@ -135,7 +132,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	for _, record := range records {
 		vMap := make(map[string]any)
 		for col, value := range record.Values {
-			vMap[keys[col]] = value
+			vMap[keys[col]] = helpers.ConvertValue(value)
 		}
 		out = append(out, vMap)
 	}
@@ -157,4 +154,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
 }

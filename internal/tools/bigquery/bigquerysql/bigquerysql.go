@@ -23,8 +23,10 @@ import (
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
@@ -48,6 +50,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryRestService() *bigqueryrestapi.Service
+	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
+	UseClientAuthorization() bool
 }
 
 // validate compatible sources are still compatible
@@ -86,27 +90,29 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	allParameters, paramManifest, paramMcpManifest := tools.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: paramMcpManifest,
+	allParameters, paramManifest, err := tools.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
+	if err != nil {
+		return nil, err
 	}
+
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	// finish tool setup
 	t := Tool{
 		Name:               cfg.Name,
 		Kind:               kind,
+		AuthRequired:       cfg.AuthRequired,
 		Parameters:         cfg.Parameters,
 		TemplateParameters: cfg.TemplateParameters,
 		AllParams:          allParameters,
-		Statement:          cfg.Statement,
-		AuthRequired:       cfg.AuthRequired,
-		Client:             s.BigQueryClient(),
-		RestService:        s.BigQueryRestService(),
-		manifest:           tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:        mcpManifest,
+
+		Statement:      cfg.Statement,
+		UseClientOAuth: s.UseClientAuthorization(),
+		Client:         s.BigQueryClient(),
+		RestService:    s.BigQueryRestService(),
+		ClientCreator:  s.BigQueryClientCreator(),
+		manifest:       tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest:    mcpManifest,
 	}
 	return t, nil
 }
@@ -118,17 +124,20 @@ type Tool struct {
 	Name               string           `yaml:"name"`
 	Kind               string           `yaml:"kind"`
 	AuthRequired       []string         `yaml:"authRequired"`
+	UseClientOAuth     bool             `yaml:"useClientOAuth"`
 	Parameters         tools.Parameters `yaml:"parameters"`
 	TemplateParameters tools.Parameters `yaml:"templateParameters"`
 	AllParams          tools.Parameters `yaml:"allParams"`
-	Statement          string
-	Client             *bigqueryapi.Client
-	RestService        *bigqueryrestapi.Service
-	manifest           tools.Manifest
-	mcpManifest        tools.McpManifest
+
+	Statement     string
+	Client        *bigqueryapi.Client
+	RestService   *bigqueryrestapi.Service
+	ClientCreator bigqueryds.BigqueryClientCreator
+	manifest      tools.Manifest
+	mcpManifest   tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	highLevelParams := make([]bigqueryapi.QueryParameter, 0, len(t.Parameters))
 	lowLevelParams := make([]*bigqueryrestapi.QueryParameter, 0, len(t.Parameters))
 
@@ -205,11 +214,26 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		lowLevelParams = append(lowLevelParams, lowLevelParam)
 	}
 
-	query := t.Client.Query(newStatement)
-	query.Parameters = highLevelParams
-	query.Location = t.Client.Location
+	bqClient := t.Client
+	restService := t.RestService
 
-	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, newStatement, lowLevelParams, query.ConnectionProperties)
+	// Initialize new client if using user OAuth token
+	if t.UseClientOAuth {
+		tokenStr, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
+		bqClient, restService, err = t.ClientCreator(tokenStr, true)
+		if err != nil {
+			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
+		}
+	}
+
+	query := bqClient.Query(newStatement)
+	query.Parameters = highLevelParams
+	query.Location = bqClient.Location
+
+	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, newStatement, lowLevelParams, query.ConnectionProperties)
 	if err != nil {
 		// This is a fallback check in case the switch logic was bypassed.
 		return nil, fmt.Errorf("final query validation failed: %w", err)
@@ -273,6 +297,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
+func (t Tool) RequiresClientAuthorization() bool {
+	return t.UseClientOAuth
+}
+
 func BQTypeStringFromToolType(toolType string) (string, error) {
 	switch toolType {
 	case "string":
@@ -287,43 +315,4 @@ func BQTypeStringFromToolType(toolType string) (string, error) {
 	default:
 		return "", fmt.Errorf("unsupported tool parameter type for BigQuery: %s", toolType)
 	}
-}
-
-func dryRunQuery(
-	ctx context.Context,
-	restService *bigqueryrestapi.Service,
-	projectID string,
-	location string,
-	sql string,
-	params []*bigqueryrestapi.QueryParameter,
-	connProps []*bigqueryapi.ConnectionProperty,
-) (*bigqueryrestapi.Job, error) {
-	useLegacySql := false
-
-	restConnProps := make([]*bigqueryrestapi.ConnectionProperty, len(connProps))
-	for i, prop := range connProps {
-		restConnProps[i] = &bigqueryrestapi.ConnectionProperty{Key: prop.Key, Value: prop.Value}
-	}
-
-	jobToInsert := &bigqueryrestapi.Job{
-		JobReference: &bigqueryrestapi.JobReference{
-			ProjectId: projectID,
-			Location:  location,
-		},
-		Configuration: &bigqueryrestapi.JobConfiguration{
-			DryRun: true,
-			Query: &bigqueryrestapi.JobConfigurationQuery{
-				Query:                sql,
-				UseLegacySql:         &useLegacySql,
-				ConnectionProperties: restConnProps,
-				QueryParameters:      params,
-			},
-		},
-	}
-
-	insertResponse, err := restService.Jobs.Insert(projectID, jobToInsert).Context(ctx).Do()
-	if err != nil {
-		return nil, fmt.Errorf("failed to insert dry run job: %w", err)
-	}
-	return insertResponse, nil
 }

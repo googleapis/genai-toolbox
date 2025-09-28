@@ -44,6 +44,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	FirebaseRulesClient() *firebaserules.Service
 	GetProjectId() string
+	GetDatabaseId() string
 }
 
 // validate compatible sources are still compatible
@@ -82,11 +83,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// No parameters needed for this tool
 	parameters := tools.Parameters{}
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
 
 	// finish tool setup
 	t := Tool{
@@ -96,6 +93,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		AuthRequired: cfg.AuthRequired,
 		RulesClient:  s.FirebaseRulesClient(),
 		ProjectId:    s.GetProjectId(),
+		DatabaseId:   s.GetDatabaseId(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
@@ -113,20 +111,21 @@ type Tool struct {
 
 	RulesClient *firebaserules.Service
 	ProjectId   string
+	DatabaseId  string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	// Get the latest release for Firestore
-	releaseName := fmt.Sprintf("projects/%s/releases/cloud.firestore", t.ProjectId)
+	releaseName := fmt.Sprintf("projects/%s/releases/cloud.firestore/%s", t.ProjectId, t.DatabaseId)
 	release, err := t.RulesClient.Projects.Releases.Get(releaseName).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get latest Firestore release: %w", err)
 	}
 
 	if release.RulesetName == "" {
-		return nil, fmt.Errorf("no active Firestore rules were found in project '%s'", t.ProjectId)
+		return nil, fmt.Errorf("no active Firestore rules were found in project '%s' and database '%s'", t.ProjectId, t.DatabaseId)
 	}
 
 	// Get the ruleset content
@@ -156,4 +155,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return false
 }
