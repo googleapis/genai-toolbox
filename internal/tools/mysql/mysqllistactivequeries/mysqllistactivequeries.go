@@ -148,12 +148,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		tools.NewIntParameterWithDefault("min_duration_secs", 0, "Optional: Only show queries running for at least this long in seconds"),
 		tools.NewIntParameterWithDefault("limit", 100, "Optional: The maximum number of rows to return."),
 	}
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: allParameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	var statement string
 	sourceKind := rawS.SourceKind()
