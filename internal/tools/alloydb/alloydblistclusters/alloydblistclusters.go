@@ -88,7 +88,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	description := cfg.Description
 	if description == "" {
-		description = "Lists all AlloyDB clusters in a given project and location."
+		description = "Lists all AlloyDB clusters in a given project and location. If the user does not provide a project ID, you must ask for it."
 	}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters)
 

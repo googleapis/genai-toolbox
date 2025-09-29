@@ -174,9 +174,7 @@ func ExpandEnv(s string) string {
 		defaultValue := ""
 		if len(parts) == 2 {
 			defaultValue = parts[1]
-			if strings.HasPrefix(defaultValue, "-") {
-				defaultValue = defaultValue[1:]
-			}
+			defaultValue = strings.TrimPrefix(defaultValue, "-")
 		}
 
 		if val, ok := os.LookupEnv(key); ok {
