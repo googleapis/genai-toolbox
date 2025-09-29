@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>AlloyDB on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1596/samples/alloydb/</link><description>Recent content in AlloyDB on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1596/samples/alloydb/index.xml" rel="self" type="application/rss+xml"/><item><title>Quickstart (MCP with AlloyDB)</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1596/samples/alloydb/mcp_quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1596/samples/alloydb/mcp_quickstart/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
+&lt;p>&lt;a href="https://modelcontextprotocol.io">Model Context Protocol&lt;/a> is an open protocol
+that standardizes how applications provide context to LLMs. Check out this page
+on how to &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1596/how-to/connect_via_mcp/">connect to Toolbox via MCP&lt;/a>.&lt;/p>
+&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+&lt;p>This guide assumes you have already done the following:&lt;/p>
+&lt;ol>
+&lt;li>
+&lt;p>&lt;a href="https://cloud.google.com/alloydb/docs/cluster-create">Create a AlloyDB cluster and
+instance&lt;/a> with a
+database and user.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Connect to the instance using &lt;a href="https://cloud.google.com/alloydb/docs/manage-data-using-studio">AlloyDB
+Studio&lt;/a>,
+&lt;a href="https://www.postgresql.org/download/">&lt;code>psql&lt;/code> command-line tool&lt;/a>, or any
+other PostgreSQL client.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Enable the &lt;code>pgvector&lt;/code> and &lt;code>google_ml_integration&lt;/code>
+&lt;a href="https://cloud.google.com/alloydb/docs/ai">extensions&lt;/a>. These are required
+for Semantic Search and Natural Language to SQL tools. Run the following SQL
+commands:&lt;/p></description></item><item><title>Getting started with alloydb-ai-nl tool</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1596/samples/alloydb/ai-nl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1596/samples/alloydb/ai-nl/</guid><description>&lt;div class="notebook-markdown">
+ 
+ 
+ &lt;p>&lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/alloydb/ai-nl/alloydb_ai_nl.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In
+Colab">&lt;/a>&lt;/p>
+&lt;h1 id="objective">Objective&lt;/h1>
+&lt;p>In this notebook, we will be using the &lt;a href="https://googleapis.github.io/genai-toolbox/resources/tools/alloydbainl/alloydb-ai-nl/">AlloyDB AI NL
+tool&lt;/a>
+to generate and execute SQL queries on AlloyDB databases. We will start by
+setting up an AlloyDB database and then connecting to it using &lt;a href="https://github.com/googleapis/genai-toolbox">MCP
+Toolbox&lt;/a> and &lt;a href="https://google.github.io/adk-docs/">ADK&lt;/a>. This allows us to leverage AlloyDB
+NL to SQL capabilities in agentic applications.&lt;/p>
+&lt;p>For detailed information on the AlloyDB capability, please see &lt;a href="https://cloud.google.com/alloydb/docs/ai/natural-language-overview">AlloyDB AI
+Natural Language Overview&lt;/a>.&lt;/p>
+&lt;h2 id="before-you-begin">Before you Begin&lt;/h2>
+&lt;p>Complete the before you begin setup from &lt;a href="https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#before-you-begin">Use AlloyDB AI natural language to generate SQL&lt;/a>.&lt;/p></description></item></channel></rss>
