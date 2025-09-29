@@ -173,8 +173,10 @@ func ExpandEnv(s string) string {
 		key := parts[0]
 		defaultValue := ""
 		if len(parts) == 2 {
-			defaultValue = parts[1]
-			defaultValue = strings.TrimPrefix(defaultValue, "-")
+			defaultValue = strings.TrimPrefix(parts[1], "-")
+			if len(defaultValue) > 1 && defaultValue[0] == '"' && defaultValue[len(defaultValue)-1] == '"' {
+				defaultValue = defaultValue[1 : len(defaultValue)-1]
+			}
 		}
 
 		if val, ok := os.LookupEnv(key); ok {
