@@ -22,6 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	alloydbadmin "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 const kind string = "alloydb-list-clusters"
@@ -42,12 +43,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 // Configuration for the list-clusters tool.
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
-	BaseURL      string   `yaml:"baseURL"`
+	Name           string   `yaml:"name" validate:"required"`
+	Kind           string   `yaml:"kind" validate:"required"`
+	Source         string   `yaml:"source" validate:"required"`
+	Description    string   `yaml:"description"`
+	AuthRequired   []string `yaml:"authRequired"`
+	BaseURL        string   `yaml:"baseURL"`
+	DefaultProject string   `yaml:"defaultProject"`
 }
 
 // validate interface
@@ -70,15 +72,24 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `%s`", kind, alloydbadmin.SourceKind)
 	}
 
+	project := util.ExpandEnv(cfg.DefaultProject)
+	var projectParam tools.Parameter
+	if project != "" {
+		projectParam = tools.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+	} else {
+		projectParam = tools.NewStringParameter("project", "The GCP project ID to list clusters for.")
+	}
+
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("project", "The GCP project ID to list clusters for."),
+		projectParam,
 		tools.NewStringParameterWithDefault("location", "-", "Optional: The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations.(Default: '-')"),
 	}
 	paramManifest := allParameters.Manifest()
 
 	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"project"}
-
+	if project == "" {
+		inputSchema.Required = []string{"project"}
+	}
 	description := cfg.Description
 	if description == "" {
 		description = "Lists all AlloyDB clusters in a given project and location."
