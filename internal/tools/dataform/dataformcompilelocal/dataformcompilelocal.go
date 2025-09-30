@@ -59,7 +59,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		tools.NewStringParameter("project_dir", "The Dataform project directory."),
 	}
 	paramManifest := allParameters.Manifest()
-	inputSchema := allParameters.McpManifest()
+	inputSchema, _ := allParameters.McpManifest()
 
 	mcpManifest := tools.McpManifest{
 		Name:        cfg.Name,
