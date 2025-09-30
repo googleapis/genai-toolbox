@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dataformcompile
+package dataformcompilelocal
 
 import (
 	"context"
@@ -69,7 +69,7 @@ func TestDataformCompileTool(t *testing.T) {
 	toolsFile := map[string]any{
 		"tools": map[string]any{
 			"my-dataform-compiler": map[string]any{
-				"kind":        "dataform-compile",
+				"kind":        "dataform-compile-local",
 				"description": "Tool to compile dataform projects",
 			},
 		},
