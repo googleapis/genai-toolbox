@@ -240,21 +240,24 @@ func runPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth strin
 		requestBody    io.Reader
 		wantStatusCode int
 		want           string
+		isAllTables    bool
 	}{
-		// {
-		// 	name:           "invoke list_tables all tables detailed output",
-		// 	api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-		// 	requestBody:    bytes.NewBuffer([]byte(`{"table_names": ""}`)),
-		// 	wantStatusCode: http.StatusOK,
-		// 	want:           fmt.Sprintf("[%s,%s]", getDetailedWant(tableNameAuth, authTableColumns), getDetailedWant(tableNameParam, paramTableColumns)),
-		// },
-		// {
-		// 	name:           "invoke list_tables all tables simple output",
-		// 	api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-		// 	requestBody:    bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "simple"}`)),
-		// 	wantStatusCode: http.StatusOK,
-		// 	want:           fmt.Sprintf("[%s,%s]", getSimpleWant(tableNameAuth), getSimpleWant(tableNameParam)),
-		// },
+		{
+			name:           "invoke list_tables all tables detailed output",
+			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody:    bytes.NewBuffer([]byte(`{"table_names": ""}`)),
+			wantStatusCode: http.StatusOK,
+			want:           fmt.Sprintf("[%s,%s]", getDetailedWant(tableNameAuth, authTableColumns), getDetailedWant(tableNameParam, paramTableColumns)),
+			isAllTables:    true,
+		},
+		{
+			name:           "invoke list_tables all tables simple output",
+			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "simple"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           fmt.Sprintf("[%s,%s]", getSimpleWant(tableNameAuth), getSimpleWant(tableNameParam)),
+			isAllTables:    true,
+		},
 		{
 			name:           "invoke list_tables detailed output",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
@@ -349,6 +352,19 @@ func runPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth strin
 				}
 				if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
 					t.Fatalf("failed to unmarshal expected want string: %v", err)
+				}
+
+				// Checking only the default public schema where the test tables are created to avoid brittle tests.
+				if tc.isAllTables {
+					var filteredGot []any
+					for _, item := range got {
+						if tableMap, ok := item.(map[string]interface{}); ok {
+							if schema, ok := tableMap["schema_name"]; ok && schema == "public" {
+								filteredGot = append(filteredGot, item)
+							}
+						}
+					}
+					got = filteredGot
 				}
 
 				sort.SliceStable(got, func(i, j int) bool {

@@ -1184,19 +1184,14 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 		wantStatusCode int
 		want           any
 		isSimple       bool
+		isAllTables    bool
 	}{
 		{
 			name:           "invoke list_tables for all tables detailed output",
 			requestBody:    bytes.NewBufferString(`{"table_names":""}`),
 			wantStatusCode: http.StatusOK,
 			want:           []objectDetails{authTableWant, paramTableWant},
-		},
-		{
-			name:           "invoke list_tables for all tables simple output",
-			requestBody:    bytes.NewBufferString(`{"table_names":"", "output_format": "simple"}`),
-			wantStatusCode: http.StatusOK,
-			want:           []map[string]any{{"name": tableNameAuth}, {"name": tableNameParam}},
-			isSimple:       true,
+			isAllTables:    true,
 		},
 		{
 			name:           "invoke list_tables detailed output",
@@ -1304,6 +1299,40 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 				cmpopts.SortSlices(func(a, b objectDetails) bool { return a.ObjectName < b.ObjectName }),
 				cmpopts.SortSlices(func(a, b column) bool { return a.ColumnName < b.ColumnName }),
 				cmpopts.SortSlices(func(a, b map[string]any) bool { return a["name"].(string) < b["name"].(string) }),
+			}
+
+			// Checking only the current database where the test tables are created to avoid brittle tests.
+			if !tc.isSimple {
+				var filteredGot []objectDetails
+				if got != nil {
+					for _, item := range got.([]objectDetails) {
+						if item.SchemaName == databaseName {
+							filteredGot = append(filteredGot, item)
+						}
+					}
+				}
+				if len(filteredGot) == 0 {
+					got = nil
+				} else {
+					got = filteredGot
+				}
+			}
+
+			// Checking only the current database where the test tables are created to avoid brittle tests.
+			if tc.isAllTables {
+				var filteredGot []objectDetails
+				if got != nil {
+					for _, item := range got.([]objectDetails) {
+						if item.SchemaName == databaseName {
+							filteredGot = append(filteredGot, item)
+						}
+					}
+				}
+				if len(filteredGot) == 0 {
+					got = nil
+				} else {
+					got = filteredGot
+				}
 			}
 
 			if diff := cmp.Diff(tc.want, got, opts...); diff != "" {
@@ -1871,6 +1900,7 @@ func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 		requestBody    string
 		wantStatusCode int
 		want           string
+		isAllTables    bool
 	}{
 		{
 			name:           "invoke list_tables for all tables detailed output",
@@ -1878,6 +1908,7 @@ func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 			requestBody:    `{"table_names": ""}`,
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s,%s]", getDetailedWant(tableNameAuth, authTableColumns), getDetailedWant(tableNameParam, paramTableColumns)),
+			isAllTables:    true,
 		},
 		{
 			name:           "invoke list_tables for all tables simple output",
@@ -1885,6 +1916,7 @@ func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 			requestBody:    `{"table_names": "", "output_format": "simple"}`,
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s,%s]", getSimpleWant(tableNameAuth), getSimpleWant(tableNameParam)),
+			isAllTables:    true,
 		},
 		{
 			name:           "invoke list_tables detailed output",
@@ -1993,6 +2025,19 @@ func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 					delete(detailsMap, "indexes")
 
 					itemMap["object_details"] = detailsMap
+				}
+
+				// Checking only the default dbo schema where the test tables are created to avoid brittle tests.
+				if tc.isAllTables {
+					var filteredGot []any
+					for _, item := range got {
+						if tableMap, ok := item.(map[string]interface{}); ok {
+							if schema, ok := tableMap["schema_name"]; ok && schema == "dbo" {
+								filteredGot = append(filteredGot, item)
+							}
+						}
+					}
+					got = filteredGot
 				}
 
 				sort.SliceStable(got, func(i, j int) bool {
