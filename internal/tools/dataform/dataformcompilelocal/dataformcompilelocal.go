@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dataformcompile
+package dataformcompilelocal
 
 import (
 	"context"
@@ -25,7 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-const kind string = "dataform-compile"
+const kind string = "dataform-compile-local"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
