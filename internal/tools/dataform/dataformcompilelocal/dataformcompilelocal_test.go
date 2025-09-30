@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dataformcompile_test
+package dataformcompilelocal_test
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/dataform/dataformcompile"
+	"github.com/googleapis/genai-toolbox/internal/tools/dataform/dataformcompilelocal"
 )
 
 func TestParseFromYamlDataformCompile(t *testing.T) {
@@ -39,13 +39,13 @@ func TestParseFromYamlDataformCompile(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: dataform-compile
+					kind: dataform-compile-local
 					description: some description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": dataformcompile.Config{
+				"example_tool": dataformcompilelocal.Config{
 					Name:         "example_tool",
-					Kind:         "dataform-compile",
+					Kind:         "dataform-compile-local",
 					Description:  "some description",
 					AuthRequired: []string{},
 				},
