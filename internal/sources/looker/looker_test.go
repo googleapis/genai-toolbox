@@ -100,10 +100,8 @@ func TestFailParseFromYamlLooker(t *testing.T) {
 			sources:
 				my-looker-instance:
 					kind: looker
-					base_url: http://example.looker.com/
-					client_id: jasdl;k;tjl
 			`,
-			err: "unable to parse source \"my-looker-instance\" as \"looker\": Key: 'Config.ClientSecret' Error:Field validation for 'ClientSecret' failed on the 'required' tag",
+			err: "unable to parse source \"my-looker-instance\" as \"looker\": Key: 'Config.BaseURL' Error:Field validation for 'BaseURL' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {

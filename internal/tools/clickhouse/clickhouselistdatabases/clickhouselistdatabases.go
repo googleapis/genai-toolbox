@@ -72,13 +72,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", listDatabasesKind, compatibleSources)
 	}
 
-	allParameters, paramManifest, paramMcpManifest, _ := tools.ProcessParameters(nil, cfg.Parameters)
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: paramMcpManifest,
-	}
+	allParameters, paramManifest, _ := tools.ProcessParameters(nil, cfg.Parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	t := Tool{
 		Name:         cfg.Name,

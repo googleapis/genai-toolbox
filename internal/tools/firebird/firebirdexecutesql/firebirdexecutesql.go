@@ -78,23 +78,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
 	parameters := tools.Parameters{sqlParameter}
 
-	_, paramManifest, paramMcpManifest, err := tools.ProcessParameters(nil, parameters)
-	if err != nil {
-		return nil, err
-	}
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: paramMcpManifest,
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
 
 	t := &Tool{
 		Name:         cfg.Name,
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
 		Db:           s.FirebirdDB(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
 	return t, nil

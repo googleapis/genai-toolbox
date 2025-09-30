@@ -111,13 +111,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		tools.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return."),
 	}
 	paramManifest := allParameters.Manifest()
-	inputSchema := allParameters.McpManifest()
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: inputSchema,
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	// finish tool setup
 	t := Tool{

@@ -81,7 +81,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Create a slice for all parameters
-	allParameters := slices.Concat(cfg.FilterParams, cfg.FilterParams, cfg.UpdateParams)
+	allParameters := slices.Concat(cfg.FilterParams, cfg.UpdateParams)
 
 	// Verify no duplicate parameter names
 	err := tools.CheckDuplicateParameters(allParameters)
@@ -97,11 +97,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Create MCP manifest
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: allParameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	// finish tool setup
 	return Tool{
