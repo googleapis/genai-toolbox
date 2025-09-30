@@ -5,7 +5,7 @@ go 1.24.7
 toolchain go1.25.1
 
 require (
-	cloud.google.com/go/alloydbconn v1.15.5
+	cloud.google.com/go/alloydbconn v1.15.6
 	cloud.google.com/go/bigquery v1.71.0
 	cloud.google.com/go/bigtable v1.40.0
 	cloud.google.com/go/cloudsqlconn v1.18.1
@@ -47,8 +47,8 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.37.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.37.0
 	go.opentelemetry.io/otel/metric v1.38.0
-	go.opentelemetry.io/otel/sdk v1.37.0
-	go.opentelemetry.io/otel/sdk/metric v1.37.0
+	go.opentelemetry.io/otel/sdk v1.38.0
+	go.opentelemetry.io/otel/sdk/metric v1.38.0
 	go.opentelemetry.io/otel/trace v1.38.0
 	golang.org/x/oauth2 v0.31.0
 	google.golang.org/api v0.250.0
