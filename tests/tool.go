@@ -1302,23 +1302,6 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 			}
 
 			// Checking only the current database where the test tables are created to avoid brittle tests.
-			if !tc.isSimple {
-				var filteredGot []objectDetails
-				if got != nil {
-					for _, item := range got.([]objectDetails) {
-						if item.SchemaName == databaseName {
-							filteredGot = append(filteredGot, item)
-						}
-					}
-				}
-				if len(filteredGot) == 0 {
-					got = nil
-				} else {
-					got = filteredGot
-				}
-			}
-
-			// Checking only the current database where the test tables are created to avoid brittle tests.
 			if tc.isAllTables {
 				var filteredGot []objectDetails
 				if got != nil {
