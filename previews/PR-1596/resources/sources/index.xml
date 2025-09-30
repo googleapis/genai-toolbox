@@ -672,31 +672,11 @@ Make HTTP requests to REST APIs or other web services.&lt;/li>
 tool that provides a semantic layer to facilitate querying. It can be deployed
 in the cloud, on GCP, or on premises.&lt;/p>
 &lt;h2 id="requirements">Requirements&lt;/h2>
-&lt;h3 id="database-user">Database User&lt;/h3>
+&lt;h3 id="looker-user">Looker User&lt;/h3>
 &lt;p>This source only uses API authentication. You will need to
 &lt;a href="https://cloud.google.com/looker/docs/api-auth#authentication_with_an_sdk">create an API user&lt;/a> to login to Looker.&lt;/p>
-&lt;h2 id="example">Example&lt;/h2>
-&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-looker-source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">base_url&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">http://looker.example.com&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">client_id&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${LOOKER_CLIENT_ID}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">client_secret&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${LOOKER_CLIENT_SECRET}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">verify_ssl&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">true&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">timeout&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">600s&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The Looker base url will look like &amp;ldquo;&lt;a href="https://looker.example.com">https://looker.example.com&lt;/a>&amp;rdquo;, don&amp;rsquo;t include
-a trailing &amp;ldquo;/&amp;rdquo;. In some cases, especially if your Looker is deployed
-on-premises, you may need to add the API port number like
-&amp;ldquo;&lt;a href="https://looker.example.com:19999">https://looker.example.com:19999&lt;/a>&amp;rdquo;.&lt;/p></description></item><item><title>Looker Conversational Analytics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1596/resources/sources/lookerca/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1596/resources/sources/lookerca/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://cloud.google.com/looker/docs">Looker&lt;/a> is a web based business intelligence and data management
-tool that provides a semantic layer to facilitate querying. It can be deployed
-in the cloud, on GCP, or on premises.&lt;/p>
-&lt;h2 id="requirements">Requirements&lt;/h2>
-&lt;h3 id="looker-user">Looker User&lt;/h3>
-&lt;p>This source uses API authentication. You will need to
-&lt;a href="https://cloud.google.com/looker/docs/api-auth#authentication_with_an_sdk">create an API user&lt;/a> to login to Looker.
-If you want to use OAuth see the sample setup for
-&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1596/samples/looker/looker_gemini_oauth/">Looker Gemini CLI OAuth&lt;/a>.&lt;/p>
+&lt;p>To use the Conversational Analytics API, you will also need to have a Google
+Cloud Project.&lt;/p>
 &lt;h3 id="google-cloud-project">Google Cloud Project&lt;/h3>
 &lt;p>Enable the following APIs in your Google Cloud Project:&lt;/p></description></item><item><title>MongoDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1596/resources/sources/mongodb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1596/resources/sources/mongodb/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://www.mongodb.com/docs/atlas/getting-started/">MongoDB&lt;/a> is a popular NoSQL database that stores data in
