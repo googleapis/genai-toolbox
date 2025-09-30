@@ -54,6 +54,8 @@ func TestParseFromYamlLooker(t *testing.T) {
 					ShowHiddenModels:   true,
 					ShowHiddenExplores: true,
 					ShowHiddenFields:   true,
+					Project:            "default",
+					Location:           "us",
 				},
 			},
 		},
@@ -90,9 +92,9 @@ func TestFailParseFromYamlLooker(t *testing.T) {
 					base_url: http://example.looker.com/
 					client_id: jasdl;k;tjl
 					client_secret: sdakl;jgflkasdfkfg
-					project: test-project
+					schema: test-schema
 			`,
-			err: "unable to parse source \"my-looker-instance\" as \"looker\": [5:1] unknown field \"project\"\n   2 | client_id: jasdl;k;tjl\n   3 | client_secret: sdakl;jgflkasdfkfg\n   4 | kind: looker\n>  5 | project: test-project\n       ^\n",
+			err: "unable to parse source \"my-looker-instance\" as \"looker\": [5:1] unknown field \"schema\"\n   2 | client_id: jasdl;k;tjl\n   3 | client_secret: sdakl;jgflkasdfkfg\n   4 | kind: looker\n>  5 | schema: test-schema\n       ^\n",
 		},
 		{
 			desc: "missing required field",
@@ -100,6 +102,7 @@ func TestFailParseFromYamlLooker(t *testing.T) {
 			sources:
 				my-looker-instance:
 					kind: looker
+					client_id: jasdl;k;tjl
 			`,
 			err: "unable to parse source \"my-looker-instance\" as \"looker\": Key: 'Config.BaseURL' Error:Field validation for 'BaseURL' failed on the 'required' tag",
 		},

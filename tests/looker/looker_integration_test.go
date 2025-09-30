@@ -15,9 +15,15 @@
 package looker
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -33,6 +39,8 @@ var (
 	LookerVerifySsl    = os.Getenv("LOOKER_VERIFY_SSL")
 	LookerClientId     = os.Getenv("LOOKER_CLIENT_ID")
 	LookerClientSecret = os.Getenv("LOOKER_CLIENT_SECRET")
+	LookerProject      = os.Getenv("LOOKER_PROJECT")
+	LookerLocation     = os.Getenv("LOOKER_LOCATION")
 )
 
 func getLookerVars(t *testing.T) map[string]any {
@@ -45,6 +53,10 @@ func getLookerVars(t *testing.T) map[string]any {
 		t.Fatal("'LOOKER_CLIENT_ID' not set")
 	case LookerClientSecret:
 		t.Fatal("'LOOKER_CLIENT_SECRET' not set")
+	case LookerProject:
+		t.Fatal("'LOOKER_PROJECT' not set")
+	case LookerLocation:
+		t.Fatal("'LOOKER_LOCATION' not set")
 	}
 
 	return map[string]any{
@@ -53,6 +65,8 @@ func getLookerVars(t *testing.T) map[string]any {
 		"verify_ssl":    (LookerVerifySsl == "true"),
 		"client_id":     LookerClientId,
 		"client_secret": LookerClientSecret,
+		"project":       LookerProject,
+		"location":      LookerLocation,
 	}
 }
 
@@ -127,6 +141,11 @@ func TestLooker(t *testing.T) {
 			},
 			"get_dashboards": map[string]any{
 				"kind":        "looker-get-dashboards",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"conversational_analytics": map[string]any{
+				"kind":        "looker-conversational-analytics",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
@@ -617,6 +636,38 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "conversational_analytics",
+		map[string]any{
+			"conversational_analytics": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The user's question, potentially including conversation history and system instructions for context.",
+						"name":        "user_query_with_context",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "An Array of at least one and up to 5 explore references like [{'model': 'MODEL_NAME', 'explore': 'EXPLORE_NAME'}]",
+						"items": map[string]any{
+							"additionalProperties": true,
+							"authSources":          []any{},
+							"name":                 "explore_reference",
+							"description":          "An explore reference like {'model': 'MODEL_NAME', 'explore': 'EXPLORE_NAME'}",
+							"required":             true,
+							"type":                 "object",
+						},
+						"name":     "explore_references",
+						"required": true,
+						"type":     "array",
+					},
+				},
+			},
+		},
+	)
 
 	wantResult := "{\"label\":\"System Activity\",\"name\":\"system__activity\",\"project_name\":\"system__activity\"}"
 	tests.RunToolInvokeSimpleTest(t, "get_models", wantResult)
@@ -651,4 +702,81 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "null"
 	tests.RunToolInvokeParametersTest(t, "get_dashboards", []byte(`{"title": "FOO", "desc": "BAR"}`), wantResult)
+
+	runConversationalAnalytics(t, "system__activity", "content_usage")
+}
+
+func runConversationalAnalytics(t *testing.T, modelName, exploreName string) {
+	exploreRefsJSON := fmt.Sprintf(`[{"model":"%s","explore":"%s"}]`, modelName, exploreName)
+
+	var refs []map[string]any
+	if err := json.Unmarshal([]byte(exploreRefsJSON), &refs); err != nil {
+		t.Fatalf("failed to unmarshal explore refs: %v", err)
+	}
+
+	testCases := []struct {
+		name           string
+		exploreRefs    []map[string]any
+		wantStatusCode int
+		wantInResult   string
+		wantInError    string
+	}{
+		{
+			name:           "invoke conversational analytics with explore",
+			exploreRefs:    refs,
+			wantStatusCode: http.StatusOK,
+			wantInResult:   `Answer`,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			requestBodyMap := map[string]any{
+				"user_query_with_context": "What is in the explore?",
+				"explore_references":      tc.exploreRefs,
+			}
+			bodyBytes, err := json.Marshal(requestBodyMap)
+			if err != nil {
+				t.Fatalf("failed to marshal request body: %v", err)
+			}
+			body := bytes.NewBuffer(bodyBytes)
+
+			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/api/tool/conversational_analytics/invoke", body)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
+			}
+
+			if tc.wantInResult != "" {
+				var respBody map[string]interface{}
+				if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
+					t.Fatalf("error parsing response body: %v", err)
+				}
+				got, ok := respBody["result"].(string)
+				if !ok {
+					t.Fatalf("unable to find result in response body")
+				}
+				if !strings.Contains(got, tc.wantInResult) {
+					t.Errorf("unexpected result: got %q, want to contain %q", got, tc.wantInResult)
+				}
+			}
+
+			if tc.wantInError != "" {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				if !strings.Contains(string(bodyBytes), tc.wantInError) {
+					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
+				}
+			}
+		})
+	}
 }
