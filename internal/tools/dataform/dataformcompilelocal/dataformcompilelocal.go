@@ -59,19 +59,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		tools.NewStringParameter("project_dir", "The Dataform project directory."),
 	}
 	paramManifest := allParameters.Manifest()
-	inputSchema, _ := allParameters.McpManifest()
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: inputSchema,
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	t := Tool{
 		Name:         cfg.Name,
 		Kind:         kind,
 		AuthRequired: cfg.AuthRequired,
-		AllParams:    allParameters,
+		Parameters:   allParameters,
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
@@ -85,7 +79,7 @@ type Tool struct {
 	Name         string           `yaml:"name"`
 	Kind         string           `yaml:"kind"`
 	AuthRequired []string         `yaml:"authRequired"`
-	AllParams    tools.Parameters `yaml:"allParams"`
+	Parameters   tools.Parameters `yaml:"allParams"`
 	manifest     tools.Manifest
 	mcpManifest  tools.McpManifest
 }
@@ -108,7 +102,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.AllParams, data, claims)
+	return tools.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

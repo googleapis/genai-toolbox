@@ -92,8 +92,7 @@ func TestDataformCompileTool(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	nonExistentDir := filepath.Join(os.TempDir(), "non-existent-dir-for-test-12345")
-	os.Remove(nonExistentDir)
+	nonExistentDir := filepath.Join(os.TempDir(), "non-existent-dir")
 
 	testCases := []struct {
 		name       string
@@ -111,7 +110,7 @@ func TestDataformCompileTool(t *testing.T) {
 			name:       "missing parameter",
 			reqBody:    `{}`,
 			wantStatus: http.StatusBadRequest,
-			wantBody:   "parameter \\\"project_dir\\\" is required",
+			wantBody:   `parameter \"project_dir\" is required`,
 		},
 		{
 			name:       "non-existent directory",
