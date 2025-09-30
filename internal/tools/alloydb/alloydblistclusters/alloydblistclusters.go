@@ -72,10 +72,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	project := s.DefaultProject
 	var projectParam tools.Parameter
-	if project == "" {
-		projectParam = tools.NewStringParameter("project", "The GCP project ID to list clusters for.")
-	} else {
+	if project != "" {
 		projectParam = tools.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+	} else {
+		projectParam = tools.NewStringParameter("project", "The GCP project ID to list clusters for.")
 	}
 
 	allParameters := tools.Parameters{

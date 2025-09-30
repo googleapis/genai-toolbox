@@ -69,8 +69,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-sql-admin`", kind)
 	}
 
+	project := s.DefaultProject
+	var projectParam tools.Parameter
+	if project != "" {
+		projectParam = tools.NewStringParameterWithDefault("projectId", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+	} else {
+		projectParam = tools.NewStringParameter("projectId", "The project ID")
+	}
+
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("projectId", "The project ID"),
+		projectParam,
 		tools.NewStringParameter("instanceId", "The instance ID"),
 	}
 	paramManifest := allParameters.Manifest()
