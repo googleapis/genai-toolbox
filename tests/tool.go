@@ -1186,6 +1186,19 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 		isSimple       bool
 	}{
 		{
+			name:           "invoke list_tables for all tables detailed output",
+			requestBody:    bytes.NewBufferString(`{"table_names":""}`),
+			wantStatusCode: http.StatusOK,
+			want:           []objectDetails{authTableWant, paramTableWant},
+		},
+		{
+			name:           "invoke list_tables for all tables simple output",
+			requestBody:    bytes.NewBufferString(`{"table_names":"", "output_format": "simple"}`),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{{"name": tableNameAuth}, {"name": tableNameParam}},
+			isSimple:       true,
+		},
+		{
 			name:           "invoke list_tables detailed output",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_names": "%s"}`, tableNameAuth)),
 			wantStatusCode: http.StatusOK,
