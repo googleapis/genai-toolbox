@@ -74,7 +74,7 @@ func initBigQueryConnection(project string) (*bigqueryapi.Client, error) {
 
 func TestBigQueryToolEndpoints(t *testing.T) {
 	sourceConfig := getBigQueryVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Minute)
 	defer cancel()
 
 	var args []string
@@ -200,10 +200,11 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	runBigQueryListTableIdsToolInvokeTest(t, datasetName, tableName)
 	runBigQueryGetTableInfoToolInvokeTest(t, datasetName, tableName, tableInfoWant)
 	runBigQueryConversationalAnalyticsInvokeTest(t, datasetName, tableName, dataInsightsWant)
+	runBigQuerySearchCatalogToolInvokeTest(t, datasetName, tableName)
 }
 
 func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
 	client, err := initBigQueryConnection(BigqueryProject)
@@ -268,6 +269,21 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 			"source":      "my-instance",
 			"description": "Tool to list table within a dataset",
 		},
+		"execute-sql-restricted": map[string]any{
+			"kind":        "bigquery-execute-sql",
+			"source":      "my-instance",
+			"description": "Tool to execute SQL",
+		},
+		"conversational-analytics-restricted": map[string]any{
+			"kind":        "bigquery-conversational-analytics",
+			"source":      "my-instance",
+			"description": "Tool to ask BigQuery conversational analytics",
+		},
+		"forecast-restricted": map[string]any{
+			"kind":        "bigquery-forecast",
+			"source":      "my-instance",
+			"description": "Tool to forecast",
+		},
 	}
 
 	// Create config file
@@ -296,6 +312,12 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	// Run tests
 	runListTableIdsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, allowedForecastTableName1)
 	runListTableIdsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, allowedForecastTableName2)
+	runExecuteSqlWithRestriction(t, allowedTableNameParam1, disallowedTableNameParam)
+	runExecuteSqlWithRestriction(t, allowedTableNameParam2, disallowedTableNameParam)
+	runConversationalAnalyticsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, disallowedTableName)
+	runConversationalAnalyticsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, disallowedTableName)
+	runForecastWithRestriction(t, allowedForecastTableFullName1, disallowedForecastTableFullName)
+	runForecastWithRestriction(t, allowedForecastTableFullName2, disallowedForecastTableFullName)
 }
 
 // getBigQueryParamToolInfo returns statements and param for my-tool for bigquery kind
@@ -621,6 +643,24 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		"kind":        "bigquery-conversational-analytics",
 		"source":      "my-client-auth-source",
 		"description": "Tool to ask BigQuery conversational analytics",
+	}
+	tools["my-search-catalog-tool"] = map[string]any{
+		"kind":        "bigquery-search-catalog",
+		"source":      "my-instance",
+		"description": "Tool to search the BiqQuery catalog",
+	}
+	tools["my-auth-search-catalog-tool"] = map[string]any{
+		"kind":        "bigquery-search-catalog",
+		"source":      "my-instance",
+		"description": "Tool to search the BiqQuery catalog",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+	tools["my-client-auth-search-catalog-tool"] = map[string]any{
+		"kind":        "bigquery-search-catalog",
+		"source":      "my-client-auth-source",
+		"description": "Tool to search the BiqQuery catalog",
 	}
 	config["tools"] = tools
 	return config
@@ -2110,6 +2150,421 @@ func runListTableIdsWithRestriction(t *testing.T, allowedDatasetName, disallowed
 
 				if string(sortedGotBytes) != tc.wantInResult {
 					t.Errorf("unexpected result: got %q, want %q", string(sortedGotBytes), tc.wantInResult)
+				}
+			}
+
+			if tc.wantInError != "" {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				if !strings.Contains(string(bodyBytes), tc.wantInError) {
+					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
+				}
+			}
+		})
+	}
+}
+
+func runExecuteSqlWithRestriction(t *testing.T, allowedTableFullName, disallowedTableFullName string) {
+	allowedTableParts := strings.Split(strings.Trim(allowedTableFullName, "`"), ".")
+	if len(allowedTableParts) != 3 {
+		t.Fatalf("invalid allowed table name format: %s", allowedTableFullName)
+	}
+	allowedDatasetID := allowedTableParts[1]
+
+	testCases := []struct {
+		name           string
+		sql            string
+		wantStatusCode int
+		wantInError    string
+	}{
+		{
+			name:           "invoke on allowed table",
+			sql:            fmt.Sprintf("SELECT * FROM %s", allowedTableFullName),
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "invoke on disallowed table",
+			sql:            fmt.Sprintf("SELECT * FROM %s", disallowedTableFullName),
+			wantStatusCode: http.StatusBadRequest,
+			wantInError: fmt.Sprintf("query accesses dataset '%s', which is not in the allowed list",
+				strings.Join(
+					strings.Split(strings.Trim(disallowedTableFullName, "`"), ".")[0:2],
+					".")),
+		},
+		{
+			name:           "disallowed create schema",
+			sql:            "CREATE SCHEMA another_dataset",
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    "dataset-level operations like 'CREATE_SCHEMA' are not allowed",
+		},
+		{
+			name:           "disallowed alter schema",
+			sql:            fmt.Sprintf("ALTER SCHEMA %s SET OPTIONS(description='new one')", allowedDatasetID),
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    "dataset-level operations like 'ALTER_SCHEMA' are not allowed",
+		},
+		{
+			name:           "disallowed create function",
+			sql:            fmt.Sprintf("CREATE FUNCTION %s.my_func() RETURNS INT64 AS (1)", allowedDatasetID),
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    "creating stored routines ('CREATE_FUNCTION') is not allowed",
+		},
+		{
+			name:           "disallowed create procedure",
+			sql:            fmt.Sprintf("CREATE PROCEDURE %s.my_proc() BEGIN SELECT 1; END", allowedDatasetID),
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    "unanalyzable statements like 'CREATE PROCEDURE' are not allowed",
+		},
+		{
+			name:           "disallowed execute immediate",
+			sql:            "EXECUTE IMMEDIATE 'SELECT 1'",
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    "EXECUTE IMMEDIATE is not allowed when dataset restrictions are in place",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			body := bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql":"%s"}`, tc.sql)))
+			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/api/tool/execute-sql-restricted/invoke", body)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
+			}
+
+			if tc.wantInError != "" {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				if !strings.Contains(string(bodyBytes), tc.wantInError) {
+					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
+				}
+			}
+		})
+	}
+}
+
+func runConversationalAnalyticsWithRestriction(t *testing.T, allowedDatasetName, disallowedDatasetName, allowedTableName, disallowedTableName string) {
+	allowedTableRefsJSON := fmt.Sprintf(`[{"projectId":"%s","datasetId":"%s","tableId":"%s"}]`, BigqueryProject, allowedDatasetName, allowedTableName)
+	disallowedTableRefsJSON := fmt.Sprintf(`[{"projectId":"%s","datasetId":"%s","tableId":"%s"}]`, BigqueryProject, disallowedDatasetName, disallowedTableName)
+
+	testCases := []struct {
+		name           string
+		tableRefs      string
+		wantStatusCode int
+		wantInResult   string
+		wantInError    string
+	}{
+		{
+			name:           "invoke with allowed table",
+			tableRefs:      allowedTableRefsJSON,
+			wantStatusCode: http.StatusOK,
+			wantInResult:   `Answer`,
+		},
+		{
+			name:           "invoke with disallowed table",
+			tableRefs:      disallowedTableRefsJSON,
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    fmt.Sprintf("access to dataset '%s.%s' (from table '%s') is not allowed", BigqueryProject, disallowedDatasetName, disallowedTableName),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			requestBodyMap := map[string]any{
+				"user_query_with_context": "What is in the table?",
+				"table_references":        tc.tableRefs,
+			}
+			bodyBytes, err := json.Marshal(requestBodyMap)
+			if err != nil {
+				t.Fatalf("failed to marshal request body: %v", err)
+			}
+			body := bytes.NewBuffer(bodyBytes)
+
+			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/api/tool/conversational-analytics-restricted/invoke", body)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
+			}
+
+			if tc.wantInResult != "" {
+				var respBody map[string]interface{}
+				if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
+					t.Fatalf("error parsing response body: %v", err)
+				}
+				got, ok := respBody["result"].(string)
+				if !ok {
+					t.Fatalf("unable to find result in response body")
+				}
+				if !strings.Contains(got, tc.wantInResult) {
+					t.Errorf("unexpected result: got %q, want to contain %q", got, tc.wantInResult)
+				}
+			}
+
+			if tc.wantInError != "" {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				if !strings.Contains(string(bodyBytes), tc.wantInError) {
+					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
+				}
+			}
+		})
+	}
+}
+
+func runBigQuerySearchCatalogToolInvokeTest(t *testing.T, datasetName string, tableName string) {
+	// Get ID token
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	// Get access token
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	// Test tool invoke endpoint
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		wantKey       string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-search-catalog-tool without body",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-search-catalog-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			wantKey:       "DisplayName",
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			wantKey:       "DisplayName",
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with correct project",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"projectIds\":[\"%s\"], \"datasetIds\":[\"%s\"]}", tableName, BigqueryProject, datasetName))),
+			wantKey:       "DisplayName",
+			isErr:         false,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with non-existent project",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"projectIds\":[\"%s-%s\"], \"datasetIds\":[\"%s\"]}", tableName, BigqueryProject, uuid.NewString(), datasetName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-auth-search-catalog-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-client-auth-search-catalog-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			isErr:         true,
+		},
+		{
+			name:          "Invoke my-client-auth-search-catalog-tool with auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-catalog-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"prompt\":\"%s\", \"types\":[\"TABLE\"], \"datasetIds\":[\"%s\"]}", tableName, datasetName))),
+			wantKey:       "DisplayName",
+			isErr:         false,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			var result map[string]interface{}
+			if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+				t.Fatalf("error parsing response body: %s", err)
+			}
+			resultStr, ok := result["result"].(string)
+			if !ok {
+				if result["result"] == nil && tc.isErr {
+					return
+				}
+				t.Fatalf("expected 'result' field to be a string, got %T", result["result"])
+			}
+			if tc.isErr && (resultStr == "" || resultStr == "[]") {
+				return
+			}
+			var entries []interface{}
+			if err := json.Unmarshal([]byte(resultStr), &entries); err != nil {
+				t.Fatalf("error unmarshalling result string: %v", err)
+			}
+
+			if !tc.isErr {
+				if len(entries) != 1 {
+					t.Fatalf("expected exactly one entry, but got %d", len(entries))
+				}
+				entry, ok := entries[0].(map[string]interface{})
+				if !ok {
+					t.Fatalf("expected first entry to be a map, got %T", entries[0])
+				}
+				respTable, ok := entry[tc.wantKey]
+				if !ok {
+					t.Fatalf("expected entry to have key '%s', but it was not found in %v", tc.wantKey, entry)
+				}
+				if respTable != tableName {
+					t.Fatalf("expected key '%s' to have value '%s', but got %s", tc.wantKey, tableName, respTable)
+				}
+			} else {
+				if len(entries) != 0 {
+					t.Fatalf("expected 0 entries, but got %d", len(entries))
+				}
+			}
+		})
+	}
+}
+
+func runForecastWithRestriction(t *testing.T, allowedTableFullName, disallowedTableFullName string) {
+	allowedTableUnquoted := strings.ReplaceAll(allowedTableFullName, "`", "")
+	disallowedTableUnquoted := strings.ReplaceAll(disallowedTableFullName, "`", "")
+	disallowedDatasetFQN := strings.Join(strings.Split(disallowedTableUnquoted, ".")[0:2], ".")
+
+	testCases := []struct {
+		name           string
+		historyData    string
+		wantStatusCode int
+		wantInResult   string
+		wantInError    string
+	}{
+		{
+			name:           "invoke with allowed table name",
+			historyData:    allowedTableUnquoted,
+			wantStatusCode: http.StatusOK,
+			wantInResult:   `"forecast_timestamp"`,
+		},
+		{
+			name:           "invoke with disallowed table name",
+			historyData:    disallowedTableUnquoted,
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    fmt.Sprintf("access to dataset '%s' (from table '%s') is not allowed", disallowedDatasetFQN, disallowedTableUnquoted),
+		},
+		{
+			name:           "invoke with query on allowed table",
+			historyData:    fmt.Sprintf("SELECT * FROM %s", allowedTableFullName),
+			wantStatusCode: http.StatusOK,
+			wantInResult:   `"forecast_timestamp"`,
+		},
+		{
+			name:           "invoke with query on disallowed table",
+			historyData:    fmt.Sprintf("SELECT * FROM %s", disallowedTableFullName),
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    fmt.Sprintf("query in history_data accesses dataset '%s', which is not in the allowed list", disallowedDatasetFQN),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			requestBodyMap := map[string]any{
+				"history_data":  tc.historyData,
+				"timestamp_col": "ts",
+				"data_col":      "data",
+			}
+			bodyBytes, err := json.Marshal(requestBodyMap)
+			if err != nil {
+				t.Fatalf("failed to marshal request body: %v", err)
+			}
+			body := bytes.NewBuffer(bodyBytes)
+
+			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/api/tool/forecast-restricted/invoke", body)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
+			}
+
+			if tc.wantInResult != "" {
+				var respBody map[string]interface{}
+				if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
+					t.Fatalf("error parsing response body: %v", err)
+				}
+				got, ok := respBody["result"].(string)
+				if !ok {
+					t.Fatalf("unable to find result in response body")
+				}
+				if !strings.Contains(got, tc.wantInResult) {
+					t.Errorf("unexpected result: got %q, want to contain %q", got, tc.wantInResult)
 				}
 			}
 

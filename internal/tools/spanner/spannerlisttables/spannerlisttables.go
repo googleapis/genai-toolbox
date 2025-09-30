@@ -99,12 +99,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if description == "" {
 		description = "Lists detailed schema information (object type, columns, constraints, indexes) as JSON for user-created tables. Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
 	}
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: description,
-		InputSchema: allParameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters)
 
 	// finish tool setup
 	t := Tool{
@@ -172,19 +167,19 @@ func (t Tool) getStatement() string {
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
-	
+
 	// Get the appropriate SQL statement based on dialect
 	statement := t.getStatement()
 
 	// Prepare parameters based on dialect
 	var stmtParams map[string]interface{}
-  
-  tableNames, _ := paramsMap["table_names"].(string)
-  outputFormat, _ := paramsMap["output_format"].(string)
-  if outputFormat == "" {
-    outputFormat = "detailed"
-  }
-	
+
+	tableNames, _ := paramsMap["table_names"].(string)
+	outputFormat, _ := paramsMap["output_format"].(string)
+	if outputFormat == "" {
+		outputFormat = "detailed"
+	}
+
 	switch strings.ToLower(t.dialect) {
 	case "postgresql":
 		// PostgreSQL uses positional parameters ($1, $2)
@@ -192,7 +187,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			"p1": tableNames,
 			"p2": outputFormat,
 		}
-		
+
 	case "googlesql":
 		// GoogleSQL uses named parameters (@table_names, @output_format)
 		stmtParams = map[string]interface{}{
@@ -203,10 +198,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("unsupported dialect: %s", t.dialect)
 	}
 
-  stmt := spanner.Statement{
-    SQL:    statement,
-    Params: stmtParams,
-  }
+	stmt := spanner.Statement{
+		SQL:    statement,
+		Params: stmtParams,
+	}
 
 	// Execute the query (read-only)
 	iter := t.Client.Single().Query(ctx, stmt)

@@ -31,8 +31,10 @@ apply when creating SQL queries to run against your BigQuery data, such as
 avoiding full table scans or complex filters.
 
 [bigquery-docs]: https://cloud.google.com/bigquery/docs
-[bigquery-quickstart-cli]: https://cloud.google.com/bigquery/docs/quickstarts/quickstart-command-line
-[bigquery-googlesql]: https://cloud.google.com/bigquery/docs/reference/standard-sql/
+[bigquery-quickstart-cli]:
+    https://cloud.google.com/bigquery/docs/quickstarts/quickstart-command-line
+[bigquery-googlesql]:
+    https://cloud.google.com/bigquery/docs/reference/standard-sql/
 
 ## Available Tools
 
@@ -63,10 +65,15 @@ avoiding full table scans or complex filters.
 - [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
   Run SQL queries directly against BigQuery datasets.
 
+- [`bigquery-search-catalog`](../tools/bigquery/bigquery-search_catalog.md)
+  List all entries in Dataplex Catalog (e.g. tables, views, models) that matches
+  given user query.
+
 ### Pre-built Configurations
 
-- [BigQuery using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/bigquery_mcp/)  
-Connect your IDE to BigQuery using Toolbox.
+- [BigQuery using
+  MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/bigquery_mcp/)
+  Connect your IDE to BigQuery using Toolbox.
 
 ## Requirements
 
@@ -77,7 +84,9 @@ user and group access to BigQuery resources like projects, datasets, and tables.
 
 ### Authentication via Application Default Credentials (ADC)
 
-By **default**, Toolbox will use your [Application Default Credentials (ADC)][adc] to authorize and authenticate when interacting with [BigQuery][bigquery-docs].
+By **default**, Toolbox will use your [Application Default Credentials
+(ADC)][adc] to authorize and authenticate when interacting with
+[BigQuery][bigquery-docs].
 
 When using this method, you need to ensure the IAM identity associated with your
 ADC (such as a service account) has the correct permissions for the queries you

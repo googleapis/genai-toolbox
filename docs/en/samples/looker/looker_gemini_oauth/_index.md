@@ -48,7 +48,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.14.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.16.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -64,6 +64,7 @@ In this section, we will download Toolbox and run the Toolbox server.
    ```bash
     export LOOKER_BASE_URL=https://looker.example.com
     export LOOKER_VERIFY_SSL=true
+    export LOOKER_USE_CLIENT_OAUTH=true
    ```
 
    In some instances you may need to append `:19999` to

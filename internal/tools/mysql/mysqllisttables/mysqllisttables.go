@@ -22,9 +22,9 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
-    "github.com/googleapis/genai-toolbox/internal/sources/mysql"
+	"github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-    "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
+	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
 )
 
 const kind string = "mysql-list-tables"
@@ -208,11 +208,11 @@ var _ compatibleSource = &mysql.Source{}
 var compatibleSources = [...]string{cloudsqlmysql.SourceKind, mysql.SourceKind}
 
 type Config struct {
-	Name               string           `yaml:"name" validate:"required"`
-	Kind               string           `yaml:"kind" validate:"required"`
-	Source             string           `yaml:"source" validate:"required"`
-	Description        string           `yaml:"description" validate:"required"`
-	AuthRequired       []string         `yaml:"authRequired"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description" validate:"required"`
+	AuthRequired []string `yaml:"authRequired"`
 }
 
 // validate interface
@@ -236,27 +236,21 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("table_names", "Optional: A comma-separated list of table names. If empty, details for all tables will be listed."),
+		tools.NewStringParameterWithDefault("table_names", "", "Optional: A comma-separated list of table names. If empty, details for all tables will be listed."),
 		tools.NewStringParameterWithDefault("output_format", "detailed", "Optional: Use 'simple' for names only or 'detailed' for full info."),
 	}
 	paramManifest := allParameters.Manifest()
-	inputSchema := allParameters.McpManifest()
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: inputSchema,
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	// finish tool setup
 	t := Tool{
-		Name:               cfg.Name,
-		Kind:               kind,
-		AllParams:          allParameters,
-		AuthRequired:       cfg.AuthRequired,
-		Pool:               s.MySQLPool(),
-		manifest:           tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:        mcpManifest,
+		Name:         cfg.Name,
+		Kind:         kind,
+		AllParams:    allParameters,
+		AuthRequired: cfg.AuthRequired,
+		Pool:         s.MySQLPool(),
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest:  mcpManifest,
 	}
 	return t, nil
 }
@@ -265,10 +259,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name               string           `yaml:"name"`
-	Kind               string           `yaml:"kind"`
-	AuthRequired       []string         `yaml:"authRequired"`
-	AllParams          tools.Parameters `yaml:"allParams"`
+	Name         string           `yaml:"name"`
+	Kind         string           `yaml:"kind"`
+	AuthRequired []string         `yaml:"authRequired"`
+	AllParams    tools.Parameters `yaml:"allParams"`
 
 	Pool        *sql.DB
 	manifest    tools.Manifest
@@ -280,12 +274,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	tableNames, ok := paramsMap["table_names"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", tableNames)
+		return nil, fmt.Errorf("invalid '%s' parameter; expected a string", tableNames)
 	}
 	outputFormat, _ := paramsMap["output_format"].(string)
-    if outputFormat != "simple" && outputFormat != "detailed" {
-        return nil, fmt.Errorf("invalid value for output_format: must be 'simple' or 'detailed', but got %q", outputFormat)
-    }
+	if outputFormat != "simple" && outputFormat != "detailed" {
+		return nil, fmt.Errorf("invalid value for output_format: must be 'simple' or 'detailed', but got %q", outputFormat)
+	}
 
 	results, err := t.Pool.QueryContext(ctx, listTablesStatement, tableNames, outputFormat)
 	if err != nil {
