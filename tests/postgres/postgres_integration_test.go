@@ -137,6 +137,9 @@ func TestPostgres(t *testing.T) {
 		t.Fatalf("unable to create postgres connection pool: %s", err)
 	}
 
+	// cleanup test environment
+	tests.CleanupPostgresTables(t, ctx, pool);
+
 	// create table name with UUID
 	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
@@ -238,6 +241,20 @@ func runPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth strin
 		wantStatusCode int
 		want           string
 	}{
+		{
+			name:           "invoke list_tables all tables detailed output",
+			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody:    bytes.NewBuffer([]byte(`{"table_names": ""}`)),
+			wantStatusCode: http.StatusOK,
+			want:           fmt.Sprintf("[%s,%s]", getDetailedWant(tableNameAuth, authTableColumns), getDetailedWant(tableNameParam, paramTableColumns)),
+		},
+		{
+			name:           "invoke list_tables all tables simple output",
+			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "simple"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           fmt.Sprintf("[%s,%s]", getSimpleWant(tableNameAuth), getSimpleWant(tableNameParam)),
+		},
 		{
 			name:           "invoke list_tables detailed output",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
