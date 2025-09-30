@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>AuthServices on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/authservices/</link><description>Recent content in AuthServices on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/authservices/index.xml" rel="self" type="application/rss+xml"/><item><title>Google Sign-In</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/authservices/google/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/authservices/google/</guid><description>&lt;h2 id="getting-started">Getting Started&lt;/h2>
+&lt;p>Google Sign-In manages the OAuth 2.0 flow and token lifecycle. To integrate the
+Google Sign-In workflow to your web app &lt;a href="https://developers.google.com/identity/sign-in/web/sign-in">follow this guide&lt;/a>.&lt;/p>
+&lt;p>After setting up the Google Sign-In workflow, you should have registered your
+application and retrieved a &lt;a href="https://developers.google.com/identity/sign-in/web/sign-in#create_authorization_credentials">Client ID&lt;/a>. Configure your auth service
+in with the &lt;code>Client ID&lt;/code>.&lt;/p>
+&lt;h2 id="behavior">Behavior&lt;/h2>
+&lt;h3 id="authorized-invocations">Authorized Invocations&lt;/h3>
+&lt;p>When using &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/#authorized-invocations">Authorized Invocations&lt;/a>, a tool will be
+considered authorized if it has a valid Oauth 2.0 token that matches the Client
+ID.&lt;/p></description></item></channel></rss>
