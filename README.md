@@ -33,7 +33,6 @@ documentation](https://googleapis.github.io/genai-toolbox/).
 - [Getting Started](#getting-started)
   - [Installing the server](#installing-the-server)
   - [Running the server](#running-the-server)
-    - [Homebrew Users](#homebrew-users)
   - [Integrating your application](#integrating-your-application)
 - [Configuration](#configuration)
   - [Sources](#sources)
@@ -115,13 +114,53 @@ following instructions for your OS and CPU architecture.
 To install Toolbox as a binary:
 
 <!-- {x-release-please-start-version} -->
-```sh
-# see releases page for other versions
-export VERSION=0.14.0
-curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
-chmod +x toolbox
-```
-
+> <details>
+> <summary>Linux (AMD64)</summary>
+>
+> To install Toolbox as a binary on Linux (AMD64):
+> ```sh
+> # see releases page for other versions
+> export VERSION=0.16.0
+> curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
+> chmod +x toolbox
+> ```
+>
+> </details>
+> <details>
+> <summary>macOS (Apple Silicon)</summary>
+>
+> To install Toolbox as a binary on macOS (Apple Silicon):
+> ```sh
+> # see releases page for other versions
+> export VERSION=0.16.0
+> curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
+> chmod +x toolbox
+> ```
+>
+> </details>
+> <details>
+> <summary>macOS (Intel)</summary>
+>
+> To install Toolbox as a binary on macOS (Intel):
+> ```sh
+> # see releases page for other versions
+> export VERSION=0.16.0
+> curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
+> chmod +x toolbox
+> ```
+>
+> </details>
+> <details>
+> <summary>Windows (AMD64)</summary>
+>
+> To install Toolbox as a binary on Windows (AMD64):
+> ```powershell
+> # see releases page for other versions
+> $VERSION = "0.16.0"
+> Invoke-WebRequest -Uri "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe" -OutFile "toolbox.exe"
+> ```
+>
+> </details>
 </details>
 
 <details>
@@ -130,7 +169,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.14.0
+export VERSION=0.16.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -154,9 +193,20 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.14.0
+go install github.com/googleapis/genai-toolbox@v0.16.0
 ```
 <!-- {x-release-please-end} -->
+
+</details>
+
+<details>
+<summary>Gemini CLI Extensions</summary>
+
+To install Gemini CLI Extensions for MCP Toolbox, run the following command:
+
+```sh
+gemini extensions install https://github.com/gemini-cli-extensions/mcp-toolbox
+```
 
 </details>
 
@@ -175,7 +225,8 @@ To run Toolbox from binary:
 ```
 
 ⓘ **NOTE:**  
-Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
+Toolbox enables dynamic reloading by default. To disable, use the
+`--disable-reload` flag.
 
 </details>
 
@@ -194,7 +245,8 @@ us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION \
 ```
 
 ⓘ **NOTE:**  
-The `-v` flag mounts your local `tools.yaml` into the container, and `-p` maps the container's port `5000` to your host's port `5000`.
+The `-v` flag mounts your local `tools.yaml` into the container, and `-p` maps
+the container's port `5000` to your host's port `5000`.
 
 </details>
 
@@ -202,14 +254,18 @@ The `-v` flag mounts your local `tools.yaml` into the container, and `-p` maps t
 
 <summary>Source</summary>
 
-To run the server directly from source, navigate to the project root directory and run:
+To run the server directly from source, navigate to the project root directory
+and run:
 
 ```sh
 go run .
 ```
 
 ⓘ **NOTE:**  
-This command runs the project from source, and is more suitable for development and testing. It does **not** compile a binary into your `$GOPATH`. If you want to compile a binary instead, refer the [Developer Documentation](./DEVELOPER.md#building-the-binary).
+This command runs the project from source, and is more suitable for development
+and testing. It does **not** compile a binary into your `$GOPATH`. If you want
+to compile a binary instead, refer the [Developer
+Documentation](./DEVELOPER.md#building-the-binary).
 
 </details>
 
@@ -217,11 +273,23 @@ This command runs the project from source, and is more suitable for development 
 
 <summary>Homebrew</summary>
 
-If you installed Toolbox using [Homebrew](https://brew.sh/), the `toolbox` binary is available in your system path. You can start the server with the same command:
+If you installed Toolbox using [Homebrew](https://brew.sh/), the `toolbox`
+binary is available in your system path. You can start the server with the same
+command:
 
 ```sh
 toolbox --tools-file "tools.yaml"
 ```
+
+</details>
+
+<details>
+
+<summary>Gemini CLI</summary>
+
+Interact with your custom tools using natural language. Check
+[gemini-cli-extensions/mcp-toolbox](https://github.com/gemini-cli-extensions/mcp-toolbox)
+for more information.
 
 </details>
 
@@ -231,7 +299,6 @@ terminate signal (`ctrl+c` on most platforms).
 For more detailed documentation on deploying to different environments, check
 out the resources in the [How-to
 section](https://googleapis.github.io/genai-toolbox/how-to/)
-
 
 ### Integrating your application
 
@@ -777,6 +844,7 @@ Since the project is in a pre-release stage (version `0.x.y`), we follow the
 standard conventions for initial  development:
 
 ### Pre-1.0.0 Versioning
+
 While the major version is `0`, the public API should be considered unstable.
 The version will be incremented  as follows:
 
@@ -786,6 +854,7 @@ The version will be incremented  as follows:
   backward-compatible bug fixes.
 
 ### Post-1.0.0 Versioning
+
 Once the project reaches a stable `1.0.0` release, the versioning will follow
 the more common convention:
 

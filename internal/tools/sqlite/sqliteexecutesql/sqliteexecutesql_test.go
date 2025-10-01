@@ -20,13 +20,13 @@ import (
 	"reflect"
 	"testing"
 
-	_ "modernc.org/sqlite"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/sqlite/sqliteexecutesql"
+	_ "modernc.org/sqlite"
 )
 
 func TestParseFromYamlExecuteSql(t *testing.T) {

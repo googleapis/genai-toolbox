@@ -123,6 +123,9 @@ func TestCloudSQLMSSQLToolEndpoints(t *testing.T) {
 		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
 	}
 
+	// cleanup test environment
+	tests.CleanupMSSQLTables(t, ctx, db)
+
 	// create table name with UUID
 	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
@@ -143,6 +146,7 @@ func TestCloudSQLMSSQLToolEndpoints(t *testing.T) {
 	toolsFile = tests.AddMSSQLExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMSSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CloudSQLMSSQLToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddMSSQLPrebuiltToolConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -167,6 +171,9 @@ func TestCloudSQLMSSQLToolEndpoints(t *testing.T) {
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+
+	// Run specific MSSQL tool tests
+	tests.RunMSSQLListTablesTest(t, tableNameParam, tableNameAuth)
 }
 
 // Test connection with different IP type

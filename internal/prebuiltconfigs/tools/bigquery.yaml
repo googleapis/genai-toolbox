@@ -63,6 +63,11 @@ tools:
     source: bigquery-source
     description: Use this tool to list tables.
 
+  search_catalog:
+    kind: bigquery-search-catalog
+    source: bigquery-source
+    description: Use this tool to find tables, views, models, routines or connections.
+
 toolsets:
   bigquery_database_tools:
     - analyze_contribution
@@ -73,3 +78,4 @@ toolsets:
     - get_table_info
     - list_dataset_ids
     - list_table_ids
+    - search_catalog
