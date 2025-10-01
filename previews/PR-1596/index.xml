@@ -5081,7 +5081,7 @@ explores, and data is required.&lt;/li>
 &lt;/ul>
 &lt;h2 id="looker-conversational-analytics">Looker Conversational Analytics&lt;/h2>
 &lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>lookerca&lt;/code>&lt;/li>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>looker-conversational-analytics&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
 &lt;li>&lt;code>LOOKER_BASE_URL&lt;/code>: The URL of your Looker instance.&lt;/li>

@@ -11251,7 +11251,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 
 ## Looker Conversational Analytics
 
-*   `--prebuilt` value: `lookerca`
+*   `--prebuilt` value: `looker-conversational-analytics`
 *   **Environment Variables:**
     *   `LOOKER_BASE_URL`: The URL of your Looker instance.
     *   `LOOKER_CLIENT_ID`: The client ID for the Looker API.
