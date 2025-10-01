@@ -10999,6 +10999,10 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_tables`: Lists tables in the database.
     *   `get_query_plan`: Provides information about how MySQL executes a SQL
         statement.
+    *   `list_active_queries`: Lists ongoing queries.
+    *   `list_tables_missing_unique_indexes`: Looks for tables that do not have
+        primary or unique key contraint.
+    *   `list_table_fragmentation`: Displays table fragmentation in MySQL.
 
 ## Cloud SQL for MySQL Observability
 
@@ -11274,6 +11278,10 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_tables`: Lists tables in the database.
     *   `get_query_plan`: Provides information about how MySQL executes a SQL
         statement.
+    *   `list_active_queries`: Lists ongoing queries.
+    *   `list_tables_missing_unique_indexes`: Looks for tables that do not have
+        primary or unique key contraint.
+    *   `list_table_fragmentation`: Displays table fragmentation in MySQL.
 
 ## OceanBase
 

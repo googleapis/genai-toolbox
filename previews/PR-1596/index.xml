@@ -4719,6 +4719,10 @@ execute queries.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Provides information about how MySQL executes a SQL
 statement.&lt;/li>
+&lt;li>&lt;code>list_active_queries&lt;/code>: Lists ongoing queries.&lt;/li>
+&lt;li>&lt;code>list_tables_missing_unique_indexes&lt;/code>: Looks for tables that do not have
+primary or unique key contraint.&lt;/li>
+&lt;li>&lt;code>list_table_fragmentation&lt;/code>: Displays table fragmentation in MySQL.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -5120,6 +5124,10 @@ execute queries.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Provides information about how MySQL executes a SQL
 statement.&lt;/li>
+&lt;li>&lt;code>list_active_queries&lt;/code>: Lists ongoing queries.&lt;/li>
+&lt;li>&lt;code>list_tables_missing_unique_indexes&lt;/code>: Looks for tables that do not have
+primary or unique key contraint.&lt;/li>
+&lt;li>&lt;code>list_table_fragmentation&lt;/code>: Displays table fragmentation in MySQL.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
