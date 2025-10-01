@@ -65,14 +65,14 @@ jobs:
       - run: npm ci
       - run: hugo --minify
         env:
-          HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/latest
+          HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/dev
           HUGO_RELATIVEURLS: false
 
       - name: Create Staging Directory
         run: |
           mkdir staging
-          mv public staging/latest
-          mv staging/latest/releases.releases staging/releases.releases
+          mv public staging/dev
+          mv staging/dev/releases.releases staging/releases.releases
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4

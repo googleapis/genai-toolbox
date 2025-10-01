@@ -45,8 +45,8 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
     sidebar_menu_compact = false
 
 [[params.versions]]
-  version = "Latest (Dev)"
-  url = "https://googleapis.github.io/genai-toolbox/latest/"
+  version = "Dev"
+  url = "https://googleapis.github.io/genai-toolbox/dev/"
 
 # RELEASE-PLEASE-VERSIONS-HOOK
 
