@@ -5047,6 +5047,10 @@ and validation errors.&lt;/li>
 &lt;li>&lt;code>LOOKER_CLIENT_ID&lt;/code>: The client ID for the Looker API.&lt;/li>
 &lt;li>&lt;code>LOOKER_CLIENT_SECRET&lt;/code>: The client secret for the Looker API.&lt;/li>
 &lt;li>&lt;code>LOOKER_VERIFY_SSL&lt;/code>: Whether to verify SSL certificates.&lt;/li>
+&lt;li>&lt;code>LOOKER_USE_CLIENT_OAUTH&lt;/code>: Whether to use OAuth for authentication.&lt;/li>
+&lt;li>&lt;code>LOOKER_SHOW_HIDDEN_MODELS&lt;/code>: Whether to show hidden models.&lt;/li>
+&lt;li>&lt;code>LOOKER_SHOW_HIDDEN_EXPLORES&lt;/code>: Whether to show hidden explores.&lt;/li>
+&lt;li>&lt;code>LOOKER_SHOW_HIDDEN_FIELDS&lt;/code>: Whether to show hidden fields.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -5072,6 +5076,41 @@ explores, and data is required.&lt;/li>
 &lt;li>&lt;code>get_dashboards&lt;/code>: Searches for saved dashboards.&lt;/li>
 &lt;li>&lt;code>make_dashboard&lt;/code>: Creates a new dashboard.&lt;/li>
 &lt;li>&lt;code>add_dashboard_element&lt;/code>: Adds a tile to a dashboard.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="looker-conversational-analytics">Looker Conversational Analytics&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>lookerca&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>LOOKER_BASE_URL&lt;/code>: The URL of your Looker instance.&lt;/li>
+&lt;li>&lt;code>LOOKER_CLIENT_ID&lt;/code>: The client ID for the Looker API.&lt;/li>
+&lt;li>&lt;code>LOOKER_CLIENT_SECRET&lt;/code>: The client secret for the Looker API.&lt;/li>
+&lt;li>&lt;code>LOOKER_VERIFY_SSL&lt;/code>: Whether to verify SSL certificates.&lt;/li>
+&lt;li>&lt;code>LOOKER_USE_CLIENT_OAUTH&lt;/code>: Whether to use OAuth for authentication.&lt;/li>
+&lt;li>&lt;code>LOOKER_PROJECT&lt;/code>: The GCP Project to use for Conversational Analytics.&lt;/li>
+&lt;li>&lt;code>LOOKER_LOCATION&lt;/code>: The GCP Location to use for Conversational Analytics.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>A Looker account with permissions to access the desired models,
+explores, and data is required.&lt;/li>
+&lt;li>&lt;strong>Looker Instance User&lt;/strong> (&lt;code>roles/looker.instanceUser&lt;/code>): IAM role to
+access Looker.&lt;/li>
+&lt;li>&lt;strong>Gemini for Google Cloud User&lt;/strong> (&lt;code>roles/cloudaicompanion.user&lt;/code>): IAM
+role to access Conversational Analytics.&lt;/li>
+&lt;li>&lt;strong>Gemini Data Analytics Stateless Chat User (Beta)&lt;/strong>
+(&lt;code>roles/geminidataanalytics.dataAgentStatelessUser&lt;/code>): IAM role to
+access Conversational Analytics.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>ask_data_insights&lt;/code>: Ask a question of the data.&lt;/li>
+&lt;li>&lt;code>get_models&lt;/code>: Retrieves the list of LookML models.&lt;/li>
+&lt;li>&lt;code>get_explores&lt;/code>: Retrieves the list of explores in a model.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
