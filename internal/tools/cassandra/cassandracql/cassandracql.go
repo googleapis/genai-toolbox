@@ -74,16 +74,12 @@ func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	allParameters, paramManifest, paramMcpManifest, err := tools.ProcessParameters(c.TemplateParameters, c.Parameters)
+	allParameters, paramManifest, err := tools.ProcessParameters(c.TemplateParameters, c.Parameters)
 	if err != nil {
 		return nil, err
 	}
 
-	mcpManifest := tools.McpManifest{
-		Name:        c.Name,
-		Description: c.Description,
-		InputSchema: paramMcpManifest,
-	}
+	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, allParameters)
 
 	t := Tool{
 		Name:               c.Name,
