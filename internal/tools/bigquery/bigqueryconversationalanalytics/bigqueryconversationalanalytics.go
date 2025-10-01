@@ -164,20 +164,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:               cfg.Name,
-		Kind:               kind,
-		Project:            s.BigQueryProject(),
-		Location:           s.BigQueryLocation(),
-		Parameters:         parameters,
-		AuthRequired:       cfg.AuthRequired,
-		Client:             s.BigQueryClient(),
-		UseClientOAuth:     s.UseClientAuthorization(),
-		TokenSource:        bigQueryTokenSourceWithScope,
-		manifest:           tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:        mcpManifest,
-		MaxQueryResultRows: s.GetMaxQueryResultRows(),
-		IsDatasetAllowed:   s.IsDatasetAllowed,
-		AllowedDatasets:    allowedDatasets,
+		Name:         cfg.Name,
+		Kind:         kind,
+		Parameters:   parameters,
+		AuthRequired: cfg.AuthRequired,
+		TokenSource:  bigQueryTokenSourceWithScope,
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:  mcpManifest,
 	}
 	return t, nil
 }
@@ -186,29 +179,24 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string           `yaml:"name"`
-	Kind           string           `yaml:"kind"`
-	AuthRequired   []string         `yaml:"authRequired"`
-	UseClientOAuth bool             `yaml:"useClientOAuth"`
-	Parameters     tools.Parameters `yaml:"parameters"`
+	Name         string           `yaml:"name"`
+	Kind         string           `yaml:"kind"`
+	AuthRequired []string         `yaml:"authRequired"`
+	Parameters   tools.Parameters `yaml:"parameters"`
 
-	Project            string
-	Location           string
-	Client             *bigqueryapi.Client
-	TokenSource        oauth2.TokenSource
-	manifest           tools.Manifest
-	mcpManifest        tools.McpManifest
-	MaxQueryResultRows int
-	IsDatasetAllowed   func(projectID, datasetID string) bool
-	AllowedDatasets    []string
+	Source      compatibleSource
+	TokenSource oauth2.TokenSource
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s := t.Source
 	var tokenStr string
 	var err error
 
 	// Get credentials for the API call
-	if t.UseClientOAuth {
+	if s.UseClientAuthorization() {
 		// Use client-side access token
 		if accessToken == "" {
 			return nil, fmt.Errorf("tool is configured for client OAuth but no token was provided in the request header: %w", tools.ErrUnauthorized)
@@ -243,17 +231,18 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		}
 	}
 
-	if len(t.AllowedDatasets) > 0 {
+	allowedDataset := s.BigQueryAllowedDatasets()
+	if len(allowedDataset) > 0 {
 		for _, tableRef := range tableRefs {
-			if !t.IsDatasetAllowed(tableRef.ProjectID, tableRef.DatasetID) {
+			if !s.IsDatasetAllowed(tableRef.ProjectID, tableRef.DatasetID) {
 				return nil, fmt.Errorf("access to dataset '%s.%s' (from table '%s') is not allowed", tableRef.ProjectID, tableRef.DatasetID, tableRef.TableID)
 			}
 		}
 	}
 
 	// Construct URL, headers, and payload
-	projectID := t.Project
-	location := t.Location
+	projectID := s.BigQueryClient()
+	location := s.BigQueryLocation()
 	if location == "" {
 		location = "us"
 	}
@@ -277,7 +266,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	// Call the streaming API
-	response, err := getStream(caURL, payload, headers, t.MaxQueryResultRows)
+	response, err := getStream(caURL, payload, headers, s.GetMaxQueryResultRows())
 	if err != nil {
 		return nil, fmt.Errorf("failed to get response from conversational analytics API: %w", err)
 	}
@@ -302,7 +291,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return t.UseClientOAuth
+	return t.Source.UseClientAuthorization()
 }
 
 // StreamMessage represents a single message object from the streaming API response.

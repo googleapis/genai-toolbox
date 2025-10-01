@@ -25,6 +25,7 @@ import (
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
@@ -245,6 +246,24 @@ func (s *Source) lazyInitDataplexClient(ctx context.Context, tracer trace.Tracer
 		})
 		return client, clientCreator, err
 	}
+}
+
+func (s *Source) RetrieveBQClient(accessToken tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+	bqClient := s.Client
+	restService := s.RestService
+
+	// Initialize new client if using user OAuth token
+	if s.UseClientOAuth {
+		tokenStr, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, nil, fmt.Errorf("error parsing access token: %w", err)
+		}
+		bqClient, restService, err = s.ClientCreator(tokenStr, true)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
+		}
+	}
+	return bqClient, restService, nil
 }
 
 func initBigQueryConnection(
