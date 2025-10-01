@@ -7481,7 +7481,8 @@ gcloud services enable cloudaicompanion.googleapis.com --project=project_id
 ### Google Cloud User
 
 You will need an Application Default Credential for Google Cloud. Your Google Cloud
-user must have the role `roles/looker.instanceUser`.
+user must have the roles `roles/looker.instanceUser` and
+`roles/cloudaicompanion.user`.
 
 To initialize the application default credential run `gcloud auth login --update-adc`
 in your environment before starting MCP Toolbox.
