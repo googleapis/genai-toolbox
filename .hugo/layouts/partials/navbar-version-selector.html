@@ -1,0 +1,12 @@
+{{ if .Site.Params.versions -}}
+<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+   {{ .Site.Params.version_menu }}
+</a>
+<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+   <div w3-include-html="/genai-toolbox/releases.releases" w3-include-html-default='<a class="dropdown-item" href="/genai-toolbox/latest/">Latest</a>'></div>
+   <script>
+     // This must run after the w3.js script has loaded.
+     w3.includeHTML();
+   </script>
+</div>
+{{ end -}}
