@@ -179,7 +179,7 @@ to use BigQuery, and then run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.16.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 

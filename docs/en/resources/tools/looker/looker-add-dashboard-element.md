@@ -3,8 +3,7 @@ title: "looker-add-dashboard-element"
 type: docs
 weight: 1
 description: >
-  "looker-add-dashboard-element" generates a Looker look in the users personal folder in
-  Looker
+  "looker-add-dashboard-element" creates a dashboard element in the given dashboard.
 aliases:
 - /resources/tools/looker-add-dashboard-element
 ---
