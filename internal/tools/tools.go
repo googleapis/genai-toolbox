@@ -99,6 +99,29 @@ type McpManifest struct {
 	Description string `json:"description,omitempty"`
 	// A JSON Schema object defining the expected parameters for the tool.
 	InputSchema McpToolsSchema `json:"inputSchema,omitempty"`
+	Metadata    map[string]any `json:"_meta,omitempty"`
+}
+
+func GetMcpManifest(name, desc string, authInvoke []string, params Parameters) McpManifest {
+	inputSchema, authParams := params.McpManifest()
+	mcpManifest := McpManifest{
+		Name:        name,
+		Description: desc,
+		InputSchema: inputSchema,
+	}
+
+	// construct metadata, if applicable
+	metadata := make(map[string]any)
+	if len(authInvoke) > 0 {
+		metadata["toolbox/authInvoke"] = authInvoke
+	}
+	if len(authParams) > 0 {
+		metadata["toolbox/authParam"] = authParams
+	}
+	if len(metadata) > 0 {
+		mcpManifest.Metadata = metadata
+	}
+	return mcpManifest
 }
 
 var ErrUnauthorized = errors.New("unauthorized")

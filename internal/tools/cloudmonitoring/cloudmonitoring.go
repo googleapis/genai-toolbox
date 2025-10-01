@@ -77,6 +77,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		tools.NewStringParameterWithRequired("query", "The promql query to execute.", true),
 	}
 
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
+
 	return Tool{
 		Name:        cfg.Name,
 		Kind:        kind,
@@ -86,7 +88,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		UserAgent:   s.UserAgent,
 		Client:      s.Client,
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest()},
-		mcpManifest: tools.McpManifest{Name: cfg.Name, Description: cfg.Description, InputSchema: allParameters.McpManifest()},
+		mcpManifest: mcpManifest,
 	}, nil
 }
 
