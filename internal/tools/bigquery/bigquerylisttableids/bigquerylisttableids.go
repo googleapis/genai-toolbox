@@ -25,6 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
 
@@ -53,6 +54,7 @@ type compatibleSource interface {
 	UseClientAuthorization() bool
 	IsDatasetAllowed(projectID, datasetID string) bool
 	BigQueryAllowedDatasets() []string
+	RetrieveBQClient(tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 }
 
 // validate compatible sources are still compatible
@@ -132,16 +134,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:             cfg.Name,
-		Kind:             kind,
-		Parameters:       parameters,
-		AuthRequired:     cfg.AuthRequired,
-		UseClientOAuth:   s.UseClientAuthorization(),
-		ClientCreator:    s.BigQueryClientCreator(),
-		Client:           s.BigQueryClient(),
-		IsDatasetAllowed: s.IsDatasetAllowed,
-		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:      mcpManifest,
+		Config:      cfg,
+		Parameters:  parameters,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -150,21 +146,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string           `yaml:"name"`
-	Kind           string           `yaml:"kind"`
-	AuthRequired   []string         `yaml:"authRequired"`
-	UseClientOAuth bool             `yaml:"useClientOAuth"`
-	Parameters     tools.Parameters `yaml:"parameters"`
-
-	Client           *bigqueryapi.Client
-	ClientCreator    bigqueryds.BigqueryClientCreator
-	IsDatasetAllowed func(projectID, datasetID string) bool
-	Statement        string
-	manifest         tools.Manifest
-	mcpManifest      tools.McpManifest
+	Config
+	Parameters  tools.Parameters
+	Source      compatibleSource
+	Statement   string
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s := t.Source
 	mapParams := params.AsMap()
 	projectId, ok := mapParams[projectKey].(string)
 	if !ok {
@@ -176,21 +167,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", datasetKey)
 	}
 
-	if !t.IsDatasetAllowed(projectId, datasetId) {
+	if !s.IsDatasetAllowed(projectId, datasetId) {
 		return nil, fmt.Errorf("access denied to dataset '%s' because it is not in the configured list of allowed datasets for project '%s'", datasetId, projectId)
 	}
 
-	bqClient := t.Client
-	// Initialize new client if using user OAuth token
-	if t.UseClientOAuth {
-		tokenStr, err := accessToken.ParseBearerToken()
-		if err != nil {
-			return nil, fmt.Errorf("error parsing access token: %w", err)
-		}
-		bqClient, _, err = t.ClientCreator(tokenStr, false)
-		if err != nil {
-			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
-		}
+	bqClient, _, err := s.RetrieveBQClient(accessToken)
+	if err != nil {
+		return nil, err
 	}
 
 	dsHandle := bqClient.DatasetInProject(projectId, datasetId)
@@ -234,5 +217,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return t.UseClientOAuth
+	return t.Source.UseClientAuthorization()
 }

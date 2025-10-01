@@ -82,9 +82,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	// Get the Dataplex client using the method from the source
-	makeCatalogClient := s.MakeDataplexCatalogClient()
-
 	prompt := tools.NewStringParameter("prompt", "Prompt representing search intention. Do not rewrite the prompt.")
 	datasetIds := tools.NewArrayParameterWithDefault("datasetIds", []any{}, "Array of dataset IDs.", tools.NewStringParameter("datasetId", "The IDs of the bigquery dataset."))
 	projectIds := tools.NewArrayParameterWithDefault("projectIds", []any{}, "Array of project IDs.", tools.NewStringParameter("projectId", "The IDs of the bigquery project."))
@@ -99,13 +96,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, parameters)
 
 	t := Tool{
-		Name:              cfg.Name,
-		Kind:              kind,
-		Parameters:        parameters,
-		AuthRequired:      cfg.AuthRequired,
-		UseClientOAuth:    s.UseClientAuthorization(),
-		MakeCatalogClient: makeCatalogClient,
-		ProjectID:         s.BigQueryProject(),
+		Config:     cfg,
+		Parameters: parameters,
+		Source:     s,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   parameters.Manifest(),
@@ -117,15 +110,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 }
 
 type Tool struct {
-	Name              string
-	Kind              string
-	Parameters        tools.Parameters
-	AuthRequired      []string
-	UseClientOAuth    bool
-	MakeCatalogClient func() (*dataplexapi.CatalogClient, bigqueryds.DataplexClientCreator, error)
-	ProjectID         string
-	manifest          tools.Manifest
-	mcpManifest       tools.McpManifest
+	Config
+	Parameters  tools.Parameters
+	Source      compatibleSource
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
@@ -133,7 +122,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return t.UseClientOAuth
+	return t.Source.UseClientAuthorization()
 }
 
 func constructSearchQueryHelper(predicate string, operator string, items []string) string {
@@ -206,6 +195,7 @@ func ExtractType(resourceString string) string {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s := t.Source
 	paramsMap := params.AsMap()
 	pageSize := int32(paramsMap["pageSize"].(int))
 	prompt, _ := paramsMap["prompt"].(string)
@@ -227,14 +217,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	req := &dataplexpb.SearchEntriesRequest{
 		Query:          fmt.Sprintf("%s %s", prompt, constructSearchQuery(projectIds, datasetIds, types)),
-		Name:           fmt.Sprintf("projects/%s/locations/global", t.ProjectID),
+		Name:           fmt.Sprintf("projects/%s/locations/global", s.BigQueryProject()),
 		PageSize:       pageSize,
 		SemanticSearch: true,
 	}
 
-	catalogClient, dataplexClientCreator, _ := t.MakeCatalogClient()
+	catalogClient, dataplexClientCreator, _ := s.MakeDataplexCatalogClient()()
 
-	if t.UseClientOAuth {
+	if s.UseClientAuthorization() {
 		tokenStr, err := accessToken.ParseBearerToken()
 		if err != nil {
 			return nil, fmt.Errorf("error parsing access token: %w", err)
@@ -247,7 +237,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	it := catalogClient.SearchEntries(ctx, req)
 	if it == nil {
-		return nil, fmt.Errorf("failed to create search entries iterator for project %q", t.ProjectID)
+		return nil, fmt.Errorf("failed to create search entries iterator for project %q", s.BigQueryProject())
 	}
 
 	var results []Response

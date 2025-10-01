@@ -50,6 +50,7 @@ type compatibleSource interface {
 	BigQueryRestService() *bigqueryrestapi.Service
 	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
 	UseClientAuthorization() bool
+	RetrieveBQClient(tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 }
 
 // validate compatible sources are still compatible
@@ -122,16 +123,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:           cfg.Name,
-		Kind:           kind,
-		Parameters:     parameters,
-		AuthRequired:   cfg.AuthRequired,
-		UseClientOAuth: s.UseClientAuthorization(),
-		ClientCreator:  s.BigQueryClientCreator(),
-		Client:         s.BigQueryClient(),
-		RestService:    s.BigQueryRestService(),
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:    mcpManifest,
+		Config:      cfg,
+		Parameters:  parameters,
+		Source:      s,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -140,21 +136,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string           `yaml:"name"`
-	Kind           string           `yaml:"kind"`
-	AuthRequired   []string         `yaml:"authRequired"`
-	UseClientOAuth bool             `yaml:"useClientOAuth"`
-	Parameters     tools.Parameters `yaml:"parameters"`
-
-	Client        *bigqueryapi.Client
-	RestService   *bigqueryrestapi.Service
-	ClientCreator bigqueryds.BigqueryClientCreator
-	manifest      tools.Manifest
-	mcpManifest   tools.McpManifest
+	Config
+	Parameters  tools.Parameters
+	Source      compatibleSource
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 // Invoke runs the contribution analysis.
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s := t.Source
 	paramsMap := params.AsMap()
 	inputData, ok := paramsMap["input_data"].(string)
 	if !ok {
@@ -206,19 +197,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		inputDataSource,
 	)
 
-	bqClient := t.Client
-	var err error
-
-	// Initialize new client if using user OAuth token
-	if t.UseClientOAuth {
-		tokenStr, err := accessToken.ParseBearerToken()
-		if err != nil {
-			return nil, fmt.Errorf("error parsing access token: %w", err)
-		}
-		bqClient, _, err = t.ClientCreator(tokenStr, false)
-		if err != nil {
-			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
-		}
+	bqClient, _, err := s.RetrieveBQClient(accessToken)
+	if err != nil {
+		return nil, err
 	}
 
 	createModelQuery := bqClient.Query(createModelSQL)
@@ -299,5 +280,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return t.UseClientOAuth
+	return t.Source.UseClientAuthorization()
 }

@@ -26,9 +26,7 @@ import (
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
-	"github.com/googleapis/genai-toolbox/internal/util"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
-	"google.golang.org/api/iterator"
 )
 
 const kind string = "bigquery-execute-sql"
@@ -54,6 +52,7 @@ type compatibleSource interface {
 	UseClientAuthorization() bool
 	IsDatasetAllowed(projectID, datasetID string) bool
 	BigQueryAllowedDatasets() []string
+	RetrieveBQClient(tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 }
 
 // validate compatible sources are still compatible
@@ -122,18 +121,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:             cfg.Name,
-		Kind:             kind,
-		Parameters:       parameters,
-		AuthRequired:     cfg.AuthRequired,
-		UseClientOAuth:   s.UseClientAuthorization(),
-		ClientCreator:    s.BigQueryClientCreator(),
-		Client:           s.BigQueryClient(),
-		RestService:      s.BigQueryRestService(),
-		IsDatasetAllowed: s.IsDatasetAllowed,
-		AllowedDatasets:  allowedDatasets,
-		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:      mcpManifest,
+		Config:      cfg,
+		Parameters:  parameters,
+		Source:      s,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -142,22 +134,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string           `yaml:"name"`
-	Kind           string           `yaml:"kind"`
-	AuthRequired   []string         `yaml:"authRequired"`
-	UseClientOAuth bool             `yaml:"useClientOAuth"`
-	Parameters     tools.Parameters `yaml:"parameters"`
-
-	Client           *bigqueryapi.Client
-	RestService      *bigqueryrestapi.Service
-	ClientCreator    bigqueryds.BigqueryClientCreator
-	IsDatasetAllowed func(projectID, datasetID string) bool
-	AllowedDatasets  []string
-	manifest         tools.Manifest
-	mcpManifest      tools.McpManifest
+	Config
+	Parameters  tools.Parameters
+	Source      compatibleSource
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s := t.Source
 	paramsMap := params.AsMap()
 	sql, ok := paramsMap["sql"].(string)
 	if !ok {
@@ -168,20 +153,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("unable to cast dry_run parameter %s", paramsMap["dry_run"])
 	}
 
-	bqClient := t.Client
-	restService := t.RestService
-
-	var err error
-	// Initialize new client if using user OAuth token
-	if t.UseClientOAuth {
-		tokenStr, err := accessToken.ParseBearerToken()
-		if err != nil {
-			return nil, fmt.Errorf("error parsing access token: %w", err)
-		}
-		bqClient, restService, err = t.ClientCreator(tokenStr, true)
-		if err != nil {
-			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
-		}
+	bqClient, restService, err := s.RetrieveBQClient(accessToken)
+	if err != nil {
+		return nil, err
 	}
 
 	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, sql, nil, nil)
@@ -189,8 +163,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("query validation failed during dry run: %w", err)
 	}
 	statementType := dryRunJob.Statistics.Query.StatementType
-
-	if len(t.AllowedDatasets) > 0 {
+	if len(s.BigQueryAllowedDatasets()) > 0 {
 		switch statementType {
 		case "CREATE_SCHEMA", "DROP_SCHEMA", "ALTER_SCHEMA":
 			return nil, fmt.Errorf("dataset-level operations like '%s' are not allowed when dataset restrictions are in place", statementType)
@@ -225,7 +198,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		} else if statementType != "SELECT" {
 			// If dry run yields no tables, fall back to the parser for non-SELECT statements
 			// to catch unsafe operations like EXECUTE IMMEDIATE.
-			parsedTables, parseErr := bqutil.TableParser(sql, t.Client.Project())
+			parsedTables, parseErr := bqutil.TableParser(sql, t.Source.BigQueryClient().Project())
 			if parseErr != nil {
 				// If parsing fails (e.g., EXECUTE IMMEDIATE), we cannot guarantee safety, so we must fail.
 				return nil, fmt.Errorf("could not parse tables from query to validate against allowed datasets: %w", parseErr)
@@ -237,7 +210,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			parts := strings.Split(tableID, ".")
 			if len(parts) == 3 {
 				projectID, datasetID := parts[0], parts[1]
-				if !t.IsDatasetAllowed(projectID, datasetID) {
+				if !s.IsDatasetAllowed(projectID, datasetID) {
 					return nil, fmt.Errorf("query accesses dataset '%s.%s', which is not in the allowed list", projectID, datasetID)
 				}
 			}
@@ -259,51 +232,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	query := bqClient.Query(sql)
 	query.Location = bqClient.Location
 
-	// Log the query executed for debugging.
-	logger, err := util.LoggerFromContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("error getting logger: %s", err)
-	}
-	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
-
-	// This block handles SELECT statements, which return a row set.
-	// We iterate through the results, convert each row into a map of
-	// column names to values, and return the collection of rows.
-	var out []any
-	it, err := query.Read(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-	for {
-		var row map[string]bigqueryapi.Value
-		err = it.Next(&row)
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("unable to iterate through query results: %w", err)
-		}
-		vMap := make(map[string]any)
-		for key, value := range row {
-			vMap[key] = value
-		}
-		out = append(out, vMap)
-	}
-	// If the query returned any rows, return them directly.
-	if len(out) > 0 {
-		return out, nil
-	}
-
-	// This handles the standard case for a SELECT query that successfully
-	// executes but returns zero rows.
-	if statementType == "SELECT" {
-		return "The query returned 0 rows.", nil
-	}
-	// This is the fallback for a successful query that doesn't return content.
-	// In most cases, this will be for DML/DDL statements like INSERT, UPDATE, CREATE, etc.
-	// However, it is also possible that this was a query that was expected to return rows
-	// but returned none, a case that we cannot distinguish here.
-	return "Query executed successfully and returned no content.", nil
+	return bqutil.RunQuery(ctx, sql, query)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
@@ -323,5 +252,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return t.UseClientOAuth
+	return t.Source.UseClientAuthorization()
 }

@@ -28,7 +28,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
-	"google.golang.org/api/iterator"
 )
 
 const kind string = "bigquery-sql"
@@ -52,6 +51,7 @@ type compatibleSource interface {
 	BigQueryRestService() *bigqueryrestapi.Service
 	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
 	UseClientAuthorization() bool
+	RetrieveBQClient(tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 }
 
 // validate compatible sources are still compatible
@@ -99,20 +99,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:               cfg.Name,
-		Kind:               kind,
-		AuthRequired:       cfg.AuthRequired,
-		Parameters:         cfg.Parameters,
-		TemplateParameters: cfg.TemplateParameters,
-		AllParams:          allParameters,
-
-		Statement:      cfg.Statement,
-		UseClientOAuth: s.UseClientAuthorization(),
-		Client:         s.BigQueryClient(),
-		RestService:    s.BigQueryRestService(),
-		ClientCreator:  s.BigQueryClientCreator(),
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:    mcpManifest,
+		Config:      cfg,
+		AllParams:   allParameters,
+		Source:      s,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -121,32 +112,24 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name               string           `yaml:"name"`
-	Kind               string           `yaml:"kind"`
-	AuthRequired       []string         `yaml:"authRequired"`
-	UseClientOAuth     bool             `yaml:"useClientOAuth"`
-	Parameters         tools.Parameters `yaml:"parameters"`
-	TemplateParameters tools.Parameters `yaml:"templateParameters"`
-	AllParams          tools.Parameters `yaml:"allParams"`
+	Config
+	AllParams tools.Parameters `yaml:"allParams"`
 
-	Statement     string
-	Client        *bigqueryapi.Client
-	RestService   *bigqueryrestapi.Service
-	ClientCreator bigqueryds.BigqueryClientCreator
-	manifest      tools.Manifest
-	mcpManifest   tools.McpManifest
+	Source      compatibleSource
+	Statement   string
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
-	highLevelParams := make([]bigqueryapi.QueryParameter, 0, len(t.Parameters))
-	lowLevelParams := make([]*bigqueryrestapi.QueryParameter, 0, len(t.Parameters))
-
 	paramsMap := params.AsMap()
-	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
+	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Config.Statement, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("unable to extract template params %w", err)
 	}
 
+	highLevelParams := make([]bigqueryapi.QueryParameter, 0, len(t.Parameters))
+	lowLevelParams := make([]*bigqueryrestapi.QueryParameter, 0, len(t.Parameters))
 	for _, p := range t.Parameters {
 		name := p.GetName()
 		value := paramsMap[name]
@@ -214,71 +197,23 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		lowLevelParams = append(lowLevelParams, lowLevelParam)
 	}
 
-	bqClient := t.Client
-	restService := t.RestService
-
-	// Initialize new client if using user OAuth token
-	if t.UseClientOAuth {
-		tokenStr, err := accessToken.ParseBearerToken()
-		if err != nil {
-			return nil, fmt.Errorf("error parsing access token: %w", err)
-		}
-		bqClient, restService, err = t.ClientCreator(tokenStr, true)
-		if err != nil {
-			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
-		}
+	bqClient, restService, err := t.Source.RetrieveBQClient(accessToken)
+	if err != nil {
+		return nil, err
 	}
 
 	query := bqClient.Query(newStatement)
 	query.Parameters = highLevelParams
 	query.Location = bqClient.Location
 
-	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, newStatement, lowLevelParams, query.ConnectionProperties)
+	_, err = bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, newStatement, lowLevelParams, query.ConnectionProperties)
 	if err != nil {
 		// This is a fallback check in case the switch logic was bypassed.
 		return nil, fmt.Errorf("final query validation failed: %w", err)
 	}
-	statementType := dryRunJob.Statistics.Query.StatementType
 
-	// This block handles SELECT statements, which return a row set.
-	// We iterate through the results, convert each row into a map of
-	// column names to values, and return the collection of rows.
-	it, err := query.Read(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
+	return bqutil.RunQuery(ctx, newStatement, query)
 
-	var out []any
-	for {
-		var row map[string]bigqueryapi.Value
-		err = it.Next(&row)
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("unable to iterate through query results: %w", err)
-		}
-		vMap := make(map[string]any)
-		for key, value := range row {
-			vMap[key] = value
-		}
-		out = append(out, vMap)
-	}
-	// If the query returned any rows, return them directly.
-	if len(out) > 0 {
-		return out, nil
-	}
-
-	// This handles the standard case for a SELECT query that successfully
-	// executes but returns zero rows.
-	if statementType == "SELECT" {
-		return "The query returned 0 rows.", nil
-	}
-	// This is the fallback for a successful query that doesn't return content.
-	// In most cases, this will be for DML/DDL statements like INSERT, UPDATE, CREATE, etc.
-	// However, it is also possible that this was a query that was expected to return rows
-	// but returned none, a case that we cannot distinguish here.
-	return "Query executed successfully and returned no content.", nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
@@ -298,7 +233,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return t.UseClientOAuth
+	return t.Source.UseClientAuthorization()
 }
 
 func BQTypeStringFromToolType(toolType string) (string, error) {
