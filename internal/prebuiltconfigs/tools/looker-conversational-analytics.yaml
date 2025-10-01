@@ -51,7 +51,7 @@ tools:
           It takes one parameter, the model_name looked up from get_models.
 
 toolsets:
-    lookerca_tools:
+    looker_conversational_analytics_tools:
         - ask_data_insights
         - get_models
         - get_explores

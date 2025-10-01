@@ -1244,7 +1244,7 @@ func TestPrebuiltTools(t *testing.T) {
 	mysql_config, _ := prebuiltconfigs.Get("mysql")
 	mssql_config, _ := prebuiltconfigs.Get("mssql")
 	looker_config, _ := prebuiltconfigs.Get("looker")
-	lookerca_config, _ := prebuiltconfigs.Get("lookerca")
+	lookerca_config, _ := prebuiltconfigs.Get("looker-conversational-analytics")
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
@@ -1502,11 +1502,11 @@ func TestPrebuiltTools(t *testing.T) {
 			},
 		},
 		{
-			name: "lookerca prebuilt tools",
+			name: "looker-conversational-analytics prebuilt tools",
 			in:   lookerca_config,
 			wantToolset: server.ToolsetConfigs{
-				"lookerca_tools": tools.ToolsetConfig{
-					Name:      "lookerca_tools",
+				"looker_conversational_analytics_tools": tools.ToolsetConfig{
+					Name:      "looker_conversational_analytics_tools",
 					ToolNames: []string{"ask_data_insights", "get_models", "get_explores"},
 				},
 			},
