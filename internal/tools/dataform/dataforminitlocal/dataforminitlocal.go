@@ -56,7 +56,9 @@ func (cfg Config) ToolConfigKind() string {
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("project_dir", "The Dataform project directory."),
+		tools.NewStringParameter("project_dir", "The directory to initialize a Dataform project under."),
+		tools.NewStringParameter("default_database", "The default database to use, equivalent to Google Cloud Project ID."),
+		tools.NewStringParameter("default_location", "The default location to use."),
 	}
 	paramManifest := allParameters.Manifest()
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
@@ -89,13 +91,23 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	projectDir, ok := paramsMap["project_dir"].(string)
 	if !ok || projectDir == "" {
-		return nil, fmt.Errorf("error casting 'project_dir' to string or invalid value")
+		return nil, fmt.Errorf("missing required parameter 'project_dir'")
 	}
 
-	cmd := exec.CommandContext(ctx, "dataform", "compile", projectDir, "--json")
+	defaultDatabase, ok := paramsMap["default_database"].(string)
+	if !ok || defaultDatabase == "" {
+		return nil, fmt.Errorf("missing required parameter 'default_database'")
+	}
+
+	defaultLocation, ok := paramsMap["default_location"].(string)
+	if !ok || defaultLocation == "" {
+		return nil, fmt.Errorf("missing required parameter 'default_location'")
+	}
+
+	cmd := exec.CommandContext(ctx, "dataform", "init", projectDir, defaultDatabase, defaultLocation)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, fmt.Errorf("error executing dataform compile: %w\nOutput: %s", err, string(output))
+		return nil, fmt.Errorf("error executing dataform init: %w\nOutput: %s", err, string(output))
 	}
 
 	return strings.TrimSpace(string(output)), nil

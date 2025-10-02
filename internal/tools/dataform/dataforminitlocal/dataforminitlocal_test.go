@@ -21,10 +21,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/dataform/dataformcompilelocal"
+	"github.com/googleapis/genai-toolbox/internal/tools/dataform/dataforminitlocal"
 )
 
-func TestParseFromYamlDataformCompile(t *testing.T) {
+func TestParseFromYamlDataformInit(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -43,7 +43,7 @@ func TestParseFromYamlDataformCompile(t *testing.T) {
 					description: some description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": dataformcompilelocal.Config{
+				"example_tool": dataforminitlocal.Config{
 					Name:         "example_tool",
 					Kind:         "dataform-init-local",
 					Description:  "some description",
