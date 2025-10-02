@@ -381,6 +381,9 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_dashboards`: Searches for saved dashboards.
     *   `make_dashboard`: Creates a new dashboard.
     *   `add_dashboard_element`: Adds a tile to a dashboard.
+    *   `health_pulse`: Test the health of a Looker instance.
+    *   `health_analyze`: Analyze the LookML usage of a Looker instance.
+    *   `health_vacuum`: Suggest LookML elements that can be removed.
 
 ## Looker Conversational Analytics
 
