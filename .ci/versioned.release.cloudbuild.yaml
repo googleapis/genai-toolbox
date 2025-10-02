@@ -144,7 +144,7 @@ steps:
   - id: "store-darwin-arm64"
     name: "gcr.io/cloud-builders/gcloud:latest"
     waitFor:
-      - "sign-darwin-arm6s64"
+      - "sign-darwin-arm64"
     script: |
         #!/usr/bin/env bash
         set -e
