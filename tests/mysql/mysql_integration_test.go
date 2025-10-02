@@ -87,6 +87,9 @@ func TestMySQLToolEndpoints(t *testing.T) {
 		t.Fatalf("unable to create MySQL connection pool: %s", err)
 	}
 
+	// cleanup test environment
+	tests.CleanupMySQLTables(t, ctx, pool)
+
 	// create table name with UUID
 	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
