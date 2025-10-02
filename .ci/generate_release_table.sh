@@ -43,7 +43,7 @@ do
         URL="https://storage.googleapis.com/genai-toolbox/$VERSION/$OS/$ARCH/toolbox"
     fi
 
-    # Generate the signature URL and link
+    # Generate the signature URL & link
     SIG_URL="${URL}.sig"
     SIG_LINK="[.sig]($SIG_URL)"
 
