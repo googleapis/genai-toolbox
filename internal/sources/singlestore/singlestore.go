@@ -17,8 +17,10 @@ package singlestore
 import (
 	"context"
 	"database/sql"
+	"net/url"
 	"fmt"
 	"time"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/goccy/go-yaml"
@@ -108,7 +110,17 @@ func initSingleStoreConnectionPool(ctx context.Context, tracer trace.Tracer, nam
 	defer span.End()
 
 	// Configure the driver to connect to the database
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, pass, host, port, dbname)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&vector_type_project_format=JSON", user, pass, host, port, dbname)
+
+	// Add connection attributes to DSN
+	customAttrs := []string{"_connector_name"}
+	customAttrValues := []string{"MCP toolbox for Databases"}
+
+	customAttrStrs := make([]string, len(customAttrs))
+	for i := range customAttrs {
+		customAttrStrs[i] = fmt.Sprintf("%s:%s", customAttrs[i], customAttrValues[i])
+	}
+	dsn += "&connectionAttributes=" + url.QueryEscape(strings.Join(customAttrStrs, ","))
 
 	// Add query timeout to DSN if specified
 	if queryTimeout != "" {
