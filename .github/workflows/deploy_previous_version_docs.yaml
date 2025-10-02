@@ -44,16 +44,18 @@ jobs:
           # Sparse checkout to only get the content directory
           sparse-checkout: |
             docs
+
       - name: Replace content with old version
         run: |
           # Remove the current content directory from the main branch checkout
           rm -rf docs/
           # Move the old content directory into place
           mv ./old_version_source/docs docs
+
       - name: Setup Hugo and Node
         uses: peaceiris/actions-hugo@v3
         with:
-          hugo-version: "0.145.0" # Use your actual Hugo version
+          hugo-version: "0.145.0"
           extended: true
       - uses: actions/setup-node@v4
         with:
