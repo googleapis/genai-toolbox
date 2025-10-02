@@ -117,6 +117,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `BIGQUERY_PROJECT`: The GCP project ID.
     *   `BIGQUERY_LOCATION`: (Optional) The dataset location.
 *   **Permissions:**
+    *   **BigQuery Data Viewer** (`roles/bigquery.dataViewer`) to view data and
+        metadata.
     *   **BigQuery User** (`roles/bigquery.user`) to execute queries and view
         metadata.
     *   **Gemini for Google Cloud** (`roles/cloudaicompanion.user`) to use the
@@ -124,6 +126,9 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 *   **Tools:**
     *   `list_data_agents`: Lists all available Conversational Analytics data
         agents for a given project.
+*   **Note:** If you encounter API or permission issues, see the setup and
+    authentication section of the Conversational Analytics API
+    documentation.
 
 ## Cloud SQL for MySQL
 
