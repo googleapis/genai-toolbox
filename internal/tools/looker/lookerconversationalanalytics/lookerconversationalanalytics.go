@@ -209,17 +209,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name             string `yaml:"name"`
-	Kind             string `yaml:"kind"`
-	ApiSettings      *rtl.ApiSettings
-	AuthRequired     []string         `yaml:"authRequired"`
-	UseClientOAuth   bool             `yaml:"useClientOAuth"`
-	Parameters       tools.Parameters `yaml:"parameters"`
-	Project          string
-	Location         string
-	TokenSource      oauth2.TokenSource
-	manifest         tools.Manifest
-	mcpManifest      tools.McpManifest
+	Name           string `yaml:"name"`
+	Kind           string `yaml:"kind"`
+	ApiSettings    *rtl.ApiSettings
+	AuthRequired   []string         `yaml:"authRequired"`
+	UseClientOAuth bool             `yaml:"useClientOAuth"`
+	Parameters     tools.Parameters `yaml:"parameters"`
+	Project        string
+	Location       string
+	TokenSource    oauth2.TokenSource
+	manifest       tools.Manifest
+	mcpManifest    tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
@@ -267,9 +267,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	// Construct URL, headers, and payload
 	projectID := t.Project
 	location := t.Location
-	if location == "" {
-		location = "us"
-	}
 	caURL := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1beta/projects/%s/locations/%s:chat", url.PathEscape(projectID), url.PathEscape(location))
 
 	headers := map[string]string{
