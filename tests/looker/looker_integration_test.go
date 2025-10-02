@@ -792,8 +792,17 @@ func TestLooker(t *testing.T) {
 	wantResult = "\"Connection\":\"thelook\""
 	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_db_connections"}`), wantResult)
 
+	wantResult = "[]"
+	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_schedule_failures"}`), wantResult)
+
+	wantResult = "[{\"Feature\":\"Unsupported in Looker (Google Cloud core)\"}]"
+	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_legacy_features"}`), wantResult)
+
 	wantResult = "\"Project\":\"the_look\""
 	tests.RunToolInvokeParametersTest(t, "health_analyze", []byte(`{"action": "projects"}`), wantResult)
+
+	wantResult = "\"Model\":\"the_look\""
+	tests.RunToolInvokeParametersTest(t, "health_analyze", []byte(`{"action": "explores", "project": "the_look", "model": "the_look", "explore": "inventory_items"}`), wantResult)
 
 	wantResult = "\"Model\":\"the_look\""
 	tests.RunToolInvokeParametersTest(t, "health_vacuum", []byte(`{"action": "models"}`), wantResult)
