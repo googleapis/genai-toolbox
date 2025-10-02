@@ -739,27 +739,16 @@ func runConversationalAnalytics(t *testing.T, modelName, exploreName string) {
 			if err != nil {
 				t.Fatalf("failed to marshal request body: %v", err)
 			}
-			body := bytes.NewBuffer(bodyBytes)
-
-			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/api/tool/conversational_analytics/invoke", body)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
+			url := "http://127.0.0.1:5000/api/tool/conversational_analytics/invoke"
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, url, bytes.NewBuffer(bodyBytes), nil)
 
 			if resp.StatusCode != tc.wantStatusCode {
-				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 
 			if tc.wantInResult != "" {
 				var respBody map[string]interface{}
-				if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
+				if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
 					t.Fatalf("error parsing response body: %v", err)
 				}
 				got, ok := respBody["result"].(string)
@@ -772,7 +761,6 @@ func runConversationalAnalytics(t *testing.T, modelName, exploreName string) {
 			}
 
 			if tc.wantInError != "" {
-				bodyBytes, _ := io.ReadAll(resp.Body)
 				if !strings.Contains(string(bodyBytes), tc.wantInError) {
 					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
 				}

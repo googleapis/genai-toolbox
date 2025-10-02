@@ -1328,10 +1328,6 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("LOOKER_CLIENT_SECRET", "your_looker_client_secret")
 	t.Setenv("LOOKER_VERIFY_SSL", "true")
 
-	t.Setenv("LOOKER_BASE_URL", "https://your_company.looker.com")
-	t.Setenv("LOOKER_CLIENT_ID", "your_looker_client_id")
-	t.Setenv("LOOKER_CLIENT_SECRET", "your_looker_client_secret")
-	t.Setenv("LOOKER_VERIFY_SSL", "true")
 	t.Setenv("LOOKER_PROJECT", "your_project_id")
 	t.Setenv("LOOKER_LOCATION", "us")
 
