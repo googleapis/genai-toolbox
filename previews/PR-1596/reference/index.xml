@@ -627,6 +627,9 @@ explores, and data is required.&lt;/li>
 &lt;li>&lt;code>get_dashboards&lt;/code>: Searches for saved dashboards.&lt;/li>
 &lt;li>&lt;code>make_dashboard&lt;/code>: Creates a new dashboard.&lt;/li>
 &lt;li>&lt;code>add_dashboard_element&lt;/code>: Adds a tile to a dashboard.&lt;/li>
+&lt;li>&lt;code>health_pulse&lt;/code>: Test the health of a Looker instance.&lt;/li>
+&lt;li>&lt;code>health_analyze&lt;/code>: Analyze the LookML usage of a Looker instance.&lt;/li>
+&lt;li>&lt;code>health_vacuum&lt;/code>: Suggest LookML elements that can be removed.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
