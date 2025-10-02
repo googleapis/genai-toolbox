@@ -78,19 +78,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	paramManifest := allParameters.Manifest()
 
-	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"project", "location", "cluster", "user"}
-
 	description := cfg.Description
 	if description == "" {
 		description = "Retrieves details about a specific AlloyDB user."
 	}
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: description,
-		InputSchema: inputSchema,
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters)
 
 	return Tool{
 		Name:        cfg.Name,

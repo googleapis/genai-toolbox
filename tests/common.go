@@ -21,6 +21,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/goccy/go-yaml"
@@ -803,4 +804,99 @@ func TestCloudSQLMySQL_IPTypeParsingFromYAML(t *testing.T) {
 			}
 		})
 	}
+}
+
+// Finds and drops all tables in a postgres database.
+func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	query := `
+	SELECT table_name FROM information_schema.tables 
+	WHERE table_schema = 'public' AND table_type = 'BASE TABLE';`
+
+	rows, err := pool.Query(ctx, query)
+	if err != nil {
+		t.Fatalf("Failed to query for all tables in 'public' schema: %v", err)
+	}
+	defer rows.Close()
+
+	var tablesToDrop []string
+	for rows.Next() {
+		var tableName string
+		if err := rows.Scan(&tableName); err != nil {
+			t.Errorf("Failed to scan table name: %v", err)
+			continue
+		}
+		tablesToDrop = append(tablesToDrop, fmt.Sprintf("public.%q", tableName))
+	}
+
+	if len(tablesToDrop) == 0 {
+		return
+	}
+
+	dropQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE;", strings.Join(tablesToDrop, ", "))
+
+	if _, err := pool.Exec(ctx, dropQuery); err != nil {
+		t.Fatalf("Failed to drop all tables in 'public' schema: %v", err)
+	}
+}
+
+// Finds and drops all tables in a mysql database.
+func CleanupMySQLTables(t *testing.T, ctx context.Context, pool *sql.DB) {
+	query := `
+	SELECT table_name FROM information_schema.tables 
+	WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';`
+
+	rows, err := pool.QueryContext(ctx, query)
+	if err != nil {
+		t.Fatalf("Failed to query for all MySQL tables: %v", err)
+	}
+	defer rows.Close()
+
+	var tablesToDrop []string
+	for rows.Next() {
+		var tableName string
+		if err := rows.Scan(&tableName); err != nil {
+			t.Errorf("Failed to scan MySQL table name: %v", err)
+			continue
+		}
+		tablesToDrop = append(tablesToDrop, fmt.Sprintf("`%s`", tableName))
+	}
+
+	if len(tablesToDrop) == 0 {
+		return
+	}
+
+	// Disable foreign key checks, drop all tables and re-enable
+	if _, err := pool.ExecContext(ctx, "SET FOREIGN_KEY_CHECKS = 0;"); err != nil {
+		t.Fatalf("Failed to disable MySQL foreign key checks: %v", err)
+	}
+
+	dropQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s;", strings.Join(tablesToDrop, ", "))
+
+	if _, err := pool.ExecContext(ctx, dropQuery); err != nil {
+		// Try to re-enable checks even if drop fails
+		if _, err := pool.ExecContext(ctx, "SET FOREIGN_KEY_CHECKS = 1;"); err != nil {
+			t.Logf("Also failed to re-enable foreign key checks: %v", err)
+		}
+		t.Fatalf("Failed to drop all MySQL tables: %v", err)
+	}
+
+	// Re-enable foreign key checks
+	if _, err := pool.ExecContext(ctx, "SET FOREIGN_KEY_CHECKS = 1;"); err != nil {
+		t.Fatalf("Failed to re-enable MySQL foreign key checks: %v", err)
+	}
+}
+
+// Finds and drops all tables in an mssql database.
+func CleanupMSSQLTables(t *testing.T, ctx context.Context, pool *sql.DB) {
+	disableConstraintsCmd := "EXEC sp_MSforeachtable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL'"
+	if _, err := pool.ExecContext(ctx, disableConstraintsCmd); err != nil {
+		t.Fatalf("Failed to disable MSSQL constraints: %v", err)
+	}
+
+	// drop 'U' (User Tables)
+	dropTablesCmd := "EXEC sp_MSforeachtable 'DROP TABLE ?', @whereand = 'AND O.Type = ''U'''"
+	if _, err := pool.ExecContext(ctx, dropTablesCmd); err != nil {
+		t.Fatalf("Failed to drop all MSSQL tables: %v", err)
+	}
+
 }
