@@ -656,10 +656,6 @@ func TestLooker(t *testing.T) {
 		map[string]any{
 			"conversational_analytics": map[string]any{
 				"description":  "Simple tool to test end to end functionality.",
-	tests.RunToolGetTestByName(t, "health_pulse",
-		map[string]any{
-			"health_pulse": map[string]any{
-				"description":  "Checks the health of a Looker instance by running a series of checks on the system.",
 				"authRequired": []any{},
 				"parameters": []any{
 					map[string]any{
@@ -688,7 +684,7 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
-  tests.RunToolGetTestByName(t, "health_pulse",
+    tests.RunToolGetTestByName(t, "health_pulse",
 		map[string]any{
 			"health_pulse": map[string]any{
 				"description":  "Checks the health of a Looker instance by running a series of checks on the system.",
