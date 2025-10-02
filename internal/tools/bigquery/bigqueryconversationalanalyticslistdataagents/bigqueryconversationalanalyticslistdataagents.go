@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigqueryconversationalanalyticslistdataagent
+package bigqueryconversationalanalyticslistdataagents
 
 import (
 	"context"
@@ -28,7 +28,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const kind string = "bigquery-conversational-analytics-list-data-agent"
+const kind string = "bigquery-conversational-analytics-list-data-agents"
 
 func init() {
 	if !tools.Register(kind, newConfig) {

@@ -172,11 +172,11 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 
 	// Get configs for tests
 	select1Want := "[{\"f0_\":1}]"
-	// invokeParamWant := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
-	// datasetInfoWant := "\"Location\":\"US\",\"DefaultTableExpiration\":0,\"Labels\":null,\"Access\":"
-	// tableInfoWant := "{\"Name\":\"\",\"Location\":\"US\",\"Description\":\"\",\"Schema\":[{\"Name\":\"id\""
+	invokeParamWant := "[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"
+	datasetInfoWant := "\"Location\":\"US\",\"DefaultTableExpiration\":0,\"Labels\":null,\"Access\":"
+	tableInfoWant := "{\"Name\":\"\",\"Location\":\"US\",\"Description\":\"\",\"Schema\":[{\"Name\":\"id\""
 	ddlWant := `"Query executed successfully and returned no content."`
-	// dataInsightsWant := `(?s)Schema Resolved.*Retrieval Query.*SQL Generated.*Answer`
+	dataInsightsWant := `(?s)Schema Resolved.*Retrieval Query.*SQL Generated.*Answer`
 	// Partial message; the full error message is too long.
 	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"final query validation failed: failed to insert dry run job: googleapi: Error 400: Syntax error: Unexpected identifier \"SELEC\" at [1:1]`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"f0_\":1}"}]}}`
@@ -194,136 +194,136 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 		tests.WithInsert1Want(ddlWant),
 	)
 
-	// runBigQueryExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, ddlWant)
-	// runBigQueryExecuteSqlToolInvokeDryRunTest(t, datasetName)
-	// runBigQueryForecastToolInvokeTest(t, tableNameForecast)
-	// runBigQueryAnalyzeContributionToolInvokeTest(t, tableNameAnalyzeContribution)
-	// runBigQueryDataTypeTests(t)
-	// runBigQueryListDatasetToolInvokeTest(t, datasetName)
-	// runBigQueryGetDatasetInfoToolInvokeTest(t, datasetName, datasetInfoWant)
-	// runBigQueryListTableIdsToolInvokeTest(t, datasetName, tableName)
-	// runBigQueryGetTableInfoToolInvokeTest(t, datasetName, tableName, tableInfoWant)
-	// runBigQueryConversationalAnalyticsInvokeTest(t, datasetName, tableName, dataInsightsWant)
-	// runBigQuerySearchCatalogToolInvokeTest(t, datasetName, tableName)
+	runBigQueryExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, ddlWant)
+	runBigQueryExecuteSqlToolInvokeDryRunTest(t, datasetName)
+	runBigQueryForecastToolInvokeTest(t, tableNameForecast)
+	runBigQueryAnalyzeContributionToolInvokeTest(t, tableNameAnalyzeContribution)
+	runBigQueryDataTypeTests(t)
+	runBigQueryListDatasetToolInvokeTest(t, datasetName)
+	runBigQueryGetDatasetInfoToolInvokeTest(t, datasetName, datasetInfoWant)
+	runBigQueryListTableIdsToolInvokeTest(t, datasetName, tableName)
+	runBigQueryGetTableInfoToolInvokeTest(t, datasetName, tableName, tableInfoWant)
+	runBigQueryConversationalAnalyticsInvokeTest(t, datasetName, tableName, dataInsightsWant)
+	runBigQuerySearchCatalogToolInvokeTest(t, datasetName, tableName)
 	runBigQueryListDataAgentsInvokeTest(t, dataAgentDisplayName)
 }
 
-// func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
-// 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
-// 	defer cancel()
+func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
 
-// 	client, err := initBigQueryConnection(BigqueryProject)
-// 	if err != nil {
-// 		t.Fatalf("unable to create BigQuery client: %s", err)
-// 	}
+	client, err := initBigQueryConnection(BigqueryProject)
+	if err != nil {
+		t.Fatalf("unable to create BigQuery client: %s", err)
+	}
 
-// 	// Create two datasets, one allowed, one not.
-// 	baseName := strings.ReplaceAll(uuid.New().String(), "-", "")
-// 	allowedDatasetName1 := fmt.Sprintf("allowed_dataset_1_%s", baseName)
-// 	allowedDatasetName2 := fmt.Sprintf("allowed_dataset_2_%s", baseName)
-// 	disallowedDatasetName := fmt.Sprintf("disallowed_dataset_%s", baseName)
-// 	allowedTableName1 := "allowed_table_1"
-// 	allowedTableName2 := "allowed_table_2"
-// 	disallowedTableName := "disallowed_table"
-// 	allowedForecastTableName1 := "allowed_forecast_table_1"
-// 	allowedForecastTableName2 := "allowed_forecast_table_2"
-// 	disallowedForecastTableName := "disallowed_forecast_table"
+	// Create two datasets, one allowed, one not.
+	baseName := strings.ReplaceAll(uuid.New().String(), "-", "")
+	allowedDatasetName1 := fmt.Sprintf("allowed_dataset_1_%s", baseName)
+	allowedDatasetName2 := fmt.Sprintf("allowed_dataset_2_%s", baseName)
+	disallowedDatasetName := fmt.Sprintf("disallowed_dataset_%s", baseName)
+	allowedTableName1 := "allowed_table_1"
+	allowedTableName2 := "allowed_table_2"
+	disallowedTableName := "disallowed_table"
+	allowedForecastTableName1 := "allowed_forecast_table_1"
+	allowedForecastTableName2 := "allowed_forecast_table_2"
+	disallowedForecastTableName := "disallowed_forecast_table"
 
-// 	// Setup allowed table
-// 	allowedTableNameParam1 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName1, allowedTableName1)
-// 	createAllowedTableStmt1 := fmt.Sprintf("CREATE TABLE %s (id INT64)", allowedTableNameParam1)
-// 	teardownAllowed1 := setupBigQueryTable(t, ctx, client, createAllowedTableStmt1, "", allowedDatasetName1, allowedTableNameParam1, nil)
-// 	defer teardownAllowed1(t)
+	// Setup allowed table
+	allowedTableNameParam1 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName1, allowedTableName1)
+	createAllowedTableStmt1 := fmt.Sprintf("CREATE TABLE %s (id INT64)", allowedTableNameParam1)
+	teardownAllowed1 := setupBigQueryTable(t, ctx, client, createAllowedTableStmt1, "", allowedDatasetName1, allowedTableNameParam1, nil)
+	defer teardownAllowed1(t)
 
-// 	allowedTableNameParam2 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName2, allowedTableName2)
-// 	createAllowedTableStmt2 := fmt.Sprintf("CREATE TABLE %s (id INT64)", allowedTableNameParam2)
-// 	teardownAllowed2 := setupBigQueryTable(t, ctx, client, createAllowedTableStmt2, "", allowedDatasetName2, allowedTableNameParam2, nil)
-// 	defer teardownAllowed2(t)
+	allowedTableNameParam2 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName2, allowedTableName2)
+	createAllowedTableStmt2 := fmt.Sprintf("CREATE TABLE %s (id INT64)", allowedTableNameParam2)
+	teardownAllowed2 := setupBigQueryTable(t, ctx, client, createAllowedTableStmt2, "", allowedDatasetName2, allowedTableNameParam2, nil)
+	defer teardownAllowed2(t)
 
-// 	// Setup allowed forecast table
-// 	allowedForecastTableFullName1 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName1, allowedForecastTableName1)
-// 	createForecastStmt1, insertForecastStmt1, forecastParams1 := getBigQueryForecastToolInfo(allowedForecastTableFullName1)
-// 	teardownAllowedForecast1 := setupBigQueryTable(t, ctx, client, createForecastStmt1, insertForecastStmt1, allowedDatasetName1, allowedForecastTableFullName1, forecastParams1)
-// 	defer teardownAllowedForecast1(t)
+	// Setup allowed forecast table
+	allowedForecastTableFullName1 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName1, allowedForecastTableName1)
+	createForecastStmt1, insertForecastStmt1, forecastParams1 := getBigQueryForecastToolInfo(allowedForecastTableFullName1)
+	teardownAllowedForecast1 := setupBigQueryTable(t, ctx, client, createForecastStmt1, insertForecastStmt1, allowedDatasetName1, allowedForecastTableFullName1, forecastParams1)
+	defer teardownAllowedForecast1(t)
 
-// 	allowedForecastTableFullName2 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName2, allowedForecastTableName2)
-// 	createForecastStmt2, insertForecastStmt2, forecastParams2 := getBigQueryForecastToolInfo(allowedForecastTableFullName2)
-// 	teardownAllowedForecast2 := setupBigQueryTable(t, ctx, client, createForecastStmt2, insertForecastStmt2, allowedDatasetName2, allowedForecastTableFullName2, forecastParams2)
-// 	defer teardownAllowedForecast2(t)
+	allowedForecastTableFullName2 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName2, allowedForecastTableName2)
+	createForecastStmt2, insertForecastStmt2, forecastParams2 := getBigQueryForecastToolInfo(allowedForecastTableFullName2)
+	teardownAllowedForecast2 := setupBigQueryTable(t, ctx, client, createForecastStmt2, insertForecastStmt2, allowedDatasetName2, allowedForecastTableFullName2, forecastParams2)
+	defer teardownAllowedForecast2(t)
 
-// 	// Setup disallowed table
-// 	disallowedTableNameParam := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, disallowedDatasetName, disallowedTableName)
-// 	createDisallowedTableStmt := fmt.Sprintf("CREATE TABLE %s (id INT64)", disallowedTableNameParam)
-// 	teardownDisallowed := setupBigQueryTable(t, ctx, client, createDisallowedTableStmt, "", disallowedDatasetName, disallowedTableNameParam, nil)
-// 	defer teardownDisallowed(t)
+	// Setup disallowed table
+	disallowedTableNameParam := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, disallowedDatasetName, disallowedTableName)
+	createDisallowedTableStmt := fmt.Sprintf("CREATE TABLE %s (id INT64)", disallowedTableNameParam)
+	teardownDisallowed := setupBigQueryTable(t, ctx, client, createDisallowedTableStmt, "", disallowedDatasetName, disallowedTableNameParam, nil)
+	defer teardownDisallowed(t)
 
-// 	// Setup disallowed forecast table
-// 	disallowedForecastTableFullName := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, disallowedDatasetName, disallowedForecastTableName)
-// 	createDisallowedForecastStmt, insertDisallowedForecastStmt, disallowedForecastParams := getBigQueryForecastToolInfo(disallowedForecastTableFullName)
-// 	teardownDisallowedForecast := setupBigQueryTable(t, ctx, client, createDisallowedForecastStmt, insertDisallowedForecastStmt, disallowedDatasetName, disallowedForecastTableFullName, disallowedForecastParams)
-// 	defer teardownDisallowedForecast(t)
+	// Setup disallowed forecast table
+	disallowedForecastTableFullName := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, disallowedDatasetName, disallowedForecastTableName)
+	createDisallowedForecastStmt, insertDisallowedForecastStmt, disallowedForecastParams := getBigQueryForecastToolInfo(disallowedForecastTableFullName)
+	teardownDisallowedForecast := setupBigQueryTable(t, ctx, client, createDisallowedForecastStmt, insertDisallowedForecastStmt, disallowedDatasetName, disallowedForecastTableFullName, disallowedForecastParams)
+	defer teardownDisallowedForecast(t)
 
-// 	// Configure source with dataset restriction.
-// 	sourceConfig := getBigQueryVars(t)
-// 	sourceConfig["allowedDatasets"] = []string{allowedDatasetName1, allowedDatasetName2}
+	// Configure source with dataset restriction.
+	sourceConfig := getBigQueryVars(t)
+	sourceConfig["allowedDatasets"] = []string{allowedDatasetName1, allowedDatasetName2}
 
-// 	// Configure tool
-// 	toolsConfig := map[string]any{
-// 		"list-table-ids-restricted": map[string]any{
-// 			"kind":        "bigquery-list-table-ids",
-// 			"source":      "my-instance",
-// 			"description": "Tool to list table within a dataset",
-// 		},
-// 		"execute-sql-restricted": map[string]any{
-// 			"kind":        "bigquery-execute-sql",
-// 			"source":      "my-instance",
-// 			"description": "Tool to execute SQL",
-// 		},
-// 		"conversational-analytics-restricted": map[string]any{
-// 			"kind":        "bigquery-conversational-analytics",
-// 			"source":      "my-instance",
-// 			"description": "Tool to ask BigQuery conversational analytics",
-// 		},
-// 		"forecast-restricted": map[string]any{
-// 			"kind":        "bigquery-forecast",
-// 			"source":      "my-instance",
-// 			"description": "Tool to forecast",
-// 		},
-// 	}
+	// Configure tool
+	toolsConfig := map[string]any{
+		"list-table-ids-restricted": map[string]any{
+			"kind":        "bigquery-list-table-ids",
+			"source":      "my-instance",
+			"description": "Tool to list table within a dataset",
+		},
+		"execute-sql-restricted": map[string]any{
+			"kind":        "bigquery-execute-sql",
+			"source":      "my-instance",
+			"description": "Tool to execute SQL",
+		},
+		"conversational-analytics-restricted": map[string]any{
+			"kind":        "bigquery-conversational-analytics",
+			"source":      "my-instance",
+			"description": "Tool to ask BigQuery conversational analytics",
+		},
+		"forecast-restricted": map[string]any{
+			"kind":        "bigquery-forecast",
+			"source":      "my-instance",
+			"description": "Tool to forecast",
+		},
+	}
 
-// 	// Create config file
-// 	config := map[string]any{
-// 		"sources": map[string]any{
-// 			"my-instance": sourceConfig,
-// 		},
-// 		"tools": toolsConfig,
-// 	}
+	// Create config file
+	config := map[string]any{
+		"sources": map[string]any{
+			"my-instance": sourceConfig,
+		},
+		"tools": toolsConfig,
+	}
 
-// 	// Start server
-// 	cmd, cleanup, err := tests.StartCmd(ctx, config)
-// 	if err != nil {
-// 		t.Fatalf("command initialization returned an error: %s", err)
-// 	}
-// 	defer cleanup()
+	// Start server
+	cmd, cleanup, err := tests.StartCmd(ctx, config)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
 
-// 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-// 	defer cancel()
-// 	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
-// 	if err != nil {
-// 		t.Logf("toolbox command logs: \n%s", out)
-// 		t.Fatalf("toolbox didn't start successfully: %s", err)
-// 	}
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
 
-// 	// Run tests
-// 	runListTableIdsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, allowedForecastTableName1)
-// 	runListTableIdsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, allowedForecastTableName2)
-// 	runExecuteSqlWithRestriction(t, allowedTableNameParam1, disallowedTableNameParam)
-// 	runExecuteSqlWithRestriction(t, allowedTableNameParam2, disallowedTableNameParam)
-// 	runConversationalAnalyticsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, disallowedTableName)
-// 	runConversationalAnalyticsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, disallowedTableName)
-// 	runForecastWithRestriction(t, allowedForecastTableFullName1, disallowedForecastTableFullName)
-// 	runForecastWithRestriction(t, allowedForecastTableFullName2, disallowedForecastTableFullName)
-// }
+	// Run tests
+	runListTableIdsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, allowedForecastTableName1)
+	runListTableIdsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, allowedForecastTableName2)
+	runExecuteSqlWithRestriction(t, allowedTableNameParam1, disallowedTableNameParam)
+	runExecuteSqlWithRestriction(t, allowedTableNameParam2, disallowedTableNameParam)
+	runConversationalAnalyticsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, disallowedTableName)
+	runConversationalAnalyticsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, disallowedTableName)
+	runForecastWithRestriction(t, allowedForecastTableFullName1, disallowedForecastTableFullName)
+	runForecastWithRestriction(t, allowedForecastTableFullName2, disallowedForecastTableFullName)
+}
 
 // getBigQueryParamToolInfo returns statements and param for my-tool for bigquery kind
 func getBigQueryParamToolInfo(tableName string) (string, string, string, string, string, string, []bigqueryapi.QueryParameter) {
@@ -668,12 +668,12 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		"description": "Tool to search the BiqQuery catalog",
 	}
 	tools["my-list-data-agents-tool"] = map[string]any{
-		"kind":        "bigquery-conversational-analytics-list-data-agent",
+		"kind":        "bigquery-conversational-analytics-list-data-agents",
 		"source":      "my-instance",
 		"description": "Tool to list data agents.",
 	}
 	tools["my-auth-list-data-agents-tool"] = map[string]any{
-		"kind":        "bigquery-conversational-analytics-list-data-agent",
+		"kind":        "bigquery-conversational-analytics-list-data-agents",
 		"source":      "my-instance",
 		"description": "Tool to list data agents with auth.",
 		"authRequired": []string{
@@ -681,7 +681,7 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		},
 	}
 	tools["my-client-auth-list-data-agents-tool"] = map[string]any{
-		"kind":        "bigquery-conversational-analytics-list-data-agent",
+		"kind":        "bigquery-conversational-analytics-list-data-agents",
 		"source":      "my-client-auth-source",
 		"description": "Tool to list data agents with client auth.",
 	}

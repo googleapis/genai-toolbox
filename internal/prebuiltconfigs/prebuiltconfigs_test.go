@@ -24,6 +24,7 @@ var expectedToolSources = []string{
 	"alloydb-postgres-admin",
 	"alloydb-postgres-observability",
 	"alloydb-postgres",
+	"bigquery-conversational-analytics-stateless-multi-turn",
 	"bigquery",
 	"clickhouse",
 	"cloud-sql-mssql-admin",

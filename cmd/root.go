@@ -55,7 +55,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryanalyzecontribution"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryconversationalanalytics"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryconversationalanalyticslistdataagent"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryconversationalanalyticslistdataagents"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryforecast"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerygetdatasetinfo"

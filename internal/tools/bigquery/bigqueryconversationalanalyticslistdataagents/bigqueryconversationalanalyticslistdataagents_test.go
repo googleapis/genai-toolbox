@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigqueryconversationalanalyticslistdataagent_test
+package bigqueryconversationalanalyticslistdataagents_test
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryconversationalanalyticslistdataagent"
+	"github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryconversationalanalyticslistdataagents"
 )
 
 func TestParseFromYamlBigQueryConversationalAnalyticsListDataAgent(t *testing.T) {
@@ -39,14 +39,14 @@ func TestParseFromYamlBigQueryConversationalAnalyticsListDataAgent(t *testing.T)
 			in: `
 			tools:
 				example_tool:
-					kind: bigquery-conversational-analytics-list-data-agent
+					kind: bigquery-conversational-analytics-list-data-agents
 					source: my-instance
 					description: some description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": bigqueryconversationalanalyticslistdataagent.Config{
+				"example_tool": bigqueryconversationalanalyticslistdataagents.Config{
 					Name:         "example_tool",
-					Kind:         "bigquery-conversational-analytics-list-data-agent",
+					Kind:         "bigquery-conversational-analytics-list-data-agents",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -58,16 +58,16 @@ func TestParseFromYamlBigQueryConversationalAnalyticsListDataAgent(t *testing.T)
 			in: `
 			tools:
 				example_tool:
-					kind: bigquery-conversational-analytics-list-data-agent
+					kind: bigquery-conversational-analytics-list-data-agents
 					source: my-instance
 					description: some description
 					authRequired:
 						- my-google-auth
 			`,
 			want: server.ToolConfigs{
-				"example_tool": bigqueryconversationalanalyticslistdataagent.Config{
+				"example_tool": bigqueryconversationalanalyticslistdataagents.Config{
 					Name:        "example_tool",
-					Kind:        "bigquery-conversational-analytics-list-data-agent",
+					Kind:        "bigquery-conversational-analytics-list-data-agents",
 					Source:      "my-instance",
 					Description: "some description",
 					AuthRequired: []string{
