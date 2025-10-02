@@ -110,9 +110,9 @@ steps:
         export VERSION=v$(cat ./cmd/version.txt)
         
         gcloud storage cp toolbox.linux.amd64
-        gs://$_BUCKET_NAME/$VERSION/linux/amd64/toolbox
+        gs://$_BUCKET_NAME/test/$VERSION/linux/amd64/toolbox
 
-        gcloud storage cp toolbox.linux.amd64.sig gs://$_BUCKET_NAME/$VERSION/linux/amd64/toolbox.sig
+        gcloud storage cp toolbox.linux.amd64.sig gs://$_BUCKET_NAME/test/$VERSION/linux/amd64/toolbox.sig
 
   - id: "build-darwin-arm64"
     name: golang:1
@@ -150,9 +150,9 @@ steps:
         set -e
         export VERSION=v$(cat ./cmd/version.txt)
 
-        gcloud storage cp toolbox.darwin.arm64 gs://$_BUCKET_NAME/$VERSION/darwin/arm64/toolbox
+        gcloud storage cp toolbox.darwin.arm64 gs://$_BUCKET_NAME/test/$VERSION/darwin/arm64/toolbox
 
-        gcloud storage cp toolbox.darwin.arm64.sig gs://$_BUCKET_NAME/$VERSION/darwin/arm64/toolbox.sig
+        gcloud storage cp toolbox.darwin.arm64.sig gs://$_BUCKET_NAME/test/$VERSION/darwin/arm64/toolbox.sig
 
   - id: "build-darwin-amd64"
     name: golang:1
@@ -190,9 +190,9 @@ steps:
         set -e
         export VERSION=v$(cat ./cmd/version.txt)
 
-        gcloud storage cp toolbox.darwin.amd64 gs://$_BUCKET_NAME/$VERSION/darwin/amd64/toolbox
+        gcloud storage cp toolbox.darwin.amd64 gs://$_BUCKET_NAME/test/$VERSION/darwin/amd64/toolbox
 
-        gcloud storage cp toolbox.darwin.amd64.sig gs://$_BUCKET_NAME/$VERSION/darwin/amd64/toolbox.sig
+        gcloud storage cp toolbox.darwin.amd64.sig gs://$_BUCKET_NAME/test/$VERSION/darwin/amd64/toolbox.sig
 
   - id: "build-windows-amd64"
     name: golang:1
@@ -230,9 +230,9 @@ steps:
         set -e
         export VERSION=v$(cat ./cmd/version.txt)
 
-        gcloud storage cp toolbox.windows.amd64 gs://$_BUCKET_NAME/$VERSION/windows/amd64/toolbox.exe
+        gcloud storage cp toolbox.windows.amd64 gs://$_BUCKET_NAME/test/$VERSION/windows/amd64/toolbox.exe
 
-        gcloud storage cp toolbox.windows.amd64.sig gs://$_BUCKET_NAME/$VERSION/windows/amd64/toolbox.exe.sig
+        gcloud storage cp toolbox.windows.amd64.sig gs://$_BUCKET_NAME/test/$VERSION/windows/amd64/toolbox.exe.sig
 
 options:
   automapSubstitutions: true
@@ -245,5 +245,5 @@ substitutions:
   _AR_HOSTNAME: ${_REGION}-docker.pkg.dev
   _AR_REPO_NAME: toolbox
   _BUCKET_NAME: genai-toolbox
-  _DOCKER_URI: ${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPO_NAME}/toolbox
+  _DOCKER_URI: ${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPO_NAME}/test
   _PUSH_LATEST: "true"
