@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"time"
 
-	googlecloudapi "cloud.google.com/go/bigquery"
+	"cloud.google.com/go/geminidataanalytics/apiv1beta"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
@@ -50,7 +50,6 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 		ShowHiddenModels:   true,
 		ShowHiddenExplores: true,
 		ShowHiddenFields:   true,
-		Project:            "default",
 		Location:           "us",
 	} // Default Ssl,timeout, ShowHidden
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
@@ -188,9 +187,9 @@ func (s *Source) GoogleCloudTokenSourceWithScope(ctx context.Context, scope stri
 }
 
 func initGoogleCloudConnection(ctx context.Context) (oauth2.TokenSource, error) {
-	cred, err := google.FindDefaultCredentials(ctx, googlecloudapi.Scope)
+	cred, err := google.FindDefaultCredentials(ctx, geminidataanalytics.DefaultAuthScopes()...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", googlecloudapi.Scope, err)
+		return nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", geminidataanalytics.DefaultAuthScopes(), err)
 	}
 
 	return cred.TokenSource, nil

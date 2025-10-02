@@ -54,7 +54,6 @@ func TestParseFromYamlLooker(t *testing.T) {
 					ShowHiddenModels:   true,
 					ShowHiddenExplores: true,
 					ShowHiddenFields:   true,
-					Project:            "default",
 					Location:           "us",
 				},
 			},
