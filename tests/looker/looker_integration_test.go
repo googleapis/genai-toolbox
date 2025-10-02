@@ -651,7 +651,7 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
-  
+
 	tests.RunToolGetTestByName(t, "conversational_analytics",
 		map[string]any{
 			"conversational_analytics": map[string]any{
@@ -684,7 +684,7 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
-    tests.RunToolGetTestByName(t, "health_pulse",
+	tests.RunToolGetTestByName(t, "health_pulse",
 		map[string]any{
 			"health_pulse": map[string]any{
 				"description":  "Checks the health of a Looker instance by running a series of checks on the system.",
@@ -842,7 +842,7 @@ func TestLooker(t *testing.T) {
 
 	runConversationalAnalytics(t, "system__activity", "content_usage")
 
-  wantResult = "\"Connection\":\"thelook\""
+	wantResult = "\"Connection\":\"thelook\""
 	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_db_connections"}`), wantResult)
 
 	wantResult = "[]"

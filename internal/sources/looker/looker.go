@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"time"
 
-	"cloud.google.com/go/geminidataanalytics/apiv1beta"
+	geminidataanalytics "cloud.google.com/go/geminidataanalytics/apiv1beta"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
