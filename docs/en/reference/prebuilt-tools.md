@@ -106,11 +106,24 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `forecast`: Use this tool to forecast time series data.
     *   `get_dataset_info`: Gets dataset metadata.
     *   `get_table_info`: Gets table metadata.
-    *   `list_data_agents`: Lists all available Conversational Analytics data
-        agents for a given project.
     *   `list_dataset_ids`: Lists datasets.
     *   `list_table_ids`: Lists tables.
     *   `search_catalog`: Search for entries based on the provided query.
+
+## BigQuery Stateless Multi-turn Conversational Analytics
+
+*   `--prebuilt` value: `bigquery-conversational-analytics-stateless-multi-turn`
+*   **Environment Variables:**
+    *   `BIGQUERY_PROJECT`: The GCP project ID.
+    *   `BIGQUERY_LOCATION`: (Optional) The dataset location.
+*   **Permissions:**
+    *   **BigQuery User** (`roles/bigquery.user`) to execute queries and view
+        metadata.
+    *   **Gemini for Google Cloud** (`roles/cloudaicompanion.user`) to use the
+        conversational analytics API.
+*   **Tools:**
+    *   `list_data_agents`: Lists all available Conversational Analytics data
+        agents for a given project.
 
 ## Cloud SQL for MySQL
 
