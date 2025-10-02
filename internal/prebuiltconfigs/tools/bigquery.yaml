@@ -58,6 +58,11 @@ tools:
     source: bigquery-source
     description: Use this tool to list datasets.
 
+  list_data_agents:
+    kind: bigquery-conversational-analytics-list-data-agent
+    source: bigquery-source
+    description: Use this tool to list Conversational Analytics data agents.
+
   list_table_ids:
     kind: bigquery-list-table-ids
     source: bigquery-source
@@ -77,5 +82,6 @@ toolsets:
     - get_dataset_info
     - get_table_info
     - list_dataset_ids
+    - list_data_agents
     - list_table_ids
     - search_catalog
