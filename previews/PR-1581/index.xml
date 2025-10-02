@@ -1914,7 +1914,17 @@ parameters will be used according to their name: e.g. &lt;code>$id&lt;/code>.&lt
 &lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
-names, or other parts of the query.&lt;/p></description></item><item><title>Dataplex</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1581/resources/sources/dataplex/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1581/resources/sources/dataplex/</guid><description>&lt;h1 id="dataplex-source">Dataplex Source&lt;/h1>
+names, or other parts of the query.&lt;/p></description></item><item><title>dataform-compile-local</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1581/resources/tools/dataform/dataform-compile-local/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1581/resources/tools/dataform/dataform-compile-local/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>dataform-compile-local&lt;/code> tool runs the &lt;code>dataform compile&lt;/code> command on a local Dataform project.&lt;/p>
+&lt;p>It is a standalone tool and &lt;strong>is not&lt;/strong> compatible with any sources.&lt;/p>
+&lt;p>At invocation time, the tool executes &lt;code>dataform compile --json&lt;/code> in the specified project directory and returns the resulting JSON object from the CLI.&lt;/p>
+&lt;p>&lt;code>dataform-compile-local&lt;/code> takes the following parameter:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>project_dir&lt;/code> (string): The absolute or relative path to the local Dataform project directory. The server process must have read access to this path.&lt;/li>
+&lt;/ul>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="dataform-cli">Dataform CLI&lt;/h3>
+&lt;p>This tool executes the &lt;code>dataform&lt;/code> command-line interface (CLI) via a system call. You must have the &lt;strong>&lt;code>dataform&lt;/code> CLI&lt;/strong> installed and available in the server&amp;rsquo;s system &lt;code>PATH&lt;/code>.&lt;/p></description></item><item><title>Dataplex</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1581/resources/sources/dataplex/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1581/resources/sources/dataplex/</guid><description>&lt;h1 id="dataplex-source">Dataplex Source&lt;/h1>
 &lt;p>&lt;a href="https://cloud.google.com/dataplex/docs">Dataplex&lt;/a> Universal Catalog is a unified, intelligent governance
 solution for data and AI assets in Google Cloud. Dataplex Universal Catalog
 powers AI, analytics, and business intelligence at scale.&lt;/p>
@@ -4901,6 +4911,10 @@ execute queries.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Provides information about how MySQL executes a SQL
 statement.&lt;/li>
+&lt;li>&lt;code>list_active_queries&lt;/code>: Lists ongoing queries.&lt;/li>
+&lt;li>&lt;code>list_tables_missing_unique_indexes&lt;/code>: Looks for tables that do not have
+primary or unique key contraint.&lt;/li>
+&lt;li>&lt;code>list_table_fragmentation&lt;/code>: Displays table fragmentation in MySQL.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -5302,6 +5316,10 @@ execute queries.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Provides information about how MySQL executes a SQL
 statement.&lt;/li>
+&lt;li>&lt;code>list_active_queries&lt;/code>: Lists ongoing queries.&lt;/li>
+&lt;li>&lt;code>list_tables_missing_unique_indexes&lt;/code>: Looks for tables that do not have
+primary or unique key contraint.&lt;/li>
+&lt;li>&lt;code>list_table_fragmentation&lt;/code>: Displays table fragmentation in MySQL.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
