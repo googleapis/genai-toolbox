@@ -136,3 +136,99 @@ func TestDataformCompileTool(t *testing.T) {
 		})
 	}
 }
+
+func TestDataformInitTool(t *testing.T) {
+	if _, err := exec.LookPath("dataform"); err != nil {
+		t.Skip("dataform CLI not found in $PATH, skipping integration test")
+	}
+
+	toolsFile := map[string]any{
+		"tools": map[string]any{
+			"my-dataform-initializer": map[string]any{
+				"kind":        "dataform-init-local",
+				"description": "Tool to initialize dataform projects",
+			},
+		},
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+
+	cmd, cleanupServer, err := tests.StartCmd(ctx, toolsFile)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanupServer()
+
+	waitCtx, cancelWait := context.WithTimeout(ctx, 30*time.Second)
+	defer cancelWait()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+
+	tmpDir, err := os.MkdirTemp("", "dataform-init-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	testCases := []struct {
+		name       string
+		reqBody    string
+		wantStatus int
+		wantBody   string
+		postCheck  func(t *testing.T)
+	}{
+		{
+			name:       "success case",
+			reqBody:    fmt.Sprintf(`{"project_dir":"%s", "default_database": "test-db", "default_location": "US"}`, tmpDir),
+			wantStatus: http.StatusOK,
+			wantBody:   "",
+			postCheck: func(t *testing.T) {
+				if _, err := os.Stat(filepath.Join(tmpDir, "workflow_settings.yaml")); os.IsNotExist(err) {
+					t.Errorf("workflow_settings.yaml was not created in the project directory")
+				}
+			},
+		},
+		{
+			name:       "missing project_dir",
+			reqBody:    `{"default_database": "test-db", "default_location": "US"}`,
+			wantStatus: http.StatusBadRequest,
+			wantBody:   `parameter \"project_dir\" is required`,
+		},
+		{
+			name:       "missing default_database",
+			reqBody:    fmt.Sprintf(`{"project_dir":"%s", "default_location": "US"}`, tmpDir),
+			wantStatus: http.StatusBadRequest,
+			wantBody:   `parameter \"default_database\" is required`,
+		},
+		{
+			name:       "missing default_location",
+			reqBody:    fmt.Sprintf(`{"project_dir":"%s", "default_database": "test-db"}`, tmpDir),
+			wantStatus: http.StatusBadRequest,
+			wantBody:   `parameter \"default_location\" is required`,
+		},
+	}
+
+	api := "http://127.0.0.1:5000/api/tool/my-dataform-initializer/invoke"
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, api, strings.NewReader(tc.reqBody), nil)
+
+			if resp.StatusCode != tc.wantStatus {
+				t.Fatalf("unexpected status: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatus, string(bodyBytes))
+			}
+
+			if tc.wantBody != "" && !strings.Contains(string(bodyBytes), tc.wantBody) {
+				t.Fatalf("expected body to contain %q, got: %s", tc.wantBody, string(bodyBytes))
+			}
+
+			if tc.postCheck != nil {
+				tc.postCheck(t)
+			}
+		})
+	}
+}
