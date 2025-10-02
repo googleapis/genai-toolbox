@@ -22,6 +22,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	_ "github.com/microsoft/go-mssqldb"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -117,7 +118,7 @@ func initMssqlConnection(
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		userAgent = "genai-toolbox"
-
+	}
 	// Create dsn
 	query := url.Values{}
 	query.Add("app name", userAgent)
