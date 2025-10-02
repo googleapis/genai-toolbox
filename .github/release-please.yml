@@ -16,31 +16,25 @@ handleGHRelease: true
 packageName: genai-toolbox
 releaseType: simple
 versionFile: "cmd/version.txt"
-extraFiles:
-    - path: hugo.toml
-      search: '# RELEASE-PLEASE-VERSIONS-HOOK'
-      replace: |
-        # RELEASE-PLEASE-VERSIONS-HOOK
-        [[params.versions]]
-          version = "v${version}"
-          url = "https://googleapis.github.io/genai-toolbox/v${version}/"
-    - "README.md"
-    - "docs/en/getting-started/colab_quickstart.ipynb"
-    - "docs/en/getting-started/introduction/_index.md"
-    - "docs/en/getting-started/mcp_quickstart/_index.md"
-    - "docs/en/getting-started/quickstart/shared/configure_toolbox.md"
-    - "docs/en/samples/alloydb/_index.md"
-    - "docs/en/samples/alloydb/mcp_quickstart.md"
-    - "docs/en/samples/alloydb/ai-nl/alloydb_ai_nl.ipynb"
-    - "docs/en/samples/bigquery/local_quickstart.md"
-    - "docs/en/samples/bigquery/mcp_quickstart/_index.md"
-    - "docs/en/samples/bigquery/colab_quickstart_bigquery.ipynb"
-    - "docs/en/samples/looker/looker_gemini.md"
-    - "docs/en/samples/looker/looker_gemini_oauth/_index.md"
-    - "docs/en/samples/looker/looker_mcp_inspector/_index.md"
-    - "docs/en/how-to/connect-ide/looker_mcp.md"
-    - "docs/en/how-to/connect-ide/mysql_mcp.md"
-    - "docs/en/how-to/connect-ide/mssql_mcp.md"
-    - "docs/en/how-to/connect-ide/postgres_mcp.md"
-    - "docs/en/how-to/connect-ide/neo4j_mcp.md"
-    - "docs/en/how-to/connect-ide/sqlite_mcp.md"
+extraFiles: [
+    "README.md",
+    "docs/en/getting-started/colab_quickstart.ipynb",
+    "docs/en/getting-started/introduction/_index.md",
+    "docs/en/getting-started/mcp_quickstart/_index.md",
+    "docs/en/getting-started/quickstart/shared/configure_toolbox.md",
+    "docs/en/samples/alloydb/_index.md",
+    "docs/en/samples/alloydb/mcp_quickstart.md",
+    "docs/en/samples/alloydb/ai-nl/alloydb_ai_nl.ipynb",
+    "docs/en/samples/bigquery/local_quickstart.md",
+    "docs/en/samples/bigquery/mcp_quickstart/_index.md",
+    "docs/en/samples/bigquery/colab_quickstart_bigquery.ipynb",
+    "docs/en/samples/looker/looker_gemini.md",
+    "docs/en/samples/looker/looker_gemini_oauth/_index.md",
+    "docs/en/samples/looker/looker_mcp_inspector/_index.md",
+    "docs/en/how-to/connect-ide/looker_mcp.md",
+    "docs/en/how-to/connect-ide/mysql_mcp.md",
+    "docs/en/how-to/connect-ide/mssql_mcp.md",
+    "docs/en/how-to/connect-ide/postgres_mcp.md",
+    "docs/en/how-to/connect-ide/neo4j_mcp.md",
+    "docs/en/how-to/connect-ide/sqlite_mcp.md",
+]
