@@ -159,10 +159,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("project must be defined for source to use with %q tool", kind)
 	}
 
-	if s.GoogleCloudLocation() == "" {
-		return nil, fmt.Errorf("location must be defined for source to use with %q tool", kind)
-	}
-
 	userQueryParameter := tools.NewStringParameter("user_query_with_context", "The user's question, potentially including conversation history and system instructions for context.")
 
 	exploreRefsDescription := `An Array of at least one and up to 5 explore references like [{'model': 'MODEL_NAME', 'explore': 'EXPLORE_NAME'}]`
@@ -180,13 +176,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
 
 	// Get cloud-platform token source for Gemini Data Analytics API during initialization
-	var bigQueryTokenSourceWithScope oauth2.TokenSource
 	ctx := context.Background()
 	ts, err := s.GoogleCloudTokenSourceWithScope(ctx, "https://www.googleapis.com/auth/cloud-platform")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cloud-platform token source: %w", err)
 	}
-	bigQueryTokenSourceWithScope = ts
 
 	// finish tool setup
 	t := Tool{
@@ -198,7 +192,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Parameters:     parameters,
 		AuthRequired:   cfg.AuthRequired,
 		UseClientOAuth: s.UseClientAuthorization(),
-		TokenSource:    bigQueryTokenSourceWithScope,
+		TokenSource:    ts,
 		manifest:       tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:    mcpManifest,
 	}
