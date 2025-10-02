@@ -7458,13 +7458,42 @@ in the cloud, on GCP, or on premises.
 
 ## Requirements
 
-### Database User
+### Looker User
 
 This source only uses API authentication. You will need to
 [create an API user][looker-user] to login to Looker.
 
 [looker-user]:
     https://cloud.google.com/looker/docs/api-auth#authentication_with_an_sdk
+
+{{< notice note >}}
+To use the Conversational Analytics API, you will need to have the following
+Google Cloud Project API enabled and IAM permissions.
+{{< /notice >}}
+
+### API Enablement in GCP
+
+Enable the following APIs in your Google Cloud Project:
+
+```
+gcloud services enable geminidataanalytics.googleapis.com --project=$PROJECT_ID
+gcloud services enable cloudaicompanion.googleapis.com --project=$PROJECT_ID
+```
+
+### IAM Permissions in GCP
+
+In addition to [setting the ADC for your server][set-adc], you need to ensure
+the IAM identity has been given the following IAM roles (or corresponding
+permissions):
+
+- `roles/looker.instanceUser`
+- `roles/cloudaicompanion.user`
+- `roles/geminidataanalytics.dataAgentStatelessUser`
+
+To initialize the application default credential run `gcloud auth login --update-adc`
+in your environment before starting MCP Toolbox.
+
+[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 
 ## Example
 
@@ -7475,6 +7504,8 @@ sources:
         base_url: http://looker.example.com
         client_id: ${LOOKER_CLIENT_ID}
         client_secret: ${LOOKER_CLIENT_SECRET}
+        project: ${LOOKER_PROJECT}
+        location: ${LOOKER_LOCATION}
         verify_ssl: true
         timeout: 600s
 ```
@@ -7492,6 +7523,8 @@ The client id and client secret are seemingly random character sequences
 assigned by the looker server. If you are using Looker OAuth you don't need
 these settings
 
+The `project` and `location` fields are utilized **only** when using the conversational analytics tool.
+
 {{< notice tip >}}
 Use environment variable replacement with the format ${ENV_NAME}
 instead of hardcoding your secrets into the configuration file.
@@ -7506,6 +7539,8 @@ instead of hardcoding your secrets into the configuration file.
 | client_id            |  string  |    false     | The client id assigned by Looker.                                                         |
 | client_secret        |  string  |    false     | The client secret assigned by Looker.                                                     |
 | verify_ssl           |  string  |    false     | Whether to check the ssl certificate of the server.                                       |
+| project              |  string  |    false     | The project id to use in Google Cloud.                                                    |
+| location             |  string  |    false     | The location to use in Google Cloud. (default: us)                                        |
 | timeout              |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, 120s is applied. |
 | use_client_oauth     |  string  |    false     | Use OAuth tokens instead of client_id and client_secret. (default: false)                 |
 | show_hidden_models   |  string  |    false     | Show or hide hidden models. (default: true)                                               |
@@ -11201,6 +11236,10 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `LOOKER_CLIENT_ID`: The client ID for the Looker API.
     *   `LOOKER_CLIENT_SECRET`: The client secret for the Looker API.
     *   `LOOKER_VERIFY_SSL`: Whether to verify SSL certificates.
+    *   `LOOKER_USE_CLIENT_OAUTH`: Whether to use OAuth for authentication.
+    *   `LOOKER_SHOW_HIDDEN_MODELS`: Whether to show hidden models.
+    *   `LOOKER_SHOW_HIDDEN_EXPLORES`: Whether to show hidden explores.
+    *   `LOOKER_SHOW_HIDDEN_FIELDS`: Whether to show hidden fields.
 *   **Permissions:**
     *   A Looker account with permissions to access the desired models,
         explores, and data is required.
@@ -11220,6 +11259,35 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_dashboards`: Searches for saved dashboards.
     *   `make_dashboard`: Creates a new dashboard.
     *   `add_dashboard_element`: Adds a tile to a dashboard.
+    *   `health_pulse`: Test the health of a Looker instance.
+    *   `health_analyze`: Analyze the LookML usage of a Looker instance.
+    *   `health_vacuum`: Suggest LookML elements that can be removed.
+
+## Looker Conversational Analytics
+
+*   `--prebuilt` value: `looker-conversational-analytics`
+*   **Environment Variables:**
+    *   `LOOKER_BASE_URL`: The URL of your Looker instance.
+    *   `LOOKER_CLIENT_ID`: The client ID for the Looker API.
+    *   `LOOKER_CLIENT_SECRET`: The client secret for the Looker API.
+    *   `LOOKER_VERIFY_SSL`: Whether to verify SSL certificates.
+    *   `LOOKER_USE_CLIENT_OAUTH`: Whether to use OAuth for authentication.
+    *   `LOOKER_PROJECT`: The GCP Project to use for Conversational Analytics.
+    *   `LOOKER_LOCATION`: The GCP Location to use for Conversational Analytics.
+*   **Permissions:**
+    *   A Looker account with permissions to access the desired models,
+        explores, and data is required.
+    *   **Looker Instance User** (`roles/looker.instanceUser`): IAM role to
+        access Looker.
+    *   **Gemini for Google Cloud User** (`roles/cloudaicompanion.user`): IAM
+        role to access Conversational Analytics.
+    *   **Gemini Data Analytics Stateless Chat User (Beta)**
+        (`roles/geminidataanalytics.dataAgentStatelessUser`): IAM role to
+        access Conversational Analytics.
+*   **Tools:**
+    *   `ask_data_insights`: Ask a question of the data.
+    *   `get_models`: Retrieves the list of LookML models.
+    *   `get_explores`: Retrieves the list of explores in a model.
 
 ## Microsoft SQL Server
 
