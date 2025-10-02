@@ -10,14 +10,17 @@ aliases:
 
 ## About
 
-A `dataform-init-local` tool runs the `dataform init` command on a local Dataform project.
+A `dataform-init-local` tool runs the `dataform init` command on a directory in the local file system.
 
 It is a standalone tool and **is not** compatible with any sources.
 
 At invocation time, the tool executes `dataform init` in the specified project directory to set up the corresponding files for a Dataform project.
 
 `dataform-init-local` takes the following parameter: 
-- `project_dir` (string): The absolute or relative path to the local Dataform project directory. The server process must have read access to this path.
+- `project_dir` (string): The absolute or relative path to the local Dataform project directory. The server process must have write access to this path.
+- `default_database` (string): The default database to use, equivalent to Google Cloud Project ID.
+- `default_location` (string): The default location to use.
+
 
 ## Requirements
 
