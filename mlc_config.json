@@ -1,0 +1,69 @@
+{
+  "projectBaseUrl": "${workspaceFolder}",
+  "ignorePatterns": [
+    {
+      "pattern": "^http://example.net"
+    },
+  
+    {
+      "pattern": "https://console.cloud.google.com"
+    },
+    {
+      "pattern": "https://storage.googleapis.com"
+    },
+    {
+      "pattern": "https://looker.example.com"
+    },
+    {
+      "pattern": "https://xxx.cloud.dgraph.io/"
+    },
+    {
+      "pattern": "https://claude.ai/download"
+    },
+    {
+      "pattern": "http://127.0.0.1"
+    },
+    {
+      "pattern": "https://cloud-run-url.app"
+    },
+    {
+      "pattern": "5000"
+    },
+    {
+      "pattern": "8080"
+    }
+  ],
+  "replacementPatterns": [
+    {
+      "pattern": "^.attachments",
+      "replacement": "file://some/conventional/folder/.attachments"
+    },
+    {
+      "pattern": "^/",
+      "replacement": "{{BASEURL}}/"
+    },
+    {
+      "pattern": "%20",
+      "replacement": "-",
+      "global": true
+    },
+    {
+      "pattern": "images/(?<filename>.*)",
+      "replacement": "assets/$<filename>"
+    }
+  ],
+  "httpHeaders": [
+    {
+      "urls": ["https://example.com"],
+      "headers": {
+        "Authorization": "Basic Zm9vOmJhcg==",
+        "Foo": "Bar"
+      }
+    }
+  ],
+  "timeout": "20s",
+  "retryOn429": true,
+  "retryCount": 5,
+  "fallbackRetryDelay": "30s",
+  "aliveStatusCodes": [200, 206]
+}
