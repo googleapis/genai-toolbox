@@ -2102,17 +2102,14 @@ func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName1, allowed
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			body := bytes.NewBuffer([]byte(`{}`))
-			resp, bodyBytes, err := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/list-dataset-ids-restricted/invoke", body, nil)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/list-dataset-ids-restricted/invoke", body, nil)
 
 			if resp.StatusCode != tc.wantStatusCode {
 				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 
 			var respBody map[string]interface{}
-			if err := json.NewDecoder(bodyBytes).Decode(&respBody); err != nil {
+			if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 			got, ok := respBody["result"].(string)
