@@ -1231,6 +1231,7 @@ func TestPrebuiltTools(t *testing.T) {
 	// Get prebuilt configs
 	alloydb_admin_config, _ := prebuiltconfigs.Get("alloydb-postgres-admin")
 	alloydb_config, _ := prebuiltconfigs.Get("alloydb-postgres")
+	bigquery_ca_config, _ := prebuiltconfigs.Get("bigquery-conversational-analytics-stateless-multi-turn")
 	bigquery_config, _ := prebuiltconfigs.Get("bigquery")
 	clickhouse_config, _ := prebuiltconfigs.Get("clickhouse")
 	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloud-sql-postgres")
@@ -1594,6 +1595,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"cloud_sql_mssql_cloud_monitoring_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mssql_cloud_monitoring_tools",
 					ToolNames: []string{"get_system_metrics"},
+				},
+			},
+		},
+		{
+			name: "bigquery conversational analytics stateless multi-turn prebuilt tools",
+			in:   bigquery_ca_config,
+			wantToolset: server.ToolsetConfigs{
+				"bigquery_conversational_analytics_stateless_multi_turn_tools": tools.ToolsetConfig{
+					Name:      "bigquery_conversational_analytics_stateless_multi_turn_tools",
+					ToolNames: []string{"list_data_agents"},
 				},
 			},
 		},
