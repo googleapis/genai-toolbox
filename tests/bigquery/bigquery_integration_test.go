@@ -2108,7 +2108,6 @@ func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName1, allowed
 			}
 
 			if resp.StatusCode != tc.wantStatusCode {
-				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 
