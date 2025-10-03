@@ -5,10 +5,6 @@ on:
     branches:
       - main
     types: [opened, synchronize, reopened, ready_for_review]
-  pull_request_target:
-    branches:
-      - main
-    types: [labeled]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -19,8 +15,6 @@ permissions: read-all
 
 jobs:
   pipeline_data:
-    # run job on proper workflow event triggers (skip job for pull_request event from forks and only run pull_request_target for "tests: run" label)
-    if: "${{ (github.event.action != 'labeled' && github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name) || github.event.label.name == 'tests: run' }}"
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -32,23 +26,6 @@ jobs:
       docs: ${{ steps.pipeline_data.outputs.docs }}
       image_tag: ${{ steps.pipeline_data.outputs.image_tag }}
     steps:
-      - name: Remove PR label
-        if: "${{ github.event.action == 'labeled' && github.event.label.name == 'tests: run' }}"
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            try {
-              await github.rest.issues.removeLabel({
-                name: 'tests: run',
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.pull_request.number
-              });
-            } catch (e) {
-              console.log('Failed to remove label. Another job may have already removed it!');
-            }
-
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           ref: ${{ github.event.pull_request.head.sha }}
