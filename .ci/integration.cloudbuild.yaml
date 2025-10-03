@@ -775,14 +775,6 @@ availableSecrets:
       env: FIREBIRD_PASS
     - versionName: projects/$PROJECT_ID/secrets/trino_user/versions/latest
       env: TRINO_USER
-    - versionName: projects/$PROJECT_ID/secrets/kdb_user/versions/latest
-      env: KDB_USER
-    - versionName: projects/$PROJECT_ID/secrets/kdb_pass/versions/latest
-      env: KDB_PASS
-    - versionName: projects/$PROJECT_ID/secrets/kdb_user/versions/latest
-      env: KDB_USER
-    - versionName: projects/$PROJECT_ID/secrets/kdb_pass/versions/latest
-      env: KDB_PASS
     - versionName: projects/$PROJECT_ID/secrets/oceanbase_host/versions/latest
       env: OCEANBASE_HOST
     - versionName: projects/$PROJECT_ID/secrets/oceanbase_user/versions/latest
