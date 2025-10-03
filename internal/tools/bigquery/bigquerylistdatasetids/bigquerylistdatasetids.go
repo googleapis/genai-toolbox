@@ -84,15 +84,21 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryProject(), "The Google Cloud project to list dataset ids.")
+	var projectParameter tools.Parameter
+	var projectParameterDescription string
+
+	allowedDatasets := s.BigQueryAllowedDatasets()
+	if len(allowedDatasets) > 0 {
+		projectParameterDescription = "This parameter will be ignored. The list of datasets is restricted to a pre-configured list; No need to provide a project ID."
+	} else {
+		projectParameterDescription = "The Google Cloud project to list dataset ids."
+	}
+
+	projectParameter = tools.NewStringParameterWithDefault(projectKey, s.BigQueryProject(), projectParameterDescription)
 
 	parameters := tools.Parameters{projectParameter}
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
 
 	// finish tool setup
 	t := Tool{
@@ -103,7 +109,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		UseClientOAuth:  s.UseClientAuthorization(),
 		ClientCreator:   s.BigQueryClientCreator(),
 		Client:          s.BigQueryClient(),
-		AllowedDatasets: s.BigQueryAllowedDatasets(),
+		AllowedDatasets: allowedDatasets,
 		manifest:        tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:     mcpManifest,
 	}
@@ -130,13 +136,8 @@ type Tool struct {
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	if len(t.AllowedDatasets) > 0 {
-		datasetIds := make([]any, len(t.AllowedDatasets))
-		for i, v := range t.AllowedDatasets {
-			datasetIds[i] = v
-		}
-		return datasetIds, nil
+		return t.AllowedDatasets, nil
 	}
-
 	mapParams := params.AsMap()
 	projectId, ok := mapParams[projectKey].(string)
 	if !ok {
