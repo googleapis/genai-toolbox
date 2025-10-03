@@ -900,3 +900,55 @@ func CleanupMSSQLTables(t *testing.T, ctx context.Context, pool *sql.DB) {
 	}
 
 }
+// GetHanaParamToolInfo returns statements and param for my-tool hana-sql kind
+func GetHanaParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INTEGER NOT NULL PRIMARY KEY, name NVARCHAR(255))", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (?, ?), (?, ?), (?, ?), (?, ?)", tableName)
+	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?", tableName)
+	idParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ?", tableName)
+	nameParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE name = ?", tableName)
+	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id IN (?, ?) AND name IN (?, ?)", tableName)
+	params := []any{1, "Alice", 2, "Jane", 3, "Sid", 4, nil}
+	return createStatement, insertStatement, toolStatement, idParamStatement, nameParamStatement, arrayToolStatement, params
+}
+
+// GetHanaAuthToolInfo returns statements and param of my-auth-tool for hana-sql kind
+func GetHanaAuthToolInfo(tableName string) (string, string, string, []any) {
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INTEGER NOT NULL PRIMARY KEY, name NVARCHAR(255), email NVARCHAR(255))", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name, email) VALUES (?, ?, ?), (?, ?, ?)", tableName)
+	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = ?", tableName)
+	params := []any{1, "Alice", ServiceAccountEmail, 2, "Jane", "janedoe@gmail.com"}
+	return createStatement, insertStatement, toolStatement, params
+}
+
+// GetHanaTemplateParamToolInfo returns statements and param for template parameter test cases for hana-sql kind
+func GetHanaTemplateParamToolInfo(tableName string) (string, string, string, []any) {
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INTEGER NOT NULL PRIMARY KEY, name NVARCHAR(255))", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (?, ?), (?, ?)", tableName)
+	toolStatement := "SELECT * FROM {{.tableName}} WHERE id = ?"
+	params := []any{1, "Template1", 2, "Template2"}
+	return createStatement, insertStatement, toolStatement, params
+}
+
+// SetupHanaTable sets up a table for testing HANA tools
+func SetupHanaTable(t *testing.T, ctx context.Context, db *sql.DB, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
+	_, err := db.ExecContext(ctx, createStatement)
+	if err != nil {
+		t.Fatalf("failed to create table: %s", err)
+	}
+
+	if len(params) > 0 {
+		_, err = db.ExecContext(ctx, insertStatement, params...)
+		if err != nil {
+			t.Fatalf("failed to insert into table: %s", err)
+		}
+	}
+
+	return func(t *testing.T) {
+		dropStatement := fmt.Sprintf("DROP TABLE %s", tableName)
+		_, err := db.ExecContext(ctx, dropStatement)
+		if err != nil {
+			t.Logf("failed to drop table %s: %s", tableName, err)
+		}
+	}
+}
