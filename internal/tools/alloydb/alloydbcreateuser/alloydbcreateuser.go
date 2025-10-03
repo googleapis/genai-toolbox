@@ -81,19 +81,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	paramManifest := allParameters.Manifest()
 
-	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"project", "location", "cluster", "user", "userType"}
-
 	description := cfg.Description
 	if description == "" {
 		description = "Creates a new AlloyDB user within a cluster. Takes the new user's name and a secure password. Optionally, a list of database roles can be assigned. Always ask the user for the type of user to create. ALLOYDB_IAM_USER is recommended."
 	}
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: description,
-		InputSchema: inputSchema,
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters)
 
 	return Tool{
 		Name:        cfg.Name,

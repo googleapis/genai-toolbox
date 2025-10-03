@@ -76,13 +76,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	databaseParameter := tools.NewStringParameter(databaseKey, "The database to list tables from.")
 	parameters := tools.Parameters{databaseParameter}
 
-	allParameters, paramManifest, paramMcpManifest, _ := tools.ProcessParameters(nil, parameters)
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: paramMcpManifest,
-	}
+	allParameters, paramManifest, _ := tools.ProcessParameters(nil, parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	t := Tool{
 		Name:         cfg.Name,
