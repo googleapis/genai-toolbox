@@ -90,6 +90,26 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with service account impersonation example",
+			in: `
+			sources:
+				my-instance:
+					kind: bigquery
+					project: my-project
+					location: us
+					impersonateServiceAccount: service-account@my-project.iam.gserviceaccount.com
+			`,
+			want: server.SourceConfigs{
+				"my-instance": bigquery.Config{
+					Name:                      "my-instance",
+					Kind:                      bigquery.SourceKind,
+					Project:                   "my-project",
+					Location:                  "us",
+					ImpersonateServiceAccount: "service-account@my-project.iam.gserviceaccount.com",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
