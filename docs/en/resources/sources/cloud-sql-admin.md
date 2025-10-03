@@ -11,7 +11,7 @@ aliases:
 ## About
 
 The `cloud-sql-admin` source provides a client to interact with the [Google
-Cloud SQL Admin API](https://cloud.google.com/sql/docs/mysql/admin-api/v1). This
+Cloud SQL Admin API](https://cloud.google.com/sql/docs/mysql/admin-api). This
 allows tools to perform administrative tasks on Cloud SQL instances, such as
 creating users and databases.
 
