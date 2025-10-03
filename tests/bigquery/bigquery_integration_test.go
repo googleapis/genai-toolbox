@@ -2102,16 +2102,10 @@ func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName1, allowed
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			body := bytes.NewBuffer([]byte(`{}`))
-			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/api/tool/list-dataset-ids-restricted/invoke", body)
+			resp, bodyBytes, err := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/list-dataset-ids-restricted/invoke", body, nil)
 			if err != nil {
 				t.Fatalf("unable to create request: %s", err)
 			}
-			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
 
 			if resp.StatusCode != tc.wantStatusCode {
 				bodyBytes, _ := io.ReadAll(resp.Body)
