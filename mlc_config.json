@@ -62,12 +62,6 @@
         "Authorization": "Basic Zm9vOmJhcg==",
         "Foo": "Bar"
       }
-    },
-     {
-      "urls": ["https://github.com/", "https://guides.github.com/", "https://help.github.com/", "https://docs.github.com/"],
-      "headers": {
-        "Accept-Encoding": "zstd, br, gzip, deflate"
-      }
     }
   ],
   "timeout": "20s",
