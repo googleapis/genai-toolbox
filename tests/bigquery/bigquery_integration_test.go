@@ -315,7 +315,7 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	}
 
 	// Run tests
-	runListDatasetIdsWithRestriction(t, allowedDatasetName1, allowedDatasetName2, disallowedDatasetName)
+	runListDatasetIdsWithRestriction(t, allowedDatasetName1, allowedDatasetName2)
 	runListTableIdsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, allowedForecastTableName1)
 	runListTableIdsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, allowedForecastTableName2)
 	runExecuteSqlWithRestriction(t, allowedTableNameParam1, disallowedTableNameParam)
@@ -2086,7 +2086,7 @@ func runBigQueryConversationalAnalyticsInvokeTest(t *testing.T, datasetName, tab
 	}
 }
 
-func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName1, allowedDataset2, disallowedDatasetName string) {
+func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName1, allowedDatasetName2 string) {
 	testCases := []struct {
 		name           string
 		wantStatusCode int
@@ -2095,7 +2095,7 @@ func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName1, allowed
 		{
 			name:           "invoke list-dataset-ids with restriction",
 			wantStatusCode: http.StatusOK,
-			wantResult:     fmt.Sprintf(`["%s.%s","%s.%s"]`, BigqueryProject, allowedDatasetName1, BigqueryProject, allowedDataset2),
+			wantResult:     fmt.Sprintf(`["%s.%s","%s.%s"]`, BigqueryProject, allowedDatasetName1, BigqueryProject, allowedDatasetName2),
 		},
 	}
 

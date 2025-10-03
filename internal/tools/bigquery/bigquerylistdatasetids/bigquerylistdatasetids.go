@@ -140,11 +140,7 @@ type Tool struct {
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	if len(t.AllowedDatasets) > 0 {
-		datasetIds := make([]any, len(t.AllowedDatasets))
-		for i, v := range t.AllowedDatasets {
-			datasetIds[i] = v
-		}
-		return datasetIds, nil
+		return t.AllowedDatasets, nil
 	}
 	mapParams := params.AsMap()
 	projectId, ok := mapParams[projectKey].(string)
