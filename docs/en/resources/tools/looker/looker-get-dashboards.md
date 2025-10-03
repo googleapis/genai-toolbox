@@ -3,8 +3,7 @@ title: "looker-get-dashboards"
 type: docs
 weight: 1
 description: >
-  "looker-get-dashboards" searches for saved Looks in a Looker
-  source.
+  "looker-get-dashboards" tool searches for a saved Dashboard by name or description.
 aliases:
 - /resources/tools/looker-get-dashboards
 ---

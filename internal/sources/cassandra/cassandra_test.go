@@ -36,7 +36,7 @@ func TestParseFromYamlCassandra(t *testing.T) {
 			sources:
 				my-cassandra-instance:
 					kind: cassandra
-					hosts: 
+					hosts:
 						- "my-host1"
 						- "my-host2"
 			`,
@@ -62,7 +62,7 @@ func TestParseFromYamlCassandra(t *testing.T) {
 			sources:
 				my-cassandra-instance:
 					kind: cassandra
-					hosts: 
+					hosts:
 						- "my-host1"
 						- "my-host2"
 					username: "user"
@@ -121,11 +121,11 @@ func TestFailParseFromYaml(t *testing.T) {
 			sources:
 				my-cassandra-instance:
 					kind: cassandra
-					host: 
+					hosts:
 						- "my-host"
 					foo: bar
 			`,
-			err: "unable to parse source \"my-cassandra-instance\" as \"cassandra\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | host:\n   3 | - my-host\n   4 | kind: cassandra",
+			err: "unable to parse source \"my-cassandra-instance\" as \"cassandra\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | hosts:\n   3 | - my-host\n   4 | kind: cassandra",
 		},
 		{
 			desc: "missing required field",
