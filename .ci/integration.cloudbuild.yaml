@@ -194,6 +194,26 @@ steps:
           dataplex \
           dataplex
 
+  - id: "dataform"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        apt-get update && apt-get install -y npm && \
+        npm install -g @dataform/cli && \
+        .ci/test_with_coverage.sh \
+          "Dataform" \
+          dataform \
+          dataform
+
   - id: "postgres"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -517,6 +537,8 @@ steps:
       - "FIRESTORE_PROJECT=$PROJECT_ID"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
       - "LOOKER_VERIFY_SSL=$_LOOKER_VERIFY_SSL"
+      - "LOOKER_PROJECT=$_LOOKER_PROJECT"
+      - "LOOKER_LOCATION=$_LOOKER_LOCATION"
     secretEnv:
       [
         "CLIENT_ID",
@@ -804,6 +826,8 @@ substitutions:
   _DGRAPHURL: "https://play.dgraph.io"
   _COUCHBASE_BUCKET: "couchbase-bucket"
   _COUCHBASE_SCOPE: "couchbase-scope"
+  _LOOKER_LOCATION: "us"
+  _LOOKER_PROJECT: "149671255749"
   _LOOKER_VERIFY_SSL: "true"
   _TIDB_HOST: 127.0.0.1
   _TIDB_PORT: "4000"
