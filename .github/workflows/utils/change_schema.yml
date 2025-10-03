@@ -1,0 +1,9 @@
+# Change detection patterns for Go project
+# Uses grep -P to support regex patterns
+pipelines:
+  - name: app_source
+    regex: '.+\.go$|go\.mod$|go\.sum$|^Dockerfile'
+  - name: tests
+    regex: 'tests\/.+|.*_test\.go$'
+  - name: docs
+    regex: '.+\.md$|docs\/.+|\.hugo\/.+'

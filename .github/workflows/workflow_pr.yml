@@ -1,0 +1,240 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_target:
+    branches:
+      - main
+    types: [labeled]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Declare default permissions as read only.
+permissions: read-all
+
+jobs:
+  pipeline_data:
+    # run job on proper workflow event triggers (skip job for pull_request event from forks and only run pull_request_target for "tests: run" label)
+    if: "${{ (github.event.action != 'labeled' && github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name) || github.event.label.name == 'tests: run' }}"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    outputs:
+      app_source: ${{ steps.pipeline_data.outputs.app_source }}
+      tests: ${{ steps.pipeline_data.outputs.tests }}
+      docs: ${{ steps.pipeline_data.outputs.docs }}
+      image_tag: ${{ steps.pipeline_data.outputs.image_tag }}
+    steps:
+      - name: Remove PR label
+        if: "${{ github.event.action == 'labeled' && github.event.label.name == 'tests: run' }}"
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              await github.rest.issues.removeLabel({
+                name: 'tests: run',
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number
+              });
+            } catch (e) {
+              console.log('Failed to remove label. Another job may have already removed it!');
+            }
+
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 2
+
+      - name: Get pipeline data
+        id: pipeline_data
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          COMPARE: ${{ github.sha }}
+        run: |
+          .github/workflows/utils/pipeline_data.sh
+
+      - name: Add details to PR
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        env:
+          IMAGE_TAG: ${{ steps.pipeline_data.outputs.image_tag }}
+        with:
+          script: |
+            const script = require('./.github/workflows/utils/pr_comment.js')
+            await script({github, context, core})
+
+  lint:
+    needs: [pipeline_data]
+    if: fromJSON(needs.pipeline_data.outputs.app_source)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version: "1.25"
+
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify go mod tidy
+        run: |
+          go mod tidy && git diff --exit-code
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@4afd733a84b1f43292c63897423277bb7f4313a9 # v8.0.0
+        with:
+          version: latest
+          args: --timeout 3m
+
+  test:
+    needs: [pipeline_data]
+    if: fromJSON(needs.pipeline_data.outputs.app_source) || fromJSON(needs.pipeline_data.outputs.tests)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Setup Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version: "1.24"
+
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: go get .
+
+      - name: Build
+        run: go build -v ./...
+
+      - name: Run tests with coverage
+        env:
+          GOTOOLCHAIN: go1.25.0+auto
+        run: |
+          source_dir="./internal/sources/*"
+          tool_dir="./internal/tools/*"
+          auth_dir="./internal/auth/*"
+          int_test_dir="./tests/*"
+          included_packages=$(go list ./... | grep -v -e "$source_dir" -e "$tool_dir" -e "$auth_dir" -e "$int_test_dir")
+          go test -race -cover -coverprofile=coverage.out -v $included_packages
+          go test -race -v ./internal/sources/... ./internal/tools/... ./internal/auth/...
+
+      - name: Check coverage
+        run: |
+          FILE_TO_EXCLUDE="github.com/googleapis/genai-toolbox/internal/server/config.go"
+          ESCAPED_PATH=$(echo "$FILE_TO_EXCLUDE" | sed 's/\//\\\//g; s/\./\\\./g')
+          sed -i "/^${ESCAPED_PATH}:/d" coverage.out
+          total_coverage=$(go tool cover -func=coverage.out | grep "total:" | awk '{print $3}')
+          echo "Total coverage: $total_coverage"
+          coverage_numeric=$(echo "$total_coverage" | sed 's/%//')
+          if (( $(echo "$coverage_numeric < 40" | bc -l) )); then
+              echo "Coverage failure: total coverage($total_coverage) is below 40%."
+              exit 1
+          fi
+
+  test_docs_only:
+    needs: [pipeline_data]
+    if: ${{ fromJSON(needs.pipeline_data.outputs.docs) && ! fromJSON(needs.pipeline_data.outputs.app_source) }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Test docs build
+        run: |
+          echo "Docs build validation placeholder"
+          # Add actual docs build command if needed
+
+  build_image:
+    needs: [pipeline_data, lint, test]
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false && fromJSON(needs.pipeline_data.outputs.app_source)
+    permissions:
+      contents: "read"
+      id-token: "write"
+    env:
+      PROJECT_ID: customer-bootstrap
+      GAR_LOCATION: us
+      REGION: us-central1
+      APP: genai-toolbox
+
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Google auth"
+        id: "auth"
+        uses: "google-github-actions/auth@v3"
+        with:
+          project_id: "${{ env.PROJECT_ID }}"
+          workload_identity_provider: "${{ secrets.CUSTOMER_BOOTSTRAP_WIF_PROVIDER }}"
+
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v3"
+        with:
+          project_id: "${{ env.PROJECT_ID }}"
+
+      - name: "Docker auth"
+        run: |
+          gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Calculate dynamic args
+        id: args
+        run: |
+          echo "CREATED=$(date --utc --rfc-3339=s)" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          build-args: |
+            CREATED=${{ steps.args.outputs.CREATED }}
+            GIT_HASH=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+          push: true
+          tags: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/nonprod/${{ env.APP }}:${{ needs.pipeline_data.outputs.image_tag }}
+
+  # This exists to prevent accidental merges when converting from draft to "Ready for review"
+  draft_check:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == true
+    steps:
+      - run: |
+          echo "This PR is still a draft. Please upgrade it"
+          exit 1
