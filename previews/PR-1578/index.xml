@@ -1420,7 +1420,7 @@ Execute pre-defined SQL Server queries with placeholder parameters.&lt;/p>
 &lt;li>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/mssql/mssql-execute-sql/">&lt;code>mssql-execute-sql&lt;/code>&lt;/a>&lt;br>
 Run parameterized SQL Server queries in Cloud SQL for SQL Server.&lt;/p></description></item><item><title>Cloud SQL Admin</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/sources/cloud-sql-admin/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/sources/cloud-sql-admin/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>cloud-sql-admin&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/sql/docs/mysql/admin-api/v1">Google
+&lt;p>The &lt;code>cloud-sql-admin&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/sql/docs/mysql/admin-api">Google
 Cloud SQL Admin API&lt;/a>. This
 allows tools to perform administrative tasks on Cloud SQL instances, such as
 creating users and databases.&lt;/p>
@@ -2048,7 +2048,7 @@ Run parameterized SQL statements in Firebird.&lt;/p>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-user">Database User&lt;/h3>
-&lt;p>This source uses standard authentication. You will need to &lt;a href="https://firebirdsql.org/refdocs/langrefupd25-sql-create-user.html">create a Firebird
+&lt;p>This source uses standard authentication. You will need to &lt;a href="https://www.firebirdsql.org/refdocs/langrefupd25-security-sql-user-mgmt.html#langrefupd25-security-create-user">create a Firebird
 user&lt;/a> to login to the database with.&lt;/p></description></item><item><title>firebird-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/firebird/firebird-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/firebird/firebird-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>firebird-execute-sql&lt;/code> tool executes a SQL statement against a Firebird
 database. It&amp;rsquo;s compatible with the following source:&lt;/p>
@@ -5743,7 +5743,7 @@ cache, and message broker. It supports data structures such as strings, hashes,
 lists, sets, sorted sets with range queries, bitmaps, hyperloglogs, and
 geospatial indexes with radius queries.&lt;/p>
 &lt;p>If you are new to Redis, you can find installation and getting started guides on
-the &lt;a href="https://redis.io/docs/getting-started/">official Redis website&lt;/a>.&lt;/p>
+the &lt;a href="https://redis.io/docs/">official Redis website&lt;/a>.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/redis/redis/">&lt;code>redis&lt;/code>&lt;/a>&lt;br>
