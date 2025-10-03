@@ -2112,7 +2112,7 @@ func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName1, allowed
 			}
 
 			var respBody map[string]interface{}
-			if err := json.NewDecoder(resp.Body).Decode(&respBody); err != nil {
+			if err := json.NewDecoder(bodyBytes).Decode(&respBody); err != nil {
 				t.Fatalf("error parsing response body: %v", err)
 			}
 			got, ok := respBody["result"].(string)
