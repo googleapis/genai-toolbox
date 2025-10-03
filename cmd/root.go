@@ -35,6 +35,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
+	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
@@ -310,6 +311,8 @@ type ToolsFile struct {
 	AuthServices server.AuthServiceConfigs `yaml:"authServices"`
 	Tools        server.ToolConfigs        `yaml:"tools"`
 	Toolsets     server.ToolsetConfigs     `yaml:"toolsets"`
+	Prompts      server.PromptConfigs      `yaml:"prompts"`
+	Promptsets   server.PromptsetConfigs   `yaml:"promptsets"`
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
@@ -362,6 +365,8 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 		AuthServices: make(server.AuthServiceConfigs),
 		Tools:        make(server.ToolConfigs),
 		Toolsets:     make(server.ToolsetConfigs),
+		Prompts:      make(server.PromptConfigs),
+		Promptsets:   make(server.PromptsetConfigs),
 	}
 
 	var conflicts []string
@@ -411,11 +416,29 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 				merged.Toolsets[name] = toolset
 			}
 		}
+
+		// Check for conflicts and merge prompts
+		for name, prompt := range file.Prompts {
+			if _, exists := merged.Prompts[name]; exists {
+				conflicts = append(conflicts, fmt.Sprintf("prompt '%s' (file #%d)", name, fileIndex+1))
+			} else {
+				merged.Prompts[name] = prompt
+			}
+		}
+
+		// Check for conflicts and merge promptsets
+		for name, promptset := range file.Promptsets {
+			if _, exists := merged.Promptsets[name]; exists {
+				conflicts = append(conflicts, fmt.Sprintf("promptset '%s' (file #%d)", name, fileIndex+1))
+			} else {
+				merged.Promptsets[name] = promptset
+			}
+		}
 	}
 
 	// If conflicts were detected, return an error
 	if len(conflicts) > 0 {
-		return ToolsFile{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, and toolset has a unique name across all files", strings.Join(conflicts, "\n  - "))
+		return ToolsFile{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, toolset, prompt and promptset has a unique name across all files", strings.Join(conflicts, "\n  - "))
 	}
 
 	return merged, nil
@@ -489,14 +512,14 @@ func handleDynamicReload(ctx context.Context, toolsFile ToolsFile, s *server.Ser
 		panic(err)
 	}
 
-	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := validateReloadEdits(ctx, toolsFile)
+	sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := validateReloadEdits(ctx, toolsFile)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
 		return err
 	}
 
-	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, toolsMap, toolsetsMap)
+	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	return nil
 }
@@ -504,7 +527,7 @@ func handleDynamicReload(ctx context.Context, toolsFile ToolsFile, s *server.Ser
 // validateReloadEdits checks that the reloaded tools file configs can initialized without failing
 func validateReloadEdits(
 	ctx context.Context, toolsFile ToolsFile,
-) (map[string]sources.Source, map[string]auth.AuthService, map[string]tools.Tool, map[string]tools.Toolset, error,
+) (map[string]sources.Source, map[string]auth.AuthService, map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset, error,
 ) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -527,16 +550,18 @@ func validateReloadEdits(
 		AuthServiceConfigs: toolsFile.AuthServices,
 		ToolConfigs:        toolsFile.Tools,
 		ToolsetConfigs:     toolsFile.Toolsets,
+		PromptConfigs:      toolsFile.Prompts,
+		PromptsetConfigs:   toolsFile.Promptsets,
 	}
 
-	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
+	sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to initialize reloaded configs: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, err
 	}
 
-	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, nil
+	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
 }
 
 // watchChanges checks for changes in the provided yaml tools file(s) or folder.
@@ -827,7 +852,8 @@ func run(cmd *Command) error {
 		}
 	}
 
-	cmd.cfg.SourceConfigs, cmd.cfg.AuthServiceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs = toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets
+	cmd.cfg.SourceConfigs, cmd.cfg.AuthServiceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs, cmd.cfg.PromptConfigs, cmd.cfg.PromptsetConfigs = toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets, toolsFile.Prompts, toolsFile.Promptsets
+
 	authSourceConfigs := toolsFile.AuthSources
 	if authSourceConfigs != nil {
 		cmd.logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")
