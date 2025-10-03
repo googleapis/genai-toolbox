@@ -31,7 +31,7 @@ maintenance.
 This source uses standard authentication. You will need to [create a Firebird
 user][fb-users] to login to the database with.
 
-[fb-users]: https://firebirdsql.org/refdocs/langrefupd25-sql-create-user.html
+[fb-users]: https://www.firebirdsql.org/refdocs/langrefupd25-security-sql-user-mgmt.html#langrefupd25-security-create-user
 
 ## Example
 
