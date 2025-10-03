@@ -31,6 +31,9 @@
     },
     {
       "pattern": "8080"
+    },
+    {
+      "patern": "7777"
     }
   ],
   "replacementPatterns": [
