@@ -111,20 +111,25 @@ func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name,
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
-	// Create dsn
-	query := fmt.Sprintf("database=%s&cloudsql=%s:%s:%s", dbname, project, region, instance)
-	url := &url.URL{
-		Scheme:   "sqlserver",
-		User:     url.UserPassword(user, pass),
-		Host:     ipAddress,
-		RawQuery: query,
-	}
-
-	// Get dial options
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
+
+	// Create dsn
+	query := url.Values{}
+	query.Add("app name", userAgent)
+	query.Add("database", dbname)
+	query.Add("cloudsql", fmt.Sprintf("%s:%s:%s", project, region, instance))
+
+	url := &url.URL{
+		Scheme:   "sqlserver",
+		User:     url.UserPassword(user, pass),
+		Host:     ipAddress,
+		RawQuery: query.Encode(),
+	}
+
+	// Get dial options
 	opts, err := sources.GetCloudSQLOpts(ipType, userAgent, false)
 	if err != nil {
 		return nil, err
