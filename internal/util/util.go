@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -162,26 +161,4 @@ func InstrumentationFromContext(ctx context.Context) (*telemetry.Instrumentation
 		return instrumentation, nil
 	}
 	return nil, fmt.Errorf("unable to retrieve instrumentation")
-}
-
-// ExpandEnv replaces ${var} or $var in the string according to the values
-// of the current environment variables. The forms ${var:default} and
-// ${var:-default} are supported for default values.
-func ExpandEnv(s string) string {
-	return os.Expand(s, func(v string) string {
-		parts := strings.SplitN(v, ":", 2)
-		key := parts[0]
-		defaultValue := ""
-		if len(parts) == 2 {
-			defaultValue = strings.TrimPrefix(parts[1], "-")
-			if len(defaultValue) > 1 && defaultValue[0] == '"' && defaultValue[len(defaultValue)-1] == '"' {
-				defaultValue = defaultValue[1 : len(defaultValue)-1]
-			}
-		}
-
-		if val, ok := os.LookupEnv(key); ok {
-			return val
-		}
-		return defaultValue
-	})
 }

@@ -112,14 +112,12 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("error creating new sqladmin service: %w", err)
 	}
 
-	defaultProject := util.ExpandEnv(r.DefaultProject)
-
 	s := &Source{
 		Name:           r.Name,
 		Kind:           SourceKind,
 		BaseURL:        "https://sqladmin.googleapis.com",
 		Service:        service,
-		DefaultProject: defaultProject,
+		DefaultProject: r.DefaultProject,
 		UseClientOAuth: r.UseClientOAuth,
 	}
 	return s, nil

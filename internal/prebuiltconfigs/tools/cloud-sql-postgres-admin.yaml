@@ -15,7 +15,7 @@
 sources:
   cloud-sql-admin-source:
     kind: cloud-sql-admin
-    defaultProject: ${CLOUD_SQL_POSTGRES_PROJECT:""}
+    defaultProject: ${CLOUD_SQL_POSTGRES_PROJECT:}
 
 tools:
   create_instance:

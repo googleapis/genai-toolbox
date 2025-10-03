@@ -15,7 +15,7 @@
 sources:
   alloydb-admin-source:
     kind: alloydb-admin
-    defaultProject: ${ALLOYDB_POSTGRES_PROJECT:""}
+    defaultProject: ${ALLOYDB_POSTGRES_PROJECT:}
 tools:
   create_cluster:
     kind: alloydb-create-cluster

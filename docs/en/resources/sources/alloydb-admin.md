@@ -2,7 +2,7 @@
 title: AlloyDB Admin
 linkTitle: AlloyDB Admin
 type: docs
-weight: 2
+weight: 1
 description: "The \"alloydb-admin\" source provides a client for the AlloyDB API.\n"
 aliases: [/resources/sources/alloydb-admin]
 ---
@@ -39,5 +39,5 @@ sources:
 | **field**      | **type** | **required** | **description**                                                                                                                                |
 | -------------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | kind           |  string  |     true     | Must be "alloydb-admin".                                                                                                                       |
-| defaultProject |  string  |     false    | The environment variable containing the Google Cloud project ID to use for all AlloyDB operations.                                             |
+| defaultProject |  string  |     false    | For prebuilt tools, this is the environment variable containing the Google Cloud project ID.                                                   |
 | useClientOAuth |  boolean |     false    | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
