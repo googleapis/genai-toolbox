@@ -1,0 +1,72 @@
+name: Release
+run-name: 'Releasing: ${{ github.event.pull_request.title }}'
+
+on:
+  pull_request:
+    types: [ closed ]
+    branches:
+      - main
+
+jobs:
+  pipeline_data:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    outputs:
+      app_source: ${{ steps.pipeline_data.outputs.app_source }}
+      image_tag: ${{ steps.pipeline_data.outputs.image_tag }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 2
+
+      - name: Get data
+        id: pipeline_data
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          COMPARE: ${{ github.sha }}
+        run: |
+          .github/workflows/utils/pipeline_data.sh
+
+  promote_image:
+    needs: [pipeline_data]
+    if: fromJSON(needs.pipeline_data.outputs.app_source)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: "read"
+      id-token: "write"
+    env:
+      PROJECT_ID: customer-bootstrap
+      GAR_LOCATION: us
+      REGION: us-central1
+      APP: genai-toolbox
+
+    steps:
+      - name: "Google auth"
+        id: "auth"
+        uses: "google-github-actions/auth@v3"
+        with:
+          project_id: "${{ env.PROJECT_ID }}"
+          workload_identity_provider: "${{ secrets.CUSTOMER_BOOTSTRAP_WIF_PROVIDER }}"
+
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v3"
+        with:
+          project_id: "${{ env.PROJECT_ID }}"
+
+      - name: "Docker auth"
+        run: |
+          gcloud auth configure-docker ${{ env.GAR_LOCATION }}-docker.pkg.dev
+
+      - name: Re-tag image and promote to prod
+        run: |
+          nonprod_image="${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/nonprod/${{ env.APP }}:${{ needs.pipeline_data.outputs.image_tag }}"
+          prod_image_uri="${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/prod/${{ env.APP }}"
+
+          echo "Pulling nonprod image"
+          docker pull "$nonprod_image"
+
+          echo "Retagging nonprod image to promote to prod"
+          docker tag "$nonprod_image" "$prod_image_uri:${{ needs.pipeline_data.outputs.image_tag }}"
+
+          echo "Pushing prod image"
+          docker push --all-tags "$prod_image_uri"
