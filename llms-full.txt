@@ -6793,7 +6793,7 @@ A "cloud-sql-admin" source provides a client for the Cloud SQL Admin API.
 ## About
 
 The `cloud-sql-admin` source provides a client to interact with the [Google
-Cloud SQL Admin API](https://cloud.google.com/sql/docs/mysql/admin-api/v1). This
+Cloud SQL Admin API](https://cloud.google.com/sql/docs/mysql/admin-api). This
 allows tools to perform administrative tasks on Cloud SQL instances, such as
 creating users and databases.
 
@@ -7288,7 +7288,7 @@ maintenance.
 This source uses standard authentication. You will need to [create a Firebird
 user][fb-users] to login to the database with.
 
-[fb-users]: https://firebirdsql.org/refdocs/langrefupd25-sql-create-user.html
+[fb-users]: https://www.firebirdsql.org/refdocs/langrefupd25-security-sql-user-mgmt.html#langrefupd25-security-create-user
 
 ## Example
 
@@ -7880,7 +7880,7 @@ lists, sets, sorted sets with range queries, bitmaps, hyperloglogs, and
 geospatial indexes with radius queries.
 
 If you are new to Redis, you can find installation and getting started guides on
-the [official Redis website](https://redis.io/docs/getting-started/).
+the [official Redis website](https://redis.io/docs/).
 
 ## Available Tools
 
