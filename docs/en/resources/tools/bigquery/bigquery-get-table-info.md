@@ -18,7 +18,9 @@ It's compatible with the following sources:
 `bigquery-get-table-info` takes `dataset` and `table` parameters to specify
 the target table. It also optionally accepts a `project` parameter to define
 the Google Cloud project ID. If the `project` parameter is not provided, the
-tool defaults to using the project defined in the source configuration.
+tool defaults to using the project defined in the source configuration. If the
+associated `bigquery` source has a `datasets` list configured, this tool will
+return an error if the requested dataset is not in that list.
 
 ## Example
 
