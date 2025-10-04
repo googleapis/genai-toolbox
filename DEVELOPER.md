@@ -229,6 +229,24 @@ Follow these steps to preview documentation changes locally using a Hugo server:
 
 ### Previewing Documentation on Pull Requests
 
+### Document Versioning Setup
+
+There are 3 GHA workflows we use to achieve document versioning:
+
+1. **Deploy In-development docs:**
+    This workflow is run on every commit merged into the main branch. It deploys the built site to the /dev/ subdirectory for the in-development documentation.
+
+1. **Deploy Versioned Docs:**
+    When a new GitHub Release is published,it performs two deployments based on the new release tag.
+    One to the new version subdirectory and one to the root directory of the versioned-gh-pages branch.
+
+1. **Deploy Previous Version Docs:**
+    This is a manual workflow, started from the GitHub Actions UI.
+    To rebuild and redeploy documentation for an already released version. This is used to generate docs for older versions that were released before this new system was in place.
+    This workflow can be started on the UI by providing the git version tag which they want to create the documentation for.
+    The specific versioned subdirectory and the root docs are updated. on the versioned-gh-pages branch.
+
+
 #### Contributors
 
 Request a repo owner to run the preview deployment workflow on your PR. A
