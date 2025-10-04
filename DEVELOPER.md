@@ -240,6 +240,8 @@ There are 3 GHA workflows we use to achieve document versioning:
     When a new GitHub Release is published,it performs two deployments based on the new release tag.
     One to the new version subdirectory and one to the root directory of the versioned-gh-pages branch.
 
+    **Note:** Before the release PR from release-please is merged, add the newest version into the hugo.toml file.
+
 1. **Deploy Previous Version Docs:**
     This is a manual workflow, started from the GitHub Actions UI.
     To rebuild and redeploy documentation for an already released version. This is used to generate docs for older versions that were released before this new system was in place.
