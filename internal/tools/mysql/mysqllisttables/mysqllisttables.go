@@ -145,11 +145,10 @@ const listTablesStatement = `
                                     JSON_ARRAYAGG(S.COLUMN_NAME) AS INDEX_COLUMNS_ARRAY
                                 FROM
                                     INFORMATION_SCHEMA.STATISTICS S
-                                WHERE
-                                    S.TABLE_SCHEMA = T.TABLE_SCHEMA AND S.TABLE_NAME = T.TABLE_NAME
                                 GROUP BY
                                     S.TABLE_SCHEMA, S.TABLE_NAME, S.INDEX_NAME
                             ) AS IndexData
+                            WHERE IndexData.TABLE_SCHEMA = T.TABLE_SCHEMA AND IndexData.TABLE_NAME = T.TABLE_NAME
                             ORDER BY IndexData.INDEX_NAME
                         ),
                         'triggers', (
