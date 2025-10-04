@@ -3,8 +3,24 @@
   "ignorePatterns": [
     {
       "pattern": "^http://example.net"
+    },
+    {
+      "pattern": "^http://example.com"
+    },
+    {
+        "pattern":"https://dev.mysql.com"
+    },
+    {
+      "pattern": "https://www.npmjs.com/package/@toolbox-sdk/core"
+    },
+    {
+        "pattern": ":(5000|3000|7777|4318|8080)",
+        "comment": "Ignore URLs containing ports 5000, 3000, or 7777 (e.g., for local development or testing)"
+    },
+    {
+        "pattern":"https://claude.ai/download"
     }
-  ],
+    ],
   "replacementPatterns": [
     {
       "pattern": "^.attachments",
