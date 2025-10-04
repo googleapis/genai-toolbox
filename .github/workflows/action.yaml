@@ -1,0 +1,14 @@
+name: markdown-link-check
+
+on:
+  push:
+
+jobs:
+  markdown-link-check:
+    name: Check markdown files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Markdown links check
+        uses: ruzickap/action-my-markdown-link-checker@v1
