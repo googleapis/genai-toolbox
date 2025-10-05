@@ -232,9 +232,20 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1623/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>bigquery-list-dataset-ids&lt;/code> optionally accepts a &lt;code>project&lt;/code> parameter to define
-the Google Cloud project ID. If the &lt;code>project&lt;/code> parameter is not provided, the
-tool defaults to using the project defined in the source configuration.&lt;/p>
+&lt;p>&lt;code>bigquery-list-dataset-ids&lt;/code> accepts the following parameter:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>project&lt;/code>&lt;/strong> (optional): Defines the Google Cloud project ID. If not provided,
+the tool defaults to the project from the source configuration.&lt;/li>
+&lt;/ul>
+&lt;p>The tool&amp;rsquo;s behavior regarding this parameter is influenced by the
+&lt;code>allowedDatasets&lt;/code> restriction on the &lt;code>bigquery&lt;/code> source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Without &lt;code>allowedDatasets&lt;/code> restriction:&lt;/strong> The tool can list datasets from any
+project specified by the &lt;code>project&lt;/code> parameter.&lt;/li>
+&lt;li>&lt;strong>With &lt;code>allowedDatasets&lt;/code> restriction:&lt;/strong> The tool directly returns the
+pre-configured list of dataset IDs from the source, and the &lt;code>project&lt;/code>
+parameter is ignored.&lt;/li>
+&lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">bigquery_list_dataset_ids&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
