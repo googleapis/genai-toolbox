@@ -69,8 +69,91 @@ func getLookerVars(t *testing.T) map[string]any {
 	}
 }
 
+var toolsFile = map[string]any{
+	"sources": map[string]any{},
+	"tools": map[string]any{
+		"get_models": map[string]any{
+			"kind":        "looker-get-models",
+			"source":      "my-instance",
+			"description": "Simple tool to test end to end functionality.",
+		},
+		"get_explores": map[string]any{
+			"kind":        "looker-get-explores",
+			"source":      "my-instance",
+			"description": "Simple tool to test end to end functionality.",
+		},
+		"get_dimensions": map[string]any{
+			"kind":        "looker-get-dimensions",
+			"source":      "my-instance",
+			"description": "Simple tool to test end to end functionality.",
+		},
+		"get_measures": map[string]any{
+			"kind":        "looker-get-measures",
+			"source":      "my-instance",
+			"description": "Simple tool to test end to end functionality.",
+		},
+		"get_filters": map[string]any{
+			"kind":        "looker-get-filters",
+			"source":      "my-instance",
+			"description": "Simple tool to test end to end functionality.",
+		},
+		"get_parameters": map[string]any{
+			"kind":        "looker-get-parameters",
+			"source":      "my-instance",
+			"description": "Simple tool to test end to end functionality.",
+		},
+		"query": map[string]any{
+			"kind":        "looker-query",
+			"source":      "my-instance",
+			"description": "Simple tool to test end to end functionality.",
+		},
+		"query_sql": map[string]any{
+			"kind":        "looker-query-sql",
+			"source":      "my-instance",
+			"description": "Simple tool to test end to end functionality.",
+		},
+		"query_url": map[string]any{
+			"kind":        "looker-query-url",
+			"source":      "my-instance",
+			"description": "Simple tool to test end to end functionality.",
+		},
+		"get_looks": map[string]any{
+			"kind":        "looker-get-looks",
+			"source":      "my-instance",
+			"description": "Simple tool to test end to end functionality.",
+		},
+		"get_dashboards": map[string]any{
+			"kind":        "looker-get-dashboards",
+			"source":      "my-instance",
+			"description": "Simple tool to test end to end functionality.",
+		},
+		"conversational_analytics": map[string]any{
+			"kind":        "looker-conversational-analytics",
+			"source":      "my-instance",
+			"description": "Simple tool to test end to end functionality.",
+		},
+		"health_pulse": map[string]any{
+			"kind":        "looker-health-pulse",
+			"source":      "my-instance",
+			"description": "Checks the health of a Looker instance by running a series of checks on the system.",
+		},
+		"health_analyze": map[string]any{
+			"kind":        "looker-health-analyze",
+			"source":      "my-instance",
+			"description": "Provides analysis of a Looker instance's projects, models, or explores.",
+		},
+		"health_vacuum": map[string]any{
+			"kind":        "looker-health-vacuum",
+			"source":      "my-instance",
+			"description": "Vacuums unused content from a Looker instance.",
+		},
+	},
+}
+
 func TestLooker(t *testing.T) {
 	sourceConfig := getLookerVars(t)
+	toolsFile["sources"].(map[string]any)["my-instance"] = sourceConfig
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
@@ -83,89 +166,6 @@ func TestLooker(t *testing.T) {
 	var args []string
 
 	// Write config into a file and pass it to command
-
-	toolsFile := map[string]any{
-		"sources": map[string]any{
-			"my-instance": sourceConfig,
-		},
-		"tools": map[string]any{
-			"get_models": map[string]any{
-				"kind":        "looker-get-models",
-				"source":      "my-instance",
-				"description": "Simple tool to test end to end functionality.",
-			},
-			"get_explores": map[string]any{
-				"kind":        "looker-get-explores",
-				"source":      "my-instance",
-				"description": "Simple tool to test end to end functionality.",
-			},
-			"get_dimensions": map[string]any{
-				"kind":        "looker-get-dimensions",
-				"source":      "my-instance",
-				"description": "Simple tool to test end to end functionality.",
-			},
-			"get_measures": map[string]any{
-				"kind":        "looker-get-measures",
-				"source":      "my-instance",
-				"description": "Simple tool to test end to end functionality.",
-			},
-			"get_filters": map[string]any{
-				"kind":        "looker-get-filters",
-				"source":      "my-instance",
-				"description": "Simple tool to test end to end functionality.",
-			},
-			"get_parameters": map[string]any{
-				"kind":        "looker-get-parameters",
-				"source":      "my-instance",
-				"description": "Simple tool to test end to end functionality.",
-			},
-			"query": map[string]any{
-				"kind":        "looker-query",
-				"source":      "my-instance",
-				"description": "Simple tool to test end to end functionality.",
-			},
-			"query_sql": map[string]any{
-				"kind":        "looker-query-sql",
-				"source":      "my-instance",
-				"description": "Simple tool to test end to end functionality.",
-			},
-			"query_url": map[string]any{
-				"kind":        "looker-query-url",
-				"source":      "my-instance",
-				"description": "Simple tool to test end to end functionality.",
-			},
-			"get_looks": map[string]any{
-				"kind":        "looker-get-looks",
-				"source":      "my-instance",
-				"description": "Simple tool to test end to end functionality.",
-			},
-			"get_dashboards": map[string]any{
-				"kind":        "looker-get-dashboards",
-				"source":      "my-instance",
-				"description": "Simple tool to test end to end functionality.",
-			},
-			"conversational_analytics": map[string]any{
-				"kind":        "looker-conversational-analytics",
-				"source":      "my-instance",
-				"description": "Simple tool to test end to end functionality.",
-			},
-			"health_pulse": map[string]any{
-				"kind":        "looker-health-pulse",
-				"source":      "my-instance",
-				"description": "Checks the health of a Looker instance by running a series of checks on the system.",
-			},
-			"health_analyze": map[string]any{
-				"kind":        "looker-health-analyze",
-				"source":      "my-instance",
-				"description": "Provides analysis of a Looker instance's projects, models, or explores.",
-			},
-			"health_vacuum": map[string]any{
-				"kind":        "looker-health-vacuum",
-				"source":      "my-instance",
-				"description": "Vacuums unused content from a Looker instance.",
-			},
-		},
-	}
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -857,7 +857,38 @@ func TestLooker(t *testing.T) {
 	wantResult = "\"Model\":\"the_look\""
 	tests.RunToolInvokeParametersTest(t, "health_analyze", []byte(`{"action": "explores", "project": "the_look", "model": "the_look", "explore": "inventory_items"}`), wantResult)
 
-	wantResult = "\"Model\":\"the_look\""
+}
+
+func TestLookerHealthVacuum(t *testing.T) {
+	sourceConfig := getLookerVars(t)
+	toolsFile["sources"].(map[string]any)["my-instance"] = sourceConfig
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithLogger(ctx, testLogger)
+
+	var args []string
+
+	// Write config into a file and pass it to command
+
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+	wantResult := "\"Model\":\"the_look\""
 	tests.RunToolInvokeParametersTest(t, "health_vacuum", []byte(`{"action": "models"}`), wantResult)
 
 }
