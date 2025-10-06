@@ -205,7 +205,6 @@ func TestGetPrebuiltTool(t *testing.T) {
 	if len(snowflake_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch snowflake prebuilt tools yaml")
 	}
-	}
 }
 
 func TestFailGetPrebuiltTool(t *testing.T) {

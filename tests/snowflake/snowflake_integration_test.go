@@ -114,7 +114,7 @@ func TestSnowflake(t *testing.T) {
 	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
-	createParamTableStmt, insertParamTableStmt, paramToolStmt, paramToolStmt2, arrayToolStmt, paramTestParams := getSnowflakeParamToolInfo(tableNameParam)
+	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := getSnowflakeParamToolInfo(tableNameParam)
 	teardownTable1 := setupSnowflakeTable(t, ctx, db, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
 	defer teardownTable1(t)
 
@@ -125,7 +125,7 @@ func TestSnowflake(t *testing.T) {
 
 	// Write config into a file and pass it to command
 
-toolsFile := tests.GetToolsConfig(sourceConfig, SnowflakeToolKind, paramToolStmt, paramToolStmt2, arrayToolStmt, authToolStmt)
+toolsFile := tests.GetToolsConfig(sourceConfig, SnowflakeToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 toolsFile = addSnowflakeExecuteSqlConfig(t, toolsFile)
 tmplSelectCombined, tmplSelectFilterCombined := getSnowflakeTmplToolStatement()
 toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SnowflakeToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
@@ -146,12 +146,14 @@ toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SnowflakeToolKind, tmplSe
 
 	tests.RunToolGetTest(t)
 
-	select1Want, failInvocationWant, createTableStatement := getSnowflakeWants()
-	invokeParamWant, invokeParamWantNull, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, true)
+	select1Want, failInvocationWant, createTableStatement, mcpSelect1Want := getSnowflakeWants()
+
+	// Run tests
+	tests.RunToolGetTest(t)
+	tests.RunToolInvokeTest(t, select1Want)
+	tests.RunMCPToolCallMethod(t, failInvocationWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
-	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
 
 // addSnowflakeExecuteSqlConfig gets the tools config for `snowflake-execute-sql`
@@ -181,14 +183,15 @@ tools["my-auth-exec-sql-tool"] = map[string]any{
 }
 
 // getSnowflakeParamToolInfo returns statements and param for my-param-tool snowflake-sql kind
-func getSnowflakeParamToolInfo(tableName string) (string, string, string, string, string, []any) {
+func getSnowflakeParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INTEGER AUTOINCREMENT PRIMARY KEY, name STRING);", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?), (?);", tableName)
 	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ? OR name = ?;", tableName)
-	toolStatement2 := fmt.Sprintf("SELECT * FROM %s WHERE id = ?;", tableName)
+	idParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ?;", tableName)
+	nameParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE name = ?;", tableName)
 	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY(?) AND name = ANY(?);", tableName)
 	params := []any{"Alice", "Jane", "Sid", nil}
-	return createStatement, insertStatement, toolStatement, toolStatement2, arrayToolStatement, params
+	return createStatement, insertStatement, toolStatement, idParamStatement, nameParamStatement, arrayToolStatement, params
 }
 
 // getSnowflakeAuthToolInfo returns statements and param of my-auth-tool for snowflake-sql kind
@@ -208,11 +211,12 @@ func getSnowflakeTmplToolStatement() (string, string) {
 }
 
 // getSnowflakeWants return the expected wants for snowflake
-func getSnowflakeWants() (string, string, string) {
+func getSnowflakeWants() (string, string, string, string) {
 	select1Want := "[{\"1\":1}]"
 	failInvocationWant := `{\"jsonrpc\":\"2.0\",\"id\":\"invoke-fail-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"unable to execute query: 000606 (57P03): No active warehouse selected in the current session.  Select an active warehouse with the 'use warehouse' command.\"}],\"isError\":true}}`
 	createTableStatement := "\"CREATE TABLE t (id INTEGER AUTOINCREMENT PRIMARY KEY, name STRING)\""
-	return select1Want, failInvocationWant, createTableStatement
+	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"?column?\":1}"}]}}`
+	return select1Want, failInvocationWant, createTableStatement, mcpSelect1Want
 }
 
 // setupSnowflakeTable creates and inserts data into a table of tool
