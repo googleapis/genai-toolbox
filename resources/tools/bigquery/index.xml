@@ -4,8 +4,9 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>bigquery-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the sql
-statement against the &lt;code>source&lt;/code>.&lt;/p>
+&lt;p>&lt;code>bigquery-execute-sql&lt;/code> takes a required &lt;code>sql&lt;/code> input parameter and runs the SQL
+statement against the configured &lt;code>source&lt;/code>. It also supports an optional &lt;code>dry_run&lt;/code>
+parameter to validate a query without executing it.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">execute_sql_tool&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -185,7 +186,7 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>bigquery-get-dataset-info&lt;/code> takes a required &lt;code>dataset&lt;/code> parameter to specify the dataset
+&lt;p>&lt;code>bigquery-list-table-ids&lt;/code> takes a required &lt;code>dataset&lt;/code> parameter to specify the dataset
 from which to list table IDs. It also optionally accepts a &lt;code>project&lt;/code> parameter to
 define the Google Cloud project ID. If the &lt;code>project&lt;/code> parameter is not provided, the
 tool defaults to using the project defined in the source configuration.&lt;/p>

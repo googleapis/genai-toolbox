@@ -31,10 +31,10 @@ List of guides detailing how to do different things with Toolbox.
   - [Cloud SQL for SQL Server using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mssql_mcp/): Connect your IDE to Cloud SQL for SQL Server using Toolbox.
   - [Firestore using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/firestore_mcp/): Connect your IDE to Firestore using Toolbox.
   - [Looker using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/looker_mcp/): Connect your IDE to Looker using Toolbox.
-  - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/): Connect your IDE to PostgreSQL using Toolbox.
+  - [MySQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/mysql_mcp/): Connect your IDE to MySQL using Toolbox.  - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/): Connect your IDE to PostgreSQL using Toolbox.
   - [Spanner using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/spanner_mcp/): Connect your IDE to Spanner using Toolbox.
-- [Connect via MCP Client](https://googleapis.github.io/genai-toolbox/how-to/connect_via_mcp/): How to connect to Toolbox from a MCP Client.
-- [Toolbox UI](https://googleapis.github.io/genai-toolbox/how-to/use-toolbox-ui/): How to effectively use Toolbox UI.
+  - [SQL Server using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/mssql_mcp/): Connect your IDE to SQL Server using Toolbox.- [Connect via MCP Client](https://googleapis.github.io/genai-toolbox/how-to/connect_via_mcp/): How to connect to Toolbox from a MCP Client.
+- [Toolbox UI](https://googleapis.github.io/genai-toolbox/how-to/toolbox-ui/): How to effectively use Toolbox UI.
 - [Deploy to Cloud Run](https://googleapis.github.io/genai-toolbox/how-to/deploy_toolbox/): How to set up and configure Toolbox to run on Cloud Run.
 - [Deploy to Kubernetes](https://googleapis.github.io/genai-toolbox/how-to/deploy_gke/): How to set up and configure Toolbox to deploy on Kubernetes with Google Kubernetes Engine (GKE).
 - [Deploy using Docker Compose](https://googleapis.github.io/genai-toolbox/how-to/deploy_docker/): How to deploy Toolbox using Docker Compose.
@@ -62,7 +62,7 @@ List of reference documentation for resources in Toolbox.
   - [MySQL](https://googleapis.github.io/genai-toolbox/resources/sources/mysql/): MySQL is a relational database management system that stores and manages data.
   - [Neo4j](https://googleapis.github.io/genai-toolbox/resources/sources/neo4j/): Neo4j is a powerful, open source graph database system
   - [PostgreSQL](https://googleapis.github.io/genai-toolbox/resources/sources/postgres/): PostgreSQL is a powerful, open source object-relational database.
-  - [Redis](https://googleapis.github.io/genai-toolbox/resources/sources/redis/): Redis is an open-source, in-memory data structure store.
+  - [Redis](https://googleapis.github.io/genai-toolbox/resources/sources/redis/): Redis is a in-memory data structure store.
   - [Spanner](https://googleapis.github.io/genai-toolbox/resources/sources/spanner/): Spanner is a fully managed database service from Google Cloud that combines  relational, key-value, graph, and search capabilities.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/resources/sources/mssql/): SQL Server is a relational database management system (RDBMS).
   - [SQLite](https://googleapis.github.io/genai-toolbox/resources/sources/sqlite/): SQLite is a C-language library that implements a small, fast, self-contained,  high-reliability, full-featured, SQL database engine.
