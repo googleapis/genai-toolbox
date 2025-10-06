@@ -87,7 +87,7 @@ type McpPromptArg struct {
 type McpManifest struct {
 	Name        string         `json:"name"`
 	Description string         `json:"description,omitempty"`
-	Arguments   []McpPromptArg `json:"inputSchema,omitempty"`
+	Arguments   []McpPromptArg `json:"arguments,omitempty"`
 	Metadata    map[string]any `json:"_meta,omitempty"`
 }
 
