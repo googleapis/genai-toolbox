@@ -15,8 +15,10 @@
 package prompts
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"html/template"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -24,7 +26,7 @@ import (
 
 // PromptConfigFactory defines the signature for a function that creates and
 // decodes a specific prompt's configuration.
-type PromptConfigFactory func(ctx context.Context, name string, decoder *yaml.Decoder) (Config, error)
+type PromptConfigFactory func(ctx context.Context, name string, decoder *yaml.Decoder) (PromptConfig, error)
 
 var promptRegistry = make(map[string]PromptConfigFactory)
 
@@ -90,10 +92,14 @@ type McpManifest struct {
 }
 
 func GetMcpManifest(name, desc string, args Arguments) McpManifest {
+	var mcpArgs []McpPromptArg
+	for _, arg := range args {
+		mcpArgs = append(mcpArgs, arg.McpPromptManifest())
+	}
 	mcpManifest := McpManifest{
 		Name:        name,
 		Description: desc,
-		Arguments:   args.McpManifest(),
+		Arguments:   mcpArgs,
 	}
 
 	// construct metadata, if applicable
@@ -118,14 +124,67 @@ type Config struct {
 	Arguments   Arguments `yaml:"arguments,omitempty"`
 }
 
-// ArgValues is an ordered list of ArgValue
-type ArgValues []ArgValue
-
-// ArgValue represents the parameter's name and value.
-type ArgValue struct {
-	Name  string
-	Value any
+// Initialize implements the Initialize method of the PromptConfig interface.
+func (c Config) Initialize() (Prompt, error) {
+	return c, nil
 }
+
+func (c Config) PromptConfigKind() string {
+	return c.Kind
+}
+
+func (c Config) Manifest() Manifest {
+	var paramManifests []tools.ParameterManifest
+	for _, arg := range c.Arguments {
+		paramManifests = append(paramManifests, arg.Manifest())
+	}
+	return Manifest{
+		Description: c.Description,
+		Arguments:   paramManifests,
+	}
+}
+
+func (c Config) McpManifest() McpManifest {
+	return GetMcpManifest(c.Name, c.Description, c.Arguments)
+}
+
+func (c Config) SubstituteParams(argValues tools.ParamValues) (any, error) {
+	substitutedMessages := []Message{}
+	argsMap := make(map[string]any)
+	for _, arg := range argValues {
+		argsMap[arg.Name] = arg.Value
+	}
+
+	for _, msg := range c.Messages {
+		tpl, err := template.New("message").Option("missingkey=error").Parse(msg.Content)
+		if err != nil {
+			return nil, err
+		}
+
+		var buf bytes.Buffer
+		if err := tpl.Execute(&buf, argsMap); err != nil {
+			return nil, err
+		}
+
+		substitutedMessages = append(substitutedMessages, Message{
+			Role:    msg.Role,
+			Content: buf.String(),
+		})
+	}
+
+	return substitutedMessages, nil
+}
+
+func (c Config) ParseArgs(args map[string]any, data map[string]map[string]any) (tools.ParamValues, error) {
+	var parameters tools.Parameters
+	for _, arg := range c.Arguments {
+		parameters = append(parameters, arg)
+	}
+	return tools.ParseParams(parameters, args, data)
+}
+
+// ArgValues can be an alias for tools.ParamValues to avoid re-definition.
+type ArgValues = tools.ParamValues
 
 // SystemPromptConfig is the configuration for a system prompt.
 type SystemPromptConfig struct {
