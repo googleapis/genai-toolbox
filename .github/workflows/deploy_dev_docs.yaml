@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: "docs"
+name: "Deploy In-development docs"
 
 permissions:
   contents: write
@@ -50,7 +50,7 @@ jobs:
           extended: true
 
       - name: Setup Node
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
 
@@ -65,15 +65,20 @@ jobs:
       - run: npm ci
       - run: hugo --minify
         env:
-          HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+          HUGO_BASEURL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/dev
           HUGO_RELATIVEURLS: false
+
+      - name: Create Staging Directory
+        run: |
+          mkdir staging
+          mv public staging/dev
+          mv staging/dev/releases.releases staging/releases.releases
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .hugo/public
-          # Do not delete previews on each production deploy.
-          # CSS or JS changes will require manual clean-up.
+          publish_dir: ./.hugo/staging
+          publish_branch: versioned-gh-pages
           keep_files: true
           commit_message: "deploy: ${{ github.event.head_commit.message }}"

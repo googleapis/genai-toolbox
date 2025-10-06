@@ -537,6 +537,8 @@ steps:
       - "FIRESTORE_PROJECT=$PROJECT_ID"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
       - "LOOKER_VERIFY_SSL=$_LOOKER_VERIFY_SSL"
+      - "LOOKER_PROJECT=$_LOOKER_PROJECT"
+      - "LOOKER_LOCATION=$_LOOKER_LOCATION"
     secretEnv:
       [
         "CLIENT_ID",
@@ -824,6 +826,8 @@ substitutions:
   _DGRAPHURL: "https://play.dgraph.io"
   _COUCHBASE_BUCKET: "couchbase-bucket"
   _COUCHBASE_SCOPE: "couchbase-scope"
+  _LOOKER_LOCATION: "us"
+  _LOOKER_PROJECT: "149671255749"
   _LOOKER_VERIFY_SSL: "true"
   _TIDB_HOST: 127.0.0.1
   _TIDB_PORT: "4000"
