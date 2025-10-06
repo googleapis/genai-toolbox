@@ -8,8 +8,10 @@
 
 How to get started with Toolbox.
 - [Introduction](https://googleapis.github.io/genai-toolbox/getting-started/introduction/): An introduction to MCP Toolbox for Databases.
-- [Quickstart (Local)](https://googleapis.github.io/genai-toolbox/getting-started/local_quickstart/): How to get started running Toolbox locally with Python, PostgreSQL, and  [Agent Development Kit](https://google.github.io/adk-docs/), [LangGraph](https://www.langchain.com/langgraph), [LlamaIndex](https://www.llamaindex.ai/) or [GoogleGenAI](https://pypi.org/project/google-genai/).
-- [Quickstart (MCP)](https://googleapis.github.io/genai-toolbox/getting-started/mcp_quickstart/): How to get started running Toolbox locally with MCP Inspector. 
+- [Python Quickstart (Local)](https://googleapis.github.io/genai-toolbox/getting-started/local_quickstart/): How to get started running Toolbox locally with [Python](https://github.com/googleapis/mcp-toolbox-sdk-python), PostgreSQL, and  [Agent Development Kit](https://google.github.io/adk-docs/), [LangGraph](https://www.langchain.com/langgraph), [LlamaIndex](https://www.llamaindex.ai/) or [GoogleGenAI](https://pypi.org/project/google-genai/).
+- [JS Quickstart (Local)](https://googleapis.github.io/genai-toolbox/getting-started/local_quickstart_js/): How to get started running Toolbox locally with [JavaScript](https://github.com/googleapis/mcp-toolbox-sdk-js), PostgreSQL, and orchestration frameworks such as [LangChain](https://js.langchain.com/docs/introduction/), [GenkitJS](https://genkit.dev/docs/get-started/), and [LlamaIndex](https://ts.llamaindex.ai/).
+- [Go Quickstart (Local)](https://googleapis.github.io/genai-toolbox/getting-started/local_quickstart_go/): How to get started running Toolbox locally with [Go](https://github.com/googleapis/mcp-toolbox-sdk-go), PostgreSQL, and orchestration frameworks such as [LangChain Go](https://tmc.github.io/langchaingo/docs/), [GenkitGo](https://genkit.dev/go/docs/get-started-go/), [Go GenAI](https://github.com/googleapis/go-genai) and [OpenAI Go](https://github.com/openai/openai-go).
+- [Quickstart (MCP)](https://googleapis.github.io/genai-toolbox/getting-started/mcp_quickstart/): How to get started running Toolbox locally with MCP Inspector.
 - [Configuration](https://googleapis.github.io/genai-toolbox/getting-started/configure/): How to configure Toolbox's tools.yaml file.
 
 ### Concepts
@@ -21,11 +23,14 @@ Some core concepts in Toolbox
 
 List of guides detailing how to do different things with Toolbox. 
 - [Connect from your IDE](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/): List of guides detailing how to connect your AI tools (IDEs) to Toolbox using MCP.
+  - [AlloyDB Admin API using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/): Create your AlloyDB database with MCP Toolbox.
   - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/): Connect your IDE to AlloyDB using Toolbox.
   - [BigQuery using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/bigquery_mcp/): Connect your IDE to BigQuery using Toolbox.
   - [Cloud SQL for MySQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mysql_mcp/): Connect your IDE to Cloud SQL for MySQL using Toolbox.
   - [Cloud SQL for Postgres using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/): Connect your IDE to Cloud SQL for Postgres using Toolbox.
   - [Cloud SQL for SQL Server using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mssql_mcp/): Connect your IDE to Cloud SQL for SQL Server using Toolbox.
+  - [Firestore using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/firestore_mcp/): Connect your IDE to Firestore using Toolbox.
+  - [Looker using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/looker_mcp/): Connect your IDE to Looker using Toolbox.
   - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/): Connect your IDE to PostgreSQL using Toolbox.
   - [Spanner using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/spanner_mcp/): Connect your IDE to Spanner using Toolbox.
 - [Connect via MCP Client](https://googleapis.github.io/genai-toolbox/how-to/connect_via_mcp/): How to connect to Toolbox from a MCP Client.
@@ -47,8 +52,12 @@ List of reference documentation for resources in Toolbox.
   - [Cloud SQL for PostgreSQL](https://googleapis.github.io/genai-toolbox/resources/sources/cloud-sql-pg/): Cloud SQL for PostgreSQL is a fully-managed database service for Postgres.
   - [Cloud SQL for SQL Server](https://googleapis.github.io/genai-toolbox/resources/sources/cloud-sql-mssql/): Cloud SQL for SQL Server is a fully-managed database service for SQL Server.
   - [couchbase](https://googleapis.github.io/genai-toolbox/resources/sources/couchbase/): A "couchbase" source connects to a Couchbase database.
+  - [Dataplex](https://googleapis.github.io/genai-toolbox/resources/sources/dataplex/): Dataplex Universal Catalog is a unified, intelligent governance solution for data and AI assets in Google Cloud. Dataplex Universal Catalog powers AI, analytics, and business intelligence at scale.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/resources/sources/dgraph/): Dgraph is fully open-source, built-for-scale graph database for Gen AI workloads
+  - [Firestore](https://googleapis.github.io/genai-toolbox/resources/sources/firestore/): Firestore is a NoSQL document database built for automatic scaling, high performance, and ease of application development. It's a fully managed, serverless database that supports mobile, web, and server development.
   - [HTTP](https://googleapis.github.io/genai-toolbox/resources/sources/http/): The HTTP source enables the Toolbox to retrieve data from a remote server using HTTP requests.
+  - [Looker](https://googleapis.github.io/genai-toolbox/resources/sources/looker/): Looker is a business intelligence tool that also provides a semantic layer.
+  - [MongoDB](https://googleapis.github.io/genai-toolbox/resources/sources/mongodb/): MongoDB is a no-sql data platform that can not only serve general purpose data requirements also perform VectorSearch where both operational data and embeddings used of search can reside in same document.
   - [MySQL](https://googleapis.github.io/genai-toolbox/resources/sources/mysql/): MySQL is a relational database management system that stores and manages data.
   - [Neo4j](https://googleapis.github.io/genai-toolbox/resources/sources/neo4j/): Neo4j is a powerful, open source graph database system
   - [PostgreSQL](https://googleapis.github.io/genai-toolbox/resources/sources/postgres/): PostgreSQL is a powerful, open source object-relational database.
@@ -62,8 +71,12 @@ List of reference documentation for resources in Toolbox.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/resources/tools/bigquery/): Tools that work with BigQuery Sources.
   - [Bigtable](https://googleapis.github.io/genai-toolbox/resources/tools/bigtable/): Tools that work with Bigtable Sources.
   - [Couchbase](https://googleapis.github.io/genai-toolbox/resources/tools/couchbase/): Tools that work with Couchbase Sources.
+  - [Dataplex](https://googleapis.github.io/genai-toolbox/resources/tools/dataplex/): Tools that work with Dataplex Sources.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/resources/tools/dgraph/): Tools that work with Dgraph Sources.
+  - [Firestore](https://googleapis.github.io/genai-toolbox/resources/tools/firestore/): Tools that work with Firestore Sources.
   - [HTTP](https://googleapis.github.io/genai-toolbox/resources/tools/http/): Tools that work with HTTP Sources.
+  - [Looker](https://googleapis.github.io/genai-toolbox/resources/tools/looker/): Tools that work with Looker Sources.
+  - [MongoDB](https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/): Tools that work with the MongoDB Source.
   - [MySQL](https://googleapis.github.io/genai-toolbox/resources/tools/mysql/): Tools that work with MySQL Sources, such as Cloud SQL for MySQL.
   - [Neo4j](https://googleapis.github.io/genai-toolbox/resources/tools/neo4j/): Tools that work with Neo4j Sources.
   - [Postgres](https://googleapis.github.io/genai-toolbox/resources/tools/postgres/): Tools that work with Postgres Sources, such as Cloud SQL for Postgres and AlloyDB. 
@@ -71,6 +84,7 @@ List of reference documentation for resources in Toolbox.
   - [Spanner](https://googleapis.github.io/genai-toolbox/resources/tools/spanner/): Tools that work with Spanner Sources.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/resources/tools/mssql/): Tools that work with SQL Server Sources, such as CloudSQL for SQL Server.
   - [SQLite](https://googleapis.github.io/genai-toolbox/resources/tools/sqlite/): Tools that work with SQLite Sources.
+  - [Utility tools](https://googleapis.github.io/genai-toolbox/resources/tools/utility/): Tools that provide utility.
   - [Valkey](https://googleapis.github.io/genai-toolbox/resources/tools/valkey/): Tools that work with Valkey Sources.
 
 ### Samples
@@ -79,6 +93,9 @@ Samples and guides for using Toolbox.
 - [BigQuery](https://googleapis.github.io/genai-toolbox/samples/bigquery/): How to get started with Toolbox using BigQuery.
   - [Quickstart (Local with BigQuery)](https://googleapis.github.io/genai-toolbox/samples/bigquery/local_quickstart/): How to get started running Toolbox locally with Python, BigQuery, and  LangGraph, LlamaIndex, or ADK.
   - [Quickstart (MCP with BigQuery)](https://googleapis.github.io/genai-toolbox/samples/bigquery/mcp_quickstart/): How to get started running Toolbox with MCP Inspector and BigQuery as the source.
+- [Looker](https://googleapis.github.io/genai-toolbox/samples/looker/): How to get started with Toolbox using Looker.
+  - [Quickstart (MCP with Looker and Gemini-CLI)](https://googleapis.github.io/genai-toolbox/samples/looker/looker_gemini/): How to get started running Toolbox with Gemini-CLI and Looker as the source.
+  - [Quickstart (MCP with Looker)](https://googleapis.github.io/genai-toolbox/samples/looker/looker_mcp_inspector/): How to get started running Toolbox with MCP Inspector and Looker as the source.
 
 ### About
 
