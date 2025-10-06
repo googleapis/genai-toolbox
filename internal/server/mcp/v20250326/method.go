@@ -24,13 +24,14 @@ import (
 	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 // ProcessMethod returns a response for the request.
-func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, tools map[string]tools.Tool, authServices map[string]auth.AuthService, body []byte, header http.Header) (any, error) {
+func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, tools map[string]tools.Tool, promptset prompts.Promptset, prompts map[string]prompts.Prompt, authServices map[string]auth.AuthService, body []byte, header http.Header) (any, error) {
 	switch method {
 	case PING:
 		return pingHandler(id)
@@ -38,6 +39,8 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, too
 		return toolsListHandler(id, toolset, body)
 	case TOOLS_CALL:
 		return toolsCallHandler(ctx, id, tools, authServices, body, header)
+	case PROMPTS_LIST:
+		return promptsListHandler(id, promptset, body)
 	default:
 		err := fmt.Errorf("invalid method %s", method)
 		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
@@ -209,5 +212,23 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
 		Result:  CallToolResult{Content: content},
+	}, nil
+}
+
+// promptsListHandler handles the "prompts/list" method.
+func promptsListHandler(id jsonrpc.RequestId, promptset prompts.Promptset, body []byte) (any, error) {
+	var req ListPromptsRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		err = fmt.Errorf("invalid mcp prompts list request: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+
+	result := ListPromptsResult{
+		Prompts: promptset.McpManifest,
+	}
+	return jsonrpc.JSONRPCResponse{
+		Jsonrpc: jsonrpc.JSONRPC_VERSION,
+		Id:      id,
+		Result:  result,
 	}, nil
 }
