@@ -287,7 +287,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 				trace.WithAttributes(attribute.String("prompt_name", name)),
 			)
 			defer span.End()
-			t, err := tc.Initialize(promptsMap)
+			t, err := tc.Initialize()
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize prompt %q: %w", name, err)
 			}
