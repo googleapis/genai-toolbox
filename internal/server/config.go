@@ -297,7 +297,7 @@ func (c *PromptsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(int
 }
 
 // PromptConfigs is a type used to allow unmarshal of the prompt configs
-type PromptConfigs map[string]*prompts.PromptConfig
+type PromptConfigs map[string]prompts.PromptConfig
 
 // validate interface
 var _ yaml.InterfaceUnmarshalerContext = &PromptConfigs{}
@@ -310,12 +310,12 @@ func (c *PromptConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 	}
 
 	for name, u := range raw {
-		var v prompts.PromptConfig
+		var v prompts.Config
 		if err := u.Unmarshal(&v); err != nil {
 			return fmt.Errorf("unable to unmarshal prompt %q: %w", name, err)
 		}
 		v.Name = name
-		(*c)[name] = &v
+		(*c)[name] = v
 	}
 	return nil
 }
