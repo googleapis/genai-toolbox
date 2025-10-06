@@ -193,5 +193,5 @@ type ListPromptsRequest struct {
 // The server's response to a prompts/list request from the client.
 type ListPromptsResult struct {
 	PaginatedResult
-	Prompts []prompts.McpManifest `json:"tools"`
+	Prompts []prompts.McpManifest `json:"prompts"`
 }
