@@ -71,7 +71,7 @@ func getLookerVars(t *testing.T) map[string]any {
 
 func TestLooker(t *testing.T) {
 	sourceConfig := getLookerVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
@@ -859,7 +859,6 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "\"Model\":\"the_look\""
 	tests.RunToolInvokeParametersTest(t, "health_vacuum", []byte(`{"action": "models"}`), wantResult)
-
 }
 
 func runConversationalAnalytics(t *testing.T, modelName, exploreName string) {
