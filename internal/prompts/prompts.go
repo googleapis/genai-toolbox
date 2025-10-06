@@ -182,13 +182,3 @@ func (c Config) ParseArgs(args map[string]any, data map[string]map[string]any) (
 	}
 	return tools.ParseParams(parameters, args, data)
 }
-
-// ArgValues can be an alias for tools.ParamValues to avoid re-definition.
-type ArgValues = tools.ParamValues
-
-// SystemPromptConfig is the configuration for a system prompt.
-type SystemPromptConfig struct {
-	Description string    `yaml:"description,omitempty"`
-	Messages    []Message `yaml:"messages"`
-	Arguments   Arguments `yaml:"arguments,omitempty"`
-}
