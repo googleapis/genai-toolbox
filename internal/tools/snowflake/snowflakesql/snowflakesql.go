@@ -133,7 +133,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
 	sliceParams := newParams.AsSlice()
-	
+
 	rows, err := t.DB.QueryxContext(ctx, newStatement, sliceParams...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
