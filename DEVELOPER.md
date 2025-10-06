@@ -138,13 +138,13 @@ go test -race -v ./...
    Look for code like this:
    ```go
    ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	 defer cancel()
+   defer cancel()
 
    cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
-	 if err != nil {
-		 t.Fatalf("command initialization returned an error: %s", err)
-	 }
-	 defer cleanup()
+   if err != nil {
+     t.Fatalf("command initialization returned an error: %s", err)
+   }
+   defer cleanup()
    ```
    Be sure to set the timeout to a reasonable value for your tests.
 
