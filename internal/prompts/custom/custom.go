@@ -18,15 +18,18 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+
+	"github.com/googleapis/genai-toolbox/internal/prompts"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
 // Configuration for the custom prompt
 type Config struct {
-	Name        string             `yaml:"name" validate:"required"`
-	Kind        string             `yaml:"kind"`
-	Description string             `yaml:"description"`
-	Arguments   []prompts.Argument `yaml:"arguments"`
-	Messages    []prompts.Message  `yaml:"messages"`
+	Name        string            `yaml:"name" validate:"required"`
+	Kind        string            `yaml:"kind"`
+	Description string            `yaml:"description"`
+	Arguments   prompts.Arguments `yaml:"arguments"`
+	Messages    []prompts.Message `yaml:"messages"`
 }
 
 // validate interface
@@ -34,25 +37,14 @@ var _ prompts.Prompt = Config{}
 
 // Manifest implements the Manifest method of the Prompt interface.
 func (p Config) Manifest() prompts.Manifest {
-	manifest := prompts.Manifest{
+	var paramManifests []tools.ParameterManifest
+	for _, arg := range p.Arguments {
+		paramManifests = append(paramManifests, arg.Manifest())
+	}
+	return prompts.Manifest{
 		Description: p.Description,
-		Arguments:   prompts.ArgumentToManifest(p.Arguments),
+		Arguments:   paramManifests,
 	}
-	return manifest
-}
-
-// Manifest implements the Manifest method of the Prompt interface.
-func (p Config) McpManifest() prompts.McpManifest {
-	mcpManifest := prompts.McpManifest{
-		Name:        p.Name,
-		Description: p.Description,
-		Arguments:   prompts.ArgumentToMcpManifest(p.Arguments),
-	}
-	metadata := make(map[string]any)
-	if len(metadata) > 0 {
-		mcpManifest.Metadata = metadata
-	}
-	return mcpManifest
 }
 
 func (p Config) Initialize() (prompts.Prompt, error) {
@@ -79,7 +71,7 @@ func (p Config) Initialize() (prompts.Prompt, error) {
 	return p, nil
 }
 
-func (p Config) SubstituteParams(argValues prompts.ArgValues) (any, error) {
+func (p Config) SubstituteParams(argValues tools.ParamValues) (any, error) {
 	substitutedMessages := []prompts.Message{}
 
 	argsMap := make(map[string]any)
@@ -107,22 +99,23 @@ func (p Config) SubstituteParams(argValues prompts.ArgValues) (any, error) {
 	return substitutedMessages, nil
 }
 
-func (p Config) ParseArgs(args map[string]any, data map[string]map[string]any) (prompts.ArgValues, error) {
-	argValues := make(prompts.ArgValues, 0, len(p.Arguments))
-
+func (p Config) ParseArgs(args map[string]any, data map[string]map[string]any) (tools.ParamValues, error) {
+	var parameters tools.Parameters
 	for _, arg := range p.Arguments {
-		val, ok := args[arg.Name]
-		if !ok && arg.Required != nil && *arg.Required {
-			return nil, fmt.Errorf("required argument %q not provided", arg.Name)
-		}
+		parameters = append(parameters, arg)
+	}
+	return tools.ParseParams(parameters, args, data)
+}
 
-		if ok {
-			argValues = append(argValues, prompts.ArgValue{
-				Name:  arg.Name,
-				Value: val,
-			})
-		}
+func (p Config) McpManifest() prompts.McpManifest {
+	var mcpArgs []prompts.McpPromptArg
+	for _, arg := range p.Arguments {
+		mcpArgs = append(mcpArgs, arg.McpPromptManifest())
 	}
 
-	return argValues, nil
+	return prompts.McpManifest{
+		Name:        p.Name,
+		Description: p.Description,
+		Arguments:   mcpArgs,
+	}
 }

@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
 // PromptConfigFactory defines the signature for a function that creates and
@@ -61,27 +62,31 @@ type PromptConfig interface {
 }
 
 type Prompt interface {
-	SubstituteParams(ArgValues) (any, error)
-	ParseArgs(map[string]any, map[string]map[string]any) (ArgValues, error)
+	SubstituteParams(tools.ParamValues) (any, error)
+	ParseArgs(map[string]any, map[string]map[string]any) (tools.ParamValues, error)
 	Manifest() Manifest
 	McpManifest() McpManifest
 }
 
 // Manifest is the representation of prompts sent to Client SDKs.
 type Manifest struct {
-	Description string             `json:"description"`
-	Arguments   []ArgumentManifest `json:"arguments"`
+	Description string                    `json:"description"`
+	Arguments   []tools.ParameterManifest `json:"arguments"`
 }
 
-// Definition for a prompt the MCP client can get.
-type McpManifest struct {
-	// The name of the prompt.
-	Name string `json:"name"`
-	// A human-readable description of the prompt.
+// McpPromptArg defines the simplified structure for a prompt's argument in the MCP manifest.
+type McpPromptArg struct {
+	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
-	// A JSON Schema object defining the expected arguments for the prompt.
-	Arguments []McpPromptArgs `json:"inputSchema,omitempty"`
-	Metadata  map[string]any  `json:"_meta,omitempty"`
+	Required    bool   `json:"required"`
+}
+
+// McpManifest is the definition for a prompt the MCP client can get.
+type McpManifest struct {
+	Name        string         `json:"name"`
+	Description string         `json:"description,omitempty"`
+	Arguments   []McpPromptArg `json:"inputSchema,omitempty"`
+	Metadata    map[string]any `json:"_meta,omitempty"`
 }
 
 func GetMcpManifest(name, desc string, args Arguments) McpManifest {
@@ -124,7 +129,7 @@ type ArgValue struct {
 
 // SystemPromptConfig is the configuration for a system prompt.
 type SystemPromptConfig struct {
-	Description string     `yaml:"description,omitempty"`
-	Messages    []Message  `yaml:"messages"`
-	Arguments   []Argument `yaml:"arguments,omitempty"`
+	Description string    `yaml:"description,omitempty"`
+	Messages    []Message `yaml:"messages"`
+	Arguments   Arguments `yaml:"arguments,omitempty"`
 }
