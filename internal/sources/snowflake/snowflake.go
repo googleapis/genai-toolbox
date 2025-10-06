@@ -117,4 +117,3 @@ func initSnowflakeConnection(ctx context.Context, tracer trace.Tracer, name, acc
 
 	return db, nil
 }
-
