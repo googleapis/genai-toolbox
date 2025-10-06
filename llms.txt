@@ -84,3 +84,7 @@ Samples and guides for using Toolbox.
 
 A list of other information related to Toolbox.
 - [FAQ](https://googleapis.github.io/genai-toolbox/about/faq/): Frequently asked questions about Toolbox.
+### SDKs
+
+Client SDKs to connect to the MCP Toolbox server.
+- [Go SDK](https://googleapis.github.io/genai-toolbox/sdks/go-sdk/): Go lang client SDK- [JS SDK](https://googleapis.github.io/genai-toolbox/sdks/js-sdk/): Javascript client SDK- [Python SDK](https://googleapis.github.io/genai-toolbox/sdks/python-sdk/): Python client SDK

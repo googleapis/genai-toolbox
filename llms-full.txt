@@ -89,7 +89,7 @@ To install Toolbox as a binary:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.8.0
+export VERSION=0.9.0
 curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -100,7 +100,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.8.0
+export VERSION=0.9.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -111,7 +111,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.8.0
+go install github.com/googleapis/genai-toolbox@v0.9.0
 ```
 
 {{% /tab %}}
@@ -126,6 +126,9 @@ execute `toolbox` to start the server:
 ```sh
 ./toolbox --tools-file "tools.yaml"
 ```
+{{< notice note >}}
+Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
+{{< /notice >}}
 
 You can use `toolbox help` for a full list of flags! To stop the server, send a
 terminate signal (`ctrl+c` on most platforms).
@@ -138,6 +141,7 @@ out the resources in the [How-to section](../../how-to/_index.md)
 Once your server is up and running, you can load the tools into your
 application. See below the list of Client SDKs for using various frameworks:
 
+#### Python
 {{< tabpane text=true persist=header >}}
 {{% tab header="Core" lang="en" %}}
 
@@ -205,6 +209,117 @@ For more detailed instructions on using the Toolbox Llamaindex SDK, see the
 {{% /tab %}}
 {{< /tabpane >}}
 
+#### Javascript/Typescript
+
+Once you've installed the [Toolbox Core
+SDK](https://www.npmjs.com/package/@toolbox-sdk/core), you can load
+tools:
+
+{{< tabpane text=true persist=header >}}
+{{% tab header="Core" lang="en" %}}
+
+{{< highlight javascript >}}
+import { ToolboxClient } from '@toolbox-sdk/core';
+
+// update the url to point to your server
+const URL = 'http://127.0.0.1:5000';
+let client = new ToolboxClient(URL);
+
+// these tools can be passed to your application!
+const toolboxTools = await client.loadToolset('toolsetName');
+{{< /highlight >}}
+
+{{% /tab %}}
+{{% tab header="LangChain/Langraph" lang="en" %}}
+
+{{< highlight javascript >}}
+import { ToolboxClient } from '@toolbox-sdk/core';
+
+// update the url to point to your server
+const URL = 'http://127.0.0.1:5000';
+let client = new ToolboxClient(URL);
+
+// these tools can be passed to your application!
+const toolboxTools = await client.loadToolset('toolsetName');
+
+// Define the basics of the tool: name, description, schema and core logic
+const getTool = (toolboxTool) => tool(currTool, {
+    name: toolboxTool.getName(),
+    description: toolboxTool.getDescription(),
+    schema: toolboxTool.getParamSchema()
+});
+
+// Use these tools in your Langchain/Langraph applications
+const tools = toolboxTools.map(getTool);
+{{< /highlight >}}
+
+{{% /tab %}}
+{{% tab header="Genkit" lang="en" %}}
+
+{{< highlight javascript >}}
+import { ToolboxClient } from '@toolbox-sdk/core';
+import { genkit } from 'genkit';
+
+// Initialise genkit
+const ai = genkit({
+    plugins: [
+        googleAI({
+            apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
+        })
+    ],
+    model: googleAI.model('gemini-2.0-flash'),
+});
+
+// update the url to point to your server
+const URL = 'http://127.0.0.1:5000';
+let client = new ToolboxClient(URL);
+
+// these tools can be passed to your application!
+const toolboxTools = await client.loadToolset('toolsetName');
+
+// Define the basics of the tool: name, description, schema and core logic
+const getTool = (toolboxTool) => ai.defineTool({
+    name: toolboxTool.getName(),
+    description: toolboxTool.getDescription(),
+    schema: toolboxTool.getParamSchema()
+}, toolboxTool)
+
+// Use these tools in your Genkit applications
+const tools = toolboxTools.map(getTool);
+{{< /highlight >}}
+
+{{% /tab %}}
+{{% tab header="LlamaIndex" lang="en" %}}
+
+{{< highlight javascript >}}
+import { ToolboxClient } from '@toolbox-sdk/core';
+import { tool } from "llamaindex";
+
+// update the url to point to your server
+const URL = 'http://127.0.0.1:5000';
+let client = new ToolboxClient(URL);
+
+// these tools can be passed to your application!
+const toolboxTools = await client.loadToolset('toolsetName');
+
+// Define the basics of the tool: name, description, schema and core logic
+const getTool = (toolboxTool) => tool({
+    name: toolboxTool.getName(),
+    description: toolboxTool.getDescription(),
+    parameters: toolboxTool.getParams(),
+    execute: toolboxTool
+});;
+
+// Use these tools in your LlamaIndex applications
+const tools = toolboxTools.map(getTool);
+
+{{< /highlight >}}
+
+{{% /tab %}}
+{{< /tabpane >}}
+
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
 
 # Quickstart (Local)
 How to get started running Toolbox locally with Python, PostgreSQL, and  [Agent Development Kit](https://google.github.io/adk-docs/), [LangGraph](https://www.langchain.com/langgraph), [LlamaIndex](https://www.llamaindex.ai/) or [GoogleGenAI](https://pypi.org/project/google-genai/).
@@ -359,7 +474,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.8.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.9.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -460,6 +575,9 @@ In this section, we will download Toolbox, configure our tools in a
     ```bash
     ./toolbox --tools-file "tools.yaml"
     ```
+    {{< notice note >}}
+    Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
+    {{< /notice >}}
 
 ## Step 3: Connect your agent to Toolbox
 
@@ -963,7 +1081,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.8.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.9.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -1516,19 +1634,19 @@ Omni](https://cloud.google.com/alloydb/omni/current/docs/overview).
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O <https://storage.googleapis.com/genai-toolbox/v0.8.0/linux/amd64/toolbox>
+curl -O <https://storage.googleapis.com/genai-toolbox/v0.9.0/linux/amd64/toolbox>
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O <https://storage.googleapis.com/genai-toolbox/v0.8.0/darwin/arm64/toolbox>
+curl -O <https://storage.googleapis.com/genai-toolbox/v0.9.0/darwin/arm64/toolbox>
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O <https://storage.googleapis.com/genai-toolbox/v0.8.0/darwin/amd64/toolbox>
+curl -O <https://storage.googleapis.com/genai-toolbox/v0.9.0/darwin/amd64/toolbox>
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O <https://storage.googleapis.com/genai-toolbox/v0.8.0/windows/amd64/toolbox>
+curl -O <https://storage.googleapis.com/genai-toolbox/v0.9.0/windows/amd64/toolbox>
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -1814,6 +1932,10 @@ When running with stdio, Toolbox will listen via stdio instead of acting as a
 remote HTTP server. Logs will be set to the `warn` level by default. `debug` and
 `info` logs are not supported with stdio.
 
+{{< notice note >}}
+Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
+{{< /notice >}}
+
 ### Connecting via HTTP
 
 Toolbox supports the HTTP transport protocol with and without SSE.
@@ -1971,7 +2093,7 @@ database are in the same VPC network.
 
 Create a `tools.yaml` file that contains your configuration for Toolbox. For
 details, see the
-[configuration](https://github.com/googleapis/genai-toolbox/blob/main/README.md#configuration)
+[configuration](https://googleapis.github.io/genai-toolbox/resources/sources/)
 section.
 
 ## Deploy to Cloud Run
@@ -3581,6 +3703,7 @@ sources:
         database: my_db
         user: ${USER_NAME}
         password: ${PASSWORD}
+        queryTimeout: 30s # Optional: query timeout duration
 ```
 
 {{< notice tip >}}
@@ -3590,14 +3713,15 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                                             |
-|-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "mysql".                                                                            |
-| host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                |
-| port      |  string  |     true     | Port to connect to (e.g. "3306").                                                           |
-| database  |  string  |     true     | Name of the MySQL database to connect to (e.g. "my_db").                                    |
-| user      |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-mysql-user").                                |
-| password  |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                            |
+| **field**    | **type** | **required** | **description**                                                                                 |
+| ------------ | :------: | :----------: | ----------------------------------------------------------------------------------------------- |
+| kind         |  string  |     true     | Must be "mysql".                                                                                |
+| host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
+| port         |  string  |     true     | Port to connect to (e.g. "3306").                                                               |
+| database     |  string  |     true     | Name of the MySQL database to connect to (e.g. "my_db").                                        |
+| user         |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-mysql-user").                                    |
+| password     |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                                |
+| queryTimeout |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied. |
 
 
 # Neo4j
@@ -4507,7 +4631,7 @@ to use BigQuery, and then run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.8.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.9.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -4620,6 +4744,9 @@ to use BigQuery, and then run the Toolbox server.
     ```bash
     ./toolbox --tools-file "tools.yaml"
     ```
+    {{< notice note >}}
+    Toolbox enables dynamic reloading by default. To disable, use the `--disable-reload` flag.
+    {{< /notice >}}
 
 ## Step 3: Connect your agent to Toolbox
 
@@ -5136,7 +5263,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.8.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.9.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -5356,5 +5483,21 @@ Yes! Toolbox is compatible with [Anthropic's Model Context Protocol
 (MCP)](https://modelcontextprotocol.io/). Please checkout [Connect via
 MCP](../how-to/connect_via_mcp.md) on how to connect to Toolbox with an MCP
 client.
+
+
+# SDKs
+Client SDKs to connect to the MCP Toolbox server.
+
+
+# Go SDK
+Go lang client SDK
+
+
+# JS SDK
+Javascript client SDK
+
+
+# Python SDK
+Python client SDK
 
 

@@ -83,8 +83,10 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="../sources/bigquery.md">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>bigquery-get-dataset-info takes a dataset parameter to specify the dataset
-on the given source.&lt;/p>
+&lt;p>&lt;code>bigquery-get-dataset-info&lt;/code> takes a &lt;code>dataset&lt;/code> parameter to specify the dataset
+on the given source. It also optionally accepts a &lt;code>project&lt;/code> parameter to
+define the Google Cloud project ID. If the &lt;code>project&lt;/code> parameter is not provided,
+the tool defaults to using the project defined in the source configuration.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">bigquery_get_dataset_info&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -127,8 +129,10 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="../sources/bigquery.md">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>bigquery-get-table-info takes dataset and table parameters to specify
-the target table.&lt;/p>
+&lt;p>&lt;code>bigquery-get-table-info&lt;/code> takes &lt;code>dataset&lt;/code> and &lt;code>table&lt;/code> parameters to specify
+the target table. It also optionally accepts a &lt;code>project&lt;/code> parameter to define
+the Google Cloud project ID. If the &lt;code>project&lt;/code> parameter is not provided, the
+tool defaults to using the project defined in the source configuration.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">bigquery_get_table_info&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -171,8 +175,9 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="../sources/bigquery.md">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>bigquery-list-dataset-ids requires no input parameters beyond the configured
-source.&lt;/p>
+&lt;p>&lt;code>bigquery-list-dataset-ids&lt;/code> optionally accepts a &lt;code>project&lt;/code> parameter to define
+the Google Cloud project ID. If the &lt;code>project&lt;/code> parameter is not provided, the
+tool defaults to using the project defined in the source configuration.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">bigquery_list_dataset_ids&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -215,8 +220,10 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="../sources/bigquery.md">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>bigquery-get-dataset-info takes a dataset parameter to specify the dataset
-from which to list table IDs.&lt;/p>
+&lt;p>&lt;code>bigquery-get-dataset-info&lt;/code> takes a required &lt;code>dataset&lt;/code> parameter to specify the dataset
+from which to list table IDs. It also optionally accepts a &lt;code>project&lt;/code> parameter to
+define the Google Cloud project ID. If the &lt;code>project&lt;/code> parameter is not provided, the
+tool defaults to using the project defined in the source configuration.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">bigquery_list_table_ids&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -718,6 +725,7 @@ MySQL user&lt;/a> to login to the database with.&lt;/p>
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">database&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my_db&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">user&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${USER_NAME}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">password&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${PASSWORD}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">queryTimeout: 30s # Optional&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">query timeout duration&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;style type="text/css">
  
  .notice {
@@ -1595,7 +1603,7 @@ docker images&lt;/a> (but you can always compile yourself as well!).&lt;/p>
 &lt;h2 id="do-i-need-a-google-cloud-accountproject-to-get-started-with-toolbox">Do I need a Google Cloud account/project to get started with Toolbox?&lt;/h2>
 &lt;p>Nope! While some of the sources Toolbox connects to may require GCP credentials,
 Toolbox doesn&amp;rsquo;t require them and can connect to a bunch of different resources
-that don&amp;rsquo;t.&lt;/p></description></item><item><title>PostgreSQL using MCP</title><link>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is
+that don&amp;rsquo;t.&lt;/p></description></item><item><title>Go SDK</title><link>https://googleapis.github.io/genai-toolbox/sdks/go-sdk/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/sdks/go-sdk/</guid><description/></item><item><title>JS SDK</title><link>https://googleapis.github.io/genai-toolbox/sdks/js-sdk/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/sdks/js-sdk/</guid><description/></item><item><title>PostgreSQL using MCP</title><link>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/</guid><description>&lt;p>&lt;a href="https://modelcontextprotocol.io/introduction">Model Context Protocol (MCP)&lt;/a> is
 an open protocol for connecting Large Language Models (LLMs) to data sources
 like Postgres. This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a>
 to expose your developer assistant tools to a Postgres instance:&lt;/p>
@@ -1728,7 +1736,7 @@ to expose your developer assistant tools to a Postgres instance:&lt;/p>
  &lt;path d="M551.281 252.36c0-3.32-1.172-6.641-3.515-8.985l-17.774-17.578c-2.344-2.344-5.469-3.711-8.789-3.711-3.32 0-6.445 1.367-8.789 3.71l-79.687 79.493-44.141-44.14c-2.344-2.344-5.469-3.712-8.79-3.712-3.32 0-6.444 1.368-8.788 3.711l-17.774 17.579c-2.343 2.343-3.515 5.664-3.515 8.984 0 3.32 1.172 6.445 3.515 8.789l70.704 70.703c2.343 2.344 5.664 3.711 8.789 3.711 3.32 0 6.64-1.367 8.984-3.71l106.055-106.056c2.343-2.343 3.515-5.468 3.515-8.789ZM600.5 284c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
 &lt;/svg>
 
- &lt;/span>Tip&lt;/p></description></item><item><title>Quickstart (Local)</title><link>https://googleapis.github.io/genai-toolbox/getting-started/local_quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/getting-started/local_quickstart/</guid><description>&lt;p>&lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/getting-started/colab_quickstart.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab">&lt;/a>&lt;/p>
+ &lt;/span>Tip&lt;/p></description></item><item><title>Python SDK</title><link>https://googleapis.github.io/genai-toolbox/sdks/python-sdk/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/sdks/python-sdk/</guid><description/></item><item><title>Quickstart (Local)</title><link>https://googleapis.github.io/genai-toolbox/getting-started/local_quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/getting-started/local_quickstart/</guid><description>&lt;p>&lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/getting-started/colab_quickstart.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab">&lt;/a>&lt;/p>
 &lt;h2 id="before-you-begin">Before you begin&lt;/h2>
 &lt;p>This guide assumes you have already done the following:&lt;/p>
 &lt;ol>
