@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Utility tools on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/utility/</link><description>Recent content in Utility tools on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/resources/tools/utility/index.xml" rel="self" type="application/rss+xml"/><item><title>wait</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/utility/wait/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/utility/wait/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>wait&lt;/code> tool pauses execution for a specified duration. This can be useful in workflows where a delay is needed between steps.&lt;/p>
-&lt;p>&lt;code>wait&lt;/code> takes one input parameter &lt;code>duration&lt;/code> which is a string representing the time to wait (e.g., &amp;ldquo;10s&amp;rdquo;, &amp;ldquo;2m&amp;rdquo;, &amp;ldquo;1h&amp;rdquo;).&lt;/p>
+&lt;p>A &lt;code>wait&lt;/code> tool pauses execution for a specified duration. This can be useful in
+workflows where a delay is needed between steps.&lt;/p>
+&lt;p>&lt;code>wait&lt;/code> takes one input parameter &lt;code>duration&lt;/code> which is a string representing the
+time to wait (e.g., &amp;ldquo;10s&amp;rdquo;, &amp;ldquo;2m&amp;rdquo;, &amp;ldquo;1h&amp;rdquo;).&lt;/p>
 &lt;style type="text/css">
  
  .notice {
@@ -122,7 +124,10 @@
  &lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
 &lt;/svg>
 
- &lt;/span>Info&lt;/p></description></item><item><title>alloydb-wait-for-operation</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/utility/alloydbwaitforoperation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/utility/alloydbwaitforoperation/</guid><description>&lt;p>The &lt;code>alloydb-wait-for-operation&lt;/code> tool is a utility tool that waits for a long-running AlloyDB operation to complete. It does this by polling the AlloyDB Admin API operation status endpoint until the operation is finished, using exponential backoff.&lt;/p>
+ &lt;/span>Info&lt;/p></description></item><item><title>alloydb-wait-for-operation</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/utility/alloydbwaitforoperation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/utility/alloydbwaitforoperation/</guid><description>&lt;p>The &lt;code>alloydb-wait-for-operation&lt;/code> tool is a utility tool that waits for a
+long-running AlloyDB operation to complete. It does this by polling the AlloyDB
+Admin API operation status endpoint until the operation is finished, using
+exponential backoff.&lt;/p>
 &lt;style type="text/css">
  
  .notice {

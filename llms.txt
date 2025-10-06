@@ -17,7 +17,7 @@ How to get started with Toolbox.
 ### Concepts
 
 Some core concepts in Toolbox
-- [Telemetry](https://googleapis.github.io/genai-toolbox/concepts/telemetry/): An overview of telemetry and observability in Toolbox. 
+- [Telemetry](https://googleapis.github.io/genai-toolbox/concepts/telemetry/): An overview of telemetry and observability in Toolbox.
 
 ### How-to
 
@@ -34,6 +34,7 @@ List of guides detailing how to do different things with Toolbox.
   - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/): Connect your IDE to PostgreSQL using Toolbox.
   - [Spanner using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/spanner_mcp/): Connect your IDE to Spanner using Toolbox.
 - [Connect via MCP Client](https://googleapis.github.io/genai-toolbox/how-to/connect_via_mcp/): How to connect to Toolbox from a MCP Client.
+- [Toolbox UI](https://googleapis.github.io/genai-toolbox/how-to/use-toolbox-ui/): How to effectively use Toolbox UI.
 - [Deploy to Cloud Run](https://googleapis.github.io/genai-toolbox/how-to/deploy_toolbox/): How to set up and configure Toolbox to run on Cloud Run.
 - [Deploy to Kubernetes](https://googleapis.github.io/genai-toolbox/how-to/deploy_gke/): How to set up and configure Toolbox to deploy on Kubernetes with Google Kubernetes Engine (GKE).
 - [Deploy using Docker Compose](https://googleapis.github.io/genai-toolbox/how-to/deploy_docker/): How to deploy Toolbox using Docker Compose.
@@ -42,8 +43,8 @@ List of guides detailing how to do different things with Toolbox.
 ### Resources
 
 List of reference documentation for resources in Toolbox.
-- [AuthServices](https://googleapis.github.io/genai-toolbox/resources/authservices/): AuthServices represent services that handle authentication and authorization. 
-  - [Google Sign-In](https://googleapis.github.io/genai-toolbox/resources/authservices/google/): Use Google Sign-In for Oauth 2.0 flow and token lifecycle. 
+- [AuthServices](https://googleapis.github.io/genai-toolbox/resources/authservices/): AuthServices represent services that handle authentication and authorization.
+  - [Google Sign-In](https://googleapis.github.io/genai-toolbox/resources/authservices/google/): Use Google Sign-In for Oauth 2.0 flow and token lifecycle.
 - [Sources](https://googleapis.github.io/genai-toolbox/resources/sources/): Sources represent your different data sources that a tool can interact with.
   - [AlloyDB for PostgreSQL](https://googleapis.github.io/genai-toolbox/resources/sources/alloydb-pg/): AlloyDB for PostgreSQL is a fully-managed, PostgreSQL-compatible database for  demanding transactional workloads.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/resources/sources/bigquery/): BigQuery is Google Cloud's fully managed, petabyte-scale, and cost-effective analytics data warehouse that lets you run analytics over vast amounts of  data in near real time. With BigQuery, there's no infrastructure to set  up or manage, letting you focus on finding meaningful insights using  GoogleSQL and taking advantage of flexible pricing models across on-demand  and flat-rate options.
@@ -65,8 +66,9 @@ List of reference documentation for resources in Toolbox.
   - [Spanner](https://googleapis.github.io/genai-toolbox/resources/sources/spanner/): Spanner is a fully managed database service from Google Cloud that combines  relational, key-value, graph, and search capabilities.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/resources/sources/mssql/): SQL Server is a relational database management system (RDBMS).
   - [SQLite](https://googleapis.github.io/genai-toolbox/resources/sources/sqlite/): SQLite is a C-language library that implements a small, fast, self-contained,  high-reliability, full-featured, SQL database engine.
+  - [TiDB](https://googleapis.github.io/genai-toolbox/resources/sources/tidb/): TiDB is a distributed SQL database that combines the best of traditional RDBMS and NoSQL databases.
   - [Valkey](https://googleapis.github.io/genai-toolbox/resources/sources/valkey/): Valkey is an open-source, in-memory data structure store, forked from Redis.
-- [Tools](https://googleapis.github.io/genai-toolbox/resources/tools/): Tools define actions an agent can take -- such as reading and writing to a  source.
+- [Tools](https://googleapis.github.io/genai-toolbox/resources/tools/): Tools define actions an agent can take -- such as reading and writing to a source.
   - [AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/resources/tools/alloydbainl/): AlloyDB AI NL Tool.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/resources/tools/bigquery/): Tools that work with BigQuery Sources.
   - [Bigtable](https://googleapis.github.io/genai-toolbox/resources/tools/bigtable/): Tools that work with Bigtable Sources.
@@ -84,6 +86,7 @@ List of reference documentation for resources in Toolbox.
   - [Spanner](https://googleapis.github.io/genai-toolbox/resources/tools/spanner/): Tools that work with Spanner Sources.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/resources/tools/mssql/): Tools that work with SQL Server Sources, such as CloudSQL for SQL Server.
   - [SQLite](https://googleapis.github.io/genai-toolbox/resources/tools/sqlite/): Tools that work with SQLite Sources.
+  - [TiDB](https://googleapis.github.io/genai-toolbox/resources/tools/tidb/): Tools that work with TiDB Sources, such as TiDB Cloud and self-hosted TiDB.
   - [Utility tools](https://googleapis.github.io/genai-toolbox/resources/tools/utility/): Tools that provide utility.
   - [Valkey](https://googleapis.github.io/genai-toolbox/resources/tools/valkey/): Tools that work with Valkey Sources.
 
@@ -91,11 +94,12 @@ List of reference documentation for resources in Toolbox.
 
 Samples and guides for using Toolbox.
 - [BigQuery](https://googleapis.github.io/genai-toolbox/samples/bigquery/): How to get started with Toolbox using BigQuery.
-  - [Quickstart (Local with BigQuery)](https://googleapis.github.io/genai-toolbox/samples/bigquery/local_quickstart/): How to get started running Toolbox locally with Python, BigQuery, and  LangGraph, LlamaIndex, or ADK.
+  - [Quickstart (Local with BigQuery)](https://googleapis.github.io/genai-toolbox/samples/bigquery/local_quickstart/): How to get started running Toolbox locally with Python, BigQuery, and LangGraph, LlamaIndex, or ADK.
   - [Quickstart (MCP with BigQuery)](https://googleapis.github.io/genai-toolbox/samples/bigquery/mcp_quickstart/): How to get started running Toolbox with MCP Inspector and BigQuery as the source.
 - [Looker](https://googleapis.github.io/genai-toolbox/samples/looker/): How to get started with Toolbox using Looker.
   - [Quickstart (MCP with Looker and Gemini-CLI)](https://googleapis.github.io/genai-toolbox/samples/looker/looker_gemini/): How to get started running Toolbox with Gemini-CLI and Looker as the source.
   - [Quickstart (MCP with Looker)](https://googleapis.github.io/genai-toolbox/samples/looker/looker_mcp_inspector/): How to get started running Toolbox with MCP Inspector and Looker as the source.
+- [AlloyDB](https://googleapis.github.io/genai-toolbox/samples/alloydb/): How to get started running Toolbox with MCP Inspector and AlloyDB as the source.
 
 ### About
 

@@ -2,7 +2,7 @@
 &lt;p>A &lt;code>dgraph-dql&lt;/code> tool executes a pre-defined DQL statement against a Dgraph
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/dgraph.md">dgraph&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/dgraph/">dgraph&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>To run a statement as a query, you need to set the config &lt;code>isQuery=true&lt;/code>. For
 upserts or mutations, set &lt;code>isQuery=false&lt;/code>. You can also configure timeout for a

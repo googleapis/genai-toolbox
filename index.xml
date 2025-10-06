@@ -26,7 +26,7 @@ converting natural language to SQL from the application layer to the database
 layer.&lt;/p>
 &lt;p>This tool is compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/alloydb-pg.md">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>AlloyDB AI Natural Language delivers secure and accurate responses for
 application end user natural language questions. Natural language streamlines
@@ -44,7 +44,7 @@ across on-demand and flat-rate options.&lt;/p>
 &lt;p>A &lt;code>bigquery-execute-sql&lt;/code> tool executes a SQL statement against BigQuery.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/bigquery.md">bigquery&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>bigquery-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the sql
 statement against the &lt;code>source&lt;/code>.&lt;/p>
@@ -88,7 +88,7 @@ statement against the &lt;code>source&lt;/code>.&lt;/p>
 &lt;p>A &lt;code>bigquery-get-dataset-info&lt;/code> tool retrieves metadata for a BigQuery dataset.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/bigquery.md">bigquery&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>bigquery-get-dataset-info&lt;/code> takes a &lt;code>dataset&lt;/code> parameter to specify the dataset
 on the given source. It also optionally accepts a &lt;code>project&lt;/code> parameter to
@@ -134,7 +134,7 @@ the tool defaults to using the project defined in the source configuration.&lt;/
 &lt;p>A &lt;code>bigquery-get-table-info&lt;/code> tool retrieves metadata for a BigQuery table.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/bigquery.md">bigquery&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>bigquery-get-table-info&lt;/code> takes &lt;code>dataset&lt;/code> and &lt;code>table&lt;/code> parameters to specify
 the target table. It also optionally accepts a &lt;code>project&lt;/code> parameter to define
@@ -180,7 +180,7 @@ tool defaults to using the project defined in the source configuration.&lt;/p>
 &lt;p>A &lt;code>bigquery-list-dataset-ids&lt;/code> tool returns all dataset IDs from the source.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/bigquery.md">bigquery&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>bigquery-list-dataset-ids&lt;/code> optionally accepts a &lt;code>project&lt;/code> parameter to define
 the Google Cloud project ID. If the &lt;code>project&lt;/code> parameter is not provided, the
@@ -225,7 +225,7 @@ tool defaults to using the project defined in the source configuration.&lt;/p>
 &lt;p>A &lt;code>bigquery-list-table-ids&lt;/code> tool returns table IDs in a given BigQuery dataset.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/bigquery.md">bigquery&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>bigquery-get-dataset-info&lt;/code> takes a required &lt;code>dataset&lt;/code> parameter to specify the dataset
 from which to list table IDs. It also optionally accepts a &lt;code>project&lt;/code> parameter to
@@ -271,7 +271,7 @@ tool defaults to using the project defined in the source configuration.&lt;/p>
 &lt;p>A &lt;code>bigquery-sql&lt;/code> tool executes a pre-defined SQL statement. It&amp;rsquo;s compatible with
 the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/bigquery.md">bigquery&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;h3 id="googlesql">GoogleSQL&lt;/h3>
 &lt;p>BigQuery uses &lt;a href="https://cloud.google.com/bigquery/docs/reference/standard-sql/">GoogleSQL&lt;/a> for querying data. The integration
@@ -296,12 +296,13 @@ with the cbt CLI&lt;/a>.&lt;/p></description></item><item><title>bigtable-sql</t
 &lt;p>A &lt;code>bigtable-sql&lt;/code> tool executes a pre-defined SQL statement against a Bigtable
 instance. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/bigtable.md">bigtable&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/bigtable/">bigtable&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;h3 id="googlesql">GoogleSQL&lt;/h3>
 &lt;p>Bigtable supports SQL queries. The integration with Toolbox supports &lt;code>googlesql&lt;/code>
 dialect, the specified SQL statement is executed as a &lt;a href="https://cloud.google.com/bigtable/docs/googlesql-overview">data manipulation
-language (DML)&lt;/a> statements, and specified parameters will inserted according to their name: e.g. &lt;code>@name&lt;/code>.&lt;/p>
+language (DML)&lt;/a> statements, and specified parameters will
+inserted according to their name: e.g. &lt;code>@name&lt;/code>.&lt;/p>
 &lt;style type="text/css">
  
  .notice {
@@ -606,7 +607,7 @@ Run SQL++ statements on Couchbase with parameterized input.&lt;/li>
 &lt;p>A &lt;code>couchbase-sql&lt;/code> tool executes a pre-defined SQL statement against a Couchbase
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/couchbase.md">couchbase&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/couchbase/">couchbase&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>The specified SQL statement is executed as a parameterized statement, and specified
 parameters will be used according to their name: e.g. &lt;code>$id&lt;/code>.&lt;/p>
@@ -616,15 +617,42 @@ parameters will be used according to their name: e.g. &lt;code>$id&lt;/code>.&lt
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
 names, or other parts of the query.&lt;/p></description></item><item><title>Dataplex</title><link>https://googleapis.github.io/genai-toolbox/resources/sources/dataplex/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/sources/dataplex/</guid><description>&lt;h1 id="dataplex-source">Dataplex Source&lt;/h1>
-&lt;p>&lt;a href="https://cloud.google.com/dataplex/docs">Dataplex&lt;/a> Universal Catalog is a unified, intelligent governance solution for data and AI assets in Google Cloud. Dataplex Universal Catalog powers AI, analytics, and business intelligence at scale.&lt;/p>
-&lt;p>At the heart of these governance capabilities is a catalog that contains a centralized inventory of the data assets in your organization. Dataplex Universal Catalog holds business, technical, and runtime metadata for all of your data. It helps you discover relationships and semantics in the metadata by applying artificial intelligence and machine learning.&lt;/p></description></item><item><title>dataplex-search-entries</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/dataplex/dataplex-search-entries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/dataplex/dataplex-search-entries/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>dataplex-search-entries&lt;/code> tool returns all entries in Dataplex Catalog (e.g. tables, views, models) that matches given user query.
+&lt;p>&lt;a href="https://cloud.google.com/dataplex/docs">Dataplex&lt;/a> Universal Catalog is a unified, intelligent governance
+solution for data and AI assets in Google Cloud. Dataplex Universal Catalog
+powers AI, analytics, and business intelligence at scale.&lt;/p>
+&lt;p>At the heart of these governance capabilities is a catalog that contains a
+centralized inventory of the data assets in your organization. Dataplex
+Universal Catalog holds business, technical, and runtime metadata for all of
+your data. It helps you discover relationships and semantics in the metadata by
+applying artificial intelligence and machine learning.&lt;/p></description></item><item><title>dataplex-lookup-entry</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/dataplex/dataplex-lookup-entry/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/dataplex/dataplex-lookup-entry/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>dataplex-lookup-entry&lt;/code> tool returns details of a particular entry in Dataplex Catalog.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="../sources/dataplex.md">dataplex&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>dataplex-search-entries&lt;/code> takes a required &lt;code>query&lt;/code> parameter based on which entries are
-filtered and returned to the user and a required &lt;code>name&lt;/code> parameter which is constructed using source&amp;rsquo;s project if user does not provide it explicitly and has the following format: projects/{project}/locations/global. It also optionally accepts following parameters:&lt;/p></description></item><item><title>Dgraph</title><link>https://googleapis.github.io/genai-toolbox/resources/sources/dgraph/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/sources/dgraph/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;code>dataplex-lookup-entry&lt;/code> takes a required &lt;code>name&lt;/code> parameter which contains the project and location to which the request should be attributed in the following form: projects/{project}/locations/{location} and also a required &lt;code>entry&lt;/code> parameter which is the resource name of the entry in the following form: projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}. It also optionally accepts following parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>view&lt;/code> - View to control which parts of an entry the service should return. It takes integer values from 1-4 corresponding to type of view - BASIC, FULL, CUSTOM, ALL&lt;/li>
+&lt;li>&lt;code>aspectTypes&lt;/code> - Limits the aspects returned to the provided aspect types in the format &lt;code>projects/{project}/locations/{location}/aspectTypes/{aspectType}&lt;/code>. It only works for CUSTOM view.&lt;/li>
+&lt;li>&lt;code>paths&lt;/code> - Limits the aspects returned to those associated with the provided paths within the Entry. It only works for CUSTOM view.&lt;/li>
+&lt;/ul>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
+&lt;p>Dataplex uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control">Identity and Access Management (IAM)&lt;/a> to control
+user and group access to Dataplex resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials (ADC)&lt;/a> to authorize and authenticate when
+interacting with [Dataplex][dataplex-docs].&lt;/p></description></item><item><title>dataplex-search-entries</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/dataplex/dataplex-search-entries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/dataplex/dataplex-search-entries/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>dataplex-search-entries&lt;/code> tool returns all entries in Dataplex Catalog (e.g.
+tables, views, models) that matches given user query.
+It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/dataplex/">dataplex&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>dataplex-search-entries&lt;/code> takes a required &lt;code>query&lt;/code> parameter based on which
+entries are filtered and returned to the user and a required &lt;code>name&lt;/code> parameter
+which is constructed using source&amp;rsquo;s project if user does not provide it
+explicitly and has the following format: projects/{project}/locations/global. It
+also optionally accepts following parameters:&lt;/p></description></item><item><title>Dgraph</title><link>https://googleapis.github.io/genai-toolbox/resources/sources/dgraph/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/sources/dgraph/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://dgraph.io/docs">Dgraph&lt;/a> is an open-source graph database. It is designed for
 real-time workloads, horizontal scalability, and data flexibility. Implemented
 as a distributed system, Dgraph processes queries in parallel to deliver the
@@ -645,7 +673,7 @@ the namespace and user credentials for that namespace.&lt;/p></description></ite
 &lt;p>A &lt;code>dgraph-dql&lt;/code> tool executes a pre-defined DQL statement against a Dgraph
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/dgraph.md">dgraph&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/dgraph/">dgraph&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>To run a statement as a query, you need to set the config &lt;code>isQuery=true&lt;/code>. For
 upserts or mutations, set &lt;code>isQuery=false&lt;/code>. You can also configure timeout for a
@@ -668,14 +696,15 @@ basics&lt;/a>.&lt;/p>
 user and group access to Firestore resources. Toolbox will use your &lt;a href="https://cloud.google.com/docs/authentication#adc">Application
 Default Credentials (ADC)&lt;/a> to authorize and authenticate when interacting
 with &lt;a href="https://cloud.google.com/firestore/docs">Firestore&lt;/a>.&lt;/p></description></item><item><title>firestore-delete-documents</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/firestore/firestore-delete-documents/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/firestore/firestore-delete-documents/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>firestore-delete-documents&lt;/code> tool deletes multiple documents from Firestore by their paths.
+&lt;p>A &lt;code>firestore-delete-documents&lt;/code> tool deletes multiple documents from Firestore by
+their paths.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/firestore.md">firestore&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/firestore/">firestore&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>firestore-delete-documents&lt;/code> takes one input parameter &lt;code>documentPaths&lt;/code> which is an array of
-document paths to delete. The tool uses Firestore&amp;rsquo;s BulkWriter for efficient batch deletion
-and returns the success status for each document.&lt;/p>
+&lt;p>&lt;code>firestore-delete-documents&lt;/code> takes one input parameter &lt;code>documentPaths&lt;/code> which is
+an array of document paths to delete. The tool uses Firestore&amp;rsquo;s BulkWriter for
+efficient batch deletion and returns the success status for each document.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">delete_user_documents&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -713,14 +742,15 @@ and returns the success status for each document.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>firestore-get-documents</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/firestore/firestore-get-documents/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/firestore/firestore-get-documents/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>firestore-get-documents&lt;/code> tool retrieves multiple documents from Firestore by their paths.
+&lt;p>A &lt;code>firestore-get-documents&lt;/code> tool retrieves multiple documents from Firestore by
+their paths.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/firestore.md">firestore&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/firestore/">firestore&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>firestore-get-documents&lt;/code> takes one input parameter &lt;code>documentPaths&lt;/code> which is an array of
-document paths, and returns the documents&amp;rsquo; data along with metadata such as existence status,
-creation time, update time, and read time.&lt;/p>
+&lt;p>&lt;code>firestore-get-documents&lt;/code> takes one input parameter &lt;code>documentPaths&lt;/code> which is an
+array of document paths, and returns the documents&amp;rsquo; data along with metadata
+such as existence status, creation time, update time, and read time.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_user_documents&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -758,13 +788,15 @@ creation time, update time, and read time.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>firestore-get-rules</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/firestore/firestore-get-rules/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/firestore/firestore-get-rules/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>firestore-get-rules&lt;/code> tool retrieves the active &lt;a href="https://firebase.google.com/docs/firestore/security/get-started">Firestore security rules&lt;/a> for the current project.
+&lt;p>A &lt;code>firestore-get-rules&lt;/code> tool retrieves the active &lt;a href="https://firebase.google.com/docs/firestore/security/get-started">Firestore security
+rules&lt;/a> for the
+current project.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/firestore.md">firestore&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/firestore/">firestore&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>firestore-get-rules&lt;/code> takes no input parameters and returns the security rules content along with metadata
-such as the ruleset name, and timestamps.&lt;/p>
+&lt;p>&lt;code>firestore-get-rules&lt;/code> takes no input parameters and returns the security rules
+content along with metadata such as the ruleset name, and timestamps.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_firestore_rules&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -802,10 +834,14 @@ such as the ruleset name, and timestamps.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>firestore-list-collections</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/firestore/firestore-list-collections/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/firestore/firestore-list-collections/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>firestore-list-collections&lt;/code> tool lists &lt;a href="https://firebase.google.com/docs/firestore/data-model#collections">collections&lt;/a> in Firestore, either at the root level or as &lt;a href="https://firebase.google.com/docs/firestore/data-model#subcollections">subcollections&lt;/a> of a specific document.
+&lt;p>A &lt;code>firestore-list-collections&lt;/code> tool lists
+&lt;a href="https://firebase.google.com/docs/firestore/data-model#collections">collections&lt;/a>
+in Firestore, either at the root level or as
+&lt;a href="https://firebase.google.com/docs/firestore/data-model#subcollections">subcollections&lt;/a>
+of a specific document.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/firestore.md">firestore&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/firestore/">firestore&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>firestore-list-collections&lt;/code> takes an optional &lt;code>parentPath&lt;/code> parameter to specify a document
 path. If provided, it lists all subcollections of that document. If not provided, it lists
@@ -846,8 +882,77 @@ all root-level collections in the database.&lt;/p>
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>firestore-validate-rules</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/firestore/firestore-validate-rules/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/firestore/firestore-validate-rules/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
-&lt;p>The &lt;code>firestore-validate-rules&lt;/code> tool validates Firestore security rules syntax and semantic correctness without deploying them. It provides detailed error reporting with source positions and code snippets.&lt;/p>
+&lt;/table></description></item><item><title>firestore-query-collection</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/firestore/firestore-query-collection/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/firestore/firestore-query-collection/</guid><description>&lt;h1 id="about">About&lt;/h1>
+&lt;p>The &lt;code>firestore-query-collection&lt;/code> tool allows you to query Firestore collections
+with filters, ordering, and limit capabilities.&lt;/p>
+&lt;h2 id="configuration">Configuration&lt;/h2>
+&lt;p>To use this tool, you need to configure it in your YAML configuration file:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-firestore&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">firestore&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">project&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-gcp-project&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">database&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s2">&amp;#34;(default)&amp;#34;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">query_collection&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">firestore-query-collection&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-firestore&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Query Firestore collections with advanced filtering&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="parameters">Parameters&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>parameters&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>default&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>&lt;code>collectionPath&lt;/code>&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td style="text-align: center">-&lt;/td>
+ &lt;td>The Firestore Rules source code to validate&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>filters&lt;/code>&lt;/td>
+ &lt;td style="text-align: center">array&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td style="text-align: center">-&lt;/td>
+ &lt;td>Array of filter objects (as JSON strings) to apply to the query&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>orderBy&lt;/code>&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td style="text-align: center">-&lt;/td>
+ &lt;td>JSON string specifying field and direction to order results&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>limit&lt;/code>&lt;/td>
+ &lt;td style="text-align: center">integer&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td style="text-align: center">100&lt;/td>
+ &lt;td>Maximum number of documents to return&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;code>analyzeQuery&lt;/code>&lt;/td>
+ &lt;td style="text-align: center">boolean&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>If true, returns query explain metrics including execution statistics&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h3 id="filter-format">Filter Format&lt;/h3>
+&lt;p>Each filter in the &lt;code>filters&lt;/code> array should be a JSON string with the following
+structure:&lt;/p></description></item><item><title>firestore-validate-rules</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/firestore/firestore-validate-rules/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/firestore/firestore-validate-rules/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
+&lt;p>The &lt;code>firestore-validate-rules&lt;/code> tool validates Firestore security rules syntax
+and semantic correctness without deploying them. It provides detailed error
+reporting with source positions and code snippets.&lt;/p>
 &lt;h2 id="configuration">Configuration&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">firestore-validate-rules&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -860,17 +965,17 @@ all root-level collections in the database.&lt;/p>
 &lt;table>
  &lt;thead>
  &lt;tr>
- &lt;th>Parameter&lt;/th>
- &lt;th>Type&lt;/th>
- &lt;th>Required&lt;/th>
- &lt;th>Description&lt;/th>
+ &lt;th>&lt;strong>parameters&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
  &lt;/tr>
  &lt;/thead>
  &lt;tbody>
  &lt;tr>
  &lt;td>source&lt;/td>
- &lt;td>string&lt;/td>
- &lt;td>Yes&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
  &lt;td>The Firestore Rules source code to validate&lt;/td>
  &lt;/tr>
  &lt;/tbody>
@@ -1054,14 +1159,15 @@ in the cloud, on GCP, or on premises.&lt;/p>
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">client_secret&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${LOOKER_CLIENT_SECRET}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">verify_ssl&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">true&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">timeout&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">600s&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The Looker base url will look like &amp;ldquo;&lt;a href="https://looker.example.com">https://looker.example.com&lt;/a>&amp;rdquo;, don&amp;rsquo;t include a
-trailing &amp;ldquo;/&amp;rdquo;. In some cases, especially if your Looker is deployed on-premises,
-you may need to add the API port numner like &amp;ldquo;&lt;a href="https://looker.example.com:19999">https://looker.example.com:19999&lt;/a>&amp;rdquo;.&lt;/p></description></item><item><title>looker-get-dimensions</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/looker/looker_get_dimensions/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/looker/looker_get_dimensions/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The Looker base url will look like &amp;ldquo;&lt;a href="https://looker.example.com">https://looker.example.com&lt;/a>&amp;rdquo;, don&amp;rsquo;t include
+a trailing &amp;ldquo;/&amp;rdquo;. In some cases, especially if your Looker is deployed
+on-premises, you may need to add the API port numner like
+&amp;ldquo;&lt;a href="https://looker.example.com:19999">https://looker.example.com:19999&lt;/a>&amp;rdquo;.&lt;/p></description></item><item><title>looker-get-dimensions</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/looker/looker_get_dimensions/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/looker/looker_get_dimensions/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>looker-get-dimensions&lt;/code> tool returns all the dimensions from a given explore
 in a given mode in the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/looker.md">looker&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>looker-get-dimensions&lt;/code> accepts two parameters, the &lt;code>model&lt;/code> and the &lt;code>explore&lt;/code>.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
@@ -1110,7 +1216,7 @@ in a given mode in the source.&lt;/p>
 for a given model from the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/looker.md">looker&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>looker-get-explores&lt;/code> accepts one parameter, the
 &lt;code>model&lt;/code> id.&lt;/p>
@@ -1159,7 +1265,7 @@ for a given model from the source.&lt;/p>
 in a given mode in the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/looker.md">looker&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>looker-get-filters&lt;/code> accepts two parameters, the &lt;code>model&lt;/code> and the &lt;code>explore&lt;/code>.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
@@ -1208,7 +1314,7 @@ in a given mode in the source.&lt;/p>
 name or description.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/looker.md">looker&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>looker-get-looks&lt;/code> takes four parameters, the &lt;code>title&lt;/code>, &lt;code>desc&lt;/code>, &lt;code>limit&lt;/code>
 and &lt;code>offset&lt;/code>.&lt;/p>
@@ -1271,7 +1377,7 @@ default to 100 and 0.&lt;/p>
 in a given mode in the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/looker.md">looker&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>looker-get-measures&lt;/code> accepts two parameters, the &lt;code>model&lt;/code> and the &lt;code>explore&lt;/code>.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
@@ -1319,7 +1425,7 @@ in a given mode in the source.&lt;/p>
 &lt;p>A &lt;code>looker-get-models&lt;/code> tool returns all the models the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/looker.md">looker&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>looker-get-models&lt;/code> accepts no parameters.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
@@ -1366,7 +1472,7 @@ in a given mode in the source.&lt;/p>
 in a given mode in the source.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/looker.md">looker&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>looker-get-parameters&lt;/code> accepts two parameters, the &lt;code>model&lt;/code> and the &lt;code>explore&lt;/code>.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
@@ -1415,7 +1521,7 @@ in a given mode in the source.&lt;/p>
 semantic model.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/looker.md">looker&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>looker-query&lt;/code> takes eight parameters:&lt;/p>
 &lt;ol>
@@ -1501,7 +1607,7 @@ semantic model.&lt;/p>
 semantic model.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/looker.md">looker&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>looker-query-sql&lt;/code> takes eight parameters:&lt;/p>
 &lt;ol>
@@ -1582,12 +1688,72 @@ semantic model.&lt;/p>
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
+&lt;/table></description></item><item><title>looker-query-url</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/looker/looker_query_url/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/looker/looker_query_url/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>looker-query-url&lt;/code> generates a url link to an explore in
+Looker so the query can be investigated further.&lt;/p>
+&lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/looker/">looker&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>looker-query-url&lt;/code> takes eight parameters:&lt;/p>
+&lt;ol>
+&lt;li>the &lt;code>model&lt;/code>&lt;/li>
+&lt;li>the &lt;code>explore&lt;/code>&lt;/li>
+&lt;li>the &lt;code>fields&lt;/code> list&lt;/li>
+&lt;li>an optional set of &lt;code>filters&lt;/code>&lt;/li>
+&lt;li>an optional set of &lt;code>pivots&lt;/code>&lt;/li>
+&lt;li>an optional set of &lt;code>sorts&lt;/code>&lt;/li>
+&lt;li>an optional &lt;code>limit&lt;/code>&lt;/li>
+&lt;li>an optional &lt;code>tz&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">query_url&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-query-url&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Query URL Tool
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> This tool is used to generate the URL of a query in Looker.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> The user can then explore the query further inside Looker.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> The tool also returns the query_id and slug. The parameters
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> are the same as the `looker-query` tool.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;looker-query-url&amp;rdquo;&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the source the SQL should execute on.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
 &lt;/table></description></item><item><title>looker-run-look</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/looker/looker_run_look/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/looker/looker_run_look/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>looker-run-look&lt;/code> tool runs the query associated with a
 saved Look.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/looker.md">looker&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>looker-run-look&lt;/code> takes one parameter, the &lt;code>look_id&lt;/code>.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
@@ -1632,7 +1798,8 @@ saved Look.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>MongoDB</title><link>https://googleapis.github.io/genai-toolbox/resources/sources/mongodb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/sources/mongodb/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://www.mongodb.com/docs/atlas/getting-started/">MongoDB&lt;/a> is a popular NoSQL database that stores data in flexible, JSON-like documents, making it easy to develop and scale applications.&lt;/p>
+&lt;p>&lt;a href="https://www.mongodb.com/docs/atlas/getting-started/">MongoDB&lt;/a> is a popular NoSQL database that stores data in
+flexible, JSON-like documents, making it easy to develop and scale applications.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-mongodb&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -1671,48 +1838,85 @@ saved Look.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>mongodb-aggregate</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-aggregate/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-aggregate/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>mongodb-aggregate&lt;/code> tool is the most powerful query tool for MongoDB, allowing you to process data through a multi-stage pipeline. Each stage transforms the documents as they pass through, enabling complex operations like grouping, filtering, reshaping documents, and performing calculations.&lt;/p>
-&lt;p>The core of this tool is the &lt;code>pipelinePayload&lt;/code>, which must be a string containing a &lt;strong>JSON array of pipeline stage documents&lt;/strong>. The tool returns a JSON array of documents produced by the final stage of the pipeline.&lt;/p></description></item><item><title>mongodb-delete-many</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-delete-many/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-delete-many/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>mongodb-delete-many&lt;/code> tool performs a &lt;strong>bulk destructive operation&lt;/strong>, deleting &lt;strong>ALL&lt;/strong> documents from a collection that match a specified filter.&lt;/p>
-&lt;p>The tool returns the total count of documents that were deleted. If the filter does not match any documents (i.e., the deleted count is 0), the tool will return an error.&lt;/p>
+&lt;p>The &lt;code>mongodb-aggregate&lt;/code> tool is the most powerful query tool for MongoDB,
+allowing you to process data through a multi-stage pipeline. Each stage
+transforms the documents as they pass through, enabling complex operations like
+grouping, filtering, reshaping documents, and performing calculations.&lt;/p>
+&lt;p>The core of this tool is the &lt;code>pipelinePayload&lt;/code>, which must be a string
+containing a &lt;strong>JSON array of pipeline stage documents&lt;/strong>. The tool returns a JSON
+array of documents produced by the final stage of the pipeline.&lt;/p></description></item><item><title>mongodb-delete-many</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-delete-many/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-delete-many/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>mongodb-delete-many&lt;/code> tool performs a &lt;strong>bulk destructive operation&lt;/strong>,
+deleting &lt;strong>ALL&lt;/strong> documents from a collection that match a specified filter.&lt;/p>
+&lt;p>The tool returns the total count of documents that were deleted. If the filter
+does not match any documents (i.e., the deleted count is 0), the tool will
+return an error.&lt;/p>
 &lt;p>This tool is compatible with the following source kind:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/mongodb/">&lt;code>mongodb&lt;/code>&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;hr>
 &lt;h2 id="example">Example&lt;/h2>
-&lt;p>Here is an example that performs a cleanup task by deleting all products from the &lt;code>inventory&lt;/code> collection that belong to a discontinued brand.&lt;/p></description></item><item><title>mongodb-delete-one</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-delete-one/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-delete-one/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>mongodb-delete-one&lt;/code> tool performs a destructive operation, deleting the &lt;strong>first single document&lt;/strong> that matches a specified filter from a MongoDB collection.&lt;/p>
-&lt;p>If the filter matches multiple documents, only the first one found by the database will be deleted. This tool is useful for removing specific entries, such as a user account or a single item from an inventory based on a unique ID.&lt;/p>
-&lt;p>The tool returns the number of documents deleted, which will be either &lt;code>1&lt;/code> if a document was found and deleted, or &lt;code>0&lt;/code> if no matching document was found.&lt;/p></description></item><item><title>mongodb-find</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-find/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-find/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>mongodb-find&lt;/code> tool is used to query a MongoDB collection and retrieve documents that match a specified filter. It&amp;rsquo;s a flexible tool that allows you to shape the output by selecting specific fields (&lt;strong>projection&lt;/strong>), ordering the results (&lt;strong>sorting&lt;/strong>), and restricting the number of documents returned (&lt;strong>limiting&lt;/strong>).&lt;/p>
+&lt;p>Here is an example that performs a cleanup task by deleting all products from
+the &lt;code>inventory&lt;/code> collection that belong to a discontinued brand.&lt;/p></description></item><item><title>mongodb-delete-one</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-delete-one/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-delete-one/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>mongodb-delete-one&lt;/code> tool performs a destructive operation, deleting the
+&lt;strong>first single document&lt;/strong> that matches a specified filter from a MongoDB
+collection.&lt;/p>
+&lt;p>If the filter matches multiple documents, only the first one found by the
+database will be deleted. This tool is useful for removing specific entries,
+such as a user account or a single item from an inventory based on a unique ID.&lt;/p>
+&lt;p>The tool returns the number of documents deleted, which will be either &lt;code>1&lt;/code> if a
+document was found and deleted, or &lt;code>0&lt;/code> if no matching document was found.&lt;/p></description></item><item><title>mongodb-find</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-find/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-find/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mongodb-find&lt;/code> tool is used to query a MongoDB collection and retrieve
+documents that match a specified filter. It&amp;rsquo;s a flexible tool that allows you to
+shape the output by selecting specific fields (&lt;strong>projection&lt;/strong>), ordering the
+results (&lt;strong>sorting&lt;/strong>), and restricting the number of documents returned
+(&lt;strong>limiting&lt;/strong>).&lt;/p>
 &lt;p>The tool returns a JSON array of the documents found.&lt;/p>
 &lt;p>This tool is compatible with the following source kind:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/mongodb/">&lt;code>mongodb&lt;/code>&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
-&lt;p>Here&amp;rsquo;s an example that finds up to 10 users from the &lt;code>customers&lt;/code> collection who live in a specific city. The results are sorted by their last name, and only their first name, last name, and email are returned.&lt;/p></description></item><item><title>mongodb-find-one</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-find-one/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-find-one/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>mongodb-find-one&lt;/code> tool is used to retrieve the &lt;strong>first single document&lt;/strong> that matches a specified filter from a MongoDB collection. If multiple documents match the filter, you can use &lt;code>sort&lt;/code> options to control which document is returned. Otherwise, the selection is not guaranteed.&lt;/p>
-&lt;p>The tool returns a single JSON object representing the document, wrapped in a JSON array.&lt;/p>
+&lt;p>Here&amp;rsquo;s an example that finds up to 10 users from the &lt;code>customers&lt;/code> collection who
+live in a specific city. The results are sorted by their last name, and only
+their first name, last name, and email are returned.&lt;/p></description></item><item><title>mongodb-find-one</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-find-one/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-find-one/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mongodb-find-one&lt;/code> tool is used to retrieve the &lt;strong>first single document&lt;/strong> that
+matches a specified filter from a MongoDB collection. If multiple documents
+match the filter, you can use &lt;code>sort&lt;/code> options to control which document is
+returned. Otherwise, the selection is not guaranteed.&lt;/p>
+&lt;p>The tool returns a single JSON object representing the document, wrapped in a
+JSON array.&lt;/p>
 &lt;p>This tool is compatible with the following source kind:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/mongodb/">&lt;code>mongodb&lt;/code>&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;hr>
 &lt;h2 id="example">Example&lt;/h2>
-&lt;p>Here&amp;rsquo;s a common use case: finding a specific user by their unique email address and returning their profile information, while excluding sensitive fields like the password hash.&lt;/p></description></item><item><title>mongodb-insert-many</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-insert-many/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-insert-many/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>mongodb-insert-many&lt;/code> tool inserts &lt;strong>multiple new documents&lt;/strong> into a specified MongoDB collection in a single bulk operation. This is highly efficient for adding large amounts of data at once.&lt;/p>
-&lt;p>This tool takes one required parameter named &lt;code>data&lt;/code>. This &lt;code>data&lt;/code> parameter must be a string containing a &lt;strong>JSON array of document objects&lt;/strong>. Upon successful insertion, the tool returns a JSON array containing the unique &lt;code>_id&lt;/code> of &lt;strong>each&lt;/strong> new document that was created.&lt;/p></description></item><item><title>mongodb-insert-one</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-insert-one/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-insert-one/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>mongodb-insert-one&lt;/code> tool inserts a &lt;strong>single new document&lt;/strong> into a specified MongoDB collection.&lt;/p>
-&lt;p>This tool takes one required parameter named &lt;code>data&lt;/code>, which must be a string containing the JSON object you want to insert. Upon successful insertion, the tool returns the unique &lt;code>_id&lt;/code> of the newly created document.&lt;/p>
+&lt;p>Here&amp;rsquo;s a common use case: finding a specific user by their unique email address
+and returning their profile information, while excluding sensitive fields like
+the password hash.&lt;/p></description></item><item><title>mongodb-insert-many</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-insert-many/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-insert-many/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>mongodb-insert-many&lt;/code> tool inserts &lt;strong>multiple new documents&lt;/strong> into a
+specified MongoDB collection in a single bulk operation. This is highly
+efficient for adding large amounts of data at once.&lt;/p>
+&lt;p>This tool takes one required parameter named &lt;code>data&lt;/code>. This &lt;code>data&lt;/code> parameter must
+be a string containing a &lt;strong>JSON array of document objects&lt;/strong>. Upon successful
+insertion, the tool returns a JSON array containing the unique &lt;code>_id&lt;/code> of &lt;strong>each&lt;/strong>
+new document that was created.&lt;/p></description></item><item><title>mongodb-insert-one</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-insert-one/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-insert-one/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>mongodb-insert-one&lt;/code> tool inserts a &lt;strong>single new document&lt;/strong> into a specified
+MongoDB collection.&lt;/p>
+&lt;p>This tool takes one required parameter named &lt;code>data&lt;/code>, which must be a string
+containing the JSON object you want to insert. Upon successful insertion, the
+tool returns the unique &lt;code>_id&lt;/code> of the newly created document.&lt;/p>
 &lt;p>This tool is compatible with the following source kind:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/mongodb/">&lt;code>mongodb&lt;/code>&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
-&lt;p>Here is an example configuration for a tool that adds a new user to a &lt;code>users&lt;/code> collection.&lt;/p></description></item><item><title>mongodb-update-many</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-update-many/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-update-many/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>mongodb-update-many&lt;/code> tool updates &lt;strong>all&lt;/strong> documents within a specified MongoDB collection that match a given filter. It locates the documents using a &lt;code>filterPayload&lt;/code> and applies the modifications defined in an &lt;code>updatePayload&lt;/code>.&lt;/p>
+&lt;p>Here is an example configuration for a tool that adds a new user to a &lt;code>users&lt;/code>
+collection.&lt;/p></description></item><item><title>mongodb-update-many</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-update-many/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-update-many/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mongodb-update-many&lt;/code> tool updates &lt;strong>all&lt;/strong> documents within a specified
+MongoDB collection that match a given filter. It locates the documents using a
+&lt;code>filterPayload&lt;/code> and applies the modifications defined in an &lt;code>updatePayload&lt;/code>.&lt;/p>
 &lt;p>The tool returns an array of three integers: &lt;code>[ModifiedCount, UpsertedCount, MatchedCount]&lt;/code>.&lt;/p>
 &lt;p>This tool is compatible with the following source kind:&lt;/p>
 &lt;ul>
@@ -1720,20 +1924,27 @@ saved Look.&lt;/p>
 &lt;/ul>
 &lt;hr>
 &lt;h2 id="example">Example&lt;/h2>
-&lt;p>Here&amp;rsquo;s an example configuration. This tool applies a discount to all items within a specific category and also marks them as being on sale.&lt;/p></description></item><item><title>mongodb-update-one</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-update-one/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-update-one/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>mongodb-update-one&lt;/code> tool updates a single document within a specified MongoDB collection. It locates the document to be updated using a &lt;code>filterPayload&lt;/code> and applies modifications defined in an &lt;code>updatePayload&lt;/code>. If the filter matches multiple documents, only the first one found will be updated.&lt;/p>
+&lt;p>Here&amp;rsquo;s an example configuration. This tool applies a discount to all items
+within a specific category and also marks them as being on sale.&lt;/p></description></item><item><title>mongodb-update-one</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-update-one/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mongodb/mongodb-update-one/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mongodb-update-one&lt;/code> tool updates a single document within a specified MongoDB
+collection. It locates the document to be updated using a &lt;code>filterPayload&lt;/code> and
+applies modifications defined in an &lt;code>updatePayload&lt;/code>. If the filter matches
+multiple documents, only the first one found will be updated.&lt;/p>
 &lt;p>This tool is compatible with the following source kind:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/mongodb/">&lt;code>mongodb&lt;/code>&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;hr>
 &lt;h2 id="example">Example&lt;/h2>
-&lt;p>Here&amp;rsquo;s an example of a &lt;code>mongodb-update-one&lt;/code> tool configuration. This tool updates the &lt;code>stock&lt;/code> and &lt;code>status&lt;/code> fields of a document in the &lt;code>inventory&lt;/code> collection where the &lt;code>item&lt;/code> field matches a provided value. If no matching document is found, the &lt;code>upsert: true&lt;/code> option will create a new one.&lt;/p></description></item><item><title>mssql-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mssql/mssql-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mssql/mssql-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>Here&amp;rsquo;s an example of a &lt;code>mongodb-update-one&lt;/code> tool configuration. This tool
+updates the &lt;code>stock&lt;/code> and &lt;code>status&lt;/code> fields of a document in the &lt;code>inventory&lt;/code>
+collection where the &lt;code>item&lt;/code> field matches a provided value. If no matching
+document is found, the &lt;code>upsert: true&lt;/code> option will create a new one.&lt;/p></description></item><item><title>mssql-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/mssql/mssql-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/mssql/mssql-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>mssql-execute-sql&lt;/code> tool executes a SQL statement against a SQL Server
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/cloud-sql-mssql.md">cloud-sql-mssql&lt;/a>&lt;/li>
-&lt;li>&lt;a href="../sources/mssql.md">mssql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/cloud-sql-mssql/">cloud-sql-mssql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/mssql/">mssql&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>mssql-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and run the sql
 statement against the &lt;code>source&lt;/code>.&lt;/p>
@@ -1780,8 +1991,8 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
 &lt;p>A &lt;code>mssql-sql&lt;/code> tool executes a pre-defined SQL statement against a SQL Server
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/cloud-sql-mssql.md">cloud-sql-mssql&lt;/a>&lt;/li>
-&lt;li>&lt;a href="../sources/mssql.md">mssql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/cloud-sql-mssql/">cloud-sql-mssql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/mssql/">mssql&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>Toolbox supports the &lt;a href="https://learn.microsoft.com/sql/relational-databases/system-stored-procedures/sp-prepare-transact-sql?view=sql-server-ver16">prepare statement syntax&lt;/a> of MS SQL
 Server and expects parameters in the SQL query to be in the form of either
@@ -1946,8 +2157,8 @@ MySQL user&lt;/a> to login to the database with.&lt;/p>
 &lt;p>A &lt;code>mysql-execute-sql&lt;/code> tool executes a SQL statement against a MySQL
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/cloud-sql-mysql.md">cloud-sql-mysql&lt;/a>&lt;/li>
-&lt;li>&lt;a href="../sources/mysql.md">mysql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/mysql/">mysql&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>mysql-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and run the sql
 statement against the &lt;code>source&lt;/code>.&lt;/p>
@@ -1994,8 +2205,8 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
 &lt;p>A &lt;code>mysql-sql&lt;/code> tool executes a pre-defined SQL statement against a MySQL
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/cloud-sql-mysql.md">cloud-sql-mysql&lt;/a>&lt;/li>
-&lt;li>&lt;a href="../sources/mysql.md">mysql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/mysql/">mysql&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>The specified SQL statement is executed as a &lt;a href="https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html">prepared statement&lt;/a>,
 and expects parameters in the SQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
@@ -2021,7 +2232,7 @@ user if available.&lt;/p></description></item><item><title>neo4j-cypher</title><
 &lt;p>A &lt;code>neo4j-cypher&lt;/code> tool executes a pre-defined Cypher statement against a Neo4j
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/neo4j.md">neo4j&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/neo4j/">neo4j&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>The specified Cypher statement is executed as a &lt;a href="https://neo4j.com/docs/cypher-manual/current/syntax/parameters/">parameterized
 statement&lt;/a>, and specified parameters will be used according to
@@ -2031,19 +2242,24 @@ their name: e.g. &lt;code>$id&lt;/code>.&lt;/p>
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
 names, or other parts of the query.&lt;/p></description></item><item><title>neo4j-execute-cypher</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/neo4j/neo4j-execute-cypher/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/neo4j/neo4j-execute-cypher/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>neo4j-execute-cypher&lt;/code> tool executes an arbitrary Cypher query provided as a string parameter against a Neo4j database. It&amp;rsquo;s designed to be a flexible tool for interacting with the database when a pre-defined query is not sufficient. This tool is compatible with any of the following sources:&lt;/p>
+&lt;p>A &lt;code>neo4j-execute-cypher&lt;/code> tool executes an arbitrary Cypher query provided as a
+string parameter against a Neo4j database. It&amp;rsquo;s designed to be a flexible tool
+for interacting with the database when a pre-defined query is not sufficient.
+This tool is compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/neo4j.md">neo4j&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/neo4j/">neo4j&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>For security, the tool can be configured to be read-only. If the &lt;code>readOnly&lt;/code> flag is set to &lt;code>true&lt;/code>, the tool will analyze the incoming Cypher query and reject any write operations (like &lt;code>CREATE&lt;/code>, &lt;code>MERGE&lt;/code>, &lt;code>DELETE&lt;/code>, etc.) before execution.&lt;/p></description></item><item><title>neo4j-schema</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/neo4j/neo4j-schema/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/neo4j/neo4j-schema/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>For security, the tool can be configured to be read-only. If the &lt;code>readOnly&lt;/code> flag
+is set to &lt;code>true&lt;/code>, the tool will analyze the incoming Cypher query and reject any
+write operations (like &lt;code>CREATE&lt;/code>, &lt;code>MERGE&lt;/code>, &lt;code>DELETE&lt;/code>, etc.) before execution.&lt;/p></description></item><item><title>neo4j-schema</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/neo4j/neo4j-schema/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/neo4j/neo4j-schema/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>neo4j-schema&lt;/code> tool connects to a Neo4j database and extracts its complete schema information. It runs multiple queries concurrently to efficiently gather details about node labels, relationships, properties, constraints, and indexes.&lt;/p>
 &lt;p>The tool automatically detects if the APOC (Awesome Procedures on Cypher) library is available. If so, it uses APOC procedures like &lt;code>apoc.meta.schema&lt;/code> for a highly detailed overview of the database structure; otherwise, it falls back to using native Cypher queries.&lt;/p></description></item><item><title>postgres-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/postgres/postgres-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/postgres/postgres-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>postgres-execute-sql&lt;/code> tool executes a SQL statement against a Postgres
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/alloydb-pg.md">alloydb-postgres&lt;/a>&lt;/li>
-&lt;li>&lt;a href="../sources/cloud-sql-pg.md">cloud-sql-postgres&lt;/a>&lt;/li>
-&lt;li>&lt;a href="../sources/postgres.md">postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>postgres-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and run the sql
 statement against the &lt;code>source&lt;/code>.&lt;/p>
@@ -2090,9 +2306,9 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
 &lt;p>A &lt;code>postgres-sql&lt;/code> tool executes a pre-defined SQL statement against a Postgres
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/alloydb-pg.md">alloydb-postgres&lt;/a>&lt;/li>
-&lt;li>&lt;a href="../sources/cloud-sql-pg.md">cloud-sql-postgres&lt;/a>&lt;/li>
-&lt;li>&lt;a href="../sources/postgres.md">postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>The specified SQL statement is executed as a &lt;a href="https://www.postgresql.org/docs/current/sql-prepare.html">prepared statement&lt;/a>,
 and specified parameters will inserted according to their position: e.g. &lt;code>1&lt;/code>
@@ -2180,7 +2396,7 @@ Execute SQL on Google Cloud Spanner.&lt;/p></description></item><item><title>spa
 &lt;p>A &lt;code>spanner-execute-sql&lt;/code> tool executes a SQL statement against a Spanner
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/spanner.md">spanner&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/spanner/">spanner&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>spanner-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and run the sql
 statement against the &lt;code>source&lt;/code>.&lt;/p>
@@ -2234,7 +2450,7 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
 &lt;code>postgresql&lt;/code>) against a Cloud Spanner database. It&amp;rsquo;s compatible with any of the
 following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/spanner.md">spanner&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/spanner/">spanner&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;h3 id="googlesql">GoogleSQL&lt;/h3>
 &lt;p>For the &lt;code>googlesql&lt;/code> dialect, the specified SQL statement is executed as a &lt;a href="https://cloud.google.com/spanner/docs/reference/standard-sql/dml-syntax">data
@@ -2285,7 +2501,7 @@ Run SQL queries against a local SQLite database.&lt;/li>
 &lt;p>A &lt;code>sqlite-sql&lt;/code> tool executes SQL statements against a SQLite database.
 It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/sqlite.md">sqlite&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/sqlite/">sqlite&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>SQLite uses the &lt;code>?&lt;/code> placeholder for parameters in SQL statements. Parameters are
 bound in the order they are provided.&lt;/p>
@@ -2297,7 +2513,81 @@ DDL statements.&lt;/p>
 &lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
-names, or other parts of the query.&lt;/p></description></item><item><title>valkey</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/valkey/valkey/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/valkey/valkey/</guid><description>&lt;h2 id="about">About&lt;/h2>
+names, or other parts of the query.&lt;/p></description></item><item><title>TiDB</title><link>https://googleapis.github.io/genai-toolbox/resources/sources/tidb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/sources/tidb/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://docs.pingcap.com/tidb/stable">TiDB&lt;/a> is an open-source distributed SQL database that supports Hybrid Transactional and Analytical Processing (HTAP) workloads. It is MySQL-compatible and features horizontal scalability, strong consistency, and high availability.&lt;/p>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="database-user">Database User&lt;/h3>
+&lt;p>This source uses standard MySQL protocol authentication. You will need to &lt;a href="https://docs.pingcap.com/tidb/stable/user-account-management">create a TiDB user&lt;/a> to login to the database with.&lt;/p>
+&lt;p>For TiDB Cloud users, you can create database users through the TiDB Cloud console.&lt;/p>
+&lt;h2 id="ssl-configuration">SSL Configuration&lt;/h2>
+&lt;ul>
+&lt;li>
+&lt;p>TiDB Cloud&lt;/p></description></item><item><title>tidb-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/tidb/tidb-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/tidb/tidb-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>tidb-execute-sql&lt;/code> tool executes a SQL statement against a TiDB
+database. It&amp;rsquo;s compatible with the following source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="../sources/tidb.md">tidb&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>tidb-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and run the sql
+statement against the &lt;code>source&lt;/code>.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool is intended for developer assistant workflows with
+human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&lt;/blockquote>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">execute_sql_tool&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">tidb-execute-sql&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-tidb-instance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to execute sql statement.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;tidb-execute-sql&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the source the SQL should execute on.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>tidb-sql</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/tidb/tidb-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/tidb/tidb-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>tidb-sql&lt;/code> tool executes a pre-defined SQL statement against a TiDB
+database. It&amp;rsquo;s compatible with the following source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="../sources/tidb.md">tidb&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>The specified SQL statement is executed as a &lt;a href="https://docs.pingcap.com/tidb/stable/sql-prepared-plan-cache">prepared statement&lt;/a>,
+and expects parameters in the SQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
+Query parameters can be used as substitutes for arbitrary expressions.
+Parameters cannot be used as substitutes for identifiers, column names, table
+names, or other parts of the query.&lt;/p></description></item><item><title>Toolbox UI</title><link>https://googleapis.github.io/genai-toolbox/how-to/use-toolbox-ui/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/how-to/use-toolbox-ui/</guid><description>&lt;p>Toolbox UI is a built-in web interface that allows users to visually inspect and test out configured resources such as tools and toolsets.&lt;/p>
+&lt;h2 id="launching-toolbox-ui">Launching Toolbox UI&lt;/h2>
+&lt;p>To launch Toolbox&amp;rsquo;s interactive UI, use the &lt;code>--ui&lt;/code> flag.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-sh" data-lang="sh">&lt;span class="line">&lt;span class="cl">./toolbox --ui
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Toolbox UI will be served from the same host and port as the Toolbox Server, with the &lt;code>/ui&lt;/code> suffix. Once Toolbox
+is launched, the following INFO log with Toolbox UI&amp;rsquo;s url will be shown:&lt;/p></description></item><item><title>valkey</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/valkey/valkey/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/valkey/valkey/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A valkey tool executes a series of pre-defined Valkey commands against a
 Memorystore for Valkey instance.&lt;/p>
 &lt;p>The specified Valkey commands are executed sequentially. Each command is
@@ -2314,8 +2604,10 @@ sets, sorted sets with range queries, bitmaps, hyperloglogs, and geospatial
 indexes with radius queries.&lt;/p>
 &lt;p>If you&amp;rsquo;re new to Valkey, you can find installation and getting started guides on
 the &lt;a href="https://valkey.io/topics/quickstart/">official Valkey website&lt;/a>.&lt;/p></description></item><item><title>wait</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/utility/wait/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/utility/wait/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>wait&lt;/code> tool pauses execution for a specified duration. This can be useful in workflows where a delay is needed between steps.&lt;/p>
-&lt;p>&lt;code>wait&lt;/code> takes one input parameter &lt;code>duration&lt;/code> which is a string representing the time to wait (e.g., &amp;ldquo;10s&amp;rdquo;, &amp;ldquo;2m&amp;rdquo;, &amp;ldquo;1h&amp;rdquo;).&lt;/p>
+&lt;p>A &lt;code>wait&lt;/code> tool pauses execution for a specified duration. This can be useful in
+workflows where a delay is needed between steps.&lt;/p>
+&lt;p>&lt;code>wait&lt;/code> takes one input parameter &lt;code>duration&lt;/code> which is a string representing the
+time to wait (e.g., &amp;ldquo;10s&amp;rdquo;, &amp;ldquo;2m&amp;rdquo;, &amp;ldquo;1h&amp;rdquo;).&lt;/p>
 &lt;style type="text/css">
  
  .notice {
@@ -2437,27 +2729,15 @@ the &lt;a href="https://valkey.io/topics/quickstart/">official Valkey website&lt
  &lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
 &lt;/svg>
 
- &lt;/span>Info&lt;/p></description></item><item><title>AlloyDB Admin API using MCP</title><link>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/</guid><description>&lt;p>This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a> to create AlloyDB clusters and instances from IDE enabling their E2E journey.&lt;/p>
-&lt;ul>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/#configure-your-mcp-client">Cursor&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/#configure-your-mcp-client">Windsurf&lt;/a> (Codium)&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/#configure-your-mcp-client">Visual Studio Code &lt;/a> (Copilot)&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/#configure-your-mcp-client">Cline&lt;/a> (VS Code extension)&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/#configure-your-mcp-client">Claude desktop&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/#configure-your-mcp-client">Claude code&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/#configure-your-mcp-client">Gemini CLI&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/#configure-your-mcp-client">Gemini Code Assist&lt;/a>&lt;/li>
-&lt;/ul>
-&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
-&lt;ol>
-&lt;li>
-&lt;p>In the Google Cloud console, on the &lt;a href="https://console.cloud.google.com/projectselector2/home/dashboard">project selector page&lt;/a>, select or create a Google Cloud project.&lt;/p>
-&lt;/li>
-&lt;li>
-&lt;p>&lt;a href="https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#confirm_billing_is_enabled_on_a_project">Make sure that billing is enabled for your Google Cloud project&lt;/a>.&lt;/p></description></item><item><title>AlloyDB using MCP</title><link>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/</guid><description>&lt;html>
+ &lt;/span>Info&lt;/p></description></item><item><title>AlloyDB Admin API using MCP</title><link>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/</guid><description>&lt;html>
  &lt;head>
- &lt;link rel="canonical" href="https://cloud.google.com/alloydb/docs/pre-built-tools-with-mcp-toolbox"/>
- &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/pre-built-tools-with-mcp-toolbox"/>
+ &lt;link rel="canonical" href="https://cloud.google.com/alloydb/docs/create-database-with-mcp-toolbox"/>
+ &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/create-database-with-mcp-toolbox"/>
+ &lt;/head>
+&lt;/html></description></item><item><title>AlloyDB using MCP</title><link>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/</guid><description>&lt;html>
+ &lt;head>
+ &lt;link rel="canonical" href="https://cloud.google.com/alloydb/docs/connect-ide-using-mcp-toolbox"/>
+ &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/connect-ide-using-mcp-toolbox"/>
  &lt;/head>
 &lt;/html></description></item><item><title>BigQuery using MCP</title><link>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/bigquery_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/bigquery_mcp/</guid><description>&lt;html>
  &lt;head>
@@ -2503,19 +2783,23 @@ to expose your developer assistant tools to a Firestore instance:&lt;/p>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/firestore_mcp/#configure-your-mcp-client">Claude desktop&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/firestore_mcp/#configure-your-mcp-client">Claude code&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/firestore_mcp/#configure-your-mcp-client">Gemini CLI&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/firestore_mcp/#configure-your-mcp-client]">Gemini Code Assist&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect-ide/firestore_mcp/#configure-your-mcp-client">Gemini Code Assist&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;h2 id="set-up-firestore">Set up Firestore&lt;/h2>
 &lt;ol>
 &lt;li>
 &lt;p>Create or select a Google Cloud project.&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="https://cloud.google.com/resource-manager/docs/creating-managing-projects">Create a new project&lt;/a>&lt;/li>
-&lt;li>&lt;a href="https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects">Select an existing project&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://cloud.google.com/resource-manager/docs/creating-managing-projects">Create a new
+project&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://cloud.google.com/resource-manager/docs/creating-managing-projects#identifying_projects">Select an existing
+project&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://console.cloud.google.com/apis/library/firestore.googleapis.com">Enable the Firestore API&lt;/a> for your project.&lt;/p></description></item><item><title>Go SDK</title><link>https://googleapis.github.io/genai-toolbox/sdks/go-sdk/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/sdks/go-sdk/</guid><description>&lt;html>
+&lt;p>&lt;a href="https://console.cloud.google.com/apis/library/firestore.googleapis.com">Enable the Firestore
+API&lt;/a>
+for your project.&lt;/p></description></item><item><title>Go SDK</title><link>https://googleapis.github.io/genai-toolbox/sdks/go-sdk/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/sdks/go-sdk/</guid><description>&lt;html>
  &lt;head>
  &lt;link rel="canonical" href="https://github.com/googleapis/mcp-toolbox-sdk-go"/>
  &lt;meta http-equiv="refresh" content="0;url=https://github.com/googleapis/mcp-toolbox-sdk-go"/>
@@ -2689,7 +2973,9 @@ your preferred virtual environment tool for managing dependencies e.g. &lt;a hre
 &lt;li>Installed &lt;a href="https://www.postgresql.org/download/">PostgreSQL 16+ and the &lt;code>psql&lt;/code> client&lt;/a>.&lt;/li>
 &lt;/ol>
 &lt;h3 id="cloud-setup-optional">Cloud Setup (Optional)&lt;/h3>
-&lt;p>If you plan to use &lt;strong>Google Cloud’s Vertex AI&lt;/strong> with your agent (e.g., using &lt;code>vertexai=True&lt;/code> or a Google GenAI model), follow these one-time setup steps for local development:&lt;/p>
+&lt;p>If you plan to use &lt;strong>Google Cloud’s Vertex AI&lt;/strong> with your agent (e.g., using
+&lt;code>vertexai=True&lt;/code> or a Google GenAI model), follow these one-time setup steps for
+local development:&lt;/p>
 &lt;ol>
 &lt;li>
 &lt;p>&lt;a href="https://cloud.google.com/sdk/docs/install">Install the Google Cloud CLI&lt;/a>&lt;/p></description></item><item><title>Python SDK</title><link>https://googleapis.github.io/genai-toolbox/sdks/python-sdk/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/sdks/python-sdk/</guid><description>&lt;html>
@@ -2769,7 +3055,8 @@ roles):&lt;/p>
 &lt;li>Installed &lt;a href="https://www.postgresql.org/download/">PostgreSQL 16+ and the &lt;code>psql&lt;/code> client&lt;/a>.&lt;/li>
 &lt;/ol>
 &lt;h3 id="cloud-setup-optional">Cloud Setup (Optional)&lt;/h3>
-&lt;p>If you plan to use &lt;strong>Google Cloud’s Vertex AI&lt;/strong> with your agent (e.g., using Gemini or PaLM models), follow these one-time setup steps:&lt;/p>
+&lt;p>If you plan to use &lt;strong>Google Cloud’s Vertex AI&lt;/strong> with your agent (e.g., using
+Gemini or PaLM models), follow these one-time setup steps:&lt;/p>
 &lt;ol>
 &lt;li>
 &lt;p>&lt;a href="https://cloud.google.com/sdk/docs/install">Install the Google Cloud CLI&lt;/a>&lt;/p>
@@ -2875,7 +3162,8 @@ section.&lt;/p>
 &lt;li>Installed &lt;a href="https://www.postgresql.org/download/">PostgreSQL 16+ and the &lt;code>psql&lt;/code> client&lt;/a>.&lt;/li>
 &lt;/ol>
 &lt;h3 id="cloud-setup-optional">Cloud Setup (Optional)&lt;/h3>
-&lt;p>If you plan to use &lt;strong>Google Cloud’s Vertex AI&lt;/strong> with your agent (e.g., using Gemini or PaLM models), follow these one-time setup steps:&lt;/p>
+&lt;p>If you plan to use &lt;strong>Google Cloud’s Vertex AI&lt;/strong> with your agent (e.g., using
+Gemini or PaLM models), follow these one-time setup steps:&lt;/p>
 &lt;ol>
 &lt;li>
 &lt;p>&lt;a href="https://cloud.google.com/sdk/docs/install">Install the Google Cloud CLI&lt;/a>&lt;/p>
@@ -2918,7 +3206,10 @@ etc., you could use environment variables instead with the format &lt;code>${ENV
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="sources">Sources&lt;/h3>
 &lt;p>The &lt;code>sources&lt;/code> section of your &lt;code>tools.yaml&lt;/code> defines what data sources your
 Toolbox should have access to. Most tools will have at least one source to
-execute against.&lt;/p></description></item><item><title>alloydb-wait-for-operation</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/utility/alloydbwaitforoperation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/utility/alloydbwaitforoperation/</guid><description>&lt;p>The &lt;code>alloydb-wait-for-operation&lt;/code> tool is a utility tool that waits for a long-running AlloyDB operation to complete. It does this by polling the AlloyDB Admin API operation status endpoint until the operation is finished, using exponential backoff.&lt;/p>
+execute against.&lt;/p></description></item><item><title>alloydb-wait-for-operation</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/utility/alloydbwaitforoperation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/utility/alloydbwaitforoperation/</guid><description>&lt;p>The &lt;code>alloydb-wait-for-operation&lt;/code> tool is a utility tool that waits for a
+long-running AlloyDB operation to complete. It does this by polling the AlloyDB
+Admin API operation status endpoint until the operation is finished, using
+exponential backoff.&lt;/p>
 &lt;style type="text/css">
  
  .notice {
@@ -3040,70 +3331,4 @@ execute against.&lt;/p></description></item><item><title>alloydb-wait-for-operat
  &lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
 &lt;/svg>
 
- &lt;/span>Info&lt;/p></description></item><item><title/><link>https://googleapis.github.io/genai-toolbox/resources/tools/firestore/firestore-query-collection/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/firestore/firestore-query-collection/</guid><description>&lt;h1 id="firestore-query-collection">firestore-query-collection&lt;/h1>
-&lt;p>The &lt;code>firestore-query-collection&lt;/code> tool allows you to query Firestore collections with filters, ordering, and limit capabilities.&lt;/p>
-&lt;h2 id="configuration">Configuration&lt;/h2>
-&lt;p>To use this tool, you need to configure it in your YAML configuration file:&lt;/p>
-&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-firestore&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">firestore&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">config&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">project&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-gcp-project&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">database&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s2">&amp;#34;(default)&amp;#34;&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">query_collection&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">firestore-query-collection&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-firestore&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Query Firestore collections with advanced filtering&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="parameters">Parameters&lt;/h2>
-&lt;table>
- &lt;thead>
- &lt;tr>
- &lt;th>Parameter&lt;/th>
- &lt;th>Type&lt;/th>
- &lt;th>Required&lt;/th>
- &lt;th>Default&lt;/th>
- &lt;th>Description&lt;/th>
- &lt;/tr>
- &lt;/thead>
- &lt;tbody>
- &lt;tr>
- &lt;td>&lt;code>collectionPath&lt;/code>&lt;/td>
- &lt;td>string&lt;/td>
- &lt;td>Yes&lt;/td>
- &lt;td>-&lt;/td>
- &lt;td>The path to the Firestore collection to query&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>&lt;code>filters&lt;/code>&lt;/td>
- &lt;td>array&lt;/td>
- &lt;td>No&lt;/td>
- &lt;td>-&lt;/td>
- &lt;td>Array of filter objects (as JSON strings) to apply to the query&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>&lt;code>orderBy&lt;/code>&lt;/td>
- &lt;td>string&lt;/td>
- &lt;td>No&lt;/td>
- &lt;td>-&lt;/td>
- &lt;td>JSON string specifying field and direction to order results&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>&lt;code>limit&lt;/code>&lt;/td>
- &lt;td>integer&lt;/td>
- &lt;td>No&lt;/td>
- &lt;td>100&lt;/td>
- &lt;td>Maximum number of documents to return&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>&lt;code>analyzeQuery&lt;/code>&lt;/td>
- &lt;td>boolean&lt;/td>
- &lt;td>No&lt;/td>
- &lt;td>false&lt;/td>
- &lt;td>If true, returns query explain metrics including execution statistics&lt;/td>
- &lt;/tr>
- &lt;/tbody>
-&lt;/table>
-&lt;h3 id="filter-format">Filter Format&lt;/h3>
-&lt;p>Each filter in the &lt;code>filters&lt;/code> array should be a JSON string with the following structure:&lt;/p></description></item></channel></rss>
+ &lt;/span>Info&lt;/p></description></item></channel></rss>

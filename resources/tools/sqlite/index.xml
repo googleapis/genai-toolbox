@@ -2,7 +2,7 @@
 &lt;p>A &lt;code>sqlite-sql&lt;/code> tool executes SQL statements against a SQLite database.
 It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/sqlite.md">sqlite&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/sqlite/">sqlite&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>SQLite uses the &lt;code>?&lt;/code> placeholder for parameters in SQL statements. Parameters are
 bound in the order they are provided.&lt;/p>
