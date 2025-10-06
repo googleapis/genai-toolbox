@@ -7,7 +7,7 @@ converting natural language to SQL from the application layer to the database
 layer.&lt;/p>
 &lt;p>This tool is compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="../sources/alloydb-pg.md">alloydb-postgres&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>AlloyDB AI Natural Language delivers secure and accurate responses for
 application end user natural language questions. Natural language streamlines
