@@ -15,10 +15,8 @@
 package prompts
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"html/template"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -150,25 +148,23 @@ func (c Config) McpManifest() McpManifest {
 
 func (c Config) SubstituteParams(argValues tools.ParamValues) (any, error) {
 	substitutedMessages := []Message{}
-	argsMap := make(map[string]any)
-	for _, arg := range argValues {
-		argsMap[arg.Name] = arg.Value
+	argsMap := argValues.AsMap()
+
+	var parameters tools.Parameters
+	for _, arg := range c.Arguments {
+		parameters = append(parameters, arg)
 	}
 
 	for _, msg := range c.Messages {
-		tpl, err := template.New("message").Option("missingkey=error").Parse(msg.Content)
+		// Use ResolveTemplateParams for each message's content
+		substitutedContent, err := tools.ResolveTemplateParams(parameters, msg.Content, argsMap)
 		if err != nil {
-			return nil, err
-		}
-
-		var buf bytes.Buffer
-		if err := tpl.Execute(&buf, argsMap); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error substituting params for message: %w", err)
 		}
 
 		substitutedMessages = append(substitutedMessages, Message{
 			Role:    msg.Role,
-			Content: buf.String(),
+			Content: substitutedContent,
 		})
 	}
 

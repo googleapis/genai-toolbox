@@ -152,3 +152,25 @@ type ListPromptsResult struct {
 	PaginatedResult
 	Prompts []prompts.McpManifest `json:"prompts"`
 }
+
+// GetPromptRequest is sent from the client to get a specific prompt with substituted arguments.
+type GetPromptRequest struct {
+	jsonrpc.Request
+	Params struct {
+		Name      string         `json:"name"`
+		Arguments map[string]any `json:"arguments,omitempty"`
+	} `json:"params"`
+}
+
+// GetPromptResult is the server's response to a prompts/get request.
+type GetPromptResult struct {
+	jsonrpc.Result
+	Description string            `json:"description,omitempty"`
+	Messages    []ResponseMessage `json:"messages"`
+}
+
+// ResponseMessage represents a single message in the GetPromptResult.
+type ResponseMessage struct {
+	Role    string      `json:"role"`
+	Content TextContent `json:"content"`
+}

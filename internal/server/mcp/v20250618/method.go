@@ -41,6 +41,8 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, too
 		return toolsCallHandler(ctx, id, tools, authServices, body, header)
 	case PROMPTS_LIST:
 		return promptsListHandler(id, promptset, body)
+	case PROMPTS_GET:
+		return promptsGetHandler(id, prompts, body)
 	default:
 		err := fmt.Errorf("invalid method %s", method)
 		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
@@ -226,6 +228,66 @@ func promptsListHandler(id jsonrpc.RequestId, promptset prompts.Promptset, body 
 	result := ListPromptsResult{
 		Prompts: promptset.McpManifest,
 	}
+	return jsonrpc.JSONRPCResponse{
+		Jsonrpc: jsonrpc.JSONRPC_VERSION,
+		Id:      id,
+		Result:  result,
+	}, nil
+}
+
+// promptsGetHandler handles the "prompts/get" method.
+func promptsGetHandler(id jsonrpc.RequestId, promptsMap map[string]prompts.Prompt, body []byte) (any, error) {
+	var req GetPromptRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		err = fmt.Errorf("invalid mcp prompts/get request: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+	}
+
+	promptName := req.Params.Name
+	prompt, ok := promptsMap[promptName]
+	if !ok {
+		err := fmt.Errorf("prompt with name %q does not exist", promptName)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+	}
+
+	// Parse the arguments provided in the request.
+	argValues, err := prompt.ParseArgs(req.Params.Arguments, nil)
+	if err != nil {
+		err = fmt.Errorf("invalid arguments for prompt %q: %w", promptName, err)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+	}
+
+	// Substitute the argument values into the prompt's messages.
+	substituted, err := prompt.SubstituteParams(argValues)
+	if err != nil {
+		err = fmt.Errorf("error substituting params for prompt %q: %w", promptName, err)
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+
+	// Cast the result to the expected []prompts.Message type.
+	substitutedMessages, ok := substituted.([]prompts.Message)
+	if !ok {
+		err = fmt.Errorf("internal error: SubstituteParams returned unexpected type")
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+
+	// Format the response messages into the required structure.
+	responseMessages := make([]ResponseMessage, len(substitutedMessages))
+	for i, msg := range substitutedMessages {
+		responseMessages[i] = ResponseMessage{
+			Role: msg.Role,
+			Content: TextContent{
+				Type: "text",
+				Text: msg.Content,
+			},
+		}
+	}
+
+	result := GetPromptResult{
+		Description: prompt.Manifest().Description,
+		Messages:    responseMessages,
+	}
+
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
