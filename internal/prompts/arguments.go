@@ -23,7 +23,6 @@ import (
 )
 
 // Argument is an interface that is compatible with tools.Parameter.
-// This allows us to treat all argument types polymorphically.
 type Argument interface {
 	tools.Parameter
 	McpPromptManifest() McpPromptArg
@@ -56,7 +55,6 @@ func parseArgFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmarsha
 		return nil, fmt.Errorf("error parsing arguments: %w", err)
 	}
 
-	// Default to "any" if type is not specified
 	t, ok := p["type"]
 	if !ok {
 		t = "any"
@@ -69,47 +67,45 @@ func parseArgFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmarsha
 
 	switch t {
 	case "string":
-		arg := &StringArgument{}
-		if err := dec.DecodeContext(ctx, arg); err != nil {
-			return nil, fmt.Errorf("unable to parse as string: %w", err)
+		var toolParam tools.StringParameter
+		if err := dec.DecodeContext(ctx, &toolParam); err != nil {
+			return nil, err
 		}
-		return arg, nil
+		return &StringArgument{StringParameter: toolParam}, nil
 	case "integer":
-		arg := &IntArgument{}
-		if err := dec.DecodeContext(ctx, arg); err != nil {
-			return nil, fmt.Errorf("unable to parse as integer: %w", err)
+		var toolParam tools.IntParameter
+		if err := dec.DecodeContext(ctx, &toolParam); err != nil {
+			return nil, err
 		}
-		return arg, nil
+		return &IntArgument{IntParameter: toolParam}, nil
 	case "float":
-		arg := &FloatArgument{}
-		if err := dec.DecodeContext(ctx, arg); err != nil {
-			return nil, fmt.Errorf("unable to parse as float: %w", err)
+		var toolParam tools.FloatParameter
+		if err := dec.DecodeContext(ctx, &toolParam); err != nil {
+			return nil, err
 		}
-		return arg, nil
+		return &FloatArgument{FloatParameter: toolParam}, nil
 	case "boolean":
-		arg := &BooleanArgument{}
-		if err := dec.DecodeContext(ctx, arg); err != nil {
-			return nil, fmt.Errorf("unable to parse as boolean: %w", err)
+		var toolParam tools.BooleanParameter
+		if err := dec.DecodeContext(ctx, &toolParam); err != nil {
+			return nil, err
 		}
-		return arg, nil
+		return &BooleanArgument{BooleanParameter: toolParam}, nil
 	case "array":
-		arg := &ArrayArgument{}
-		if err := dec.DecodeContext(ctx, arg); err != nil {
-			return nil, fmt.Errorf("unable to parse as array: %w", err)
+		var toolParam tools.ArrayParameter
+		if err := dec.DecodeContext(ctx, &toolParam); err != nil {
+			return nil, err
 		}
-		return arg, nil
+		return &ArrayArgument{ArrayParameter: toolParam}, nil
 	case "map":
-		arg := &MapArgument{}
-		if err := dec.DecodeContext(ctx, arg); err != nil {
-			return nil, fmt.Errorf("unable to parse as map: %w", err)
+		var toolParam tools.MapParameter
+		if err := dec.DecodeContext(ctx, &toolParam); err != nil {
+			return nil, err
 		}
-		return arg, nil
-	case "any":
-		fallthrough
-	default:
+		return &MapArgument{MapParameter: toolParam}, nil
+	default: // "any"
 		arg := &AnyArgument{}
 		if err := dec.DecodeContext(ctx, arg); err != nil {
-			return nil, fmt.Errorf("unable to parse as any: %w", err)
+			return nil, err
 		}
 		return arg, nil
 	}
@@ -126,13 +122,14 @@ func (b *BaseArgument) McpPromptManifest(p tools.Parameter) McpPromptArg {
 	}
 }
 
+// --- Argument Struct Implementations ---
+
 type AnyArgument struct {
 	tools.CommonParameter `yaml:",inline"`
 	Default               *any `yaml:"default"`
 	BaseArgument
 }
 
-// Fulfilling the tools.Parameter interface for AnyArgument
 func (a *AnyArgument) Parse(v any) (any, error) { return v, nil }
 func (a *AnyArgument) GetDefault() any {
 	if a.Default == nil {
@@ -152,7 +149,6 @@ func (a *AnyArgument) McpManifest() (tools.ParameterMcpManifest, []string) {
 }
 func (a *AnyArgument) McpPromptManifest() McpPromptArg { return a.BaseArgument.McpPromptManifest(a) }
 
-// Argument structs that embed the corresponding tool Parameter structs.
 type StringArgument struct {
 	tools.StringParameter
 	BaseArgument
