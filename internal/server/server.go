@@ -116,7 +116,7 @@ func (r *ResourceManager) GetPrompt(promptName string) (prompts.Prompt, bool) {
 	return prompt, ok
 }
 
-func (r *ResourceManager) GetPromptSet(promptsetName string) (prompts.Promptset, bool) {
+func (r *ResourceManager) GetPromptset(promptsetName string) (prompts.Promptset, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	promptset, ok := r.promptsets[promptsetName]
