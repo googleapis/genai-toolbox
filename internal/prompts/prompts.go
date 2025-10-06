@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,30 +14,53 @@
 
 package prompts
 
-type Message struct {
-	Role    string `yaml:"role,omitempty"`
-	Content string `yaml:"content"`
+import (
+	"context"
+	"fmt"
+
+	yaml "github.com/goccy/go-yaml"
+)
+
+// PromptConfigFactory defines the signature for a function that creates and
+// decodes a specific prompt's configuration.
+type PromptConfigFactory func(ctx context.Context, name string, decoder *yaml.Decoder) (Config, error)
+
+var promptRegistry = make(map[string]PromptConfigFactory)
+
+// Register allows individual prompt packages to register their configuration
+// factory function. This is typically called from an init() function in the
+// prompt's package. It associates a 'kind' string with a function that can
+// produce the specific PromptConfig type. It returns true if the registration was
+// successful, and false if a prompt with the same kind was already registered.
+func Register(kind string, factory PromptConfigFactory) bool {
+	if _, exists := promptRegistry[kind]; exists {
+		// Prompt with this kind already exists, do not overwrite.
+		return false
+	}
+	promptRegistry[kind] = factory
+	return true
 }
 
-// Prompt config as defined by the user
-type PromptConfig struct {
-	Name        string     `yaml:"name"`
-	Description string     `yaml:"description"`
-	Messages    []Message  `yaml:"messages"`
-	Arguments   []Argument `yaml:"arguments,omitempty"`
+// DecodeConfig looks up the registered factory for the given kind and uses it
+// to decode the prompt configuration.
+func DecodeConfig(ctx context.Context, kind, name string, decoder *yaml.Decoder) (PromptConfig, error) {
+	factory, found := promptRegistry[kind]
+	if !found {
+		return nil, fmt.Errorf("unknown prompt kind: %q", kind)
+	}
+	promptConfig, err := factory(ctx, name, decoder)
+	if err != nil {
+		return nil, fmt.Errorf("unable to parse prompt %q as kind %q: %w", name, kind, err)
+	}
+	return promptConfig, nil
 }
 
-// ParamValues is an ordered list of ParamValue
-type ArgValues []ArgValue
-
-// ParamValue represents the parameter's name and value.
-type ArgValue struct {
-	Name  string
-	Value any
+type PromptConfig interface {
+	PromptConfigKind() string
+	Initialize() (Prompt, error)
 }
 
 type Prompt interface {
-	Initialize() (Prompt, error)
 	SubstituteParams(ArgValues) (any, error)
 	ParseArgs(map[string]any, map[string]map[string]any) (ArgValues, error)
 	Manifest() Manifest
@@ -50,7 +73,7 @@ type Manifest struct {
 	Arguments   []ArgumentManifest `json:"arguments"`
 }
 
-// Definition for a prompt the MCP client can call.
+// Definition for a prompt the MCP client can get.
 type McpManifest struct {
 	// The name of the prompt.
 	Name string `json:"name"`
@@ -59,4 +82,49 @@ type McpManifest struct {
 	// A JSON Schema object defining the expected arguments for the prompt.
 	Arguments []McpPromptArgs `json:"inputSchema,omitempty"`
 	Metadata  map[string]any  `json:"_meta,omitempty"`
+}
+
+func GetMcpManifest(name, desc string, args Arguments) McpManifest {
+	mcpManifest := McpManifest{
+		Name:        name,
+		Description: desc,
+		Arguments:   args.McpManifest(),
+	}
+
+	// construct metadata, if applicable
+	metadata := make(map[string]any)
+	if len(metadata) > 0 {
+		mcpManifest.Metadata = metadata
+	}
+	return mcpManifest
+}
+
+type Message struct {
+	Role    string `yaml:"role,omitempty"`
+	Content string `yaml:"content"`
+}
+
+// Config is the configuration for a prompt.
+type Config struct {
+	Name        string    `yaml:"name"`
+	Kind        string    `yaml:"kind,omitempty"`
+	Description string    `yaml:"description,omitempty"`
+	Messages    []Message `yaml:"messages"`
+	Arguments   Arguments `yaml:"arguments,omitempty"`
+}
+
+// ArgValues is an ordered list of ArgValue
+type ArgValues []ArgValue
+
+// ArgValue represents the parameter's name and value.
+type ArgValue struct {
+	Name  string
+	Value any
+}
+
+// SystemPromptConfig is the configuration for a system prompt.
+type SystemPromptConfig struct {
+	Description string     `yaml:"description,omitempty"`
+	Messages    []Message  `yaml:"messages"`
+	Arguments   []Argument `yaml:"arguments,omitempty"`
 }

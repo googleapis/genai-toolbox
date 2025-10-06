@@ -17,12 +17,10 @@ package custom_prompts
 import (
 	"bytes"
 	"fmt"
-	"text/template"
-
-	"github.com/googleapis/genai-toolbox/internal/prompts"
+	"html/template"
 )
 
-// Configuration for the create-cluster tool.
+// Configuration for the custom prompt
 type Config struct {
 	Name        string             `yaml:"name" validate:"required"`
 	Kind        string             `yaml:"kind"`
@@ -30,6 +28,9 @@ type Config struct {
 	Arguments   []prompts.Argument `yaml:"arguments"`
 	Messages    []prompts.Message  `yaml:"messages"`
 }
+
+// validate interface
+var _ prompts.Prompt = Config{}
 
 // Manifest implements the Manifest method of the Prompt interface.
 func (p Config) Manifest() prompts.Manifest {
@@ -57,7 +58,10 @@ func (p Config) McpManifest() prompts.McpManifest {
 func (p Config) Initialize() (prompts.Prompt, error) {
 	if p.Kind == "" {
 		p.Kind = "custom"
+	} else if p.Kind != "custom" {
+		return nil, fmt.Errorf("kind must be 'custom'")
 	}
+
 	for i := range p.Messages {
 		if p.Messages[i].Role == "" {
 			p.Messages[i].Role = "user"
