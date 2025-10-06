@@ -22,5 +22,10 @@ This tool is compatible with any of the following sources:&lt;/p>
 &lt;p>For security, the tool can be configured to be read-only. If the &lt;code>readOnly&lt;/code> flag
 is set to &lt;code>true&lt;/code>, the tool will analyze the incoming Cypher query and reject any
 write operations (like &lt;code>CREATE&lt;/code>, &lt;code>MERGE&lt;/code>, &lt;code>DELETE&lt;/code>, etc.) before execution.&lt;/p></description></item><item><title>neo4j-schema</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/neo4j/neo4j-schema/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/neo4j/neo4j-schema/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>neo4j-schema&lt;/code> tool connects to a Neo4j database and extracts its complete schema information. It runs multiple queries concurrently to efficiently gather details about node labels, relationships, properties, constraints, and indexes.&lt;/p>
-&lt;p>The tool automatically detects if the APOC (Awesome Procedures on Cypher) library is available. If so, it uses APOC procedures like &lt;code>apoc.meta.schema&lt;/code> for a highly detailed overview of the database structure; otherwise, it falls back to using native Cypher queries.&lt;/p></description></item></channel></rss>
+&lt;p>A &lt;code>neo4j-schema&lt;/code> tool connects to a Neo4j database and extracts its complete
+schema information. It runs multiple queries concurrently to efficiently gather
+details about node labels, relationships, properties, constraints, and indexes.&lt;/p>
+&lt;p>The tool automatically detects if the APOC (Awesome Procedures on Cypher)
+library is available. If so, it uses APOC procedures like &lt;code>apoc.meta.schema&lt;/code> for
+a highly detailed overview of the database structure; otherwise, it falls back
+to using native Cypher queries.&lt;/p></description></item></channel></rss>
