@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Dataplex on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/v0.10.0/resources/tools/dataplex/</link><description>Recent content in Dataplex on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/v0.10.0/resources/tools/dataplex/index.xml" rel="self" type="application/rss+xml"/><item><title>dataplex-search-entries</title><link>https://googleapis.github.io/genai-toolbox/v0.10.0/resources/tools/dataplex/dataplex-search-entries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/v0.10.0/resources/tools/dataplex/dataplex-search-entries/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>dataplex-search-entries&lt;/code> tool returns all entries in Dataplex Catalog (e.g. tables, views, models) that matches given user query.
+It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="../sources/dataplex.md">dataplex&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>dataplex-search-entries&lt;/code> takes a required &lt;code>query&lt;/code> parameter based on which entries are
+filtered and returned to the user and a required &lt;code>name&lt;/code> parameter which is constructed using source&amp;rsquo;s project if user does not provide it explicitly and has the following format: projects/{project}/locations/global. It also optionally accepts following parameters:&lt;/p></description></item></channel></rss>
