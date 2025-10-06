@@ -16,6 +16,8 @@ package prompts
 
 import (
 	"fmt"
+
+	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
 type PromptsetConfig struct {
@@ -40,7 +42,7 @@ func (t PromptsetConfig) Initialize(serverVersion string, promptsMap map[string]
 	// Check each declared prompt name exists
 	var promptset Promptset
 	promptset.Name = t.Name
-	if !IsValidName(promptset.Name) {
+	if !tools.IsValidName(promptset.Name) {
 		return promptset, fmt.Errorf("invalid promptset name: %s", t)
 	}
 	promptset.Prompts = make([]*Prompt, 0, len(t.PromptNames))
