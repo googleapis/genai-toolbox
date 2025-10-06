@@ -106,6 +106,6 @@ tools:
       18. `dbinsights.googleapis.com/pertag/row_count`: Total number of rows affected during query execution. `cloudsql_instance_database`. `user`, `client_addr`, `action`, `application`, `controller`, `db_driver`, `framework`, `route`, `tag_hash`, `row_status`, `database`, `project_id`, `resource_id`.
 
 toolsets:
-  cloud-sql-mysql-cloud-monitoring-tools:
+  cloud_sql_mysql_cloud_monitoring_tools:
     - get_system_metrics
     - get_query_metrics

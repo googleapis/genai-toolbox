@@ -78,6 +78,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Client:      client,
 		RulesClient: rulesClient,
 		ProjectId:   r.Project,
+		DatabaseId:  r.Database,
 	}
 	return s, nil
 }
@@ -91,6 +92,7 @@ type Source struct {
 	Client      *firestore.Client
 	RulesClient *firebaserules.Service
 	ProjectId   string `yaml:"projectId"`
+	DatabaseId  string `yaml:"databaseId"`
 }
 
 func (s *Source) SourceKind() string {
@@ -108,6 +110,10 @@ func (s *Source) FirebaseRulesClient() *firebaserules.Service {
 
 func (s *Source) GetProjectId() string {
 	return s.ProjectId
+}
+
+func (s *Source) GetDatabaseId() string {
+	return s.DatabaseId
 }
 
 func initFirestoreConnection(

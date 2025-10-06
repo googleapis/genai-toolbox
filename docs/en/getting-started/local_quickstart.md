@@ -14,12 +14,14 @@ description: >
 This guide assumes you have already done the following:
 
 1. Installed [Python 3.9+][install-python] (including [pip][install-pip] and
-   your preferred virtual environment tool for managing dependencies e.g. [venv][install-venv]).
+   your preferred virtual environment tool for managing dependencies e.g.
+   [venv][install-venv]).
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
 
 [install-python]: https://wiki.python.org/moin/BeginnersGuide/Download
 [install-pip]: https://pip.pypa.io/en/stable/installation/
-[install-venv]: https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments
+[install-venv]:
+    https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments
 [install-postgres]: https://www.postgresql.org/download/
 
 ### Cloud Setup (Optional)
@@ -36,9 +38,10 @@ This guide assumes you have already done the following:
 In this section, we will write and run an agent that will load the Tools
 from Toolbox.
 
-{{< notice tip>}} If you prefer to experiment within a Google Colab environment,
-you can connect to a
-[local runtime](https://research.google.com/colaboratory/local-runtimes.html).
+{{< notice tip>}}
+If you prefer to experiment within a Google Colab environment, you can connect
+to a [local
+runtime](https://research.google.com/colaboratory/local-runtimes.html).
 {{< /notice >}}
 
 1. In a new terminal, install the SDK package.
@@ -148,5 +151,6 @@ Documentation](https://github.com/googleapis/python-genai?tab=readme-ov-file#man
     ```
 
 {{< notice info >}}
-For more information, visit the [Python SDK repo](https://github.com/googleapis/mcp-toolbox-sdk-python).
+For more information, visit the [Python SDK
+repo](https://github.com/googleapis/mcp-toolbox-sdk-python).
 {{</ notice >}}

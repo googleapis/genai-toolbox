@@ -220,7 +220,7 @@ func TestSQLiteExecuteSqlTool(t *testing.T) {
 		name       string
 		sql        string
 		wantStatus int
-		wantBody   string 
+		wantBody   string
 	}{
 		{
 			name:       "select existing row",

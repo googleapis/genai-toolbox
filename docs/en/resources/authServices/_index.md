@@ -200,7 +200,9 @@ func main() {
 ### Specifying tokens for existing tools
 
 #### Python
-Use the [Python SDK](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main).
+
+Use the [Python
+SDK](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main).
 
 {{< tabpane persist=header >}}
 {{< tab header="Core" lang="Python" >}}

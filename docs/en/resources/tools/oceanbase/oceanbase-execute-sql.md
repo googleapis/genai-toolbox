@@ -10,13 +10,16 @@ aliases:
 
 ## About
 
-An `oceanbase-execute-sql` tool executes a SQL statement against an OceanBase database. It's compatible with the following source:
+An `oceanbase-execute-sql` tool executes a SQL statement against an OceanBase
+database. It's compatible with the following source:
 
 - [oceanbase](../sources/oceanbase.md)
 
-`oceanbase-execute-sql` takes one input parameter `sql` and runs the sql statement against the `source`.
+`oceanbase-execute-sql` takes one input parameter `sql` and runs the sql
+statement against the `source`.
 
-> **Note:** This tool is intended for developer assistant workflows with human-in-the-loop and shouldn't be used for production agents.
+> **Note:** This tool is intended for developer assistant workflows with
+> human-in-the-loop and shouldn't be used for production agents.
 
 ## Example
 
@@ -30,8 +33,8 @@ tools:
 
 ## Reference
 
-| **field**   | **type**   | **required** | **description**                                                                                  |
-|-------------|:----------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        | string     |     true     | Must be "oceanbase-execute-sql".                                                                 |
-| source      | string     |     true     | Name of the source the SQL should execute on.                                                    |
-| description | string     |     true     | Description of the tool that is passed to the LLM.                                               | 
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "oceanbase-execute-sql".                   |
+| source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

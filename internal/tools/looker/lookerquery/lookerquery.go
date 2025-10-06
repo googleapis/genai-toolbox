@@ -75,11 +75,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	parameters := lookercommon.GetQueryParameters()
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
 
 	// finish tool setup
 	return Tool{
@@ -127,27 +123,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, fmt.Errorf("error getting sdk: %w", err)
 	}
-	req := v4.RequestRunInlineQuery{
-		Body:         *wq,
-		ResultFormat: "json",
-	}
-	req2 := lookercommon.RequestRunInlineQuery2{
-		Query: *wq,
-		RenderOpts: lookercommon.RenderOptions{
-			Format: "json",
-		},
-		QueryApiClientCtx: lookercommon.QueryApiClientContext{
-			Name: "MCP Toolbox",
-		},
-	}
-	resp, err := lookercommon.RunInlineQuery2(sdk, req2, t.ApiSettings)
+	resp, err := lookercommon.RunInlineQuery(ctx, sdk, wq, "json", t.ApiSettings)
 	if err != nil {
-		logger.DebugContext(ctx, "error querying with new endpoint, trying again with original", err)
-		resp, err = sdk.RunInlineQuery(req, t.ApiSettings)
-		if err != nil {
-			return nil, fmt.Errorf("error making query request: %s", err)
-		}
+		return nil, fmt.Errorf("error making query request: %s", err)
 	}
+
 	logger.DebugContext(ctx, "resp = ", resp)
 
 	var data []any

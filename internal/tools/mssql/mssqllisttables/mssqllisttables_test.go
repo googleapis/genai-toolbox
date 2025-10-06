@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package alloydbwaitforoperation_test
+package mssqllisttables_test
 
 import (
 	"testing"
@@ -21,10 +21,10 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	alloydbwaitforoperation "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydbwaitforoperation"
+	mssqllisttables "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqllisttables"
 )
 
-func TestParseFromYaml(t *testing.T) {
+func TestParseFromYamlmssqlListTables(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -38,24 +38,21 @@ func TestParseFromYaml(t *testing.T) {
 			desc: "basic example",
 			in: `
 			tools:
-				wait-for-thing:
-					kind: alloydb-wait-for-operation
+				example_tool:
+					kind: mssql-list-tables
+					source: my-mssql-instance
 					description: some description
-					delay: 1s
-					maxDelay: 5s
-					multiplier: 1.5
-					maxRetries: 5
+					authRequired:
+						- my-google-auth-service
+						- other-auth-service
 			`,
 			want: server.ToolConfigs{
-				"wait-for-thing": alloydbwaitforoperation.Config{
-					Name:         "wait-for-thing",
-					Kind:         "alloydb-wait-for-operation",
+				"example_tool": mssqllisttables.Config{
+					Name:         "example_tool",
+					Kind:         "mssql-list-tables",
+					Source:       "my-mssql-instance",
 					Description:  "some description",
-					AuthRequired: []string{},
-					Delay:        "1s",
-					MaxDelay:     "5s",
-					Multiplier:   1.5,
-					MaxRetries:   5,
+					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 				},
 			},
 		},
@@ -75,4 +72,5 @@ func TestParseFromYaml(t *testing.T) {
 			}
 		})
 	}
+
 }

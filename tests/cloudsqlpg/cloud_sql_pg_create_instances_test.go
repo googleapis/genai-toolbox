@@ -57,9 +57,11 @@ type masterHandler struct {
 }
 
 func (h *masterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if !strings.HasPrefix(r.Header.Get("User-Agent"), "genai-toolbox/") {
-		h.t.Errorf("unexpected User-Agent: got %q", r.Header.Get("User-Agent"))
+	ua := r.Header.Get("User-Agent")
+	if !strings.Contains(ua, "genai-toolbox/") {
+		h.t.Errorf("User-Agent header not found in %q", ua)
 	}
+
 	var body sqladmin.DatabaseInstance
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		h.t.Fatalf("failed to decode request body: %v", err)

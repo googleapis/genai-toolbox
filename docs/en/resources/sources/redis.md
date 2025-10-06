@@ -16,7 +16,7 @@ lists, sets, sorted sets with range queries, bitmaps, hyperloglogs, and
 geospatial indexes with radius queries.
 
 If you are new to Redis, you can find installation and getting started guides on
-the [official Redis website](https://redis.io/docs/getting-started/).
+the [official Redis website](https://redis.io/docs/).
 
 ## Available Tools
 

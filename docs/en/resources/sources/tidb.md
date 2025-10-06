@@ -9,7 +9,10 @@ description: >
 
 ## About
 
-[TiDB][tidb-docs] is an open-source distributed SQL database that supports Hybrid Transactional and Analytical Processing (HTAP) workloads. It is MySQL-compatible and features horizontal scalability, strong consistency, and high availability.
+[TiDB][tidb-docs] is an open-source distributed SQL database that supports
+Hybrid Transactional and Analytical Processing (HTAP) workloads. It is
+MySQL-compatible and features horizontal scalability, strong consistency, and
+high availability.
 
 [tidb-docs]: https://docs.pingcap.com/tidb/stable
 
@@ -17,9 +20,11 @@ description: >
 
 ### Database User
 
-This source uses standard MySQL protocol authentication. You will need to [create a TiDB user][tidb-users] to login to the database with.
+This source uses standard MySQL protocol authentication. You will need to
+[create a TiDB user][tidb-users] to login to the database with.
 
-For TiDB Cloud users, you can create database users through the TiDB Cloud console.
+For TiDB Cloud users, you can create database users through the TiDB Cloud
+console.
 
 [tidb-users]: https://docs.pingcap.com/tidb/stable/user-account-management
 
@@ -27,11 +32,14 @@ For TiDB Cloud users, you can create database users through the TiDB Cloud conso
 
 - TiDB Cloud
 
-    For TiDB Cloud instances, SSL is automatically enabled when the hostname matches the TiDB Cloud pattern (`gateway*.*.*.tidbcloud.com`). You don't need to explicitly set `ssl: true` for TiDB Cloud connections.
+    For TiDB Cloud instances, SSL is automatically enabled when the hostname
+    matches the TiDB Cloud pattern (`gateway*.*.*.tidbcloud.com`). You don't
+    need to explicitly set `ssl: true` for TiDB Cloud connections.
 
 - Self-Hosted TiDB
 
-    For self-hosted TiDB instances, you can optionally enable SSL by setting `ssl: true` in your configuration.
+    For self-hosted TiDB instances, you can optionally enable SSL by setting
+    `ssl: true` in your configuration.
 
 ## Example
 

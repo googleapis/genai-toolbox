@@ -50,9 +50,9 @@ func TestTool_Invoke(t *testing.T) {
 		Name:        "test-cloudmonitoring",
 		Kind:        "cloud-monitoring-query-prometheus",
 		Description: "Test Cloudmonitoring Tool",
-		AllParams:      tools.Parameters{},
-		BaseURL: server.URL,
-		Client:     &http.Client{},
+		AllParams:   tools.Parameters{},
+		BaseURL:     server.URL,
+		Client:      &http.Client{},
 	}
 
 	// Define the test parameters
@@ -94,9 +94,9 @@ func TestTool_Invoke_Error(t *testing.T) {
 		Name:        "test-cloudmonitoring",
 		Kind:        "clou-monitoring-query-prometheus",
 		Description: "Test Cloudmonitoring Tool",
-		AllParams:      tools.Parameters{},
-		BaseURL: server.URL,
-		Client:     &http.Client{},
+		AllParams:   tools.Parameters{},
+		BaseURL:     server.URL,
+		Client:      &http.Client{},
 	}
 
 	// Define the test parameters

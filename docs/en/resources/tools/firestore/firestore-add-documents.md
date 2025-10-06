@@ -9,29 +9,33 @@ aliases:
 ---
 ## Description
 
-The `firestore-add-documents` tool allows you to add new documents to a Firestore collection. It supports all Firestore data types using Firestore's native JSON format. The tool automatically generates a unique document ID for each new document.
+The `firestore-add-documents` tool allows you to add new documents to a
+Firestore collection. It supports all Firestore data types using Firestore's
+native JSON format. The tool automatically generates a unique document ID for
+each new document.
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `collectionPath` | string | Yes | The path of the collection where the document will be added |
-| `documentData` | map | Yes | The data to be added as a document to the given collection. Must use [Firestore's native JSON format](https://cloud.google.com/firestore/docs/reference/rest/Shared.Types/ArrayValue#Value) with typed values |
-| `returnData` | boolean | No | If set to true, the output will include the data of the created document. Defaults to false to help avoid overloading the context |
+| Parameter        | Type    | Required | Description                                                                                                                                                                                                   |
+|------------------|---------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `collectionPath` | string  | Yes      | The path of the collection where the document will be added                                                                                                                                                   |
+| `documentData`   | map     | Yes      | The data to be added as a document to the given collection. Must use [Firestore's native JSON format](https://cloud.google.com/firestore/docs/reference/rest/Shared.Types/ArrayValue#Value) with typed values |
+| `returnData`     | boolean | No       | If set to true, the output will include the data of the created document. Defaults to false to help avoid overloading the context                                                                             |
 
 ## Output
 
 The tool returns a map containing:
 
-| Field | Type | Description |
-|-------|------|-------------|
+| Field          | Type   | Description                                                                                                                    |
+|----------------|--------|--------------------------------------------------------------------------------------------------------------------------------|
 | `documentPath` | string | The full resource name of the created document (e.g., `projects/{projectId}/databases/{databaseId}/documents/{document_path}`) |
-| `createTime` | string | The timestamp when the document was created |
-| `documentData` | map | The data that was added (only included when `returnData` is true) |
+| `createTime`   | string | The timestamp when the document was created                                                                                    |
+| `documentData` | map    | The data that was added (only included when `returnData` is true)                                                              |
 
 ## Data Type Format
 
-The tool requires Firestore's native JSON format for document data. Each field must be wrapped with its type indicator:
+The tool requires Firestore's native JSON format for document data. Each field
+must be wrapped with its type indicator:
 
 ### Basic Types
 - **String**: `{"stringValue": "your string"}`
@@ -259,16 +263,25 @@ Common errors include:
 
 ## Best Practices
 
-1. **Always use typed values**: Every field must be wrapped with its appropriate type indicator (e.g., `{"stringValue": "text"}`)
-2. **Integer values can be strings**: The tool accepts integer values as strings (e.g., `{"integerValue": "1500"}`)
-3. **Use returnData sparingly**: Only set to true when you need to verify the exact data that was written
-4. **Validate data before sending**: Ensure your data matches Firestore's native JSON format
+1. **Always use typed values**: Every field must be wrapped with its appropriate
+   type indicator (e.g., `{"stringValue": "text"}`)
+2. **Integer values can be strings**: The tool accepts integer values as strings
+   (e.g., `{"integerValue": "1500"}`)
+3. **Use returnData sparingly**: Only set to true when you need to verify the
+   exact data that was written
+4. **Validate data before sending**: Ensure your data matches Firestore's native
+   JSON format
 5. **Handle timestamps properly**: Use RFC3339 format for timestamp strings
-6. **Base64 encode binary data**: Binary data must be base64 encoded in the `bytesValue` field
-7. **Consider security rules**: Ensure your Firestore security rules allow document creation in the target collection
+6. **Base64 encode binary data**: Binary data must be base64 encoded in the
+   `bytesValue` field
+7. **Consider security rules**: Ensure your Firestore security rules allow
+   document creation in the target collection
 
 ## Related Tools
 
-- [`firestore-get-documents`](firestore-get-documents.md) - Retrieve documents by their paths
-- [`firestore-query-collection`](firestore-query-collection.md) - Query documents in a collection
-- [`firestore-delete-documents`](firestore-delete-documents.md) - Delete documents from Firestore
+- [`firestore-get-documents`](firestore-get-documents.md) - Retrieve documents
+  by their paths
+- [`firestore-query-collection`](firestore-query-collection.md) - Query
+  documents in a collection
+- [`firestore-delete-documents`](firestore-delete-documents.md) - Delete
+  documents from Firestore

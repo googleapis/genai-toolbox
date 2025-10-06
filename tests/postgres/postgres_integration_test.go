@@ -27,9 +27,11 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
@@ -37,14 +39,17 @@ import (
 )
 
 var (
-	PostgresSourceKind         = "postgres"
-	PostgresToolKind           = "postgres-sql"
-	PostgresListTablesToolKind = "postgres-list-tables"
-	PostgresDatabase           = os.Getenv("POSTGRES_DATABASE")
-	PostgresHost               = os.Getenv("POSTGRES_HOST")
-	PostgresPort               = os.Getenv("POSTGRES_PORT")
-	PostgresUser               = os.Getenv("POSTGRES_USER")
-	PostgresPass               = os.Getenv("POSTGRES_PASS")
+	PostgresSourceKind                      = "postgres"
+	PostgresToolKind                        = "postgres-sql"
+	PostgresListTablesToolKind              = "postgres-list-tables"
+	PostgresListActiveQueriesToolKind       = "postgres-list-active-queries"
+	PostgresListInstalledExtensionsToolKind = "postgres-list-installed-extensions"
+	PostgresListAvailableExtensionsToolKind = "postgres-list-available-extensions"
+	PostgresDatabase                        = os.Getenv("POSTGRES_DATABASE")
+	PostgresHost                            = os.Getenv("POSTGRES_HOST")
+	PostgresPort                            = os.Getenv("POSTGRES_PORT")
+	PostgresUser                            = os.Getenv("POSTGRES_USER")
+	PostgresPass                            = os.Getenv("POSTGRES_PASS")
 )
 
 func getPostgresVars(t *testing.T) map[string]any {
@@ -81,6 +86,24 @@ func addPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]any {
 		"source":      "my-instance",
 		"description": "Lists tables in the database.",
 	}
+	tools["list_active_queries"] = map[string]any{
+		"kind":        PostgresListActiveQueriesToolKind,
+		"source":      "my-instance",
+		"description": "Lists active queries in the database.",
+	}
+
+	tools["list_installed_extensions"] = map[string]any{
+		"kind":        PostgresListInstalledExtensionsToolKind,
+		"source":      "my-instance",
+		"description": "Lists installed extensions in the database.",
+	}
+
+	tools["list_available_extensions"] = map[string]any{
+		"kind":        PostgresListAvailableExtensionsToolKind,
+		"source":      "my-instance",
+		"description": "Lists available extensions in the database.",
+	}
+
 	config["tools"] = tools
 	return config
 }
@@ -113,6 +136,9 @@ func TestPostgres(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to create postgres connection pool: %s", err)
 	}
+
+	// cleanup test environment
+	tests.CleanupPostgresTables(t, ctx, pool);
 
 	// create table name with UUID
 	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
@@ -163,6 +189,9 @@ func TestPostgres(t *testing.T) {
 
 	// Run specific Postgres tool tests
 	runPostgresListTablesTest(t, tableNameParam, tableNameAuth)
+	runPostgresListActiveQueriesTest(t, ctx, pool)
+	runPostgresListAvailableExtensionsTest(t)
+	runPostgresListInstalledExtensionsTest(t)
 }
 
 func runPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) {
@@ -211,11 +240,28 @@ func runPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth strin
 		requestBody    io.Reader
 		wantStatusCode int
 		want           string
+		isAllTables    bool
 	}{
+		{
+			name:           "invoke list_tables all tables detailed output",
+			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody:    bytes.NewBuffer([]byte(`{"table_names": ""}`)),
+			wantStatusCode: http.StatusOK,
+			want:           fmt.Sprintf("[%s,%s]", getDetailedWant(tableNameAuth, authTableColumns), getDetailedWant(tableNameParam, paramTableColumns)),
+			isAllTables:    true,
+		},
+		{
+			name:           "invoke list_tables all tables simple output",
+			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
+			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "simple"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           fmt.Sprintf("[%s,%s]", getSimpleWant(tableNameAuth), getSimpleWant(tableNameParam)),
+			isAllTables:    true,
+		},
 		{
 			name:           "invoke list_tables detailed output",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s"}`,tableNameAuth))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_names": "%s"}`, tableNameAuth))),
 			wantStatusCode: http.StatusOK,
 			want:           fmt.Sprintf("[%s]", getDetailedWant(tableNameAuth, authTableColumns)),
 		},
@@ -308,6 +354,19 @@ func runPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth strin
 					t.Fatalf("failed to unmarshal expected want string: %v", err)
 				}
 
+				// Checking only the default public schema where the test tables are created to avoid brittle tests.
+				if tc.isAllTables {
+					var filteredGot []any
+					for _, item := range got {
+						if tableMap, ok := item.(map[string]interface{}); ok {
+							if schema, ok := tableMap["schema_name"]; ok && schema == "public" {
+								filteredGot = append(filteredGot, item)
+							}
+						}
+					}
+					got = filteredGot
+				}
+
 				sort.SliceStable(got, func(i, j int) bool {
 					return fmt.Sprintf("%v", got[i]) < fmt.Sprintf("%v", got[j])
 				})
@@ -319,6 +378,224 @@ func runPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth strin
 					t.Errorf("Unexpected result: got  %#v, want: %#v", got, want)
 				}
 			}
+		})
+	}
+}
+
+func runPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	type queryListDetails struct {
+		ProcessId        any    `json:"pid"`
+		User             string `json:"user"`
+		Datname          string `json:"datname"`
+		ApplicationName  string `json:"application_name"`
+		ClientAddress    string `json:"client_addr"`
+		State            string `json:"state"`
+		WaitEventType    string `json:"wait_event_type"`
+		WaitEvent        string `json:"wait_event"`
+		BackendStart     any    `json:"backend_start"`
+		TransactionStart any    `json:"xact_start"`
+		QueryStart       any    `json:"query_start"`
+		QueryDuration    any    `json:"query_duration"`
+		Query            string `json:"query"`
+	}
+
+	singleQueryWanted := queryListDetails{
+		ProcessId:        any(nil),
+		User:             "",
+		Datname:          "",
+		ApplicationName:  "",
+		ClientAddress:    "",
+		State:            "",
+		WaitEventType:    "",
+		WaitEvent:        "",
+		BackendStart:     any(nil),
+		TransactionStart: any(nil),
+		QueryStart:       any(nil),
+		QueryDuration:    any(nil),
+		Query:            "SELECT pg_sleep(10);",
+	}
+
+	invokeTcs := []struct {
+		name                string
+		requestBody         io.Reader
+		clientSleepSecs     int
+		waitSecsBeforeCheck int
+		wantStatusCode      int
+		want                any
+	}{
+		{
+			name:                "invoke list_active_queries when the system is idle",
+			requestBody:         bytes.NewBufferString(`{}`),
+			clientSleepSecs:     0,
+			waitSecsBeforeCheck: 0,
+			wantStatusCode:      http.StatusOK,
+			want:                []queryListDetails(nil),
+		},
+		{
+			name:                "invoke list_active_queries when there is 1 ongoing but lower than the threshold",
+			requestBody:         bytes.NewBufferString(`{"min_duration": "100 seconds"}`),
+			clientSleepSecs:     1,
+			waitSecsBeforeCheck: 1,
+			wantStatusCode:      http.StatusOK,
+			want:                []queryListDetails(nil),
+		},
+		{
+			name:                "invoke list_active_queries when 1 ongoing query should show up",
+			requestBody:         bytes.NewBufferString(`{"min_duration": "1 seconds"}`),
+			clientSleepSecs:     10,
+			waitSecsBeforeCheck: 5,
+			wantStatusCode:      http.StatusOK,
+			want:                []queryListDetails{singleQueryWanted},
+		},
+	}
+
+	var wg sync.WaitGroup
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.clientSleepSecs > 0 {
+				wg.Add(1)
+
+				go func() {
+					defer wg.Done()
+
+					err := pool.Ping(ctx)
+					if err != nil {
+						t.Errorf("unable to connect to test database: %s", err)
+						return
+					}
+					_, err = pool.Exec(ctx, fmt.Sprintf("SELECT pg_sleep(%d);", tc.clientSleepSecs))
+					if err != nil {
+						t.Errorf("Executing 'SELECT pg_sleep' failed: %s", err)
+					}
+				}()
+			}
+
+			if tc.waitSecsBeforeCheck > 0 {
+				time.Sleep(time.Duration(tc.waitSecsBeforeCheck) * time.Second)
+			}
+
+			const api = "http://127.0.0.1:5000/api/tool/list_active_queries/invoke"
+			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %v", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %v", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				body, _ := io.ReadAll(resp.Body)
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got any
+			var details []queryListDetails
+			if err := json.Unmarshal([]byte(resultString), &details); err != nil {
+				t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
+			}
+			got = details
+
+			if diff := cmp.Diff(tc.want, got, cmp.Comparer(func(a, b queryListDetails) bool {
+				return a.Query == b.Query
+			})); diff != "" {
+				t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
+			}
+		})
+	}
+	wg.Wait()
+}
+
+func runPostgresListAvailableExtensionsTest(t *testing.T) {
+	invokeTcs := []struct {
+		name           string
+		api            string
+		requestBody    io.Reader
+		wantStatusCode int
+	}{
+		{
+			name:           "invoke list_available_extensions output",
+			api:            "http://127.0.0.1:5000/api/tool/list_available_extensions/invoke",
+			wantStatusCode: http.StatusOK,
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Intentionally not adding the output check as output depends on the postgres instance used where the the functional test runs.
+			// Adding the check will make the test flaky.
+		})
+	}
+}
+
+func runPostgresListInstalledExtensionsTest(t *testing.T) {
+	invokeTcs := []struct {
+		name           string
+		api            string
+		requestBody    io.Reader
+		wantStatusCode int
+	}{
+		{
+			name:           "invoke list_installed_extensions output",
+			api:            "http://127.0.0.1:5000/api/tool/list_installed_extensions/invoke",
+			wantStatusCode: http.StatusOK,
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Intentionally not adding the output check as output depends on the postgres instance used where the the functional test runs.
+			// Adding the check will make the test flaky.
 		})
 	}
 }

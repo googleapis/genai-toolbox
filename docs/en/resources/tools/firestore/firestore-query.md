@@ -10,18 +10,28 @@ aliases:
 
 ## Overview
 
-The `firestore-query` tool allows you to query Firestore collections with dynamic, parameterizable filters that support Firestore's native JSON value types. This tool is designed for querying single collection, which is the standard pattern in Firestore. The collection path itself can be parameterized, making it flexible for various use cases. This tool is particularly useful when you need to create reusable query templates with parameters that can be substituted at runtime.
+The `firestore-query` tool allows you to query Firestore collections with
+dynamic, parameterizable filters that support Firestore's native JSON value
+types. This tool is designed for querying single collection, which is the
+standard pattern in Firestore. The collection path itself can be parameterized,
+making it flexible for various use cases. This tool is particularly useful when
+you need to create reusable query templates with parameters that can be
+substituted at runtime.
 
-**Developer Note**: This tool serves as the general querying foundation that developers can use to create custom tools with specific query patterns.
+**Developer Note**: This tool serves as the general querying foundation that
+developers can use to create custom tools with specific query patterns.
 
 ## Key Features
 
 - **Parameterizable Queries**: Use Go template syntax to create dynamic queries
-- **Dynamic Collection Paths**: The collection path can be parameterized for flexibility
-- **Native JSON Value Types**: Support for Firestore's typed values (stringValue, integerValue, doubleValue, etc.)
+- **Dynamic Collection Paths**: The collection path can be parameterized for
+  flexibility
+- **Native JSON Value Types**: Support for Firestore's typed values
+  (stringValue, integerValue, doubleValue, etc.)
 - **Complex Filter Logic**: Support for AND/OR logical operators in filters
 - **Template Substitution**: Dynamic collection paths, filters, and ordering
-- **Query Analysis**: Optional query performance analysis with explain metrics (non-parameterizable)
+- **Query Analysis**: Optional query performance analysis with explain metrics
+  (non-parameterizable)
 
 ## Configuration
 
@@ -115,22 +125,23 @@ tools:
 
 ### Configuration Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `kind` | string | Yes | Must be `firestore-query` |
-| `source` | string | Yes | Name of the Firestore source to use |
-| `description` | string | Yes | Description of what this tool does |
-| `collectionPath` | string | Yes | Path to the collection to query (supports templates) |
-| `filters` | string | No | JSON string defining query filters (supports templates) |
-| `select` | array | No | Fields to select from documents(supports templates - string or array) |
-| `orderBy` | object | No | Ordering configuration with `field` and `direction`(supports templates for the value of field or direction) |
-| `limit` | integer | No | Maximum number of documents to return (default: 100) (supports templates) |
-| `analyzeQuery` | boolean | No | Whether to analyze query performance (default: false) |
-| `parameters` | array | Yes | Parameter definitions for template substitution |
+| Parameter        | Type    | Required | Description                                                                                                 |
+|------------------|---------|----------|-------------------------------------------------------------------------------------------------------------|
+| `kind`           | string  | Yes      | Must be `firestore-query`                                                                                   |
+| `source`         | string  | Yes      | Name of the Firestore source to use                                                                         |
+| `description`    | string  | Yes      | Description of what this tool does                                                                          |
+| `collectionPath` | string  | Yes      | Path to the collection to query (supports templates)                                                        |
+| `filters`        | string  | No       | JSON string defining query filters (supports templates)                                                     |
+| `select`         | array   | No       | Fields to select from documents(supports templates - string or array)                                       |
+| `orderBy`        | object  | No       | Ordering configuration with `field` and `direction`(supports templates for the value of field or direction) |
+| `limit`          | integer | No       | Maximum number of documents to return (default: 100) (supports templates)                                   |
+| `analyzeQuery`   | boolean | No       | Whether to analyze query performance (default: false)                                                       |
+| `parameters`     | array   | Yes      | Parameter definitions for template substitution                                                             |
 
 ### Runtime Parameters
 
-Runtime parameters are defined in the `parameters` array and can be used in templates throughout the configuration.
+Runtime parameters are defined in the `parameters` array and can be used in
+templates throughout the configuration.
 
 ## Filter Format
 
@@ -182,17 +193,17 @@ Runtime parameters are defined in the `parameters` array and can be used in temp
 
 The tool supports all Firestore native JSON value types:
 
-| Type | Format | Example |
-|------|--------|---------|
-| String | `{"stringValue": "text"}` | `{"stringValue": "{{.name}}"}` |
-| Integer | `{"integerValue": "123"}` or `{"integerValue": 123}` | `{"integerValue": "{{.age}}"}` or `{"integerValue": {{.age}}}` |
-| Double | `{"doubleValue": 45.67}` | `{"doubleValue": {{.price}}}` |
-| Boolean | `{"booleanValue": true}` | `{"booleanValue": {{.active}}}` |
-| Null | `{"nullValue": null}` | `{"nullValue": null}` |
-| Timestamp | `{"timestampValue": "RFC3339"}` | `{"timestampValue": "{{.date}}"}` |
-| GeoPoint | `{"geoPointValue": {"latitude": 0, "longitude": 0}}` | See below |
-| Array | `{"arrayValue": {"values": [...]}}` | See below |
-| Map | `{"mapValue": {"fields": {...}}}` | See below |
+| Type      | Format                                               | Example                                                        |
+|-----------|------------------------------------------------------|----------------------------------------------------------------|
+| String    | `{"stringValue": "text"}`                            | `{"stringValue": "{{.name}}"}`                                 |
+| Integer   | `{"integerValue": "123"}` or `{"integerValue": 123}` | `{"integerValue": "{{.age}}"}` or `{"integerValue": {{.age}}}` |
+| Double    | `{"doubleValue": 45.67}`                             | `{"doubleValue": {{.price}}}`                                  |
+| Boolean   | `{"booleanValue": true}`                             | `{"booleanValue": {{.active}}}`                                |
+| Null      | `{"nullValue": null}`                                | `{"nullValue": null}`                                          |
+| Timestamp | `{"timestampValue": "RFC3339"}`                      | `{"timestampValue": "{{.date}}"}`                              |
+| GeoPoint  | `{"geoPointValue": {"latitude": 0, "longitude": 0}}` | See below                                                      |
+| Array     | `{"arrayValue": {"values": [...]}}`                  | See below                                                      |
+| Map       | `{"mapValue": {"fields": {...}}}`                    | See below                                                      |
 
 ### Complex Type Examples
 
@@ -391,11 +402,15 @@ curl -X POST http://localhost:5000/api/tool/your-tool-name/invoke \
 
 ## Best Practices
 
-1. **Use Typed Values**: Always use Firestore's native JSON value types for proper type handling
-2. **String Numbers for Large Integers**: Use string representation for large integers to avoid precision loss
-3. **Template Security**: Validate all template parameters to prevent injection attacks
+1. **Use Typed Values**: Always use Firestore's native JSON value types for
+   proper type handling
+2. **String Numbers for Large Integers**: Use string representation for large
+   integers to avoid precision loss
+3. **Template Security**: Validate all template parameters to prevent injection
+   attacks
 4. **Index Optimization**: Use `analyzeQuery` to identify missing indexes
-5. **Limit Results**: Always set a reasonable `limit` to prevent excessive data retrieval
+5. **Limit Results**: Always set a reasonable `limit` to prevent excessive data
+   retrieval
 6. **Field Selection**: Use `select` to retrieve only necessary fields
 
 ## Technical Notes
@@ -407,6 +422,8 @@ curl -X POST http://localhost:5000/api/tool/your-tool-name/invoke \
 
 ## See Also
 
-- [firestore-query-collection](firestore-query-collection.md) - Non-parameterizable query tool
+- [firestore-query-collection](firestore-query-collection.md) -
+  Non-parameterizable query tool
 - [Firestore Source Configuration](../../sources/firestore.md)
-- [Firestore Query Documentation](https://firebase.google.com/docs/firestore/query-data/queries)
+- [Firestore Query
+  Documentation](https://firebase.google.com/docs/firestore/query-data/queries)

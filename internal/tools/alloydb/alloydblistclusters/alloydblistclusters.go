@@ -42,12 +42,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 // Configuration for the list-clusters tool.
 type Config struct {
-	Name         string            `yaml:"name" validate:"required"`
-	Kind         string            `yaml:"kind" validate:"required"`
-	Source       string            `yaml:"source" validate:"required"`
-	Description  string            `yaml:"description" validate:"required"`
-	AuthRequired []string          `yaml:"authRequired"`
-	BaseURL      string            `yaml:"baseURL"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description"`
+	AuthRequired []string `yaml:"authRequired"`
+	BaseURL      string   `yaml:"baseURL"`
 }
 
 // validate interface
@@ -71,36 +71,33 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("projectId", "The GCP project ID to list clusters for."),
-		tools.NewStringParameterWithDefault("locationId", "-", "Optional: The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations.(Default: '-')"),
+		tools.NewStringParameter("project", "The GCP project ID to list clusters for."),
+		tools.NewStringParameterWithDefault("location", "-", "Optional: The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations.(Default: '-')"),
 	}
 	paramManifest := allParameters.Manifest()
 
-	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"projectId", "locationId"}
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: inputSchema,
+	description := cfg.Description
+	if description == "" {
+		description = "Lists all AlloyDB clusters in a given project and location."
 	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters)
 
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Source:       s,
-		AllParams:    allParameters,
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest},
-		mcpManifest:  mcpManifest,
+		Name:        cfg.Name,
+		Kind:        kind,
+		Source:      s,
+		AllParams:   allParameters,
+		manifest:    tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}, nil
 }
 
 // Tool represents the list-clusters tool.
 type Tool struct {
-	Name         string   `yaml:"name"`
-	Kind         string   `yaml:"kind"`
-	Description  string   `yaml:"description"`
-	
+	Name        string `yaml:"name"`
+	Kind        string `yaml:"kind"`
+	Description string `yaml:"description"`
+
 	Source    *alloydbadmin.Source
 	AllParams tools.Parameters `yaml:"allParams"`
 
@@ -112,13 +109,13 @@ type Tool struct {
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	projectId, ok := paramsMap["projectId"].(string)
+	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing 'projectId' parameter; expected a string")
+		return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a string")
 	}
-	locationId, ok := paramsMap["locationId"].(string)
-    if !ok {
-		return nil, fmt.Errorf("invalid 'locationId' parameter; expected a string")
+	location, ok := paramsMap["location"].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid 'location' parameter; expected a string")
 	}
 
 	service, err := t.Source.GetService(ctx, string(accessToken))
@@ -126,7 +123,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, err
 	}
 
-	urlString := fmt.Sprintf("projects/%s/locations/%s", projectId, locationId)
+	urlString := fmt.Sprintf("projects/%s/locations/%s", project, location)
 
 	resp, err := service.Projects.Locations.Clusters.List(urlString).Do()
 	if err != nil {

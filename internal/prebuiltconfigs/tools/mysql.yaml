@@ -31,12 +31,39 @@ tools:
     kind: mysql-execute-sql
     source: mysql-source
     description: Use this tool to execute SQL.
+  list_active_queries:
+    kind: mysql-list-active-queries
+    source: mysql-source
+    description: Lists top N (default 10) ongoing queries from processlist and innodb_trx, ordered by execution time in descending order. Returns detailed information of those queries in json format, including process id, query, transaction duration, transaction wait duration, process time, transaction state, process state, username with host, transaction rows locked, transaction rows modified, and db schema.
+  get_query_plan:
+    kind: mysql-sql
+    source: mysql-source
+    description: "Provide information about how MySQL executes a SQL statement. Common use cases include: 1) analyze query plan to improve its performance, and 2) determine effectiveness of existing indexes and evalueate new ones."
+    statement: |
+      EXPLAIN FORMAT=JSON {{.sql_statement}};
+    templateParameters:
+      - name: sql_statement
+        type: string
+        description: "the SQL statement to explain"
+        required: true
   list_tables:
     kind: mysql-list-tables
     source: mysql-source
     description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
+  list_tables_missing_unique_indexes:
+    kind: mysql-list-tables-missing-unique-indexes
+    source: mysql-source
+    description: "Find tables that do not have primary or unique key constraint. A primary key or unique key is the only mechanism that guaranttes a row is unique. Without them, the database-level protection against data integrity issues will be missing."
+  list_table_fragmentation:
+    kind: mysql-list-table-fragmentation
+    source: mysql-source
+    description: List table fragmentation in MySQL, by calculating the size of the data and index files and free space allocated to each table. The query calculates fragmentation percentage which represents the proportion of free space relative to the total data and index size. Storage can be reclaimed for tables with high fragmentation using OPTIMIZE TABLE.
 
 toolsets:
   mysql_database_tools:
     - execute_sql
     - list_tables
+    - get_query_plan
+    - list_active_queries
+    - list_tables_missing_unique_indexes
+    - list_table_fragmentation

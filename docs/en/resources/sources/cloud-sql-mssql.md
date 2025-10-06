@@ -27,6 +27,9 @@ to a database by following these instructions][csql-mssql-connect].
 - [`mssql-execute-sql`](../tools/mssql/mssql-execute-sql.md)  
   Run parameterized SQL Server queries in Cloud SQL for SQL Server.
 
+- [`mssql-list-tables`](../tools/mssql/mssql-list-tables.md)  
+  List tables in a Cloud SQL for SQL Server database.
+
 ### Pre-built Configurations
 
 - [Cloud SQL for SQL Server using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mssql_mcp/)  

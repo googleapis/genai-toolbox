@@ -108,6 +108,6 @@ tools:
       18. `cloudsql.googleapis.com/database/postgresql/insights/pertag/row_count`: The number of retrieved or affected rows since the last sample per tag. `cloudsql_instance_database`. `user`, `client_addr`, `action`, `application`, `controller`, `db_driver`, `framework`, `route`, `tag_hash`, `project_id`, `resource_id`.
 
 toolsets:
-  cloud-sql-postgres-cloud-monitoring-tools:
+  cloud_sql_postgres_cloud_monitoring_tools:
     - get_system_metrics
     - get_query_metrics

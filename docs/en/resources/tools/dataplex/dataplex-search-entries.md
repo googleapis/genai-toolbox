@@ -17,7 +17,8 @@ It's compatible with the following sources:
 - [dataplex](../../sources/dataplex.md)
 
 `dataplex-search-entries` takes a required `query` parameter based on which
-entries are filtered and returned to the user. It also optionally accepts following parameters:
+entries are filtered and returned to the user. It also optionally accepts
+following parameters:
 
 - `pageSize` - Number of results in the search page. Defaults to `5`.
 - `orderBy` - Specifies the ordering of results. Supported values are: relevance
@@ -57,8 +58,8 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "dataplex-search-entries".                                                               |
-| source      |                   string                   |     true     | Name of the source the tool should execute on.                                                   |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "dataplex-search-entries".                 |
+| source      |  string  |     true     | Name of the source the tool should execute on.     |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

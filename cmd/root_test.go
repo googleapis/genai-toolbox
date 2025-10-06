@@ -1244,11 +1244,16 @@ func TestPrebuiltTools(t *testing.T) {
 	mysql_config, _ := prebuiltconfigs.Get("mysql")
 	mssql_config, _ := prebuiltconfigs.Get("mssql")
 	looker_config, _ := prebuiltconfigs.Get("looker")
+	lookerca_config, _ := prebuiltconfigs.Get("looker-conversational-analytics")
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
 	sqlite_config, _ := prebuiltconfigs.Get("sqlite")
 	neo4jconfig, _ := prebuiltconfigs.Get("neo4j")
+	alloydbobsvconfig, _ := prebuiltconfigs.Get("alloydb-postgres-observability")
+	cloudsqlpgobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-postgres-observability")
+	cloudsqlmysqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mysql-observability")
+	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1323,6 +1328,9 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("LOOKER_CLIENT_SECRET", "your_looker_client_secret")
 	t.Setenv("LOOKER_VERIFY_SSL", "true")
 
+	t.Setenv("LOOKER_PROJECT", "your_project_id")
+	t.Setenv("LOOKER_LOCATION", "us")
+
 	t.Setenv("SQLITE_DATABASE", "test.db")
 
 	t.Setenv("NEO4J_URI", "bolt://localhost:7687")
@@ -1385,7 +1393,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"alloydb_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "alloydb_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan"},
 				},
 			},
 		},
@@ -1395,7 +1403,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"bigquery_database_tools": tools.ToolsetConfig{
 					Name:      "bigquery_database_tools",
-					ToolNames: []string{"analyze_contribution", "ask_data_insights", "execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids"},
+					ToolNames: []string{"analyze_contribution", "ask_data_insights", "execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids", "search_catalog"},
 				},
 			},
 		},
@@ -1405,7 +1413,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"clickhouse_database_tools": tools.ToolsetConfig{
 					Name:      "clickhouse_database_tools",
-					ToolNames: []string{"execute_sql", "list_databases"},
+					ToolNames: []string{"execute_sql", "list_databases", "list_tables"},
 				},
 			},
 		},
@@ -1415,7 +1423,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan"},
 				},
 			},
 		},
@@ -1425,7 +1433,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_mysql_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mysql_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries", "list_tables_missing_unique_indexes", "list_table_fragmentation"},
 				},
 			},
 		},
@@ -1465,7 +1473,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"mysql_database_tools": tools.ToolsetConfig{
 					Name:      "mysql_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries", "list_tables_missing_unique_indexes", "list_table_fragmentation"},
 				},
 			},
 		},
@@ -1485,7 +1493,17 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"looker_tools": tools.ToolsetConfig{
 					Name:      "looker_tools",
-					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "make_dashboard", "add_dashboard_element"},
+					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "make_dashboard", "add_dashboard_element", "health_pulse", "health_analyze", "health_vacuum"},
+				},
+			},
+		},
+		{
+			name: "looker-conversational-analytics prebuilt tools",
+			in:   lookerca_config,
+			wantToolset: server.ToolsetConfigs{
+				"looker_conversational_analytics_tools": tools.ToolsetConfig{
+					Name:      "looker_conversational_analytics_tools",
+					ToolNames: []string{"ask_data_insights", "get_models", "get_explores"},
 				},
 			},
 		},
@@ -1495,7 +1513,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"postgres_database_tools": tools.ToolsetConfig{
 					Name:      "postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan"},
 				},
 			},
 		},
@@ -1539,6 +1557,46 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "alloydb postgres observability prebuilt tools",
+			in:   alloydbobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"alloydb_postgres_cloud_monitoring_tools": tools.ToolsetConfig{
+					Name:      "alloydb_postgres_cloud_monitoring_tools",
+					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
+				},
+			},
+		},
+		{
+			name: "cloudsql postgres observability prebuilt tools",
+			in:   cloudsqlpgobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_postgres_cloud_monitoring_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_postgres_cloud_monitoring_tools",
+					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
+				},
+			},
+		},
+		{
+			name: "cloudsql mysql observability prebuilt tools",
+			in:   cloudsqlmysqlobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_mysql_cloud_monitoring_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_mysql_cloud_monitoring_tools",
+					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
+				},
+			},
+		},
+		{
+			name: "cloudsql mssql observability prebuilt tools",
+			in:   cloudsqlmssqlobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_mssql_cloud_monitoring_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_mssql_cloud_monitoring_tools",
+					ToolNames: []string{"get_system_metrics"},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tcs {
@@ -1549,54 +1607,6 @@ func TestPrebuiltTools(t *testing.T) {
 			}
 			if diff := cmp.Diff(tc.wantToolset, toolsFile.Toolsets); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
-			}
-		})
-	}
-}
-
-func TestUpdateLogLevel(t *testing.T) {
-	tcs := []struct {
-		desc     string
-		stdio    bool
-		logLevel string
-		want     bool
-	}{
-		{
-			desc:     "no stdio",
-			stdio:    false,
-			logLevel: "info",
-			want:     false,
-		},
-		{
-			desc:     "stdio with info log",
-			stdio:    true,
-			logLevel: "info",
-			want:     true,
-		},
-		{
-			desc:     "stdio with debug log",
-			stdio:    true,
-			logLevel: "debug",
-			want:     true,
-		},
-		{
-			desc:     "stdio with warn log",
-			stdio:    true,
-			logLevel: "warn",
-			want:     false,
-		},
-		{
-			desc:     "stdio with error log",
-			stdio:    true,
-			logLevel: "error",
-			want:     false,
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			got := updateLogLevel(tc.stdio, tc.logLevel)
-			if got != tc.want {
-				t.Fatalf("incorrect indication to update log level: got %t, want %t", got, tc.want)
 			}
 		})
 	}

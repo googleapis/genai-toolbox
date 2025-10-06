@@ -8,7 +8,11 @@ description: >
 
 ## About
 
-[OceanBase][oceanbase-docs] is a distributed relational database management system (RDBMS) that provides high availability, scalability, and strong consistency. It's designed to handle large-scale data processing and is compatible with MySQL, making it easy for developers to migrate from MySQL to OceanBase.
+[OceanBase][oceanbase-docs] is a distributed relational database management
+system (RDBMS) that provides high availability, scalability, and strong
+consistency. It's designed to handle large-scale data processing and is
+compatible with MySQL, making it easy for developers to migrate from MySQL to
+OceanBase.
 
 [oceanbase-docs]: https://www.oceanbase.com/
 
@@ -16,11 +20,15 @@ description: >
 
 ### Database User
 
-This source only uses standard authentication. You will need to create an OceanBase user to login to the database with. OceanBase supports MySQL-compatible user management syntax.
+This source only uses standard authentication. You will need to create an
+OceanBase user to login to the database with. OceanBase supports
+MySQL-compatible user management syntax.
 
 ### Network Connectivity
 
-Ensure that your application can connect to the OceanBase cluster. OceanBase typically runs on ports 2881 (for MySQL protocol) or 3881 (for MySQL protocol with SSL).
+Ensure that your application can connect to the OceanBase cluster. OceanBase
+typically runs on ports 2881 (for MySQL protocol) or 3881 (for MySQL protocol
+with SSL).
 
 ## Example
 
@@ -57,16 +65,21 @@ instead of hardcoding your secrets into the configuration file.
 
 ### MySQL Compatibility
 
-OceanBase is highly compatible with MySQL, supporting most MySQL SQL syntax, data types, and functions. This makes it easy to migrate existing MySQL applications to OceanBase.
+OceanBase is highly compatible with MySQL, supporting most MySQL SQL syntax,
+data types, and functions. This makes it easy to migrate existing MySQL
+applications to OceanBase.
 
 ### High Availability
 
-OceanBase provides automatic failover and data replication across multiple nodes, ensuring high availability and data durability.
+OceanBase provides automatic failover and data replication across multiple
+nodes, ensuring high availability and data durability.
 
 ### Scalability
 
-OceanBase can scale horizontally by adding more nodes to the cluster, making it suitable for large-scale applications.
+OceanBase can scale horizontally by adding more nodes to the cluster, making it
+suitable for large-scale applications.
 
 ### Strong Consistency
 
-OceanBase provides strong consistency guarantees, ensuring that all transactions are ACID compliant. 
+OceanBase provides strong consistency guarantees, ensuring that all transactions
+are ACID compliant.

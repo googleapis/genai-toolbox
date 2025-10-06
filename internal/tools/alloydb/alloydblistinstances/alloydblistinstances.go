@@ -42,12 +42,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 // Configuration for the list-instances tool.
 type Config struct {
-	Name         string            `yaml:"name" validate:"required"`
-	Kind         string            `yaml:"kind" validate:"required"`
-	Source       string            `yaml:"source" validate:"required"`
-	Description  string            `yaml:"description" validate:"required"`
-	AuthRequired []string          `yaml:"authRequired"`
-	BaseURL      string            `yaml:"baseURL"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description"`
+	AuthRequired []string `yaml:"authRequired"`
+	BaseURL      string   `yaml:"baseURL"`
 }
 
 // validate interface
@@ -71,37 +71,34 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("projectId", "The GCP project ID to list instances for."),
-		tools.NewStringParameterWithDefault("locationId", "-", "Optional: The location of the cluster (e.g., 'us-central1'). Use '-' to get results for all regions.(Default: '-')"),
-		tools.NewStringParameterWithDefault("clusterId", "-", "Optional: The ID of the cluster to list instances from. Use '-' to get results for all clusters.(Default: '-')"),
+		tools.NewStringParameter("project", "The GCP project ID to list instances for."),
+		tools.NewStringParameterWithDefault("location", "-", "Optional: The location of the cluster (e.g., 'us-central1'). Use '-' to get results for all regions.(Default: '-')"),
+		tools.NewStringParameterWithDefault("cluster", "-", "Optional: The ID of the cluster to list instances from. Use '-' to get results for all clusters.(Default: '-')"),
 	}
 	paramManifest := allParameters.Manifest()
 
-	inputSchema := allParameters.McpManifest()
-	inputSchema.Required = []string{"projectId"}
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: inputSchema,
+	description := cfg.Description
+	if description == "" {
+		description = "Lists all AlloyDB instances in a given project, location and cluster."
 	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters)
 
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Source:       s,
-		AllParams:    allParameters,
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest},
-		mcpManifest:  mcpManifest,
+		Name:        cfg.Name,
+		Kind:        kind,
+		Source:      s,
+		AllParams:   allParameters,
+		manifest:    tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}, nil
 }
 
 // Tool represents the list-instances tool.
 type Tool struct {
-	Name         string   `yaml:"name"`
-	Kind         string   `yaml:"kind"`
-	Description  string   `yaml:"description"`
-	
+	Name        string `yaml:"name"`
+	Kind        string `yaml:"kind"`
+	Description string `yaml:"description"`
+
 	Source    *alloydbadmin.Source
 	AllParams tools.Parameters `yaml:"allParams"`
 
@@ -113,17 +110,17 @@ type Tool struct {
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	projectId, ok := paramsMap["projectId"].(string)
+	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing 'projectId' parameter; expected a string")
+		return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a string")
 	}
-	locationId, ok := paramsMap["locationId"].(string)
-    if !ok {
-		return nil, fmt.Errorf("invalid 'locationId' parameter; expected a string")
+	location, ok := paramsMap["location"].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid 'location' parameter; expected a string")
 	}
-	clusterId, ok := paramsMap["clusterId"].(string)
-    if !ok {
-		return nil, fmt.Errorf("invalid 'clusterId' parameter; expected a string")
+	cluster, ok := paramsMap["cluster"].(string)
+	if !ok {
+		return nil, fmt.Errorf("invalid 'cluster' parameter; expected a string")
 	}
 
 	service, err := t.Source.GetService(ctx, string(accessToken))
@@ -131,7 +128,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, err
 	}
 
-	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", projectId, locationId, clusterId)
+	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", project, location, cluster)
 
 	resp, err := service.Projects.Locations.Clusters.Instances.List(urlString).Do()
 	if err != nil {

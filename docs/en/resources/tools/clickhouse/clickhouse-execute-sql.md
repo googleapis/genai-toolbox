@@ -12,7 +12,8 @@ aliases:
 ## About
 
 A `clickhouse-execute-sql` tool executes a SQL statement against a ClickHouse
-database. It's compatible with the [clickhouse](../../sources/clickhouse.md) source.
+database. It's compatible with the [clickhouse](../../sources/clickhouse.md)
+source.
 
 `clickhouse-execute-sql` takes one input parameter `sql` and runs the SQL
 statement against the specified `source`. This tool includes query logging
@@ -33,14 +34,14 @@ tools:
 
 ## Parameters
 
-| **parameter** | **type** | **required** | **description**                                    |
-|---------------|:--------:|:------------:|----------------------------------------------------|
+| **parameter** | **type** | **required** | **description**                                   |
+|---------------|:--------:|:------------:|---------------------------------------------------|
 | sql           |  string  |     true     | The SQL statement to execute against the database |
 
 ## Reference
 
-| **field**   | **type** | **required** | **description**                                         |
-|-------------|:--------:|:------------:|---------------------------------------------------------|
-| kind        |  string  |     true     | Must be "clickhouse-execute-sql".                      |
-| source      |  string  |     true     | Name of the ClickHouse source to execute SQL against.  |
-| description |  string  |     true     | Description of the tool that is passed to the LLM.     |
+| **field**   | **type** | **required** | **description**                                       |
+|-------------|:--------:|:------------:|-------------------------------------------------------|
+| kind        |  string  |     true     | Must be "clickhouse-execute-sql".                     |
+| source      |  string  |     true     | Name of the ClickHouse source to execute SQL against. |
+| description |  string  |     true     | Description of the tool that is passed to the LLM.    |

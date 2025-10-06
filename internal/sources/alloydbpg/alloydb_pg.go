@@ -117,11 +117,15 @@ func getOpts(ipType, userAgent string, useIAM bool) ([]alloydbconn.Option, error
 }
 
 func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string, bool, error) {
+	userAgent, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		userAgent = "genai-toolbox"
+	}
 	useIAM := true
 
 	// If username and password both provided, use password authentication
 	if user != "" && pass != "" {
-		dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
+		dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable application_name=%s", user, pass, dbname, userAgent)
 		useIAM = false
 		return dsn, useIAM, nil
 	}
@@ -141,7 +145,7 @@ func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string
 	}
 
 	// Construct IAM connection string with username
-	dsn := fmt.Sprintf("user=%s dbname=%s sslmode=disable", user, dbname)
+	dsn := fmt.Sprintf("user=%s dbname=%s sslmode=disable application_name=%s", user, dbname, userAgent)
 	return dsn, useIAM, nil
 }
 

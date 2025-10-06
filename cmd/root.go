@@ -42,12 +42,16 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	// Import tool packages for side effect of registration
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreatecluster"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreateinstance"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreateuser"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetcluster"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetinstance"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetuser"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistclusters"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistinstances"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistusers"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbwaitforoperation"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryanalyzecontribution"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryconversationalanalytics"
@@ -57,10 +61,13 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerygettableinfo"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerylistdatasetids"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerylisttableids"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysearchcatalog"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigtable"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cassandra/cassandracql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouseexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouselistdatabases"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouselisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhousesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlcreatedatabase"
@@ -73,6 +80,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlmysql/cloudsqlmysqlcreateinstance"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg/cloudsqlpgcreateinstances"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/dataform/dataformcompilelocal"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexlookupentry"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchaspecttypes"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchentries"
@@ -90,6 +98,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorevalidaterules"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookeradddashboardelement"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerconversationalanalytics"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetdashboards"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetdimensions"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetexplores"
@@ -98,6 +107,9 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetmeasures"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetmodels"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetparameters"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthanalyze"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthpulse"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthvacuum"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookermakedashboard"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookermakelook"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerquery"
@@ -114,9 +126,13 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbupdatemany"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbupdateone"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqllisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllistactivequeries"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttablefragmentation"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttables"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttablesmissinguniqueindexes"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jcypher"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jexecutecypher"
@@ -124,6 +140,9 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/oceanbase/oceanbaseexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/oceanbase/oceanbasesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistactivequeries"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistavailableextensions"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistinstalledextensions"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
@@ -136,7 +155,6 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/tidb/tidbsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/trino/trinoexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/trino/trinosql"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydbwaitforoperation"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/wait"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/yugabytedbsql"
@@ -147,6 +165,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/bigtable"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/cassandra"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudmonitoring"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
@@ -641,20 +660,6 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 	}
 }
 
-// updateLogLevel checks if Toolbox have to update the existing log level set by users.
-// stdio doesn't support "debug" and "info" logs.
-func updateLogLevel(stdio bool, logLevel string) bool {
-	if stdio {
-		switch strings.ToUpper(logLevel) {
-		case log.Debug, log.Info:
-			return true
-		default:
-			return false
-		}
-	}
-	return false
-}
-
 func resolveWatcherInputs(toolsFile string, toolsFiles []string, toolsFolder string) (map[string]bool, map[string]bool) {
 	var relevantFiles []string
 
@@ -683,10 +688,6 @@ func resolveWatcherInputs(toolsFile string, toolsFiles []string, toolsFolder str
 }
 
 func run(cmd *Command) error {
-	if updateLogLevel(cmd.cfg.Stdio, cmd.cfg.LogLevel.String()) {
-		cmd.cfg.LogLevel = server.StringLevel(log.Warn)
-	}
-
 	ctx, cancel := context.WithCancel(cmd.Context())
 	defer cancel()
 
@@ -710,16 +711,22 @@ func run(cmd *Command) error {
 		cancel()
 	}(ctx)
 
+	// If stdio, set logger's out stream (usually DEBUG and INFO logs) to errStream
+	loggerOut := cmd.outStream
+	if cmd.cfg.Stdio {
+		loggerOut = cmd.errStream
+	}
+
 	// Handle logger separately from config
 	switch strings.ToLower(cmd.cfg.LoggingFormat.String()) {
 	case "json":
-		logger, err := log.NewStructuredLogger(cmd.outStream, cmd.errStream, cmd.cfg.LogLevel.String())
+		logger, err := log.NewStructuredLogger(loggerOut, cmd.errStream, cmd.cfg.LogLevel.String())
 		if err != nil {
 			return fmt.Errorf("unable to initialize logger: %w", err)
 		}
 		cmd.logger = logger
 	case "standard":
-		logger, err := log.NewStdLogger(cmd.outStream, cmd.errStream, cmd.cfg.LogLevel.String())
+		logger, err := log.NewStdLogger(loggerOut, cmd.errStream, cmd.cfg.LogLevel.String())
 		if err != nil {
 			return fmt.Errorf("unable to initialize logger: %w", err)
 		}

@@ -75,11 +75,17 @@ func (t MockTool) RequiresClientAuthorization() bool {
 func (t MockTool) McpManifest() tools.McpManifest {
 	properties := make(map[string]tools.ParameterMcpManifest)
 	required := make([]string, 0)
+	authParams := make(map[string][]string)
 
 	for _, p := range t.Params {
 		name := p.GetName()
-		properties[name] = p.McpManifest()
+		paramManifest, authParamList := p.McpManifest()
+		properties[name] = paramManifest
 		required = append(required, name)
+
+		if len(authParamList) > 0 {
+			authParams[name] = authParamList
+		}
 	}
 
 	toolsSchema := tools.McpToolsSchema{
@@ -88,11 +94,19 @@ func (t MockTool) McpManifest() tools.McpManifest {
 		Required:   required,
 	}
 
-	return tools.McpManifest{
+	mcpManifest := tools.McpManifest{
 		Name:        t.Name,
 		Description: t.Description,
 		InputSchema: toolsSchema,
 	}
+
+	if len(authParams) > 0 {
+		mcpManifest.Metadata = map[string]any{
+			"toolbox/authParams": authParams,
+		}
+	}
+
+	return mcpManifest
 }
 
 var tool1 = MockTool{

@@ -113,12 +113,12 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                              |
-|-------------|:------------------------------------------:|:------------:|----------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "dgraph-dql".                                                                        |
-| source      |                   string                   |     true     | Name of the source the dql query should execute on.                                          |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                           |
-| statement   |                   string                   |     true     | dql statement to execute                                                                     |
-| isQuery     |                  boolean                   |    false     | To run statement as query set true otherwise false                                           |
-| timeout     |                   string                   |    false     | To set timeout for query                                                                     |
+| **field**   |                **type**                 | **required** | **description**                                                                           |
+|-------------|:---------------------------------------:|:------------:|-------------------------------------------------------------------------------------------|
+| kind        |                 string                  |     true     | Must be "dgraph-dql".                                                                     |
+| source      |                 string                  |     true     | Name of the source the dql query should execute on.                                       |
+| description |                 string                  |     true     | Description of the tool that is passed to the LLM.                                        |
+| statement   |                 string                  |     true     | dql statement to execute                                                                  |
+| isQuery     |                 boolean                 |    false     | To run statement as query set true otherwise false                                        |
+| timeout     |                 string                  |    false     | To set timeout for query                                                                  |
 | parameters  | [parameters](../#specifying-parameters) |    false     | List of [parameters](../#specifying-parameters) that will be used with the dql statement. |
