@@ -74,13 +74,6 @@ type Manifest struct {
 	Arguments   []tools.ParameterManifest `json:"arguments"`
 }
 
-// McpPromptArg defines the simplified structure for a prompt's argument in the MCP manifest.
-type McpPromptArg struct {
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
-	Required    bool   `json:"required"`
-}
-
 // McpManifest is the definition for a prompt the MCP client can get.
 type McpManifest struct {
 	Name        string         `json:"name"`
