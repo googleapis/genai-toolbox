@@ -15,6 +15,7 @@
 package v20241105
 
 import (
+	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
@@ -27,9 +28,11 @@ const PROTOCOL_VERSION = "2024-11-05"
 
 // methods that are supported.
 const (
-	PING       = "ping"
-	TOOLS_LIST = "tools/list"
-	TOOLS_CALL = "tools/call"
+	PING         = "ping"
+	TOOLS_LIST   = "tools/list"
+	TOOLS_CALL   = "tools/call"
+	PROMPTS_LIST = "prompts/list"
+	PROMPTS_GET  = "prompts/get"
 )
 
 /* Empty result */
@@ -135,4 +138,39 @@ type CallToolResult struct {
 	// Whether the tool call ended in an error.
 	// If not set, this is assumed to be false (the call was successful).
 	IsError bool `json:"isError,omitempty"`
+}
+
+/* Prompts */
+
+// Sent from the client to request a list of prompts the server has.
+type ListPromptsRequest struct {
+	PaginatedRequest
+}
+
+// The server's response to a prompts/list request from the client.
+type ListPromptsResult struct {
+	PaginatedResult
+	Prompts []prompts.McpManifest `json:"prompts"`
+}
+
+// GetPromptRequest is sent from the client to get a specific prompt with substituted arguments.
+type GetPromptRequest struct {
+	jsonrpc.Request
+	Params struct {
+		Name      string         `json:"name"`
+		Arguments map[string]any `json:"arguments,omitempty"`
+	} `json:"params"`
+}
+
+// GetPromptResult is the server's response to a prompts/get request.
+type GetPromptResult struct {
+	jsonrpc.Result
+	Description string            `json:"description,omitempty"`
+	Messages    []ResponseMessage `json:"messages"`
+}
+
+// ResponseMessage represents a single message in the GetPromptResult.
+type ResponseMessage struct {
+	Role    string      `json:"role"`
+	Content TextContent `json:"content"`
 }
