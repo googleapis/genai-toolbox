@@ -13,7 +13,7 @@ aliases:
 A `dataplex-lookup-entry` tool returns details of a particular entry in Dataplex
 Catalog. It's compatible with the following sources:
 
-- [dataplex](../sources/dataplex.md)
+- [dataplex](../../sources/dataplex.md)
 
 `dataplex-lookup-entry` takes a required `name` parameter which contains the
 project and location to which the request should be attributed in the following

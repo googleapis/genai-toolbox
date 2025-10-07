@@ -276,7 +276,7 @@ to the `tools` section in your `tools.yaml`:
     {{< notice tip >}}Before using NL2SQL tools,
     you must first install the `alloydb_ai_nl` extension and
     create the [semantic
-    layer](https://cloud.google.com/alloydb/docs/ai/natural-language-overview)
+    layer](https://cloud.google.com/alloydb/docs/ai/natural-language-landing)
     under a configuration named `flower_shop`.
     {{< /notice >}}
 

@@ -34,7 +34,7 @@ database layer.
 
 {{< notice tip >}} AlloyDB AI natural language is currently in gated public
 preview. For more information on availability and limitations, please see
-[AlloyDB AI natural language overview](https://cloud.google.com/alloydb/docs/ai/natural-language-overview)
+[AlloyDB AI natural language overview](https://cloud.google.com/alloydb/docs/ai/natural-language-landing)
 {{< /notice >}}
 
 To enable AlloyDB AI natural language for your AlloyDB cluster, please follow
@@ -42,7 +42,7 @@ the steps listed in the [Generate SQL queries that answer natural language
 questions][alloydb-ai-gen-nl], including enabling the extension and configuring
 context for your application.
 
-[alloydb-ai-nl-overview]: https://cloud.google.com/alloydb/docs/ai/natural-language-overview
+[alloydb-ai-nl-overview]: https://cloud.google.com/alloydb/docs/ai/natural-language-landing
 [alloydb-ai-gen-nl]: https://cloud.google.com/alloydb/docs/ai/generate-sql-queries-natural-language
 
 ## Configuration
