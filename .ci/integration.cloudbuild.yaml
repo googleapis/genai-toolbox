@@ -834,14 +834,15 @@ steps:
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
       - "SNOWFLAKE_DATABASE=$_SNOWFLAKE_DATABASE"
       - "SNOWFLAKE_SCHEMA=$_SNOWFLAKE_SCHEMA"
-    secretEnv: ["CLIENT_ID", "SNOWFLAKE_USER", "SNOWFLAKE_PASS", "SNOWFLAKE_ACCOUNT"]
+      - "SNOWFLAKE_HOST=$_SNOWFLAKE_HOST"
+    secretEnv: ["CLIENT_ID", "SNOWFLAKE_USER", "SNOWFLAKE_PASS"]
     volumes:
       - name: "go"
         path: "/gopath"
     args:
       - -c
       - |
-        sudo echo "$SNOWFLAKE_ACCOUNT snowflake.localhost.localstack.cloud" >> /etc/hosts
+        sudo echo "$SNOWFLAKE_HOST snowflake.localhost.localstack.cloud" >> /etc/hosts
         .ci/test_with_coverage.sh \
           "Snowflake" \
           snowflake \
@@ -1153,3 +1154,4 @@ substitutions:
   _MARIADB_DATABASE: test_database
   _SNOWFLAKE_DATABASE: "test"
   _SNOWFLAKE_SCHEMA: "PUBLIC"
+  _SNOWFLAKE_HOST: 127.0.0.1
