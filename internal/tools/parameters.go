@@ -37,14 +37,6 @@ const (
 	TypeMap    = "map"
 )
 
-// delimiters for string parameter escaping
-const (
-	escapeBackticks      = "backticks"
-	escapeDoubleQuotes   = "double-quotes"
-	escapeSingleQuotes   = "single-quotes"
-	escapeSquareBrackets = "square-brackets"
-)
-
 // ParamValues is an ordered list of ParamValue
 type ParamValues []ParamValue
 

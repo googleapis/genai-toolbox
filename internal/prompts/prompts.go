@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -72,13 +72,6 @@ type Prompt interface {
 type Manifest struct {
 	Description string                    `json:"description"`
 	Arguments   []tools.ParameterManifest `json:"arguments"`
-}
-
-// McpPromptArg defines the simplified structure for a prompt's argument in the MCP manifest.
-type McpPromptArg struct {
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
-	Required    bool   `json:"required"`
 }
 
 // McpManifest is the definition for a prompt the MCP client can get.

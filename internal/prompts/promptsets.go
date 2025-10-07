@@ -38,7 +38,6 @@ type PromptsetManifest struct {
 }
 
 func (t PromptsetConfig) Initialize(serverVersion string, promptsMap map[string]Prompt) (Promptset, error) {
-	// finish promptset setup
 	// Check each declared prompt name exists
 	var promptset Promptset
 	promptset.Name = t.Name
