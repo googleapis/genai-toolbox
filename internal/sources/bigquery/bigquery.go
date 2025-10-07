@@ -87,6 +87,10 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		r.WriteMode = WriteModeAllowed
 	}
 
+	if r.WriteMode == WriteModeProtected && r.UseClientOAuth {
+		return nil, fmt.Errorf("writeMode 'protected' cannot be used with useClientOAuth 'true'")
+	}
+
 	var client *bigqueryapi.Client
 	var restService *bigqueryrestapi.Service
 	var tokenSource oauth2.TokenSource
