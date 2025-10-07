@@ -841,6 +841,7 @@ steps:
     args:
       - -c
       - |
+        sudo echo "$SNOWFLAKE_ACCOUNT snowflake.localhost.localstack.cloud" >> /etc/hosts
         .ci/test_with_coverage.sh \
           "Snowflake" \
           snowflake \
