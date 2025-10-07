@@ -49,7 +49,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
-	BigQuerySession() *bigqueryds.Session
+	BigQuerySession() bigqueryds.BigQuerySessionProvider
 	BigQueryWriteMode() string
 	BigQueryRestService() *bigqueryrestapi.Service
 	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
@@ -108,14 +108,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		TemplateParameters: cfg.TemplateParameters,
 		AllParams:          allParameters,
 
-		Statement:      cfg.Statement,
-		UseClientOAuth: s.UseClientAuthorization(),
-		Client:         s.BigQueryClient(),
-		RestService:    s.BigQueryRestService(),
-		Session:        s.BigQuerySession(),
-		ClientCreator:  s.BigQueryClientCreator(),
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:    mcpManifest,
+		Statement:       cfg.Statement,
+		UseClientOAuth:  s.UseClientAuthorization(),
+		Client:          s.BigQueryClient(),
+		RestService:     s.BigQueryRestService(),
+		SessionProvider: s.BigQuerySession(),
+		ClientCreator:   s.BigQueryClientCreator(),
+		manifest:        tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest:     mcpManifest,
 	}
 	return t, nil
 }
@@ -132,13 +132,13 @@ type Tool struct {
 	TemplateParameters tools.Parameters `yaml:"templateParameters"`
 	AllParams          tools.Parameters `yaml:"allParams"`
 
-	Statement     string
-	Client        *bigqueryapi.Client
-	RestService   *bigqueryrestapi.Service
-	Session       *bigqueryds.Session
-	ClientCreator bigqueryds.BigqueryClientCreator
-	manifest      tools.Manifest
-	mcpManifest   tools.McpManifest
+	Statement       string
+	Client          *bigqueryapi.Client
+	RestService     *bigqueryrestapi.Service
+	SessionProvider bigqueryds.BigQuerySessionProvider
+	ClientCreator   bigqueryds.BigqueryClientCreator
+	manifest        tools.Manifest
+	mcpManifest     tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
@@ -237,14 +237,16 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	query.Parameters = highLevelParams
 	query.Location = bqClient.Location
 
-	if t.Session != nil {
-		// Add session ID to the connection properties for subsequent calls.
-		query.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
-			{Key: "session_id", Value: t.Session.ID},
+	connProps := []*bigqueryapi.ConnectionProperty{}
+	if t.SessionProvider != nil {
+		session := t.SessionProvider()
+		if session != nil {
+			// Add session ID to the connection properties for subsequent calls.
+			connProps = append(connProps, &bigqueryapi.ConnectionProperty{Key: "session_id", Value: session.ID})
 		}
 	}
-
-	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), query.Location, newStatement, lowLevelParams, query.ConnectionProperties)
+	query.ConnectionProperties = connProps
+	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), query.Location, newStatement, lowLevelParams, connProps)
 	if err != nil {
 		return nil, fmt.Errorf("query validation failed: %w", err)
 	}

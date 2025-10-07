@@ -53,7 +53,7 @@ type compatibleSource interface {
 	UseClientAuthorization() bool
 	IsDatasetAllowed(projectID, datasetID string) bool
 	BigQueryAllowedDatasets() []string
-	BigQuerySession() *bigqueryds.Session
+	BigQuerySession() bigqueryds.BigQuerySessionProvider
 }
 
 // validate compatible sources are still compatible
@@ -124,7 +124,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Client:           s.BigQueryClient(),
 		RestService:      s.BigQueryRestService(),
 		IsDatasetAllowed: s.IsDatasetAllowed,
-		Session:          s.BigQuerySession(),
+		SessionProvider:  s.BigQuerySession(),
 		AllowedDatasets:  allowedDatasets,
 		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:      mcpManifest,
@@ -147,7 +147,7 @@ type Tool struct {
 	ClientCreator    bigqueryds.BigqueryClientCreator
 	IsDatasetAllowed func(projectID, datasetID string) bool
 	AllowedDatasets  []string
-	Session          *bigqueryds.Session
+	SessionProvider  bigqueryds.BigQuerySessionProvider
 	manifest         tools.Manifest
 	mcpManifest      tools.McpManifest
 }
@@ -208,9 +208,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if strings.HasPrefix(trimmedUpperHistoryData, "SELECT") || strings.HasPrefix(trimmedUpperHistoryData, "WITH") {
 		if len(t.AllowedDatasets) > 0 {
 			var connProps []*bigqueryapi.ConnectionProperty
-			if t.Session != nil {
+			if session := t.SessionProvider(); session != nil {
 				connProps = []*bigqueryapi.ConnectionProperty{
-					{Key: "session_id", Value: t.Session.ID},
+					{Key: "session_id", Value: session.ID},
 				}
 			}
 			dryRunJob, err := bqutil.DryRunQuery(ctx, restService, t.Client.Project(), t.Client.Location, historyData, nil, connProps)
@@ -274,10 +274,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	// JobStatistics.QueryStatistics.StatementType
 	query := bqClient.Query(sql)
 	query.Location = bqClient.Location
-	if t.Session != nil {
+	if session := t.SessionProvider(); session != nil {
 		// Add session ID to the connection properties for subsequent calls.
 		query.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
-			{Key: "session_id", Value: t.Session.ID},
+			{Key: "session_id", Value: session.ID},
 		}
 	}
 

@@ -49,7 +49,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
-	BigQuerySession() *bigqueryds.Session
+	BigQuerySession() bigqueryds.BigQuerySessionProvider
 	BigQueryWriteMode() string
 	BigQueryRestService() *bigqueryrestapi.Service
 	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
@@ -96,7 +96,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	case bigqueryds.WriteModeBlocked:
 		sqlDescriptionBuilder.WriteString("The SQL to execute. In 'blocked' mode, only SELECT statements are allowed; other statement types will fail.")
 	case bigqueryds.WriteModeProtected:
-		sqlDescriptionBuilder.WriteString(fmt.Sprintf("The SQL to execute. Only SELECT statements and writes to the session's temporary dataset (ID: %s) are allowed (e.g., `CREATE TEMP TABLE ...`).", s.BigQuerySession().DatasetID))
+		sqlDescriptionBuilder.WriteString("The SQL to execute. Only SELECT statements and writes to the session's temporary dataset are allowed (e.g., `CREATE TEMP TABLE ...`).")
 	default: // WriteModeAllowed
 		sqlDescriptionBuilder.WriteString("The SQL to execute.")
 	}
@@ -143,7 +143,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Client:           s.BigQueryClient(),
 		RestService:      s.BigQueryRestService(),
 		WriteMode:        s.BigQueryWriteMode(),
-		Session:          s.BigQuerySession(),
+		SessionProvider:  s.BigQuerySession(),
 		IsDatasetAllowed: s.IsDatasetAllowed,
 		AllowedDatasets:  allowedDatasets,
 		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
@@ -165,7 +165,7 @@ type Tool struct {
 	Client           *bigqueryapi.Client
 	RestService      *bigqueryrestapi.Service
 	WriteMode        string
-	Session          *bigqueryds.Session
+	SessionProvider  bigqueryds.BigQuerySessionProvider
 	ClientCreator    bigqueryds.BigqueryClientCreator
 	IsDatasetAllowed func(projectID, datasetID string) bool
 	AllowedDatasets  []string
@@ -201,9 +201,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	var connProps []*bigqueryapi.ConnectionProperty
+	var session *bigqueryds.Session
 	if t.WriteMode == bigqueryds.WriteModeProtected {
+		session = t.SessionProvider()
+		if session == nil {
+			return nil, fmt.Errorf("failed to get or create a BigQuery session for protected mode")
+		}
 		connProps = []*bigqueryapi.ConnectionProperty{
-			{Key: "session_id", Value: t.Session.ID},
+			{Key: "session_id", Value: session.ID},
 		}
 	}
 
@@ -221,7 +226,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		}
 	case bigqueryds.WriteModeProtected:
 		if dryRunJob.Configuration != nil && dryRunJob.Configuration.Query != nil {
-			if dest := dryRunJob.Configuration.Query.DestinationTable; dest != nil && dest.DatasetId != t.Session.DatasetID {
+			if dest := dryRunJob.Configuration.Query.DestinationTable; dest != nil && dest.DatasetId != session.DatasetID {
 				return nil, fmt.Errorf("protected write mode only supports SELECT statements, or write operations in the anonymous "+
 					"dataset of a BigQuery session, but destination was %q", dest.DatasetId)
 			}
@@ -297,12 +302,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	query := bqClient.Query(sql)
 	query.Location = bqClient.Location
 
-	if t.WriteMode == bigqueryds.WriteModeProtected {
-		// Add session ID to the connection properties for subsequent calls.
-		query.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
-			{Key: "session_id", Value: t.Session.ID},
-		}
-	}
+	query.ConnectionProperties = connProps
 
 	// Log the query executed for debugging.
 	logger, err := util.LoggerFromContext(ctx)

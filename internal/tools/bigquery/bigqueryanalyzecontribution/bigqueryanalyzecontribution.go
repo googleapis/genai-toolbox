@@ -50,7 +50,7 @@ type compatibleSource interface {
 	BigQueryRestService() *bigqueryrestapi.Service
 	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
 	UseClientAuthorization() bool
-	BigQuerySession() *bigqueryds.Session
+	BigQuerySession() bigqueryds.BigQuerySessionProvider
 }
 
 // validate compatible sources are still compatible
@@ -123,17 +123,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:           cfg.Name,
-		Kind:           kind,
-		Parameters:     parameters,
-		AuthRequired:   cfg.AuthRequired,
-		UseClientOAuth: s.UseClientAuthorization(),
-		ClientCreator:  s.BigQueryClientCreator(),
-		Client:         s.BigQueryClient(),
-		RestService:    s.BigQueryRestService(),
-		Session:        s.BigQuerySession(),
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:    mcpManifest,
+		Name:            cfg.Name,
+		Kind:            kind,
+		Parameters:      parameters,
+		AuthRequired:    cfg.AuthRequired,
+		UseClientOAuth:  s.UseClientAuthorization(),
+		ClientCreator:   s.BigQueryClientCreator(),
+		Client:          s.BigQueryClient(),
+		RestService:     s.BigQueryRestService(),
+		SessionProvider: s.BigQuerySession(),
+		manifest:        tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:     mcpManifest,
 	}
 	return t, nil
 }
@@ -148,12 +148,12 @@ type Tool struct {
 	UseClientOAuth bool             `yaml:"useClientOAuth"`
 	Parameters     tools.Parameters `yaml:"parameters"`
 
-	Client        *bigqueryapi.Client
-	RestService   *bigqueryrestapi.Service
-	ClientCreator bigqueryds.BigqueryClientCreator
-	Session       *bigqueryds.Session
-	manifest      tools.Manifest
-	mcpManifest   tools.McpManifest
+	Client          *bigqueryapi.Client
+	RestService     *bigqueryrestapi.Service
+	ClientCreator   bigqueryds.BigqueryClientCreator
+	SessionProvider bigqueryds.BigQuerySessionProvider
+	manifest        tools.Manifest
+	mcpManifest     tools.McpManifest
 }
 
 // Invoke runs the contribution analysis.
@@ -225,11 +225,16 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	createModelQuery := bqClient.Query(createModelSQL)
-	if t.Session != nil {
+
+	// Get session from provider if in protected mode.
+	// Otherwise, a new session will be created by the first query.
+	session := t.SessionProvider()
+	if session != nil {
 		createModelQuery.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
-			{Key: "session_id", Value: t.Session.ID},
+			{Key: "session_id", Value: session.ID},
 		}
 	} else {
+		// If not in protected mode, create a session for this invocation.
 		createModelQuery.CreateSession = true
 	}
 	createModelJob, err := createModelQuery.Run(ctx)
@@ -245,21 +250,21 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("create model job failed: %w", err)
 	}
 
+	// Determine the session ID to use for subsequent queries.
+	// It's either from the pre-existing session (protected mode) or the one just created.
 	var sessionID string
-	if t.Session != nil {
-		sessionID = t.Session.ID
+	if session != nil {
+		sessionID = session.ID
 	} else if status.Statistics != nil && status.Statistics.SessionInfo != nil {
 		sessionID = status.Statistics.SessionInfo.SessionID
 	} else {
-		return nil, fmt.Errorf("failed to get a BigQuery session ID")
+		return nil, fmt.Errorf("failed to get or create a BigQuery session ID")
 	}
 
 	getInsightsSQL := fmt.Sprintf("SELECT * FROM ML.GET_INSIGHTS(MODEL %s)", modelID)
 
 	getInsightsQuery := bqClient.Query(getInsightsSQL)
-	getInsightsQuery.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
-		{Key: "session_id", Value: sessionID},
-	}
+	getInsightsQuery.ConnectionProperties = []*bigqueryapi.ConnectionProperty{{Key: "session_id", Value: sessionID}}
 
 	job, err := getInsightsQuery.Run(ctx)
 	if err != nil {

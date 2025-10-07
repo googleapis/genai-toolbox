@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
@@ -49,6 +50,8 @@ const (
 var _ sources.SourceConfig = Config{}
 
 type BigqueryClientCreator func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
+
+type BigQuerySessionProvider func() *Session
 
 type DataplexClientCreator func(tokenString string) (*dataplexapi.CatalogClient, error)
 
@@ -155,52 +158,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		AllowedDatasets:    allowedDatasets,
 		UseClientOAuth:     r.UseClientOAuth,
 	}
+	s.SessionProvider = s.newBigQuerySessionProvider()
 
-	switch r.WriteMode {
-	case WriteModeAllowed, WriteModeBlocked:
-		// Valid write mode, do not need session
-	case WriteModeProtected:
-		if err != nil {
-			return nil, fmt.Errorf("failed to create BigQuery REST client for session creation: %w", err)
-		}
-
-		job := &bigqueryrestapi.Job{
-			JobReference: &bigqueryrestapi.JobReference{
-				ProjectId: r.Project,
-				Location:  r.Location,
-			},
-			Configuration: &bigqueryrestapi.JobConfiguration{
-				DryRun: true,
-				Query: &bigqueryrestapi.JobConfigurationQuery{
-					Query:         "SELECT 1",
-					CreateSession: true,
-				},
-			},
-		}
-
-		createdJob, err := restService.Jobs.Insert(r.Project, job).Do()
-		if err != nil {
-			return nil, fmt.Errorf("failed to create BigQuery session via job: %w", err)
-		}
-
-		var sessionID, sessionDatasetID string
-		if createdJob.Status != nil && createdJob.Statistics.SessionInfo != nil {
-			sessionID = createdJob.Statistics.SessionInfo.SessionId
-		} else {
-			return nil, fmt.Errorf("did not get session info back from session creation job")
-		}
-
-		if createdJob.Configuration != nil && createdJob.Configuration.Query != nil && createdJob.Configuration.Query.DestinationTable != nil {
-			sessionDatasetID = createdJob.Configuration.Query.DestinationTable.DatasetId
-		} else {
-			return nil, fmt.Errorf("did not get destination dataset ID from session creation job")
-		}
-
-		s.Session = &Session{
-			ID:        sessionID,
-			DatasetID: sessionDatasetID,
-		}
-	default:
+	if r.WriteMode != WriteModeAllowed && r.WriteMode != WriteModeBlocked && r.WriteMode != WriteModeProtected {
 		return nil, fmt.Errorf("invalid writeMode %q: must be one of %q, %q, or %q", r.WriteMode, WriteModeAllowed, WriteModeProtected, WriteModeBlocked)
 	}
 	s.makeDataplexCatalogClient = s.lazyInitDataplexClient(ctx, tracer)
@@ -224,13 +184,18 @@ type Source struct {
 	AllowedDatasets           map[string]struct{}
 	UseClientOAuth            bool
 	WriteMode                 string
+	sessionMutex              sync.Mutex
 	makeDataplexCatalogClient func() (*dataplexapi.CatalogClient, DataplexClientCreator, error)
+	SessionProvider           BigQuerySessionProvider
 	Session                   *Session
 }
 
 type Session struct {
-	ID        string
-	DatasetID string
+	ID           string
+	ProjectID    string
+	DatasetID    string
+	CreationTime time.Time
+	LastUsed     time.Time
 }
 
 func (s *Source) SourceKind() string {
@@ -250,8 +215,94 @@ func (s *Source) BigQueryWriteMode() string {
 	return s.WriteMode
 }
 
-func (s *Source) BigQuerySession() *Session {
-	return s.Session
+func (s *Source) BigQuerySession() BigQuerySessionProvider {
+	return s.SessionProvider
+}
+
+func (s *Source) newBigQuerySessionProvider() BigQuerySessionProvider {
+	return func() *Session {
+		if s.WriteMode != WriteModeProtected {
+			return nil
+		}
+
+		s.sessionMutex.Lock()
+		defer s.sessionMutex.Unlock()
+
+		logger, _ := util.LoggerFromContext(context.Background())
+
+		if s.Session != nil {
+			// Absolute 7-day lifetime check.
+			const sessionMaxLifetime = 7 * 24 * time.Hour
+			// This assumes a single task will not exceed 30 minutes, preventing it from failing mid-execution.
+			const refreshThreshold = 30 * time.Minute
+			if time.Since(s.Session.CreationTime) > (sessionMaxLifetime - refreshThreshold) {
+				logger.DebugContext(context.Background(), "Session is approaching its 7-day maximum lifetime. Creating a new one.")
+			} else {
+				job := &bigqueryrestapi.Job{
+					Configuration: &bigqueryrestapi.JobConfiguration{
+						DryRun: true,
+						Query: &bigqueryrestapi.JobConfigurationQuery{
+							Query:                "SELECT 1",
+							UseLegacySql:         new(bool),
+							ConnectionProperties: []*bigqueryrestapi.ConnectionProperty{{Key: "session_id", Value: s.Session.ID}},
+						},
+					},
+				}
+				_, err := s.RestService.Jobs.Insert(s.Project, job).Do()
+				if err == nil {
+					s.Session.LastUsed = time.Now()
+					return s.Session
+				}
+				logger.DebugContext(context.Background(), "Session validation failed (likely expired), creating a new one.", "error", err)
+			}
+		}
+
+		// Create a new session if one doesn't exist, it has passed its 7-day lifetime,
+		// or it failed the validation dry run.
+
+		creationTime := time.Now()
+		job := &bigqueryrestapi.Job{
+			JobReference: &bigqueryrestapi.JobReference{
+				ProjectId: s.Project,
+				Location:  s.Location,
+			},
+			Configuration: &bigqueryrestapi.JobConfiguration{
+				DryRun: true,
+				Query: &bigqueryrestapi.JobConfigurationQuery{
+					Query:         "SELECT 1",
+					CreateSession: true,
+				},
+			},
+		}
+
+		createdJob, err := s.RestService.Jobs.Insert(s.Project, job).Do()
+		if err != nil {
+			return nil
+		}
+
+		var sessionID, sessionDatasetID, projectID string
+		if createdJob.Status != nil && createdJob.Statistics.SessionInfo != nil {
+			sessionID = createdJob.Statistics.SessionInfo.SessionId
+		} else {
+			return nil
+		}
+
+		if createdJob.Configuration != nil && createdJob.Configuration.Query != nil && createdJob.Configuration.Query.DestinationTable != nil {
+			sessionDatasetID = createdJob.Configuration.Query.DestinationTable.DatasetId
+			projectID = createdJob.Configuration.Query.DestinationTable.ProjectId
+		} else {
+			return nil
+		}
+
+		s.Session = &Session{
+			ID:           sessionID,
+			ProjectID:    projectID,
+			DatasetID:    sessionDatasetID,
+			CreationTime: creationTime,
+			LastUsed:     creationTime,
+		}
+		return s.Session
+	}
 }
 
 func (s *Source) UseClientAuthorization() bool {
