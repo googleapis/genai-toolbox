@@ -33,7 +33,9 @@ import (
 var (
 	SnowflakeSourceKind = "snowflake"
 	SnowflakeToolKind   = "snowflake-sql"
-	SnowflakeAccount    = os.Getenv("SNOWFLAKE_HOST")
+	SnowflakeHost    = os.Getenv("SNOWFLAKE_HOST")
+	SnowflakePort    = os.Getenv("SNOWFLAKE_PORT")
+	SnowflakeAccount    = os.Getenv("SNOWFLAKE_ACCOUNT")
 	SnowflakeUser       = os.Getenv("SNOWFLAKE_USER")
 	SnowflakePassword   = os.Getenv("SNOWFLAKE_PASS")
 	SnowflakeDatabase   = os.Getenv("SNOWFLAKE_DATABASE")
@@ -77,7 +79,7 @@ func getSnowflakeVars(t *testing.T) map[string]any {
 }
 
 // Copied over from snowflake.go
-func initSnowflakeConnectionPool(ctx context.Context, account, user, password, database, schema, warehouse, role string) (*sqlx.DB, error) {
+func initSnowflakeConnectionPool(ctx context.Context, account, user, password, host, port, database, schema, warehouse, role string) (*sqlx.DB, error) {
 	// Set defaults for optional parameters
 	if warehouse == "" {
 		warehouse = "COMPUTE_WH"
@@ -87,7 +89,7 @@ func initSnowflakeConnectionPool(ctx context.Context, account, user, password, d
 	}
 
 	// Snowflake DSN format: user:password@account/database/schema?warehouse=warehouse&role=role
-	dsn := fmt.Sprintf("%s:%s@%s/%s/%s?warehouse=%s&role=%s&protocol=http&timeout=60", user, password, account, database, schema, warehouse, role)
+	dsn := fmt.Sprintf("%s:%s@%s:%s/%s/%s?account=%s&warehouse=%s&role=%s&protocol=http&timeout=60", user, password, host, port, database, schema, account, warehouse, role)
 	db, err := sqlx.ConnectContext(ctx, "snowflake", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create connection: %w", err)
@@ -103,7 +105,7 @@ func TestSnowflake(t *testing.T) {
 
 	var args []string
 
-	db, err := initSnowflakeConnectionPool(ctx, SnowflakeAccount, SnowflakeUser, SnowflakePassword, SnowflakeDatabase, SnowflakeSchema, SnowflakeWarehouse, SnowflakeRole)
+	db, err := initSnowflakeConnectionPool(ctx, SnowflakeAccount, SnowflakeUser, SnowflakePassword, SnowflakeHost, SnowflakePort, SnowflakeDatabase, SnowflakeSchema, SnowflakeWarehouse, SnowflakeRole)
 	if err != nil {
 		t.Fatalf("unable to create snowflake connection pool: %s", err)
 	}
@@ -122,9 +124,9 @@ func TestSnowflake(t *testing.T) {
 	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := getSnowflakeAuthToolInfo(tableNameAuth)
 	teardownTable2 := setupSnowflakeTable(t, ctx, db, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
 	defer teardownTable2(t)
+	t.Logf("Test table setup complete.")
 
 	// Write config into a file and pass it to command
-
 	toolsFile := tests.GetToolsConfig(sourceConfig, SnowflakeToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addSnowflakeExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getSnowflakeTmplToolStatement()
