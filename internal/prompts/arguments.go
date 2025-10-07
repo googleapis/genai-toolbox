@@ -22,68 +22,173 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
-// ArgMcpManifest is the simplified manifest structure for an argument required for prompts.
-type ArgMcpManifest struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Required    bool   `json:"required"`
-}
-
-// Argument is a wrapper around a tools.Parameter that provides prompt-specific functionality.
-// If the 'type' field is not specified in a YAML definition, it defaults to 'string'.
-type Argument struct {
+// Argument is an interface that is compatible with tools.Parameter.
+type Argument interface {
 	tools.Parameter
-}
-
-// McpManifest returns the simplified manifest structure required for prompts.
-func (a Argument) McpManifest() ArgMcpManifest {
-	return ArgMcpManifest{
-		Name:        a.GetName(),
-		Description: a.Manifest().Description,
-		Required:    tools.CheckParamRequired(a.GetRequired(), a.GetDefault()),
-	}
+	McpPromptManifest() McpPromptArg
 }
 
 // Arguments is a slice of Argument.
 type Arguments []Argument
 
-// UnmarshalYAML provides custom unmarshaling logic for Arguments.
-func (args *Arguments) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
-	*args = make(Arguments, 0)
+// UnmarshalYAML is a custom unmarshaler for a slice of Arguments.
+func (a *Arguments) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
+	*a = make(Arguments, 0)
 	var rawList []util.DelayedUnmarshaler
 	if err := unmarshal(&rawList); err != nil {
 		return err
 	}
-
 	for _, u := range rawList {
-		var p map[string]any
-		if err := u.Unmarshal(&p); err != nil {
-			return fmt.Errorf("error parsing argument: %w", err)
-		}
-
-		// If 'type' is missing, default it to string.
-		paramType, ok := p["type"]
-		if !ok {
-			p["type"] = tools.TypeString
-			paramType = tools.TypeString
-		}
-
-		// Call the clean, exported parser from the tools package. No more duplicated logic!
-		param, err := tools.ParseParameter(ctx, p, paramType.(string))
+		p, err := parseArgFromDelayedUnmarshaler(ctx, &u)
 		if err != nil {
 			return err
 		}
-
-		*args = append(*args, Argument{Parameter: param})
+		(*a) = append((*a), p)
 	}
 	return nil
 }
 
-// ParseArguments validates and processes the user-provided arguments against the prompt's requirements.
-func ParseArguments(arguments Arguments, args map[string]any, data map[string]map[string]any) (tools.ParamValues, error) {
-	var parameters tools.Parameters
-	for _, arg := range arguments {
-		parameters = append(parameters, arg.Parameter)
+// parseArgFromDelayedUnmarshaler is a helper function to parse arguments based on their type.
+func parseArgFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmarshaler) (Argument, error) {
+	var p map[string]any
+	if err := u.Unmarshal(&p); err != nil {
+		return nil, fmt.Errorf("error parsing arguments: %w", err)
 	}
-	return tools.ParseParams(parameters, args, data)
+
+	t, ok := p["type"]
+	if !ok {
+		t = "any"
+	}
+
+	dec, err := util.NewStrictDecoder(p)
+	if err != nil {
+		return nil, fmt.Errorf("error creating decoder: %w", err)
+	}
+
+	switch t {
+	case "string":
+		var toolParam tools.StringParameter
+		if err := dec.DecodeContext(ctx, &toolParam); err != nil {
+			return nil, err
+		}
+		return &StringArgument{StringParameter: toolParam}, nil
+	case "integer":
+		var toolParam tools.IntParameter
+		if err := dec.DecodeContext(ctx, &toolParam); err != nil {
+			return nil, err
+		}
+		return &IntArgument{IntParameter: toolParam}, nil
+	case "float":
+		var toolParam tools.FloatParameter
+		if err := dec.DecodeContext(ctx, &toolParam); err != nil {
+			return nil, err
+		}
+		return &FloatArgument{FloatParameter: toolParam}, nil
+	case "boolean":
+		var toolParam tools.BooleanParameter
+		if err := dec.DecodeContext(ctx, &toolParam); err != nil {
+			return nil, err
+		}
+		return &BooleanArgument{BooleanParameter: toolParam}, nil
+	case "array":
+		var toolParam tools.ArrayParameter
+		if err := dec.DecodeContext(ctx, &toolParam); err != nil {
+			return nil, err
+		}
+		return &ArrayArgument{ArrayParameter: toolParam}, nil
+	case "map":
+		var toolParam tools.MapParameter
+		if err := dec.DecodeContext(ctx, &toolParam); err != nil {
+			return nil, err
+		}
+		return &MapArgument{MapParameter: toolParam}, nil
+	default: // "any"
+		arg := &AnyArgument{}
+		if err := dec.DecodeContext(ctx, arg); err != nil {
+			return nil, err
+		}
+		return arg, nil
+	}
 }
+
+// BaseArgument provides the common implementation for McpPromptManifest.
+type BaseArgument struct{}
+
+func (b *BaseArgument) McpPromptManifest(p tools.Parameter) McpPromptArg {
+	return McpPromptArg{
+		Name:        p.GetName(),
+		Description: p.Manifest().Description,
+		Required:    tools.CheckParamRequired(p.GetRequired(), p.GetDefault()),
+	}
+}
+
+// --- Argument Struct Implementations ---
+
+type AnyArgument struct {
+	tools.CommonParameter `yaml:",inline"`
+	Default               *any `yaml:"default"`
+	BaseArgument
+}
+
+func (a *AnyArgument) Parse(v any) (any, error) { return v, nil }
+func (a *AnyArgument) GetDefault() any {
+	if a.Default == nil {
+		return nil
+	}
+	return *a.Default
+}
+func (a *AnyArgument) GetAuthServices() []tools.ParamAuthService { return a.AuthServices }
+func (a *AnyArgument) Manifest() tools.ParameterManifest {
+	return tools.ParameterManifest{
+		Name: a.GetName(), Type: a.GetType(), Description: a.Desc,
+		Required: tools.CheckParamRequired(a.GetRequired(), a.GetDefault()),
+	}
+}
+func (a *AnyArgument) McpManifest() (tools.ParameterMcpManifest, []string) {
+	return a.CommonParameter.McpManifest()
+}
+func (a *AnyArgument) McpPromptManifest() McpPromptArg { return a.BaseArgument.McpPromptManifest(a) }
+
+type StringArgument struct {
+	tools.StringParameter
+	BaseArgument
+}
+
+func (a *StringArgument) McpPromptManifest() McpPromptArg { return a.BaseArgument.McpPromptManifest(a) }
+
+type IntArgument struct {
+	tools.IntParameter
+	BaseArgument
+}
+
+func (a *IntArgument) McpPromptManifest() McpPromptArg { return a.BaseArgument.McpPromptManifest(a) }
+
+type FloatArgument struct {
+	tools.FloatParameter
+	BaseArgument
+}
+
+func (a *FloatArgument) McpPromptManifest() McpPromptArg { return a.BaseArgument.McpPromptManifest(a) }
+
+type BooleanArgument struct {
+	tools.BooleanParameter
+	BaseArgument
+}
+
+func (a *BooleanArgument) McpPromptManifest() McpPromptArg {
+	return a.BaseArgument.McpPromptManifest(a)
+}
+
+type ArrayArgument struct {
+	tools.ArrayParameter
+	BaseArgument
+}
+
+func (a *ArrayArgument) McpPromptManifest() McpPromptArg { return a.BaseArgument.McpPromptManifest(a) }
+
+type MapArgument struct {
+	tools.MapParameter
+	BaseArgument
+}
+
+func (a *MapArgument) McpPromptManifest() McpPromptArg { return a.BaseArgument.McpPromptManifest(a) }

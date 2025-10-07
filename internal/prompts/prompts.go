@@ -46,15 +46,9 @@ func Register(kind string, factory PromptConfigFactory) bool {
 // to decode the prompt configuration.
 func DecodeConfig(ctx context.Context, kind, name string, decoder *yaml.Decoder) (PromptConfig, error) {
 	factory, found := promptRegistry[kind]
-	if !found && kind == "" {
-		kind = "custom"
-		factory, found = promptRegistry[kind]
-	}
-
 	if !found {
 		return nil, fmt.Errorf("unknown prompt kind: %q", kind)
 	}
-
 	promptConfig, err := factory(ctx, name, decoder)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse prompt %q as kind %q: %w", name, kind, err)
@@ -80,32 +74,107 @@ type Manifest struct {
 	Arguments   []tools.ParameterManifest `json:"arguments"`
 }
 
+// McpPromptArg defines the simplified structure for a prompt's argument in the MCP manifest.
+type McpPromptArg struct {
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+	Required    bool   `json:"required"`
+}
+
 // McpManifest is the definition for a prompt the MCP client can get.
 type McpManifest struct {
-	Name        string           `json:"name"`
-	Description string           `json:"description,omitempty"`
-	Arguments   []ArgMcpManifest `json:"arguments,omitempty"`
+	Name        string         `json:"name"`
+	Description string         `json:"description,omitempty"`
+	Arguments   []McpPromptArg `json:"arguments,omitempty"`
+	Metadata    map[string]any `json:"_meta,omitempty"`
 }
 
 func GetMcpManifest(name, desc string, args Arguments) McpManifest {
-	mcpArgs := make([]ArgMcpManifest, 0, len(args))
+	var mcpArgs []McpPromptArg
 	for _, arg := range args {
-		mcpArgs = append(mcpArgs, arg.McpManifest())
+		mcpArgs = append(mcpArgs, arg.McpPromptManifest())
 	}
-	return McpManifest{
+	mcpManifest := McpManifest{
 		Name:        name,
 		Description: desc,
 		Arguments:   mcpArgs,
 	}
+
+	// construct metadata, if applicable
+	metadata := make(map[string]any)
+	if len(metadata) > 0 {
+		mcpManifest.Metadata = metadata
+	}
+	return mcpManifest
 }
 
-func GetManifest(desc string, args Arguments) Manifest {
-	paramManifests := make([]tools.ParameterManifest, 0, len(args))
-	for _, arg := range args {
+type Message struct {
+	Role    string `yaml:"role,omitempty"`
+	Content string `yaml:"content"`
+}
+
+// Config is the configuration for a prompt.
+type Config struct {
+	Name        string    `yaml:"name"`
+	Kind        string    `yaml:"kind,omitempty"`
+	Description string    `yaml:"description,omitempty"`
+	Messages    []Message `yaml:"messages"`
+	Arguments   Arguments `yaml:"arguments,omitempty"`
+}
+
+// Initialize implements the Initialize method of the PromptConfig interface.
+func (c Config) Initialize() (Prompt, error) {
+	return c, nil
+}
+
+func (c Config) PromptConfigKind() string {
+	return c.Kind
+}
+
+func (c Config) Manifest() Manifest {
+	var paramManifests []tools.ParameterManifest
+	for _, arg := range c.Arguments {
 		paramManifests = append(paramManifests, arg.Manifest())
 	}
 	return Manifest{
-		Description: desc,
+		Description: c.Description,
 		Arguments:   paramManifests,
 	}
+}
+
+func (c Config) McpManifest() McpManifest {
+	return GetMcpManifest(c.Name, c.Description, c.Arguments)
+}
+
+func (c Config) SubstituteParams(argValues tools.ParamValues) (any, error) {
+	substitutedMessages := []Message{}
+	argsMap := argValues.AsMap()
+
+	var parameters tools.Parameters
+	for _, arg := range c.Arguments {
+		parameters = append(parameters, arg)
+	}
+
+	for _, msg := range c.Messages {
+		// Use ResolveTemplateParams for each message's content
+		substitutedContent, err := tools.ResolveTemplateParams(parameters, msg.Content, argsMap)
+		if err != nil {
+			return nil, fmt.Errorf("error substituting params for message: %w", err)
+		}
+
+		substitutedMessages = append(substitutedMessages, Message{
+			Role:    msg.Role,
+			Content: substitutedContent,
+		})
+	}
+
+	return substitutedMessages, nil
+}
+
+func (c Config) ParseArgs(args map[string]any, data map[string]map[string]any) (tools.ParamValues, error) {
+	var parameters tools.Parameters
+	for _, arg := range c.Arguments {
+		parameters = append(parameters, arg)
+	}
+	return tools.ParseParams(parameters, args, data)
 }
