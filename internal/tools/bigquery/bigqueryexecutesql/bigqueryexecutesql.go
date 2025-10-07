@@ -199,7 +199,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		}
 	}
 
-	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, sql, nil, nil)
+	var connProps []*bigqueryapi.ConnectionProperty
+	if t.WriteMode == bigqueryds.WriteModeProtected {
+		connProps = []*bigqueryapi.ConnectionProperty{
+			{Key: "session_id", Value: t.Session.ID},
+		}
+	}
+
+	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, sql, nil, connProps)
 	if err != nil {
 		// Check if the error is due to EXECUTE IMMEDIATE, which is not supported in dry run but might be allowed.
 		// This is a known limitation. We provide a more specific error message.

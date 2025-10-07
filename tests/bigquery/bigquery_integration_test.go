@@ -403,12 +403,6 @@ func TestBigQueryWriteModeBlocked(t *testing.T) {
 		"sources": map[string]any{"my-instance": sourceConfig},
 		"tools": map[string]any{
 			"my-exec-sql-tool": map[string]any{"kind": "bigquery-execute-sql", "source": "my-instance", "description": "Tool to execute sql"},
-			"my-sql-tool-protected": map[string]any{
-				"kind":        "bigquery-sql",
-				"source":      "my-instance",
-				"description": "Tool to query from the session",
-				"statement":   "SELECT * FROM my_shared_temp_table",
-			},
 		},
 	}
 
@@ -460,6 +454,16 @@ func TestBigQueryWriteModeProtected(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Tool to query from the session",
 				"statement":   "SELECT * FROM my_shared_temp_table",
+			},
+			"my-forecast-tool-protected": map[string]any{
+				"kind":        "bigquery-forecast",
+				"source":      "my-instance",
+				"description": "Tool to forecast from session temp table",
+			},
+			"my-analyze-contribution-tool-protected": map[string]any{
+				"kind":        "bigquery-analyze-contribution",
+				"source":      "my-instance",
+				"description": "Tool to analyze contribution from session temp table",
 			},
 		},
 	}
@@ -1197,6 +1201,46 @@ func runBigQueryWriteModeProtectedTest(t *testing.T, permanentDatasetName string
 			wantInError:    "",
 			wantResult:     `[{"x":42}]`,
 		},
+		{
+			name:           "SELECT from TEMP TABLE with sql-tool should succeed",
+			toolName:       "my-sql-tool-protected",
+			requestBody:    `{}`,
+			wantStatusCode: http.StatusOK,
+			wantInError:    "",
+			wantResult:     `[{"x":42}]`,
+		},
+		{
+			name:           "CREATE TEMP TABLE for forecast should succeed",
+			toolName:       "my-exec-sql-tool",
+			requestBody:    `{"sql": "CREATE TEMP TABLE forecast_temp_table (ts TIMESTAMP, data FLOAT64) AS SELECT TIMESTAMP('2025-01-01T00:00:00Z') AS ts, 10.0 AS data UNION ALL SELECT TIMESTAMP('2025-01-01T01:00:00Z'), 11.0 UNION ALL SELECT TIMESTAMP('2025-01-01T02:00:00Z'), 12.0 UNION ALL SELECT TIMESTAMP('2025-01-01T03:00:00Z'), 13.0"}`,
+			wantStatusCode: http.StatusOK,
+			wantInError:    "",
+			wantResult:     `"Query executed successfully and returned no content."`,
+		},
+		{
+			name:           "Forecast from TEMP TABLE should succeed",
+			toolName:       "my-forecast-tool-protected",
+			requestBody:    `{"history_data": "SELECT * FROM forecast_temp_table", "timestamp_col": "ts", "data_col": "data", "horizon": 1}`,
+			wantStatusCode: http.StatusOK,
+			wantInError:    "",
+			wantResult:     `"forecast_timestamp"`,
+		},
+		{
+			name:           "CREATE TEMP TABLE for contribution analysis should succeed",
+			toolName:       "my-exec-sql-tool",
+			requestBody:    `{"sql": "CREATE TEMP TABLE contribution_temp_table (dim1 STRING, is_test BOOL, metric FLOAT64) AS SELECT 'a' as dim1, true as is_test, 100.0 as metric UNION ALL SELECT 'b', false, 120.0"}`,
+			wantStatusCode: http.StatusOK,
+			wantInError:    "",
+			wantResult:     `"Query executed successfully and returned no content."`,
+		},
+		{
+			name:           "Analyze contribution from TEMP TABLE should succeed",
+			toolName:       "my-analyze-contribution-tool-protected",
+			requestBody:    `{"input_data": "SELECT * FROM contribution_temp_table", "contribution_metric": "SUM(metric)", "is_test_col": "is_test", "dimension_id_cols": ["dim1"]}`,
+			wantStatusCode: http.StatusOK,
+			wantInError:    "",
+			wantResult:     `"relative_difference"`,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -1224,8 +1268,8 @@ func runBigQueryWriteModeProtectedTest(t *testing.T, permanentDatasetName string
 				if !ok {
 					t.Fatalf("expected 'result' field in response, got %v", result)
 				}
-				if resStr != tc.wantResult {
-					t.Fatalf("unexpected result: got %q, want %q", resStr, tc.wantResult)
+				if !strings.Contains(resStr, tc.wantResult) {
+					t.Fatalf("expected %q to contain %q, but it did not", resStr, tc.wantResult)
 				}
 			}
 		})
