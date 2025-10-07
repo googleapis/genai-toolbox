@@ -18,11 +18,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -46,14 +48,15 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name         string `yaml:"name" validate:"required"`
-	Kind         string `yaml:"kind" validate:"required"`
-	Host         string `yaml:"host" validate:"required"`
-	Port         string `yaml:"port" validate:"required"`
-	User         string `yaml:"user" validate:"required"`
-	Password     string `yaml:"password" validate:"required"`
-	Database     string `yaml:"database" validate:"required"`
-	QueryTimeout string `yaml:"queryTimeout"`
+	Name         string            `yaml:"name" validate:"required"`
+	Kind         string            `yaml:"kind" validate:"required"`
+	Host         string            `yaml:"host" validate:"required"`
+	Port         string            `yaml:"port" validate:"required"`
+	User         string            `yaml:"user" validate:"required"`
+	Password     string            `yaml:"password" validate:"required"`
+	Database     string            `yaml:"database" validate:"required"`
+	QueryTimeout string            `yaml:"queryTimeout"`
+	QueryParams  map[string]string `yaml:"queryParams"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -61,7 +64,7 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initMySQLConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.QueryTimeout)
+	pool, err := initMySQLConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.QueryTimeout, r.QueryParams)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -95,21 +98,38 @@ func (s *Source) MySQLPool() *sql.DB {
 	return s.Pool
 }
 
-func initMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname, queryTimeout string) (*sql.DB, error) {
+func initMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname, queryTimeout string, queryParams map[string]string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
-	// Configure the driver to connect to the database
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, pass, host, port, dbname)
+	// Build query parameters via url.Values for deterministic order and proper escaping.
+	values := url.Values{}
 
-	// Add query timeout to DSN if specified
+	// Derive readTimeout from queryTimeout when provided.
 	if queryTimeout != "" {
 		timeout, err := time.ParseDuration(queryTimeout)
 		if err != nil {
 			return nil, fmt.Errorf("invalid queryTimeout %q: %w", queryTimeout, err)
 		}
-		dsn += "&readTimeout=" + timeout.String()
+		values.Set("readTimeout", timeout.String())
+	}
+
+	// Custom user parameters
+	for k, v := range queryParams {
+		if v == "" {
+			continue // skip empty values
+		}
+		values.Set(k, v)
+	}
+
+	userAgent, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&connectionAttributes=program_name:%s", user, pass, host, port, dbname, userAgent)
+	if enc := values.Encode(); enc != "" {
+		dsn += "&" + enc
 	}
 
 	// Interact with the driver directly as you normally would

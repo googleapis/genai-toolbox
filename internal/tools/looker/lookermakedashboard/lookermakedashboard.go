@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
@@ -80,20 +81,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	descParameter := tools.NewStringParameterWithDefault("description", "", "The description of the Dashboard")
 	parameters = append(parameters, descParameter)
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
 
 	// finish tool setup
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
-		ApiSettings:  s.ApiSettings,
+		Name:           cfg.Name,
+		Kind:           kind,
+		Parameters:     parameters,
+		AuthRequired:   cfg.AuthRequired,
+		UseClientOAuth: s.UseClientOAuth,
+		Client:         s.Client,
+		ApiSettings:    s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   parameters.Manifest(),
@@ -107,25 +105,30 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string `yaml:"name"`
-	Kind         string `yaml:"kind"`
-	Client       *v4.LookerSDK
-	ApiSettings  *rtl.ApiSettings
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Name           string `yaml:"name"`
+	Kind           string `yaml:"kind"`
+	UseClientOAuth bool
+	Client         *v4.LookerSDK
+	ApiSettings    *rtl.ApiSettings
+	AuthRequired   []string         `yaml:"authRequired"`
+	Parameters     tools.Parameters `yaml:"parameters"`
+	manifest       tools.Manifest
+	mcpManifest    tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
 	}
 	logger.DebugContext(ctx, "params = ", params)
 
+	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
+	if err != nil {
+		return nil, fmt.Errorf("error getting sdk: %w", err)
+	}
 	mrespFields := "id,personal_folder_id"
-	mresp, err := t.Client.Me(mrespFields, t.ApiSettings)
+	mresp, err := sdk.Me(mrespFields, t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making me request: %s", err)
 	}
@@ -138,7 +141,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, fmt.Errorf("user does not have a personal folder. cannot continue")
 	}
 
-	dashs, err := t.Client.FolderDashboards(*mresp.PersonalFolderId, "title", t.ApiSettings)
+	dashs, err := sdk.FolderDashboards(*mresp.PersonalFolderId, "title", t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error getting existing dashboards in folder: %s", err)
 	}
@@ -157,13 +160,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		Description: &description,
 		FolderId:    mresp.PersonalFolderId,
 	}
-	resp, err := t.Client.CreateDashboard(wd, t.ApiSettings)
+	resp, err := sdk.CreateDashboard(wd, t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making create dashboard request: %s", err)
 	}
 	logger.DebugContext(ctx, "resp = %v", resp)
 
-	setting, err := t.Client.GetSetting("host_url", t.ApiSettings)
+	setting, err := sdk.GetSetting("host_url", t.ApiSettings)
 	if err != nil {
 		logger.ErrorContext(ctx, "error getting settings: %s", err)
 	}
@@ -198,4 +201,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return t.UseClientOAuth
 }

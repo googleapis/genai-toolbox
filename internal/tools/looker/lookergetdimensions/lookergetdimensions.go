@@ -74,26 +74,24 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	parameters := lookercommon.GetFieldParameters()
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
 
 	// finish tool setup
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
-		ApiSettings:  s.ApiSettings,
+		Name:           cfg.Name,
+		Kind:           kind,
+		Parameters:     parameters,
+		UseClientOAuth: s.UseClientOAuth,
+		Client:         s.Client,
+		AuthRequired:   cfg.AuthRequired,
+		ApiSettings:    s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   parameters.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
-		mcpManifest: mcpManifest,
+		mcpManifest:      mcpManifest,
+		ShowHiddenFields: s.ShowHiddenFields,
 	}, nil
 }
 
@@ -101,17 +99,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string `yaml:"name"`
-	Kind         string `yaml:"kind"`
-	Client       *v4.LookerSDK
-	ApiSettings  *rtl.ApiSettings
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Name             string `yaml:"name"`
+	Kind             string `yaml:"kind"`
+	UseClientOAuth   bool
+	Client           *v4.LookerSDK
+	ApiSettings      *rtl.ApiSettings
+	AuthRequired     []string         `yaml:"authRequired"`
+	Parameters       tools.Parameters `yaml:"parameters"`
+	manifest         tools.Manifest
+	mcpManifest      tools.McpManifest
+	ShowHiddenFields bool
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
@@ -121,13 +121,17 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, fmt.Errorf("error processing model or explore: %w", err)
 	}
 
+	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
+	if err != nil {
+		return nil, fmt.Errorf("error getting sdk: %w", err)
+	}
 	fields := lookercommon.DimensionsFields
 	req := v4.RequestLookmlModelExplore{
 		LookmlModelName: *model,
 		ExploreName:     *explore,
 		Fields:          &fields,
 	}
-	resp, err := t.Client.LookmlModelExplore(req, t.ApiSettings)
+	resp, err := sdk.LookmlModelExplore(req, t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making get_dimensions request: %w", err)
 	}
@@ -136,7 +140,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, fmt.Errorf("error processing get_dimensions response: %w", err)
 	}
 
-	data, err := lookercommon.ExtractLookerFieldProperties(ctx, resp.Fields.Dimensions)
+	data, err := lookercommon.ExtractLookerFieldProperties(ctx, resp.Fields.Dimensions, t.ShowHiddenFields)
 	if err != nil {
 		return nil, fmt.Errorf("error extracting get_dimensions response: %w", err)
 	}
@@ -159,4 +163,8 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization() bool {
+	return t.UseClientOAuth
 }

@@ -52,7 +52,7 @@ type Config struct {
 	Project  string         `yaml:"project" validate:"required"`
 	Region   string         `yaml:"region" validate:"required"`
 	Instance string         `yaml:"instance" validate:"required"`
-	IPType   sources.IPType `yaml:"ipType" validate:"required"`
+	IPType   sources.IPType `yaml:"ipType"`
 	User     string         `yaml:"user" validate:"required"`
 	Password string         `yaml:"password" validate:"required"`
 	Database string         `yaml:"database" validate:"required"`
@@ -118,9 +118,8 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 			return nil, fmt.Errorf("unable to register driver: %w", err)
 		}
 	}
-
 	// Tell the driver to use the Cloud SQL Go Connector to create connections
-	dsn := fmt.Sprintf("%s:%s@cloudsql-mysql(%s:%s:%s)/%s", user, pass, project, region, instance, dbname)
+	dsn := fmt.Sprintf("%s:%s@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s", user, pass, project, region, instance, dbname, userAgent)
 	db, err := sql.Open(
 		"cloudsql-mysql",
 		dsn,

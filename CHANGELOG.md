@@ -1,5 +1,183 @@
 # Changelog
 
+## [0.16.0](https://github.com/googleapis/genai-toolbox/compare/v0.15.0...v0.16.0) (2025-09-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **tool/bigquery-execute-sql:** add allowed datasets support ([#1443](https://github.com/googleapis/genai-toolbox/issues/1443))
+* **tool/bigquery-forecast:** add allowed datasets support ([#1412](https://github.com/googleapis/genai-toolbox/issues/1412))
+
+### Features
+
+* **cassandra:** Add Cassandra Source and Tool ([#1012](https://github.com/googleapis/genai-toolbox/issues/1012)) ([6e42053](https://github.com/googleapis/genai-toolbox/commit/6e420534ee894da4a8d226acb6cdb63d0d5d9ce5))
+* **sources/postgres:** Add application_name ([#1504](https://github.com/googleapis/genai-toolbox/issues/1504)) ([72a2366](https://github.com/googleapis/genai-toolbox/commit/72a2366b28870aa6f81c4f890f4770ec5ecffdba))
+* **tool/bigquery-execute-sql:** Add allowed datasets support ([#1443](https://github.com/googleapis/genai-toolbox/issues/1443)) ([9501ebb](https://github.com/googleapis/genai-toolbox/commit/9501ebbdbcba871b98663185c690308dda1729b5))
+* **tool/bigquery-forecast:** Add allowed datasets support ([#1412](https://github.com/googleapis/genai-toolbox/issues/1412)) ([88bac7e](https://github.com/googleapis/genai-toolbox/commit/88bac7e36f5ebb6ad18773bff30b85ef678431e7))
+* **tools/clickhouse-list-tables:** Add list-tables tool ([#1446](https://github.com/googleapis/genai-toolbox/issues/1446)) ([69a3caf](https://github.com/googleapis/genai-toolbox/commit/69a3cafabec5a40e2776d71de3587c0d16c722a2))
+
+
+### Bug Fixes
+
+* **tool/mongodb-find:** Fix find tool `limit` field ([#1570](https://github.com/googleapis/genai-toolbox/issues/1570)) ([4166bf7](https://github.com/googleapis/genai-toolbox/commit/4166bf7ab85732f64b877d5f20235057df919049))
+* **tools/mongodb:** Concat filter params only once in mongodb update tools ([#1545](https://github.com/googleapis/genai-toolbox/issues/1545)) ([295f9dc](https://github.com/googleapis/genai-toolbox/commit/295f9dc41a43f0a4bdbd99e465bf2be01249084e))
+
+## [0.15.0](https://github.com/googleapis/genai-toolbox/compare/v0.14.0...v0.15.0) (2025-09-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* **prebuilt:** update prebuilt tool names to use consistent guidance ([#1421](https://github.com/googleapis/genai-toolbox/issues/1421))
+* **tools/alloydb-wait-for-operation:** Add `alloydb-admin` source to `alloydb-wait-for-operation` tool ([#1449](https://github.com/googleapis/genai-toolbox/issues/1449))
+
+### Features
+
+* Add AlloyDB admin source ([#1369](https://github.com/googleapis/genai-toolbox/issues/1369)) ([33beb71](https://github.com/googleapis/genai-toolbox/commit/33beb7187d2e0f968fc949a00c780073d1bc7cdd))
+* Add Cloud monitoring source and tool ([#1311](https://github.com/googleapis/genai-toolbox/issues/1311)) ([d661f53](https://github.com/googleapis/genai-toolbox/commit/d661f5343f2ad28fbf0481db16440aec823eece6))
+* Add YugabyteDB Source and Tool ([#732](https://github.com/googleapis/genai-toolbox/issues/732)) ([664711f](https://github.com/googleapis/genai-toolbox/commit/664711f4b35409bd1c57af92f625b70a0dc9a4e6))
+* **prebuilt:** Update default values for prebuilt tools ([#1355](https://github.com/googleapis/genai-toolbox/issues/1355)) ([70e832b](https://github.com/googleapis/genai-toolbox/commit/70e832bd08a98a95b925e590f31c8d3f2d8b6aa0))
+* **prebuilt/cloud-sql:** Add  list instances tool for cloudsql ([#1310](https://github.com/googleapis/genai-toolbox/issues/1310)) ([0171228](https://github.com/googleapis/genai-toolbox/commit/01712284b480774ffa68930affae290ee2e3fcfd))
+* **prebuilt/cloud-sql:** Add cloud sql create database tool. ([#1453](https://github.com/googleapis/genai-toolbox/issues/1453)) ([a1bc044](https://github.com/googleapis/genai-toolbox/commit/a1bc04477b0f822ffaab039098682f1776b8a472))
+* **prebuilt/cloud-sql:** Add `cloud-sql-get-instances` tool ([#1383](https://github.com/googleapis/genai-toolbox/issues/1383)) ([77919c7](https://github.com/googleapis/genai-toolbox/commit/77919c7d8e4aac16eeb703c0cc61ca774dc4f94e))
+* **prebuilt/cloud-sql:** Add create user tool for cloud sql ([#1406](https://github.com/googleapis/genai-toolbox/issues/1406)) ([3a6b517](https://github.com/googleapis/genai-toolbox/commit/3a6b51752f077b225b8c2e2e7308a69a68eec3c0))
+* **prebuilt/cloud-sql:** Add list databases tool for cloud sql ([#1454](https://github.com/googleapis/genai-toolbox/issues/1454)) ([e6a6c61](https://github.com/googleapis/genai-toolbox/commit/e6a6c615d5480e8930ad173d44d243f5bd99eebc))
+* **prebuilt/cloud-sql:** Package cloud sql tools ([#1455](https://github.com/googleapis/genai-toolbox/issues/1455)) ([bf6266b](https://github.com/googleapis/genai-toolbox/commit/bf6266ba1131bd1c5829ac112a8c45c8a5919fea))
+* **prebuilt/cloud-sql-mssql:** Add create instance tool for mssql ([#1440](https://github.com/googleapis/genai-toolbox/issues/1440)) ([b176523](https://github.com/googleapis/genai-toolbox/commit/b17652309d8a02b1f20c6c576b1617b23c8e481f))
+* **prebuilt/cloud-sql-mysql:** Add create instance tool for Cloud SQL MySQL ([#1434](https://github.com/googleapis/genai-toolbox/issues/1434)) ([15b628d](https://github.com/googleapis/genai-toolbox/commit/15b628d2d2feb2ecdd418394b9265a6c77c77f6d))
+* **prebuilt/cloud-sql-mysql:** Add env var support for IP Type ([#1232](https://github.com/googleapis/genai-toolbox/issues/1232)) ([#1347](https://github.com/googleapis/genai-toolbox/issues/1347)) ([0cd3f16](https://github.com/googleapis/genai-toolbox/commit/0cd3f16f877f426b45e35625ba0af03789459591))
+* **prebuilt/cloudsqlpg:** Add cloud sql pg create instance tool ([#1403](https://github.com/googleapis/genai-toolbox/issues/1403)) ([d302499](https://github.com/googleapis/genai-toolbox/commit/d30249961b5a2ddc2c3809b481085d1ca034ead0))
+* **prebuilt/mysql:** Add a new tool to show query plan of a given query in MySQL ([#1474](https://github.com/googleapis/genai-toolbox/issues/1474)) ([1a42e05](https://github.com/googleapis/genai-toolbox/commit/1a42e05675645ac4f1b89edef7a71ac61b637a76))
+* **prebuilt/mysql:** Add  `queryParams` field in MySQL prebuilt config ([#1318](https://github.com/googleapis/genai-toolbox/issues/1318)) ([4b32c2a](https://github.com/googleapis/genai-toolbox/commit/4b32c2a7701ce5ccc56d019055283e73e7046372))
+* **prebuilt/neo4j:** Add prebuiltconfig support for neo4j ([#1352](https://github.com/googleapis/genai-toolbox/issues/1352)) ([f819e26](https://github.com/googleapis/genai-toolbox/commit/f819e2644315a589ec283494f244c1b8407cae59))
+* **prebuilt/observability:** Add cloud sql observability tools ([#1425](https://github.com/googleapis/genai-toolbox/issues/1425)) ([236be89](https://github.com/googleapis/genai-toolbox/commit/236be89961fe423c1ec992d3d1f699f77a6e5b29))
+* **prebuilt/postgres:** Add postgres prebuilt tools ([#1473](https://github.com/googleapis/genai-toolbox/issues/1473)) ([edca9dc](https://github.com/googleapis/genai-toolbox/commit/edca9dc7d772baf1a234485020fa69d76f71bfcc))
+* **prebuilt/sqlite:** Prebuilt tools for the sqlite. ([#1227](https://github.com/googleapis/genai-toolbox/issues/1227)) ([681c2b4](https://github.com/googleapis/genai-toolbox/commit/681c2b4f3a65837d972c138c623c08fb6b1f1785))
+* **source/alloydb-admin:** Add user agent and attach alloydb api in `alloydb-admin` source ([#1448](https://github.com/googleapis/genai-toolbox/issues/1448)) ([9710014](https://github.com/googleapis/genai-toolbox/commit/971001400f25796784f8aeb3ec5cb1a2df2e4c69))
+* **source/bigquery:** Add support for datasets selection ([#1313](https://github.com/googleapis/genai-toolbox/issues/1313)) ([aa39724](https://github.com/googleapis/genai-toolbox/commit/aa3972470fd0f6f5901c5d85dd05f1e2ae973e7b))
+* **source/cloud-monitoring:** Add support for user agent in cloud monitoring source ([#1472](https://github.com/googleapis/genai-toolbox/issues/1472)) ([92680b1](https://github.com/googleapis/genai-toolbox/commit/92680b18d6159300ae66f80ddb4c6bf0547d45a1))
+* **source/cloud-sql-admin:** Add User agent and attach sqldmin in `cloud-sql-admin` source. ([#1441](https://github.com/googleapis/genai-toolbox/issues/1441)) ([56b6574](https://github.com/googleapis/genai-toolbox/commit/56b6574fc2c506c7c7df7f2a25686e3e4aae0e8a))
+* **source/cloudsqladmin:** Add cloud sql admin source ([#1408](https://github.com/googleapis/genai-toolbox/issues/1408)) ([4f46782](https://github.com/googleapis/genai-toolbox/commit/4f4678292762507494515ce61188cd0310805c40))
+* **tool/cloudsql:** Add cloud sql wait for operation tool with exponential backoff ([#1306](https://github.com/googleapis/genai-toolbox/issues/1306)) ([3aef2bb](https://github.com/googleapis/genai-toolbox/commit/3aef2bb7be8274bb4718739faeaa5f97b50dbf19))
+* **tools/alloydb-create-cluster:** Add custom tool kind for AlloyDB create cluster ([#1331](https://github.com/googleapis/genai-toolbox/issues/1331)) ([76bb876](https://github.com/googleapis/genai-toolbox/commit/76bb876d546780908c1a69ef3b1a92781af28a3b))
+* **tools/alloydb-create-instance:** Add new custom tool kind for AlloyDB ([#1379](https://github.com/googleapis/genai-toolbox/issues/1379)) ([091cd9a](https://github.com/googleapis/genai-toolbox/commit/091cd9aa1aabe1cb3de2ce2be5c707a8f77ad647))
+* **tools/alloydb-create-user:** Add new custom tool kind for AlloyDB create user ([#1380](https://github.com/googleapis/genai-toolbox/issues/1380)) ([ab3fd26](https://github.com/googleapis/genai-toolbox/commit/ab3fd261af373dcdaf4555292c63d7095d7a02df))
+* **tools/alloydb-get-cluster:** Add new tool for AlloyDB ([#1420](https://github.com/googleapis/genai-toolbox/issues/1420)) ([c181dab](https://github.com/googleapis/genai-toolbox/commit/c181dabc91bdc1c24c89a3c7bba0049d9af4cf2b))
+* **tools/alloydb-get-instance:** Add new for AlloyDB ([#1435](https://github.com/googleapis/genai-toolbox/issues/1435)) ([f2d9e3b](https://github.com/googleapis/genai-toolbox/commit/f2d9e3b57963082f0db70880d5c02b1cbe3eb75d))
+* **tools/alloydb-get-user:** Add new tool for AlloyDB ([#1436](https://github.com/googleapis/genai-toolbox/issues/1436)) ([677254e](https://github.com/googleapis/genai-toolbox/commit/677254e6d9c532fa9f0fb0b0e4062446640ab75f))
+* **tools/alloydb-list-cluster:** Add custom tool kind for AlloyDB ([#1319](https://github.com/googleapis/genai-toolbox/issues/1319)) ([d4a9eb0](https://github.com/googleapis/genai-toolbox/commit/d4a9eb0ce217c7969aff61868e53c7dc7757d28d))
+* **tools/alloydb-list-instances:** Add custom tool kind for AlloyDB ([#1357](https://github.com/googleapis/genai-toolbox/issues/1357)) ([93c1b30](https://github.com/googleapis/genai-toolbox/commit/93c1b30fced113d6721ade9fdcfb92b5ed6c0ad6))
+* **tools/alloydb-list-users:** Add new custom tool kind for AlloyDB ([#1377](https://github.com/googleapis/genai-toolbox/issues/1377)) ([3a8a65c](https://github.com/googleapis/genai-toolbox/commit/3a8a65ceaa92368563e237087c4a38ed7c0d3fd5))
+* **tools/bigquery-analyze-contribution:** Add analyze contribution tool ([#1223](https://github.com/googleapis/genai-toolbox/issues/1223)) ([81d239b](https://github.com/googleapis/genai-toolbox/commit/81d239b053a6978250878a6809905dcc9424909e))
+* **tools/bigquery-conversational-analytics:** Add allowed datasets support ([#1411](https://github.com/googleapis/genai-toolbox/issues/1411)) ([345bd6a](https://github.com/googleapis/genai-toolbox/commit/345bd6af520bb9ce8a43834951e68fea7bbe6a02))
+* **tools/bigquery-search-catalog:** Add new tool to BigQuery ([#1382](https://github.com/googleapis/genai-toolbox/issues/1382)) ([bffb39d](https://github.com/googleapis/genai-toolbox/commit/bffb39dea3cc946a1e611e3523241443b1e4f047))
+* **tools/bigquery:** Add `useClientOAuth` to BigQuery prebuilt source config ([#1431](https://github.com/googleapis/genai-toolbox/issues/1431)) ([fe2999a](https://github.com/googleapis/genai-toolbox/commit/fe2999a691ac92b2bf35cb7cfd504df2f3ce84b3))
+* **tools/clickhouse-list-databases:** Add `list-databases` tool to clickhouse source ([#1274](https://github.com/googleapis/genai-toolbox/issues/1274)) ([e515d92](https://github.com/googleapis/genai-toolbox/commit/e515d9254f3b8e89f89322d490eb3cedce85d2bb))
+* **tools/firestore-get-rules:** Add `databaseId` to the Firestore source and `firestore-get-rules` tool ([#1505](https://github.com/googleapis/genai-toolbox/issues/1505)) ([7450482](https://github.com/googleapis/genai-toolbox/commit/7450482bb2479eab7d1c8f0d40755a8d11aa3b26))
+* **tools/firestore:** Add `firestore-query` tool ([#1305](https://github.com/googleapis/genai-toolbox/issues/1305)) ([cce602f](https://github.com/googleapis/genai-toolbox/commit/cce602f28097353f6a3017cec1fa5f75283f111d))
+* **tools/looker:** Query tracking for MCP Toolbox in Looker System Activity views ([#1410](https://github.com/googleapis/genai-toolbox/issues/1410)) ([2036c8e](https://github.com/googleapis/genai-toolbox/commit/2036c8efd2fb9edc26df599629d3131c6c367f4b))
+* **tools/mssql-list-tables:** Add new tool for sql server ([#1433](https://github.com/googleapis/genai-toolbox/issues/1433)) ([b036047](https://github.com/googleapis/genai-toolbox/commit/b036047a21f63265c9d9637ac1a671792c9c2e80))
+* **tools/mysql-list-active-queries:** Add a new tool to list ongoing queries in a MySQL instance ([#1471](https://github.com/googleapis/genai-toolbox/issues/1471)) ([ed54cd6](https://github.com/googleapis/genai-toolbox/commit/ed54cd6cfd17a3bdd84025d4eb8264763da36a98))
+* **tools/mysql-list-table-fragmentation:** Add a new tool to list table fragmentation in a MySQL instance ([#1479](https://github.com/googleapis/genai-toolbox/issues/1479)) ([fe651d8](https://github.com/googleapis/genai-toolbox/commit/fe651d822f88832833e869ec049c6c084eae7e51))
+* **tools/mysql-list-tables-missing-index:** Add a new tool to list tables that do not have primary or unique keys in a MySQL instance ([#1493](https://github.com/googleapis/genai-toolbox/issues/1493)) ([9eb821a](https://github.com/googleapis/genai-toolbox/commit/9eb821a6dca408ba993f904aa42b5b4f70674ba7))
+* **tools/mysql-list-tables:** Add new tool for MySQL ([#1287](https://github.com/googleapis/genai-toolbox/issues/1287)) ([6c8460b](https://github.com/googleapis/genai-toolbox/commit/6c8460b0e507315d407c91ba1c821f4820cc1620))
+* **tools/postgres-list-active-queries:** Add new `postgres-list-active-queries` tool ([#1400](https://github.com/googleapis/genai-toolbox/issues/1400)) ([b2b06c7](https://github.com/googleapis/genai-toolbox/commit/b2b06c72c29fd99a0c7118b85e6f7bcf6853d173))
+* **tools/postgres-list-tables:** Add new tool to postgres source ([#1284](https://github.com/googleapis/genai-toolbox/issues/1284)) ([71f360d](https://github.com/googleapis/genai-toolbox/commit/71f360d31522f429a646b705ce7d1d11dac4cf68))
+* **tools/spanner-list-tables:** Add new tool `spanner-list-tables` ([#1404](https://github.com/googleapis/genai-toolbox/issues/1404)) ([7d384dc](https://github.com/googleapis/genai-toolbox/commit/7d384dc28f8c37dddc2f6cefc0bbeb4c201e3167))
+
+
+### Bug Fixes
+
+* **bigquery:** Add `Bearer` parsing to auth token ([#1386](https://github.com/googleapis/genai-toolbox/issues/1386)) ([b5f9780](https://github.com/googleapis/genai-toolbox/commit/b5f9780a59e15eca2591dee32f5da42435e03039))
+* **source/alloydb-admin, source/cloudsql-admin:** Post append new user agent ([#1494](https://github.com/googleapis/genai-toolbox/issues/1494)) ([30f1d3a](https://github.com/googleapis/genai-toolbox/commit/30f1d3a983aa317f1e1a98f9fe753005b56c52bd))
+* **tools/alloydb:** Update parameter names and set default description for AlloyDB control plane tools ([#1468](https://github.com/googleapis/genai-toolbox/issues/1468)) ([6c140d7](https://github.com/googleapis/genai-toolbox/commit/6c140d718a66b45c7ec2d5a267331adb7680f689))
+* **tools/bigquery-conversational-analytics:** Fix authentication scope error in Cloud Run ([#1381](https://github.com/googleapis/genai-toolbox/issues/1381)) ([80b7488](https://github.com/googleapis/genai-toolbox/commit/80b7488ad248ab1d98ee6713e1f6737f67f6754b))
+* **tools/mysql-list-tables:** Update `mysql-list-tables` table_names parameter with default value ([#1439](https://github.com/googleapis/genai-toolbox/issues/1439)) ([da24661](https://github.com/googleapis/genai-toolbox/commit/da246610e105df10a9dc1bce19fa35d408c039f3))
+* **tools/neo4j:** Implement value conversion for Neo4j types to JSON-compatible ([#1428](https://github.com/googleapis/genai-toolbox/issues/1428)) ([4babc4e](https://github.com/googleapis/genai-toolbox/commit/4babc4e11b3b64db8d8c9d6b65e47744f5174f7f))
+
+## [0.14.0](https://github.com/googleapis/genai-toolbox/compare/v0.13.0...v0.14.0) (2025-09-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* **bigquery:** Move `useClientOAuth` config from tool to source ([#1279](https://github.com/googleapis/genai-toolbox/issues/1279)) ([8d20a48](https://github.com/googleapis/genai-toolbox/commit/8d20a48f13bcda853d41bdf80a162de12b076d1b))
+* **tools/bigquerysql:** remove `useClientOAuth` from tools config ([#1312](https://github.com/googleapis/genai-toolbox/issues/1312))
+
+### Features
+
+* **clickhouse:** Add ClickHouse Source and Tools ([#1088](https://github.com/googleapis/genai-toolbox/issues/1088)) ([75a04a5](https://github.com/googleapis/genai-toolbox/commit/75a04a55dd2259bed72fe95119a7a51a906c0b21))
+* **prebuilt/alloydb-postgres:** Support ipType and IAM users ([#1324](https://github.com/googleapis/genai-toolbox/issues/1324)) ([0b2121e](https://github.com/googleapis/genai-toolbox/commit/0b2121ea72eb81348dcd9c740a62ccd32e71fe37))
+* **server/mcp:** Support toolbox auth in mcp ([#1140](https://github.com/googleapis/genai-toolbox/issues/1140)) ([ca353e0](https://github.com/googleapis/genai-toolbox/commit/ca353e0b66fedc00e9110df57db18632aef49018))
+* **source/mysql:** Support `queryParams` in MySQL source ([#1299](https://github.com/googleapis/genai-toolbox/issues/1299)) ([3ae2526](https://github.com/googleapis/genai-toolbox/commit/3ae2526e0fe36b57b05a9b54f1d99f3fc68d9657))
+* **tools/bigquery:** Support end-user credential passthrough on multiple BQ tools ([#1314](https://github.com/googleapis/genai-toolbox/issues/1314)) ([88f4b30](https://github.com/googleapis/genai-toolbox/commit/88f4b3028df3b6a400936cdf8a035bf55021924c))
+* **tools/looker:** Add description for looker-get-models tool ([#1266](https://github.com/googleapis/genai-toolbox/issues/1266)) ([89af3a4](https://github.com/googleapis/genai-toolbox/commit/89af3a4ca332f029615b2a739d1f6cd50519638d))
+* **tools/looker:** Authenticate via end user credentials ([#1257](https://github.com/googleapis/genai-toolbox/issues/1257)) ([8755e3d](https://github.com/googleapis/genai-toolbox/commit/8755e3db3476abb35629b3cca9c78db7366757a4))
+* **tools/looker:** Report field suggestions to agent ([#1267](https://github.com/googleapis/genai-toolbox/issues/1267)) ([2cad82e](https://github.com/googleapis/genai-toolbox/commit/2cad82e5107566dd6c9b75e34e9976af63af0bb5))
+
+
+### Bug Fixes
+
+* Do not print usage on runtime error ([#1315](https://github.com/googleapis/genai-toolbox/issues/1315)) ([afba7a5](https://github.com/googleapis/genai-toolbox/commit/afba7a57cdd4fe7c1b0741dbf8f8c78b14a68089))
+* Update env var to allow empty string ([#1260](https://github.com/googleapis/genai-toolbox/issues/1260)) ([03aa9fa](https://github.com/googleapis/genai-toolbox/commit/03aa9fabacda06f860c9f178485126bddb7d5782))
+* **tools/firestore:** Add document/collection path validation ([#1229](https://github.com/googleapis/genai-toolbox/issues/1229)) ([14c2249](https://github.com/googleapis/genai-toolbox/commit/14c224939a2f9bb349fa00a7d5227877198530c2))
+* **tools/looker-get-dashboards:** Fix Looker client OAuth check ([#1338](https://github.com/googleapis/genai-toolbox/issues/1338)) ([36225aa](https://github.com/googleapis/genai-toolbox/commit/36225aa6db7f8426ad87930866530fde4e9bf0cd))
+* **tools/oceanbase:** Fix encoded text with mysql driver ([#1283](https://github.com/googleapis/genai-toolbox/issues/1283)) ([d16f89f](https://github.com/googleapis/genai-toolbox/commit/d16f89fbb6e49c03998f114ef7dc2b584b5e4967)), closes [#1161](https://github.com/googleapis/genai-toolbox/issues/1161)
+
+## [0.13.0](https://github.com/googleapis/genai-toolbox/compare/v0.12.0...v0.13.0) (2025-08-27)
+
+### ⚠ BREAKING CHANGES
+
+* **prebuilt/alloydb:** Add bearer token support for alloydb-wait-for-operation ([#1183](https://github.com/googleapis/genai-toolbox/issues/1183))
+
+
+### Features
+
+* Add capability to set default for environment variable in config ([#1248](https://github.com/googleapis/genai-toolbox/issues/1248)) ([5bcd52e](https://github.com/googleapis/genai-toolbox/commit/5bcd52e7dcd0773ded723585f4abe29d044e1540))
+* **firebird:** Add Firebird SQL 2.5+ source and tool ([#1011](https://github.com/googleapis/genai-toolbox/issues/1011)) ([4f6b806](https://github.com/googleapis/genai-toolbox/commit/4f6b806de947efc4e12bdb50dff7781aedb7b966))
+* **oceanbase:** Add Oceanbase source and tool  ([#895](https://github.com/googleapis/genai-toolbox/issues/895)) ([6fc4982](https://github.com/googleapis/genai-toolbox/commit/6fc49826d43f46c84028e752ebebddf3d94b3d13))
+* **server/mcp:** Support `ping` mechanism ([#1178](https://github.com/googleapis/genai-toolbox/issues/1178)) ([5dcc66c](https://github.com/googleapis/genai-toolbox/commit/5dcc66c84fa72c75ec50a9ac5198018212ec2979))
+* **server:** Fail-fast on environment variable substitution ([#1177](https://github.com/googleapis/genai-toolbox/issues/1177)) ([212aaba](https://github.com/googleapis/genai-toolbox/commit/212aaba74c8b431de8a5f7b9822a0af4afcaaa0e))
+* **server:** Implement Tool call auth error propagation ([#1235](https://github.com/googleapis/genai-toolbox/issues/1235)) ([b94a021](https://github.com/googleapis/genai-toolbox/commit/b94a021ca11c6637cf8038449483b5e75f2012b3))
+* **sources/bigquery:** Add support for user-credential passthrough  ([#1067](https://github.com/googleapis/genai-toolbox/issues/1067)) ([650e2e2](https://github.com/googleapis/genai-toolbox/commit/650e2e26f51bff75ce66343f64944d0a89a58b69))
+* **tool/looker:** Add support for `description` field in looker tool ([#1199](https://github.com/googleapis/genai-toolbox/issues/1199)) ([97f0dd2](https://github.com/googleapis/genai-toolbox/commit/97f0dd2acf26caf28ecad65abea8779c196a27f1))
+* **tools/bigquery-ask-data-insights:** Add bigquery `ask-data-insights` tool ([#932](https://github.com/googleapis/genai-toolbox/issues/932)) ([7651357](https://github.com/googleapis/genai-toolbox/commit/7651357d424a2b6656d8b6818cebc5c8a86ed053))
+* **tools/bigquery-forecast:** Add bigqueryforecast tool ([#1148](https://github.com/googleapis/genai-toolbox/issues/1148)) ([2ad0ccf](https://github.com/googleapis/genai-toolbox/commit/2ad0ccf83df542340087742468d6762f81eedee6))
+* **tools/firestore-add-documents:** Add firestore-add-documents tool ([#1107](https://github.com/googleapis/genai-toolbox/issues/1107)) ([ee4a70a](https://github.com/googleapis/genai-toolbox/commit/ee4a70a0e82b346b07b5b4c60dfa060da2273f50))
+* **tools/firestore-update-document:** Add firestore-update-document tool ([#1191](https://github.com/googleapis/genai-toolbox/issues/1191)) ([0010123](https://github.com/googleapis/genai-toolbox/commit/00101232a39c70288aac5715649c184858d351e3))
+* **tools/looker:** Control over whether hidden objects are surfaced ([#1222](https://github.com/googleapis/genai-toolbox/issues/1222)) ([bc91559](https://github.com/googleapis/genai-toolbox/commit/bc91559cc4e5b20385b84cc562b624fabf7e47a8))
+* **trino:** Add Trino source and tools ([#948](https://github.com/googleapis/genai-toolbox/issues/948)) ([7dd123b](https://github.com/googleapis/genai-toolbox/commit/7dd123b3d76b8eb2b74b5d960959c1f90684b37e))
+
+
+### Bug Fixes
+
+* **tools/looker:** Lookergetdashboards uses proper Authorized helper func ([#1255](https://github.com/googleapis/genai-toolbox/issues/1255)) ([00866bc](https://github.com/googleapis/genai-toolbox/commit/00866bc7fc33115c547213e60316ae889735fdbb))
+* **tools/mongodb-find-one:** ProjectPayload unmarshaling ([#1167](https://github.com/googleapis/genai-toolbox/issues/1167)) ([8ea6a98](https://github.com/googleapis/genai-toolbox/commit/8ea6a98bd9096ba97722e5f807366887e864004f))
+* **tools/mysql:** Fix encoded text for mysql ([#1161](https://github.com/googleapis/genai-toolbox/issues/1161)) ([a37cfa8](https://github.com/googleapis/genai-toolbox/commit/a37cfa841d151b9995d4fab73cfc5e4d30d2cc57)), closes [#840](https://github.com/googleapis/genai-toolbox/issues/840)
+
+## [0.12.0](https://github.com/googleapis/genai-toolbox/compare/v0.11.0...v0.12.0) (2025-08-14)
+
+
+### Features
+
+* **prebuiltconfig:** Introduce additional parameter to limit context in list_tables ([#1151](https://github.com/googleapis/genai-toolbox/issues/1151)) ([497d3b1](https://github.com/googleapis/genai-toolbox/commit/497d3b126da252a4b59806ca2ca3c56e78efc13d))
+* **prebuiltconfig/alloydb-admin:** Add list cluster, instance and users ([#1126](https://github.com/googleapis/genai-toolbox/issues/1126)) ([b42c139](https://github.com/googleapis/genai-toolbox/commit/b42c139158650fb1f3b696965e840c52e2016bf0))
+* **prebuiltconfig/alloydb-admin:** Add tool to create user via Built in user type or IAM ([#1130](https://github.com/googleapis/genai-toolbox/issues/1130)) ([f5bcb9c](https://github.com/googleapis/genai-toolbox/commit/f5bcb9c755a2c1747d0beeda568b6217d7420e7a))
+* **source/http:** Add User Agent to `http` invocations ([#1102](https://github.com/googleapis/genai-toolbox/issues/1102)) ([6f55b78](https://github.com/googleapis/genai-toolbox/commit/6f55b78e96b8c7aa9aca601cfae4d62f3e1eb42b))
+* **sources/postgres:** Add support for `queryParams` ([#1047](https://github.com/googleapis/genai-toolbox/issues/1047)) ([7b57251](https://github.com/googleapis/genai-toolbox/commit/7b5725140279de21fece45e860945b7a7d23e7d0)), closes [#963](https://github.com/googleapis/genai-toolbox/issues/963)
+* **tools/bigquery-execute-sql:** Add dry run support ([#1057](https://github.com/googleapis/genai-toolbox/issues/1057)) ([1cac9b5](https://github.com/googleapis/genai-toolbox/commit/1cac9b5b378153c7dc65ff3dfb4ebd852b715a10))
+* **tools/dataplex-search-aspect-types:** Add support for `dataplex-search-aspect-types` tool ([#1061](https://github.com/googleapis/genai-toolbox/issues/1061)) ([d940187](https://github.com/googleapis/genai-toolbox/commit/d940187c851666cc201f519665fb4f2e1478465c))
+* **tools/looker:** Add `looker-make-look` tool to create Looks ([#1099](https://github.com/googleapis/genai-toolbox/issues/1099)) ([61d9489](https://github.com/googleapis/genai-toolbox/commit/61d94893448f633a5f2b9d7f0744ab40704af824))
+* **tools/looker:** Add visualizations to `query-url` tool ([#1090](https://github.com/googleapis/genai-toolbox/issues/1090)) ([5bf2758](https://github.com/googleapis/genai-toolbox/commit/5bf275846a268a8d305d6392fa4e8e79e365f00d))
+* **tools/looker:** New Looker tools for dashboards ([#1118](https://github.com/googleapis/genai-toolbox/issues/1118)) ([42be3f5](https://github.com/googleapis/genai-toolbox/commit/42be3f550ceab34baf43fe2a246ded7a09cff8e3))
+* **ui:** Add login with google button for automatic id token retrieval ([#1044](https://github.com/googleapis/genai-toolbox/issues/1044)) ([d91bdfc](https://github.com/googleapis/genai-toolbox/commit/d91bdfcbdcbf5fcae6e17770c88c5ffba4115d67))
+
+
+### Bug Fixes
+
+* Correct the capitalization of `map` manifests ([#1139](https://github.com/googleapis/genai-toolbox/issues/1139)) ([0b0457c](https://github.com/googleapis/genai-toolbox/commit/0b0457c8e6b78f53a2f1929c05d46fb31421fbca))
+* Remove unnecessary fields from `map` parameter manifests ([#1138](https://github.com/googleapis/genai-toolbox/issues/1138)) ([fbe8c1a](https://github.com/googleapis/genai-toolbox/commit/fbe8c1a9c0f28797443bf9cb32d63bfbc1072881))
+* **tools/looker:** Add authorized invocation feature to all Looker tools ([#1091](https://github.com/googleapis/genai-toolbox/issues/1091)) ([3b1cce7](https://github.com/googleapis/genai-toolbox/commit/3b1cce72e7ff4f6b3a0a31db0564dc45b8302caa))
+* Update ui info log to reflect port ([#1125](https://github.com/googleapis/genai-toolbox/issues/1125)) ([6d691d5](https://github.com/googleapis/genai-toolbox/commit/6d691d582f18137de504d39f372c5104b7392bff))
+
 ## [0.11.0](https://github.com/googleapis/genai-toolbox/compare/v0.11.0...v0.11.0) (2025-08-05)
 
 

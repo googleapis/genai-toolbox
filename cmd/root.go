@@ -42,26 +42,63 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 
 	// Import tool packages for side effect of registration
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreatecluster"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreateinstance"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreateuser"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetcluster"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetinstance"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbgetuser"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistclusters"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistinstances"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydblistusers"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbwaitforoperation"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryanalyzecontribution"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryconversationalanalytics"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigqueryforecast"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerygetdatasetinfo"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerygettableinfo"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerylistdatasetids"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerylisttableids"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysearchcatalog"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerysql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/bigtable"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cassandra/cassandracql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouseexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouselistdatabases"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouselisttables"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhousesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlcreatedatabase"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlcreateusers"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlgetinstances"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqllistdatabases"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqllistinstances"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlwaitforoperation"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlmssql/cloudsqlmssqlcreateinstance"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlmysql/cloudsqlmysqlcreateinstance"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg/cloudsqlpgcreateinstances"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/dataform/dataformcompilelocal"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexlookupentry"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchaspecttypes"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchentries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firebird/firebirdexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firebird/firebirdsql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoreadddocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoredeletedocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetdocuments"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoregetrules"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorelistcollections"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorequery"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorequerycollection"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoreupdatedocument"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorevalidaterules"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookeradddashboardelement"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerconversationalanalytics"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetdashboards"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetdimensions"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetexplores"
@@ -70,6 +107,9 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetmeasures"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetmodels"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetparameters"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthanalyze"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthpulse"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthvacuum"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookermakedashboard"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookermakelook"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerquery"
@@ -86,35 +126,56 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbupdatemany"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbupdateone"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqllisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mssql/mssqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllistactivequeries"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttablefragmentation"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttables"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqllisttablesmissinguniqueindexes"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jcypher"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jexecutecypher"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/oceanbase/oceanbaseexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/oceanbase/oceanbasesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistactivequeries"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistavailableextensions"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistinstalledextensions"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerlisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannersql"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlitesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlite/sqliteexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlite/sqlitesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/tidb/tidbexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/tidb/tidbsql"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/alloydbwaitforoperation"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/trino/trinoexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/trino/trinosql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/utility/wait"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/yugabytedbsql"
 
 	"github.com/spf13/cobra"
 
+	_ "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/bigtable"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/cassandra"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudmonitoring"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/dataplex"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/firebird"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/http"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/looker"
@@ -122,12 +183,15 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/oceanbase"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/tidb"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/trino"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/valkey"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/yugabytedb"
 )
 
 var (
@@ -202,6 +266,9 @@ func NewCommand(opts ...Option) *Command {
 		o(cmd)
 	}
 
+	// Do not print Usage on runtime error
+	cmd.SilenceUsage = true
+
 	// Set server version
 	cmd.cfg.Version = versionString
 
@@ -225,7 +292,13 @@ func NewCommand(opts ...Option) *Command {
 	flags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
 	flags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
-	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", "Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: 'alloydb-postgres-admin', alloydb-postgres', 'bigquery', 'cloud-sql-mysql', 'cloud-sql-postgres', 'cloud-sql-mssql', 'dataplex', 'firestore', 'looker', 'mssql', 'mysql', 'postgres', 'spanner', 'spanner-postgres'.")
+
+	// Fetch prebuilt tools sources to customize the help description
+	prebuiltHelp := fmt.Sprintf(
+		"Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: '%s'.",
+		strings.Join(prebuiltconfigs.GetPrebuiltSources(), "', '"),
+	)
+	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", prebuiltHelp)
 	flags.BoolVar(&cmd.cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 	flags.BoolVar(&cmd.cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
 	flags.BoolVar(&cmd.cfg.UI, "ui", false, "Launches the Toolbox UI web server.")
@@ -245,32 +318,40 @@ type ToolsFile struct {
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
-func parseEnv(input string) string {
-	re := regexp.MustCompile(`\$\{(\w+)\}`)
+// also support ${ENV_NAME:default_value}.
+func parseEnv(input string) (string, error) {
+	re := regexp.MustCompile(`\$\{(\w+)(:(\w*))?\}`)
 
-	return re.ReplaceAllStringFunc(input, func(match string) string {
+	var err error
+	output := re.ReplaceAllStringFunc(input, func(match string) string {
 		parts := re.FindStringSubmatch(match)
-		if len(parts) < 2 {
-			// technically shouldn't happen
-			return match
-		}
 
 		// extract the variable name
 		variableName := parts[1]
 		if value, found := os.LookupEnv(variableName); found {
 			return value
 		}
-		return match
+		if parts[2] != "" {
+			return parts[3]
+		}
+		err = fmt.Errorf("environment variable not found: %q", variableName)
+		return ""
 	})
+	return output, err
 }
 
 // parseToolsFile parses the provided yaml into appropriate configs.
 func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	var toolsFile ToolsFile
 	// Replace environment variables if found
-	raw = []byte(parseEnv(string(raw)))
+	output, err := parseEnv(string(raw))
+	if err != nil {
+		return toolsFile, fmt.Errorf("error parsing environment variables: %s", err)
+	}
+	raw = []byte(output)
+
 	// Parse contents
-	err := yaml.UnmarshalContext(ctx, raw, &toolsFile, yaml.Strict())
+	err = yaml.UnmarshalContext(ctx, raw, &toolsFile, yaml.Strict())
 	if err != nil {
 		return toolsFile, err
 	}
@@ -579,20 +660,6 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 	}
 }
 
-// updateLogLevel checks if Toolbox have to update the existing log level set by users.
-// stdio doesn't support "debug" and "info" logs.
-func updateLogLevel(stdio bool, logLevel string) bool {
-	if stdio {
-		switch strings.ToUpper(logLevel) {
-		case log.Debug, log.Info:
-			return true
-		default:
-			return false
-		}
-	}
-	return false
-}
-
 func resolveWatcherInputs(toolsFile string, toolsFiles []string, toolsFolder string) (map[string]bool, map[string]bool) {
 	var relevantFiles []string
 
@@ -621,10 +688,6 @@ func resolveWatcherInputs(toolsFile string, toolsFiles []string, toolsFolder str
 }
 
 func run(cmd *Command) error {
-	if updateLogLevel(cmd.cfg.Stdio, cmd.cfg.LogLevel.String()) {
-		cmd.cfg.LogLevel = server.StringLevel(log.Warn)
-	}
-
 	ctx, cancel := context.WithCancel(cmd.Context())
 	defer cancel()
 
@@ -648,16 +711,22 @@ func run(cmd *Command) error {
 		cancel()
 	}(ctx)
 
+	// If stdio, set logger's out stream (usually DEBUG and INFO logs) to errStream
+	loggerOut := cmd.outStream
+	if cmd.cfg.Stdio {
+		loggerOut = cmd.errStream
+	}
+
 	// Handle logger separately from config
 	switch strings.ToLower(cmd.cfg.LoggingFormat.String()) {
 	case "json":
-		logger, err := log.NewStructuredLogger(cmd.outStream, cmd.errStream, cmd.cfg.LogLevel.String())
+		logger, err := log.NewStructuredLogger(loggerOut, cmd.errStream, cmd.cfg.LogLevel.String())
 		if err != nil {
 			return fmt.Errorf("unable to initialize logger: %w", err)
 		}
 		cmd.logger = logger
 	case "standard":
-		logger, err := log.NewStdLogger(cmd.outStream, cmd.errStream, cmd.cfg.LogLevel.String())
+		logger, err := log.NewStdLogger(loggerOut, cmd.errStream, cmd.cfg.LogLevel.String())
 		if err != nil {
 			return fmt.Errorf("unable to initialize logger: %w", err)
 		}
@@ -806,7 +875,7 @@ func run(cmd *Command) error {
 		}
 		cmd.logger.InfoContext(ctx, "Server ready to serve!")
 		if cmd.cfg.UI {
-			cmd.logger.InfoContext(ctx, fmt.Sprintf("Toolbox UI is up and running at: http://localhost:%d/ui", cmd.cfg.Port))
+			cmd.logger.InfoContext(ctx, fmt.Sprintf("Toolbox UI is up and running at: http://%s:%d/ui", cmd.cfg.Address, cmd.cfg.Port))
 		}
 
 		go func() {

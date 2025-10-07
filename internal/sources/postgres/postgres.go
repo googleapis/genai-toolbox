@@ -18,9 +18,11 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -45,13 +47,14 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
-	Host     string `yaml:"host" validate:"required"`
-	Port     string `yaml:"port" validate:"required"`
-	User     string `yaml:"user" validate:"required"`
-	Password string `yaml:"password" validate:"required"`
-	Database string `yaml:"database" validate:"required"`
+	Name        string            `yaml:"name" validate:"required"`
+	Kind        string            `yaml:"kind" validate:"required"`
+	Host        string            `yaml:"host" validate:"required"`
+	Port        string            `yaml:"port" validate:"required"`
+	User        string            `yaml:"user" validate:"required"`
+	Password    string            `yaml:"password" validate:"required"`
+	Database    string            `yaml:"database" validate:"required"`
+	QueryParams map[string]string `yaml:"queryParams"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -59,7 +62,7 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database)
+	pool, err := initPostgresConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.QueryParams)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -93,17 +96,29 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
-func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
+func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string, queryParams map[string]string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
+	userAgent, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		userAgent = "genai-toolbox"
+	}
+	if queryParams == nil {
+		// Initialize the map before using it
+		queryParams = make(map[string]string)
+	}
+	if _, ok := queryParams["application_name"]; !ok {
+		queryParams["application_name"] = userAgent
+	}
 
 	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
 	url := &url.URL{
-		Scheme: "postgres",
-		User:   url.UserPassword(user, pass),
-		Host:   fmt.Sprintf("%s:%s", host, port),
-		Path:   dbname,
+		Scheme:   "postgres",
+		User:     url.UserPassword(user, pass),
+		Host:     fmt.Sprintf("%s:%s", host, port),
+		Path:     dbname,
+		RawQuery: ConvertParamMapToRawQuery(queryParams),
 	}
 	pool, err := pgxpool.New(ctx, url.String())
 	if err != nil {
@@ -111,4 +126,12 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 	}
 
 	return pool, nil
+}
+
+func ConvertParamMapToRawQuery(queryParams map[string]string) string {
+	queryArray := []string{}
+	for k, v := range queryParams {
+		queryArray = append(queryArray, fmt.Sprintf("%s=%s", k, v))
+	}
+	return strings.Join(queryArray, "&")
 }

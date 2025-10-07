@@ -88,7 +88,15 @@
   color: 8befd7
   description: 'Status: reviewer is awaiting feedback or responses from the author before proceeding.'
 
+- name: 'release candidate'
+  color: 32CD32
+  description: 'Use label to signal PR should be included in the next release.'
+
 # Product Labels
 - name: 'product: bigquery'
   color: 5065c7
   description: 'Product: Assigned to the BigQuery team.'
+# Product Labels
+- name: 'product: looker'
+  color: 5065c7
+  description: 'Product: Assigned to the Looker team.'

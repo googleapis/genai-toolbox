@@ -21,6 +21,16 @@ It's compatible with the following sources:
 `looker-get-explores` accepts one parameter, the
 `model` id.
 
+The return type is an array of maps, each map is formatted like:
+
+```json
+{
+    "name": "explore name",
+    "description": "explore description",
+    "label": "explore label",
+    "group_label": "group label"
+}
+```
 ## Example
 
 ```yaml
@@ -37,8 +47,8 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker-get-explores".                                                                   |
-| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "looker-get-explores".                     |
+| source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

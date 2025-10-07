@@ -1,11 +1,29 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 sources:
     looker-source:
         kind: looker
         base_url: ${LOOKER_BASE_URL}
-        client_id: ${LOOKER_CLIENT_ID}
-        client_secret: ${LOOKER_CLIENT_SECRET}
-        verify_ssl: ${LOOKER_VERIFY_SSL}
+        client_id: ${LOOKER_CLIENT_ID:}
+        client_secret: ${LOOKER_CLIENT_SECRET:}
+        verify_ssl: ${LOOKER_VERIFY_SSL:true}
         timeout: 600s
+        use_client_oauth: ${LOOKER_USE_CLIENT_OAUTH:false}
+        show_hidden_models: ${LOOKER_SHOW_HIDDEN_MODELS:true}
+        show_hidden_explores: ${LOOKER_SHOW_HIDDEN_EXPLORES:true}
+        show_hidden_fields: ${LOOKER_SHOW_HIDDEN_FIELDS:true}
 
 tools:
     get_models:
@@ -35,6 +53,11 @@ tools:
           It takes two parameters, the model_name looked up from get_models and the
           explore_name looked up from get_explores.
 
+          If this returns a suggestions field for a dimension, the contents of suggestions
+          can be used as filters for this field. If this returns a suggest_explore and
+          suggest_dimension, a query against that explore and dimension can be used to find
+          valid filters for this field.
+
     get_measures:
         kind: looker-get-measures
         source: looker-source
@@ -44,6 +67,11 @@ tools:
 
           It takes two parameters, the model_name looked up from get_models and the
           explore_name looked up from get_explores.
+
+          If this returns a suggestions field for a measure, the contents of suggestions
+          can be used as filters for this field. If this returns a suggest_explore and
+          suggest_dimension, a query against that explore and dimension can be used to find
+          valid filters for this field.
 
     get_filters:
         kind: looker-get-filters
@@ -88,7 +116,8 @@ tools:
           Filters are provided as a map of {"field.id": "condition",
           "field.id2": "condition2", ...}. Do not put the field.id in
           quotes. Filter expressions can be found at
-          https://cloud.google.com/looker/docs/filter-expressions.
+          https://cloud.google.com/looker/docs/filter-expressions. There
+          is one mistake in that, however, Use `not null` instead of `-NULL`.
 
           Sorts can be specified like [ "field.id desc 0" ].
 
@@ -215,6 +244,7 @@ tools:
 
           ### Pie / Donut
 
+          *   Pie charts must have exactly one dimension and one numerical measure.
           *   `type`: Must be `looker_pie`.
           *   `value_labels`: Where to display values (`'legend'`, `'labels'`).
           *   `label_type`: The format of data labels (`'labPer'`, `'labVal'`, `'lab'`, `'val'`, `'per'`).
@@ -665,8 +695,58 @@ tools:
           This tool can be called many times for one dashboard_id
           and the resulting tiles will be added in order.
 
+    health_pulse:
+        kind: looker-health-pulse
+        source: looker-source
+        description: |
+          health-pulse Tool
+
+          This tool takes the pulse of a Looker instance by taking
+          one of the following actions:
+            1. `check_db_connections`,
+            2. `check_dashboard_performance`,
+            3. `check_dashboard_errors`,
+            4. `check_explore_performance`,
+            5. `check_schedule_failures`, or
+            6. `check_legacy_features`
+
+    health_analyze:
+        kind: looker-health-analyze
+        source: looker-source
+        description: |
+          health-analyze Tool
+
+          This tool calculates the usage of projects, models and explores.
+
+          It accepts 6 parameters:
+            1. `action`: can be "projects", "models", or "explores"
+            2. `project`: the project to analyze (optional)
+            3. `model`: the model to analyze (optional)
+            4. `explore`: the explore to analyze (optional)
+            5. `timeframe`: the lookback period in days, default is 90
+            6. `min_queries`: the minimum number of queries to consider a resource as active, default is 1
+
+    health_vacuum:
+        kind: looker-health-vacuum
+        source: looker-source
+        description: |
+          health-vacuum Tool
+
+          This tool suggests models or explores that can removed
+          because they are unused.
+
+          It accepts 6 parameters:
+            1. `action`: can be "models" or "explores"
+            2. `project`: the project to vacuum (optional)
+            3. `model`: the model to vacuum (optional)
+            4. `explore`: the explore to vacuum (optional)
+            5. `timeframe`: the lookback period in days, default is 90
+            6. `min_queries`: the minimum number of queries to consider a resource as active, default is 1
+
+          The result is a list of objects that are candidates for deletion.
+
 toolsets:
-    looker-tools:
+    looker_tools:
         - get_models
         - get_explores
         - get_dimensions
@@ -682,3 +762,6 @@ toolsets:
         - get_dashboards
         - make_dashboard
         - add_dashboard_element
+        - health_pulse
+        - health_analyze
+        - health_vacuum

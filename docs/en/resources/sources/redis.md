@@ -4,19 +4,19 @@ linkTitle: "Redis"
 type: docs
 weight: 1
 description: >
-    Redis is an open-source, in-memory data structure store.
+    Redis is a in-memory data structure store.
     
 ---
 
 ## About
 
-Redis is an open-source, in-memory data structure store, used as a database,
+Redis is a in-memory data structure store, used as a database,
 cache, and message broker. It supports data structures such as strings, hashes,
 lists, sets, sorted sets with range queries, bitmaps, hyperloglogs, and
 geospatial indexes with radius queries.
 
 If you are new to Redis, you can find installation and getting started guides on
-the [official Redis website](https://redis.io/docs/getting-started/).
+the [official Redis website](https://redis.io/docs/).
 
 ## Available Tools
 

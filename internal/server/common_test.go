@@ -36,13 +36,15 @@ var _ tools.Tool = &MockTool{}
 
 // MockTool is used to mock tools in tests
 type MockTool struct {
-	Name        string
-	Description string
-	Params      []tools.Parameter
-	manifest    tools.Manifest
+	Name                         string
+	Description                  string
+	Params                       []tools.Parameter
+	manifest                     tools.Manifest
+	unauthorized                 bool
+	requiresClientAuthrorization bool
 }
 
-func (t MockTool) Invoke(context.Context, tools.ParamValues) (any, error) {
+func (t MockTool) Invoke(context.Context, tools.ParamValues, tools.AccessToken) (any, error) {
 	mock := []any{t.Name}
 	return mock, nil
 }
@@ -59,18 +61,31 @@ func (t MockTool) Manifest() tools.Manifest {
 	}
 	return tools.Manifest{Description: t.Description, Parameters: pMs}
 }
+
 func (t MockTool) Authorized(verifiedAuthServices []string) bool {
-	return true
+	// defaulted to true
+	return !t.unauthorized
+}
+
+func (t MockTool) RequiresClientAuthorization() bool {
+	// defaulted to false
+	return t.requiresClientAuthrorization
 }
 
 func (t MockTool) McpManifest() tools.McpManifest {
 	properties := make(map[string]tools.ParameterMcpManifest)
 	required := make([]string, 0)
+	authParams := make(map[string][]string)
 
 	for _, p := range t.Params {
 		name := p.GetName()
-		properties[name] = p.McpManifest()
+		paramManifest, authParamList := p.McpManifest()
+		properties[name] = paramManifest
 		required = append(required, name)
+
+		if len(authParamList) > 0 {
+			authParams[name] = authParamList
+		}
 	}
 
 	toolsSchema := tools.McpToolsSchema{
@@ -79,11 +94,19 @@ func (t MockTool) McpManifest() tools.McpManifest {
 		Required:   required,
 	}
 
-	return tools.McpManifest{
+	mcpManifest := tools.McpManifest{
 		Name:        t.Name,
 		Description: t.Description,
 		InputSchema: toolsSchema,
 	}
+
+	if len(authParams) > 0 {
+		mcpManifest.Metadata = map[string]any{
+			"toolbox/authParams": authParams,
+		}
+	}
+
+	return mcpManifest
 }
 
 var tool1 = MockTool{
@@ -105,6 +128,18 @@ var tool3 = MockTool{
 	Params: tools.Parameters{
 		tools.NewArrayParameter("my_array", "this param is an array of strings", tools.NewStringParameter("my_string", "string item")),
 	},
+}
+
+var tool4 = MockTool{
+	Name:         "unauthorized_tool",
+	Params:       []tools.Parameter{},
+	unauthorized: true,
+}
+
+var tool5 = MockTool{
+	Name:                         "require_client_auth_tool",
+	Params:                       []tools.Parameter{},
+	requiresClientAuthrorization: true,
 }
 
 // setUpResources setups resources to test against
