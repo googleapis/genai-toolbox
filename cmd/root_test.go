@@ -526,8 +526,8 @@ func TestParseToolFile(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
-				Prompts:    server.PromptConfigs{},
-				Promptsets: server.PromptsetConfigs{},
+				Prompts:    nil,
+				Promptsets: nil,
 			},
 		},
 	}
@@ -667,8 +667,8 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
-				Prompts:    server.PromptConfigs{},
-				Promptsets: server.PromptsetConfigs{},
+				Prompts:    nil,
+				Promptsets: nil,
 			},
 		},
 		{
@@ -768,8 +768,8 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
-				Prompts:    server.PromptConfigs{},
-				Promptsets: server.PromptsetConfigs{},
+				Prompts:    nil,
+				Promptsets: nil,
 			},
 		},
 		{
@@ -871,8 +871,8 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
-				Prompts:    server.PromptConfigs{},
-				Promptsets: server.PromptsetConfigs{},
+				Prompts:    nil,
+				Promptsets: nil,
 			},
 		},
 	}
@@ -923,7 +923,7 @@ func TestParseToolFileWithPrompts(t *testing.T) {
                 my-prompt:
                     kind: standard
                     description: A prompt template for data analysis.
-                    template: |
+                    content: |
                         Analyze the data for {{.country}}.
             promptsets:
                 my-prompt-set:
@@ -983,7 +983,7 @@ func TestEnvVarReplacement(t *testing.T) {
 	t.Setenv("TestHeader", "ACTUAL_HEADER")
 	t.Setenv("promptset_name", "ACTUAL_PROMPTSET_NAME")
 	t.Setenv("prompt_name", "ACTUAL_PROMPT_NAME")
-	t.Setenv("prompt_template", "ACTUAL TEMPLATE")
+	t.Setenv("prompt_content", "ACTUAL CONTENT")
 
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -1113,8 +1113,8 @@ func TestEnvVarReplacement(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
-				Prompts:    server.PromptConfigs{},
-				Promptsets: server.PromptsetConfigs{},
+				Prompts:    nil,
+				Promptsets: nil,
 			},
 		},
 	}
