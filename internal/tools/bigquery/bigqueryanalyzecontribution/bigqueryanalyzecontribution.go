@@ -50,6 +50,7 @@ type compatibleSource interface {
 	BigQueryRestService() *bigqueryrestapi.Service
 	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
 	UseClientAuthorization() bool
+	BigQuerySession() *bigqueryds.Session
 }
 
 // validate compatible sources are still compatible
@@ -130,6 +131,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		ClientCreator:  s.BigQueryClientCreator(),
 		Client:         s.BigQueryClient(),
 		RestService:    s.BigQueryRestService(),
+		Session:        s.BigQuerySession(),
 		manifest:       tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:    mcpManifest,
 	}
@@ -149,6 +151,7 @@ type Tool struct {
 	Client        *bigqueryapi.Client
 	RestService   *bigqueryrestapi.Service
 	ClientCreator bigqueryds.BigqueryClientCreator
+	Session       *bigqueryds.Session
 	manifest      tools.Manifest
 	mcpManifest   tools.McpManifest
 }
@@ -222,7 +225,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	createModelQuery := bqClient.Query(createModelSQL)
-	createModelQuery.CreateSession = true
+	if t.Session != nil {
+		createModelQuery.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
+			{Key: "session_id", Value: t.Session.ID},
+		}
+	} else {
+		createModelQuery.CreateSession = true
+	}
 	createModelJob, err := createModelQuery.Run(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start create model job: %w", err)
@@ -236,10 +245,15 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("create model job failed: %w", err)
 	}
 
-	if status.Statistics == nil || status.Statistics.SessionInfo == nil || status.Statistics.SessionInfo.SessionID == "" {
-		return nil, fmt.Errorf("failed to create a BigQuery session")
+	var sessionID string
+	if t.Session != nil {
+		sessionID = t.Session.ID
+	} else if status.Statistics != nil && status.Statistics.SessionInfo != nil {
+		sessionID = status.Statistics.SessionInfo.SessionID
+	} else {
+		return nil, fmt.Errorf("failed to get a BigQuery session ID")
 	}
-	sessionID := status.Statistics.SessionInfo.SessionID
+
 	getInsightsSQL := fmt.Sprintf("SELECT * FROM ML.GET_INSIGHTS(MODEL %s)", modelID)
 
 	getInsightsQuery := bqClient.Query(getInsightsSQL)

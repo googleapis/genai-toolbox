@@ -328,7 +328,7 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 
 func TestBigQueryWriteModeAllowed(t *testing.T) {
 	sourceConfig := getBigQueryVars(t)
-	sourceConfig["write_mode"] = "allowed"
+	sourceConfig["writeMode"] = "allowed"
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
@@ -382,7 +382,7 @@ func TestBigQueryWriteModeAllowed(t *testing.T) {
 
 func TestBigQueryWriteModeBlocked(t *testing.T) {
 	sourceConfig := getBigQueryVars(t)
-	sourceConfig["write_mode"] = "blocked"
+	sourceConfig["writeMode"] = "blocked"
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
@@ -431,7 +431,7 @@ func TestBigQueryWriteModeBlocked(t *testing.T) {
 
 func TestBigQueryWriteModeProtected(t *testing.T) {
 	sourceConfig := getBigQueryVars(t)
-	sourceConfig["write_mode"] = "protected"
+	sourceConfig["writeMode"] = "protected"
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()

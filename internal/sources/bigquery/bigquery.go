@@ -72,7 +72,7 @@ type Config struct {
 	Kind            string   `yaml:"kind" validate:"required"`
 	Project         string   `yaml:"project" validate:"required"`
 	Location        string   `yaml:"location"`
-	WriteMode       string   `yaml:"write_mode"`
+	WriteMode       string   `yaml:"writeMode"`
 	AllowedDatasets []string `yaml:"allowedDatasets"`
 	UseClientOAuth  bool     `yaml:"useClientOAuth"`
 }
@@ -197,7 +197,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 			DatasetID: sessionDatasetID,
 		}
 	default:
-		return nil, fmt.Errorf("invalid write_mode %q: must be one of %q, %q, or %q", r.WriteMode, WriteModeAllowed, WriteModeProtected, WriteModeBlocked)
+		return nil, fmt.Errorf("invalid writeMode %q: must be one of %q, %q, or %q", r.WriteMode, WriteModeAllowed, WriteModeProtected, WriteModeBlocked)
 	}
 	s.makeDataplexCatalogClient = s.lazyInitDataplexClient(ctx, tracer)
 	return s, nil
@@ -219,6 +219,7 @@ type Source struct {
 	ClientCreator             BigqueryClientCreator
 	AllowedDatasets           map[string]struct{}
 	UseClientOAuth            bool
+	WriteMode                 string
 	makeDataplexCatalogClient func() (*dataplexapi.CatalogClient, DataplexClientCreator, error)
 	Session                   *Session
 }

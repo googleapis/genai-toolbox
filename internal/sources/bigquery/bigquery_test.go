@@ -56,7 +56,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 					kind: bigquery
 					project: my-project
 					location: asia
-					write_mode: blocked
+					writeMode: blocked
 			`,
 			want: server.SourceConfigs{
 				"my-instance": bigquery.Config{

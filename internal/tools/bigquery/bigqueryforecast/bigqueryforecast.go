@@ -53,6 +53,7 @@ type compatibleSource interface {
 	UseClientAuthorization() bool
 	IsDatasetAllowed(projectID, datasetID string) bool
 	BigQueryAllowedDatasets() []string
+	BigQuerySession() *bigqueryds.Session
 }
 
 // validate compatible sources are still compatible
@@ -123,6 +124,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Client:           s.BigQueryClient(),
 		RestService:      s.BigQueryRestService(),
 		IsDatasetAllowed: s.IsDatasetAllowed,
+		Session:          s.BigQuerySession(),
 		AllowedDatasets:  allowedDatasets,
 		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:      mcpManifest,
@@ -145,6 +147,7 @@ type Tool struct {
 	ClientCreator    bigqueryds.BigqueryClientCreator
 	IsDatasetAllowed func(projectID, datasetID string) bool
 	AllowedDatasets  []string
+	Session          *bigqueryds.Session
 	manifest         tools.Manifest
 	mcpManifest      tools.McpManifest
 }
@@ -264,6 +267,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	// JobStatistics.QueryStatistics.StatementType
 	query := bqClient.Query(sql)
 	query.Location = bqClient.Location
+	if t.Session != nil {
+		// Add session ID to the connection properties for subsequent calls.
+		query.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
+			{Key: "session_id", Value: t.Session.ID},
+		}
+	}
 
 	// Log the query executed for debugging.
 	logger, err := util.LoggerFromContext(ctx)

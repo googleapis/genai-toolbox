@@ -119,7 +119,7 @@ sources:
     kind: "bigquery"
     project: "my-project-id"
     # location: "US" # Optional: Specifies the location for query jobs.
-    # write_mode: "allowed" # One of: allowed, blocked, protected. Defaults to "allowed".
+    # writeMode: "allowed" # One of: allowed, blocked, protected. Defaults to "allowed".
     # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
     #   - "my_dataset_1"
     #   - "other_project.my_dataset_2"
@@ -134,7 +134,7 @@ sources:
     project: "my-project-id"
     useClientOAuth: true
     # location: "US" # Optional: Specifies the location for query jobs.
-    # write_mode: "allowed" # One of: allowed, blocked, protected. Defaults to "allowed".
+    # writeMode: "allowed" # One of: allowed, blocked, protected. Defaults to "allowed".
     # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
     #   - "my_dataset_1"
     #   - "other_project.my_dataset_2"
@@ -147,6 +147,6 @@ sources:
 | kind            |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | project         |  string  |     true     | Id of the Google Cloud project to use for billing and as the default project for BigQuery resources.                                                                                                                                                                                                                                                                                                                                                                                                                |
 | location        |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. Defaults to the table's location or 'US' if the location cannot be determined. [Learn More](https://cloud.google.com/bigquery/docs/locations)                                                                                                                                                                                                    |
-| write_mode |  string  |    false     | Controls the write behavior for `bigquery-execute-sql`. `allowed` (default): All queries are permitted. `blocked`: Only `SELECT` statements are allowed. `protected`: Enables session-based execution. `SELECT` statements can be used on all tabels, while write operations are allowed only for the session's temporary dataset. For `bigquery-sql`, the `writemode` restrictions do not apply; however, they will operate within the same session when the mode is `protected`. |
+| writeMode |  string  |    false     | Controls the write behavior for `bigquery-execute-sql`. `allowed` (default): All queries are permitted. `blocked`: Only `SELECT` statements are allowed. `protected`: Enables session-based execution. `SELECT` statements can be used on all tabels, while write operations are allowed only for the session's temporary dataset. For `bigquery-sql`, the `writeMode` restrictions do not apply; however, they will operate within the same session when the mode is `protected`. |
 | allowedDatasets | []string |    false     | An optional list of dataset IDs that tools using this source are allowed to access. If provided, any tool operation attempting to access a dataset not in this list will be rejected. To enforce this, two types of operations are also disallowed: 1) Dataset-level operations (e.g., `CREATE SCHEMA`), and 2) operations where table access cannot be statically analyzed (e.g., `EXECUTE IMMEDIATE`, `CREATE PROCEDURE`). If a single dataset is provided, it will be treated as the default for prebuilt tools. |
 | useClientOAuth  |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries.                                                                                                                                                                                                                                                                                                                                                                                                            |

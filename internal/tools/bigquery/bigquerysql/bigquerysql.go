@@ -26,6 +26,7 @@ import (
 
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
@@ -190,7 +191,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		if arrayParam, ok := p.(*tools.ArrayParameter); ok {
 			// Handle array types based on their defined item type.
 			lowLevelParam.ParameterType.Type = "ARRAY"
-			itemType, err := BQTypeStringFromToolType(arrayParam.GetItems().GetType())
+			itemType, err := bqutil.BQTypeStringFromToolType(arrayParam.GetItems().GetType())
 			if err != nil {
 				return nil, err
 			}
@@ -207,7 +208,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			lowLevelParam.ParameterValue.ArrayValues = arrayValues
 		} else {
 			// Handle scalar types based on their defined type.
-			bqType, err := BQTypeStringFromToolType(p.GetType())
+			bqType, err := bqutil.BQTypeStringFromToolType(p.GetType())
 			if err != nil {
 				return nil, err
 			}
@@ -243,7 +244,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		}
 	}
 
-	dryRunJob, err := dryRunQuery(ctx, t.RestService, t.Client.Project(), query.Location, newStatement, lowLevelParams, query.ConnectionProperties)
+	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), query.Location, newStatement, lowLevelParams, query.ConnectionProperties)
 	if err != nil {
 		return nil, fmt.Errorf("query validation failed during dry run: %w", err)
 	}
@@ -324,20 +325,4 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return t.UseClientOAuth
-}
-
-func BQTypeStringFromToolType(toolType string) (string, error) {
-	switch toolType {
-	case "string":
-		return "STRING", nil
-	case "integer":
-		return "INT64", nil
-	case "float":
-		return "FLOAT64", nil
-	case "boolean":
-		return "BOOL", nil
-	// Note: 'array' is handled separately as it has a nested item type.
-	default:
-		return "", fmt.Errorf("unsupported tool parameter type for BigQuery: %s", toolType)
-	}
 }

@@ -91,41 +91,38 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	var sqlParamDescription string
+	var sqlDescriptionBuilder strings.Builder
 	switch s.BigQueryWriteMode() {
 	case bigqueryds.WriteModeBlocked:
-		sqlParamDescription = "The SQL to execute. In 'blocked' mode, only SELECT statements are allowed; " +
-			"other statement types will fail."
+		sqlDescriptionBuilder.WriteString("The SQL to execute. In 'blocked' mode, only SELECT statements are allowed; other statement types will fail.")
 	case bigqueryds.WriteModeProtected:
-		sqlParamDescription = fmt.Sprintf("The SQL to execute. Only SELECT statements and writes to the session's"+
-			" temporary dataset (ID: %s) are allowed (e.g., `CREATE TEMP TABLE ...`).", s.BigQuerySession().DatasetID)
+		sqlDescriptionBuilder.WriteString(fmt.Sprintf("The SQL to execute. Only SELECT statements and writes to the session's temporary dataset (ID: %s) are allowed (e.g., `CREATE TEMP TABLE ...`).", s.BigQuerySession().DatasetID))
 	default: // WriteModeAllowed
-		sqlParamDescription = "The SQL to execute."
+		sqlDescriptionBuilder.WriteString("The SQL to execute.")
 	}
-	sqlParameter := tools.NewStringParameter("sql", sqlParamDescription)
 
-	sqlDescription := "The sql to execute."
 	allowedDatasets := s.BigQueryAllowedDatasets()
 	if len(allowedDatasets) > 0 {
-		datasetIDs := []string{}
-		for _, ds := range allowedDatasets {
-			datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
-		}
-
-		if len(datasetIDs) == 1 {
-			parts := strings.Split(allowedDatasets[0], ".")
+		if len(allowedDatasets) == 1 {
+			datasetFQN := allowedDatasets[0]
+			parts := strings.Split(datasetFQN, ".")
 			if len(parts) < 2 {
-				return nil, fmt.Errorf("expected split to have 2 parts: %s", allowedDatasets[0])
+				return nil, fmt.Errorf("expected allowedDataset to have at least 2 parts (project.dataset): %s", datasetFQN)
 			}
 			datasetID := parts[1]
-			sqlDescription += fmt.Sprintf(" The query must only access the %s dataset. "+
+			sqlDescriptionBuilder.WriteString(fmt.Sprintf(" The query must only access the `%s` dataset. "+
 				"To query a table within this dataset (e.g., `my_table`), "+
-				"qualify it with the dataset id (e.g., `%s.my_table`).", datasetIDs[0], datasetID)
+				"qualify it with the dataset id (e.g., `%s.my_table`).", datasetFQN, datasetID))
 		} else {
-			sqlDescription += fmt.Sprintf(" The query must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", "))
+			datasetIDs := []string{}
+			for _, ds := range allowedDatasets {
+				datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
+			}
+			sqlDescriptionBuilder.WriteString(fmt.Sprintf(" The query must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", ")))
 		}
 	}
-	sqlParameter := tools.NewStringParameter("sql", sqlDescription)
+
+	sqlParameter := tools.NewStringParameter("sql", sqlDescriptionBuilder.String())
 	dryRunParameter := tools.NewBooleanParameterWithDefault(
 		"dry_run",
 		false,
@@ -186,27 +183,17 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if !ok {
 		return nil, fmt.Errorf("unable to cast dry_run parameter %s", paramsMap["dry_run"])
 	}
-	query := t.Client.Query(sql)
-	query.Location = t.Client.Location
-
-	if t.WriteMode == bigqueryds.WriteModeProtected {
-		// Add session ID to the connection properties for subsequent calls.
-		query.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
-			{Key: "session_id", Value: t.Session.ID},
-		}
-	}
 
 	bqClient := t.Client
 	restService := t.RestService
-
 	var err error
-	// Initialize new client if using user OAuth token
+
 	if t.UseClientOAuth {
 		tokenStr, err := accessToken.ParseBearerToken()
 		if err != nil {
 			return nil, fmt.Errorf("error parsing access token: %w", err)
 		}
-		bqClient, restService, err = t.ClientCreator(tokenStr, true)
+		bqClient, restService, err = t.ClientCreator(tokenStr, true) // Re-initialize clients with user token
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
 		}
@@ -214,7 +201,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, sql, nil, nil)
 	if err != nil {
-		return nil, fmt.Errorf("query validation failed during dry run: %w", err)
+		// Check if the error is due to EXECUTE IMMEDIATE, which is not supported in dry run but might be allowed.
+		// This is a known limitation. We provide a more specific error message.
+		if strings.Contains(err.Error(), "EXECUTE IMMEDIATE is not supported in a dry run") {
+			if len(t.AllowedDatasets) > 0 {
+				return nil, fmt.Errorf("EXECUTE IMMEDIATE is not allowed when dataset restrictions are in place")
+			}
+		}
+		return nil, fmt.Errorf("final query validation failed: %w", err)
 	}
 
 	if dryRunJob.Status != nil && dryRunJob.Status.ErrorResult != nil {
@@ -244,7 +238,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			}
 		}
 	}
-	statementType := dryRunJob.Statistics.Query.StatementType
 
 	if len(t.AllowedDatasets) > 0 {
 		switch statementType {
@@ -314,6 +307,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	query := bqClient.Query(sql)
 	query.Location = bqClient.Location
+
+	if t.WriteMode == bigqueryds.WriteModeProtected {
+		// Add session ID to the connection properties for subsequent calls.
+		query.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
+			{Key: "session_id", Value: t.Session.ID},
+		}
+	}
 
 	// Log the query executed for debugging.
 	logger, err := util.LoggerFromContext(ctx)
