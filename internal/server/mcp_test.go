@@ -65,6 +65,7 @@ var tool3InputSchema = map[string]any{
 	"required": []any{"my_array"},
 }
 
+var prompt1Args = []any{}
 var prompt2Args = []any{
 	map[string]any{
 		"name":        "arg1",
@@ -75,7 +76,7 @@ var prompt2Args = []any{
 
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
 	mockTools := []MockTool{tool1, tool2, tool3, tool4, tool5}
-	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, []MockPrompt{})
+	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, nil)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
 	defer shutdown()
 	ts := runServer(r, false)
@@ -516,7 +517,8 @@ func TestMcpEndpoint(t *testing.T) {
 						"result": map[string]any{
 							"prompts": []any{
 								map[string]any{
-									"name": "prompt1",
+									"name":      "prompt1",
+									"arguments": prompt1Args,
 								},
 								map[string]any{
 									"name":      "prompt2",
@@ -811,8 +813,7 @@ func TestMcpEndpoint(t *testing.T) {
 }
 
 func TestInvalidProtocolVersionHeader(t *testing.T) {
-	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, nil, nil)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -838,8 +839,7 @@ func TestInvalidProtocolVersionHeader(t *testing.T) {
 }
 
 func TestDeleteEndpoint(t *testing.T) {
-	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, nil, nil)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -854,8 +854,7 @@ func TestDeleteEndpoint(t *testing.T) {
 }
 
 func TestGetEndpoint(t *testing.T) {
-	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, nil, nil)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
