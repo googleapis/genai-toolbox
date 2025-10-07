@@ -842,7 +842,7 @@ steps:
     args:
       - -c
       - |
-        sudo echo "$$SNOWFLAKE_HOST snowflake.localhost.localstack.cloud" >> /etc/hosts
+        echo "$$SNOWFLAKE_HOST snowflake.localhost.localstack.cloud" >> /etc/hosts
         .ci/test_with_coverage.sh \
           "Snowflake" \
           snowflake \
