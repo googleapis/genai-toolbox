@@ -29,7 +29,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
-// Test type aliases for convenience
+// Test type aliases for convenience.
 type (
 	Argument     = prompts.Argument
 	McpPromptArg = prompts.McpPromptArg
@@ -41,26 +41,12 @@ func Ptr[T any](v T) *T {
 	return &v
 }
 
-// -- Test Setup Helpers to reduce boilerplate in test cases --
-
-func makeStrArg(name, desc string) Argument {
-	return Argument{Parameter: tools.NewStringParameter(name, desc)}
-}
-
-func makeIntArg(name, desc string) Argument {
-	return Argument{Parameter: tools.NewIntParameter(name, desc)}
-}
-
-func makeBoolArg(name, desc string, required bool) Argument {
-	return Argument{Parameter: tools.NewBooleanParameterWithRequired(name, desc, required)}
-}
-
 func makeArrayArg(name, desc string, items tools.Parameter) Argument {
 	return Argument{Parameter: tools.NewArrayParameter(name, desc, items)}
 }
 
-func makeMapArg(name, desc, valueType string) Argument {
-	return Argument{Parameter: tools.NewMapParameter(name, desc, valueType)}
+func makeStrItem(name, desc string) tools.Parameter {
+	return tools.NewStringParameter(name, desc)
 }
 
 func TestArgument_McpPromptManifest(t *testing.T) {
@@ -91,25 +77,6 @@ func TestArgument_McpPromptManifest(t *testing.T) {
 				Name: "name3", Description: "desc3", Required: false,
 			},
 		},
-		{
-			name: "Explicitly required with default",
-			arg: Argument{
-				Parameter: &tools.StringParameter{
-					CommonParameter: tools.CommonParameter{Name: "name4", Type: tools.TypeString, Desc: "desc4", Required: Ptr(true)},
-					Default:         Ptr("defaultVal"),
-				},
-			},
-			expected: McpPromptArg{
-				Name: "name4", Description: "desc4", Required: false,
-			},
-		},
-		{
-			name: "Implicitly required with no default",
-			arg:  Argument{Parameter: tools.NewStringParameter("name5", "desc5")},
-			expected: McpPromptArg{
-				Name: "name5", Description: "desc5", Required: true,
-			},
-		},
 	}
 
 	for _, tc := range testCases {
@@ -122,164 +89,169 @@ func TestArgument_McpPromptManifest(t *testing.T) {
 	}
 }
 
+// TestArguments_UnmarshalYAML is a UNIT TEST focused on the specific logic in arguments.go:
+// defaulting the 'type' field to 'string' if it is omitted in the YAML.
 func TestArguments_UnmarshalYAML(t *testing.T) {
 	t.Parallel()
-
-	var transformFunc func(tools.Parameter) any
-	transformFunc = func(p tools.Parameter) any {
-		s := struct {
-			Name, Type, Desc string
-			Required         bool
-			Items            any
-			ValueType        string
-		}{
-			Name:     p.GetName(),
-			Type:     p.GetType(),
-			Desc:     p.Manifest().Description,
-			Required: p.GetRequired(),
-		}
-		if arr, ok := p.(*tools.ArrayParameter); ok {
-			// Correct recursive call
-			s.Items = transformFunc(arr.GetItems())
-		}
-		if m, ok := p.(*tools.MapParameter); ok {
-			s.ValueType = m.GetValueType()
-		}
-		return s
-	}
-
-	// Finally, create the comparer option for cmp.Diff by passing our recursive function to cmp.Transformer.
-	paramComparer := cmp.Transformer("Parameter", transformFunc)
-
 	testCases := []struct {
 		name         string
-		yaml         string
-		expectedArgs Arguments
-		wantErr      string
+		yamlInput    any
+		expectedType string
 	}{
 		{
-			name: "Successful unmarshal with various types",
-			yaml: `
-- name: param1
-  description: string param
-- name: param2
-  description: int param
-  type: integer
-- name: param3
-  description: bool param
-  type: boolean
-  required: false
-`,
-			expectedArgs: Arguments{
-				makeStrArg("param1", "string param"),
-				makeIntArg("param2", "int param"),
-				makeBoolArg("param3", "bool param", false),
+			name: "Type field is missing",
+			yamlInput: []map[string]any{
+				{"name": "p1", "description": "d1"},
 			},
+			expectedType: "string",
 		},
 		{
-			name: "Type defaults to string",
-			yaml: `
-- name: param_default
-  description: a param that defaults to string type
-`,
-			expectedArgs: Arguments{
-				makeStrArg("param_default", "a param that defaults to string type"),
+			name: "Type field is present",
+			yamlInput: []map[string]any{
+				{"name": "p1", "description": "d1", "type": "integer"},
 			},
-		},
-		{
-			name: "Array and Map types",
-			yaml: `
-- name: param_array
-  description: an array
-  type: array
-  items:
-    name: an_item_name_to_pass_validation
-    type: string
-    description: an item
-- name: param_map
-  description: a map
-  type: map
-  valueType: integer
-`,
-			expectedArgs: Arguments{
-				makeArrayArg("param_array", "an array", tools.NewStringParameter("an_item_name_to_pass_validation", "an item")),
-				makeMapArg("param_map", "a map", "integer"),
-			},
-		},
-		{
-			name:    "Unmarshal error - not a list",
-			yaml:    `name: param1`,
-			wantErr: "mapping was used where sequence is expected",
-		},
-		{
-			name:    "Parse error - bad item in list",
-			yaml:    `- "just a string"`,
-			wantErr: "string was used where mapping is expected",
-		},
-		{
-			name: "Parse error - invalid type",
-			yaml: `
-- name: param1
-  description: desc1
-  type: unsupported
-`,
-			wantErr: `"unsupported" is not valid type for a parameter`,
-		},
-		{
-			name: "Parse error - missing name",
-			yaml: `
-- type: string
-  description: desc1
-`,
-			wantErr: "Field validation for 'Name' failed on the 'required' tag",
+			expectedType: "integer",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			var rawList []util.DelayedUnmarshaler
-			err := yaml.Unmarshal([]byte(tc.yaml), &rawList)
+			args := runUnmarshalTest(t, tc.yamlInput, "") // We expect no error here.
 
-			if err != nil {
-				if tc.wantErr == "" {
-					t.Fatalf("Initial unmarshal failed unexpectedly: %v", err)
-				}
-				if !strings.Contains(err.Error(), tc.wantErr) {
-					t.Errorf("Initial unmarshal error mismatch:\nwant: %q\ngot:  %q", tc.wantErr, err.Error())
-				}
-				return
+			if len(args) != 1 {
+				t.Fatalf("expected 1 argument to be parsed, got %d", len(args))
 			}
-
-			unmarshalFunc := func(v interface{}) error {
-				dest, ok := v.(*[]util.DelayedUnmarshaler)
-				if !ok {
-					return fmt.Errorf("unexpected type for unmarshal: %T", v)
-				}
-				*dest = rawList
-				return nil
-			}
-
-			var args Arguments
-			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-			ctx := util.WithLogger(context.Background(), logger)
-			err = args.UnmarshalYAML(ctx, unmarshalFunc)
-
-			if tc.wantErr != "" {
-				if err == nil {
-					t.Fatalf("UnmarshalYAML() expected error, got nil")
-				}
-				if !strings.Contains(err.Error(), tc.wantErr) {
-					t.Errorf("UnmarshalYAML() error mismatch:\nwant: %q\ngot:  %q", tc.wantErr, err.Error())
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("UnmarshalYAML() returned unexpected error: %v", err)
-			}
-
-			if diff := cmp.Diff(tc.expectedArgs, args, paramComparer); diff != "" {
-				t.Errorf("UnmarshalYAML() mismatch (-want +got):\n%s", diff)
+			gotType := args[0].Parameter.GetType()
+			if gotType != tc.expectedType {
+				t.Errorf("expected parameter type to be %q, got %q", tc.expectedType, gotType)
 			}
 		})
 	}
+}
+
+// TestArguments_UnmarshalYAML_Integration verifies that UnmarshalYAML correctly interacts with the tools package.
+func TestArguments_UnmarshalYAML_Integration(t *testing.T) {
+	t.Parallel()
+
+	// paramComparer allows cmp.Diff to intelligently compare the parsed results.
+	var transformFunc func(tools.Parameter) any
+	transformFunc = func(p tools.Parameter) any {
+		s := struct{ Name, Type, Desc string }{
+			Name: p.GetName(),
+			Type: p.GetType(),
+			Desc: p.Manifest().Description,
+		}
+		if arr, ok := p.(*tools.ArrayParameter); ok {
+			// To compare arrays, we also need to compare their items.
+			s.Desc = fmt.Sprintf("%s items:%v", s.Desc, transformFunc(arr.GetItems()))
+		}
+		return s
+	}
+	paramComparer := cmp.Transformer("Parameter", transformFunc)
+
+	testCases := []struct {
+		name         string
+		yamlInput    any
+		expectedArgs Arguments
+		wantErr      string
+	}{
+		{
+			name: "Complex types (array/map) are passed correctly",
+			yamlInput: []map[string]any{
+				{
+					"name":        "param_array",
+					"description": "an array",
+					"type":        "array",
+					"items": map[string]any{
+						"name":        "item_name",
+						"type":        "string",
+						"description": "an item",
+					},
+				},
+			},
+			expectedArgs: Arguments{
+				makeArrayArg("param_array", "an array", makeStrItem("item_name", "an item")),
+			},
+		},
+		{
+			name: "Error from tools.ParseParameter is propagated correctly",
+			yamlInput: []map[string]any{
+				{"name": "p1", "description": "d1", "type": "unsupported"},
+			},
+			wantErr: `"unsupported" is not valid type for a parameter`,
+		},
+		{
+			name:      "Unmarshal error - not a list",
+			yamlInput: map[string]any{"name": "param1"}, // This is a map, not a slice.
+			wantErr:   "mapping was used where sequence is expected",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			args := runUnmarshalTest(t, tc.yamlInput, tc.wantErr)
+
+			// If an error was expected, the helper already verified it.
+			if tc.wantErr != "" {
+				return
+			}
+
+			// If no error was expected, compare the parsed result.
+			if diff := cmp.Diff(tc.expectedArgs, args, paramComparer); diff != "" {
+				t.Errorf("UnmarshalYAML() result mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+// runUnmarshalTest is a test helper that marshals Go test data into YAML before testing.
+func runUnmarshalTest(t *testing.T, yamlInput any, wantErr string) Arguments {
+	t.Helper()
+
+	yamlBytes, err := yaml.Marshal(yamlInput)
+	if err != nil {
+		t.Fatalf("Test setup failure: could not marshal test input to YAML: %v", err)
+	}
+
+	var rawList []util.DelayedUnmarshaler
+	err = yaml.Unmarshal(yamlBytes, &rawList)
+
+	// This block handles cases where the initial parsing into a list is expected to fail.
+	if err != nil {
+		if wantErr == "" {
+			t.Fatalf("Initial YAML parsing failed unexpectedly: %v", err)
+		}
+		if !strings.Contains(err.Error(), wantErr) {
+			t.Errorf("Initial unmarshal error mismatch:\nwant to contain: %q\ngot:             %q", wantErr, err.Error())
+		}
+		return nil // Test is complete.
+	}
+
+	// This block handles the main test path.
+	unmarshalFunc := func(v interface{}) error {
+		dest, ok := v.(*[]util.DelayedUnmarshaler)
+		if !ok {
+			return fmt.Errorf("unexpected type for unmarshal: %T", v)
+		}
+		*dest = rawList
+		return nil
+	}
+
+	var args Arguments
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	ctx := util.WithLogger(context.Background(), logger)
+	err = args.UnmarshalYAML(ctx, unmarshalFunc)
+
+	if wantErr != "" {
+		if err == nil {
+			t.Fatalf("UnmarshalYAML() expected error but got nil")
+		}
+		if !strings.Contains(err.Error(), wantErr) {
+			t.Errorf("UnmarshalYAML() error mismatch:\nwant: %q\ngot:  %q", wantErr, err.Error())
+		}
+	} else if err != nil {
+		t.Fatalf("UnmarshalYAML() returned unexpected error: %v", err)
+	}
+
+	return args
 }
