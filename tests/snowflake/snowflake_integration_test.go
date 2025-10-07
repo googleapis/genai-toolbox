@@ -33,7 +33,7 @@ import (
 var (
 	SnowflakeSourceKind = "snowflake"
 	SnowflakeToolKind   = "snowflake-sql"
-	SnowflakeAccount    = os.Getenv("SNOWFLAKE_ACCOUNT")
+	SnowflakeAccount    = os.Getenv("SNOWFLAKE_HOST")
 	SnowflakeUser       = os.Getenv("SNOWFLAKE_USER")
 	SnowflakePassword   = os.Getenv("SNOWFLAKE_PASS")
 	SnowflakeDatabase   = os.Getenv("SNOWFLAKE_DATABASE")
