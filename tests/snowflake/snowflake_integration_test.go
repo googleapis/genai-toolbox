@@ -77,7 +77,7 @@ func getSnowflakeVars(t *testing.T) map[string]any {
 }
 
 // Copied over from snowflake.go
-func initSnowflakeConnectionPool(account, user, password, database, schema, warehouse, role string) (*sqlx.DB, error) {
+func initSnowflakeConnectionPool(ctx context.Context, account, user, password, database, schema, warehouse, role string) (*sqlx.DB, error) {
 	// Set defaults for optional parameters
 	if warehouse == "" {
 		warehouse = "COMPUTE_WH"
@@ -88,7 +88,7 @@ func initSnowflakeConnectionPool(account, user, password, database, schema, ware
 
 	// Snowflake DSN format: user:password@account/database/schema?warehouse=warehouse&role=role
 	dsn := fmt.Sprintf("%s:%s@%s/%s/%s?warehouse=%s&role=%s&protocol=http&timeout=60", user, password, account, database, schema, warehouse, role)
-	db, err := sqlx.Connect("snowflake", dsn)
+	db, err := sqlx.ConnectContext(ctx, "snowflake", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create connection: %w", err)
 	}
@@ -103,7 +103,7 @@ func TestSnowflake(t *testing.T) {
 
 	var args []string
 
-	db, err := initSnowflakeConnectionPool(SnowflakeAccount, SnowflakeUser, SnowflakePassword, SnowflakeDatabase, SnowflakeSchema, SnowflakeWarehouse, SnowflakeRole)
+	db, err := initSnowflakeConnectionPool(ctx, SnowflakeAccount, SnowflakeUser, SnowflakePassword, SnowflakeDatabase, SnowflakeSchema, SnowflakeWarehouse, SnowflakeRole)
 	if err != nil {
 		t.Fatalf("unable to create snowflake connection pool: %s", err)
 	}

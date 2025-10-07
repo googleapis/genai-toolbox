@@ -110,7 +110,7 @@ func initSnowflakeConnection(ctx context.Context, tracer trace.Tracer, name, acc
 
 	// Snowflake DSN format: user:password@account/database/schema?warehouse=warehouse&role=role
 	dsn := fmt.Sprintf("%s:%s@%s/%s/%s?warehouse=%s&role=%s&protocol=http&timeout=60", user, password, account, database, schema, warehouse, role)
-	db, err := sqlx.Connect("snowflake", dsn)
+	db, err := sqlx.ConnectContext(ctx, "snowflake", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create connection: %w", err)
 	}
