@@ -145,11 +145,10 @@ const listTablesStatement = `
                                     JSON_ARRAYAGG(S.COLUMN_NAME) AS INDEX_COLUMNS_ARRAY
                                 FROM
                                     INFORMATION_SCHEMA.STATISTICS S
-                                WHERE
-                                    S.TABLE_SCHEMA = T.TABLE_SCHEMA AND S.TABLE_NAME = T.TABLE_NAME
                                 GROUP BY
                                     S.TABLE_SCHEMA, S.TABLE_NAME, S.INDEX_NAME
                             ) AS IndexData
+                            WHERE IndexData.TABLE_SCHEMA = T.TABLE_SCHEMA AND IndexData.TABLE_NAME = T.TABLE_NAME
                             ORDER BY IndexData.INDEX_NAME
                         ),
                         'triggers', (
@@ -240,13 +239,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		tools.NewStringParameterWithDefault("output_format", "detailed", "Optional: Use 'simple' for names only or 'detailed' for full info."),
 	}
 	paramManifest := allParameters.Manifest()
-	inputSchema := allParameters.McpManifest()
-
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: inputSchema,
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	// finish tool setup
 	t := Tool{

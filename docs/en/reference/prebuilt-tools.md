@@ -132,6 +132,10 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_tables`: Lists tables in the database.
     *   `get_query_plan`: Provides information about how MySQL executes a SQL
         statement.
+    *   `list_active_queries`: Lists ongoing queries.
+    *   `list_tables_missing_unique_indexes`: Looks for tables that do not have
+        primary or unique key contraint.
+    *   `list_table_fragmentation`: Displays table fragmentation in MySQL.
 
 ## Cloud SQL for MySQL Observability
 
@@ -354,6 +358,10 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `LOOKER_CLIENT_ID`: The client ID for the Looker API.
     *   `LOOKER_CLIENT_SECRET`: The client secret for the Looker API.
     *   `LOOKER_VERIFY_SSL`: Whether to verify SSL certificates.
+    *   `LOOKER_USE_CLIENT_OAUTH`: Whether to use OAuth for authentication.
+    *   `LOOKER_SHOW_HIDDEN_MODELS`: Whether to show hidden models.
+    *   `LOOKER_SHOW_HIDDEN_EXPLORES`: Whether to show hidden explores.
+    *   `LOOKER_SHOW_HIDDEN_FIELDS`: Whether to show hidden fields.
 *   **Permissions:**
     *   A Looker account with permissions to access the desired models,
         explores, and data is required.
@@ -373,6 +381,35 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_dashboards`: Searches for saved dashboards.
     *   `make_dashboard`: Creates a new dashboard.
     *   `add_dashboard_element`: Adds a tile to a dashboard.
+    *   `health_pulse`: Test the health of a Looker instance.
+    *   `health_analyze`: Analyze the LookML usage of a Looker instance.
+    *   `health_vacuum`: Suggest LookML elements that can be removed.
+
+## Looker Conversational Analytics
+
+*   `--prebuilt` value: `looker-conversational-analytics`
+*   **Environment Variables:**
+    *   `LOOKER_BASE_URL`: The URL of your Looker instance.
+    *   `LOOKER_CLIENT_ID`: The client ID for the Looker API.
+    *   `LOOKER_CLIENT_SECRET`: The client secret for the Looker API.
+    *   `LOOKER_VERIFY_SSL`: Whether to verify SSL certificates.
+    *   `LOOKER_USE_CLIENT_OAUTH`: Whether to use OAuth for authentication.
+    *   `LOOKER_PROJECT`: The GCP Project to use for Conversational Analytics.
+    *   `LOOKER_LOCATION`: The GCP Location to use for Conversational Analytics.
+*   **Permissions:**
+    *   A Looker account with permissions to access the desired models,
+        explores, and data is required.
+    *   **Looker Instance User** (`roles/looker.instanceUser`): IAM role to
+        access Looker.
+    *   **Gemini for Google Cloud User** (`roles/cloudaicompanion.user`): IAM
+        role to access Conversational Analytics.
+    *   **Gemini Data Analytics Stateless Chat User (Beta)**
+        (`roles/geminidataanalytics.dataAgentStatelessUser`): IAM role to
+        access Conversational Analytics.
+*   **Tools:**
+    *   `ask_data_insights`: Ask a question of the data.
+    *   `get_models`: Retrieves the list of LookML models.
+    *   `get_explores`: Retrieves the list of explores in a model.
 
 ## Microsoft SQL Server
 
@@ -407,6 +444,10 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_tables`: Lists tables in the database.
     *   `get_query_plan`: Provides information about how MySQL executes a SQL
         statement.
+    *   `list_active_queries`: Lists ongoing queries.
+    *   `list_tables_missing_unique_indexes`: Looks for tables that do not have
+        primary or unique key contraint.
+    *   `list_table_fragmentation`: Displays table fragmentation in MySQL.
 
 ## OceanBase
 

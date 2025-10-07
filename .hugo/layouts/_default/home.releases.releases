@@ -1,0 +1,9 @@
+{{ if .Site.Params.versions -}}
+  {{ $path := "" -}}
+  {{ if .Site.Params.version_menu_pagelinks -}}
+    {{ $path = .Page.RelPermalink -}}
+  {{ end -}}
+  {{ range .Site.Params.versions -}}
+  <a class="dropdown-item" href="{{ .url }}{{ $path }}">{{ .version }}</a>
+  {{ end -}}
+{{ end -}}
