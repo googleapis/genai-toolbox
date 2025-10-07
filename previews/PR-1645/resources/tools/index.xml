@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Tools on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1645/resources/tools/</link><description>Recent content in Tools on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1645/resources/tools/index.xml" rel="self" type="application/rss+xml"/><item><title>yugabytedb-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1645/resources/tools/yugabytedb-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1645/resources/tools/yugabytedb-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>yugabytedb-sql&lt;/code> tool executes a pre-defined SQL statement against a YugabyteDB
+database.&lt;/p>
+&lt;p>The specified SQL statement is executed as a prepared statement,
+and specified parameters will inserted according to their position: e.g. &lt;code>1&lt;/code>
+will be the first parameter specified, &lt;code>$@&lt;/code> will be the second parameter, and so
+on. If template parameters are included, they will be resolved before execution
+of the prepared statement.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
+Query parameters can be used as substitutes for arbitrary expressions.
+Parameters cannot be used as substitutes for identifiers, column names, table
+names, or other parts of the query.&lt;/p></description></item></channel></rss>
