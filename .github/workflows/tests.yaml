@@ -86,7 +86,7 @@ jobs:
           int_test_dir="./tests/*"
           included_packages=$(go list ./... | grep -v -e "$source_dir" -e "$tool_dir"  -e "$prompt_dir" -e "$auth_dir" -e "$int_test_dir")
           go test -race -cover -coverprofile=coverage.out -v $included_packages
-          go test -race -v ./internal/sources/... ./internal/tools/... ./internal/prompts/... ./internal/auth/...
+          go test -race -v ./internal/sources/... ./internal/tools/... ./internal/prompts/.. ./internal/auth/...
 
       - name: Run tests without coverage
         if: ${{ runner.os != 'Linux' }}
