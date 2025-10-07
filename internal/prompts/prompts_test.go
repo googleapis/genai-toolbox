@@ -23,7 +23,6 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
-	_ "github.com/googleapis/genai-toolbox/internal/prompts/custom"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
@@ -49,6 +48,7 @@ func TestRegistry(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
+	// Test case 1: Successful registration and decoding
 	t.Run("RegisterAndDecodeSuccess", func(t *testing.T) {
 		kind := "testKindSuccess"
 		if !prompts.Register(kind, mockFactory) {
@@ -69,6 +69,7 @@ func TestRegistry(t *testing.T) {
 		}
 	})
 
+	// Test case 2: Decoding an unknown kind
 	t.Run("DecodeUnknownKind", func(t *testing.T) {
 		decoder := yaml.NewDecoder(strings.NewReader(""))
 		_, err := prompts.DecodeConfig(ctx, "unregisteredKind", "testPrompt", decoder)
@@ -80,6 +81,7 @@ func TestRegistry(t *testing.T) {
 		}
 	})
 
+	// Test case 3: Factory returns an error
 	t.Run("FactoryReturnsError", func(t *testing.T) {
 		kind := "testKindError"
 		if !prompts.Register(kind, mockErrorFactory) {
@@ -95,20 +97,6 @@ func TestRegistry(t *testing.T) {
 			t.Errorf("expected error to wrap mock factory error, but it didn't")
 		}
 	})
-
-	t.Run("DecodeDefaultsToCustom", func(t *testing.T) {
-		decoder := yaml.NewDecoder(strings.NewReader("description: A test prompt"))
-		config, err := prompts.DecodeConfig(ctx, "", "testDefaultPrompt", decoder)
-		if err != nil {
-			t.Fatalf("expected DecodeConfig with empty kind to succeed, but got error: %v", err)
-		}
-		if config == nil {
-			t.Fatal("expected a non-nil config for default kind")
-		}
-		if config.PromptConfigKind() != "custom" {
-			t.Errorf("expected default kind to be 'custom', but got %q", config.PromptConfigKind())
-		}
-	})
 }
 
 func TestGetMcpManifest(t *testing.T) {
@@ -121,14 +109,15 @@ func TestGetMcpManifest(t *testing.T) {
 		want        prompts.McpManifest
 	}{
 		{
-			name:        "No arguments",
+			name:        "No arguments or metadata",
 			promptName:  "test-prompt",
 			description: "A test prompt.",
 			args:        prompts.Arguments{},
 			want: prompts.McpManifest{
 				Name:        "test-prompt",
 				Description: "A test prompt.",
-				Arguments:   []prompts.ArgMcpManifest{},
+				Arguments:   []prompts.McpPromptArg{},
+				Metadata:    nil,
 			},
 		},
 		{
@@ -136,16 +125,17 @@ func TestGetMcpManifest(t *testing.T) {
 			promptName:  "arg-prompt",
 			description: "Prompt with args.",
 			args: prompts.Arguments{
-				{Parameter: tools.NewStringParameter("param1", "First param")},
-				{Parameter: tools.NewIntParameterWithRequired("param2", "Second param", false)},
+				prompts.Argument{Parameter: tools.NewStringParameter("param1", "First param")},
+				prompts.Argument{Parameter: tools.NewIntParameterWithRequired("param2", "Second param", false)},
 			},
 			want: prompts.McpManifest{
 				Name:        "arg-prompt",
 				Description: "Prompt with args.",
-				Arguments: []prompts.ArgMcpManifest{
+				Arguments: []prompts.McpPromptArg{
 					{Name: "param1", Description: "First param", Required: true},
 					{Name: "param2", Description: "Second param", Required: false},
 				},
+				Metadata: nil,
 			},
 		},
 	}
@@ -159,45 +149,121 @@ func TestGetMcpManifest(t *testing.T) {
 	}
 }
 
-func TestGetManifest(t *testing.T) {
+func TestConfig_Methods(t *testing.T) {
 	t.Parallel()
-	testCases := []struct {
-		name        string
-		description string
-		args        prompts.Arguments
-		want        prompts.Manifest
-	}{
-		{
-			name:        "No arguments",
-			description: "A simple prompt.",
-			args:        prompts.Arguments{},
-			want: prompts.Manifest{
-				Description: "A simple prompt.",
-				Arguments:   []tools.ParameterManifest{},
-			},
-		},
-		{
-			name:        "With arguments",
-			description: "Prompt with arguments.",
-			args: prompts.Arguments{
-				{Parameter: tools.NewStringParameter("param1", "First param")},
-				{Parameter: tools.NewBooleanParameterWithRequired("param2", "Second param", false)},
-			},
-			want: prompts.Manifest{
-				Description: "Prompt with arguments.",
-				Arguments: []tools.ParameterManifest{
-					{Name: "param1", Type: "string", Required: true, Description: "First param", AuthServices: []string{}},
-					{Name: "param2", Type: "boolean", Required: false, Description: "Second param", AuthServices: []string{}},
-				},
-			},
-		},
+
+	// Setup a shared config for testing its methods
+	testArgs := prompts.Arguments{
+		prompts.Argument{Parameter: tools.NewStringParameter("name", "The name to use.")},
+		prompts.Argument{Parameter: tools.NewStringParameterWithRequired("location", "The location.", false)},
 	}
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			got := prompts.GetManifest(tc.description, tc.args)
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("GetManifest() mismatch (-want +got):\n%s", diff)
+
+	cfg := prompts.Config{
+		Name:        "TestConfig",
+		Kind:        "test",
+		Description: "A test config.",
+		Messages: []prompts.Message{
+			{Role: "user", Content: "Hello, my name is {{.name}} and I am in {{.location}}."},
+		},
+		Arguments: testArgs,
+	}
+
+	t.Run("Initialize and Kind", func(t *testing.T) {
+		p, err := cfg.Initialize()
+		if err != nil {
+			t.Fatalf("Initialize() failed: %v", err)
+		}
+		if p == nil {
+			t.Fatal("Initialize() returned a nil prompt")
+		}
+		if cfg.PromptConfigKind() != "test" {
+			t.Errorf("PromptConfigKind() = %q, want %q", cfg.PromptConfigKind(), "test")
+		}
+	})
+
+	t.Run("Manifest", func(t *testing.T) {
+		want := prompts.Manifest{
+			Description: "A test config.",
+			Arguments: []tools.ParameterManifest{
+				{Name: "name", Type: "string", Required: true, Description: "The name to use.", AuthServices: []string{}},
+				{Name: "location", Type: "string", Required: false, Description: "The location.", AuthServices: []string{}},
+			},
+		}
+		got := cfg.Manifest()
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("Manifest() mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("McpManifest", func(t *testing.T) {
+		want := prompts.McpManifest{
+			Name:        "TestConfig",
+			Description: "A test config.",
+			Arguments: []prompts.McpPromptArg{
+				{Name: "name", Description: "The name to use.", Required: true},
+				{Name: "location", Description: "The location.", Required: false},
+			},
+		}
+		got := cfg.McpManifest()
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("McpManifest() mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("SubstituteParams", func(t *testing.T) {
+		argValues := tools.ParamValues{
+			{Name: "name", Value: "Alice"},
+			{Name: "location", Value: "Wonderland"},
+		}
+		want := []prompts.Message{
+			{Role: "user", Content: "Hello, my name is Alice and I am in Wonderland."},
+		}
+
+		got, err := cfg.SubstituteParams(argValues)
+		if err != nil {
+			t.Fatalf("SubstituteParams() failed: %v", err)
+		}
+
+		gotMessages, ok := got.([]prompts.Message)
+		if !ok {
+			t.Fatalf("expected result to be of type []prompts.Message, but got %T", got)
+		}
+
+		if diff := cmp.Diff(want, gotMessages); diff != "" {
+			t.Errorf("SubstituteParams() mismatch (-want +got):\n%s", diff)
+		}
+	})
+
+	t.Run("ParseArgs", func(t *testing.T) {
+		t.Run("Success", func(t *testing.T) {
+			argsIn := map[string]any{
+				"name":     "Bob",
+				"location": "the Builder",
+			}
+			want := tools.ParamValues{
+				{Name: "name", Value: "Bob"},
+				{Name: "location", Value: "the Builder"},
+			}
+			got, err := cfg.ParseArgs(argsIn, nil)
+			if err != nil {
+				t.Fatalf("ParseArgs() failed: %v", err)
+			}
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("ParseArgs() mismatch (-want +got):\n%s", diff)
 			}
 		})
-	}
+
+		t.Run("FailureMissingRequired", func(t *testing.T) {
+			argsIn := map[string]any{
+				"location": "missing name",
+			}
+			_, err := cfg.ParseArgs(argsIn, nil)
+			if err == nil {
+				t.Fatal("expected an error for missing required arg, but got nil")
+			}
+			if !strings.Contains(err.Error(), `parameter "name" is required`) {
+				t.Errorf("expected error to be about missing parameter, but got: %v", err)
+			}
+		})
+	})
 }
