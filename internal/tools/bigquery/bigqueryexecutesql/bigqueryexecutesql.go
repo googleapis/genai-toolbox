@@ -186,14 +186,15 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	bqClient := t.Client
 	restService := t.RestService
-	var err error
 
+	var err error
+	// Initialize new client if using user OAuth token
 	if t.UseClientOAuth {
 		tokenStr, err := accessToken.ParseBearerToken()
 		if err != nil {
 			return nil, fmt.Errorf("error parsing access token: %w", err)
 		}
-		bqClient, restService, err = t.ClientCreator(tokenStr, true) // Re-initialize clients with user token
+		bqClient, restService, err = t.ClientCreator(tokenStr, true)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
 		}
@@ -208,29 +209,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, sql, nil, connProps)
 	if err != nil {
-		// Check if the error is due to EXECUTE IMMEDIATE, which is not supported in dry run but might be allowed.
-		// This is a known limitation. We provide a more specific error message.
-		if strings.Contains(err.Error(), "EXECUTE IMMEDIATE is not supported in a dry run") {
-			if len(t.AllowedDatasets) > 0 {
-				return nil, fmt.Errorf("EXECUTE IMMEDIATE is not allowed when dataset restrictions are in place")
-			}
-		}
-		return nil, fmt.Errorf("final query validation failed: %w", err)
-	}
-
-	if dryRunJob.Status != nil && dryRunJob.Status.ErrorResult != nil {
-		return nil, fmt.Errorf("query validation failed: %s", dryRunJob.Status.ErrorResult.Message)
-	}
-
-	if dryRunJob.Statistics == nil || dryRunJob.Statistics.Query == nil {
-		return nil, fmt.Errorf("query validation failed: unable to retrieve statistics from the dry run job")
+		return nil, fmt.Errorf("query validation failed: %w", err)
 	}
 
 	statementType := dryRunJob.Statistics.Query.StatementType
-	if statementType == "" {
-		// This can happen for queries that are syntactically valid but have semantic errors that are caught early.
-		return nil, fmt.Errorf("query validation failed: unable to infer the statement type from the dry run job")
-	}
 
 	switch t.WriteMode {
 	case bigqueryds.WriteModeBlocked:

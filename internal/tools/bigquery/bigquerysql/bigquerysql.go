@@ -246,21 +246,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), query.Location, newStatement, lowLevelParams, query.ConnectionProperties)
 	if err != nil {
-		return nil, fmt.Errorf("query validation failed during dry run: %w", err)
+		return nil, fmt.Errorf("query validation failed: %w", err)
 	}
 
-	if dryRunJob.Status != nil && dryRunJob.Status.ErrorResult != nil {
-		return nil, fmt.Errorf("query validation failed: %s", dryRunJob.Status.ErrorResult.Message)
-	}
-
-	if dryRunJob.Statistics == nil || dryRunJob.Statistics.Query == nil {
-		return nil, fmt.Errorf("query validation failed: unable to retrieve statistics from the dry run job")
-	}
 	statementType := dryRunJob.Statistics.Query.StatementType
-	if statementType == "" {
-		// This can happen for queries that are syntactically valid but have semantic errors that are caught early.
-		return nil, fmt.Errorf("query validation failed: unable to infer the statement type from the dry run job")
-	}
 
 	// This block handles SELECT statements, which return a row set.
 	// We iterate through the results, convert each row into a map of

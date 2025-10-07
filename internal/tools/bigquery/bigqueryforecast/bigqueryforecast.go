@@ -215,7 +215,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			}
 			dryRunJob, err := bqutil.DryRunQuery(ctx, restService, t.Client.Project(), t.Client.Location, historyData, nil, connProps)
 			if err != nil {
-				return nil, fmt.Errorf("query validation failed during dry run: %w", err)
+				return nil, fmt.Errorf("query validation failed: %w", err)
 			}
 			statementType := dryRunJob.Statistics.Query.StatementType
 			if statementType != "SELECT" {
