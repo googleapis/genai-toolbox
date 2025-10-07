@@ -61,11 +61,15 @@ func InitializeResponse(ctx context.Context, id jsonrpc.RequestId, body []byte, 
 	}
 
 	toolsListChanged := false
+	promptsListChanged := false
 	result := mcputil.InitializeResult{
 		ProtocolVersion: protocolVersion,
 		Capabilities: mcputil.ServerCapabilities{
 			Tools: &mcputil.ListChanged{
 				ListChanged: &toolsListChanged,
+			},
+			Prompts: &mcputil.ListChanged{
+				ListChanged: &promptsListChanged,
 			},
 		},
 		ServerInfo: mcputil.Implementation{
