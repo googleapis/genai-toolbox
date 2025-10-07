@@ -65,7 +65,6 @@ var tool3InputSchema = map[string]any{
 	"required": []any{"my_array"},
 }
 
-var prompt1Args = []any{}
 var prompt2Args = []any{
 	map[string]any{
 		"name":        "arg1",
@@ -517,8 +516,7 @@ func TestMcpEndpoint(t *testing.T) {
 						"result": map[string]any{
 							"prompts": []any{
 								map[string]any{
-									"name":      "prompt1",
-									"arguments": prompt1Args,
+									"name": "prompt1",
 								},
 								map[string]any{
 									"name":      "prompt2",
