@@ -15,22 +15,25 @@
 package prompts_test
 
 import (
+	"context"
 	"fmt"
+	"io"
+	"log/slog"
 	"strings"
 	"testing"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
-// Test type aliases for convenience.
+// Test type aliases for convenience
 type (
-	Argument       = prompts.Argument
-	ArgMcpManifest = prompts.ArgMcpManifest
-	Arguments      = prompts.Arguments
+	Argument     = prompts.Argument
+	McpPromptArg = prompts.McpPromptArg
+	Arguments    = prompts.Arguments
 )
 
 // Ptr is a helper function to create a pointer to a value.
@@ -38,211 +41,244 @@ func Ptr[T any](v T) *T {
 	return &v
 }
 
+// -- Test Setup Helpers to reduce boilerplate in test cases --
+
+func makeStrArg(name, desc string) Argument {
+	return Argument{Parameter: tools.NewStringParameter(name, desc)}
+}
+
+func makeIntArg(name, desc string) Argument {
+	return Argument{Parameter: tools.NewIntParameter(name, desc)}
+}
+
+func makeBoolArg(name, desc string, required bool) Argument {
+	return Argument{Parameter: tools.NewBooleanParameterWithRequired(name, desc, required)}
+}
+
 func makeArrayArg(name, desc string, items tools.Parameter) Argument {
 	return Argument{Parameter: tools.NewArrayParameter(name, desc, items)}
 }
 
-func TestArgMcpManifest(t *testing.T) {
+func makeMapArg(name, desc, valueType string) Argument {
+	return Argument{Parameter: tools.NewMapParameter(name, desc, valueType)}
+}
+
+func TestArgument_McpPromptManifest(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		name     string
 		arg      Argument
-		expected ArgMcpManifest
+		expected McpPromptArg
 	}{
 		{
 			name: "Required with no default",
 			arg:  Argument{Parameter: tools.NewStringParameterWithRequired("name1", "desc1", true)},
-			expected: ArgMcpManifest{
+			expected: McpPromptArg{
 				Name: "name1", Description: "desc1", Required: true,
 			},
 		},
 		{
 			name: "Not required with no default",
 			arg:  Argument{Parameter: tools.NewStringParameterWithRequired("name2", "desc2", false)},
-			expected: ArgMcpManifest{
+			expected: McpPromptArg{
 				Name: "name2", Description: "desc2", Required: false,
 			},
 		},
 		{
 			name: "Implicitly required with default",
 			arg:  Argument{Parameter: tools.NewStringParameterWithDefault("name3", "defaultVal", "desc3")},
-			expected: ArgMcpManifest{
+			expected: McpPromptArg{
 				Name: "name3", Description: "desc3", Required: false,
+			},
+		},
+		{
+			name: "Explicitly required with default",
+			arg: Argument{
+				Parameter: &tools.StringParameter{
+					CommonParameter: tools.CommonParameter{Name: "name4", Type: tools.TypeString, Desc: "desc4", Required: Ptr(true)},
+					Default:         Ptr("defaultVal"),
+				},
+			},
+			expected: McpPromptArg{
+				Name: "name4", Description: "desc4", Required: false,
+			},
+		},
+		{
+			name: "Implicitly required with no default",
+			arg:  Argument{Parameter: tools.NewStringParameter("name5", "desc5")},
+			expected: McpPromptArg{
+				Name: "name5", Description: "desc5", Required: true,
 			},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := tc.arg.McpManifest()
+			got := tc.arg.McpPromptManifest()
 			if diff := cmp.Diff(tc.expected, got); diff != "" {
-				t.Errorf("McpManifest() mismatch (-want +got):\n%s", diff)
+				t.Errorf("McpPromptManifest() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
 }
 
-// TestArguments_UnmarshalYAML tests all unmarshaling logic for the Arguments type.
-func TestArgumentsUnmarshalYAML(t *testing.T) {
+func TestArguments_UnmarshalYAML(t *testing.T) {
 	t.Parallel()
-	// paramComparer allows cmp.Diff to intelligently compare the parsed results.
+
 	var transformFunc func(tools.Parameter) any
 	transformFunc = func(p tools.Parameter) any {
-		s := struct{ Name, Type, Desc string }{
-			Name: p.GetName(),
-			Type: p.GetType(),
-			Desc: p.Manifest().Description,
+		s := struct {
+			Name, Type, Desc string
+			Required         bool
+			Items            any
+			ValueType        string
+		}{
+			Name:     p.GetName(),
+			Type:     p.GetType(),
+			Desc:     p.Manifest().Description,
+			Required: p.GetRequired(),
 		}
 		if arr, ok := p.(*tools.ArrayParameter); ok {
-			s.Desc = fmt.Sprintf("%s items:%v", s.Desc, transformFunc(arr.GetItems()))
+			// Correct recursive call
+			s.Items = transformFunc(arr.GetItems())
+		}
+		if m, ok := p.(*tools.MapParameter); ok {
+			s.ValueType = m.GetValueType()
 		}
 		return s
 	}
+
+	// Finally, create the comparer option for cmp.Diff by passing our recursive function to cmp.Transformer.
 	paramComparer := cmp.Transformer("Parameter", transformFunc)
 
 	testCases := []struct {
 		name         string
-		yamlInput    []map[string]any
+		yaml         string
 		expectedArgs Arguments
 		wantErr      string
 	}{
 		{
-			name: "Defaults type to string when omitted",
-			yamlInput: []map[string]any{
-				{"name": "p1", "description": "d1"},
-			},
+			name: "Successful unmarshal with various types",
+			yaml: `
+- name: param1
+  description: string param
+- name: param2
+  description: int param
+  type: integer
+- name: param3
+  description: bool param
+  type: boolean
+  required: false
+`,
 			expectedArgs: Arguments{
-				{Parameter: tools.NewStringParameter("p1", "d1")},
+				makeStrArg("param1", "string param"),
+				makeIntArg("param2", "int param"),
+				makeBoolArg("param3", "bool param", false),
 			},
 		},
 		{
-			name: "Respects type when present",
-			yamlInput: []map[string]any{
-				{"name": "p1", "description": "d1", "type": "integer"},
-			},
+			name: "Type defaults to string",
+			yaml: `
+- name: param_default
+  description: a param that defaults to string type
+`,
 			expectedArgs: Arguments{
-				{Parameter: tools.NewIntParameter("p1", "d1")},
+				makeStrArg("param_default", "a param that defaults to string type"),
 			},
 		},
 		{
-			name: "Parses complex types like arrays correctly",
-			yamlInput: []map[string]any{
-				{
-					"name":        "param_array",
-					"description": "an array",
-					"type":        "array",
-					"items": map[string]any{
-						"name":        "item_name",
-						"type":        "string",
-						"description": "an item",
-					},
-				},
-			},
+			name: "Array and Map types",
+			yaml: `
+- name: param_array
+  description: an array
+  type: array
+  items:
+    name: an_item_name_to_pass_validation
+    type: string
+    description: an item
+- name: param_map
+  description: a map
+  type: map
+  valueType: integer
+`,
 			expectedArgs: Arguments{
-				makeArrayArg("param_array", "an array", tools.NewStringParameter("item_name", "an item")),
+				makeArrayArg("param_array", "an array", tools.NewStringParameter("an_item_name_to_pass_validation", "an item")),
+				makeMapArg("param_map", "a map", "integer"),
 			},
 		},
 		{
-			name: "Propagates parsing error for unsupported type",
-			yamlInput: []map[string]any{
-				{"name": "p1", "description": "d1", "type": "unsupported"},
-			},
+			name:    "Unmarshal error - not a list",
+			yaml:    `name: param1`,
+			wantErr: "mapping was used where sequence is expected",
+		},
+		{
+			name:    "Parse error - bad item in list",
+			yaml:    `- "just a string"`,
+			wantErr: "string was used where mapping is expected",
+		},
+		{
+			name: "Parse error - invalid type",
+			yaml: `
+- name: param1
+  description: desc1
+  type: unsupported
+`,
 			wantErr: `"unsupported" is not valid type for a parameter`,
 		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			yamlBytes, err := yaml.Marshal(tc.yamlInput)
-			if err != nil {
-				t.Fatalf("Test setup failure: could not marshal test input to YAML: %v", err)
-			}
-			var got Arguments
-			ctx, err := testutils.ContextWithNewLogger()
-			if err != nil {
-				t.Fatalf("Failed to create logger using testutils: %v", err)
-			}
-			err = yaml.UnmarshalContext(ctx, yamlBytes, &got)
-
-			if tc.wantErr != "" {
-				if err == nil {
-					t.Fatalf("UnmarshalContext() expected error but got nil")
-				}
-				if !strings.Contains(err.Error(), tc.wantErr) {
-					t.Errorf("UnmarshalContext() error mismatch:\nwant to contain: %q\ngot: %q", tc.wantErr, err.Error())
-				}
-			} else {
-				if err != nil {
-					t.Fatalf("UnmarshalContext() returned unexpected error: %v", err)
-				}
-				if diff := cmp.Diff(tc.expectedArgs, got, paramComparer); diff != "" {
-					t.Errorf("UnmarshalContext() result mismatch (-want +got):\n%s", diff)
-				}
-			}
-		})
-	}
-}
-
-func TestParseArguments(t *testing.T) {
-	t.Parallel()
-	testArguments := prompts.Arguments{
-		{Parameter: tools.NewStringParameter("name", "A required name.")},
-		{Parameter: tools.NewIntParameterWithRequired("count", "An optional count.", false)},
-	}
-
-	testCases := []struct {
-		name    string
-		argsIn  map[string]any
-		want    tools.ParamValues
-		wantErr string
-	}{
 		{
-			name: "Success with all parameters provided",
-			argsIn: map[string]any{
-				"name":  "test-name",
-				"count": 42,
-			},
-			want: tools.ParamValues{
-				{Name: "name", Value: "test-name"},
-				{Name: "count", Value: 42},
-			},
-		},
-		{
-			name: "Success with only required parameters",
-			argsIn: map[string]any{
-				"name": "another-name",
-			},
-			want: tools.ParamValues{
-				{Name: "name", Value: "another-name"},
-				{Name: "count", Value: nil},
-			},
-		},
-		{
-			name: "Failure with missing required parameter",
-			argsIn: map[string]any{
-				"count": 123,
-			},
-			wantErr: `parameter "name" is required`,
+			name: "Parse error - missing name",
+			yaml: `
+- type: string
+  description: desc1
+`,
+			wantErr: "Field validation for 'Name' failed on the 'required' tag",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := prompts.ParseArguments(testArguments, tc.argsIn, nil)
-			if tc.wantErr != "" {
-				if err == nil {
-					t.Fatalf("expected an error but got nil")
+			var rawList []util.DelayedUnmarshaler
+			err := yaml.Unmarshal([]byte(tc.yaml), &rawList)
+
+			if err != nil {
+				if tc.wantErr == "" {
+					t.Fatalf("Initial unmarshal failed unexpectedly: %v", err)
 				}
 				if !strings.Contains(err.Error(), tc.wantErr) {
-					t.Errorf("error mismatch:\n  want to contain: %q\n  got: %q", tc.wantErr, err.Error())
+					t.Errorf("Initial unmarshal error mismatch:\nwant: %q\ngot:  %q", tc.wantErr, err.Error())
 				}
-			} else {
-				if err != nil {
-					t.Fatalf("unexpected error: %v", err)
+				return
+			}
+
+			unmarshalFunc := func(v interface{}) error {
+				dest, ok := v.(*[]util.DelayedUnmarshaler)
+				if !ok {
+					return fmt.Errorf("unexpected type for unmarshal: %T", v)
 				}
-				if diff := cmp.Diff(tc.want, got); diff != "" {
-					t.Errorf("ParseArguments() result mismatch (-want +got):\n%s", diff)
+				*dest = rawList
+				return nil
+			}
+
+			var args Arguments
+			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+			ctx := util.WithLogger(context.Background(), logger)
+			err = args.UnmarshalYAML(ctx, unmarshalFunc)
+
+			if tc.wantErr != "" {
+				if err == nil {
+					t.Fatalf("UnmarshalYAML() expected error, got nil")
 				}
+				if !strings.Contains(err.Error(), tc.wantErr) {
+					t.Errorf("UnmarshalYAML() error mismatch:\nwant: %q\ngot:  %q", tc.wantErr, err.Error())
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("UnmarshalYAML() returned unexpected error: %v", err)
+			}
+
+			if diff := cmp.Diff(tc.expectedArgs, args, paramComparer); diff != "" {
+				t.Errorf("UnmarshalYAML() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
