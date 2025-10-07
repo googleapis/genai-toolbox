@@ -68,8 +68,8 @@ var tool3InputSchema = map[string]any{
 
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
 	mockTools := []MockTool{tool1, tool2, tool3, tool4, tool5}
-	toolsMap, toolsets := setUpResources(t, mockTools)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	toolsMap, toolsets, _, _ := setUpResources(t, mockTools, nil)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -337,8 +337,8 @@ func runInitializeLifecycle(t *testing.T, ts *httptest.Server, protocolVersion s
 
 func TestMcpEndpoint(t *testing.T) {
 	mockTools := []MockTool{tool1, tool2, tool3, tool4, tool5}
-	toolsMap, toolsets := setUpResources(t, mockTools)
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	toolsMap, toolsets, _, _ := setUpResources(t, mockTools, nil)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -744,7 +744,7 @@ func TestMcpEndpoint(t *testing.T) {
 
 func TestInvalidProtocolVersionHeader(t *testing.T) {
 	toolsMap, toolsets := map[string]tools.Tool{}, map[string]tools.Toolset{}
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -771,7 +771,7 @@ func TestInvalidProtocolVersionHeader(t *testing.T) {
 
 func TestDeleteEndpoint(t *testing.T) {
 	toolsMap, toolsets := map[string]tools.Tool{}, map[string]tools.Toolset{}
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -787,7 +787,7 @@ func TestDeleteEndpoint(t *testing.T) {
 
 func TestGetEndpoint(t *testing.T) {
 	toolsMap, toolsets := map[string]tools.Tool{}, map[string]tools.Toolset{}
-	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets)
+	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -810,7 +810,7 @@ func TestGetEndpoint(t *testing.T) {
 }
 
 func TestSseEndpoint(t *testing.T) {
-	r, shutdown := setUpServer(t, "mcp", nil, nil)
+	r, shutdown := setUpServer(t, "mcp", nil, nil, nil, nil)
 	defer shutdown()
 	ts := runServer(r, false)
 	defer ts.Close()
@@ -925,7 +925,7 @@ func TestStdioSession(t *testing.T) {
 	defer cancel()
 
 	mockTools := []MockTool{tool1, tool2, tool3}
-	toolsMap, toolsets := setUpResources(t, mockTools)
+	toolsMap, toolsets, _, _ := setUpResources(t, mockTools, nil)
 
 	pr, pw, err := os.Pipe()
 	if err != nil {
