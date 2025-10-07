@@ -83,7 +83,7 @@ type McpManifest struct {
 }
 
 func GetMcpManifest(name, desc string, args Arguments) McpManifest {
-	var mcpArgs []McpPromptArg
+	mcpArgs := make([]McpPromptArg, 0)
 	for _, arg := range args {
 		mcpArgs = append(mcpArgs, arg.McpPromptManifest())
 	}
