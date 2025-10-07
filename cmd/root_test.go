@@ -923,8 +923,8 @@ func TestParseToolFileWithPrompts(t *testing.T) {
                 my-prompt:
                     kind: standard
                     description: A prompt template for data analysis.
-                    content: |
-                        Analyze the data for {{.country}}.
+                    messages:
+                        - content: Analyze the data for {{.country}}.
             promptsets:
                 my-prompt-set:
                     - my-prompt
