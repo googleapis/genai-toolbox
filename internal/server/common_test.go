@@ -180,6 +180,18 @@ var tool5 = MockTool{
 	requiresClientAuthrorization: true,
 }
 
+var prompt1 = MockPrompt{
+	Name: "prompt1",
+	Args: prompts.Arguments{},
+}
+
+var prompt2 = MockPrompt{
+	Name: "prompt2",
+	Args: prompts.Arguments{
+		{Parameter: tools.NewStringParameter("arg1", "This is the first argument.")},
+	},
+}
+
 // setUpResources setups resources to test against
 func setUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt) (map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset) {
 	toolsMap := make(map[string]tools.Tool)
