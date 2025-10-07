@@ -121,7 +121,7 @@ func TestArguments_UnmarshalYAML(t *testing.T) {
 			if len(args) != 1 {
 				t.Fatalf("expected 1 argument to be parsed, got %d", len(args))
 			}
-			gotType := args[0].Parameter.GetType()
+			gotType := args[0].GetType()
 			if gotType != tc.expectedType {
 				t.Errorf("expected parameter type to be %q, got %q", tc.expectedType, gotType)
 			}
@@ -222,7 +222,7 @@ func runUnmarshalTest(t *testing.T, yamlInput any, wantErr string) Arguments {
 			t.Fatalf("Initial YAML parsing failed unexpectedly: %v", err)
 		}
 		if !strings.Contains(err.Error(), wantErr) {
-			t.Errorf("Initial unmarshal error mismatch:\nwant to contain: %q\ngot:             %q", wantErr, err.Error())
+			t.Errorf("Initial unmarshal error mismatch:\nwant to contain: %q\ngot: %q", wantErr, err.Error())
 		}
 		return nil // Test is complete.
 	}
