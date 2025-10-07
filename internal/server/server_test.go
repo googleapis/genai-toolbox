@@ -147,7 +147,7 @@ func TestUpdateServer(t *testing.T) {
 			Name: "example-toolset", Tools: []*tools.Tool{},
 		},
 	}
-	s.ResourceMgr.SetResources(newSources, newAuth, newTools, newToolsets)
+	s.ResourceMgr.SetResources(newSources, newAuth, newTools, newToolsets, nil, nil)
 	if err != nil {
 		t.Errorf("error updating server: %s", err)
 	}
