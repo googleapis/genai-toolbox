@@ -673,7 +673,7 @@ steps:
       - "KDB_HOST=$_KDB_HOST"
       - "KDB_PORT=$_KDB_PORT"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLIENT_ID", "KDB_USER", "KDB_PASS"]
+    secretEnv: ["CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
