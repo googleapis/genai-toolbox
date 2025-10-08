@@ -517,8 +517,7 @@ func TestMcpEndpoint(t *testing.T) {
 						"result": map[string]any{
 							"prompts": []any{
 								map[string]any{
-									"name":      "prompt1",
-									"arguments": prompt1Args,
+									"name": "prompt1",
 								},
 								map[string]any{
 									"name":      "prompt2",
@@ -529,13 +528,13 @@ func TestMcpEndpoint(t *testing.T) {
 					},
 				},
 				{
-					name: "prompts/call",
+					name: "prompts/get",
 					url:  "/",
 					body: jsonrpc.JSONRPCRequest{
 						Jsonrpc: jsonrpcVersion,
-						Id:      "prompts-call-prompt2",
+						Id:      "prompts-get-prompt2",
 						Request: jsonrpc.Request{
-							Method: "prompts/call",
+							Method: "prompts/get",
 						},
 						Params: map[string]any{
 							"name": "prompt2",
@@ -547,12 +546,15 @@ func TestMcpEndpoint(t *testing.T) {
 					wantStatusCode: http.StatusOK,
 					want: map[string]any{
 						"jsonrpc": "2.0",
-						"id":      "prompts-call-prompt2",
+						"id":      "prompts-get-prompt2",
 						"result": map[string]any{
-							"content": []any{
+							"messages": []any{
 								map[string]any{
-									"type": "text",
-									"text": `"substituted prompt2"`,
+									"role": "user",
+									"content": map[string]any{
+										"type": "text",
+										"text": "substituted prompt2",
+									},
 								},
 							},
 						},
