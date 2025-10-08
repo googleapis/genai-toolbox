@@ -39,6 +39,13 @@ It's compatible with the following sources:
   insights. Can be `'NO_PRUNING'` or `'PRUNE_REDUNDANT_INSIGHTS'`. Defaults to
   `'PRUNE_REDUNDANT_INSIGHTS'`.
 
+The behavior of this tool is influenced by the `writeMode` setting on its `bigquery` source:
+
+- **`allowed` (default) and `blocked`:** These modes do not impose any special restrictions on the `bigquery-analyze-contribution` tool.
+- **`protected`:** This mode enables session-based execution. The tool will operate within the same BigQuery session as other
+  tools using the same source. This allows the `input_data` parameter to be a query that references temporary resources (e.g., 
+  `TEMP` tables) created within that session.
+
 
 ## Example
 
