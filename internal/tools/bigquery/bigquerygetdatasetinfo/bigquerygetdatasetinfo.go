@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
 )
 
 const kind string = "bigquery-get-dataset-info"
@@ -88,30 +89,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	defaultProjectID := s.BigQueryClient().Project()
 	projectDescription := "The Google Cloud project ID containing the dataset."
-	datasetDescription := "The dataset to get metadata information."
+	datasetDescription := "The dataset to get metadata information. Can be in `project.dataset` format."
 	var datasetParameter tools.Parameter
-	allowedDatasets := s.BigQueryAllowedDatasets()
-	if len(allowedDatasets) > 0 {
-		if len(allowedDatasets) == 1 {
-			parts := strings.Split(allowedDatasets[0], ".")
-			defaultProjectID = parts[0]
-			datasetID := parts[1]
-			projectDescription += fmt.Sprintf(" Must be `%s`.", defaultProjectID)
-			datasetDescription += fmt.Sprintf(" Must be `%s`.", datasetID)
-			datasetParameter = tools.NewStringParameterWithDefault(datasetKey, datasetID, datasetDescription)
-		} else {
-			datasetIDs := []string{}
-			for _, ds := range allowedDatasets {
-				datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
-			}
-			datasetDescription += fmt.Sprintf(" Must be one of the following: %s.", strings.Join(datasetIDs, ", "))
-			datasetParameter = tools.NewStringParameter(datasetKey, datasetDescription)
-		}
-	} else {
-		datasetParameter = tools.NewStringParameter(datasetKey, datasetDescription)
-	}
+	var projectParameter tools.Parameter
 
-	projectParameter := tools.NewStringParameterWithDefault(projectKey, defaultProjectID, projectDescription)
+	projectParameter, datasetParameter = bqutil.InitializeDatasetParameters(
+		s.BigQueryAllowedDatasets(),
+		defaultProjectID,
+		projectKey, datasetKey,
+		projectDescription, datasetDescription)
 	parameters := tools.Parameters{projectParameter, datasetParameter}
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
@@ -188,16 +174,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	dsHandle := bqClient.DatasetInProject(projectId, datasetId)
-
-	// Handle fully-qualified dataset ID in the dataset parameter.
-	if parts := strings.Split(datasetId, "."); len(parts) == 2 {
-		projectId = parts[0]
-		datasetId = parts[1]
-	}
-
-	if !t.IsDatasetAllowed(projectId, datasetId) {
-		return nil, fmt.Errorf("access denied to dataset '%s' because it is not in the configured list of allowed datasets for project '%s'", datasetId, projectId)
-	}
 
 	metadata, err := dsHandle.Metadata(ctx)
 	if err != nil {
