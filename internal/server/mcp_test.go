@@ -65,7 +65,6 @@ var tool3InputSchema = map[string]any{
 	"required": []any{"my_array"},
 }
 
-var prompt1Args = []any{}
 var prompt2Args = []any{
 	map[string]any{
 		"name":        "arg1",
