@@ -51,7 +51,7 @@ var _ sources.SourceConfig = Config{}
 
 type BigqueryClientCreator func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 
-type BigQuerySessionProvider func() *Session
+type BigQuerySessionProvider func(ctx context.Context) (*Session, error)
 
 type DataplexClientCreator func(tokenString string) (*dataplexapi.CatalogClient, error)
 
@@ -220,15 +220,18 @@ func (s *Source) BigQuerySession() BigQuerySessionProvider {
 }
 
 func (s *Source) newBigQuerySessionProvider() BigQuerySessionProvider {
-	return func() *Session {
+	return func(ctx context.Context) (*Session, error) {
 		if s.WriteMode != WriteModeProtected {
-			return nil
+			return nil, nil
 		}
 
 		s.sessionMutex.Lock()
 		defer s.sessionMutex.Unlock()
 
-		logger, _ := util.LoggerFromContext(context.Background())
+		logger, err := util.LoggerFromContext(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get logger from context: %w", err)
+		}
 
 		if s.Session != nil {
 			// Absolute 7-day lifetime check.
@@ -236,7 +239,7 @@ func (s *Source) newBigQuerySessionProvider() BigQuerySessionProvider {
 			// This assumes a single task will not exceed 30 minutes, preventing it from failing mid-execution.
 			const refreshThreshold = 30 * time.Minute
 			if time.Since(s.Session.CreationTime) > (sessionMaxLifetime - refreshThreshold) {
-				logger.DebugContext(context.Background(), "Session is approaching its 7-day maximum lifetime. Creating a new one.")
+				logger.DebugContext(ctx, "Session is approaching its 7-day maximum lifetime. Creating a new one.")
 			} else {
 				job := &bigqueryrestapi.Job{
 					Configuration: &bigqueryrestapi.JobConfiguration{
@@ -251,9 +254,9 @@ func (s *Source) newBigQuerySessionProvider() BigQuerySessionProvider {
 				_, err := s.RestService.Jobs.Insert(s.Project, job).Do()
 				if err == nil {
 					s.Session.LastUsed = time.Now()
-					return s.Session
+					return s.Session, nil
 				}
-				logger.DebugContext(context.Background(), "Session validation failed (likely expired), creating a new one.", "error", err)
+				logger.DebugContext(ctx, "Session validation failed (likely expired), creating a new one.", "error", err)
 			}
 		}
 
@@ -277,21 +280,21 @@ func (s *Source) newBigQuerySessionProvider() BigQuerySessionProvider {
 
 		createdJob, err := s.RestService.Jobs.Insert(s.Project, job).Do()
 		if err != nil {
-			return nil
+			return nil, fmt.Errorf("failed to create new session: %w", err)
 		}
 
 		var sessionID, sessionDatasetID, projectID string
 		if createdJob.Status != nil && createdJob.Statistics.SessionInfo != nil {
 			sessionID = createdJob.Statistics.SessionInfo.SessionId
 		} else {
-			return nil
+			return nil, fmt.Errorf("failed to get session ID from new session job")
 		}
 
 		if createdJob.Configuration != nil && createdJob.Configuration.Query != nil && createdJob.Configuration.Query.DestinationTable != nil {
 			sessionDatasetID = createdJob.Configuration.Query.DestinationTable.DatasetId
 			projectID = createdJob.Configuration.Query.DestinationTable.ProjectId
 		} else {
-			return nil
+			return nil, fmt.Errorf("failed to get session dataset ID from new session job")
 		}
 
 		s.Session = &Session{
@@ -301,7 +304,7 @@ func (s *Source) newBigQuerySessionProvider() BigQuerySessionProvider {
 			CreationTime: creationTime,
 			LastUsed:     creationTime,
 		}
-		return s.Session
+		return s.Session, nil
 	}
 }
 

@@ -203,9 +203,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	var connProps []*bigqueryapi.ConnectionProperty
 	var session *bigqueryds.Session
 	if t.WriteMode == bigqueryds.WriteModeProtected {
-		session = t.SessionProvider()
-		if session == nil {
-			return nil, fmt.Errorf("failed to get or create a BigQuery session for protected mode")
+		session, err = t.SessionProvider(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get BigQuery session for protected mode: %w", err)
 		}
 		connProps = []*bigqueryapi.ConnectionProperty{
 			{Key: "session_id", Value: session.ID},

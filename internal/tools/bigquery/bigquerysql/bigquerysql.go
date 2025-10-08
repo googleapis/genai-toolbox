@@ -239,7 +239,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	connProps := []*bigqueryapi.ConnectionProperty{}
 	if t.SessionProvider != nil {
-		session := t.SessionProvider()
+		session, err := t.SessionProvider(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
+		}
 		if session != nil {
 			// Add session ID to the connection properties for subsequent calls.
 			connProps = append(connProps, &bigqueryapi.ConnectionProperty{Key: "session_id", Value: session.ID})

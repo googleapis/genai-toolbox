@@ -228,7 +228,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	// Get session from provider if in protected mode.
 	// Otherwise, a new session will be created by the first query.
-	session := t.SessionProvider()
+	session, err := t.SessionProvider(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
+	}
+
 	if session != nil {
 		createModelQuery.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
 			{Key: "session_id", Value: session.ID},

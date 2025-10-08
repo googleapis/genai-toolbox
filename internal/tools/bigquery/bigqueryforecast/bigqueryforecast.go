@@ -208,7 +208,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if strings.HasPrefix(trimmedUpperHistoryData, "SELECT") || strings.HasPrefix(trimmedUpperHistoryData, "WITH") {
 		if len(t.AllowedDatasets) > 0 {
 			var connProps []*bigqueryapi.ConnectionProperty
-			if session := t.SessionProvider(); session != nil {
+			session, err := t.SessionProvider(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
+			}
+			if session != nil {
 				connProps = []*bigqueryapi.ConnectionProperty{
 					{Key: "session_id", Value: session.ID},
 				}
@@ -274,7 +278,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	// JobStatistics.QueryStatistics.StatementType
 	query := bqClient.Query(sql)
 	query.Location = bqClient.Location
-	if session := t.SessionProvider(); session != nil {
+	session, err := t.SessionProvider(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
+	}
+	if session != nil {
 		// Add session ID to the connection properties for subsequent calls.
 		query.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
 			{Key: "session_id", Value: session.ID},
