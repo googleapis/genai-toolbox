@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 
@@ -65,6 +66,26 @@ type Config struct {
 	Location        string   `yaml:"location"`
 	AllowedDatasets []string `yaml:"allowedDatasets"`
 	UseClientOAuth  bool     `yaml:"useClientOAuth"`
+	CredentialsJSON string   `yaml:"credentialsJson"`
+	CredentialsPath string   `yaml:"credentialsPath"`
+}
+
+// validateCredentials ensures that only one credential method is provided.
+func (r Config) validateCredentials() error {
+	provided := 0
+	if r.UseClientOAuth {
+		provided++
+	}
+	if r.CredentialsJSON != "" {
+		provided++
+	}
+	if r.CredentialsPath != "" {
+		provided++
+	}
+	if provided > 1 {
+		return fmt.Errorf("for source %q, you can only set one of useClientOAuth, credentialsJson, or credentialsPath", r.Name)
+	}
+	return nil
 }
 
 func (r Config) SourceConfigKind() string {
@@ -73,22 +94,44 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	if err := r.validateCredentials(); err != nil {
+		return nil, err
+	}
+
 	var client *bigqueryapi.Client
 	var restService *bigqueryrestapi.Service
-	var tokenSource oauth2.TokenSource
+	var cloudPlatformTokenSource oauth2.TokenSource
 	var clientCreator BigqueryClientCreator
 	var err error
+	var credsJSON []byte
 
 	if r.UseClientOAuth {
 		clientCreator, err = newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.Name)
 		if err != nil {
 			return nil, fmt.Errorf("error constructing client creator: %w", err)
 		}
-	} else {
-		// Initializes a BigQuery Google SQL source
-		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location)
-		if err != nil {
-			return nil, fmt.Errorf("error creating client from ADC: %w", err)
+	} else { // Use service account (JSON/path) or ADC
+		if r.CredentialsPath != "" {
+			credsJSON, err = os.ReadFile(r.CredentialsPath)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read credentials from path %q: %w", r.CredentialsPath, err)
+			}
+		} else if r.CredentialsJSON != "" {
+			credsJSON = []byte(r.CredentialsJSON)
+		}
+
+		opts := []option.ClientOption{}
+		if len(credsJSON) > 0 {
+			// Use the provided credentials for both BQ client and the separate token source.
+			client, restService, cloudPlatformTokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, false, credsJSON, opts...)
+			if err != nil {
+				return nil, fmt.Errorf("error creating client from credentials: %w", err)
+			}
+		} else {
+			client, restService, cloudPlatformTokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, true, nil)
+			if err != nil {
+				return nil, fmt.Errorf("error creating client from ADC: %w", err)
+			}
 		}
 	}
 
@@ -124,17 +167,19 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name:               r.Name,
-		Kind:               SourceKind,
-		Project:            r.Project,
-		Location:           r.Location,
-		Client:             client,
-		RestService:        restService,
-		TokenSource:        tokenSource,
-		MaxQueryResultRows: 50,
-		ClientCreator:      clientCreator,
-		AllowedDatasets:    allowedDatasets,
-		UseClientOAuth:     r.UseClientOAuth,
+		Name:                     r.Name,
+		Kind:                     SourceKind,
+		Project:                  r.Project,
+		Location:                 r.Location,
+		CredentialsJSON:          string(credsJSON),
+		CredentialsPath:          r.CredentialsPath,
+		Client:                   client,
+		RestService:              restService,
+		CloudPlatformTokenSource: cloudPlatformTokenSource,
+		MaxQueryResultRows:       50,
+		ClientCreator:            clientCreator,
+		AllowedDatasets:          allowedDatasets,
+		UseClientOAuth:           r.UseClientOAuth,
 	}
 	s.makeDataplexCatalogClient = s.lazyInitDataplexClient(ctx, tracer)
 	return s, nil
@@ -149,9 +194,11 @@ type Source struct {
 	Kind                      string `yaml:"kind"`
 	Project                   string
 	Location                  string
+	CredentialsJSON           string
+	CredentialsPath           string
 	Client                    *bigqueryapi.Client
 	RestService               *bigqueryrestapi.Service
-	TokenSource               oauth2.TokenSource
+	CloudPlatformTokenSource  oauth2.TokenSource
 	MaxQueryResultRows        int
 	ClientCreator             BigqueryClientCreator
 	AllowedDatasets           map[string]struct{}
@@ -184,12 +231,8 @@ func (s *Source) BigQueryLocation() string {
 	return s.Location
 }
 
-func (s *Source) BigQueryTokenSource() oauth2.TokenSource {
-	return s.TokenSource
-}
-
-func (s *Source) BigQueryTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error) {
-	return google.DefaultTokenSource(ctx, scope)
+func (s *Source) BigQueryCloudPlatformTokenSource() oauth2.TokenSource {
+	return s.CloudPlatformTokenSource
 }
 
 func (s *Source) GetMaxQueryResultRows() int {
@@ -235,7 +278,7 @@ func (s *Source) lazyInitDataplexClient(ctx context.Context, tracer trace.Tracer
 
 	return func() (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
 		once.Do(func() {
-			c, cc, e := initDataplexConnection(ctx, tracer, s.Name, s.Project, s.UseClientOAuth)
+			c, cc, e := initDataplexConnection(ctx, tracer, s.Name, s.Project, s.UseClientOAuth, []byte(s.CredentialsJSON))
 			if e != nil {
 				err = fmt.Errorf("failed to initialize dataplex client: %w", e)
 				return
@@ -253,34 +296,72 @@ func initBigQueryConnection(
 	name string,
 	project string,
 	location string,
+	useADC bool,
+	credsJSON []byte,
+	opts ...option.ClientOption,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
-
-	cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
-	}
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, nil, nil, err
 	}
+	opts = append(opts, option.WithUserAgent(userAgent))
+
+	var cred *google.Credentials
+	var cloudPlatformTokenSource oauth2.TokenSource
+	if useADC {
+		cred, err = google.FindDefaultCredentials(ctx, bigqueryapi.Scope)
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
+		}
+		cloudPlatformCreds, err := google.FindDefaultCredentials(ctx, "https://www.googleapis.com/auth/cloud-platform")
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with cloud-platform scope: %w", err)
+		}
+		if cloudPlatformCreds != nil {
+			cloudPlatformTokenSource = cloudPlatformCreds.TokenSource
+		}
+	} else {
+		// When not using ADC, we expect credentials to be in opts.
+		// We need to extract them to create a separate token source with a different scope.
+		creds, err := google.CredentialsFromJSON(ctx, credsJSON, "https://www.googleapis.com/auth/cloud-platform")
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("failed to create credentials with cloud-platform scope from JSON: %w", err)
+		}
+		cloudPlatformTokenSource = creds.TokenSource
+
+		// For the BQ client itself, we create another credential object with the more limited BQ scope.
+		bqCreds, err := google.CredentialsFromJSON(ctx, credsJSON, bigqueryapi.Scope)
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("failed to create credentials with bigquery scope from JSON: %w", err)
+		}
+		cred = bqCreds
+	}
+
+	// The credentials from FindDefaultCredentials should be passed as an option
+	// to the client, along with any other options.
+	if cred != nil {
+		// If opts already contains credentials (from SA), this will overwrite it with the correctly-scoped one.
+		// If using ADC, this will add the found credentials.
+		opts = append(opts, option.WithCredentials(cred))
+	}
 
 	// Initialize the high-level BigQuery client
-	client, err := bigqueryapi.NewClient(ctx, project, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+	client, err := bigqueryapi.NewClient(ctx, project, opts...)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
 	}
 	client.Location = location
 
 	// Initialize the low-level BigQuery REST service using the same credentials
-	restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+	restService, err := bigqueryrestapi.NewService(ctx, opts...)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
 	}
 
-	return client, restService, cred.TokenSource, nil
+	return client, restService, cloudPlatformTokenSource, nil
 }
 
 // initBigQueryConnectionWithOAuthToken initialize a BigQuery client with an
@@ -348,31 +429,34 @@ func initDataplexConnection(
 	name string,
 	project string,
 	useClientOAuth bool,
+	credsJSON []byte,
 ) (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
 	var client *dataplexapi.CatalogClient
 	var clientCreator DataplexClientCreator
 	var err error
+	var opts []option.ClientOption
 
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
-
-	cred, err := google.FindDefaultCredentials(ctx)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
-	}
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
+	opts = append(opts, option.WithUserAgent(userAgent))
 
 	if useClientOAuth {
 		clientCreator = newDataplexClientCreator(ctx, project, userAgent)
+	} else if len(credsJSON) > 0 {
+		opts = append(opts, option.WithCredentialsJSON(credsJSON))
+		client, err = dataplexapi.NewCatalogClient(ctx, opts...)
 	} else {
-		client, err = dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
-		}
+		// Use Application Default Credentials
+		client, err = dataplexapi.NewCatalogClient(ctx, opts...)
+	}
+
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
 	}
 
 	return client, clientCreator, nil
