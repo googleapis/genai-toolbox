@@ -754,14 +754,23 @@ tools:
           This tool returns the project_id and projecrt_name for
           all the LookML projects on the looker instance.
 
-    get_project_filess:
+    get_project_files:
         kind: looker-get-project-files
         source: looker-source
         description: |
-          get_project_filess Tool
+          get_project_files Tool
 
           Given a project_id this tool returns the details about
           the LookML files that make up that project.
+
+    get_project_file:
+        kind: looker-get-project-file
+        source: looker-source
+        description: |
+          get_project_file Tool
+
+          Given a project_id and a file path within the project, this tool returns
+          the contents of the LookML file.
 
 toolsets:
     looker_tools:
@@ -785,3 +794,4 @@ toolsets:
         - health_vacuum
         - get_projects
         - get_project_files
+        - get_project_file
