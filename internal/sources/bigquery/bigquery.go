@@ -31,6 +31,7 @@ import (
 	"golang.org/x/oauth2/google"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/googleapi"
+	"google.golang.org/api/impersonate"
 	"google.golang.org/api/option"
 )
 
@@ -59,12 +60,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// BigQuery configs
-	Name            string   `yaml:"name" validate:"required"`
-	Kind            string   `yaml:"kind" validate:"required"`
-	Project         string   `yaml:"project" validate:"required"`
-	Location        string   `yaml:"location"`
-	AllowedDatasets []string `yaml:"allowedDatasets"`
-	UseClientOAuth  bool     `yaml:"useClientOAuth"`
+	Name                      string   `yaml:"name" validate:"required"`
+	Kind                      string   `yaml:"kind" validate:"required"`
+	Project                   string   `yaml:"project" validate:"required"`
+	Location                  string   `yaml:"location"`
+	AllowedDatasets           []string `yaml:"allowedDatasets"`
+	UseClientOAuth            bool     `yaml:"useClientOAuth"`
+	ImpersonateServiceAccount string   `yaml:"impersonateServiceAccount"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -86,7 +88,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		}
 	} else {
 		// Initializes a BigQuery Google SQL source
-		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location)
+		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.ImpersonateServiceAccount)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from ADC: %w", err)
 		}
@@ -124,17 +126,18 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name:               r.Name,
-		Kind:               SourceKind,
-		Project:            r.Project,
-		Location:           r.Location,
-		Client:             client,
-		RestService:        restService,
-		TokenSource:        tokenSource,
-		MaxQueryResultRows: 50,
-		ClientCreator:      clientCreator,
-		AllowedDatasets:    allowedDatasets,
-		UseClientOAuth:     r.UseClientOAuth,
+		Name:                      r.Name,
+		Kind:                      SourceKind,
+		Project:                   r.Project,
+		Location:                  r.Location,
+		Client:                    client,
+		RestService:               restService,
+		TokenSource:               tokenSource,
+		MaxQueryResultRows:        50,
+		ClientCreator:             clientCreator,
+		AllowedDatasets:           allowedDatasets,
+		UseClientOAuth:            r.UseClientOAuth,
+		ImpersonateServiceAccount: r.ImpersonateServiceAccount,
 	}
 	s.makeDataplexCatalogClient = s.lazyInitDataplexClient(ctx, tracer)
 	return s, nil
@@ -156,6 +159,7 @@ type Source struct {
 	ClientCreator             BigqueryClientCreator
 	AllowedDatasets           map[string]struct{}
 	UseClientOAuth            bool
+	ImpersonateServiceAccount string
 	makeDataplexCatalogClient func() (*dataplexapi.CatalogClient, DataplexClientCreator, error)
 }
 
@@ -235,7 +239,7 @@ func (s *Source) lazyInitDataplexClient(ctx context.Context, tracer trace.Tracer
 
 	return func() (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
 		once.Do(func() {
-			c, cc, e := initDataplexConnection(ctx, tracer, s.Name, s.Project, s.UseClientOAuth)
+			c, cc, e := initDataplexConnection(ctx, tracer, s.Name, s.Project, s.UseClientOAuth, s.ImpersonateServiceAccount)
 			if e != nil {
 				err = fmt.Errorf("failed to initialize dataplex client: %w", e)
 				return
@@ -253,34 +257,60 @@ func initBigQueryConnection(
 	name string,
 	project string,
 	location string,
+	impersonateServiceAccount string,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
-
-	cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
-	}
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
+	var tokenSource oauth2.TokenSource
+	var opts []option.ClientOption
+
+	if impersonateServiceAccount != "" {
+		// Create impersonated credentials token source
+		ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
+			TargetPrincipal: impersonateServiceAccount,
+			Scopes:          []string{bigqueryapi.Scope},
+		})
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("failed to create impersonated credentials for %q: %w", impersonateServiceAccount, err)
+		}
+		tokenSource = ts
+		opts = []option.ClientOption{
+			option.WithUserAgent(userAgent),
+			option.WithTokenSource(ts),
+		}
+	} else {
+		// Use default credentials
+		cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
+		}
+		tokenSource = cred.TokenSource
+		opts = []option.ClientOption{
+			option.WithUserAgent(userAgent),
+			option.WithCredentials(cred),
+		}
+	}
+
 	// Initialize the high-level BigQuery client
-	client, err := bigqueryapi.NewClient(ctx, project, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+	client, err := bigqueryapi.NewClient(ctx, project, opts...)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
 	}
 	client.Location = location
 
 	// Initialize the low-level BigQuery REST service using the same credentials
-	restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+	restService, err := bigqueryrestapi.NewService(ctx, opts...)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
 	}
 
-	return client, restService, cred.TokenSource, nil
+	return client, restService, tokenSource, nil
 }
 
 // initBigQueryConnectionWithOAuthToken initialize a BigQuery client with an
@@ -348,6 +378,7 @@ func initDataplexConnection(
 	name string,
 	project string,
 	useClientOAuth bool,
+	impersonateServiceAccount string,
 ) (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
 	var client *dataplexapi.CatalogClient
 	var clientCreator DataplexClientCreator
@@ -355,11 +386,6 @@ func initDataplexConnection(
 
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
-
-	cred, err := google.FindDefaultCredentials(ctx)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
-	}
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
@@ -369,7 +395,34 @@ func initDataplexConnection(
 	if useClientOAuth {
 		clientCreator = newDataplexClientCreator(ctx, project, userAgent)
 	} else {
-		client, err = dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+		var opts []option.ClientOption
+
+		if impersonateServiceAccount != "" {
+			// Create impersonated credentials token source
+			ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
+				TargetPrincipal: impersonateServiceAccount,
+				Scopes:          []string{"https://www.googleapis.com/auth/cloud-platform"},
+			})
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to create impersonated credentials for %q: %w", impersonateServiceAccount, err)
+			}
+			opts = []option.ClientOption{
+				option.WithUserAgent(userAgent),
+				option.WithTokenSource(ts),
+			}
+		} else {
+			// Use default credentials
+			cred, err := google.FindDefaultCredentials(ctx)
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
+			}
+			opts = []option.ClientOption{
+				option.WithUserAgent(userAgent),
+				option.WithCredentials(cred),
+			}
+		}
+
+		client, err = dataplexapi.NewCatalogClient(ctx, opts...)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
 		}
