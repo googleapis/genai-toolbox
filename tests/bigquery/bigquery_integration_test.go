@@ -274,11 +274,6 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 			"source":      "my-instance",
 			"description": "Tool to list table within a dataset",
 		},
-		"get-dataset-info-restricted": map[string]any{
-			"kind":        "bigquery-get-dataset-info",
-			"source":      "my-instance",
-			"description": "Tool to get dataset info",
-		},
 		"get-table-info-restricted": map[string]any{
 			"kind":        "bigquery-get-table-info",
 			"source":      "my-instance",
