@@ -983,7 +983,7 @@ func TestEnvVarReplacement(t *testing.T) {
 	t.Setenv("TestHeader", "ACTUAL_HEADER")
 	t.Setenv("promptset_name", "ACTUAL_PROMPTSET_NAME")
 	t.Setenv("prompt_name", "ACTUAL_PROMPT_NAME")
-	t.Setenv("prompt_content", "ACTUAL CONTENT")
+	t.Setenv("prompt_content", "ACTUAL_CONTENT")
 
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -1057,6 +1057,18 @@ func TestEnvVarReplacement(t *testing.T) {
 			toolsets:
 				${toolset_name}:
 					- example_tool
+
+						
+			prompts:
+				${prompt_name}:
+					kind: standard
+					description: A test prompt for {{.name}}.
+					messages:
+						- role: user
+						  content: ${prompt_content}
+			promptsets:
+				${promptset_name}:
+					- ${prompt_name}
 			`,
 			wantToolsFile: ToolsFile{
 				Sources: server.SourceConfigs{
@@ -1113,8 +1125,26 @@ func TestEnvVarReplacement(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
-				Prompts:    nil,
-				Promptsets: nil,
+				Prompts: server.PromptConfigs{
+					"ACTUAL_PROMPT_NAME": prompts.Config{
+						Name:        "ACTUAL_PROMPT_NAME",
+						Kind:        "standard",
+						Description: "A test prompt for {{.name}}.",
+						Messages: []prompts.Message{
+							{
+								Role:    "user",
+								Content: "ACTUAL_CONTENT",
+							},
+						},
+						Arguments: nil,
+					},
+				},
+				Promptsets: server.PromptsetConfigs{
+					"ACTUAL_PROMPTSET_NAME": prompts.PromptsetConfig{
+						Name:        "ACTUAL_PROMPTSET_NAME",
+						PromptNames: []string{"ACTUAL_PROMPT_NAME"},
+					},
+				},
 			},
 		},
 	}
@@ -1144,7 +1174,6 @@ func TestEnvVarReplacement(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 // normalizeFilepaths is a helper function to allow same filepath formats for Mac and Windows.
