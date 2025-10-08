@@ -17,7 +17,6 @@ package bigquerygetdatasetinfo
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
@@ -161,12 +160,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
 		}
-	}
-
-	// Handle fully-qualified dataset ID in the dataset parameter.
-	if parts := strings.Split(datasetId, "."); len(parts) == 2 {
-		projectId = parts[0]
-		datasetId = parts[1]
 	}
 
 	if !t.IsDatasetAllowed(projectId, datasetId) {
