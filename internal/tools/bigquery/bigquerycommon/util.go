@@ -79,15 +79,13 @@ func InitializeDatasetParameters(
 	defaultProjectID string,
 	projectKey, datasetKey string,
 	projectDescription, datasetDescription string,
-) (projectParam, datasetParam tools.Parameter, updatedDefaultProjectID string) {
-	updatedDefaultProjectID = defaultProjectID
-
+) (projectParam, datasetParam tools.Parameter) {
 	if len(allowedDatasets) > 0 {
 		if len(allowedDatasets) == 1 {
 			parts := strings.Split(allowedDatasets[0], ".")
-			updatedDefaultProjectID = parts[0]
+			defaultProjectID = parts[0]
 			datasetID := parts[1]
-			projectDescription += fmt.Sprintf(" Must be `%s`.", updatedDefaultProjectID)
+			projectDescription += fmt.Sprintf(" Must be `%s`.", defaultProjectID)
 			datasetDescription += fmt.Sprintf(" Must be `%s`.", datasetID)
 			datasetParam = tools.NewStringParameterWithDefault(datasetKey, datasetID, datasetDescription)
 		} else {
@@ -116,7 +114,7 @@ func InitializeDatasetParameters(
 		datasetParam = tools.NewStringParameter(datasetKey, datasetDescription)
 	}
 
-	projectParam = tools.NewStringParameterWithDefault(projectKey, updatedDefaultProjectID, projectDescription)
+	projectParam = tools.NewStringParameterWithDefault(projectKey, defaultProjectID, projectDescription)
 
-	return projectParam, datasetParam, updatedDefaultProjectID
+	return projectParam, datasetParam
 }

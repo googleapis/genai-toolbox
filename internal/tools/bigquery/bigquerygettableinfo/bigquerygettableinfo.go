@@ -93,7 +93,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	var datasetParameter tools.Parameter
 	var projectParameter tools.Parameter
 
-	projectParameter, datasetParameter, _ = bqutil.InitializeDatasetParameters(
+	projectParameter, datasetParameter = bqutil.InitializeDatasetParameters(
 		s.BigQueryAllowedDatasets(),
 		defaultProjectID,
 		projectKey, datasetKey,
