@@ -17,13 +17,13 @@ package bigquerygettableinfo
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
 )
 
 const kind string = "bigquery-get-table-info"
@@ -91,27 +91,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	projectDescription := "The Google Cloud project ID containing the dataset and table."
 	datasetDescription := "The table's parent dataset."
 	var datasetParameter tools.Parameter
-	allowedDatasets := s.BigQueryAllowedDatasets()
-	if len(allowedDatasets) > 0 {
-		if len(allowedDatasets) == 1 {
-			parts := strings.Split(allowedDatasets[0], ".")
-			defaultProjectID = parts[0]
-			datasetID := parts[1]
-			projectDescription += fmt.Sprintf(" Must be `%s`.", defaultProjectID)
-			datasetDescription += fmt.Sprintf(" Must be `%s`.", datasetID)
-			datasetParameter = tools.NewStringParameterWithDefault(datasetKey, datasetID, datasetDescription)
-		} else {
-			datasetIDs := []string{}
-			for _, ds := range allowedDatasets {
-				datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
-			}
-			datasetDescription += fmt.Sprintf(" Must be one of the following: %s.", strings.Join(datasetIDs, ", "))
-			datasetParameter = tools.NewStringParameter(datasetKey, datasetDescription)
-		}
-	} else {
-		datasetParameter = tools.NewStringParameter(datasetKey, datasetDescription)
-	}
-	projectParameter := tools.NewStringParameterWithDefault(projectKey, defaultProjectID, projectDescription)
+	var projectParameter tools.Parameter
+
+	projectParameter, datasetParameter, _ = bqutil.InitializeDatasetParameters(
+		s.BigQueryAllowedDatasets(),
+		defaultProjectID,
+		projectKey, datasetKey,
+		projectDescription, datasetDescription,
+	)
+
 	tableParameter := tools.NewStringParameter(tableKey, "The table to get metadata information.")
 	parameters := tools.Parameters{projectParameter, datasetParameter, tableParameter}
 

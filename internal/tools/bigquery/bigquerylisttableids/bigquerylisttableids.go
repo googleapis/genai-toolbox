@@ -17,14 +17,13 @@ package bigquerylisttableids
 import (
 	"context"
 	"fmt"
-	"sort"
-	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
 	"google.golang.org/api/iterator"
 )
 
@@ -92,39 +91,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	projectDescription := "The Google Cloud project ID containing the dataset."
 	datasetDescription := "The dataset to list table ids."
 	var datasetParameter tools.Parameter
-	allowedDatasets := s.BigQueryAllowedDatasets()
-	if len(allowedDatasets) > 0 {
-		if len(allowedDatasets) == 1 {
-			parts := strings.Split(allowedDatasets[0], ".")
-			defaultProjectID = parts[0]
-			datasetID := parts[1]
-			projectDescription += fmt.Sprintf(" Must be `%s`.", defaultProjectID)
-			datasetDescription += fmt.Sprintf(" Must be `%s`.", datasetID)
-			datasetParameter = tools.NewStringParameterWithDefault(datasetKey, datasetID, datasetDescription)
-		} else {
-			datasetIDsByProject := make(map[string][]string)
-			for _, ds := range allowedDatasets {
-				parts := strings.Split(ds, ".")
-				project := parts[0]
-				dataset := parts[1]
-				datasetIDsByProject[project] = append(datasetIDsByProject[project], fmt.Sprintf("`%s`", dataset))
-			}
+	var projectParameter tools.Parameter
 
-			var datasetDescriptions, projectIDList []string
-			for project, datasets := range datasetIDsByProject {
-				sort.Strings(datasets)
-				projectIDList = append(projectIDList, fmt.Sprintf("`%s`", project))
-				datasetList := strings.Join(datasets, ", ")
-				datasetDescriptions = append(datasetDescriptions, fmt.Sprintf("%s from project `%s`", datasetList, project))
-			}
-			projectDescription += fmt.Sprintf(" Must be one of the following: %s.", strings.Join(projectIDList, ", "))
-			datasetDescription += fmt.Sprintf(" Must be one of the allowed datasets: %s.", strings.Join(datasetDescriptions, "; "))
-			datasetParameter = tools.NewStringParameter(datasetKey, datasetDescription)
-		}
-	} else {
-		datasetParameter = tools.NewStringParameter(datasetKey, datasetDescription)
-	}
-	projectParameter := tools.NewStringParameterWithDefault(projectKey, defaultProjectID, projectDescription)
+	projectParameter, datasetParameter, _ = bqutil.InitializeDatasetParameters(
+		s.BigQueryAllowedDatasets(),
+		defaultProjectID,
+		projectKey, datasetKey,
+		projectDescription, datasetDescription,
+	)
 
 	parameters := tools.Parameters{projectParameter, datasetParameter}
 

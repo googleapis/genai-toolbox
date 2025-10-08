@@ -17,8 +17,11 @@ package bigquerycommon
 import (
 	"context"
 	"fmt"
+	"sort"
+	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 )
 
@@ -68,4 +71,52 @@ func BQTypeStringFromToolType(toolType string) (string, error) {
 	default:
 		return "", fmt.Errorf("unsupported tool parameter type for BigQuery: %s", toolType)
 	}
+}
+
+// InitializeDatasetParameters generates project and dataset tool parameters based on allowedDatasets.
+func InitializeDatasetParameters(
+	allowedDatasets []string,
+	defaultProjectID string,
+	projectKey, datasetKey string,
+	projectDescription, datasetDescription string,
+) (projectParam, datasetParam tools.Parameter, updatedDefaultProjectID string) {
+	updatedDefaultProjectID = defaultProjectID
+
+	if len(allowedDatasets) > 0 {
+		if len(allowedDatasets) == 1 {
+			parts := strings.Split(allowedDatasets[0], ".")
+			updatedDefaultProjectID = parts[0]
+			datasetID := parts[1]
+			projectDescription += fmt.Sprintf(" Must be `%s`.", updatedDefaultProjectID)
+			datasetDescription += fmt.Sprintf(" Must be `%s`.", datasetID)
+			datasetParam = tools.NewStringParameterWithDefault(datasetKey, datasetID, datasetDescription)
+		} else {
+			datasetIDsByProject := make(map[string][]string)
+			for _, ds := range allowedDatasets {
+				parts := strings.Split(ds, ".")
+				project := parts[0]
+				dataset := parts[1]
+				datasetIDsByProject[project] = append(datasetIDsByProject[project], fmt.Sprintf("`%s`", dataset))
+			}
+
+			var datasetDescriptions, projectIDList []string
+			for project, datasets := range datasetIDsByProject {
+				sort.Strings(datasets)
+				projectIDList = append(projectIDList, fmt.Sprintf("`%s`", project))
+				datasetList := strings.Join(datasets, ", ")
+				datasetDescriptions = append(datasetDescriptions, fmt.Sprintf("%s from project `%s`", datasetList, project))
+			}
+			sort.Strings(projectIDList)
+			sort.Strings(datasetDescriptions)
+			projectDescription += fmt.Sprintf(" Must be one of the following: %s.", strings.Join(projectIDList, ", "))
+			datasetDescription += fmt.Sprintf(" Must be one of the allowed datasets: %s.", strings.Join(datasetDescriptions, "; "))
+			datasetParam = tools.NewStringParameter(datasetKey, datasetDescription)
+		}
+	} else {
+		datasetParam = tools.NewStringParameter(datasetKey, datasetDescription)
+	}
+
+	projectParam = tools.NewStringParameterWithDefault(projectKey, updatedDefaultProjectID, projectDescription)
+
+	return projectParam, datasetParam, updatedDefaultProjectID
 }
