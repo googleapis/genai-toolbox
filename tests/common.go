@@ -167,19 +167,19 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 	return toolsFile
 }
 
-// AddPgExecuteSqlConfig gets the tools config for `postgres-execute-sql`
-func AddPgExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
+// AddExecuteSqlConfig gets the tools config
+func AddExecuteSqlConfig(t *testing.T, config map[string]any, toolKind string) map[string]any {
 	tools, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "postgres-execute-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "postgres-execute-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{
