@@ -8456,13 +8456,14 @@ the parameter.
         description: Airline unique 2 letter identifier
 ```
 
-| **field**   | **type**        | **required** | **description**                                                             |
-|-------------|:---------------:|:------------:|-----------------------------------------------------------------------------|
-| name        |  string         |     true     | Name of the parameter.                                                      |
-| type        |  string         |     true     | Must be one of "string", "integer", "float", "boolean" "array"              |
-| description |  string         |     true     | Natural language description of the parameter to describe it to the agent.  |
-| default     |  parameter type |     false    | Default value of the parameter. If provided, `required` will be `false`.    |
-| required    |  bool           |     false    | Indicate if the parameter is required. Default to `true`.                   |
+| **field**     |    **type**    | **required** | **description**                                                            |
+|---------------|:--------------:|:------------:|----------------------------------------------------------------------------|
+| name          |     string     |     true     | Name of the parameter.                                                     |
+| type          |     string     |     true     | Must be one of "string", "integer", "float", "boolean" "array"             |
+| description   |     string     |     true     | Natural language description of the parameter to describe it to the agent. |
+| default       | parameter type |    false     | Default value of the parameter. If provided, `required` will be `false`.   |
+| required      |      bool      |    false     | Indicate if the parameter is required. Default to `true`.                  |
+| allowedValues |    []string    |    false     | Input value will be checked against this field.                            |
 
 ### Array Parameters
 
@@ -8483,14 +8484,15 @@ in the list using the items field:
       SELECT * FROM airlines WHERE preferred_airlines = ANY($1);
 ```
 
-| **field**   |     **type**     | **required** | **description**                                                             |
-|-------------|:----------------:|:------------:|-----------------------------------------------------------------------------|
-| name        |      string      |     true     | Name of the parameter.                                                      |
-| type        |      string      |     true     | Must be "array"                                                             |
-| description |      string      |     true     | Natural language description of the parameter to describe it to the agent.  |
-| default     |  parameter type |     false    | Default value of the parameter. If provided, `required` will be `false`.     |
-| required    |  bool           |     false    | Indicate if the parameter is required. Default to `true`.                    |
-| items       | parameter object |     true     | Specify a Parameter object for the type of the values in the array.         |
+| **field**     |     **type**     | **required** | **description**                                                            |
+|---------------|:----------------:|:------------:|----------------------------------------------------------------------------|
+| name          |      string      |     true     | Name of the parameter.                                                     |
+| type          |      string      |     true     | Must be "array"                                                            |
+| description   |      string      |     true     | Natural language description of the parameter to describe it to the agent. |
+| default       |  parameter type  |    false     | Default value of the parameter. If provided, `required` will be `false`.   |
+| required      |       bool       |    false     | Indicate if the parameter is required. Default to `true`.                  |
+| allowedValues |     []string     |    false     | Input value will be checked against this field.                            |
+| items         | parameter object |     true     | Specify a Parameter object for the type of the values in the array.        |
 
 {{< notice note >}}
 Items in array should not have a `default` or `required` value. If provided, it
@@ -8532,32 +8534,6 @@ will be thrown in case of value type mismatch.
         valueType: integer # This enforces the value type for all entries.
 ```
 
-### Enum Parameters
-
-The `enum` type allow users to specify a set of allowed values with that
-parameter. When toolbox parse the input of parameters, it will check against the
-allowed values.
-
-```yaml
-parameter:
-    - name: airline
-      type: enum
-      description: name of airline.
-      enumType: string
-      allowedValues:
-        - cymbalair
-        - delta
-```
-
-Other than the regular fields required with the `enumType` specified, below are
-the additional fields that are needed when using `enum` type.
-
-| **field**     | **type** | **required** | **description**                                                                                                                                                                                                           |
-|---------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| enumType      |  string  |     true     | This indicates the type of the value. Must be one of the supported parameter type (e.g. `string`/ `integer` / `float` / `boolean` / `array` / `map`).                                                                     |
-| escape        |   bool   |    false     | Indicates if the value will be escaped if used with `templateParameters`. Escaping will add double quotes (or backticks/square brackets depending on the source) depending on the database. This is defaulted to `false`. |
-| allowedValues | []string |     true     | Input value will be checked against this field.                                                                                                                                                                           |
-
 ### Authenticated Parameters
 
 Authenticated parameters are automatically populated with user
@@ -8586,10 +8562,10 @@ user's ID token.
                 field: sub
 ```
 
-| **field** | **type** | **required** | **description**                                                                         |
-|-----------|:--------:|:------------:|-----------------------------------------------------------------------------------------|
-| name      |  string  |     true     | Name of the [authServices](../authServices/) used to verify the OIDC auth token.         |
-| field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.           |
+| **field** | **type** | **required** | **description**                                                                  |
+|-----------|:--------:|:------------:|----------------------------------------------------------------------------------|
+| name      |  string  |     true     | Name of the [authServices](../authServices/) used to verify the OIDC auth token. |
+| field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.    |
 
 ### Template Parameters
 
@@ -8638,12 +8614,15 @@ tools:
           description: Name of a column to select
 ```
 
-| **field**   | **type**         | **required**  | **description**                                                                     |
-|-------------|:----------------:|:-------------:|-------------------------------------------------------------------------------------|
-| name        |  string          |     true      | Name of the template parameter.                                                     |
-| type        |  string          |     true      | Must be one of "string", "integer", "float", "boolean" "array"                      |
-| description |  string          |     true      | Natural language description of the template parameter to describe it to the agent. |
-| items       | parameter object |true (if array)| Specify a Parameter object for the type of the values in the array (string only).   |
+| **field**     |     **type**     |  **required**   | **description**                                                                     |
+|---------------|:----------------:|:---------------:|-------------------------------------------------------------------------------------|
+| name          |      string      |      true       | Name of the template parameter.                                                     |
+| type          |      string      |      true       | Must be one of "string", "integer", "float", "boolean", "array"                     |
+| description   |      string      |      true       | Natural language description of the template parameter to describe it to the agent. |
+| default       | parameter type |    false     | Default value of the parameter. If provided, `required` will be `false`.   |
+| required      |      bool      |    false     | Indicate if the parameter is required. Default to `true`.                  |
+| allowedValues |     []string     |      false      | Input value will be checked against this field.                                     |
+| items         | parameter object | true (if array) | Specify a Parameter object for the type of the values in the array (string only).   |
 
 ## Authorized Invocations
 
