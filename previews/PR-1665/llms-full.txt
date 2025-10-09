@@ -8537,7 +8537,7 @@ code_review:
 | `role` | String | The role of the sender. Can be `"user"` or `"assistant"`. Defaults to `"user"`. | No |
 | `content` | String | The text of the message. You can include placeholders for arguments using `{{.argument_name}}` syntax. | Yes |
 
-### Argument Schema
+## Argument Schema
 
 | Field | Type | Description | Required |
 | --- | --- | --- | --- |
