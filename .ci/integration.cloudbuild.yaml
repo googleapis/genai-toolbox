@@ -683,7 +683,6 @@ steps:
       - -c
       - |
         ./yugabytedb.test -test.v
-
  
   - id: "cassandra"
     name: golang:1
@@ -703,6 +702,27 @@ steps:
           "Cassandra" \
           cassandra \
           cassandra
+
+  - id: "hana"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+      - "HANA_PORT=$_HANA_PORT"
+      - "HANA_DATABASE=$_HANA_DATABASE"
+    secretEnv: ["CLIENT_ID", "HANA_USER", "HANA_PASS", "HANA_HOST"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "SAP HANA" \
+          hana \
+          hana
           
 availableSecrets:
   secretManager:
@@ -794,6 +814,12 @@ availableSecrets:
       env: CASSANDRA_PASS
     - versionName: projects/$PROJECT_ID/secrets/cassandra_host/versions/latest
       env: CASSANDRA_HOST
+    - versionName: projects/$PROJECT_ID/secrets/sap_hana_user/versions/latest
+      env: HANA_USER
+    - versionName: projects/$PROJECT_ID/secrets/sap_hana_pass/versions/latest
+      env: HANA_PASS
+    - versionName: projects/$PROJECT_ID/secrets/sap_hana_host/versions/latest
+      env: HANA_HOST
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -845,3 +871,5 @@ substitutions:
   _YUGABYTEDB_DATABASE: "yugabyte"
   _YUGABYTEDB_PORT: "5433"
   _YUGABYTEDB_LOADBALANCE: "false"
+  _HANA_PORT: "39013"
+  _HANA_DATABASE: "HXE"

@@ -1241,6 +1241,7 @@ func TestPrebuiltTools(t *testing.T) {
 	cloudsqlmssql_admin_config, _ := prebuiltconfigs.Get("cloud-sql-mssql-admin")
 	dataplex_config, _ := prebuiltconfigs.Get("dataplex")
 	firestoreconfig, _ := prebuiltconfigs.Get("firestore")
+	hana_config, _ := prebuiltconfigs.Get("hana")
 	mysql_config, _ := prebuiltconfigs.Get("mysql")
 	mssql_config, _ := prebuiltconfigs.Get("mssql")
 	looker_config, _ := prebuiltconfigs.Get("looker")
@@ -1322,6 +1323,12 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("MSSQL_DATABASE", "your_mssql_db")
 	t.Setenv("MSSQL_USER", "your_mssql_user")
 	t.Setenv("MSSQL_PASSWORD", "your_mssql_password")
+
+	t.Setenv("HANA_HOST", "your_hana_host")
+	t.Setenv("HANA_PORT", "39015")
+	t.Setenv("HANA_DATABASE", "your_hana_db")
+	t.Setenv("HANA_USER", "your_hana_user")
+	t.Setenv("HANA_PASSWORD", "your_hana_password")
 
 	t.Setenv("LOOKER_BASE_URL", "https://your_company.looker.com")
 	t.Setenv("LOOKER_CLIENT_ID", "your_looker_client_id")
@@ -1464,6 +1471,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"firestore_database_tools": tools.ToolsetConfig{
 					Name:      "firestore_database_tools",
 					ToolNames: []string{"get_documents", "add_documents", "update_document", "list_collections", "delete_documents", "query_collection", "get_rules", "validate_rules"},
+				},
+			},
+		},
+		{
+			name: "hana prebuilt tools",
+			in:   hana_config,
+			wantToolset: server.ToolsetConfigs{
+				"hana-database-tools": tools.ToolsetConfig{
+					Name:      "hana-database-tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
 				},
 			},
 		},
