@@ -8,6 +8,9 @@
     },
     {
          "pattern": "^https:\\/\\/img\\.shields\\.io\\/.*"
+    },
+    {
+      
     }
   ],
   "replacementPatterns": [
