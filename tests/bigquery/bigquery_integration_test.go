@@ -2506,8 +2506,23 @@ func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName1, allowed
 			if !ok {
 				t.Fatalf("unable to find result in response body")
 			}
-			if got != tc.wantResult {
-				t.Errorf("unexpected result: got %q, want %q", got, tc.wantResult)
+
+			var gotSlice, wantSlice []string
+			if err := json.Unmarshal([]byte(got), &gotSlice); err != nil {
+				t.Fatalf("failed to unmarshal 'got' result: %v", err)
+			}
+			if err := json.Unmarshal([]byte(tc.wantResult), &wantSlice); err != nil {
+				t.Fatalf("failed to unmarshal 'want' result: %v", err)
+			}
+
+			sort.Strings(gotSlice)
+			sort.Strings(wantSlice)
+
+			sortedGot, _ := json.Marshal(gotSlice)
+			sortedWant, _ := json.Marshal(wantSlice)
+
+			if string(sortedGot) != string(sortedWant) {
+				t.Errorf("unexpected result: got %q, want %q", string(sortedGot), string(sortedWant))
 			}
 		})
 	}
