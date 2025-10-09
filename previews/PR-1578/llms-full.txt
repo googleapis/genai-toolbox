@@ -10965,6 +10965,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 *   **Environment Variables:**
     *   `BIGQUERY_PROJECT`: The GCP project ID.
     *   `BIGQUERY_LOCATION`: (Optional) The dataset location.
+    *   `BIGQUERY_USE_CLIENT_OAUTH`: (Optional) If `true`, forwards the client's
+        OAuth access token for authentication. Defaults to `false`.
 *   **Permissions:**
     *   **BigQuery User** (`roles/bigquery.user`) to execute queries and view
         metadata.
