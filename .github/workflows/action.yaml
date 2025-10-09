@@ -36,7 +36,7 @@ jobs:
           # Pass the GitHub Actions token to the environment. 
           # This authenticates API calls and dramatically increases rate limits, 
           # often solving 403 errors when accessing GitHub links or hitting public rate limits.
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # 💡 Adding a custom User-Agent can help bypass blocks by external websites
           # USER_AGENT: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
           USER_AGENT: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
