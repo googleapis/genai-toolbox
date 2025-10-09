@@ -86,7 +86,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	defaultProjectID := s.BigQueryClient().Project()
+	defaultProjectID := s.BigQueryProject()
 	projectDescription := "The Google Cloud project ID containing the dataset."
 	datasetDescription := "The dataset to get metadata information. Can be in `project.dataset` format."
 	var datasetParameter tools.Parameter
