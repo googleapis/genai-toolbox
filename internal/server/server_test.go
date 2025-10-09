@@ -150,7 +150,7 @@ func TestUpdateServer(t *testing.T) {
 	}
 	newPrompts := map[string]prompts.Prompt{"example-prompt": nil}
 	newPromptsets := map[string]prompts.Promptset{
-		"example-prompt": {
+		"example-promptset": {
 			Name: "example-promptset", Prompts: []*prompts.Prompt{},
 		},
 	}
