@@ -127,7 +127,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 				datasetID = parts[1]
 				allowedFullID = allowed
 			} else {
-				projectID = client.Project()
+				projectID = r.Project
 				datasetID = allowed
 				allowedFullID = fmt.Sprintf("%s.%s", projectID, datasetID)
 			}
