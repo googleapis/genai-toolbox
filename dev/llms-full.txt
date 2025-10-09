@@ -9355,11 +9355,13 @@ Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 - Learn more about [Toolbox Resources](../../resources/).
 - Learn more about [Toolbox How-to guides](../../how-to/).
 
+
 # Getting started with alloydb-ai-nl tool
 An end to end tutorial for building an ADK agent using the AlloyDB AI NL tool.
 
 
 {{< ipynb "alloydb_ai_nl.ipynb" >}}
+
 
 # BigQuery
 How to get started with Toolbox using BigQuery.
