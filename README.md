@@ -23,24 +23,27 @@ documentation](https://googleapis.github.io/genai-toolbox/).
 > its initial development predated MCP, but was renamed to align with recently
 > added MCP compatibility.
 
+<!-- TOC ignore:true -->
+## Table of Contents
+
 <!-- TOC -->
 
-  - [Why Toolbox?](#why-toolbox)
-  - [General Architecture](#general-architecture)
-  - [Getting Started](#getting-started)
-      - [Installing the server](#installing-the-server)
-      - [Running the server](#running-the-server)
-      - [Integrating your application](#integrating-your-application)
-  - [Configuration](#configuration)
-      - [Sources](#sources)
-      - [Tools](#tools)
-      - [Toolsets](#toolsets)
-      - [Prompts](#prompts)
-  - [Versioning](#versioning)
-      - [Pre-1.0.0 Versioning](#pre-100-versioning)
-      - [Post-1.0.0 Versioning](#post-100-versioning)
-  - [Contributing](#contributing)
-  - [Community](#community)
+- [Why Toolbox?](#why-toolbox)
+- [General Architecture](#general-architecture)
+- [Getting Started](#getting-started)
+  - [Installing the server](#installing-the-server)
+  - [Running the server](#running-the-server)
+  - [Integrating your application](#integrating-your-application)
+- [Configuration](#configuration)
+  - [Sources](#sources)
+  - [Tools](#tools)
+  - [Toolsets](#toolsets)
+  - [Prompts](#prompts)
+- [Versioning](#versioning)
+  - [Pre-1.0.0 Versioning](#pre-100-versioning)
+  - [Post-1.0.0 Versioning](#post-100-versioning)
+- [Contributing](#contributing)
+- [Community](#community)
 
 <!-- /TOC -->
 
