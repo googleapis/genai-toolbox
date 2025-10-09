@@ -164,6 +164,11 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Vacuums unused content from a Looker instance.",
 			},
+			"dev_mode": map[string]any{
+				"kind":        "looker-dev-mode",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 			"get_projects": map[string]any{
 				"kind":        "looker-get-projects",
 				"source":      "my-instance",
@@ -171,6 +176,11 @@ func TestLooker(t *testing.T) {
 			},
 			"get_project_files": map[string]any{
 				"kind":        "looker-get-project-files",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_project_file": map[string]any{
+				"kind":        "looker-get-project-file",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
@@ -661,33 +671,6 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
-	tests.RunToolGetTestByName(t, "get_projects",
-		map[string]any{
-			"get_projects": map[string]any{
-				"description":  "Simple tool to test end to end functionality.",
-				"authRequired": []any{},
-				"parameters":   []any{},
-			},
-		},
-	)
-	tests.RunToolGetTestByName(t, "get_project_files",
-		map[string]any{
-			"get_explores": map[string]any{
-				"description":  "Simple tool to test end to end functionality.",
-				"authRequired": []any{},
-				"parameters": []any{
-					map[string]any{
-						"authSources": []any{},
-						"description": "The id of the project containing the files",
-						"name":        "project_id",
-						"required":    true,
-						"type":        "string",
-					},
-				},
-			},
-		},
-	)
-
 	tests.RunToolGetTestByName(t, "conversational_analytics",
 		map[string]any{
 			"conversational_analytics": map[string]any{
@@ -841,6 +824,73 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "dev_mode",
+		map[string]any{
+			"dev_mode": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "Whether to set Dev Mode.",
+						"name":        "devMode",
+						"required":    false,
+						"type":        "boolean",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_projects",
+		map[string]any{
+			"get_projects": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters":   []any{},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_project_files",
+		map[string]any{
+			"get_project_files": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The id of the project containing the files",
+						"name":        "project_id",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_project_file",
+		map[string]any{
+			"get_project_file": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The id of the project containing the files",
+						"name":        "project_id",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The path of the file within the project",
+						"name":        "file_path",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
 
 	wantResult := "{\"label\":\"System Activity\",\"name\":\"system__activity\",\"project_name\":\"system__activity\"}"
 	tests.RunToolInvokeSimpleTest(t, "get_models", wantResult)
@@ -896,11 +946,20 @@ func TestLooker(t *testing.T) {
 	wantResult = "\"Model\":\"the_look\""
 	tests.RunToolInvokeParametersTest(t, "health_vacuum", []byte(`{"action": "models"}`), wantResult)
 
+	wantResult = "dev"
+	tests.RunToolInvokeParametersTest(t, "dev_mode", []byte(`{"devMode": true}`), wantResult)
+
+	wantResult = "production"
+	tests.RunToolInvokeParametersTest(t, "dev_mode", []byte(`{"devMode": false}`), wantResult)
+
 	wantResult = "the_look"
 	tests.RunToolInvokeSimpleTest(t, "get_projects", wantResult)
 
 	wantResult = "order_items.view"
 	tests.RunToolInvokeParametersTest(t, "get_project_files", []byte(`{"project_id": "the_look"}`), wantResult)
+
+	wantResult = "view"
+	tests.RunToolInvokeParametersTest(t, "get_project_file", []byte(`{"project_id": "the_look", "file_path": "order_items.view.lkml"}`), wantResult)
 }
 
 func runConversationalAnalytics(t *testing.T, modelName, exploreName string) {

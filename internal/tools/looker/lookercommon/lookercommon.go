@@ -321,3 +321,29 @@ func GetProjectFileContent(l *v4.LookerSDK, projectId string, filePath string, o
 	err := l.AuthSession.Do(&result, "GET", "/4.0", path, query, nil, options)
 	return result, err
 }
+
+func DeleteProjectFile(l *v4.LookerSDK, projectId string, filePath string, options *rtl.ApiSettings) error {
+	path := fmt.Sprintf("/projects/%s/files", url.PathEscape(projectId))
+	query := map[string]any{
+		"file_path": url.QueryEscape(filePath),
+	}
+	err := l.AuthSession.Do(nil, "DELETE", "/4.0", path, query, nil, options)
+	return err
+}
+
+type FileContent struct {
+	Path    string `json:"path"`
+	Content string `json:"content"`
+}
+
+func CreateProjectFile(l *v4.LookerSDK, projectId string, fileContent FileContent, options *rtl.ApiSettings) error {
+	path := fmt.Sprintf("/projects/%s/files", url.PathEscape(projectId))
+	err := l.AuthSession.Do(nil, "POST", "/4.0", path, nil, fileContent, options)
+	return err
+}
+
+func UpdateProjectFile(l *v4.LookerSDK, projectId string, fileContent FileContent, options *rtl.ApiSettings) error {
+	path := fmt.Sprintf("/projects/%s/files", url.PathEscape(projectId))
+	err := l.AuthSession.Do(nil, "PUT", "/4.0", path, nil, fileContent, options)
+	return err
+}

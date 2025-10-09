@@ -745,6 +745,15 @@ tools:
 
           The result is a list of objects that are candidates for deletion.
 
+    dev_mode:
+        kind: looker-dev-mode
+        source: looker-source
+        description: |
+          dev_mode Tool
+
+          Passing true to this tool switches the session to dev mode. Passing false to this tool switches the
+          session to production mode.
+
     get_projects:
         kind: looker-get-projects
         source: looker-source
@@ -792,6 +801,7 @@ toolsets:
         - health_pulse
         - health_analyze
         - health_vacuum
+        - dev_mode
         - get_projects
         - get_project_files
         - get_project_file
