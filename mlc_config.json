@@ -1,4 +1,5 @@
 {
+
   "projectBaseUrl":"${workspaceFolder}",
   "ignorePatterns": [
     {
