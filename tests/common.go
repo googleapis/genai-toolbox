@@ -167,7 +167,7 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 	return toolsFile
 }
 
-// AddExecuteSqlConfig gets the tools config fot `execute-sql` tools
+// AddExecuteSqlConfig gets the tools config for `execute-sql` tools
 func AddExecuteSqlConfig(t *testing.T, config map[string]any, toolKind string) map[string]any {
 	tools, ok := config["tools"].(map[string]any)
 	if !ok {
