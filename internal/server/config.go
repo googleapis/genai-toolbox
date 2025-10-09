@@ -21,6 +21,7 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
+	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
@@ -41,6 +42,10 @@ type ServerConfig struct {
 	ToolConfigs ToolConfigs
 	// ToolsetConfigs defines what tools are available.
 	ToolsetConfigs ToolsetConfigs
+	// PromptConfigs defines what prompts are available
+	PromptConfigs PromptConfigs
+	// PromptsetConfigs defines what prompts are available
+	PromptsetConfigs PromptsetConfigs
 	// LoggingFormat defines whether structured loggings are used.
 	LoggingFormat logFormat
 	// LogLevel defines the levels to log.
@@ -267,6 +272,50 @@ func (c *ToolsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(inter
 
 	for name, toolList := range raw {
 		(*c)[name] = tools.ToolsetConfig{Name: name, ToolNames: toolList}
+	}
+	return nil
+}
+
+// ToolConfigs is a type used to allow unmarshal of the toolset configs
+type PromptsetConfigs map[string]prompts.PromptsetConfig
+
+// validate interface
+var _ yaml.InterfaceUnmarshalerContext = &PromptsetConfigs{}
+
+func (c *PromptsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
+	*c = make(PromptsetConfigs)
+
+	var raw map[string][]string
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	for name, promptList := range raw {
+		(*c)[name] = prompts.PromptsetConfig{Name: name, PromptNames: promptList}
+	}
+	return nil
+}
+
+// PromptConfigs is a type used to allow unmarshal of the prompt configs
+type PromptConfigs map[string]prompts.PromptConfig
+
+// validate interface
+var _ yaml.InterfaceUnmarshalerContext = &PromptConfigs{}
+
+func (c *PromptConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
+	*c = make(PromptConfigs)
+	var raw map[string]util.DelayedUnmarshaler
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	for name, u := range raw {
+		var v prompts.Config
+		if err := u.Unmarshal(&v); err != nil {
+			return fmt.Errorf("unable to unmarshal prompt %q: %w", name, err)
+		}
+		v.Name = name
+		(*c)[name] = v
 	}
 	return nil
 }
