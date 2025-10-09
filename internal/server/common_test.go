@@ -121,7 +121,9 @@ type MockPrompt struct {
 }
 
 func (p MockPrompt) SubstituteParams(vals tools.ParamValues) (any, error) {
-	return fmt.Sprintf("substituted %s", p.Name), nil
+	return []prompts.Message{
+		{Role: "user", Content: fmt.Sprintf("substituted %s", p.Name)},
+	}, nil
 }
 
 func (p MockPrompt) ParseArgs(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
@@ -180,6 +182,18 @@ var tool5 = MockTool{
 	requiresClientAuthrorization: true,
 }
 
+var prompt1 = MockPrompt{
+	Name: "prompt1",
+	Args: prompts.Arguments{},
+}
+
+var prompt2 = MockPrompt{
+	Name: "prompt2",
+	Args: prompts.Arguments{
+		{Parameter: tools.NewStringParameter("arg1", "This is the first argument.")},
+	},
+}
+
 // setUpResources setups resources to test against
 func setUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt) (map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset) {
 	toolsMap := make(map[string]tools.Tool)
@@ -212,14 +226,12 @@ func setUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt
 	}
 
 	promptsets := make(map[string]prompts.Promptset)
-	if len(allPrompts) > 0 {
-		psc := prompts.PromptsetConfig{Name: "", PromptNames: allPrompts}
-		ps, err := psc.Initialize(fakeVersionString, promptsMap)
-		if err != nil {
-			t.Fatalf("unable to initialize default promptset: %s", err)
-		}
-		promptsets[""] = ps
+	psc := prompts.PromptsetConfig{Name: "", PromptNames: allPrompts}
+	ps, err := psc.Initialize(fakeVersionString, promptsMap)
+	if err != nil {
+		t.Fatalf("unable to initialize default promptset: %s", err)
 	}
+	promptsets[""] = ps
 
 	return toolsMap, toolsets, promptsMap, promptsets
 }
