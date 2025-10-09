@@ -64,7 +64,6 @@ type Config struct {
 }
 
 func (c Config) SourceConfigKind() string {
-	// Returns Healthcare source kind
 	return SourceKind
 }
 
@@ -72,21 +71,23 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	var service *healthcare.Service
 	var serviceCreator HealthcareServiceCreator
 	var tokenSource oauth2.TokenSource
-	var err error
 
+	svc, tok, err := initHealthcareConnection(ctx, tracer, c.Name)
+	if err != nil {
+		return nil, fmt.Errorf("error creating service from ADC: %w", err)
+	}
 	if c.UseClientOAuth {
 		serviceCreator, err = newHealthcareServiceCreator(ctx, tracer, c.Name)
 		if err != nil {
 			return nil, fmt.Errorf("error constructing service creator: %w", err)
 		}
 	} else {
-		service, tokenSource, err = initHealthcareConnection(ctx, tracer, c.Name)
-		if err != nil {
-			return nil, fmt.Errorf("error creating service from ADC: %w", err)
-		}
+		service = svc
+		tokenSource = tok
 	}
+
 	dsName := fmt.Sprintf("projects/%s/locations/%s/datasets/%s", c.Project, c.Region, c.Dataset)
-	if _, err = service.Projects.Locations.Datasets.FhirStores.Get(dsName).Do(); err != nil {
+	if _, err = svc.Projects.Locations.Datasets.FhirStores.Get(dsName).Do(); err != nil {
 		if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
 			return nil, fmt.Errorf("dataset '%s' not found", dsName)
 		}
@@ -96,7 +97,7 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	allowedFHIRStores := make(map[string]struct{})
 	for _, store := range c.AllowedFHIRStores {
 		name := fmt.Sprintf("%s/fhirStores/%s", dsName, store)
-		_, err := service.Projects.Locations.Datasets.FhirStores.Get(name).Do()
+		_, err := svc.Projects.Locations.Datasets.FhirStores.Get(name).Do()
 		if err != nil {
 			if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
 				return nil, fmt.Errorf("allowedFhirStore '%s' not found in dataset '%s'", store, dsName)
@@ -108,7 +109,7 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	allowedDICOMStores := make(map[string]struct{})
 	for _, store := range c.AllowedDICOMStores {
 		name := fmt.Sprintf("%s/dicomStores/%s", dsName, store)
-		_, err := service.Projects.Locations.Datasets.DicomStores.Get(name).Do()
+		_, err := svc.Projects.Locations.Datasets.DicomStores.Get(name).Do()
 		if err != nil {
 			if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
 				return nil, fmt.Errorf("allowedDicomStore '%s' not found in dataset '%s'", store, dsName)
@@ -118,17 +119,17 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		allowedDICOMStores[store] = struct{}{}
 	}
 	s := &Source{
-		Name:               c.Name,
-		Kind:               SourceKind,
-		Project:            c.Project,
-		Region:             c.Region,
-		Dataset:            c.Dataset,
-		Service:            service,
-		ServiceCreator:     serviceCreator,
-		TokenSource:        tokenSource,
-		AllowedFHIRStores:  allowedFHIRStores,
-		AllowedDICOMStores: allowedDICOMStores,
-		UseClientOAuth:     c.UseClientOAuth,
+		name:               c.Name,
+		kind:               SourceKind,
+		project:            c.Project,
+		region:             c.Region,
+		dataset:            c.Dataset,
+		service:            service,
+		serviceCreator:     serviceCreator,
+		tokenSource:        tokenSource,
+		allowedFHIRStores:  allowedFHIRStores,
+		allowedDICOMStores: allowedDICOMStores,
+		useClientOAuth:     c.UseClientOAuth,
 	}
 	return s, nil
 }
@@ -184,81 +185,77 @@ func initHealthcareConnection(ctx context.Context, tracer trace.Tracer, name str
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name               string `yaml:"name"`
-	Kind               string `yaml:"kind"`
-	Project            string
-	Region             string
-	Dataset            string
-	Service            *healthcare.Service
-	ServiceCreator     HealthcareServiceCreator
-	TokenSource        oauth2.TokenSource
-	AllowedFHIRStores  map[string]struct{}
-	AllowedDICOMStores map[string]struct{}
-	UseClientOAuth     bool
+	name               string `yaml:"name"`
+	kind               string `yaml:"kind"`
+	project            string
+	region             string
+	dataset            string
+	service            *healthcare.Service
+	serviceCreator     HealthcareServiceCreator
+	tokenSource        oauth2.TokenSource
+	allowedFHIRStores  map[string]struct{}
+	allowedDICOMStores map[string]struct{}
+	useClientOAuth     bool
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
 }
 
-func (s *Source) HealthcareProject() string {
-	return s.Project
+func (s *Source) Project() string {
+	return s.project
 }
 
-func (s *Source) HealthcareRegion() string {
-	return s.Region
+func (s *Source) Region() string {
+	return s.region
 }
 
-func (s *Source) HealthcareDatasetID() string {
-	return s.Dataset
+func (s *Source) DatasetID() string {
+	return s.dataset
 }
 
-func (s *Source) HealthcareService() *healthcare.Service {
-	return s.Service
+func (s *Source) Service() *healthcare.Service {
+	return s.service
 }
 
-func (s *Source) HealthcareServiceCreator() HealthcareServiceCreator {
-	return s.ServiceCreator
+func (s *Source) ServiceCreator() HealthcareServiceCreator {
+	return s.serviceCreator
 }
 
-func (s *Source) HealthcareTokenSource() oauth2.TokenSource {
-	return s.TokenSource
+func (s *Source) TokenSource() oauth2.TokenSource {
+	return s.tokenSource
 }
 
-func (s *Source) HealthcareTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error) {
-	return google.DefaultTokenSource(ctx, scope)
-}
-
-func (s *Source) HealthcareAllowedFHIRStores() map[string]struct{} {
-	if len(s.AllowedFHIRStores) == 0 {
+func (s *Source) AllowedFHIRStores() map[string]struct{} {
+	if len(s.allowedFHIRStores) == 0 {
 		return nil
 	}
-	return s.AllowedFHIRStores
+	return s.allowedFHIRStores
 }
 
-func (s *Source) HealthcareAllowedDICOMStores() map[string]struct{} {
-	if len(s.AllowedDICOMStores) == 0 {
+func (s *Source) AllowedDICOMStores() map[string]struct{} {
+	if len(s.allowedDICOMStores) == 0 {
 		return nil
 	}
-	return s.AllowedDICOMStores
+	return s.allowedDICOMStores
 }
 
 func (s *Source) IsFHIRStoreAllowed(storeID string) bool {
-	if len(s.AllowedFHIRStores) == 0 {
+	if len(s.allowedFHIRStores) == 0 {
 		return true
 	}
-	_, ok := s.AllowedFHIRStores[storeID]
+	_, ok := s.allowedFHIRStores[storeID]
 	return ok
 }
 
 func (s *Source) IsDICOMStoreAllowed(storeID string) bool {
-	if len(s.AllowedDICOMStores) == 0 {
+	if len(s.allowedDICOMStores) == 0 {
 		return true
 	}
-	_, ok := s.AllowedDICOMStores[storeID]
+	_, ok := s.allowedDICOMStores[storeID]
 	return ok
 }
 
 func (s *Source) UseClientAuthorization() bool {
-	return s.UseClientOAuth
+	return s.useClientOAuth
 }

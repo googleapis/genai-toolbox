@@ -1,5 +1,6 @@
 ---
-title: "Healthcare"
+title: "Cloud Healthcare API"
+linkTitle: "Healthcare"
 type: docs
 weight: 1
 description: >
@@ -8,7 +9,7 @@ description: >
   between existing care systems and applications hosted on Google Cloud.
 ---
 
-# Healthcare Source
+## About
 
 The [Cloud Healthcare API][healthcare-docs] provides a managed solution
 for storing and accessing healthcare data in Google Cloud, providing a
@@ -32,10 +33,6 @@ If you are new to the Healthcare API, you can try to
 [healthcare-docs]: https://cloud.google.com/healthcare/docs
 [healthcare-quickstart-curl]:
     https://cloud.google.com/healthcare-api/docs/store-healthcare-data-rest
-
-## Available Tools
-
-### Pre-built Configurations
 
 ## Requirements
 
