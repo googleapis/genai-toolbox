@@ -23,26 +23,26 @@ documentation](https://googleapis.github.io/genai-toolbox/).
 > its initial development predated MCP, but was renamed to align with recently
 > added MCP compatibility.
 
-<!-- TOC ignore:true -->
-## Table of Contents
-
 <!-- TOC -->
 
-- [Why Toolbox?](#why-toolbox)
-- [General Architecture](#general-architecture)
-- [Getting Started](#getting-started)
-  - [Installing the server](#installing-the-server)
-  - [Running the server](#running-the-server)
-  - [Integrating your application](#integrating-your-application)
-- [Configuration](#configuration)
-  - [Sources](#sources)
-  - [Tools](#tools)
-  - [Toolsets](#toolsets)
-- [Versioning](#versioning)
-  - [Pre-1.0.0 Versioning](#pre-100-versioning)
-  - [Post-1.0.0 Versioning](#post-100-versioning)
-- [Contributing](#contributing)
-- [Community](#community)
+- [MCP Toolbox for Databases](#mcp-toolbox-for-databases)
+    - [Why Toolbox?](#why-toolbox)
+    - [General Architecture](#general-architecture)
+    - [Getting Started](#getting-started)
+        - [Installing the server](#installing-the-server)
+        - [Running the server](#running-the-server)
+        - [Integrating your application](#integrating-your-application)
+    - [Configuration](#configuration)
+        - [Sources](#sources)
+        - [Tools](#tools)
+        - [Toolsets](#toolsets)
+            - [Prompts](#prompts)
+            - [Promptsets](#promptsets)
+    - [Versioning](#versioning)
+        - [Pre-1.0.0 Versioning](#pre-100-versioning)
+        - [Post-1.0.0 Versioning](#post-100-versioning)
+    - [Contributing](#contributing)
+    - [Community](#community)
 
 <!-- /TOC -->
 
@@ -836,6 +836,25 @@ all_tools = client.load_toolset()
 # This will only load the tools listed in 'my_second_toolset'
 my_second_toolset = client.load_toolset("my_second_toolset")
 ```
+
+#### Prompts
+
+The `prompts` section of a `tools.yaml` defines prompts that can be used for
+interactions with LLMs.
+
+```yaml
+prompts:
+  code_review:
+    description: "Asks the LLM to analyze code quality and suggest improvements."
+    messages:
+      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+    arguments:
+      - name: "code"
+        description: "The code to review"
+```
+
+For more details on configuring prompts, see the
+[Prompts](https://googleapis.github.io/genai-toolbox/resources/prompts).
 
 ## Versioning
 
