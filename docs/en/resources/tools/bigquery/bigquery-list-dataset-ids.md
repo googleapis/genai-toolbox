@@ -15,9 +15,17 @@ It's compatible with the following sources:
 
 - [bigquery](../../sources/bigquery.md)
 
-`bigquery-list-dataset-ids` optionally accepts a `project` parameter to define
-the Google Cloud project ID. If the `project` parameter is not provided, the
-tool defaults to using the project defined in the source configuration.
+`bigquery-list-dataset-ids` accepts the following parameter:
+- **`project`** (optional): Defines the Google Cloud project ID. If not provided,
+  the tool defaults to the project from the source configuration.
+
+The tool's behavior regarding this parameter is influenced by the
+`allowedDatasets` restriction on the `bigquery` source:
+- **Without `allowedDatasets` restriction:** The tool can list datasets from any
+  project specified by the `project` parameter.
+- **With `allowedDatasets` restriction:** The tool directly returns the
+  pre-configured list of dataset IDs from the source, and the `project`
+  parameter is ignored.
 
 ## Example
 

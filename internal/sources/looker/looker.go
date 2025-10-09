@@ -18,10 +18,13 @@ import (
 	"fmt"
 	"time"
 
+	geminidataanalytics "cloud.google.com/go/geminidataanalytics/apiv1beta"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
@@ -47,6 +50,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 		ShowHiddenModels:   true,
 		ShowHiddenExplores: true,
 		ShowHiddenFields:   true,
+		Location:           "us",
 	} // Default Ssl,timeout, ShowHidden
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
@@ -66,6 +70,8 @@ type Config struct {
 	ShowHiddenModels   bool   `yaml:"show_hidden_models"`
 	ShowHiddenExplores bool   `yaml:"show_hidden_explores"`
 	ShowHiddenFields   bool   `yaml:"show_hidden_fields"`
+	Project            string `yaml:"project"`
+	Location           string `yaml:"location"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -102,6 +108,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		ClientSecret: r.ClientSecret,
 	}
 
+	var tokenSource oauth2.TokenSource
+	tokenSource, _ = initGoogleCloudConnection(ctx)
+
 	s := &Source{
 		Name:               r.Name,
 		Kind:               SourceKind,
@@ -111,6 +120,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		ShowHiddenModels:   r.ShowHiddenModels,
 		ShowHiddenExplores: r.ShowHiddenExplores,
 		ShowHiddenFields:   r.ShowHiddenFields,
+		Project:            r.Project,
+		Location:           r.Location,
+		TokenSource:        tokenSource,
 	}
 
 	if !r.UseClientOAuth {
@@ -137,12 +149,48 @@ type Source struct {
 	Timeout            string `yaml:"timeout"`
 	Client             *v4.LookerSDK
 	ApiSettings        *rtl.ApiSettings
-	UseClientOAuth     bool `yaml:"use_client_oauth"`
-	ShowHiddenModels   bool `yaml:"show_hidden_models"`
-	ShowHiddenExplores bool `yaml:"show_hidden_explores"`
-	ShowHiddenFields   bool `yaml:"show_hidden_fields"`
+	UseClientOAuth     bool   `yaml:"use_client_oauth"`
+	ShowHiddenModels   bool   `yaml:"show_hidden_models"`
+	ShowHiddenExplores bool   `yaml:"show_hidden_explores"`
+	ShowHiddenFields   bool   `yaml:"show_hidden_fields"`
+	Project            string `yaml:"project"`
+	Location           string `yaml:"location"`
+	TokenSource        oauth2.TokenSource
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) GetApiSettings() *rtl.ApiSettings {
+	return s.ApiSettings
+}
+
+func (s *Source) UseClientAuthorization() bool {
+	return s.UseClientOAuth
+}
+
+func (s *Source) GoogleCloudProject() string {
+	return s.Project
+}
+
+func (s *Source) GoogleCloudLocation() string {
+	return s.Location
+}
+
+func (s *Source) GoogleCloudTokenSource() oauth2.TokenSource {
+	return s.TokenSource
+}
+
+func (s *Source) GoogleCloudTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error) {
+	return google.DefaultTokenSource(ctx, scope)
+}
+
+func initGoogleCloudConnection(ctx context.Context) (oauth2.TokenSource, error) {
+	cred, err := google.FindDefaultCredentials(ctx, geminidataanalytics.DefaultAuthScopes()...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", geminidataanalytics.DefaultAuthScopes(), err)
+	}
+
+	return cred.TokenSource, nil
 }

@@ -833,7 +833,7 @@ func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool
 	}
 
 	dropQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE;", strings.Join(tablesToDrop, ", "))
-	
+
 	if _, err := pool.Exec(ctx, dropQuery); err != nil {
 		t.Fatalf("Failed to drop all tables in 'public' schema: %v", err)
 	}
@@ -871,7 +871,7 @@ func CleanupMySQLTables(t *testing.T, ctx context.Context, pool *sql.DB) {
 	}
 
 	dropQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s;", strings.Join(tablesToDrop, ", "))
-	
+
 	if _, err := pool.ExecContext(ctx, dropQuery); err != nil {
 		// Try to re-enable checks even if drop fails
 		if _, err := pool.ExecContext(ctx, "SET FOREIGN_KEY_CHECKS = 1;"); err != nil {
