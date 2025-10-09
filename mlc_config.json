@@ -10,6 +10,10 @@
     },
     {
          "pattern": "^https:\\/\\/img\\.shields\\.io\\/.*"
+    },
+    {
+      "pattern": "^https?:\\/\\/([a-zA-Z0-9-]+\\.)?example\\.com(:\\d+)?(\\/.*)?$",
+      "comment" : "this is for the http:any.example.com"
     }
   ],
   "replacementPatterns": [

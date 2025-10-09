@@ -30,6 +30,8 @@ jobs:
         with:
           config_file: mlc_config.json
           debug: true
+          cmd_params: '--buffer-size=8192 --max-connections=10 --color=always --skip-tls-verification --header="User-Agent:curl/7.54.0" --timeout=20'  # muffet parameters
+
         env:
           # Pass the GitHub Actions token to the environment. 
           # This authenticates API calls and dramatically increases rate limits, 
