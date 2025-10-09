@@ -75,7 +75,8 @@ var prompt2Args = []any{
 
 func TestMcpEndpointWithoutInitialized(t *testing.T) {
 	mockTools := []MockTool{tool1, tool2, tool3, tool4, tool5}
-	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, nil)
+	mockPrompts := []MockPrompt{prompt1, prompt2}
+	toolsMap, toolsets, promptsMap, promptsets := setUpResources(t, mockTools, mockPrompts)
 	r, shutdown := setUpServer(t, "mcp", toolsMap, toolsets, promptsMap, promptsets)
 	defer shutdown()
 	ts := runServer(r, false)
