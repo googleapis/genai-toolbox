@@ -760,7 +760,7 @@ tools:
         description: |
           get_projects Tool
 
-          This tool returns the project_id and projecrt_name for
+          This tool returns the project_id and project_name for
           all the LookML projects on the looker instance.
 
     get_project_files:
