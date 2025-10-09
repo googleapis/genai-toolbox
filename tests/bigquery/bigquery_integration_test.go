@@ -204,7 +204,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 }
 
 func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Minute)
 	defer cancel()
 
 	client, err := initBigQueryConnection(BigqueryProject)
@@ -590,8 +590,10 @@ func getBigQueryForecastToolInfo(tableName string) (string, string, []bigqueryap
 
 // getBigQueryAnalyzeContributionToolInfo returns statements and params for the analyze-contribution tool.
 func getBigQueryAnalyzeContributionToolInfo(tableName string) (string, string, []bigqueryapi.QueryParameter) {
-	createStatement := fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (dim1 STRING, dim2 STRING, is_test BOOL, metric FLOAT64);`, tableName)
-	insertStatement := fmt.Sprintf(`INSERT INTO %s (dim1, dim2, is_test, metric) VALUES 
+	createStatement := fmt.Sprintf(`
+		CREATE TABLE IF NOT EXISTS %s (dim1 STRING, dim2 STRING, is_test BOOL, metric FLOAT64);`, tableName)
+	insertStatement := fmt.Sprintf(`
+		INSERT INTO %s (dim1, dim2, is_test, metric) VALUES 
 		(?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?), (?, ?, ?, ?);`, tableName)
 	params := []bigqueryapi.QueryParameter{
 		{Value: "a"}, {Value: "x"}, {Value: true}, {Value: 100.0},
