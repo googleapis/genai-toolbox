@@ -255,6 +255,82 @@ func TestMcpEndpointWithoutInitialized(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "prompts/list",
+			url:  "/",
+			body: jsonrpc.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Id:      "prompts-list-uninitialized",
+				Request: jsonrpc.Request{
+					Method: "prompts/list",
+				},
+			},
+			isErr: false,
+			want: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "prompts-list-uninitialized",
+				"result": map[string]any{
+					"prompts": []any{
+						map[string]any{
+							"name": "prompt1",
+						},
+						map[string]any{
+							"name":      "prompt2",
+							"arguments": prompt2Args,
+						},
+					},
+				},
+			},
+		},
+		{
+			name:  "prompts/get non-existent prompt",
+			url:   "/",
+			isErr: true,
+			body: jsonrpc.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Id:      "prompts-get-non-existent",
+				Request: jsonrpc.Request{
+					Method: "prompts/get",
+				},
+				Params: map[string]any{
+					"name": "non_existent_prompt",
+				},
+			},
+			want: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "prompts-get-non-existent",
+				"error": map[string]any{
+					"code":    -32602.0,
+					"message": `prompt with name "non_existent_prompt" does not exist`,
+				},
+			},
+		},
+		{
+			name:  "prompts/get with invalid arguments",
+			url:   "/",
+			isErr: true,
+			body: jsonrpc.JSONRPCRequest{
+				Jsonrpc: jsonrpcVersion,
+				Id:      "prompts-get-invalid-args",
+				Request: jsonrpc.Request{
+					Method: "prompts/get",
+				},
+				Params: map[string]any{
+					"name": "prompt2",
+					"arguments": map[string]any{
+						"arg1": 42, // prompt2 expects a string, we send a number
+					},
+				},
+			},
+			want: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "prompts-get-invalid-args",
+				"error": map[string]any{
+					"code":    -32602.0,
+					"message": `invalid arguments for prompt "prompt2": unable to parse value for "arg1": %!q(float64=42) not type "string"`,
+				},
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -917,6 +993,12 @@ func TestSseEndpoint(t *testing.T) {
 			server: ts,
 			path:   "/tool1_only/sse",
 			event:  fmt.Sprintf("event: endpoint\ndata: http://127.0.0.1:%s/mcp/tool1_only?sessionId=", tsPort),
+		},
+		{
+			name:   "promptset1",
+			server: ts,
+			path:   "/prompt1_only/sse",
+			event:  fmt.Sprintf("event: endpoint\ndata: http://127.0.0.1:%s/mcp/prompt1_only?sessionId=", tsPort),
 		},
 		{
 			name:   "basic with http proto",
