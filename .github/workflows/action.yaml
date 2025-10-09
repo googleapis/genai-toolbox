@@ -9,15 +9,6 @@ jobs:
     name: Check Markdown Links
     runs-on: ubuntu-latest
     
-    # 🔑 CORRECT PLACEMENT AND SCOPE FOR THE GITHUB_TOKEN
-    # Permissions MUST be defined at the job level. 
-    # Read access is sufficient for checking links.
-    # Write access is only needed if the job modifies the repo (e.g., creates a commit/issue/PR status).
-    permissions:
-      contents: read       # Only needs read access to check the files
-      pull-requests: write # Recommended if the action updates PR status/checks
-      issues: write        # Recommended if the action creates failure issues
-    
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -25,18 +16,17 @@ jobs:
       # The link checker relies on external HTTP requests, which can hit 
       # rate limits or receive 403s on external sites, or even internal GitHub links, 
       # unless the request is authenticated.
-      - name: Run Markdown Link Check (Fixes 403 by using Token)
+      - name: Check for broken links
         uses: ruzickap/action-my-markdown-link-checker@v1
         with:
           config_file: mlc_config.json
           debug: true
-          cmd_params: '--buffer-size=8192 --max-connections=10 --color=always --skip-tls-verification --header="User-Agent:curl/7.54.0" --timeout=20'  # muffet parameters
-
+          url: https://github.com/googleapis/genai-toolbox
+          cmd_params: '--buffer-size=8192 --max-connections=10 --color=always --skip-tls-verification --header="User-Agent:curl/7.54.0" --timeout=20'  # muffet 
+          
+          
         env:
-          # Pass the GitHub Actions token to the environment. 
-          # This authenticates API calls and dramatically increases rate limits, 
-          # often solving 403 errors when accessing GitHub links or hitting public rate limits.
-          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # 💡 Adding a custom User-Agent can help bypass blocks by external websites
-          # USER_AGENT: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
-          USER_AGENT: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+          INPUT_URL: https://${{ github.event.repository.name }}
+          INPUT_PAGES_PATH: public
+          INPUT_CMD_PARAMS: '--verbose --buffer-size=8192 --max-connections=10 --color=always --skip-tls-verification --exclude="(mylabs.dev|linkedin.com)"'
+      
