@@ -261,6 +261,13 @@ func TestToolInvokeEndpoint(t *testing.T) {
 			want:        "",
 			isErr:       true,
 		},
+		{
+			name:        "malformed json body",
+			toolName:    tool1.Name,
+			requestBody: bytes.NewBuffer([]byte(`{"param1": 1,`)), // Intentionally broken JSON
+			want:        "",
+			isErr:       true,
+		},
 	}
 
 	for _, tc := range testCases {
