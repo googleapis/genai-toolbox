@@ -5,8 +5,7 @@
 <div class="dropdown-menu" aria-labelledby="navbarDropdown">
    <div w3-include-html="/genai-toolbox/releases.releases" w3-include-html-default='<a class="dropdown-item" href="/genai-toolbox/dev/">Dev</a>'></div>
    <script>
-     // This must run after the w3.js script has loaded.
-      function fixVersionLinks() {
+      function deepRouteLink() {
         const currentPath = window.location.pathname;
         const versionRegex = /(\/genai-toolbox\/(v\d+\.\d+\.\d+|dev)\/)/;
         const versionMatch = currentPath.match(versionRegex);
@@ -23,7 +22,7 @@
         });
       }
 
-      w3.includeHTML(fixVersionLinks);
+      w3.includeHTML(deepRouteLink);
    </script>
 </div>
 {{ end -}}
