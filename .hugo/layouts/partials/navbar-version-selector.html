@@ -6,7 +6,24 @@
    <div w3-include-html="/genai-toolbox/releases.releases" w3-include-html-default='<a class="dropdown-item" href="/genai-toolbox/dev/">Dev</a>'></div>
    <script>
      // This must run after the w3.js script has loaded.
-     w3.includeHTML();
+      function fixVersionLinks() {
+        const currentPath = window.location.pathname;
+        const versionRegex = /(\/genai-toolbox\/(v\d+\.\d+\.\d+|dev)\/)/;
+        const versionMatch = currentPath.match(versionRegex);
+
+        if (!versionMatch) {
+          return;
+        }
+
+        const deepPath = currentPath.substring(versionMatch[0].length);
+        const versionLinks = document.querySelectorAll('.dropdown-menu[aria-labelledby="navbarDropdown"] .dropdown-item');
+
+        versionLinks.forEach(link => {
+          link.href = link.href + deepPath;
+        });
+      }
+
+      w3.includeHTML(fixVersionLinks);
    </script>
 </div>
 {{ end -}}
