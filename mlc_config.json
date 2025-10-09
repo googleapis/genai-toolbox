@@ -4,7 +4,8 @@
     {
       "pattern": "^http://example.net"
     },{
-        "pattern": "^https?:\\/\\/\\(127\\.0\\.0\\.1\\|localhost\\)\\(:\\d+\\)?\\(\\/.*\\)?$"
+        "pattern": "^https?:\\/\\/(127\\.0\\.0\\.1|localhost)(:\\d+)?(\\/.*)?$"
+
     },
     {
          "pattern": "^https:\\/\\/img\\.shields\\.io\\/.*"
