@@ -25,24 +25,22 @@ documentation](https://googleapis.github.io/genai-toolbox/).
 
 <!-- TOC -->
 
-- [MCP Toolbox for Databases](#mcp-toolbox-for-databases)
-    - [Why Toolbox?](#why-toolbox)
-    - [General Architecture](#general-architecture)
-    - [Getting Started](#getting-started)
-        - [Installing the server](#installing-the-server)
-        - [Running the server](#running-the-server)
-        - [Integrating your application](#integrating-your-application)
-    - [Configuration](#configuration)
-        - [Sources](#sources)
-        - [Tools](#tools)
-        - [Toolsets](#toolsets)
-            - [Prompts](#prompts)
-            - [Promptsets](#promptsets)
-    - [Versioning](#versioning)
-        - [Pre-1.0.0 Versioning](#pre-100-versioning)
-        - [Post-1.0.0 Versioning](#post-100-versioning)
-    - [Contributing](#contributing)
-    - [Community](#community)
+  - [Why Toolbox?](#why-toolbox)
+  - [General Architecture](#general-architecture)
+  - [Getting Started](#getting-started)
+      - [Installing the server](#installing-the-server)
+      - [Running the server](#running-the-server)
+      - [Integrating your application](#integrating-your-application)
+  - [Configuration](#configuration)
+      - [Sources](#sources)
+      - [Tools](#tools)
+      - [Toolsets](#toolsets)
+      - [Prompts](#prompts)
+  - [Versioning](#versioning)
+      - [Pre-1.0.0 Versioning](#pre-100-versioning)
+      - [Post-1.0.0 Versioning](#post-100-versioning)
+  - [Contributing](#contributing)
+  - [Community](#community)
 
 <!-- /TOC -->
 
@@ -837,7 +835,7 @@ all_tools = client.load_toolset()
 my_second_toolset = client.load_toolset("my_second_toolset")
 ```
 
-#### Prompts
+### Prompts
 
 The `prompts` section of a `tools.yaml` defines prompts that can be used for
 interactions with LLMs.
