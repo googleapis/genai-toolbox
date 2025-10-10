@@ -46,6 +46,13 @@ The behavior of this tool is influenced by the `writeMode` setting on its `bigqu
   tools using the same source. This allows the `input_data` parameter to be a query that references temporary resources (e.g., 
   `TEMP` tables) created within that session.
 
+The tool's behavior is also influenced by the `allowedDatasets` restriction on the `bigquery` source:
+
+- **Without `allowedDatasets` restriction:** The tool can use any table or query for the `input_data` parameter.
+- **With `allowedDatasets` restriction:** The tool verifies that the `input_data` parameter only accesses tables within the allowed datasets.
+  - If `input_data` is a table ID, the tool checks if the table's dataset is in the allowed list.
+  - If `input_data` is a query, the tool performs a dry run to analyze the query and rejects it if it accesses any table outside the allowed list.
+
 
 ## Example
 
