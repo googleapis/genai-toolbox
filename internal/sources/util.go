@@ -35,8 +35,10 @@ func GetCloudSQLOpts(ipType, userAgent string, useIAM bool) ([]cloudsqlconn.Opti
 		opts = append(opts, cloudsqlconn.WithDefaultDialOptions(cloudsqlconn.WithPrivateIP()))
 	case "public":
 		opts = append(opts, cloudsqlconn.WithDefaultDialOptions(cloudsqlconn.WithPublicIP()))
+	case "psc":
+		opts = append(opts, cloudsqlconn.WithDefaultDialOptions(cloudsqlconn.WithPSC()))
 	default:
-		return nil, fmt.Errorf("invalid ipType %s", ipType)
+		return nil, fmt.Errorf("invalid ipType %s. Must be one of `public`, `private`, or `psc`", ipType)
 	}
 
 	if useIAM {
