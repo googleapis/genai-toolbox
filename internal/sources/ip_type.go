@@ -35,10 +35,10 @@ func (i *IPType) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) 
 		return err
 	}
 	switch strings.ToLower(ipType) {
-	case "private", "public":
+	case "private", "public", "psc":
 		*i = IPType(strings.ToLower(ipType))
 		return nil
 	default:
-		return fmt.Errorf(`ipType invalid: must be one of "public", or "private"`)
+		return fmt.Errorf(`ipType invalid: must be one of "public", "private", or "psc"`)
 	}
 }

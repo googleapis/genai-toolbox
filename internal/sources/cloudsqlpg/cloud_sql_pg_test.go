@@ -113,6 +113,34 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "psc ipType",
+			in: `
+			sources:
+				my-pg-instance:
+					kind: cloud-sql-postgres
+					project: my-project
+					region: my-region
+					instance: my-instance
+					ipType: private 
+					database: my_db
+					user: my_user
+					password: my_pass
+			`,
+			want: server.SourceConfigs{
+				"my-pg-instance": cloudsqlpg.Config{
+					Name:     "my-pg-instance",
+					Kind:     cloudsqlpg.SourceKind,
+					Project:  "my-project",
+					Region:   "my-region",
+					Instance: "my-instance",
+					IPType:   "psc",
+					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -152,7 +180,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					user: my_user
 					password: my_pass
 			`,
-			err: "unable to parse source \"my-pg-instance\" as \"cloud-sql-postgres\": ipType invalid: must be one of \"public\", or \"private\"",
+			err: "unable to parse source \"my-pg-instance\" as \"cloud-sql-postgres\": ipType invalid: must be one of \"public\", \"private\", or \"psc\"",
 		},
 		{
 			desc: "extra field",
