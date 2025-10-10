@@ -1,0 +1,15 @@
+
+
+^https?:\\/\\/([a-zA-Z0-9-]+\\.)?example\\.com(:\\d+)?(\\/.*)?$
+^https:\\/\\/img\\.shields\\.io\\/.*
+^mailto:
+^https?:\\/\\/(127\\.0\\.0\\.1|localhost)(:\\d+)?(\\/.*)?$
+^http://localhost
+^https?://127\.0\.0\.1
+^http://example.net
+
+^https?://(?:www\.)?twitter\.com/
+^https?://(?:www\.)?linkedin\.com/company/
+\.pdf$
+
+^https://some-old-api-documentation.io/v1/deprecated$

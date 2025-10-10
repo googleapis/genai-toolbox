@@ -9,7 +9,8 @@ jobs:
   linkChecker:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - name: Checkout Repository
+        uses: actions/checkout@v5
 
       - name: Restore lychee cache
         uses: actions/cache@v4
@@ -21,11 +22,11 @@ jobs:
       - name: Link Checker
         uses: lycheeverse/lychee-action@v2
         with:
-          config_file: mlc_config.json
+          # config_file: mlc_config.json
           args: --verbose --no-progress --cache --max-cache-age 1d README.md docs/
           fail: true
           jobSummary: true
-          
+
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       
