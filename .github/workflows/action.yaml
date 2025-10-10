@@ -1,32 +1,27 @@
-name: Markdown Link Check
+
+name: Link Check
 
 on:
-  # Triggers the workflow on pushes to main and master branches
   push:
-  
+
 jobs:
-  markdown-link-check:
-    name: Check Markdown Links
+  linkChecker:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        
-      # The link checker relies on external HTTP requests, which can hit 
-      # rate limits or receive 403s on external sites, or even internal GitHub links, 
-      # unless the request is authenticated.
-      - name: Check for broken links
-        uses: ruzickap/action-my-markdown-link-checker@v1
+      - uses: actions/checkout@v5
+
+      - name: Restore lychee cache
+        uses: actions/cache@v4
         with:
-          config_file: mlc_config.json
-          debug: true
-          url: https://github.com/googleapis/genai-toolbox
-          cmd_params: '--buffer-size=8192 --max-connections=10 --color=always --skip-tls-verification --header="User-Agent:curl/7.54.0" --timeout=20'  # muffet 
-          
-          
+          path: .lycheecache
+          key: cache-lychee-${{ github.sha }}
+          restore-keys: cache-lychee-
+
+      - name: Link Checker
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --verbose --no-progress --cache --max-cache-age 1d README.md docs/
+          fail: true
+          jobSummary: true
         env:
-          INPUT_URL: https://${{ github.event.repository.name }}
-          INPUT_PAGES_PATH: public
-          INPUT_CMD_PARAMS: '--verbose --buffer-size=8192 --max-connections=10 --color=always --skip-tls-verification --exclude="(mylabs.dev|linkedin.com)"'
-      
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
