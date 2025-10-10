@@ -12,6 +12,12 @@
 ^file:///home/runner/work/genai-toolbox/genai-toolbox/docs/en/resources/tools/sources/tidb.md$
 ^file:///home/runner/work/genai-toolbox/genai-toolbox/docs/en/resources/tools/_..#template-parameters$
 
+^https://www.npmjs.com/package/@toolbox-sdk/core$
+^https://cloud.google.com/alloydb/docs/create-database-with-mcp-toolbox$
+^https://claude.ai/download$
+^https://dev.mysql.com/downloads/installer/$
+^https://dev.mysql.com/doc/refman/8.4/en/user-names.html$
+^https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html$
 
 ^http://localhost
 ^https?://127\.0\.0\.1

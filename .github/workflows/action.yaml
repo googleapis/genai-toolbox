@@ -22,7 +22,6 @@ jobs:
       - name: Link Checker
         uses: lycheeverse/lychee-action@v2
         with:
-          # config_file: mlc_config.json
           args: --verbose --no-progress --cache --max-cache-age 1d README.md docs/
           fail: true
           jobSummary: true
