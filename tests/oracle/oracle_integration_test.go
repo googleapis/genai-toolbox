@@ -123,7 +123,6 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 	// Run tests
 	tests.RunToolGetTest(t)
 	tests.RunToolInvokeTest(t, select1Want,
-		tests.DisableArrayTest(),
 	)
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)

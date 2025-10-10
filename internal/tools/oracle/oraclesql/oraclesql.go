@@ -215,7 +215,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		}
 		out = append(out, vMap)
 	}
-        
+
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("errors encountered during query execution or row processing: %w", err)
 	}

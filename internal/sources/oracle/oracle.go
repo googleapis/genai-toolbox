@@ -107,8 +107,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name string  `yaml:"name"`
-	Kind string  `yaml:"kind"`
+	Name string `yaml:"name"`
+	Kind string `yaml:"kind"`
 	DB   *sql.DB
 }
 
