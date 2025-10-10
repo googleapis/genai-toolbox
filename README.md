@@ -118,6 +118,7 @@ To install Toolbox as a binary:
 > <summary>Linux (AMD64)</summary>
 >
 > To install Toolbox as a binary on Linux (AMD64):
+>
 > ```sh
 > # see releases page for other versions
 > export VERSION=0.16.0
@@ -130,6 +131,7 @@ To install Toolbox as a binary:
 > <summary>macOS (Apple Silicon)</summary>
 >
 > To install Toolbox as a binary on macOS (Apple Silicon):
+>
 > ```sh
 > # see releases page for other versions
 > export VERSION=0.16.0
@@ -142,6 +144,7 @@ To install Toolbox as a binary:
 > <summary>macOS (Intel)</summary>
 >
 > To install Toolbox as a binary on macOS (Intel):
+>
 > ```sh
 > # see releases page for other versions
 > export VERSION=0.16.0
@@ -154,6 +157,7 @@ To install Toolbox as a binary:
 > <summary>Windows (AMD64)</summary>
 >
 > To install Toolbox as a binary on Windows (AMD64):
+>
 > ```powershell
 > # see releases page for other versions
 > $VERSION = "0.16.0"

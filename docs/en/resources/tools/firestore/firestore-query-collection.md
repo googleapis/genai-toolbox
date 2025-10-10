@@ -8,7 +8,7 @@ aliases:
 - /resources/tools/firestore-query-collection
 ---
 
-# About
+## About
 
 The `firestore-query-collection` tool allows you to query Firestore collections
 with filters, ordering, and limit capabilities.

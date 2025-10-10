@@ -14,8 +14,8 @@ A `clickhouse-list-databases` tool lists all available databases in a ClickHouse
 instance. It's compatible with the [clickhouse](../../sources/clickhouse.md)
 source.
 
-This tool executes the `SHOW DATABASES` command and returns a list of all 
-databases accessible to the configured user, making it useful for database 
+This tool executes the `SHOW DATABASES` command and returns a list of all
+databases accessible to the configured user, making it useful for database
 discovery and exploration tasks.
 
 ## Example
@@ -31,9 +31,11 @@ tools:
 ## Return Value
 
 The tool returns an array of objects, where each object contains:
+
 - `name`: The name of the database
 
 Example response:
+
 ```json
 [
   {"name": "default"},
