@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mysqlsql
+package mindsdbexecutesql
 
 import (
 	"context"
@@ -21,14 +21,12 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	"github.com/googleapis/genai-toolbox/internal/sources/mindsdb"
-	"github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
 )
 
-const kind string = "mysql-sql"
+const kind string = "mindsdb-execute-sql"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -45,25 +43,20 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	MySQLPool() *sql.DB
+	MindsDBPool() *sql.DB
 }
 
 // validate compatible sources are still compatible
-var _ compatibleSource = &cloudsqlmysql.Source{}
-var _ compatibleSource = &mysql.Source{}
 var _ compatibleSource = &mindsdb.Source{}
 
-var compatibleSources = [...]string{cloudsqlmysql.SourceKind, mysql.SourceKind, mindsdb.SourceKind}
+var compatibleSources = [...]string{mindsdb.SourceKind}
 
 type Config struct {
-	Name               string           `yaml:"name" validate:"required"`
-	Kind               string           `yaml:"kind" validate:"required"`
-	Source             string           `yaml:"source" validate:"required"`
-	Description        string           `yaml:"description" validate:"required"`
-	Statement          string           `yaml:"statement" validate:"required"`
-	AuthRequired       []string         `yaml:"authRequired"`
-	Parameters         tools.Parameters `yaml:"parameters"`
-	TemplateParameters tools.Parameters `yaml:"templateParameters"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description" validate:"required"`
+	AuthRequired []string `yaml:"authRequired"`
 }
 
 // validate interface
@@ -86,25 +79,25 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	allParameters, paramManifest, err := tools.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
-	if err != nil {
-		return nil, err
-	}
+	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
+	parameters := tools.Parameters{sqlParameter}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
+	inputSchema, _ := parameters.McpManifest()
+	mcpManifest := tools.McpManifest{
+		Name:        cfg.Name,
+		Description: cfg.Description,
+		InputSchema: inputSchema,
+	}
 
 	// finish tool setup
 	t := Tool{
-		Name:               cfg.Name,
-		Kind:               kind,
-		Parameters:         cfg.Parameters,
-		TemplateParameters: cfg.TemplateParameters,
-		AllParams:          allParameters,
-		Statement:          cfg.Statement,
-		AuthRequired:       cfg.AuthRequired,
-		Pool:               s.MySQLPool(),
-		manifest:           tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:        mcpManifest,
+		Name:         cfg.Name,
+		Kind:         kind,
+		Parameters:   parameters,
+		AuthRequired: cfg.AuthRequired,
+		Pool:         s.MindsDBPool(),
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:  mcpManifest,
 	}
 	return t, nil
 }
@@ -113,36 +106,28 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name               string           `yaml:"name"`
-	Kind               string           `yaml:"kind"`
-	AuthRequired       []string         `yaml:"authRequired"`
-	Parameters         tools.Parameters `yaml:"parameters"`
-	TemplateParameters tools.Parameters `yaml:"templateParameters"`
-	AllParams          tools.Parameters `yaml:"allParams"`
+	Name         string           `yaml:"name"`
+	Kind         string           `yaml:"kind"`
+	AuthRequired []string         `yaml:"authRequired"`
+	Parameters   tools.Parameters `yaml:"parameters"`
 
 	Pool        *sql.DB
-	Statement   string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
-	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
-	if err != nil {
-		return nil, fmt.Errorf("unable to extract template params %w", err)
+	sql, ok := paramsMap["sql"].(string)
+	if !ok {
+		return nil, fmt.Errorf("unable to get cast %s", paramsMap["sql"])
 	}
 
-	newParams, err := tools.GetParams(t.Parameters, paramsMap)
-	if err != nil {
-		return nil, fmt.Errorf("unable to extract standard params %w", err)
-	}
-
-	sliceParams := newParams.AsSlice()
-	results, err := t.Pool.QueryContext(ctx, newStatement, sliceParams...)
+	results, err := t.Pool.QueryContext(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
+	defer results.Close()
 
 	cols, err := results.Columns()
 	if err != nil {
@@ -155,7 +140,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	for i := range rawValues {
 		values[i] = &rawValues[i]
 	}
-	defer results.Close()
 
 	colTypes, err := results.ColumnTypes()
 	if err != nil {
@@ -176,6 +160,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 				continue
 			}
 
+			// MindsDB uses mysql driver
 			vMap[name], err = mysqlcommon.ConvertToType(colTypes[i], val)
 			if err != nil {
 				return nil, fmt.Errorf("errors encountered when converting values: %w", err)
@@ -192,7 +177,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.AllParams, data, claims)
+	return tools.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
