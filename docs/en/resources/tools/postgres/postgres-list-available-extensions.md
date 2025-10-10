@@ -3,7 +3,8 @@ title: "postgres-list-available-extensions"
 type: docs
 weight: 1
 description: >
-  The "postgres-list-available-extensions" tool retrieves all PostgreSQL extensions available for installation on a Postgres database.
+  The "postgres-list-available-extensions" tool retrieves all PostgreSQL
+  extensions available for installation on a Postgres database.
 aliases:
 - /resources/tools/postgres-list-available-extensions
 ---
