@@ -127,18 +127,20 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 				datasetID = parts[1]
 				allowedFullID = allowed
 			} else {
-				projectID = client.Project()
+				projectID = r.Project
 				datasetID = allowed
 				allowedFullID = fmt.Sprintf("%s.%s", projectID, datasetID)
 			}
 
-			dataset := client.DatasetInProject(projectID, datasetID)
-			_, err := dataset.Metadata(ctx)
-			if err != nil {
-				if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
-					return nil, fmt.Errorf("allowedDataset '%s' not found in project '%s'", datasetID, projectID)
+			if client != nil {
+				dataset := client.DatasetInProject(projectID, datasetID)
+				_, err := dataset.Metadata(ctx)
+				if err != nil {
+					if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
+						return nil, fmt.Errorf("allowedDataset '%s' not found in project '%s'", datasetID, projectID)
+					}
+					return nil, fmt.Errorf("failed to verify allowedDataset '%s' in project '%s': %w", datasetID, projectID, err)
 				}
-				return nil, fmt.Errorf("failed to verify allowedDataset '%s' in project '%s': %w", datasetID, projectID, err)
 			}
 			allowedDatasets[allowedFullID] = struct{}{}
 		}
