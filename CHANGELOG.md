@@ -35,12 +35,6 @@
 * **tools/looker:** Refactor run-inline-query logic to helper function ([#1497](https://github.com/googleapis/genai-toolbox/issues/1497)) ([62af39d](https://github.com/googleapis/genai-toolbox/commit/62af39d751443eb758586663969b162c868a233f))
 * **tools/mysql-list-tables:** Update sql query to resolve subquery scope error ([#1629](https://github.com/googleapis/genai-toolbox/issues/1629)) ([94e19d8](https://github.com/googleapis/genai-toolbox/commit/94e19d87e54e831b80eb766572e48bc7370305d8))
 
-
-### Miscellaneous Chores
-
-* Release 0.17.0 ([#1676](https://github.com/googleapis/genai-toolbox/issues/1676)) ([7e22cb4](https://github.com/googleapis/genai-toolbox/commit/7e22cb455d2709559c198024f3e782ef1a4bbacb))
-* Release 0.17.0 ([#1681](https://github.com/googleapis/genai-toolbox/issues/1681)) ([18c92b5](https://github.com/googleapis/genai-toolbox/commit/18c92b51ab2321b3c1e9dd85f5448b09b967a312))
-
 ## [0.16.0](https://github.com/googleapis/genai-toolbox/compare/v0.15.0...v0.16.0) (2025-09-25)
 
 
