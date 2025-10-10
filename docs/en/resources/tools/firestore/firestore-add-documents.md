@@ -256,6 +256,7 @@ tools:
 ## Error Handling
 
 Common errors include:
+
 - Invalid collection path
 - Missing or invalid document data
 - Permission denied (if Firestore security rules block the operation)
