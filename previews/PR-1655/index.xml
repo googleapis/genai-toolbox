@@ -542,16 +542,7 @@ insights to return, ranked by apriori support. Default to &amp;lsquo;30&amp;rsqu
 insights. Can be &lt;code>'NO_PRUNING'&lt;/code> or &lt;code>'PRUNE_REDUNDANT_INSIGHTS'&lt;/code>. Defaults to
 &lt;code>'PRUNE_REDUNDANT_INSIGHTS'&lt;/code>.&lt;/li>
 &lt;/ul>
-&lt;h2 id="example">Example&lt;/h2>
-&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">contribution_analyzer&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">bigquery-analyze-contribution&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-bigquery-source&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to run contribution analysis on a dataset in BigQuery.&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="sample-prompt">Sample Prompt&lt;/h2>
-&lt;p>You can prepare a sample table following
-&lt;a href="https://cloud.google.com/bigquery/docs/get-contribution-analysis-insights">https://cloud.google.com/bigquery/docs/get-contribution-analysis-insights&lt;/a>.
-And use the following sample prompts to call this tool:&lt;/p></description></item><item><title>bigquery-conversational-analytics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/bigquery/bigquery-conversational-analytics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/bigquery/bigquery-conversational-analytics/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its &lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-conversational-analytics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/bigquery/bigquery-conversational-analytics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/bigquery/bigquery-conversational-analytics/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-conversational-analytics&lt;/code> tool allows you to ask questions about
 your data in natural language.&lt;/p>
 &lt;p>This function takes a user&amp;rsquo;s question (which can include conversational history
@@ -572,60 +563,14 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;li>&lt;strong>&lt;code>dry_run&lt;/code>&lt;/strong> (optional): If set to &lt;code>true&lt;/code>, the query is validated but not run,
 returning information about the execution instead. Defaults to &lt;code>false&lt;/code>.&lt;/li>
 &lt;/ul>
+&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its &lt;code>bigquery&lt;/code> source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>allowed&lt;/code> (default):&lt;/strong> All SQL statements are permitted.&lt;/li>
+&lt;li>&lt;strong>&lt;code>blocked&lt;/code>:&lt;/strong> Only &lt;code>SELECT&lt;/code> statements are allowed. Any other type of statement (e.g., &lt;code>INSERT&lt;/code>, &lt;code>UPDATE&lt;/code>, &lt;code>CREATE&lt;/code>) will be rejected.&lt;/li>
+&lt;li>&lt;strong>&lt;code>protected&lt;/code>:&lt;/strong> This mode enables session-based execution. &lt;code>SELECT&lt;/code> statements can be used on all tables, while write operations are allowed only for the session&amp;rsquo;s temporary dataset (e.g., &lt;code>CREATE TEMP TABLE ...&lt;/code>). This prevents modifications to permanent datasets while allowing stateful, multi-step operations within a secure session.&lt;/li>
+&lt;/ul>
 &lt;p>The tool&amp;rsquo;s behavior is influenced by the &lt;code>allowedDatasets&lt;/code> restriction on the
-&lt;code>bigquery&lt;/code> source:&lt;/p>
-&lt;ul>
-&lt;li>&lt;strong>Without &lt;code>allowedDatasets&lt;/code> restriction:&lt;/strong> The tool can execute any valid GoogleSQL
-query.&lt;/li>
-&lt;li>&lt;strong>With &lt;code>allowedDatasets&lt;/code> restriction:&lt;/strong> Before execution, the tool performs a dry run
-to analyze the query.
-It will reject the query if it attempts to access any table outside the
-allowed &lt;code>datasets&lt;/code> list. To enforce this restriction, the following operations
-are also disallowed:
-&lt;ul>
-&lt;li>&lt;strong>Dataset-level operations&lt;/strong> (e.g., &lt;code>CREATE SCHEMA&lt;/code>, &lt;code>ALTER SCHEMA&lt;/code>).&lt;/li>
-&lt;li>&lt;strong>Unanalyzable operations&lt;/strong> where the accessed tables cannot be determined
-statically (e.g., &lt;code>EXECUTE IMMEDIATE&lt;/code>, &lt;code>CREATE PROCEDURE&lt;/code>, &lt;code>CALL&lt;/code>).&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="example">Example&lt;/h2>
-&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">execute_sql_tool&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">bigquery-execute-sql&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-bigquery-source&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to execute sql statement.&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
-&lt;table>
- &lt;thead>
- &lt;tr>
- &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
- &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
- &lt;/tr>
- &lt;/thead>
- &lt;tbody>
- &lt;tr>
- &lt;td>kind&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Must be &amp;ldquo;bigquery-execute-sql&amp;rdquo;.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>source&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Name of the source the SQL should execute on.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>description&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
- &lt;/tr>
- &lt;/tbody>
-&lt;/table></description></item><item><title>bigquery-forecast</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/bigquery/bigquery-forecast/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/bigquery/bigquery-forecast/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;code>bigquery&lt;/code> source. Similar to &lt;code>writeMode&lt;/code>, this setting provides an additional layer of security by controlling which datasets can be accessed:&lt;/p></description></item><item><title>bigquery-forecast</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/bigquery/bigquery-forecast/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/bigquery/bigquery-forecast/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-forecast&lt;/code> tool forecasts time series data in BigQuery.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -649,7 +594,7 @@ empty array if not provided.&lt;/li>
 &lt;li>&lt;strong>horizon&lt;/strong> (integer, optional): The number of future time steps you want to
 predict. It defaults to 10 if not specified.&lt;/li>
 &lt;/ul>
-&lt;p>The tool&amp;rsquo;s behavior regarding these parameters is influenced by the &lt;code>allowedDatasets&lt;/code> restriction on the &lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-get-dataset-info</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/bigquery/bigquery-get-dataset-info/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/bigquery/bigquery-get-dataset-info/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its &lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-get-dataset-info</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/bigquery/bigquery-get-dataset-info/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/bigquery/bigquery-get-dataset-info/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-get-dataset-info&lt;/code> tool retrieves metadata for a BigQuery dataset.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -701,47 +646,15 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>bigquery-get-table-info&lt;/code> takes &lt;code>dataset&lt;/code> and &lt;code>table&lt;/code> parameters to specify
-the target table. It also optionally accepts a &lt;code>project&lt;/code> parameter to define
-the Google Cloud project ID. If the &lt;code>project&lt;/code> parameter is not provided, the
-tool defaults to using the project defined in the source configuration.&lt;/p>
-&lt;h2 id="example">Example&lt;/h2>
-&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">bigquery_get_table_info&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">bigquery-get-table-info&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-bigquery-source&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to get table metadata.&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
-&lt;table>
- &lt;thead>
- &lt;tr>
- &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
- &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
- &lt;/tr>
- &lt;/thead>
- &lt;tbody>
- &lt;tr>
- &lt;td>kind&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Must be &amp;ldquo;bigquery-get-table-info&amp;rdquo;.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>source&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Name of the source the SQL should execute on.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>description&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
- &lt;/tr>
- &lt;/tbody>
-&lt;/table></description></item><item><title>bigquery-list-dataset-ids</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/bigquery/bigquery-list-dataset-ids/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/bigquery/bigquery-list-dataset-ids/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;code>bigquery-get-table-info&lt;/code> accepts the following parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>table&lt;/code>&lt;/strong> (required): The name of the table for which to retrieve metadata.&lt;/li>
+&lt;li>&lt;strong>&lt;code>dataset&lt;/code>&lt;/strong> (required): The dataset containing the specified table.&lt;/li>
+&lt;li>&lt;strong>&lt;code>project&lt;/code>&lt;/strong> (optional): The Google Cloud project ID. If not provided, the
+tool defaults to the project from the source configuration.&lt;/li>
+&lt;/ul>
+&lt;p>The tool&amp;rsquo;s behavior regarding these parameters is influenced by the
+&lt;code>allowedDatasets&lt;/code> restriction on the &lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-list-dataset-ids</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/bigquery/bigquery-list-dataset-ids/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/bigquery/bigquery-list-dataset-ids/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-list-dataset-ids&lt;/code> tool returns all dataset IDs from the source.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -838,19 +751,17 @@ the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
+&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its &lt;code>bigquery&lt;/code> source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>allowed&lt;/code> (default) and &lt;code>blocked&lt;/code>:&lt;/strong> These modes do not impose any restrictions on the &lt;code>bigquery-sql&lt;/code> tool. The pre-defined SQL statement will be executed as-is.&lt;/li>
+&lt;li>&lt;strong>&lt;code>protected&lt;/code>:&lt;/strong> This mode enables session-based execution. The tool will operate within the same BigQuery session as other tools using the same source, allowing it to interact with temporary resources like &lt;code>TEMP&lt;/code> tables created within that session.&lt;/li>
+&lt;/ul>
 &lt;h3 id="googlesql">GoogleSQL&lt;/h3>
 &lt;p>BigQuery uses &lt;a href="https://cloud.google.com/bigquery/docs/reference/standard-sql/">GoogleSQL&lt;/a> for querying data. The integration
 with Toolbox supports this dialect. The specified SQL statement is executed, and
 parameters can be inserted into the query. BigQuery supports both named parameters
 (e.g., &lt;code>@name&lt;/code>) and positional parameters (&lt;code>?&lt;/code>), but they cannot be mixed in the
-same query.&lt;/p>
-&lt;h2 id="example">Example&lt;/h2>
-&lt;blockquote>
-&lt;p>&lt;strong>Note:&lt;/strong> This tool uses &lt;a href="https://cloud.google.com/bigquery/docs/parameterized-queries">parameterized
-queries&lt;/a> to
-prevent SQL injections. Query parameters can be used as substitutes for
-arbitrary expressions. Parameters cannot be used as substitutes for
-identifiers, column names, table names, or other parts of the query.&lt;/p></description></item><item><title>Bigtable</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/sources/bigtable/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/sources/bigtable/</guid><description>&lt;h1 id="bigtable-source">Bigtable Source&lt;/h1>
+same query.&lt;/p></description></item><item><title>Bigtable</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/sources/bigtable/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/sources/bigtable/</guid><description>&lt;h1 id="bigtable-source">Bigtable Source&lt;/h1>
 &lt;p>&lt;a href="https://cloud.google.com/bigtable/docs">Bigtable&lt;/a> is a low-latency NoSQL database service for machine
 learning, operational analytics, and user-facing operations. It&amp;rsquo;s a wide-column,
 key-value store that can scale to billions of rows and thousands of columns.
@@ -2367,7 +2278,7 @@ types. This tool is designed for querying single collection, which is the
 standard pattern in Firestore. The collection path itself can be parameterized,
 making it flexible for various use cases. This tool is particularly useful when
 you need to create reusable query templates with parameters that can be
-substituted at runtime.&lt;/p></description></item><item><title>firestore-query-collection</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/firestore/firestore-query-collection/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/firestore/firestore-query-collection/</guid><description>&lt;h1 id="about">About&lt;/h1>
+substituted at runtime.&lt;/p></description></item><item><title>firestore-query-collection</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/firestore/firestore-query-collection/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/firestore/firestore-query-collection/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>firestore-query-collection&lt;/code> tool allows you to query Firestore collections
 with filters, ordering, and limit capabilities.&lt;/p>
 &lt;h2 id="configuration">Configuration&lt;/h2>
@@ -4696,6 +4607,52 @@ form of placeholders &lt;code>?&lt;/code>.&lt;/p>
 &lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
+names, or other parts of the query.&lt;/p></description></item><item><title>Oracle</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/sources/oracle/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/sources/oracle/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://www.oracle.com/database/">Oracle Database&lt;/a> is a multi-model database management system produced and marketed by Oracle Corporation. It is commonly used for running online transaction processing (OLTP), data warehousing (DW), and mixed (OLTP &amp;amp; DW) database workloads.&lt;/p>
+&lt;h2 id="available-tools">Available Tools&lt;/h2>
+&lt;ul>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/oracle/oracle-sql/">&lt;code>oracle-sql&lt;/code>&lt;/a>
+Execute pre-defined prepared SQL queries in Oracle.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/oracle/oracle-execute-sql/">&lt;code>oracle-execute-sql&lt;/code>&lt;/a>
+Run parameterized SQL queries in Oracle.&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="database-user">Database User&lt;/h3>
+&lt;p>This source uses standard authentication. You will need to &lt;a href="https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/CREATE-USER.html">create an Oracle user&lt;/a> to log in to the database with the necessary permissions.&lt;/p></description></item><item><title>oracle-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/oracle/oracle-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/oracle/oracle-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>An &lt;code>oracle-execute-sql&lt;/code> tool executes a SQL statement against an Oracle
+database. It&amp;rsquo;s compatible with the following source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/sources/oracle/">oracle&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>oracle-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the sql
+statement against the &lt;code>source&lt;/code>.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool is intended for developer assistant workflows with
+human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&lt;/blockquote>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">execute_sql_tool&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">oracle-execute-sql&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-oracle-instance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to execute sql statement.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>oracle-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/oracle/oracle-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/oracle/oracle-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>An &lt;code>oracle-sql&lt;/code> tool executes a pre-defined SQL statement against an
+Oracle database. It&amp;rsquo;s compatible with the following source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/sources/oracle/">oracle&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>The specified SQL statement is executed using &lt;a href="https://docs.oracle.com/javase/tutorial/jdbc/basics/prepared.html">prepared statements&lt;/a>
+for security and performance. It expects parameter placeholders in the SQL query
+to be in the native Oracle format (e.g., &lt;code>:1&lt;/code>, &lt;code>:2&lt;/code>).&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
+Query parameters can be used as substitutes for arbitrary expressions.
+Parameters cannot be used as substitutes for identifiers, column names, table
 names, or other parts of the query.&lt;/p></description></item><item><title>postgres-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/postgres/postgres-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/postgres/postgres-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>postgres-execute-sql&lt;/code> tool executes a SQL statement against a Postgres
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
@@ -4880,12 +4837,12 @@ following sources:&lt;/p>
 &lt;/ul>
 &lt;p>&lt;code>postgres-list-tables&lt;/code> lists detailed schema information (object type, columns,
 constraints, indexes, triggers, owner, comment) as JSON for user-created tables
-(ordinary or partitioned). The tool takes the following input parameters:
-* &lt;code>table_names&lt;/code> (optional): Filters by a comma-separated list of names. By
-default, it lists all tables in user schemas.
-* &lt;code>output_format&lt;/code> (optional): Indicate the output format of table schema.
-&lt;code>simple&lt;/code> will return only the table names, &lt;code>detailed&lt;/code> will return the full
-table information. Default: &lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/postgres/postgres-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/postgres/postgres-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+(ordinary or partitioned). The tool takes the following input parameters: *
+&lt;code>table_names&lt;/code> (optional): Filters by a comma-separated list of names. By
+default, it lists all tables in user schemas.* &lt;code>output_format&lt;/code> (optional):
+Indicate the output format of table schema. &lt;code>simple&lt;/code> will return only the
+table names, &lt;code>detailed&lt;/code> will return the full table information. Default:
+&lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/postgres/postgres-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1655/resources/tools/postgres/postgres-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>postgres-sql&lt;/code> tool executes a pre-defined SQL statement against a Postgres
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
@@ -5019,6 +4976,8 @@ PromQL query.&lt;/li>
 &lt;ul>
 &lt;li>&lt;code>BIGQUERY_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
 &lt;li>&lt;code>BIGQUERY_LOCATION&lt;/code>: (Optional) The dataset location.&lt;/li>
+&lt;li>&lt;code>BIGQUERY_USE_CLIENT_OAUTH&lt;/code>: (Optional) If &lt;code>true&lt;/code>, forwards the client&amp;rsquo;s
+OAuth access token for authentication. Defaults to &lt;code>false&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
