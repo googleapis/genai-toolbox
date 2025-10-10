@@ -33,8 +33,9 @@ steps:
       - name: "go"
         path: "/gopath"
     script: |
+      TEST_DIRS=$(find ./tests -name '*_test.go' -print0 | xargs -0 -n1 dirname | sort -u)
       go test -c -race -cover \
-      -coverpkg=./internal/sources/...,./internal/tools/...,./internal/prompts/... ./tests/... ./tests/prompts/...
+      -coverpkg=./internal/sources/...,./internal/tools/...,./internal/prompts/... ${TEST_DIRS}
       chmod +x .ci/test_with_coverage.sh
       chmod +x .ci/test_prompts_with_coverage.sh
 
