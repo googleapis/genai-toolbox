@@ -38,7 +38,7 @@ steps:
       chmod +x .ci/test_with_coverage.sh
       chmod +x .ci/test_prompts_with_coverage.sh
 
-  - id: "prompts"
+  - id: "prompts-custom"
     name: golang:1
     waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
@@ -50,7 +50,7 @@ steps:
     args:
       - -c
       - |
-        .ci/test_prompts_with_coverage.sh "Prompts" prompts
+        .ci/test_prompts_with_coverage.sh "Custom Prompts" custom
 
   - id: "cloud-sql-pg"
     name: golang:1
