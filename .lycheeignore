@@ -5,6 +5,14 @@
 ^mailto:
 ^https?:\\/\\/(127\\.0\\.0\\.1|localhost)(:\\d+)?(\\/.*)?$
 ^https:\/\/localhost:8080\/$
+
+^https?://cloud.dgraph.io/login/?$
+^https?://[a-zA-Z0-9-]+.cloud.dgraph.io/?.*$
+^https?://cloud-run-url.app/$
+^file:///home/runner/work/genai-toolbox/genai-toolbox/docs/en/resources/tools/sources/tidb.md$
+^file:///home/runner/work/genai-toolbox/genai-toolbox/docs/en/resources/tools/_..#template-parameters$
+
+
 ^http://localhost
 ^https?://127\.0\.0\.1
 ^http://example.net
