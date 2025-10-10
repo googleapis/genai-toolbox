@@ -122,8 +122,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if !ok {
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `%s`", kind, alloydbadmin.SourceKind)
 	}
+
+	project := s.DefaultProject
+	var projectParam tools.Parameter
+	if project != "" {
+		projectParam = tools.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+	} else {
+		projectParam = tools.NewStringParameter("project", "The project ID")
+	}
+
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("project", "The project ID"),
+		projectParam,
 		tools.NewStringParameter("location", "The location ID"),
 		tools.NewStringParameter("operation", "The operation ID"),
 	}
