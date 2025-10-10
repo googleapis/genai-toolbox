@@ -1,24 +1,25 @@
 #!/bin/bash
 
-# This script is a special version of the main test script, tailored
-# specifically for running the prompts tests and calculating their coverage.
+# This script runs prompt tests based on the convention that tests
+# are located in `tests/prompts/{subdir}`.
 #
 # Arguments:
-# $1: Display name for logs (e.g., "Prompts")
-# $2: Integration test's package name (e.g., prompts)
+# $1: Display name for logs (e.g., "Custom Prompts")
+# $2: The unique subdirectory for the prompt test (e.g., custom)
 
 set -e
 
 DISPLAY_NAME="$1"
-TEST_PACKAGE_NAME="$2"
+PROMPT_TEST_SUBDIR="$2" # e.g., "custom"
 
-# Construct the test binary name
-TEST_BINARY="${TEST_PACKAGE_NAME}.test"
+FULL_TEST_PATH="tests/prompts/${PROMPT_TEST_SUBDIR}"
+TEST_BINARY=$(echo "${FULL_TEST_PATH}" | tr / .).test
 
 COVERAGE_FILE="${TEST_BINARY%.test}_coverage.out"
 FILTERED_COVERAGE_FILE="${TEST_BINARY%.test}_filtered_coverage.out"
 
 export path="github.com/googleapis/genai-toolbox/internal/"
+
 GREP_PATTERN="^mode:|${path}prompts/"
 
 # Run integration test
