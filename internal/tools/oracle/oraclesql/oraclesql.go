@@ -145,34 +145,34 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	var out []any
 	for rows.Next() {
-		receivers := make([]any, len(cols))
+		values := make([]any, len(cols))
 		for i, colType := range colTypes {
 			switch strings.ToUpper(colType.DatabaseTypeName()) {
 			case "NUMBER", "FLOAT", "BINARY_FLOAT", "BINARY_DOUBLE":
 				if _, scale, ok := colType.DecimalSize(); ok && scale == 0 {
 					// Scale is 0, treat it as an integer.
-					receivers[i] = new(sql.NullInt64)
+					values[i] = new(sql.NullInt64)
 				} else {
 					// Scale is non-zero or unknown, treat
 					// it as a float.
-					receivers[i] = new(sql.NullFloat64)
+					values[i] = new(sql.NullFloat64)
 				}
 			case "DATE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
-				receivers[i] = new(sql.NullTime)
+				values[i] = new(sql.NullTime)
 			case "JSON":
-				receivers[i] = new(sql.RawBytes)
+				values[i] = new(sql.RawBytes)
 			default:
-				receivers[i] = new(sql.NullString)
+				values[i] = new(sql.NullString)
 			}
 		}
 
-		if err := rows.Scan(receivers...); err != nil {
+		if err := rows.Scan(values...); err != nil {
 			return nil, fmt.Errorf("unable to scan row: %w", err)
 		}
 
 		vMap := make(map[string]any)
 		for i, col := range cols {
-			receiver := receivers[i]
+			receiver := values[i]
 
 			switch v := receiver.(type) {
 			case *sql.NullInt64:

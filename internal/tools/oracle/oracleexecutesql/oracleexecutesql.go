@@ -121,12 +121,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 	defer results.Close()
 
+	// If Columns() errors, it might be a DDL/DML without an OUTPUT clause.
+	// We proceed, and results.Err() will catch actual query execution errors.
+	// 'out' will remain nil if cols is empty or err is not nil here.
 	cols, _ := results.Columns()
+
 	// Get Column types
 	colTypes, err := results.ColumnTypes()
 	if err != nil {
-		// This can happen for DDL/DML statements without a return clause (e.g., INSERT, UPDATE).
-		// In this case, we return an empty result set, which is the expected behavior.
 		if err := results.Err(); err != nil {
 			return nil, fmt.Errorf("query execution error: %w", err)
 		}
@@ -135,35 +137,35 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	var out []any
 	for results.Next() {
-		// Create a slice of interface{} to hold pointers to the scanned values.
-		receivers := make([]any, len(cols))
+		// Create slice to hold values
+		values := make([]any, len(cols))
 		for i, colType := range colTypes {
 			// Based on the database type, we prepare a pointer to a Go type.
 			switch strings.ToUpper(colType.DatabaseTypeName()) {
 			case "NUMBER", "FLOAT", "BINARY_FLOAT", "BINARY_DOUBLE":
 				if _, scale, ok := colType.DecimalSize(); ok && scale == 0 {
 					// Scale is 0, treat as an integer.
-					receivers[i] = new(sql.NullInt64)
+					values[i] = new(sql.NullInt64)
 				} else {
 					// Scale is non-zero or unknown, treat as a float.
-					receivers[i] = new(sql.NullFloat64)
+					values[i] = new(sql.NullFloat64)
 				}
 			case "DATE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
-				receivers[i] = new(sql.NullTime)
+				values[i] = new(sql.NullTime)
 			case "JSON":
-				receivers[i] = new(sql.RawBytes)
+				values[i] = new(sql.RawBytes)
 			default:
-				receivers[i] = new(sql.NullString)
+				values[i] = new(sql.NullString)
 			}
 		}
 
-		if err := results.Scan(receivers...); err != nil {
+		if err := results.Scan(values...); err != nil {
 			return nil, fmt.Errorf("unable to scan row: %w", err)
 		}
 
 		vMap := make(map[string]any)
 		for i, col := range cols {
-			receiver := receivers[i]
+			receiver := values[i]
 
 			// Dereference the pointer and check for validity (not NULL).
 			switch v := receiver.(type) {

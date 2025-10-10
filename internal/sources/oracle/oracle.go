@@ -32,7 +32,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 		return nil, err
 	}
 
-	if err := actual.validateConfig(); err != nil {
+	// Validate that we have one of: tns_alias, connection_string, or host+service_name
+	if err := actual.validate(); err != nil {
 		return nil, fmt.Errorf("invalid Oracle configuration: %w", err)
 	}
 
@@ -52,8 +53,8 @@ type Config struct {
 	TnsAdmin         string `yaml:"tnsAdmin,omitempty"` // Optional: override TNS_ADMIN environment variable
 }
 
-// validateConfig checks exactly one of the connection methods is configured: tns_alias, connection_string, or host+service_name
-func (c Config) validateConfig() error {
+// validate ensures we have one of: tns_alias, connection_string, or host+service_name
+func (c Config) validate() error {
 	hasTnsAlias := strings.TrimSpace(c.TnsAlias) != ""
 	hasConnStr := strings.TrimSpace(c.ConnectionString) != ""
 	hasHostService := strings.TrimSpace(c.Host) != "" && strings.TrimSpace(c.ServiceName) != ""
