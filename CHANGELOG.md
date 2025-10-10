@@ -16,7 +16,7 @@
 * **source/bigquery:** Add optional write mode config ([#1157](https://github.com/googleapis/genai-toolbox/issues/1157)) ([63adc78](https://github.com/googleapis/genai-toolbox/commit/63adc78beae949dfe5e300c50e5ceef073e9652c))
 * **sources/mssql:** Add app name to MSSQL ([#1620](https://github.com/googleapis/genai-toolbox/issues/1620)) ([1536d1f](https://github.com/googleapis/genai-toolbox/commit/1536d1fdabb9d7f73dbdeebeb05a83d9a3b78e1c))
 * **sources/oracle:** Add Oracle Source and Tool ([#1456](https://github.com/googleapis/genai-toolbox/issues/1456)) ([3a19a50](https://github.com/googleapis/genai-toolbox/commit/3a19a50ff211e33429de1d05338d353359a52987))
-* **tool/bigquery-list-dataset-ids:** Add allowed datasets support ([#1573](https://github.com/googleapis/genai-toolbox/issues/1573)) ([1a44c67](https://github.com/googleapis/genai-toolbox/commit/1a44c671ec593e764a2d2f67f70a98ceec20a168))
+* **tools/bigquery-list-dataset-ids:** Add allowed datasets support ([#1573](https://github.com/googleapis/genai-toolbox/issues/1573)) ([1a44c67](https://github.com/googleapis/genai-toolbox/commit/1a44c671ec593e764a2d2f67f70a98ceec20a168))
 * **tools/bigquery-get-table-info:** Add allowed dataset support ([#1093](https://github.com/googleapis/genai-toolbox/issues/1093)) ([acb205c](https://github.com/googleapis/genai-toolbox/commit/acb205ca4761d59ce97b804827230978c8c98ede))
 * **tools/dataform:** Add dataform compile tool ([#1470](https://github.com/googleapis/genai-toolbox/issues/1470)) ([3be9b7b](https://github.com/googleapis/genai-toolbox/commit/3be9b7b3bdf112fe7303706e56e9f39935cde661))
 * **tools/looker:** Add support for pulse, vacuum and analyze audit and performance functions on a Looker instance ([#1581](https://github.com/googleapis/genai-toolbox/issues/1581)) ([5aed4e1](https://github.com/googleapis/genai-toolbox/commit/5aed4e136d0091731d2ded10ec076ee789e1987c))
@@ -50,8 +50,8 @@
 
 * **cassandra:** Add Cassandra Source and Tool ([#1012](https://github.com/googleapis/genai-toolbox/issues/1012)) ([6e42053](https://github.com/googleapis/genai-toolbox/commit/6e420534ee894da4a8d226acb6cdb63d0d5d9ce5))
 * **sources/postgres:** Add application_name ([#1504](https://github.com/googleapis/genai-toolbox/issues/1504)) ([72a2366](https://github.com/googleapis/genai-toolbox/commit/72a2366b28870aa6f81c4f890f4770ec5ecffdba))
-* **tool/bigquery-execute-sql:** Add allowed datasets support ([#1443](https://github.com/googleapis/genai-toolbox/issues/1443)) ([9501ebb](https://github.com/googleapis/genai-toolbox/commit/9501ebbdbcba871b98663185c690308dda1729b5))
-* **tool/bigquery-forecast:** Add allowed datasets support ([#1412](https://github.com/googleapis/genai-toolbox/issues/1412)) ([88bac7e](https://github.com/googleapis/genai-toolbox/commit/88bac7e36f5ebb6ad18773bff30b85ef678431e7))
+* **tools/bigquery-execute-sql:** Add allowed datasets support ([#1443](https://github.com/googleapis/genai-toolbox/issues/1443)) ([9501ebb](https://github.com/googleapis/genai-toolbox/commit/9501ebbdbcba871b98663185c690308dda1729b5))
+* **tools/bigquery-forecast:** Add allowed datasets support ([#1412](https://github.com/googleapis/genai-toolbox/issues/1412)) ([88bac7e](https://github.com/googleapis/genai-toolbox/commit/88bac7e36f5ebb6ad18773bff30b85ef678431e7))
 * **tools/clickhouse-list-tables:** Add list-tables tool ([#1446](https://github.com/googleapis/genai-toolbox/issues/1446)) ([69a3caf](https://github.com/googleapis/genai-toolbox/commit/69a3cafabec5a40e2776d71de3587c0d16c722a2))
 
 
