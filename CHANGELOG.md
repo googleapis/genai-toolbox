@@ -6,7 +6,7 @@
 ### ⚠ BREAKING CHANGES
 
 * **tools/bigquery-get-table-info:** add allowed dataset support ([#1093](https://github.com/googleapis/genai-toolbox/issues/1093))
-* **tool/bigquery-list-dataset-ids:** add allowed datasets support ([#1573](https://github.com/googleapis/genai-toolbox/issues/1573))
+* **tools/bigquery-list-dataset-ids:** add allowed datasets support ([#1573](https://github.com/googleapis/genai-toolbox/issues/1573))
 
 ### Features
 
