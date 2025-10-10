@@ -34,21 +34,9 @@ steps:
         path: "/gopath"
     script: |
       go test -c -race -cover \
-      -coverpkg=./internal/sources/...,./internal/tools/...,./internal/prompts/... ./tests/...
+      -coverpkg=./internal/sources/...,./internal/tools/...,./internal/prompts/... ./tests/... ./tests/prompts/...
       chmod +x .ci/test_with_coverage.sh
-
-  - id: "compile-test-binary-prompts"
-    name: golang:1
-    waitFor: ["install-dependencies"]
-    env:
-      - "GOPATH=/gopath"
-    volumes:
-      - name: "go"
-        path: "/gopath"
-    script: |
-      go test -c -race -cover \
-      -coverpkg=./internal/prompts/... ./tests/prompts/...
-      chmod +x .ci/test_with_coverage_prompts.sh
+      chmod +x .ci/test_prompts_with_coverage.sh
 
   - id: "prompts"
     name: golang:1
@@ -62,9 +50,7 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Prompts" \
-          prompts \
+        .ci/test_prompts_with_coverage.sh "Prompts" prompts
 
   - id: "cloud-sql-pg"
     name: golang:1
