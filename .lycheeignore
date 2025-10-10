@@ -18,6 +18,7 @@
 ^https://dev.mysql.com/downloads/installer/$
 ^https://dev.mysql.com/doc/refman/8.4/en/user-names.html$
 ^https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html$
+^https:\/\/www\.mysql\.com\/$
 
 ^http://localhost
 ^https?://127\.0\.0\.1
