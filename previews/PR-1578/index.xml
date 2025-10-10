@@ -2278,7 +2278,7 @@ types. This tool is designed for querying single collection, which is the
 standard pattern in Firestore. The collection path itself can be parameterized,
 making it flexible for various use cases. This tool is particularly useful when
 you need to create reusable query templates with parameters that can be
-substituted at runtime.&lt;/p></description></item><item><title>firestore-query-collection</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/firestore/firestore-query-collection/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/firestore/firestore-query-collection/</guid><description>&lt;h1 id="about">About&lt;/h1>
+substituted at runtime.&lt;/p></description></item><item><title>firestore-query-collection</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/firestore/firestore-query-collection/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/firestore/firestore-query-collection/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>firestore-query-collection&lt;/code> tool allows you to query Firestore collections
 with filters, ordering, and limit capabilities.&lt;/p>
 &lt;h2 id="configuration">Configuration&lt;/h2>
@@ -4607,6 +4607,52 @@ form of placeholders &lt;code>?&lt;/code>.&lt;/p>
 &lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
+names, or other parts of the query.&lt;/p></description></item><item><title>Oracle</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/sources/oracle/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/sources/oracle/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://www.oracle.com/database/">Oracle Database&lt;/a> is a multi-model database management system produced and marketed by Oracle Corporation. It is commonly used for running online transaction processing (OLTP), data warehousing (DW), and mixed (OLTP &amp;amp; DW) database workloads.&lt;/p>
+&lt;h2 id="available-tools">Available Tools&lt;/h2>
+&lt;ul>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/oracle/oracle-sql/">&lt;code>oracle-sql&lt;/code>&lt;/a>
+Execute pre-defined prepared SQL queries in Oracle.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/oracle/oracle-execute-sql/">&lt;code>oracle-execute-sql&lt;/code>&lt;/a>
+Run parameterized SQL queries in Oracle.&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="database-user">Database User&lt;/h3>
+&lt;p>This source uses standard authentication. You will need to &lt;a href="https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/CREATE-USER.html">create an Oracle user&lt;/a> to log in to the database with the necessary permissions.&lt;/p></description></item><item><title>oracle-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/oracle/oracle-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/oracle/oracle-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>An &lt;code>oracle-execute-sql&lt;/code> tool executes a SQL statement against an Oracle
+database. It&amp;rsquo;s compatible with the following source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/sources/oracle/">oracle&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>oracle-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the sql
+statement against the &lt;code>source&lt;/code>.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool is intended for developer assistant workflows with
+human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&lt;/blockquote>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">execute_sql_tool&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">oracle-execute-sql&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-oracle-instance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to execute sql statement.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>oracle-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/oracle/oracle-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/oracle/oracle-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>An &lt;code>oracle-sql&lt;/code> tool executes a pre-defined SQL statement against an
+Oracle database. It&amp;rsquo;s compatible with the following source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/sources/oracle/">oracle&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>The specified SQL statement is executed using &lt;a href="https://docs.oracle.com/javase/tutorial/jdbc/basics/prepared.html">prepared statements&lt;/a>
+for security and performance. It expects parameter placeholders in the SQL query
+to be in the native Oracle format (e.g., &lt;code>:1&lt;/code>, &lt;code>:2&lt;/code>).&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
+Query parameters can be used as substitutes for arbitrary expressions.
+Parameters cannot be used as substitutes for identifiers, column names, table
 names, or other parts of the query.&lt;/p></description></item><item><title>postgres-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/postgres/postgres-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/postgres/postgres-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>postgres-execute-sql&lt;/code> tool executes a SQL statement against a Postgres
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
@@ -4791,12 +4837,12 @@ following sources:&lt;/p>
 &lt;/ul>
 &lt;p>&lt;code>postgres-list-tables&lt;/code> lists detailed schema information (object type, columns,
 constraints, indexes, triggers, owner, comment) as JSON for user-created tables
-(ordinary or partitioned). The tool takes the following input parameters:
-* &lt;code>table_names&lt;/code> (optional): Filters by a comma-separated list of names. By
-default, it lists all tables in user schemas.
-* &lt;code>output_format&lt;/code> (optional): Indicate the output format of table schema.
-&lt;code>simple&lt;/code> will return only the table names, &lt;code>detailed&lt;/code> will return the full
-table information. Default: &lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/postgres/postgres-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/postgres/postgres-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+(ordinary or partitioned). The tool takes the following input parameters: *
+&lt;code>table_names&lt;/code> (optional): Filters by a comma-separated list of names. By
+default, it lists all tables in user schemas.* &lt;code>output_format&lt;/code> (optional):
+Indicate the output format of table schema. &lt;code>simple&lt;/code> will return only the
+table names, &lt;code>detailed&lt;/code> will return the full table information. Default:
+&lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/postgres/postgres-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1578/resources/tools/postgres/postgres-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>postgres-sql&lt;/code> tool executes a pre-defined SQL statement against a Postgres
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
