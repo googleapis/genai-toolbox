@@ -10,7 +10,7 @@ require (
 	cloud.google.com/go/bigtable v1.40.1
 	cloud.google.com/go/cloudsqlconn v1.18.1
 	cloud.google.com/go/dataplex v1.27.1
-	cloud.google.com/go/firestore v1.18.0
+	cloud.google.com/go/firestore v1.19.0
 	cloud.google.com/go/geminidataanalytics v0.2.1
 	cloud.google.com/go/spanner v1.86.0
 	github.com/ClickHouse/clickhouse-go/v2 v2.40.3
@@ -24,18 +24,19 @@ require (
 	github.com/go-chi/httplog/v2 v2.1.1
 	github.com/go-chi/render v1.0.3
 	github.com/go-goquery/goquery v1.0.1
-	github.com/go-playground/validator/v10 v10.27.0
+	github.com/go-playground/validator/v10 v10.28.0
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/goccy/go-yaml v1.18.0
 	github.com/gocql/gocql v1.7.0
+	github.com/godror/godror v0.49.3
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/json-iterator/go v1.1.12
-	github.com/looker-open-source/sdk-codegen/go v0.25.11
+	github.com/looker-open-source/sdk-codegen/go v0.25.16
 	github.com/microsoft/go-mssqldb v1.9.3
 	github.com/nakagami/firebirdsql v0.9.15
-	github.com/neo4j/neo4j-go-driver/v5 v5.28.3
+	github.com/neo4j/neo4j-go-driver/v5 v5.28.4
 	github.com/redis/go-redis/v9 v9.14.0
 	github.com/spf13/cobra v1.10.1
 	github.com/thlib/go-timezone-local v0.0.7
@@ -85,6 +86,7 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.29.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.53.0 // indirect
 	github.com/PuerkitoBio/goquery v1.10.3 // indirect
+	github.com/VictoriaMetrics/easyproto v0.1.4 // indirect
 	github.com/ajg/form v1.5.1 // indirect
 	github.com/apache/arrow/go/v15 v15.0.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -99,13 +101,15 @@ require (
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.10 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.1 // indirect
+	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
+	github.com/godror/knownpb v0.3.0 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
 	github.com/golang-sql/sqlexp v0.1.0 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
