@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/goccy/go-yaml"
-	_ "github.com/godror/godror"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	_ "github.com/sijms/go-ora/v2"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -32,8 +32,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 		return nil, err
 	}
 
-	// Validate that we have one of: tns_alias, connection_string, or host+service_name
-	if err := actual.validate(); err != nil {
+	if err := actual.validateConfig(); err != nil {
 		return nil, fmt.Errorf("invalid Oracle configuration: %w", err)
 	}
 
@@ -53,8 +52,8 @@ type Config struct {
 	TnsAdmin         string `yaml:"tnsAdmin,omitempty"` // Optional: override TNS_ADMIN environment variable
 }
 
-// validate ensures we have one of: tns_alias, connection_string, or host+service_name
-func (c Config) validate() error {
+// validateConfig checks exactly one of the connection methods is configured: tns_alias, connection_string, or host+service_name
+func (c Config) validateConfig() error {
 	hasTnsAlias := strings.TrimSpace(c.TnsAlias) != ""
 	hasConnStr := strings.TrimSpace(c.ConnectionString) != ""
 	hasHostService := strings.TrimSpace(c.Host) != "" && strings.TrimSpace(c.ServiceName) != ""
@@ -107,8 +106,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name string `yaml:"name"`
-	Kind string `yaml:"kind"`
+	Name string  `yaml:"name"`
+	Kind string  `yaml:"kind"`
 	DB   *sql.DB
 }
 
@@ -125,13 +124,12 @@ func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Confi
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, config.Name)
 	defer span.End()
 
-	var connectString string
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	// Set TNS_ADMIN environment variable if specified in config
+	// Set TNS_ADMIN environment variable if specified in config.
 	if config.TnsAdmin != "" {
 		originalTnsAdmin := os.Getenv("TNS_ADMIN")
 		os.Setenv("TNS_ADMIN", config.TnsAdmin)
@@ -146,27 +144,26 @@ func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Confi
 		}()
 	}
 
-	// Determine the connection string to use (priority order)
+	var serverString string
 	if config.TnsAlias != "" {
-		// Use TNS alias - godror will resolve from tnsnames.ora
-		connectString = strings.TrimSpace(config.TnsAlias)
+		// Use TNS alias
+		serverString = strings.TrimSpace(config.TnsAlias)
 	} else if config.ConnectionString != "" {
 		// Use provided connection string directly (hostname[:port]/servicename format)
-		connectString = strings.TrimSpace(config.ConnectionString)
+		serverString = strings.TrimSpace(config.ConnectionString)
 	} else {
 		// Build connection string from host and service_name
 		if config.Port > 0 {
-			connectString = fmt.Sprintf("%s:%d/%s", config.Host, config.Port, config.ServiceName)
+			serverString = fmt.Sprintf("%s:%d/%s", config.Host, config.Port, config.ServiceName)
 		} else {
-			connectString = fmt.Sprintf("%s/%s", config.Host, config.ServiceName)
+			serverString = fmt.Sprintf("%s/%s", config.Host, config.ServiceName)
 		}
 	}
 
-	// Build the full Oracle connection string for godror driver
-	connStr := fmt.Sprintf(`user="%s" password="%s" connectString="%s"`,
-		config.User, config.Password, connectString)
+	connStr := fmt.Sprintf("oracle://%s:%s@%s",
+		config.User, config.Password, serverString)
 
-	db, err := sql.Open("godror", connStr)
+	db, err := sql.Open("oracle", connStr)
 	if err != nil {
 		return nil, fmt.Errorf("unable to open Oracle connection: %w", err)
 	}

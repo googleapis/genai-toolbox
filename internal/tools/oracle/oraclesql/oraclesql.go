@@ -1,16 +1,4 @@
-// Copyright 2024 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// Copyright © 2025, Oracle and/or its affiliates.
 
 package oraclesql
 
@@ -19,11 +7,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/godror/godror"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/oracle"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -143,9 +129,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 	fmt.Printf("\n")
 
-	// NO PARAMETER CONVERSION - godror supports :1, :2, :3 natively
-	// Execute Oracle query with original statement
-
 	rows, err := t.DB.QueryContext(ctx, newStatement, sliceParams...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
@@ -162,50 +145,77 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	var out []any
 	for rows.Next() {
-		// Create slice to hold values
-		values := make([]any, len(cols))
-		valuePtrs := make([]any, len(cols))
-		for i := range values {
-			valuePtrs[i] = &values[i]
+		receivers := make([]any, len(cols))
+		for i, colType := range colTypes {
+			switch strings.ToUpper(colType.DatabaseTypeName()) {
+			case "NUMBER", "FLOAT", "BINARY_FLOAT", "BINARY_DOUBLE":
+				if _, scale, ok := colType.DecimalSize(); ok && scale == 0 {
+					// Scale is 0, treat it as an integer.
+					receivers[i] = new(sql.NullInt64)
+				} else {
+					// Scale is non-zero or unknown, treat
+					// it as a float.
+					receivers[i] = new(sql.NullFloat64)
+				}
+			case "DATE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
+				receivers[i] = new(sql.NullTime)
+			case "JSON":
+				receivers[i] = new(sql.RawBytes)
+			default:
+				receivers[i] = new(sql.NullString)
+			}
 		}
 
-		// Scan the values
-		if err := rows.Scan(valuePtrs...); err != nil {
+		if err := rows.Scan(receivers...); err != nil {
 			return nil, fmt.Errorf("unable to scan row: %w", err)
 		}
 
-		// Create result map
 		vMap := make(map[string]any)
 		for i, col := range cols {
-			val := values[i]
-			switch colTypes[i].DatabaseTypeName() {
-			case "JSON":
-				// unmarshal JSON data before storing to prevent double marshaling
-				var unmarshaledData any
-				err := json.Unmarshal(val.([]byte), &unmarshaledData)
-				if err != nil {
-					return nil, fmt.Errorf("unable to unmarshal json data %s", val)
-				}
-				vMap[col] = unmarshaledData
-			case "TEXT", "VARCHAR", "NVARCHAR":
-				vMap[col] = string(val.([]byte))
-			case "NUMBER":
-				s := string(val.(godror.Number))
-				if strings.Contains(s, ".") {
-					vMap[col], err = strconv.ParseFloat(s, 64)
+			receiver := receivers[i]
+
+			switch v := receiver.(type) {
+			case *sql.NullInt64:
+				if v.Valid {
+					vMap[col] = v.Int64
 				} else {
-					vMap[col], err = strconv.ParseInt(s, 10, 64)
+					vMap[col] = nil
 				}
-				if err != nil {
-					return nil, fmt.Errorf("unable to convert NUMBER data '%s' for column %s: %w", s, col, err)
+			case *sql.NullFloat64:
+				if v.Valid {
+					vMap[col] = v.Float64
+				} else {
+					vMap[col] = nil
+				}
+			case *sql.NullString:
+				if v.Valid {
+					vMap[col] = v.String
+				} else {
+					vMap[col] = nil
+				}
+			case *sql.NullTime:
+				if v.Valid {
+					vMap[col] = v.Time
+				} else {
+					vMap[col] = nil
+				}
+			case *sql.RawBytes:
+				if *v != nil {
+					var unmarshaledData any
+					if err := json.Unmarshal(*v, &unmarshaledData); err != nil {
+						return nil, fmt.Errorf("unable to unmarshal json data for column %s", col)
+					}
+					vMap[col] = unmarshaledData
+				} else {
+					vMap[col] = nil
 				}
 			default:
-				vMap[col] = val
+				return nil, fmt.Errorf("unexpected receiver type: %T", v)
 			}
 		}
 		out = append(out, vMap)
 	}
-
+        
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("errors encountered during query execution or row processing: %w", err)
 	}
