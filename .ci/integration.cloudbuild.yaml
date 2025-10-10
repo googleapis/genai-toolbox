@@ -702,7 +702,7 @@ steps:
         .ci/test_with_coverage.sh \
           "Cassandra" \
           cassandra \
-          cassandra_host
+          cassandra
 
   - id: "oracle"
     name: golang:1
