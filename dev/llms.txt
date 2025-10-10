@@ -112,7 +112,7 @@ List of reference documentation for resources in Toolbox.
   - [Trino](https://googleapis.github.io/genai-toolbox/dev/resources/tools/trino/): Tools that work with Trino Sources, such as distributed SQL query engine.
   - [Utility tools](https://googleapis.github.io/genai-toolbox/dev/resources/tools/utility/): Tools that provide utility.
   - [Valkey](https://googleapis.github.io/genai-toolbox/dev/resources/tools/valkey/): Tools that work with Valkey Sources.
-  - [yugabytedb-sql](https://googleapis.github.io/genai-toolbox/dev/resources/tools/yugabytedb-sql/): A "yugabytedb-sql" tool executes a pre-defined SQL statement against a YugabyteDB database.
+  - [YugabyteDB](https://googleapis.github.io/genai-toolbox/dev/resources/tools/yuagbytedb/): Tools that work with Valkey Sources.
 
 ### Samples
 
