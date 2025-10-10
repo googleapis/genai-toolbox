@@ -122,7 +122,7 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 					project: my-project
 					region: my-region
 					instance: my-instance
-					ipType: private 
+					ipType: psc 
 					database: my_db
 					user: my_user
 					password: my_pass
