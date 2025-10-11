@@ -182,12 +182,12 @@ following sources:&lt;/p>
 &lt;/ul>
 &lt;p>&lt;code>postgres-list-tables&lt;/code> lists detailed schema information (object type, columns,
 constraints, indexes, triggers, owner, comment) as JSON for user-created tables
-(ordinary or partitioned). The tool takes the following input parameters:
-* &lt;code>table_names&lt;/code> (optional): Filters by a comma-separated list of names. By
-default, it lists all tables in user schemas.
-* &lt;code>output_format&lt;/code> (optional): Indicate the output format of table schema.
-&lt;code>simple&lt;/code> will return only the table names, &lt;code>detailed&lt;/code> will return the full
-table information. Default: &lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-sql</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/postgres/postgres-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/postgres/postgres-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+(ordinary or partitioned). The tool takes the following input parameters: *
+&lt;code>table_names&lt;/code> (optional): Filters by a comma-separated list of names. By
+default, it lists all tables in user schemas.* &lt;code>output_format&lt;/code> (optional):
+Indicate the output format of table schema. &lt;code>simple&lt;/code> will return only the
+table names, &lt;code>detailed&lt;/code> will return the full table information. Default:
+&lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-sql</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/postgres/postgres-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/postgres/postgres-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>postgres-sql&lt;/code> tool executes a pre-defined SQL statement against a Postgres
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
