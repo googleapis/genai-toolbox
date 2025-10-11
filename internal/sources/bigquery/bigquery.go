@@ -49,6 +49,12 @@ const (
 // validate interface
 var _ sources.SourceConfig = Config{}
 
+var (
+	clientCache *ClientCache
+	restServiceCache *restServiceCache
+	once        sync.Once
+)
+
 type BigqueryClientCreator func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 
 type BigQuerySessionProvider func(ctx context.Context) (*Session, error)
@@ -421,45 +427,6 @@ func initBigQueryConnection(
 	return client, restService, cred.TokenSource, nil
 }
 
-// initBigQueryConnectionWithOAuthToken initialize a BigQuery client with an
-// OAuth access token.
-func initBigQueryConnectionWithOAuthToken(
-	ctx context.Context,
-	tracer trace.Tracer,
-	project string,
-	location string,
-	name string,
-	userAgent string,
-	tokenString string,
-	wantRestService bool,
-) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
-	defer span.End()
-	// Construct token source
-	token := &oauth2.Token{
-		AccessToken: string(tokenString),
-	}
-	ts := oauth2.StaticTokenSource(token)
-
-	// Initialize the BigQuery client with tokenSource
-	client, err := bigqueryapi.NewClient(ctx, project, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
-	}
-	client.Location = location
-
-	if wantRestService {
-		// Initialize the low-level BigQuery REST service using the same credentials
-		restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
-		}
-		return client, restService, nil
-	}
-
-	return client, nil, nil
-}
-
 // newBigQueryClientCreator sets the project parameters for the init helper
 // function. The returned function takes in an OAuth access token and uses it to
 // create a BQ client.
@@ -476,8 +443,118 @@ func newBigQueryClientCreator(
 	}
 
 	return func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, name, userAgent, tokenString, wantRestService)
+		return clientCache.GetOrCreateClient(ctx, tracer, project, location, name, userAgent, tokenString, wantRestService)
 	}, nil
+}
+
+
+// cachedClient holds the BigQuery clients and their expiration time.
+type cachedClient struct {
+	client     *bigqueryapi.Client 
+	expiry      time.Time
+}
+
+
+// ClientCache manages a thread-safe cache of BigQuery clients.
+type ClientCache struct {
+	mu      sync.RWMutex
+	clients map[string]*cachedClient
+}
+
+// CreateClientCache initializes the clientCache and start a cleanup go routine
+func CreateClientCache() *ClientCache {
+	once.Do(func() {
+		clientCache = &ClientCache{
+			clients: make(map[string]*cachedClient),
+		}
+		restServiceCache = &ClientCache{
+			clients: make(map[string]*cachedClient),
+		}
+		// Clean up expired clients periodically.
+		go clientCache.cleanupLoop(5 * time.Minute)
+	})
+	return clientCache
+}
+
+// cleanupLoop periodically removes expired clients from the cache.
+func (c *ClientCache) cleanupLoop(interval time.Duration) {
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		c.mu.Lock()
+		for token, cached := range c.clients {
+			if time.Now().After(cached.expiry) {
+				_ = cached.client.Close()
+				delete(c.clients, token)
+			}
+		}
+		c.mu.Unlock()
+	}
+}
+
+// GetOrCreateClient retrieves a cached client or creates a new one if not found.
+func (c *ClientCache) GetOrCreateClient(
+	ctx context.Context,
+	tracer trace.Tracer,
+	project string,
+	name string, 
+	location string,
+	userAgent string,
+	tokenString string,
+	wantRestService bool,
+) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+
+	// Check for an existing client using a read lock.
+	c.mu.RLock()
+	cached, found := c.clients[tokenString]
+	if found && time.Now().Before(cached.expiry) {
+		c.mu.RUnlock()
+		return cached.client, cached.restService, nil
+	}
+	c.mu.RUnlock()
+
+	// Use a write lock to create a new client.
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	// Double-check in case another goroutine created it while waiting for the lock.
+	cached, found = c.clients[tokenString]
+	if found && time.Now().Before(cached.expiry) {
+		return cached.client, cached.restService, nil
+	}
+
+	// Construct token source
+	token := &oauth2.Token{
+		AccessToken: string(tokenString),
+	}
+	ts := oauth2.StaticTokenSource(token)
+
+	// Create the new client
+	client, err := bigqueryapi.NewClient(ctx, project, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
+	}
+	client.Location = location
+
+	var restService *bigqueryrestapi.Service
+	if wantRestService{
+		// Initialize the low-level BigQuery REST service using the same credentials
+		restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
+		}
+		return client, restService, nil
+	}
+	// Store the new client in the cache with a 55-minute expiry.
+	newCachedClient := &cachedClient{
+		client:      client,
+		restService: restService,
+		expiry:      time.Now().Add(55 * time.Minute),
+	}
+	c.clients[tokenString] = newCachedClient
+
+	return client, restService, nil
 }
 
 func initDataplexConnection(
@@ -544,3 +621,4 @@ func newDataplexClientCreator(
 		return initDataplexConnectionWithOAuthToken(ctx, project, userAgent, tokenString)
 	}
 }
+
