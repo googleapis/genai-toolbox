@@ -23,6 +23,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
+type Message = prompts.Message
+
 const kind = "custom"
 
 // init registers this prompt kind with the prompt framework.
@@ -50,12 +52,6 @@ type Config struct {
 	Arguments   prompts.Arguments `yaml:"arguments,omitempty"`
 }
 
-// Message represents a single message in a prompt.
-type Message struct {
-	Role    string `yaml:"role,omitempty"`
-	Content string `yaml:"content"`
-}
-
 // Interface compliance checks.
 var _ prompts.PromptConfig = (*Config)(nil)
 var _ prompts.Prompt = (*Config)(nil)
@@ -65,7 +61,6 @@ func (c *Config) PromptConfigKind() string {
 }
 
 func (c *Config) Initialize() (prompts.Prompt, error) {
-	// For this simple prompt, the config is also the runnable prompt.
 	return c, nil
 }
 
@@ -85,25 +80,7 @@ func (c *Config) McpManifest() prompts.McpManifest {
 }
 
 func (c *Config) SubstituteParams(argValues tools.ParamValues) (any, error) {
-	substitutedMessages := []Message{}
-	argsMap := argValues.AsMap()
-
-	var parameters tools.Parameters
-	for _, arg := range c.Arguments {
-		parameters = append(parameters, arg)
-	}
-
-	for _, msg := range c.Messages {
-		substitutedContent, err := tools.ResolveTemplateParams(parameters, msg.Content, argsMap)
-		if err != nil {
-			return nil, fmt.Errorf("error substituting params for message: %w", err)
-		}
-		substitutedMessages = append(substitutedMessages, Message{
-			Role:    msg.Role,
-			Content: substitutedContent,
-		})
-	}
-	return substitutedMessages, nil
+	return prompts.SubstituteMessages(c.Messages, c.Arguments, argValues)
 }
 
 func (c *Config) ParseArgs(args map[string]any, data map[string]map[string]any) (tools.ParamValues, error) {
