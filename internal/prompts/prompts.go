@@ -46,9 +46,15 @@ func Register(kind string, factory PromptConfigFactory) bool {
 // to decode the prompt configuration.
 func DecodeConfig(ctx context.Context, kind, name string, decoder *yaml.Decoder) (PromptConfig, error) {
 	factory, found := promptRegistry[kind]
+	if !found && kind == "" {
+		kind = "custom"
+		factory, found = promptRegistry[kind]
+	}
+
 	if !found {
 		return nil, fmt.Errorf("unknown prompt kind: %q", kind)
 	}
+
 	promptConfig, err := factory(ctx, name, decoder)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse prompt %q as kind %q: %w", name, kind, err)
@@ -80,88 +86,4 @@ type McpManifest struct {
 	Description string           `json:"description,omitempty"`
 	Arguments   []McpArgManifest `json:"arguments,omitempty"`
 	Metadata    map[string]any   `json:"_meta,omitempty"`
-}
-
-func GetMcpManifest(name, desc string, args Arguments) McpManifest {
-	mcpArgs := make([]McpArgManifest, 0)
-	for _, arg := range args {
-		mcpArgs = append(mcpArgs, arg.McpArgManifest())
-	}
-	mcpManifest := McpManifest{
-		Name:        name,
-		Description: desc,
-		Arguments:   mcpArgs,
-	}
-	return mcpManifest
-}
-
-type Message struct {
-	Role    string `yaml:"role,omitempty"`
-	Content string `yaml:"content"`
-}
-
-// Config is the configuration for a prompt.
-type Config struct {
-	Name        string    `yaml:"name"`
-	Kind        string    `yaml:"kind,omitempty"`
-	Description string    `yaml:"description,omitempty"`
-	Messages    []Message `yaml:"messages"`
-	Arguments   Arguments `yaml:"arguments,omitempty"`
-}
-
-// Initialize implements the Initialize method of the PromptConfig interface.
-func (c Config) Initialize() (Prompt, error) {
-	return c, nil
-}
-
-func (c Config) PromptConfigKind() string {
-	return c.Kind
-}
-
-func (c Config) Manifest() Manifest {
-	var paramManifests []tools.ParameterManifest
-	for _, arg := range c.Arguments {
-		paramManifests = append(paramManifests, arg.Manifest())
-	}
-	return Manifest{
-		Description: c.Description,
-		Arguments:   paramManifests,
-	}
-}
-
-func (c Config) McpManifest() McpManifest {
-	return GetMcpManifest(c.Name, c.Description, c.Arguments)
-}
-
-func (c Config) SubstituteParams(argValues tools.ParamValues) (any, error) {
-	substitutedMessages := []Message{}
-	argsMap := argValues.AsMap()
-
-	var parameters tools.Parameters
-	for _, arg := range c.Arguments {
-		parameters = append(parameters, arg)
-	}
-
-	for _, msg := range c.Messages {
-		// Use ResolveTemplateParams for each message's content
-		substitutedContent, err := tools.ResolveTemplateParams(parameters, msg.Content, argsMap)
-		if err != nil {
-			return nil, fmt.Errorf("error substituting params for message: %w", err)
-		}
-
-		substitutedMessages = append(substitutedMessages, Message{
-			Role:    msg.Role,
-			Content: substitutedContent,
-		})
-	}
-
-	return substitutedMessages, nil
-}
-
-func (c Config) ParseArgs(args map[string]any, data map[string]map[string]any) (tools.ParamValues, error) {
-	var parameters tools.Parameters
-	for _, arg := range c.Arguments {
-		parameters = append(parameters, arg)
-	}
-	return tools.ParseParams(parameters, args, data)
 }

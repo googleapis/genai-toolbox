@@ -23,8 +23,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-type Message = prompts.Message
-
 const kind = "custom"
 
 // init registers this prompt kind with the prompt framework.
@@ -52,6 +50,12 @@ type Config struct {
 	Arguments   prompts.Arguments `yaml:"arguments,omitempty"`
 }
 
+// Message represents a single message in a prompt.
+type Message struct {
+	Role    string `yaml:"role,omitempty"`
+	Content string `yaml:"content"`
+}
+
 // Interface compliance checks.
 var _ prompts.PromptConfig = (*Config)(nil)
 var _ prompts.Prompt = (*Config)(nil)
@@ -61,21 +65,63 @@ func (c *Config) PromptConfigKind() string {
 }
 
 func (c *Config) Initialize() (prompts.Prompt, error) {
+	// For this simple prompt, the config is also the runnable prompt.
 	return c, nil
 }
 
 func (c *Config) Manifest() prompts.Manifest {
-	return prompts.GetManifest(c.Description, c.Arguments)
+	var paramManifests []tools.ParameterManifest
+	for _, arg := range c.Arguments {
+		paramManifests = append(paramManifests, arg.Manifest())
+	}
+	return prompts.Manifest{
+		Description: c.Description,
+		Arguments:   paramManifests,
+	}
 }
 
 func (c *Config) McpManifest() prompts.McpManifest {
-	return prompts.GetMcpManifest(c.Name, c.Description, c.Arguments)
+	return getMcpManifest(c.Name, c.Description, c.Arguments)
 }
 
 func (c *Config) SubstituteParams(argValues tools.ParamValues) (any, error) {
-	return prompts.SubstituteMessages(c.Messages, c.Arguments, argValues)
+	substitutedMessages := []Message{}
+	argsMap := argValues.AsMap()
+
+	var parameters tools.Parameters
+	for _, arg := range c.Arguments {
+		parameters = append(parameters, arg)
+	}
+
+	for _, msg := range c.Messages {
+		substitutedContent, err := tools.ResolveTemplateParams(parameters, msg.Content, argsMap)
+		if err != nil {
+			return nil, fmt.Errorf("error substituting params for message: %w", err)
+		}
+		substitutedMessages = append(substitutedMessages, Message{
+			Role:    msg.Role,
+			Content: substitutedContent,
+		})
+	}
+	return substitutedMessages, nil
 }
 
 func (c *Config) ParseArgs(args map[string]any, data map[string]map[string]any) (tools.ParamValues, error) {
-	return prompts.ParseArguments(c.Arguments, args, data)
+	var parameters tools.Parameters
+	for _, arg := range c.Arguments {
+		parameters = append(parameters, arg)
+	}
+	return tools.ParseParams(parameters, args, data)
+}
+
+func getMcpManifest(name, desc string, args prompts.Arguments) prompts.McpManifest {
+	mcpArgs := make([]prompts.McpArgManifest, 0, len(args))
+	for _, arg := range args {
+		mcpArgs = append(mcpArgs, arg.McpArgManifest())
+	}
+	return prompts.McpManifest{
+		Name:        name,
+		Description: desc,
+		Arguments:   mcpArgs,
+	}
 }
