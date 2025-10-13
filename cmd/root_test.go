@@ -35,6 +35,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
+	"github.com/googleapis/genai-toolbox/internal/prompts/custom"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
@@ -921,8 +922,10 @@ func TestParseToolFileWithPrompts(t *testing.T) {
 			in: `
             prompts:
                 my-prompt:
-                    kind: standard
                     description: A prompt template for data analysis.
+                    arguments:
+                        - name: country
+                          description: The country to analyze.
                     messages:
                         - content: Analyze the data for {{.country}}.
             promptsets:
@@ -935,7 +938,16 @@ func TestParseToolFileWithPrompts(t *testing.T) {
 				Tools:        server.ToolConfigs{},
 				Toolsets:     server.ToolsetConfigs{},
 				Prompts: server.PromptConfigs{
-					"my-prompt": prompts.Config{},
+					"my-prompt": &custom.Config{
+						Name:        "my-prompt",
+						Description: "A prompt template for data analysis.",
+						Arguments: prompts.Arguments{
+							{Parameter: tools.NewStringParameter("country", "The country to analyze.")},
+						},
+						Messages: []prompts.Message{
+							{Role: "user", Content: "Analyze the data for {{.country}}."},
+						},
+					},
 				},
 				Promptsets: server.PromptsetConfigs{
 					"my-prompt-set": prompts.PromptsetConfig{
@@ -952,18 +964,9 @@ func TestParseToolFileWithPrompts(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to parse input: %v", err)
 			}
-
-			// Check Prompts map size and key existence (rudimentary check due to interface type)
-			if len(tc.wantToolsFile.Prompts) != len(toolsFile.Prompts) {
-				t.Fatalf("prompt count mismatch: got %d, want %d", len(toolsFile.Prompts), len(tc.wantToolsFile.Prompts))
+			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
+				t.Fatalf("incorrect prompts parse: diff %v", diff)
 			}
-			if len(toolsFile.Prompts) > 0 {
-				if _, ok := toolsFile.Prompts["my-prompt"]; !ok {
-					t.Fatalf("missing expected prompt 'my-prompt'")
-				}
-			}
-
-			// Deep check on Promptsets (uses exported struct type)
 			if diff := cmp.Diff(tc.wantToolsFile.Promptsets, toolsFile.Promptsets); diff != "" {
 				t.Fatalf("incorrect promptsets parse: diff %v", diff)
 			}
@@ -1061,7 +1064,6 @@ func TestEnvVarReplacement(t *testing.T) {
 						
 			prompts:
 				${prompt_name}:
-					kind: standard
 					description: A test prompt for {{.name}}.
 					messages:
 						- role: user
@@ -1126,9 +1128,8 @@ func TestEnvVarReplacement(t *testing.T) {
 					},
 				},
 				Prompts: server.PromptConfigs{
-					"ACTUAL_PROMPT_NAME": prompts.Config{
+					"ACTUAL_PROMPT_NAME": &custom.Config{
 						Name:        "ACTUAL_PROMPT_NAME",
-						Kind:        "standard",
 						Description: "A test prompt for {{.name}}.",
 						Messages: []prompts.Message{
 							{
