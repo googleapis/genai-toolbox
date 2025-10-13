@@ -15,16 +15,14 @@
 package prompts_test
 
 import (
-	"context"
 	"fmt"
-	"io"
-	"log/slog"
 	"strings"
 	"testing"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
@@ -188,8 +186,7 @@ func TestArguments_UnmarshalYAML(t *testing.T) {
 			}
 
 			var args Arguments
-			logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-			ctx := util.WithLogger(context.Background(), logger)
+			ctx, err := testutils.ContextWithNewLogger()
 			err = args.UnmarshalYAML(ctx, unmarshalFunc)
 
 			if tc.wantErr != "" {
