@@ -24,7 +24,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 // Test type aliases for convenience.
@@ -160,48 +159,26 @@ func TestArguments_UnmarshalYAML(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			yamlBytes, err := yaml.Marshal(tc.yamlInput)
-			var rawList []util.DelayedUnmarshaler
-			err = yaml.Unmarshal(yamlBytes, &rawList)
-
-			if tc.name == "Returns error when input is not a list" {
-				if err == nil {
-					t.Fatalf("Expected a structural parsing error, but got nil")
-				}
-				if !strings.Contains(err.Error(), tc.wantErr) {
-					t.Errorf("Structural error mismatch:\nwant to contain: %q\ngot: %q", tc.wantErr, err.Error())
-				}
-				return
-			}
 			if err != nil {
-				t.Fatalf("Unexpected structural parsing error: %v", err)
+				t.Fatalf("Test setup failure: could not marshal test input to YAML: %v", err)
 			}
-
-			unmarshalFunc := func(v interface{}) error {
-				dest, ok := v.(*[]util.DelayedUnmarshaler)
-				if !ok {
-					return fmt.Errorf("unexpected type for unmarshal: %T", v)
-				}
-				*dest = rawList
-				return nil
-			}
-
-			var args Arguments
+			var got Arguments
 			ctx, err := testutils.ContextWithNewLogger()
-			err = args.UnmarshalYAML(ctx, unmarshalFunc)
+			err = yaml.UnmarshalContext(ctx, yamlBytes, &got)
 
 			if tc.wantErr != "" {
 				if err == nil {
-					t.Fatalf("UnmarshalYAML() expected error but got nil")
+					t.Fatalf("UnmarshalContext() expected error but got nil")
 				}
 				if !strings.Contains(err.Error(), tc.wantErr) {
-					t.Errorf("UnmarshalYAML() error mismatch:\nwant to contain: %q\ngot: %q", tc.wantErr, err.Error())
+					t.Errorf("UnmarshalContext() error mismatch:\nwant to contain: %q\ngot: %q", tc.wantErr, err.Error())
 				}
 			} else {
 				if err != nil {
-					t.Fatalf("UnmarshalYAML() returned unexpected error: %v", err)
+					t.Fatalf("UnmarshalContext() returned unexpected error: %v", err)
 				}
-				if diff := cmp.Diff(tc.expectedArgs, args, paramComparer); diff != "" {
-					t.Errorf("UnmarshalYAML() result mismatch (-want +got):\n%s", diff)
+				if diff := cmp.Diff(tc.expectedArgs, got, paramComparer); diff != "" {
+					t.Errorf("UnmarshalContext() result mismatch (-want +got):\n%s", diff)
 				}
 			}
 		})
