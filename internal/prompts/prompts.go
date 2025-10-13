@@ -87,3 +87,15 @@ type McpManifest struct {
 	Arguments   []McpArgManifest `json:"arguments,omitempty"`
 	Metadata    map[string]any   `json:"_meta,omitempty"`
 }
+
+func GetMcpManifest(name, desc string, args Arguments) McpManifest {
+	mcpArgs := make([]McpArgManifest, 0, len(args))
+	for _, arg := range args {
+		mcpArgs = append(mcpArgs, arg.McpArgManifest())
+	}
+	return McpManifest{
+		Name:        name,
+		Description: desc,
+		Arguments:   mcpArgs,
+	}
+}

@@ -76,7 +76,7 @@ func (c *Config) Manifest() prompts.Manifest {
 }
 
 func (c *Config) McpManifest() prompts.McpManifest {
-	return getMcpManifest(c.Name, c.Description, c.Arguments)
+	return prompts.GetMcpManifest(c.Name, c.Description, c.Arguments)
 }
 
 func (c *Config) SubstituteParams(argValues tools.ParamValues) (any, error) {
@@ -89,16 +89,4 @@ func (c *Config) ParseArgs(args map[string]any, data map[string]map[string]any) 
 		parameters = append(parameters, arg)
 	}
 	return tools.ParseParams(parameters, args, data)
-}
-
-func getMcpManifest(name, desc string, args prompts.Arguments) prompts.McpManifest {
-	mcpArgs := make([]prompts.McpArgManifest, 0, len(args))
-	for _, arg := range args {
-		mcpArgs = append(mcpArgs, arg.McpArgManifest())
-	}
-	return prompts.McpManifest{
-		Name:        name,
-		Description: desc,
-		Arguments:   mcpArgs,
-	}
 }

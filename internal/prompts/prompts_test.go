@@ -21,8 +21,10 @@ import (
 	"testing"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	_ "github.com/googleapis/genai-toolbox/internal/prompts/custom"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
 type mockPromptConfig struct {
@@ -107,4 +109,54 @@ func TestRegistry(t *testing.T) {
 			t.Errorf("expected default kind to be 'custom', but got %q", config.PromptConfigKind())
 		}
 	})
+}
+
+func TestGetMcpManifest(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		name        string
+		promptName  string
+		description string
+		args        prompts.Arguments
+		want        prompts.McpManifest
+	}{
+		{
+			name:        "No arguments",
+			promptName:  "test-prompt",
+			description: "A test prompt.",
+			args:        prompts.Arguments{},
+			want: prompts.McpManifest{
+				Name:        "test-prompt",
+				Description: "A test prompt.",
+				Arguments:   []prompts.McpArgManifest{},
+				Metadata:    nil,
+			},
+		},
+		{
+			name:        "With arguments",
+			promptName:  "arg-prompt",
+			description: "Prompt with args.",
+			args: prompts.Arguments{
+				{Parameter: tools.NewStringParameter("param1", "First param")},
+				{Parameter: tools.NewIntParameterWithRequired("param2", "Second param", false)},
+			},
+			want: prompts.McpManifest{
+				Name:        "arg-prompt",
+				Description: "Prompt with args.",
+				Arguments: []prompts.McpArgManifest{
+					{Name: "param1", Description: "First param", Required: true},
+					{Name: "param2", Description: "Second param", Required: false},
+				},
+				Metadata: nil,
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := prompts.GetMcpManifest(tc.promptName, tc.description, tc.args)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("GetMcpManifest() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
 }
