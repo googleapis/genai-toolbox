@@ -15,6 +15,11 @@ the following sources:
 
 - [bigquery](../../sources/bigquery.md)
 
+The behavior of this tool is influenced by the `writeMode` setting on its `bigquery` source:
+
+- **`allowed` (default) and `blocked`:** These modes do not impose any restrictions on the `bigquery-sql` tool. The pre-defined SQL statement will be executed as-is.
+- **`protected`:** This mode enables session-based execution. The tool will operate within the same BigQuery session as other tools using the same source, allowing it to interact with temporary resources like `TEMP` tables created within that session.
+
 ### GoogleSQL
 
 BigQuery uses [GoogleSQL][bigquery-googlesql] for querying data. The integration
