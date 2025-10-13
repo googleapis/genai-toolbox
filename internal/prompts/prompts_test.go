@@ -160,3 +160,46 @@ func TestGetMcpManifest(t *testing.T) {
 		})
 	}
 }
+
+func TestGetManifest(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		name        string
+		description string
+		args        prompts.Arguments
+		want        prompts.Manifest
+	}{
+		{
+			name:        "No arguments",
+			description: "A simple prompt.",
+			args:        prompts.Arguments{},
+			want: prompts.Manifest{
+				Description: "A simple prompt.",
+				Arguments:   []tools.ParameterManifest{},
+			},
+		},
+		{
+			name:        "With arguments",
+			description: "Prompt with arguments.",
+			args: prompts.Arguments{
+				{Parameter: tools.NewStringParameter("param1", "First param")},
+				{Parameter: tools.NewBooleanParameterWithRequired("param2", "Second param", false)},
+			},
+			want: prompts.Manifest{
+				Description: "Prompt with arguments.",
+				Arguments: []tools.ParameterManifest{
+					{Name: "param1", Type: "string", Required: true, Description: "First param", AuthServices: []string{}},
+					{Name: "param2", Type: "boolean", Required: false, Description: "Second param", AuthServices: []string{}},
+				},
+			},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := prompts.GetManifest(tc.description, tc.args)
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("GetManifest() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}

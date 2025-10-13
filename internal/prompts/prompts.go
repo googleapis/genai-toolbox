@@ -99,3 +99,14 @@ func GetMcpManifest(name, desc string, args Arguments) McpManifest {
 		Arguments:   mcpArgs,
 	}
 }
+
+func GetManifest(desc string, args Arguments) Manifest {
+	paramManifests := make([]tools.ParameterManifest, 0, len(args))
+	for _, arg := range args {
+		paramManifests = append(paramManifests, arg.Manifest())
+	}
+	return Manifest{
+		Description: desc,
+		Arguments:   paramManifests,
+	}
+}
