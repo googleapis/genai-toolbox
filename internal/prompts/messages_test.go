@@ -18,10 +18,70 @@ import (
 	"strings"
 	"testing"
 
+	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
+
+func TestMessage_UnmarshalYAML(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		name      string
+		yamlInput map[string]any
+		want      prompts.Message
+		wantErr   string
+	}{
+		{
+			name:      "Valid role: user",
+			yamlInput: map[string]any{"role": "user", "content": "Hello"},
+			want:      prompts.Message{Role: "user", Content: "Hello"},
+		},
+		{
+			name:      "Valid role: assistant",
+			yamlInput: map[string]any{"role": "assistant", "content": "Hi there"},
+			want:      prompts.Message{Role: "assistant", Content: "Hi there"},
+		},
+		{
+			name:      "Role is omitted, defaults to user",
+			yamlInput: map[string]any{"content": "A message with no role"},
+			want:      prompts.Message{Role: "user", Content: "A message with no role"},
+		},
+		{
+			name:      "Invalid role: other",
+			yamlInput: map[string]any{"role": "other", "content": "Some other role"},
+			wantErr:   `invalid role "other": must be 'user' or 'assistant'`,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			yamlBytes, err := yaml.Marshal(tc.yamlInput)
+			if err != nil {
+				t.Fatalf("Test setup failure: could not marshal test input: %v", err)
+			}
+
+			var got prompts.Message
+			err = yaml.Unmarshal(yamlBytes, &got)
+
+			if tc.wantErr != "" {
+				if err == nil {
+					t.Fatalf("expected an error but got nil")
+				}
+				if !strings.Contains(err.Error(), tc.wantErr) {
+					t.Errorf("error mismatch:\n  want to contain: %q\n  got: %q", tc.wantErr, err.Error())
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if diff := cmp.Diff(tc.want, got); diff != "" {
+					t.Errorf("unmarshal mismatch (-want +got):\n%s", diff)
+				}
+			}
+		})
+	}
+}
 
 func TestSubstituteMessages(t *testing.T) {
 	t.Parallel()

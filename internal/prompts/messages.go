@@ -40,6 +40,25 @@ type Message struct {
 	Content string `yaml:"content"`
 }
 
+func (m *Message) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	// Use a type alias to prevent an infinite recursion loop. The alias
+	// has the same fields but lacks the UnmarshalYAML method.
+	type messageAlias Message
+	var alias messageAlias
+	if err := unmarshal(&alias); err != nil {
+		return err
+	}
+
+	*m = Message(alias)
+	if m.Role == "" {
+		m.Role = "user"
+	}
+	if m.Role != "user" && m.Role != "assistant" {
+		return fmt.Errorf("invalid role %q: must be 'user' or 'assistant'", m.Role)
+	}
+	return nil
+}
+
 // SubstituteMessages takes a slice of Messages and a set of parameter values,
 // and returns a new slice with all template variables resolved.
 func SubstituteMessages(messages []Message, arguments Arguments, argValues tools.ParamValues) ([]Message, error) {
