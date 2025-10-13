@@ -45,7 +45,7 @@ func makeArrayArg(name, desc string, items tools.Parameter) Argument {
 	return Argument{Parameter: tools.NewArrayParameter(name, desc, items)}
 }
 
-func makeStrItem(name, desc string) tools.Parameter {
+func makeStrParam(name, desc string) tools.Parameter {
 	return tools.NewStringParameter(name, desc)
 }
 
@@ -170,7 +170,7 @@ func TestArguments_UnmarshalYAML_Integration(t *testing.T) {
 				},
 			},
 			expectedArgs: Arguments{
-				makeArrayArg("param_array", "an array", makeStrItem("item_name", "an item")),
+				makeArrayArg("param_array", "an array", makeStrParam("item_name", "an item")),
 			},
 		},
 		{
