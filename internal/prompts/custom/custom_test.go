@@ -89,7 +89,7 @@ func TestConfig(t *testing.T) {
 			{Name: "name", Value: "Alice"},
 			{Name: "location", Value: "Wonderland"},
 		}
-		want := []custom.Message{
+		want := []prompts.Message{
 			{Role: "user", Content: "Hello, my name is Alice and I am in Wonderland."},
 		}
 
@@ -98,9 +98,9 @@ func TestConfig(t *testing.T) {
 			t.Fatalf("SubstituteParams() failed: %v", err)
 		}
 
-		gotMessages, ok := got.([]custom.Message)
+		gotMessages, ok := got.([]prompts.Message)
 		if !ok {
-			t.Fatalf("expected result to be of type []custom.Message, but got %T", got)
+			t.Fatalf("expected result to be of type []prompts.Message, but got %T", got)
 		}
 
 		if diff := cmp.Diff(want, gotMessages); diff != "" {
