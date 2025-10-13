@@ -92,12 +92,6 @@ func GetMcpManifest(name, desc string, args Arguments) McpManifest {
 		Description: desc,
 		Arguments:   mcpArgs,
 	}
-
-	// construct metadata, if applicable
-	metadata := make(map[string]any)
-	if len(metadata) > 0 {
-		mcpManifest.Metadata = metadata
-	}
 	return mcpManifest
 }
 
