@@ -36,7 +36,8 @@ func getPromptsConfig() map[string]any {
 				"description": "description1.",
 				"arguments": []any{
 					map[string]any{
-						"name": "arg1",
+						"name":        "arg1",
+						"description": "Description of arg1 for prompt1",
 					},
 				},
 				"messages": []any{
@@ -49,10 +50,12 @@ func getPromptsConfig() map[string]any {
 				"description": "description2",
 				"arguments": []any{
 					map[string]any{
-						"name": "arg1",
+						"name":        "arg1",
+						"description": "Description for arg1 for prompt2",
 					},
 					map[string]any{
-						"name": "arg2",
+						"name":        "arg2",
+						"description": "Description for arg2 for prompt2",
 					},
 				},
 				"messages": []any{
