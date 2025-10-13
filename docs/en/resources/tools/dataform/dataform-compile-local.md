@@ -16,7 +16,8 @@ It is a standalone tool and **is not** compatible with any sources.
 
 At invocation time, the tool executes `dataform compile --json` in the specified project directory and returns the resulting JSON object from the CLI.
 
-`dataform-compile-local` takes the following parameter: 
+`dataform-compile-local` takes the following parameter:
+
 - `project_dir` (string): The absolute or relative path to the local Dataform project directory. The server process must have read access to this path.
 
 ## Requirements
@@ -26,6 +27,7 @@ At invocation time, the tool executes `dataform compile --json` in the specified
 This tool executes the `dataform` command-line interface (CLI) via a system call. You must have the **`dataform` CLI** installed and available in the server's system `PATH`.
 
 You can typically install the CLI via `npm`:
+
 ```bash
 npm install -g @dataform/cli
 ```
@@ -42,6 +44,7 @@ tools:
 ```
 
 ## Reference
+
 | **field** | **type** | **required** | **description** |
 | :---- | :---- | :---- | :---- |
 | kind | string | true | Must be "dataform-compile-local". |

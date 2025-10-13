@@ -22,8 +22,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
-// McpPromptArg is the simplified manifest structure for an argument required for prompts.
-type McpPromptArg struct {
+// McpArgManifest is the simplified manifest structure for an argument required for prompts.
+type McpArgManifest struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Required    bool   `json:"required"`
@@ -35,9 +35,9 @@ type Argument struct {
 	tools.Parameter
 }
 
-// McpPromptManifest returns the simplified manifest structure required for prompts.
-func (a Argument) McpPromptManifest() McpPromptArg {
-	return McpPromptArg{
+// McpArgManifest returns the simplified manifest structure required for prompts.
+func (a Argument) McpArgManifest() McpArgManifest {
+	return McpArgManifest{
 		Name:        a.GetName(),
 		Description: a.Manifest().Description,
 		Required:    tools.CheckParamRequired(a.GetRequired(), a.GetDefault()),
@@ -77,4 +77,12 @@ func (args *Arguments) UnmarshalYAML(ctx context.Context, unmarshal func(interfa
 		*args = append(*args, Argument{Parameter: param})
 	}
 	return nil
+}
+
+func ParseArguments(arguments Arguments, args map[string]any, data map[string]map[string]any) (tools.ParamValues, error) {
+	var parameters tools.Parameters
+	for _, arg := range arguments {
+		parameters = append(parameters, arg)
+	}
+	return tools.ParseParams(parameters, args, data)
 }
