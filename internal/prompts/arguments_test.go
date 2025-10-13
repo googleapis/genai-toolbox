@@ -162,10 +162,6 @@ func TestArguments_UnmarshalYAML(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			yamlBytes, err := yaml.Marshal(tc.yamlInput)
-			if err != nil {
-				t.Fatalf("Test setup failure: could not marshal test input to YAML: %v", err)
-			}
-
 			var rawList []util.DelayedUnmarshaler
 			err = yaml.Unmarshal(yamlBytes, &rawList)
 
