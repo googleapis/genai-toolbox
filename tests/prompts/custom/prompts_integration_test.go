@@ -24,6 +24,7 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/googleapis/genai-toolbox/internal/prompts/custom"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
