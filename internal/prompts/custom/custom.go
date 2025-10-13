@@ -65,14 +65,7 @@ func (c *Config) Initialize() (prompts.Prompt, error) {
 }
 
 func (c *Config) Manifest() prompts.Manifest {
-	var paramManifests []tools.ParameterManifest
-	for _, arg := range c.Arguments {
-		paramManifests = append(paramManifests, arg.Manifest())
-	}
-	return prompts.Manifest{
-		Description: c.Description,
-		Arguments:   paramManifests,
-	}
+	return prompts.GetManifest(c.Description, c.Arguments)
 }
 
 func (c *Config) McpManifest() prompts.McpManifest {
