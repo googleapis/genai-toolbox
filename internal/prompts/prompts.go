@@ -76,16 +76,16 @@ type Manifest struct {
 
 // McpManifest is the definition for a prompt the MCP client can get.
 type McpManifest struct {
-	Name        string         `json:"name"`
-	Description string         `json:"description,omitempty"`
-	Arguments   []McpPromptArg `json:"arguments,omitempty"`
-	Metadata    map[string]any `json:"_meta,omitempty"`
+	Name        string           `json:"name"`
+	Description string           `json:"description,omitempty"`
+	Arguments   []McpArgManifest `json:"arguments,omitempty"`
+	Metadata    map[string]any   `json:"_meta,omitempty"`
 }
 
 func GetMcpManifest(name, desc string, args Arguments) McpManifest {
-	mcpArgs := make([]McpPromptArg, 0)
+	mcpArgs := make([]McpArgManifest, 0)
 	for _, arg := range args {
-		mcpArgs = append(mcpArgs, arg.McpPromptManifest())
+		mcpArgs = append(mcpArgs, arg.McpArgManifest())
 	}
 	mcpManifest := McpManifest{
 		Name:        name,

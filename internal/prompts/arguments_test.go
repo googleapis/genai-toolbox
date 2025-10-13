@@ -28,9 +28,9 @@ import (
 
 // Test type aliases for convenience.
 type (
-	Argument     = prompts.Argument
-	McpPromptArg = prompts.McpPromptArg
-	Arguments    = prompts.Arguments
+	Argument       = prompts.Argument
+	McpArgManifest = prompts.McpArgManifest
+	Arguments      = prompts.Arguments
 )
 
 // Ptr is a helper function to create a pointer to a value.
@@ -42,31 +42,31 @@ func makeArrayArg(name, desc string, items tools.Parameter) Argument {
 	return Argument{Parameter: tools.NewArrayParameter(name, desc, items)}
 }
 
-func TestArgument_McpPromptManifest(t *testing.T) {
+func TestArgument_McpArgManifest(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		name     string
 		arg      Argument
-		expected McpPromptArg
+		expected McpArgManifest
 	}{
 		{
 			name: "Required with no default",
 			arg:  Argument{Parameter: tools.NewStringParameterWithRequired("name1", "desc1", true)},
-			expected: McpPromptArg{
+			expected: McpArgManifest{
 				Name: "name1", Description: "desc1", Required: true,
 			},
 		},
 		{
 			name: "Not required with no default",
 			arg:  Argument{Parameter: tools.NewStringParameterWithRequired("name2", "desc2", false)},
-			expected: McpPromptArg{
+			expected: McpArgManifest{
 				Name: "name2", Description: "desc2", Required: false,
 			},
 		},
 		{
 			name: "Implicitly required with default",
 			arg:  Argument{Parameter: tools.NewStringParameterWithDefault("name3", "defaultVal", "desc3")},
-			expected: McpPromptArg{
+			expected: McpArgManifest{
 				Name: "name3", Description: "desc3", Required: false,
 			},
 		},
@@ -74,9 +74,9 @@ func TestArgument_McpPromptManifest(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := tc.arg.McpPromptManifest()
+			got := tc.arg.McpArgManifest()
 			if diff := cmp.Diff(tc.expected, got); diff != "" {
-				t.Errorf("McpPromptManifest() mismatch (-want +got):\n%s", diff)
+				t.Errorf("McpArgManifest() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
