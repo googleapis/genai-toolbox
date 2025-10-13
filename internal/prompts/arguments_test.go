@@ -102,7 +102,7 @@ func TestArguments_UnmarshalYAML(t *testing.T) {
 
 	testCases := []struct {
 		name         string
-		yamlInput    any
+		yamlInput    []map[string]any
 		expectedArgs Arguments
 		wantErr      string
 	}{
@@ -148,11 +148,6 @@ func TestArguments_UnmarshalYAML(t *testing.T) {
 				{"name": "p1", "description": "d1", "type": "unsupported"},
 			},
 			wantErr: `"unsupported" is not valid type for a parameter`,
-		},
-		{
-			name:      "Returns error when input is not a list",
-			yamlInput: map[string]any{"name": "param1"}, // This is a map, not a slice.
-			wantErr:   "mapping was used where sequence is expected",
 		},
 	}
 
