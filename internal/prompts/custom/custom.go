@@ -84,9 +84,5 @@ func (c *Config) SubstituteParams(argValues tools.ParamValues) (any, error) {
 }
 
 func (c *Config) ParseArgs(args map[string]any, data map[string]map[string]any) (tools.ParamValues, error) {
-	var parameters tools.Parameters
-	for _, arg := range c.Arguments {
-		parameters = append(parameters, arg)
-	}
-	return tools.ParseParams(parameters, args, data)
+	return prompts.ParseArguments(c.Arguments, args, data)
 }

@@ -182,3 +182,68 @@ func TestArguments_UnmarshalYAML(t *testing.T) {
 		})
 	}
 }
+
+func TestParseArguments(t *testing.T) {
+	t.Parallel()
+	testArguments := prompts.Arguments{
+		{Parameter: tools.NewStringParameter("name", "A required name.")},
+		{Parameter: tools.NewIntParameterWithRequired("count", "An optional count.", false)},
+	}
+
+	testCases := []struct {
+		name    string
+		argsIn  map[string]any
+		want    tools.ParamValues
+		wantErr string
+	}{
+		{
+			name: "Success with all parameters provided",
+			argsIn: map[string]any{
+				"name":  "test-name",
+				"count": 42,
+			},
+			want: tools.ParamValues{
+				{Name: "name", Value: "test-name"},
+				{Name: "count", Value: 42},
+			},
+		},
+		{
+			name: "Success with only required parameters",
+			argsIn: map[string]any{
+				"name": "another-name",
+			},
+			want: tools.ParamValues{
+				{Name: "name", Value: "another-name"},
+				{Name: "count", Value: nil},
+			},
+		},
+		{
+			name: "Failure with missing required parameter",
+			argsIn: map[string]any{
+				"count": 123,
+			},
+			wantErr: `parameter "name" is required`,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := prompts.ParseArguments(testArguments, tc.argsIn, nil)
+			if tc.wantErr != "" {
+				if err == nil {
+					t.Fatalf("expected an error but got nil")
+				}
+				if !strings.Contains(err.Error(), tc.wantErr) {
+					t.Errorf("error mismatch:\n  want to contain: %q\n  got: %q", tc.wantErr, err.Error())
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if diff := cmp.Diff(tc.want, got); diff != "" {
+					t.Errorf("ParseArguments() result mismatch (-want +got):\n%s", diff)
+				}
+			}
+		})
+	}
+}
