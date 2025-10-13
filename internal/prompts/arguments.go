@@ -78,3 +78,11 @@ func (args *Arguments) UnmarshalYAML(ctx context.Context, unmarshal func(interfa
 	}
 	return nil
 }
+
+func ParseArguments(arguments Arguments, args map[string]any, data map[string]map[string]any) (tools.ParamValues, error) {
+	var parameters tools.Parameters
+	for _, arg := range arguments {
+		parameters = append(parameters, arg)
+	}
+	return tools.ParseParams(parameters, args, data)
+}
