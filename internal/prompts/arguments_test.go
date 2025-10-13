@@ -164,6 +164,9 @@ func TestArguments_UnmarshalYAML(t *testing.T) {
 			}
 			var got Arguments
 			ctx, err := testutils.ContextWithNewLogger()
+			if err != nil {
+				t.Fatalf("Failed to create logger using testutils: %v", err)
+			}
 			err = yaml.UnmarshalContext(ctx, yamlBytes, &got)
 
 			if tc.wantErr != "" {
