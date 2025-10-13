@@ -310,12 +310,34 @@ func (c *PromptConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 	}
 
 	for name, u := range raw {
-		var v prompts.Config
+		var v map[string]any
 		if err := u.Unmarshal(&v); err != nil {
 			return fmt.Errorf("unable to unmarshal prompt %q: %w", name, err)
 		}
-		v.Name = name
-		(*c)[name] = v
+
+		// Look for the 'kind' field. If it's not present, kindStr will be an
+		// empty string, which prompts.DecodeConfig will correctly default to "custom".
+		var kindStr string
+		if kindVal, ok := v["kind"]; ok {
+			var isString bool
+			kindStr, isString = kindVal.(string)
+			if !isString {
+				return fmt.Errorf("invalid 'kind' field for prompt %q (must be a string)", name)
+			}
+		}
+
+		// Create a new, strict decoder for this specific prompt's data.
+		yamlDecoder, err := util.NewStrictDecoder(v)
+		if err != nil {
+			return fmt.Errorf("error creating YAML decoder for prompt %q: %w", name, err)
+		}
+
+		// Use the central registry to decode the prompt based on its kind.
+		promptCfg, err := prompts.DecodeConfig(ctx, kindStr, name, yamlDecoder)
+		if err != nil {
+			return err
+		}
+		(*c)[name] = promptCfg
 	}
 	return nil
 }
