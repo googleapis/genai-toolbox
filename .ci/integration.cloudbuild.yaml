@@ -33,15 +33,36 @@ steps:
       - name: "go"
         path: "/gopath"
     script: |
-      TEST_DIRS=$(find ./tests -name '*_test.go' -print0 | xargs -0 -n1 dirname | sort -u)
       go test -c -race -cover \
-      -coverpkg=./internal/sources/...,./internal/tools/...,./internal/prompts/... ${TEST_DIRS}
+        -coverpkg=./internal/sources/...,./internal/tools/... ./tests/...
       chmod +x .ci/test_with_coverage.sh
+
+  - id: "compile-prompt-test-binary"
+    name: golang:1
+    waitFor: ["install-dependencies"]
+    env:
+      - "GOPATH=/gopath"
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    script: |
+      for dir in ./tests/prompts/*; do
+        if [ -d "$dir" ]; then
+          PROMPT_TYPE=$(basename "$dir")
+          echo "--- Compiling prompt test for ${PROMPT_TYPE} with targeted coverage ---"
+
+          go test -c -race -cover \
+            -coverpkg=./internal/prompts/... \
+            -o "prompt.${PROMPT_TYPE}.test" \
+            "${dir}"
+        fi
+      done
+
       chmod +x .ci/test_prompts_with_coverage.sh
 
   - id: "prompts-custom"
     name: golang:1
-    waitFor: ["compile-test-binary"]
+    waitFor: ["compile-prompt-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -51,7 +72,7 @@ steps:
     args:
       - -c
       - |
-        .ci/test_prompts_with_coverage.sh "Custom Prompts" custom
+        .ci/test_prompts_with_coverage.sh "custom"
 
   - id: "cloud-sql-pg"
     name: golang:1
