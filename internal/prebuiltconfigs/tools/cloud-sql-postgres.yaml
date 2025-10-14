@@ -155,6 +155,22 @@ tools:
               description: "The SQL statement for which you want to generate plan (omit the EXPLAIN keyword)."
               required: true
 
+    list_views:
+        kind: postgres-sql
+        source: cloudsql-pg-source
+        description: "Lists all the views in the database."
+        statement: |
+            SELECT schemaname, viewname, viewowner
+            FROM pg_views
+            WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            ORDER BY viewname
+            LIMIT COALESCE($1::int, 50);
+        parameters:
+            - name: limit
+              description: "The maximum number of results to return."
+              type: integer
+              default: 50
+
 toolsets:
     cloud_sql_postgres_database_tools:
         - execute_sql
@@ -168,3 +184,4 @@ toolsets:
         - list_replication_slots
         - list_invalid_indexes
         - get_query_plan
+        - list_views

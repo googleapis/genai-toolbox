@@ -153,6 +153,21 @@ tools:
               type: string
               description: "The SQL statement for which you want to generate plan (omit the EXPLAIN keyword)."
               required: true
+    list_views:
+        kind: postgres-sql
+        source: postgresql-source
+        description: "Lists all the views in the database."
+        statement: |
+            SELECT schemaname, viewname, viewowner
+            FROM pg_views
+            WHERE schemaname NOT IN ('pg_catalog', 'information_schema')
+            ORDER BY viewname
+            LIMIT COALESCE($1::int, 50);
+        parameters:
+            - name: limit
+              description: "The maximum number of results to return."
+              type: integer
+              default: 50
 
 toolsets:
     postgres_database_tools:
@@ -167,3 +182,5 @@ toolsets:
         - list_replication_slots
         - list_invalid_indexes
         - get_query_plan
+        - list_views
+

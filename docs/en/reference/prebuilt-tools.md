@@ -43,6 +43,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_replication_slots`: Lists replication slots in the database.
     *   `list_invalid_indexes`: Lists invalid indexes in the database.
     *   `get_query_plan`: Generate the execution plan of a statement.
+    *   `list_views`: Lists all the views in the database. 
 
 ## AlloyDB Postgres Admin
 
@@ -210,6 +211,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_replication_slots`: Lists replication slots in the database.
     *   `list_invalid_indexes`: Lists invalid indexes in the database.
     *   `get_query_plan`: Generate the execution plan of a statement.
+    *   `list_views`: Lists all the views in the database. 
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -492,6 +494,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_replication_slots`: Lists replication slots in the database.
     *   `list_invalid_indexes`: Lists invalid indexes in the database.
     *   `get_query_plan`: Generate the execution plan of a statement.
+    *   `list_views`: Lists all the views in the database. 
 
 ## Spanner (GoogleSQL dialect)
 
