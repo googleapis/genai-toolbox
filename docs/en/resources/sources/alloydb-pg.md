@@ -45,6 +45,9 @@ cluster][alloydb-free-trial].
 - [`postgres-list-installed-extensions`](../tools/postgres/postgres-list-installed-extensions.md)
   List installed extensions in a PostgreSQL database.
 
+- [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
+  List views in an AlloyDB for PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
