@@ -35,6 +35,9 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-list-installed-extensions`](../tools/postgres/postgres-list-installed-extensions.md)
   List installed extensions in a PostgreSQL database.
 
+- [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
+  List views in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)
