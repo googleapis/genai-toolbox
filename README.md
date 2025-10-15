@@ -625,13 +625,11 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     package main
     import (
       "context"
-      "encoding/json"
+      "log"
 
-      "github.com/firebase/genkit/go/ai"
       "github.com/firebase/genkit/go/genkit"
       "github.com/googleapis/mcp-toolbox-sdk-go/core"
       "github.com/googleapis/mcp-toolbox-sdk-go/tbgenkit"
-      "github.com/invopop/jsonschema"
     )
 
     func main() {
@@ -639,7 +637,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
       // Update the url to point to your server
       URL := "http://127.0.0.1:5000"
       ctx := context.Background()
-      g, err := genkit.Init(ctx)
+      g := genkit.Init(ctx)
 
       client, err := core.NewToolboxClient(URL)
 
@@ -652,6 +650,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
       if err != nil {
         log.Fatalf("Failed to convert tool: %v\n", err)
       }
+      log.Printf("Successfully converted tool: %s", genkitTool.Name())
     }
     ```
 
