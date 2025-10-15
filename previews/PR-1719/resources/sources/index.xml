@@ -33,7 +33,7 @@ With Bigtable, you can replicate your data to regions across the world for high
 availability and data resiliency.&lt;/p>
 &lt;p>If you are new to Bigtable, you can try to &lt;a href="https://cloud.google.com/bigtable/docs/create-instance-write-data-cbt-cli">create an instance and write data
 with the cbt CLI&lt;/a>.&lt;/p></description></item><item><title>Cassandra</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1719/resources/sources/cassandra/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1719/resources/sources/cassandra/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://cassandra.apache.org/">Cassandra&lt;/a> is a NoSQL distributed database. By design, NoSQL databases are lightweight, open-source, non-relational, and largely distributed. Counted among their strengths are horizontal scalability, distributed architectures, and a flexible approach to schema definition.&lt;/p>
+&lt;p>&lt;a href="https://cassandra.apache.org/">Apache Cassandra&lt;/a> is a NoSQL distributed database. By design, NoSQL databases are lightweight, open-source, non-relational, and largely distributed. Counted among their strengths are horizontal scalability, distributed architectures, and a flexible approach to schema definition.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1719/resources/tools/cassandra/cassandra-cql/">&lt;code>cassandra-cql&lt;/code>&lt;/a>&lt;br>
