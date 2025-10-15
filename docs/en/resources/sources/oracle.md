@@ -29,14 +29,6 @@ This source uses standard authentication. You will need to [create an Oracle use
 [oracle-users]:
     https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/CREATE-USER.html
 
-### Oracle Instant Client (OIC)
-
-The underlying database driver requires the [Oracle Instant Client][oracle-ic] libraries to connect to the database. These libraries must be installed on the machine where the application is running.
-
-After installing the client, ensure the library path is correctly configured for your operating system (e.g., by setting the `LD_LIBRARY_PATH` environment variable on Linux or adding the directory to the `PATH` on Windows) so the application can find the necessary files at runtime.
-
-[oracle-ic]: https://www.oracle.com/database/technologies/instant-client/downloads.html
-
 ## Connection Methods
 
 You can configure the connection to your Oracle database using one of the following three methods. **You should only use one method** in your source configuration.
