@@ -3,7 +3,7 @@ from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService
 from google.genai import types
-from toolbox_core import ToolboxSyncClient
+from toolbox_core import ToolboxClient
 
 import asyncio
 import os
@@ -14,7 +14,7 @@ api_key = os.environ.get("GOOGLE_API_KEY") or "your-api-key" # Set your API key 
 os.environ["GOOGLE_API_KEY"] = api_key
 
 async def main():
-  with ToolboxSyncClient("http://127.0.0.1:5000") as toolbox_client:
+  async with ToolboxClient("http://127.0.0.1:5000") as toolbox_client:
 
       prompt = """
         You're a helpful hotel assistant. You handle hotel searching, booking and
@@ -26,12 +26,13 @@ async def main():
         Don't ask for confirmations from the user.
       """
 
+      tools=await toolbox_client.load_toolset("my-toolset")
       root_agent = Agent(
-          model='gemini-2.0-flash-001',
+          model='gemini-2.5-flash',
           name='hotel_agent',
           description='A helpful AI assistant.',
           instruction=prompt,
-          tools=toolbox_client.load_toolset("my-toolset"),
+          tools=tools,
       )
 
       session_service = InMemorySessionService()
