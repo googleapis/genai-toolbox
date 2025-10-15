@@ -3,8 +3,8 @@ module genkit-quickstart
 go 1.24.6
 
 require (
-	github.com/firebase/genkit/go v1.0.4
-	github.com/googleapis/mcp-toolbox-sdk-go v0.3.1-0.20251001045305-f99f1ed70832
+	github.com/firebase/genkit/go v1.0.5
+	github.com/googleapis/mcp-toolbox-sdk-go v0.3.1-0.20251014170108-5bb8a29de9d3
 )
 
 require (
@@ -18,7 +18,7 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/goccy/go-yaml v1.17.1 // indirect
-	github.com/google/dotprompt/go v0.0.0-20251014011017-8d056e027254 // indirect
+	github.com/google/dotprompt/go v0.0.0-20250923103342-a8a91d1dff59 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -44,10 +44,10 @@ require (
 	golang.org/x/oauth2 v0.31.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/text v0.29.0 // indirect
-	google.golang.org/api v0.251.0 // indirect
+	google.golang.org/api v0.252.0 // indirect
 	google.golang.org/genai v1.24.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250929231259-57b25ae835d4 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251002232023-7c0ddcbb5797 // indirect
 	google.golang.org/grpc v1.75.1 // indirect
-	google.golang.org/protobuf v1.36.9 // indirect
+	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
