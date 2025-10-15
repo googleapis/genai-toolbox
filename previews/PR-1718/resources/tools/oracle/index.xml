@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Oracle on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1718/resources/tools/oracle/</link><description>Recent content in Oracle on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1718/resources/tools/oracle/index.xml" rel="self" type="application/rss+xml"/><item><title>oracle-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1718/resources/tools/oracle/oracle-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1718/resources/tools/oracle/oracle-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>An &lt;code>oracle-execute-sql&lt;/code> tool executes a SQL statement against an Oracle
+database. It&amp;rsquo;s compatible with the following source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1718/resources/sources/oracle/">oracle&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>oracle-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the sql
+statement against the &lt;code>source&lt;/code>.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool is intended for developer assistant workflows with
+human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&lt;/blockquote>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">execute_sql_tool&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">oracle-execute-sql&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-oracle-instance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to execute sql statement.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>oracle-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1718/resources/tools/oracle/oracle-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1718/resources/tools/oracle/oracle-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>An &lt;code>oracle-sql&lt;/code> tool executes a pre-defined SQL statement against an
+Oracle database. It&amp;rsquo;s compatible with the following source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1718/resources/sources/oracle/">oracle&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>The specified SQL statement is executed using &lt;a href="https://docs.oracle.com/javase/tutorial/jdbc/basics/prepared.html">prepared statements&lt;/a>
+for security and performance. It expects parameter placeholders in the SQL query
+to be in the native Oracle format (e.g., &lt;code>:1&lt;/code>, &lt;code>:2&lt;/code>).&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
+Query parameters can be used as substitutes for arbitrary expressions.
+Parameters cannot be used as substitutes for identifiers, column names, table
+names, or other parts of the query.&lt;/p></description></item></channel></rss>
