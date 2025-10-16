@@ -1,12 +1,10 @@
 ## Description
 
----
 > Should include a concise description of the changes (bug or feature), it's
 > impact, along with a summary of the solution
 
 ## PR Checklist
 
----
 > Thank you for opening a Pull Request! Before submitting your PR, there are a
 > few things you can do to make sure it goes smoothly:
 
@@ -14,7 +12,7 @@
   [CONTRIBUTING.md](https://github.com/googleapis/genai-toolbox/blob/main/CONTRIBUTING.md)
 - [ ] Make sure to open an issue as a
   [bug/issue](https://github.com/googleapis/genai-toolbox/issues/new/choose)
-  before writing your code!  That way we can discuss the change, evaluate
+  before writing your code! That way we can discuss the change, evaluate
   designs, and agree on the general idea
 - [ ] Ensure the tests and linter pass
 - [ ] Code coverage does not decrease (if any source code was changed)

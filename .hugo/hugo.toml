@@ -48,6 +48,13 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
   version = "Dev"
   url = "https://googleapis.github.io/genai-toolbox/dev/"
 
+# Add a new version block here before every release
+# The order of versions in this file is mirrored into the dropdown
+
+[[params.versions]]
+  version = "v0.17.0"
+  url = "https://googleapis.github.io/genai-toolbox/v0.17.0/"
+  
 [[params.versions]]
   version = "v0.16.0"
   url = "https://googleapis.github.io/genai-toolbox/v0.16.0/"
