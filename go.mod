@@ -55,7 +55,7 @@ require (
 	golang.org/x/oauth2 v0.31.0
 	google.golang.org/api v0.251.0
 	google.golang.org/genproto v0.0.0-20250929231259-57b25ae835d4
-	modernc.org/sqlite v1.39.0
+	modernc.org/sqlite v1.39.1
 )
 
 require (
@@ -182,7 +182,7 @@ require (
 	google.golang.org/protobuf v1.36.9 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	modernc.org/libc v1.66.3 // indirect
+	modernc.org/libc v1.66.10 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
