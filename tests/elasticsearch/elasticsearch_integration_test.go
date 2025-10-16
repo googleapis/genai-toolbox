@@ -50,6 +50,17 @@ func getElasticsearchVars(t *testing.T) map[string]any {
 	}
 }
 
+type ElasticsearchWants struct {
+	Select1               string
+	MyToolId3NameAlice    string
+	MyToolById4           string
+	Null                  string
+	McpMyFailTool         string
+	McpMyToolId3NameAlice string
+	MyAuthTool            string
+	McpSelect1            string
+}
+
 func TestElasticsearchToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -125,17 +136,18 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 	}
 
 	// Get configs for tests
-	select1Want, myToolId3NameAliceWant, myToolById4Want, nullWant, mcpMyfailToolWant, mcpMyToolId3NameAliceWant := getElasticsearchWants()
+	wants := getElasticsearchWants()
 
 	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want,
+	tests.RunToolInvokeTest(t, wants.Select1,
 		tests.DisableArrayTest(),
 
-		tests.WithMyToolId3NameAliceWant(myToolId3NameAliceWant),
-		tests.WithMyToolById4Want(myToolById4Want),
-		tests.WithNullWant(nullWant),
+		tests.WithMyToolId3NameAliceWant(wants.MyToolId3NameAlice),
+		tests.WithMyToolById4Want(wants.MyToolById4),
+		tests.WithNullWant(wants.Null),
+		tests.WithMyAuthToolWant(wants.MyAuthTool),
 	)
-	tests.RunMCPToolCallMethod(t, mcpMyfailToolWant, "", tests.WithMcpMyToolId3NameAliceWant(mcpMyToolId3NameAliceWant))
+	tests.RunMCPToolCallMethod(t, wants.McpMyFailTool, wants.McpSelect1, tests.WithMcpMyToolId3NameAliceWant(wants.McpMyToolId3NameAlice))
 }
 
 func getElasticsearchQueries(index string) (string, string, string, string, string) {
@@ -143,20 +155,30 @@ func getElasticsearchQueries(index string) (string, string, string, string, stri
 	idParamToolStatement := fmt.Sprintf(`FROM %s | WHERE id == ?id`, index)
 	nameParamToolStatement := fmt.Sprintf(`FROM %s | WHERE name == ?name`, index)
 	arrayParamToolStatement := fmt.Sprintf(`FROM %s | WHERE first_name == ?first_name_array`, index) // Not supported yet.
-	authToolStatement := fmt.Sprintf(`FROM %s | WHERE name == ?name`, index)
+	authToolStatement := fmt.Sprintf(`FROM %s | WHERE email == ?email | KEEP name`, index)
 	return paramToolStatement, idParamToolStatement, nameParamToolStatement, arrayParamToolStatement, authToolStatement
 }
 
-func getElasticsearchWants() (string, string, string, string, string, string) {
-	select1Want := `[["test@elastic.co","test@elastic.co",1,"Alice","Alice"],["janedoe@gmail.com","janedoe@gmail.com",2,"Jane","Jane"],[null,null,3,"Sid","Sid"],[null,null,4,"null","null"]]`
-	myToolId3NameAliceWant := `[["test@elastic.co","test@elastic.co",1,"Alice","Alice"],[null,null,3,"Sid","Sid"]]`
-	myToolById4Want := `[[null,null,4,"null","null"]]`
+func getElasticsearchWants() ElasticsearchWants {
+	select1Want := `[{"email":"test@elastic.co","email.keyword":"test@elastic.co","id":1,"name":"Alice","name.keyword":"Alice"},{"email":"janedoe@gmail.com","email.keyword":"janedoe@gmail.com","id":2,"name":"Jane","name.keyword":"Jane"},{"email":null,"email.keyword":null,"id":3,"name":"Sid","name.keyword":"Sid"},{"email":null,"email.keyword":null,"id":4,"name":"null","name.keyword":"null"}]`
+	myToolId3NameAliceWant := `[{"email":"test@elastic.co","email.keyword":"test@elastic.co","id":1,"name":"Alice","name.keyword":"Alice"},{"email":null,"email.keyword":null,"id":3,"name":"Sid","name.keyword":"Sid"}]`
+	myToolById4Want := `[{"email":null,"email.keyword":null,"id":4,"name":"null","name.keyword":"null"}]`
 	nullWant := `{"error":{"root_cause":[{"type":"verification_exception","reason":"Found 1 problem\nline 1:25: first argument of [name == ?name] is [text] so second argument must also be [text] but was [null]"}],"type":"verification_exception","reason":"Found 1 problem\nline 1:25: first argument of [name == ?name] is [text] so second argument must also be [text] but was [null]"},"status":400}`
+	mcpMyFailToolWant := `{"content":[{"type":"text","text":"{\"error\":{\"root_cause\":[{\"type\":\"parsing_exception\",\"reason\":\"line 1:1: mismatched input 'SELEC' expecting {, 'row', 'from', 'show'}\"}],\"type\":\"parsing_exception\",\"reason\":\"line 1:1: mismatched input 'SELEC' expecting {, 'row', 'from', 'show'}\",\"caused_by\":{\"type\":\"input_mismatch_exception\",\"reason\":null}},\"status\":400}"}]}`
+	mcpMyToolId3NameAliceWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"[{\"email\":\"test@elastic.co\",\"email.keyword\":\"test@elastic.co\",\"id\":1,\"name\":\"Alice\",\"name.keyword\":\"Alice\"},{\"email\":null,\"email.keyword\":null,\"id\":3,\"name\":\"Sid\",\"name.keyword\":\"Sid\"}]"}]}}`
+	myAuthToolWant := `[]`
+	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"[{\"email\":\"test@elastic.co\",\"email.keyword\":\"test@elastic.co\",\"id\":1,\"name\":\"Alice\",\"name.keyword\":\"Alice\"},{\"email\":\"janedoe@gmail.com\",\"email.keyword\":\"janedoe@gmail.com\",\"id\":2,\"name\":\"Jane\",\"name.keyword\":\"Jane\"},{\"email\":null,\"email.keyword\":null,\"id\":3,\"name\":\"Sid\",\"name.keyword\":\"Sid\"},{\"email\":null,\"email.keyword\":null,\"id\":4,\"name\":\"null\",\"name.keyword\":\"null\"}]"}]}}`
 
-	mcpMyFailToolWant := `{"content":[{"type":"text","text":"{\"error\":{\"root_cause\":[{\"type\":\"parsing_exception\",\"reason\":\"line 1:1: mismatched input 'SELEC' expecting {, 'row', 'from', 'show'}\"}],\"type\":\"parsing_exception\",\"reason\":\"line 1:1: mismatched input 'SELEC' expecting {, 'row', 'from', 'show'}\",\"caused_by\":{\"type\":\"input_mismatch_exception\",\"reason\":null}},\"status\":400}"}]`
-	mcpSelect1Want := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"[[\"test@elastic.co\",\"test@elastic.co\",1,\"Alice\",\"Alice\"],[null,null,3,\"Sid\",\"Sid\"]]"}]}}`
-
-	return select1Want, myToolId3NameAliceWant, myToolById4Want, nullWant, mcpMyFailToolWant, mcpSelect1Want
+	return ElasticsearchWants{
+		Select1:               select1Want,
+		MyToolId3NameAlice:    myToolId3NameAliceWant,
+		MyToolById4:           myToolById4Want,
+		Null:                  nullWant,
+		McpMyFailTool:         mcpMyFailToolWant,
+		McpMyToolId3NameAlice: mcpMyToolId3NameAliceWant,
+		MyAuthTool:            myAuthToolWant,
+		McpSelect1:            mcpSelect1Want,
+	}
 }
 
 func getElasticsearchToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
@@ -274,7 +296,7 @@ func getElasticsearchToolsConfig(sourceConfig map[string]any, toolKind, paramToo
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test auth required invocation.",
-				"query":       "FROM *",
+				"query":       "FROM test-index",
 				"authRequired": []string{
 					"my-google-auth",
 				},
