@@ -38,6 +38,9 @@ tools:
   wait_for_operation:
     kind: cloud-sql-wait-for-operation
     source: cloud-sql-admin-source
+  pre_check_major_version_upgrade:
+    kind: cloud-sql-postgres-pre-check-major-version-upgrade
+    source: cloud-sql-admin-source
 
 toolsets:
   cloud_sql_postgres_admin_tools:
@@ -48,3 +51,4 @@ toolsets:
     - list_databases
     - create_user
     - wait_for_operation
+    - pre_check_major_version_upgrade

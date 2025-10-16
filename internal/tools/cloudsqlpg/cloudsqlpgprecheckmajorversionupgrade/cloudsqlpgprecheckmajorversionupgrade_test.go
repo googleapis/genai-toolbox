@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsqlpgcreateinstances_test
+package cloudsqlpgprecheckmajorversionupgrade_test
 
 import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg/cloudsqlpgcreateinstances"
+	"github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg/cloudsqlpgprecheckmajorversionupgrade"
 	"testing"
 )
 
@@ -34,20 +34,41 @@ func TestParseFromYaml(t *testing.T) {
 		want server.ToolConfigs
 	}{
 		{
-			desc: "basic example",
+			desc: "basic precheck example",
 			in: `
 			tools:
-				create-instance-tool:
-					kind: cloud-sql-postgres-create-instance
-					description: a test description
-					source: a-source
+				precheck-upgrade-tool:
+					kind: cloud-sql-postgres-pre-check-major-version-upgrade
+					description: a precheck test description
+					source: some-admin-source
+					authRequired:
+						- https://www.googleapis.com/auth/cloud-platform
 			`,
 			want: server.ToolConfigs{
-				"create-instance-tool": cloudsqlpgcreateinstances.Config{
-					Name:         "create-instance-tool",
-					Kind:         "cloud-sql-postgres-create-instance",
-					Description:  "a test description",
-					Source:       "a-source",
+				"precheck-upgrade-tool": cloudsqlpgprecheckmajorversionupgrade.Config{
+					Name:         "precheck-upgrade-tool",
+					Kind:         "cloud-sql-postgres-pre-check-major-version-upgrade",
+					Description:  "a precheck test description",
+					Source:       "some-admin-source",
+					AuthRequired: []string{"https://www.googleapis.com/auth/cloud-platform"},
+				},
+			},
+		},
+		{
+			desc: "precheck example with no auth",
+			in: `
+			tools:
+				precheck-upgrade-tool-no-auth:
+					kind: cloud-sql-postgres-pre-check-major-version-upgrade
+					description: a precheck test description no auth
+					source: other-admin-source
+			`,
+			want: server.ToolConfigs{
+				"precheck-upgrade-tool-no-auth": cloudsqlpgprecheckmajorversionupgrade.Config{
+					Name:         "precheck-upgrade-tool-no-auth",
+					Kind:         "cloud-sql-postgres-pre-check-major-version-upgrade",
+					Description:  "a precheck test description no auth",
+					Source:       "other-admin-source",
 					AuthRequired: []string{},
 				},
 			},
@@ -64,7 +85,7 @@ func TestParseFromYaml(t *testing.T) {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
 			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
-				t.Fatalf("incorrect parse: diff %v", diff)
+				t.Fatalf("incorrect parse: diff (-want +got):\n%s", diff)
 			}
 		})
 	}
