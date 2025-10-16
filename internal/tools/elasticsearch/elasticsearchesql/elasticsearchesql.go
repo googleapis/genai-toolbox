@@ -165,7 +165,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	res, err := esapi.EsqlQueryRequest{
 		Body:       bytes.NewReader(body),
 		Format:     t.Format,
-		FilterPath: []string{"values"},
+		FilterPath: []string{"columns", "values"},
 		Instrument: t.EsClient.InstrumentationEnabled(),
 	}.Do(ctx, t.EsClient)
 
@@ -185,6 +185,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	var result struct {
+		Columns []struct {
+			Name string `json:"name"`
+			Type string `json:"type"`
+		} `json:"columns"`
 		Values json.RawMessage `json:"values"`
 	}
 	err = util.DecodeJSON(res.Body, &result)
@@ -192,7 +196,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("failed to decode response body: %w", err)
 	}
 
-	return result.Values, nil
+	return result, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
