@@ -13,7 +13,9 @@ It helps identify potential incompatibilities or issues before starting the actu
 This tool uses a `source` of kind `cloud-sql-admin`.
 {{< /notice >}}
 
-## Example
+## Tool Inputs
+
+### Example
 
 ```yaml
 tools:
@@ -21,25 +23,18 @@ tools:
     kind: cloud-sql-postgres-pre-check-major-version-upgrade
     source: cloud-sql-admin-source
     description: "Checks if a Cloud SQL PostgreSQL instance is ready for a major version upgrade to the specified target version."
-    authRequired:
-      - https://www.googleapis.com/auth/cloud-platform
 ```
 
-## Reference
-
-### Tool Configuration
+### Reference
 
 | **field**    | **type** | **required** | **description**                                           |
 | ------------ | :------: | :----------: | --------------------------------------------------------- |
 | kind         |  string  |     true     | Must be "cloud-sql-postgres-pre-check-major-version-upgrade". |
 | source       |  string  |     true     | The name of the `cloud-sql-admin` source to use.          |
 | description  |  string  |     false    | A description of the tool.                                |
-| authRequired | []string |     false    | List of OAuth scopes required (e.g., ["https://www.googleapis.com/auth/cloud-platform"]). |
-
-### Tool Inputs
 
 | **parameter**           | **type** | **required** | **description**                                                                 |
 | ----------------------- | :------: | :----------: | ------------------------------------------------------------------------------- |
 | project                 |  string  |     true     | The project ID containing the instance.                                         |
-| instance                |  string  |     true     | The name of the Cloud SQL instance to check.                                    |
+| name                    |  string  |     true     | The name of the Cloud SQL instance to check.                                    |
 | targetDatabaseVersion   |  string  |     true     | The target PostgreSQL major version for the upgrade (e.g., `POSTGRES_18`). |
