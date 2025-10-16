@@ -16,7 +16,6 @@ package cloudsqlpgprecheckmajorversionupgrade
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -72,8 +71,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	allParameters := tools.Parameters{
 		tools.NewStringParameter("project", "The project ID"),
-		tools.NewStringParameter("name", "The name of the instance to check"),
-		tools.NewStringParameter("targetDatabaseVersion", "The target PostgreSQL version for the upgrade (e.g., POSTGRES_15)"),
+		tools.NewStringParameter("instance", "The name of the instance to check"),
+		tools.NewStringParameterWithDefault("targetDatabaseVersion", "POSTGRES_18", "The target PostgreSQL version for the upgrade (e.g., POSTGRES_18). If not specified, defaults to the PostgreSQL 18."),
 	}
 	paramManifest := allParameters.Manifest()
 
@@ -119,6 +118,22 @@ type PreCheckAPIResponse struct {
 	Items []PreCheckResultItem `json:"preCheckResponse"`
 }
 
+// Helper function to convert from []*sqladmin.PreCheckResponse to []PreCheckResultItem
+func convertResults(items []*sqladmin.PreCheckResponse) []PreCheckResultItem {
+	if len(items) == 0 { // Handle nil or empty slice
+		return []PreCheckResultItem{}
+	}
+	results := make([]PreCheckResultItem, len(items))
+	for i, item := range items {
+		results[i] = PreCheckResultItem{
+			Message:         item.Message,
+			MessageType:     item.MessageType,
+			ActionsRequired: item.ActionsRequired,
+		}
+	}
+	return results
+}
+
 // Invoke executes the tool's logic.
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
@@ -127,35 +142,35 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if !ok || project == "" {
 		return nil, fmt.Errorf("missing or empty 'project' parameter")
 	}
-	instanceName, ok := paramsMap["name"].(string)
+	instanceName, ok := paramsMap["instance"].(string)
 	if !ok || instanceName == "" {
-		return nil, fmt.Errorf("missing or empty 'name' parameter")
+		return nil, fmt.Errorf("missing or empty 'instance' parameter")
 	}
 	targetVersion, ok := paramsMap["targetDatabaseVersion"].(string)
 	if !ok || targetVersion == "" {
+		// This should not happen due to the default value
 		return nil, fmt.Errorf("missing or empty 'targetDatabaseVersion' parameter")
 	}
 
 	service, err := t.Source.GetService(ctx, string(accessToken))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get HTTP client from source: %w", err)
 	}
 
-	// Prepare the request body
 	reqBody := &sqladmin.InstancesPreCheckMajorVersionUpgradeRequest{
 		PreCheckMajorVersionUpgradeContext: &sqladmin.PreCheckMajorVersionUpgradeContext{
 			TargetDatabaseVersion: targetVersion,
 		},
 	}
 
-	// Call the PreCheckMajorVersionUpgrade API
 	call := service.Instances.PreCheckMajorVersionUpgrade(project, instanceName, reqBody).Context(ctx)
 	op, err := call.Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to start pre-check operation: %w", err)
 	}
 
-	// Poll the Long-Running Operation
+	fmt.Printf("Pre-check operation started: %s for instance %s:%s to version %s\n", op.Name, project, instanceName, targetVersion)
+
 	for {
 		currentOp, err := service.Operations.Get(project, op.Name).Context(ctx).Do()
 		if err != nil {
@@ -163,6 +178,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		}
 
 		if currentOp.Status == "DONE" {
+			fmt.Printf("Pre-check operation %s finished.\n", op.Name)
 			if currentOp.Error != nil && len(currentOp.Error.Errors) > 0 {
 				errMsg := fmt.Sprintf("pre-check operation LRO failed: %s", currentOp.Error.Errors[0].Message)
 				if currentOp.Error.Errors[0].Code != "" {
@@ -171,28 +187,19 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 				return nil, fmt.Errorf("%s", errMsg)
 			}
 
-			if currentOp.PreCheckMajorVersionUpgradeContext.PreCheckResponse == nil {
-				return nil, fmt.Errorf("operation completed, but the Response field is nil")
+			var preCheckItems []*sqladmin.PreCheckResponse
+			if currentOp.PreCheckMajorVersionUpgradeContext != nil {
+				preCheckItems = currentOp.PreCheckMajorVersionUpgradeContext.PreCheckResponse
 			}
-
-			// Convert the map[string]interface{} to JSON bytes
-			responseBytes, err := json.Marshal(currentOp.PreCheckMajorVersionUpgradeContext.PreCheckResponse)
-			if err != nil {
-				return nil, fmt.Errorf("failed to marshal operation response to JSON: %w", err)
-			}
-
-			// Attempt to unmarshal the JSON bytes into our struct
-			var preCheckItems []PreCheckResultItem
-			if err := json.Unmarshal(responseBytes, &preCheckItems); err != nil {
-				return nil, fmt.Errorf("failed to unmarshal preCheckResponse: %w - RAW RESPONSE: %s", err, string(responseBytes))
-			}
-			return PreCheckAPIResponse{Items: preCheckItems}, nil
+			// convertResults handles nil or empty preCheckItems
+			return PreCheckAPIResponse{Items: convertResults(preCheckItems)}, nil
 		}
 
+		fmt.Printf("Operation %s not done yet, current status: %s. Waiting...\n", op.Name, currentOp.Status)
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
-		case <-time.After(10 * time.Second): // Poll every 10 seconds
+		case <-time.After(10 * time.Second):
 		}
 	}
 }

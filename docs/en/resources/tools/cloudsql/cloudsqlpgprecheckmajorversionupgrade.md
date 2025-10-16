@@ -36,5 +36,5 @@ tools:
 | **parameter**           | **type** | **required** | **description**                                                                 |
 | ----------------------- | :------: | :----------: | ------------------------------------------------------------------------------- |
 | project                 |  string  |     true     | The project ID containing the instance.                                         |
-| name                    |  string  |     true     | The name of the Cloud SQL instance to check.                                    |
-| targetDatabaseVersion   |  string  |     true     | The target PostgreSQL major version for the upgrade (e.g., `POSTGRES_18`). |
+| instance                    |  string  |     true     | The name of the Cloud SQL instance to check.                                    |
+| targetDatabaseVersion   |  string  |     false     | The target PostgreSQL major version for the upgrade (e.g., `POSTGRES_18`).  If not specified, defaults to the PostgreSQL 18. |
