@@ -169,7 +169,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("failed to start pre-check operation: %w", err)
 	}
 
-	fmt.Printf("Pre-check operation started: %s for instance %s:%s to version %s\n", op.Name, project, instanceName, targetVersion)
+	const pollTimeout = 5 * time.Minute
+	timeout := time.After(pollTimeout)
 
 	for {
 		currentOp, err := service.Operations.Get(project, op.Name).Context(ctx).Do()
@@ -178,7 +179,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		}
 
 		if currentOp.Status == "DONE" {
-			fmt.Printf("Pre-check operation %s finished.\n", op.Name)
 			if currentOp.Error != nil && len(currentOp.Error.Errors) > 0 {
 				errMsg := fmt.Sprintf("pre-check operation LRO failed: %s", currentOp.Error.Errors[0].Message)
 				if currentOp.Error.Errors[0].Code != "" {
@@ -195,10 +195,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			return PreCheckAPIResponse{Items: convertResults(preCheckItems)}, nil
 		}
 
-		fmt.Printf("Operation %s not done yet, current status: %s. Waiting...\n", op.Name, currentOp.Status)
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
+		case <-timeout:
+			return nil, fmt.Errorf("timed out after %v waiting for operation %s to complete", pollTimeout, op.Name)
 		case <-time.After(10 * time.Second):
 		}
 	}
