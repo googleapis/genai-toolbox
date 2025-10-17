@@ -360,7 +360,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:        true,
 			requestHeader:  map[string]string{"my-google-auth_token": idToken},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
-			wantBody:       "[{\"name\":\"Alice\"}]",
+			wantBody:       configs.myAuthToolWant,
 			wantStatusCode: http.StatusOK,
 		},
 		{
