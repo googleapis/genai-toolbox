@@ -121,12 +121,14 @@ func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	}, nil
 }
 
+type esqlColumn struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+
 type esqlResult struct {
-	Columns []struct {
-		Name string `json:"name"`
-		Type string `json:"type"`
-	} `json:"columns"`
-	Values [][]any `json:"values"`
+	Columns []esqlColumn `json:"columns"`
+	Values  [][]any      `json:"values"`
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
