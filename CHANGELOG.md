@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.17.1](https://github.com/googleapis/genai-toolbox/compare/v0.17.0...v0.17.1) (2025-10-17)
+
+
+### Bug Fixes
+
+* Escape mysql user agent ([#1707](https://github.com/googleapis/genai-toolbox/issues/1707)) ([eeb694c](https://github.com/googleapis/genai-toolbox/commit/eeb694c20facc40a38bfa67073c4cb1f3dd657ff))
+* Escape program_name for MySQL ([#1717](https://github.com/googleapis/genai-toolbox/issues/1717)) ([02f7f8a](https://github.com/googleapis/genai-toolbox/commit/02f7f8af979057efe99fd138cb1b958130355b68))
+
 ## [0.17.0](https://github.com/googleapis/genai-toolbox/compare/v0.16.0...v0.17.0) (2025-10-10)
 
 
