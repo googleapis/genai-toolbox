@@ -167,19 +167,19 @@ func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, i
 	return toolsFile
 }
 
-// AddPgExecuteSqlConfig gets the tools config for `postgres-execute-sql`
-func AddPgExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any {
+// AddExecuteSqlConfig gets the tools config for `execute-sql` tools
+func AddExecuteSqlConfig(t *testing.T, config map[string]any, toolKind string) map[string]any {
 	tools, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "postgres-execute-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "postgres-execute-sql",
+		"kind":        toolKind,
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{
@@ -833,7 +833,7 @@ func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool
 	}
 
 	dropQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE;", strings.Join(tablesToDrop, ", "))
-	
+
 	if _, err := pool.Exec(ctx, dropQuery); err != nil {
 		t.Fatalf("Failed to drop all tables in 'public' schema: %v", err)
 	}
@@ -871,7 +871,7 @@ func CleanupMySQLTables(t *testing.T, ctx context.Context, pool *sql.DB) {
 	}
 
 	dropQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s;", strings.Join(tablesToDrop, ", "))
-	
+
 	if _, err := pool.ExecContext(ctx, dropQuery); err != nil {
 		// Try to re-enable checks even if drop fails
 		if _, err := pool.ExecContext(ctx, "SET FOREIGN_KEY_CHECKS = 1;"); err != nil {
