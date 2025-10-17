@@ -22,7 +22,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
-	sqladmin "google.golang.org/api/sqladmin/v1" // USING v1
+	sqladmin "google.golang.org/api/sqladmin/v1"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -44,13 +44,8 @@ type preCheckTransport struct {
 
 func (t *preCheckTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if strings.HasPrefix(req.URL.String(), "https://sqladmin.googleapis.com") {
-		// Log the URL *before* modification
-		// log.Printf("preCheckTransport: Original URL: %s", req.URL.String())
 		req.URL.Scheme = t.url.Scheme
 		req.URL.Host = t.url.Host
-		// log.Printf("preCheckTransport: Modified URL: %s", req.URL.String())
-	} else {
-		// log.Printf("preCheckTransport: URL not modified: %s", req.URL.String())
 	}
 	return t.transport.RoundTrip(req)
 }
@@ -67,8 +62,6 @@ func (h *preCheckHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !strings.Contains(ua, "genai-toolbox/") {
 		h.t.Errorf("User-Agent header not found in %q", ua)
 	}
-
-	// h.t.Logf("Mock server received request: %s %s", r.Method, r.URL.Path)
 
 	if strings.Contains(r.URL.Path, "/operations/") {
 		h.handleOperations(w, r)
@@ -95,7 +88,6 @@ func (h *preCheckHandler) handlePreCheckV1(w http.ResponseWriter, r *http.Reques
 	}
 
 	parts := strings.Split(r.URL.Path, "/")
-	// h.t.Logf("handlePreCheckV1 URL Path parts: %#v", parts)
 
 	if len(parts) < 7 {
 		msg := fmt.Sprintf("handlePreCheckV1: Expected 7 path parts, got %d for path %s", len(parts), r.URL.Path)
@@ -106,7 +98,6 @@ func (h *preCheckHandler) handlePreCheckV1(w http.ResponseWriter, r *http.Reques
 
 	project := parts[3]
 	instanceName := parts[5]
-	// h.t.Logf("handlePreCheckV1 Extracted instance: %s, project: %s", instanceName, project)
 
 	h.opCount++
 	opName := fmt.Sprintf("op-%s-%s-%d", project, instanceName, h.opCount)
@@ -116,15 +107,11 @@ func (h *preCheckHandler) handlePreCheckV1(w http.ResponseWriter, r *http.Reques
 
 	switch instanceName {
 	case "instance-ok":
-		// h.t.Logf("Matched instance-ok")
-		// Simulate API returning PreCheckMajorVersionUpgradeContext: {}
 		h.opResults[opName] = nil // This will make PreCheckResponse nil inside the context
 	case "instance-empty":
-		// h.t.Logf("Matched instance-empty")
 		preCheckResult = []*sqladmin.PreCheckResponse{} // No issues
 		h.opResults[opName] = preCheckResult
 	case "instance-warnings":
-		// h.t.Logf("Matched instance-warnings")
 		preCheckResult = []*sqladmin.PreCheckResponse{
 			{
 				Message:         "This is a warning.",
@@ -134,7 +121,6 @@ func (h *preCheckHandler) handlePreCheckV1(w http.ResponseWriter, r *http.Reques
 		}
 		h.opResults[opName] = preCheckResult
 	case "instance-errors":
-		// h.t.Logf("Matched instance-errors")
 		preCheckResult = []*sqladmin.PreCheckResponse{
 			{
 				Message:         "This is a critical error.",
@@ -144,7 +130,6 @@ func (h *preCheckHandler) handlePreCheckV1(w http.ResponseWriter, r *http.Reques
 		}
 		h.opResults[opName] = preCheckResult
 	case "instance-notfound":
-		// h.t.Logf("Matched instance-notfound")
 		http.Error(w, "Not authorized to access instance", http.StatusForbidden)
 		return
 	default:
