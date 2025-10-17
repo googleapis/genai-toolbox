@@ -1,0 +1,62 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+sources:
+  mindsdb:
+    kind: mindsdb
+    host: ${MINDSDB_HOST}
+    port: ${MINDSDB_PORT}
+    database: ${MINDSDB_DATABASE}
+    user: ${MINDSDB_USER}
+    password: ${MINDSDB_PASS}
+
+tools:
+  mindsdb-execute-sql:
+    kind: mindsdb-execute-sql
+    source: mindsdb
+    description: |
+      Execute SQL queries directly on MindsDB database.
+      Use this tool to run any SQL statement against your MindsDB instance.
+      Example: SELECT * FROM my_table LIMIT 10
+
+  mindsdb-sql:
+    kind: mindsdb-sql
+    source: mindsdb
+    statement: |
+      SELECT * FROM {{.table_name}} 
+      WHERE {{.condition_column}} = ?
+      LIMIT {{.limit}}
+    description: |
+      Execute parameterized SQL queries on MindsDB database.
+      Use this tool to run parameterized SQL statements against your MindsDB instance.
+      Example: {"table_name": "users", "condition_column": "status", "limit": 10}
+    templateParameters:
+      - name: table_name
+        type: string
+        description: Name of the table to query
+      - name: condition_column
+        type: string
+        description: Column name to use in WHERE clause
+      - name: limit
+        type: integer
+        description: Maximum number of rows to return
+    parameters:
+      - name: value
+        type: string
+        description: Value to match in the WHERE clause 
+
+toolsets:
+  mindsdb-tools:
+      - mindsdb-execute-sql
+      - mindsdb-sql
