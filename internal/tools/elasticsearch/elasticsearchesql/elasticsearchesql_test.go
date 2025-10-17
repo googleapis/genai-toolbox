@@ -104,5 +104,4 @@ func TestParseFromYamlElasticsearchEsql(t *testing.T) {
 			}
 		})
 	}
-
 }

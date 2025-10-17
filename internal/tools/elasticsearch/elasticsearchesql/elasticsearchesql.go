@@ -121,6 +121,14 @@ func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	}, nil
 }
 
+type esqlResult struct {
+	Columns []struct {
+		Name string `json:"name"`
+		Type string `json:"type"`
+	} `json:"columns"`
+	Values [][]any `json:"values"`
+}
+
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	var cancel context.CancelFunc
 	if t.Timeout > 0 {
@@ -184,19 +192,36 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return esErr, nil
 	}
 
-	var result struct {
-		Columns []struct {
-			Name string `json:"name"`
-			Type string `json:"type"`
-		} `json:"columns"`
-		Values json.RawMessage `json:"values"`
-	}
+	var result esqlResult
 	err = util.DecodeJSON(res.Body, &result)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode response body: %w", err)
 	}
 
-	return result, nil
+	output := t.esqlToMap(result)
+
+	return output, nil
+}
+
+// esqlToMap converts the esqlResult to a slice of maps.
+func (t Tool) esqlToMap(result esqlResult) []map[string]any {
+	output := make([]map[string]any, 0, len(result.Values))
+	for _, value := range result.Values {
+		row := make(map[string]any)
+		if value == nil {
+			output = append(output, row)
+			continue
+		}
+		for i, col := range result.Columns {
+			if i < len(value) {
+				row[col.Name] = value[i]
+			} else {
+				row[col.Name] = nil
+			}
+		}
+		output = append(output, row)
+	}
+	return output
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
