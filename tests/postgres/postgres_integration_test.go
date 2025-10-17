@@ -45,6 +45,7 @@ var (
 	PostgresListActiveQueriesToolKind       = "postgres-list-active-queries"
 	PostgresListInstalledExtensionsToolKind = "postgres-list-installed-extensions"
 	PostgresListAvailableExtensionsToolKind = "postgres-list-available-extensions"
+	PostgresListViewsToolKind               = "postgres-list-views"
 	PostgresDatabase                        = os.Getenv("POSTGRES_DATABASE")
 	PostgresHost                            = os.Getenv("POSTGRES_HOST")
 	PostgresPort                            = os.Getenv("POSTGRES_PORT")
@@ -102,6 +103,12 @@ func addPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]any {
 		"kind":        PostgresListAvailableExtensionsToolKind,
 		"source":      "my-instance",
 		"description": "Lists available extensions in the database.",
+	}
+
+	tools["list_views"] = map[string]any{
+		"kind":        PostgresListViewsToolKind,
+		"source":      "my-instance",
+		"description": "Lists top N(default 50) views in the database from pg_views, ordered by viewname. Returns schemaname, viewname and the ownername.",
 	}
 
 	config["tools"] = tools
