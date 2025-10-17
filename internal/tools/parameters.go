@@ -27,12 +27,12 @@ import (
 )
 
 const (
-	typeString = "string"
-	typeInt    = "integer"
-	typeFloat  = "float"
-	typeBool   = "boolean"
-	typeArray  = "array"
-	typeMap    = "map"
+	TypeString = "string"
+	TypeInt    = "integer"
+	TypeFloat  = "float"
+	TypeBool   = "boolean"
+	TypeArray  = "array"
+	TypeMap    = "map"
 )
 
 // ParamValues is an ordered list of ParamValue
@@ -281,6 +281,11 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 		return nil, fmt.Errorf("parameter is missing 'type' field: %w", err)
 	}
 
+	return ParseParameter(ctx, p, t.(string))
+}
+
+// ParseParameter parses a raw map into a Parameter object based on its "type" field.
+func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Parameter, error) {
 	dec, err := util.NewStrictDecoder(p)
 	if err != nil {
 		return nil, fmt.Errorf("error creating decoder: %w", err)
@@ -289,11 +294,11 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 	if err != nil {
 		return nil, err
 	}
-	switch t {
-	case typeString:
+	switch paramType {
+	case TypeString:
 		a := &StringParameter{}
 		if err := dec.DecodeContext(ctx, a); err != nil {
-			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
+			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
 		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
@@ -301,10 +306,10 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 			a.AuthSources = nil
 		}
 		return a, nil
-	case typeInt:
+	case TypeInt:
 		a := &IntParameter{}
 		if err := dec.DecodeContext(ctx, a); err != nil {
-			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
+			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
 		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
@@ -312,10 +317,10 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 			a.AuthSources = nil
 		}
 		return a, nil
-	case typeFloat:
+	case TypeFloat:
 		a := &FloatParameter{}
 		if err := dec.DecodeContext(ctx, a); err != nil {
-			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
+			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
 		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
@@ -323,10 +328,10 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 			a.AuthSources = nil
 		}
 		return a, nil
-	case typeBool:
+	case TypeBool:
 		a := &BooleanParameter{}
 		if err := dec.DecodeContext(ctx, a); err != nil {
-			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
+			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
 		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
@@ -334,10 +339,10 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 			a.AuthSources = nil
 		}
 		return a, nil
-	case typeArray:
+	case TypeArray:
 		a := &ArrayParameter{}
 		if err := dec.DecodeContext(ctx, a); err != nil {
-			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
+			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
 		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
@@ -345,10 +350,10 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 			a.AuthSources = nil
 		}
 		return a, nil
-	case typeMap:
+	case TypeMap:
 		a := &MapParameter{}
 		if err := dec.DecodeContext(ctx, a); err != nil {
-			return nil, fmt.Errorf("unable to parse as %q: %w", t, err)
+			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
 		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
@@ -357,7 +362,7 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 		}
 		return a, nil
 	}
-	return nil, fmt.Errorf("%q is not valid type for a parameter", t)
+	return nil, fmt.Errorf("%q is not valid type for a parameter", paramType)
 }
 
 func (ps Parameters) Manifest() []ParameterManifest {
@@ -479,7 +484,7 @@ func NewStringParameter(name string, desc string) *StringParameter {
 	return &StringParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeString,
+			Type:         TypeString,
 			Desc:         desc,
 			AuthServices: nil,
 		},
@@ -491,7 +496,7 @@ func NewStringParameterWithDefault(name string, defaultV, desc string) *StringPa
 	return &StringParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeString,
+			Type:         TypeString,
 			Desc:         desc,
 			AuthServices: nil,
 		},
@@ -504,7 +509,7 @@ func NewStringParameterWithRequired(name string, desc string, required bool) *St
 	return &StringParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeString,
+			Type:         TypeString,
 			Desc:         desc,
 			Required:     &required,
 			AuthServices: nil,
@@ -517,7 +522,7 @@ func NewStringParameterWithAuth(name string, desc string, authServices []ParamAu
 	return &StringParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeString,
+			Type:         TypeString,
 			Desc:         desc,
 			AuthServices: authServices,
 		},
@@ -571,7 +576,7 @@ func NewIntParameter(name string, desc string) *IntParameter {
 	return &IntParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeInt,
+			Type:         TypeInt,
 			Desc:         desc,
 			AuthServices: nil,
 		},
@@ -583,7 +588,7 @@ func NewIntParameterWithDefault(name string, defaultV int, desc string) *IntPara
 	return &IntParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeInt,
+			Type:         TypeInt,
 			Desc:         desc,
 			AuthServices: nil,
 		},
@@ -596,7 +601,7 @@ func NewIntParameterWithRequired(name string, desc string, required bool) *IntPa
 	return &IntParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeInt,
+			Type:         TypeInt,
 			Desc:         desc,
 			Required:     &required,
 			AuthServices: nil,
@@ -609,7 +614,7 @@ func NewIntParameterWithAuth(name string, desc string, authServices []ParamAuthS
 	return &IntParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeInt,
+			Type:         TypeInt,
 			Desc:         desc,
 			AuthServices: authServices,
 		},
@@ -675,7 +680,7 @@ func NewFloatParameter(name string, desc string) *FloatParameter {
 	return &FloatParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeFloat,
+			Type:         TypeFloat,
 			Desc:         desc,
 			AuthServices: nil,
 		},
@@ -687,7 +692,7 @@ func NewFloatParameterWithDefault(name string, defaultV float64, desc string) *F
 	return &FloatParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeFloat,
+			Type:         TypeFloat,
 			Desc:         desc,
 			AuthServices: nil,
 		},
@@ -700,7 +705,7 @@ func NewFloatParameterWithRequired(name string, desc string, required bool) *Flo
 	return &FloatParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeFloat,
+			Type:         TypeFloat,
 			Desc:         desc,
 			Required:     &required,
 			AuthServices: nil,
@@ -713,7 +718,7 @@ func NewFloatParameterWithAuth(name string, desc string, authServices []ParamAut
 	return &FloatParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeFloat,
+			Type:         TypeFloat,
 			Desc:         desc,
 			AuthServices: authServices,
 		},
@@ -787,7 +792,7 @@ func NewBooleanParameter(name string, desc string) *BooleanParameter {
 	return &BooleanParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeBool,
+			Type:         TypeBool,
 			Desc:         desc,
 			AuthServices: nil,
 		},
@@ -799,7 +804,7 @@ func NewBooleanParameterWithDefault(name string, defaultV bool, desc string) *Bo
 	return &BooleanParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeBool,
+			Type:         TypeBool,
 			Desc:         desc,
 			AuthServices: nil,
 		},
@@ -812,7 +817,7 @@ func NewBooleanParameterWithRequired(name string, desc string, required bool) *B
 	return &BooleanParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeBool,
+			Type:         TypeBool,
 			Desc:         desc,
 			Required:     &required,
 			AuthServices: nil,
@@ -825,7 +830,7 @@ func NewBooleanParameterWithAuth(name string, desc string, authServices []ParamA
 	return &BooleanParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeBool,
+			Type:         TypeBool,
 			Desc:         desc,
 			AuthServices: authServices,
 		},
@@ -878,7 +883,7 @@ func NewArrayParameter(name string, desc string, items Parameter) *ArrayParamete
 	return &ArrayParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeArray,
+			Type:         TypeArray,
 			Desc:         desc,
 			AuthServices: nil,
 		},
@@ -891,7 +896,7 @@ func NewArrayParameterWithDefault(name string, defaultV []any, desc string, item
 	return &ArrayParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeArray,
+			Type:         TypeArray,
 			Desc:         desc,
 			AuthServices: nil,
 		},
@@ -905,7 +910,7 @@ func NewArrayParameterWithRequired(name string, desc string, required bool, item
 	return &ArrayParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeArray,
+			Type:         TypeArray,
 			Desc:         desc,
 			Required:     &required,
 			AuthServices: nil,
@@ -919,7 +924,7 @@ func NewArrayParameterWithAuth(name string, desc string, items Parameter, authSe
 	return &ArrayParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeArray,
+			Type:         TypeArray,
 			Desc:         desc,
 			AuthServices: authServices,
 		},
