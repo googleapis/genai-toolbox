@@ -34,7 +34,7 @@ import (
 )
 
 var (
-	preCheckToolKind = "cloud-sql-postgres-pre-check-major-version-upgrade"
+	preCheckToolKind = "postgres-upgrade-precheck"
 )
 
 type preCheckTransport struct {

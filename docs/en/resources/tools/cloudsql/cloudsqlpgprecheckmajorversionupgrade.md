@@ -19,8 +19,8 @@ This tool uses a `source` of kind `cloud-sql-admin`.
 
 ```yaml
 tools:
-  cloud-sql-postgres-pre-check-major-version-upgrade:
-    kind: cloud-sql-postgres-pre-check-major-version-upgrade
+  postgres-upgrade-precheck:
+    kind: postgres-upgrade-precheck
     source: cloud-sql-admin-source
     description: "Checks if a Cloud SQL PostgreSQL instance is ready for a major version upgrade to the specified target version."
 ```
@@ -29,7 +29,7 @@ tools:
 
 | **field**    | **type** | **required** | **description**                                           |
 | ------------ | :------: | :----------: | --------------------------------------------------------- |
-| kind         |  string  |     true     | Must be "cloud-sql-postgres-pre-check-major-version-upgrade". |
+| kind         |  string  |     true     | Must be "postgres-upgrade-precheck". |
 | source       |  string  |     true     | The name of the `cloud-sql-admin` source to use.          |
 | description  |  string  |     false    | A description of the tool.                                |
 

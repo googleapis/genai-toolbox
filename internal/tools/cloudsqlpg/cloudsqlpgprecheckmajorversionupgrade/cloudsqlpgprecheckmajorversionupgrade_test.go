@@ -38,7 +38,7 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			tools:
 				precheck-upgrade-tool:
-					kind: cloud-sql-postgres-pre-check-major-version-upgrade
+					kind: postgres-upgrade-precheck
 					description: a precheck test description
 					source: some-admin-source
 					authRequired:
@@ -47,7 +47,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"precheck-upgrade-tool": cloudsqlpgprecheckmajorversionupgrade.Config{
 					Name:         "precheck-upgrade-tool",
-					Kind:         "cloud-sql-postgres-pre-check-major-version-upgrade",
+					Kind:         "postgres-upgrade-precheck",
 					Description:  "a precheck test description",
 					Source:       "some-admin-source",
 					AuthRequired: []string{"https://www.googleapis.com/auth/cloud-platform"},
@@ -59,14 +59,14 @@ func TestParseFromYaml(t *testing.T) {
 			in: `
 			tools:
 				precheck-upgrade-tool-no-auth:
-					kind: cloud-sql-postgres-pre-check-major-version-upgrade
+					kind: postgres-upgrade-precheck
 					description: a precheck test description no auth
 					source: other-admin-source
 			`,
 			want: server.ToolConfigs{
 				"precheck-upgrade-tool-no-auth": cloudsqlpgprecheckmajorversionupgrade.Config{
 					Name:         "precheck-upgrade-tool-no-auth",
-					Kind:         "cloud-sql-postgres-pre-check-major-version-upgrade",
+					Kind:         "postgres-upgrade-precheck",
 					Description:  "a precheck test description no auth",
 					Source:       "other-admin-source",
 					AuthRequired: []string{},

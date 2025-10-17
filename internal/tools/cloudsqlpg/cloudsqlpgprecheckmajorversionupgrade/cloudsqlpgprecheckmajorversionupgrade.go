@@ -25,7 +25,7 @@ import (
 	"time"
 )
 
-const kind string = "cloud-sql-postgres-pre-check-major-version-upgrade"
+const kind string = "postgres-upgrade-precheck"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
