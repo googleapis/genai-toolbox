@@ -41,13 +41,19 @@ import (
 )
 
 var (
-	healthcareSourceKind    = "healthcare"
-	getDatasetToolKind      = "get-healthcare-dataset"
-	listFHIRStoresToolKind  = "list-fhir-stores"
-	listDICOMStoresToolKind = "list-dicom-stores"
-	healthcareProject       = os.Getenv("HEALTHCARE_PROJECT")
-	healthcareRegion        = os.Getenv("HEALTHCARE_REGION")
-	healthcareDataset       = os.Getenv("HEALTHCARE_DATASET")
+	healthcareSourceKind          = "healthcare"
+	getDatasetToolKind            = "get-healthcare-dataset"
+	listFHIRStoresToolKind        = "list-fhir-stores"
+	listDICOMStoresToolKind       = "list-dicom-stores"
+	getFHIRStoreToolKind          = "get-fhir-store"
+	getFHIRStoreMetricsToolKind   = "get-fhir-store-metrics"
+	getFHIRResourceToolKind       = "get-fhir-resource"
+	fhirPatientSearchToolKind     = "fhir-patient-search"
+	fhirPatientEverythingToolKind = "fhir-patient-everything"
+	fhirFetchPageToolKind         = "fhir-fetch-page"
+	healthcareProject             = os.Getenv("HEALTHCARE_PROJECT")
+	healthcareRegion              = os.Getenv("HEALTHCARE_REGION")
+	healthcareDataset             = os.Getenv("HEALTHCARE_DATASET")
 )
 
 func verifyHealthcareVars(t *testing.T) {
@@ -63,7 +69,7 @@ func verifyHealthcareVars(t *testing.T) {
 
 func TestHealthcareToolEndpoints(t *testing.T) {
 	verifyHealthcareVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
 	healthcareService, err := newHealthcareService(ctx)
@@ -74,7 +80,7 @@ func TestHealthcareToolEndpoints(t *testing.T) {
 	fhirStoreID := "fhir-store-" + uuid.New().String()
 	dicomStoreID := "dicom-store-" + uuid.New().String()
 
-	teardown := setupHealthcareResources(t, ctx, healthcareService, healthcareDataset, fhirStoreID, dicomStoreID)
+	patient1ID, patient2ID, teardown := setupHealthcareResources(t, healthcareService, healthcareDataset, fhirStoreID, dicomStoreID)
 	defer teardown(t)
 
 	sourceConfig := map[string]any{
@@ -109,11 +115,19 @@ func TestHealthcareToolEndpoints(t *testing.T) {
 	runGetDatasetToolInvokeTest(t, datasetWant)
 	runListFHIRStoresToolInvokeTest(t, fhirStoreWant)
 	runListDICOMStoresToolInvokeTest(t, dicomStoreWant)
+	runGetFHIRStoreToolInvokeTest(t, fhirStoreID, fhirStoreWant)
+	runGetFHIRStoreMetricsToolInvokeTest(t, fhirStoreID, `"metrics"`)
+	runGetFHIRResourceToolInvokeTest(t, fhirStoreID, "Patient", patient1ID, `"id":"`+patient1ID+`"`)
+	runFHIRPatientSearchToolInvokeTest(t, fhirStoreID, patient1ID, patient2ID)
+	runFHIRPatientEverythingToolInvokeTest(t, fhirStoreID, patient1ID, `"resourceType":"Bundle"`)
+
+	nextURL := getNextPageURLForPatientEverything(t, fhirStoreID, patient2ID)
+	runFHIRFetchPageToolInvokeTest(t, nextURL, `"total":1`)
 }
 
 func TestHealthcareToolWithStoreRestriction(t *testing.T) {
 	verifyHealthcareVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
 	healthcareService, err := newHealthcareService(ctx)
@@ -127,9 +141,9 @@ func TestHealthcareToolWithStoreRestriction(t *testing.T) {
 	disallowedFHIRStoreID := "fhir-store-disallowed-" + uuid.New().String()
 	disallowedDICOMStoreID := "dicom-store-disallowed-" + uuid.New().String()
 
-	teardownAllowedStores := setupHealthcareResources(t, ctx, healthcareService, healthcareDataset, allowedFHIRStoreID, allowedDICOMStoreID)
+	_, _, teardownAllowedStores := setupHealthcareResources(t, healthcareService, healthcareDataset, allowedFHIRStoreID, allowedDICOMStoreID)
 	defer teardownAllowedStores(t)
-	teardownDisallowedStores := setupHealthcareResources(t, ctx, healthcareService, healthcareDataset, disallowedFHIRStoreID, disallowedDICOMStoreID)
+	_, _, teardownDisallowedStores := setupHealthcareResources(t, healthcareService, healthcareDataset, disallowedFHIRStoreID, disallowedDICOMStoreID)
 	defer teardownDisallowedStores(t)
 
 	// Configure source with dataset restriction.
@@ -188,6 +202,26 @@ func TestHealthcareToolWithStoreRestriction(t *testing.T) {
 	runListDICOMStoresWithRestriction(t, allowedDICOMStoreID, disallowedDICOMStoreID)
 }
 
+func createFHIRResource(t *testing.T, service *healthcare.Service, fhirStoreName, resourceType string, resourceBody io.Reader) (string, string) {
+	resp, err := service.Projects.Locations.Datasets.FhirStores.Fhir.Create(fhirStoreName, resourceType, resourceBody).Do()
+	if err != nil {
+		t.Fatalf("failed to create FHIR resource: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		t.Fatalf("failed to create FHIR resource, status: %d, body: %s", resp.StatusCode, string(body))
+	}
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		t.Fatalf("failed to decode response: %v", err)
+	}
+	id := result["id"].(string)
+	return id, fmt.Sprintf("%s/%s", resourceType, id)
+}
+
 func newHealthcareService(ctx context.Context) (*healthcare.Service, error) {
 	creds, err := google.FindDefaultCredentials(ctx, healthcare.CloudHealthcareScope)
 	if err != nil {
@@ -201,7 +235,7 @@ func newHealthcareService(ctx context.Context) (*healthcare.Service, error) {
 	return healthcareService, nil
 }
 
-func setupHealthcareResources(t *testing.T, ctx context.Context, service *healthcare.Service, datasetID, fhirStoreID, dicomStoreID string) func(*testing.T) {
+func setupHealthcareResources(t *testing.T, service *healthcare.Service, datasetID, fhirStoreID, dicomStoreID string) (string, string, func(*testing.T)) {
 	datasetName := fmt.Sprintf("projects/%s/locations/%s/datasets/%s", healthcareProject, healthcareRegion, datasetID)
 	var err error
 
@@ -217,7 +251,51 @@ func setupHealthcareResources(t *testing.T, ctx context.Context, service *health
 		t.Fatalf("failed to create dicom store: %v", err)
 	}
 
-	return func(t *testing.T) {
+	// Create Patient 1
+	patient1Body := bytes.NewBuffer([]byte(`{
+		"resourceType":"Patient",
+		"name":[{"use":"official","family":"Smith","given":["John"]}],
+		"birthDate":"1980-01-01",
+		"gender":"male",
+		"address":[{"use":"home","line":["123 Main St"],"city":"san fransisco","state":"CA","postalCode":"12345","country":"USA"}],
+		"active":true,
+		"deceasedBoolean":false,
+		"telecom":[{"system":"phone","value":"555-1234","use":"home"},{"system":"email","value":"john@foo.com","use":"work"}],
+		"gender":"male",
+		"identifier":[{"system":"http://hospital.org","value":"1234567"}],
+		"communication":[{"language":{"coding":[{"system":"urn:ietf:bcp:47","code":"en","display":"English"}]},"preferred":true}]
+	}`))
+	patient1ID, patient1Name := createFHIRResource(t, service, fhirStore.Name, "Patient", patient1Body)
+
+	// Create Observation for Patient 1
+	observation1Body := bytes.NewBuffer([]byte(fmt.Sprintf(`
+	{
+		"resourceType": "Observation",
+		"status": "final",
+		"code": { "coding": [{ "system": "http://loinc.org", "code": "29463-7", "display": "Body Weight" }] },
+		"subject": { "reference": "%s" },
+		"valueQuantity": { "value": 185, "unit": "lbs", "system": "http://unitsofmeasure.org", "code": "[lb_av]" }
+	}`, patient1Name)))
+	createFHIRResource(t, service, fhirStore.Name, "Observation", observation1Body)
+
+	// Create Patient 2
+	patient2Body := bytes.NewBuffer([]byte(`{"resourceType":"Patient","name":[{"use":"official","family":"Doe","given":["Jane"]}]}`))
+	patient2ID, patient2Name := createFHIRResource(t, service, fhirStore.Name, "Patient", patient2Body)
+
+	// Create 101 Observations for Patient 2
+	for i := 0; i < 101; i++ {
+		observation2Body := bytes.NewBuffer([]byte(fmt.Sprintf(`
+		{
+			"resourceType": "Observation",
+			"status": "final",
+			"code": { "coding": [{ "system": "http://loinc.org", "code": "8302-2", "display": "Body Height" }] },
+			"subject": { "reference": "%s" },
+			"valueQuantity": { "value": 68, "unit": "in", "system": "http://unitsofmeasure.org", "code": "[in_i]" }
+		}`, patient2Name)))
+		createFHIRResource(t, service, fhirStore.Name, "Observation", observation2Body)
+	}
+
+	teardown := func(t *testing.T) {
 		if _, err := service.Projects.Locations.Datasets.FhirStores.Delete(fhirStore.Name).Do(); err != nil {
 			t.Logf("failed to delete fhir store: %v", err)
 		}
@@ -225,6 +303,7 @@ func setupHealthcareResources(t *testing.T, ctx context.Context, service *health
 			t.Logf("failed to delete dicom store: %v", err)
 		}
 	}
+	return patient1ID, patient2ID, teardown
 }
 
 func getToolsConfig(sourceConfig map[string]any) map[string]any {
@@ -248,6 +327,36 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				"source":      "my-instance",
 				"description": "Tool to list DICOM stores",
 			},
+			"my-get-fhir-store-tool": map[string]any{
+				"kind":        getFHIRStoreToolKind,
+				"source":      "my-instance",
+				"description": "Tool to get a FHIR store",
+			},
+			"my-get-fhir-store-metrics-tool": map[string]any{
+				"kind":        getFHIRStoreMetricsToolKind,
+				"source":      "my-instance",
+				"description": "Tool to get FHIR store metrics",
+			},
+			"my-get-fhir-resource-tool": map[string]any{
+				"kind":        getFHIRResourceToolKind,
+				"source":      "my-instance",
+				"description": "Tool to get FHIR resource",
+			},
+			"my-fhir-patient-search-tool": map[string]any{
+				"kind":        fhirPatientSearchToolKind,
+				"source":      "my-instance",
+				"description": "Tool to search for patients",
+			},
+			"my-fhir-patient-everything-tool": map[string]any{
+				"kind":        fhirPatientEverythingToolKind,
+				"source":      "my-instance",
+				"description": "Tool for patient everything",
+			},
+			"my-fhir-fetch-page-tool": map[string]any{
+				"kind":        fhirFetchPageToolKind,
+				"source":      "my-instance",
+				"description": "Tool to fetch a page of FHIR resources",
+			},
 			"my-auth-get-dataset-tool": map[string]any{
 				"kind":        getDatasetToolKind,
 				"source":      "my-instance",
@@ -268,6 +377,54 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				"kind":        listDICOMStoresToolKind,
 				"source":      "my-instance",
 				"description": "Tool to list DICOM stores with auth",
+				"authRequired": []string{
+					"my-google-auth",
+				},
+			},
+			"my-auth-get-fhir-store-tool": map[string]any{
+				"kind":        getFHIRStoreToolKind,
+				"source":      "my-instance",
+				"description": "Tool to get a FHIR store",
+				"authRequired": []string{
+					"my-google-auth",
+				},
+			},
+			"my-auth-get-fhir-store-metrics-tool": map[string]any{
+				"kind":        getFHIRStoreMetricsToolKind,
+				"source":      "my-instance",
+				"description": "Tool to get FHIR store metrics",
+				"authRequired": []string{
+					"my-google-auth",
+				},
+			},
+			"my-auth-get-fhir-resource-tool": map[string]any{
+				"kind":        getFHIRResourceToolKind,
+				"source":      "my-instance",
+				"description": "Tool to get FHIR resource",
+				"authRequired": []string{
+					"my-google-auth",
+				},
+			},
+			"my-auth-fhir-patient-search-tool": map[string]any{
+				"kind":        fhirPatientSearchToolKind,
+				"source":      "my-instance",
+				"description": "Tool to search for patients",
+				"authRequired": []string{
+					"my-google-auth",
+				},
+			},
+			"my-auth-fhir-patient-everything-tool": map[string]any{
+				"kind":        fhirPatientEverythingToolKind,
+				"source":      "my-instance",
+				"description": "Tool for patient everything",
+				"authRequired": []string{
+					"my-google-auth",
+				},
+			},
+			"my-auth-fhir-fetch-page-tool": map[string]any{
+				"kind":        fhirFetchPageToolKind,
+				"source":      "my-instance",
+				"description": "Tool to fetch a page of FHIR resources",
 				"authRequired": []string{
 					"my-google-auth",
 				},
@@ -495,6 +652,583 @@ func runListDICOMStoresToolInvokeTest(t *testing.T, want string) {
 			runTest(t, tc.api, tc.requestHeader, tc.requestBody, tc.want, tc.isErr)
 		})
 	}
+}
+
+func runGetFHIRStoreToolInvokeTest(t *testing.T, fhirStoreID, want string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-get-fhir-store-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-fhir-store-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-get-fhir-store-tool with auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-fhir-store-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-get-fhir-store-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-fhir-store-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-get-fhir-store-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-fhir-store-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-auth-get-fhir-store-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-fhir-store-tool/invoke",
+			requestHeader: map[string]string{"Authorization": "invalid-token"},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-get-fhir-store-tool with invalid storeID",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-fhir-store-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"invalid-store"}`)),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			runTest(t, tc.api, tc.requestHeader, tc.requestBody, tc.want, tc.isErr)
+		})
+	}
+}
+
+func runGetFHIRStoreMetricsToolInvokeTest(t *testing.T, fhirStoreID, want string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-get-fhir-store-metrics-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-fhir-store-metrics-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-get-fhir-store-metrics-tool with auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-fhir-store-metrics-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-get-fhir-store-metrics-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-fhir-store-metrics-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-get-fhir-store-metrics-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-fhir-store-metrics-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-auth-get-fhir-store-metrics-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-fhir-store-metrics-tool/invoke",
+			requestHeader: map[string]string{"Authorization": "invalid-token"},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-get-fhir-store-metrics-tool with invalid storeID",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-fhir-store-metrics-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"invalid-store"}`)),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			runTest(t, tc.api, tc.requestHeader, tc.requestBody, tc.want, tc.isErr)
+		})
+	}
+}
+
+func runGetFHIRResourceToolInvokeTest(t *testing.T, storeID, resType, resID, want string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-get-fhir-resource-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-fhir-resource-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + storeID + `", "resourceType":"` + resType + `", "resourceID":"` + resID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-get-fhir-resource-tool with auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-fhir-resource-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + storeID + `", "resourceType":"` + resType + `", "resourceID":"` + resID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-get-fhir-resource-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-fhir-resource-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + storeID + `", "resourceType":"` + resType + `", "resourceID":"` + resID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-get-fhir-resource-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-fhir-resource-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + storeID + `", "resourceType":"` + resType + `", "resourceID":"` + resID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-auth-get-fhir-resource-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-fhir-resource-tool/invoke",
+			requestHeader: map[string]string{"Authorization": "invalid-token"},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + storeID + `", "resourceType":"` + resType + `", "resourceID":"` + resID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-get-fhir-resource-tool with non-existent resource",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-fhir-resource-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + storeID + `", "resourceType":"` + resType + `", "resourceID":"foo"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-get-fhir-resource-tool with missing required id parameter",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-fhir-resource-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + storeID + `", "resourceType":"` + resType + `"}`)),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			runTest(t, tc.api, tc.requestHeader, tc.requestBody, tc.want, tc.isErr)
+		})
+	}
+}
+
+func runFHIRPatientSearchToolInvokeTest(t *testing.T, fhirStoreID string, patientIDs ...string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+	want := `"total":` + fmt.Sprintf(`%d`, len(patientIDs))
+
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-fhir-patient-search-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-patient-search-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-fhir-patient-search-tool with auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-fhir-patient-search-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-fhir-patient-search-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-patient-search-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-fhir-patient-search-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-fhir-patient-search-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-auth-fhir-patient-search-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-fhir-patient-search-tool/invoke",
+			requestHeader: map[string]string{"Authorization": "invalid-token"},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-auth-fhir-patient-search-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-fhir-patient-search-tool/invoke",
+			requestHeader: map[string]string{"Authorization": "invalid-token"},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-fhir-patient-search-tool wrong parameter type",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-patient-search-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `", "name":true}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-fhir-patient-search-tool filters",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-patient-search-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `", "name":"john","gender":"male","state":"CA","active":"true","birthDateRange":"1970-01-01/2000-12-31"}`)),
+			want:          patientIDs[0],
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-fhir-patient-search-tool filters 2",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-patient-search-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `", "givenName":"john","addressSubstring":"main st","email":"john@foo.com","phone":"555-1234","language":"en","deceased":"false"}`)),
+			want:          patientIDs[0],
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-fhir-patient-search-tool filters 3",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-patient-search-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `", "familyName":"smith","country":"USA","addressUse":"home","postalCode":"12345","identifier":"1234567"}`)),
+			want:          patientIDs[0],
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-fhir-patient-search-tool zero matches",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-patient-search-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `", "gender":"unknown"}`)),
+			want:          `"total":0`,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-fhir-patient-search-tool match second patient only",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-patient-search-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `","familyName":"Doe"}`)),
+			want:          patientIDs[1],
+			isErr:         false,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			runTest(t, tc.api, tc.requestHeader, tc.requestBody, tc.want, tc.isErr)
+		})
+	}
+}
+
+func runFHIRPatientEverythingToolInvokeTest(t *testing.T, fhirStoreID, patientID, want string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-fhir-patient-everything-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-patient-everything-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `", "patientID":"` + patientID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-fhir-patient-everything-tool with auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-fhir-patient-everything-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `", "patientID":"` + patientID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-fhir-patient-everything-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-patient-everything-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `", "patientID":"` + patientID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-fhir-patient-everything-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-fhir-patient-everything-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `", "patientID":"` + patientID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-auth-fhir-patient-everything-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-fhir-patient-everything-tool/invoke",
+			requestHeader: map[string]string{"Authorization": "invalid-token"},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `", "patientID":"` + patientID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-fhir-patient-everything-tool with invalid type filter",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-patient-everything-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `", "patientID":"` + patientID + `","resourceTypesFilter":"InvalidType"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-fhir-patient-everything-tool with invalid since filter format",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-patient-everything-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `", "patientID":"` + patientID + `","sinceFilter":"October 10th, 2023"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-fhir-patient-everything-tool with type and since filters",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-patient-everything-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `", "patientID":"` + patientID + `","sinceFilter":"2023-01-01T00:00:00Z","resourceTypesFilter":"Observation"}`)),
+			want:          `"total":2`,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-fhir-patient-everything-tool with type and since keeps only patient",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-patient-everything-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `", "patientID":"` + patientID + `","sinceFilter":"` + time.Now().Format(time.RFC3339) + `","resourceTypesFilter":"Observation,Encounter"}`)),
+			want:          `"total":1`,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-fhir-patient-everything-tool with type keeps only patient",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-patient-everything-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + fhirStoreID + `", "patientID":"` + patientID + `","resourceTypesFilter":"Encounter,Claim"}`)),
+			want:          `"total":1`,
+			isErr:         false,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			runTest(t, tc.api, tc.requestHeader, tc.requestBody, tc.want, tc.isErr)
+		})
+	}
+}
+
+func runFHIRFetchPageToolInvokeTest(t *testing.T, pageURL, want string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-fhir-fetch-page-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-fetch-page-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"pageURL":"` + pageURL + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-fhir-fetch-page-tool with auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-fhir-fetch-page-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"pageURL":"` + pageURL + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-fhir-fetch-page-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-fetch-page-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"pageURL":"` + pageURL + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-fhir-fetch-page-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-fhir-fetch-page-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"pageURL":"` + pageURL + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-auth-fhir-fetch-page-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-fhir-fetch-page-tool/invoke",
+			requestHeader: map[string]string{"Authorization": "invalid-token"},
+			requestBody:   bytes.NewBuffer([]byte(`{"pageURL":"` + pageURL + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-fhir-fetch-page-tool with invalid url",
+			api:           "http://127.0.0.1:5000/api/tool/my-fhir-fetch-page-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"pageURL":"google.com"}`)),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			runTest(t, tc.api, tc.requestHeader, tc.requestBody, tc.want, tc.isErr)
+		})
+	}
+}
+
+func getNextPageURLForPatientEverything(t *testing.T, fhirStoreID, patientID string) string {
+	api := "http://127.0.0.1:5000/api/tool/my-fhir-patient-everything-tool/invoke"
+	body := fmt.Sprintf(`{"storeID": "%s", "patientID": "%s"}`, fhirStoreID, patientID)
+	req, err := http.NewRequest(http.MethodPost, api, bytes.NewBuffer([]byte(body)))
+	if err != nil {
+		t.Fatalf("unable to create request: %s", err)
+	}
+	req.Header.Add("Content-type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("unable to send request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	var respBody map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	if err != nil {
+		t.Fatalf("error parsing response body")
+	}
+
+	resultStr, ok := respBody["result"].(string)
+	if !ok {
+		t.Fatalf("unable to find result in response body")
+	}
+
+	var resultJSON map[string]interface{}
+	if err := json.Unmarshal([]byte(resultStr), &resultJSON); err != nil {
+		t.Fatalf("failed to unmarshal result string: %v", err)
+	}
+
+	links, ok := resultJSON["link"].([]interface{})
+	if !ok {
+		t.Fatalf("no link field in result")
+	}
+
+	for _, l := range links {
+		link := l.(map[string]interface{})
+		if relation, ok := link["relation"].(string); ok && relation == "next" {
+			if url, ok := link["url"].(string); ok {
+				return url
+			}
+		}
+	}
+
+	t.Fatalf("next link not found in patient everything response")
+	return ""
 }
 
 func runTest(t *testing.T, api string, requestHeader map[string]string, requestBody io.Reader, want string, isErr bool) {
