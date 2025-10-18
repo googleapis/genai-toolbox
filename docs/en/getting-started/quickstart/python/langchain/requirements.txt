@@ -1,4 +1,4 @@
-langchain==0.3.27
+langchain==1.0.0
 langchain-google-vertexai==2.1.2
 langgraph==0.6.8
 toolbox-langchain==0.5.2
