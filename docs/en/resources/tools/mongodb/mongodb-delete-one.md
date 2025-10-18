@@ -58,4 +58,4 @@ tools:
 | database      | string   | true         | The name of the MongoDB database containing the collection.                                                        |
 | collection    | string   | true         | The name of the MongoDB collection from which to delete a document.                                                |
 | filterPayload | string   | true         | The MongoDB query filter document to select the document for deletion. Uses `{{json .param_name}}` for templating. |
-| filterParams  | list     | true         | A list of parameter objects that define the variables used in the `filterPayload`.                                 |
+| filterParams  | list     | false        | A list of parameter objects that define the variables used in the `filterPayload`.                                 |

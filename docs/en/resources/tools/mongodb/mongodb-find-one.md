@@ -61,7 +61,7 @@ tools:
 | database       | string   | true         | The name of the MongoDB database to query.                                                                                                   |
 | collection     | string   | true         | The name of the MongoDB collection to query.                                                                                                 |
 | filterPayload  | string   | true         | The MongoDB query filter document to select the document. Uses `{{json .param_name}}` for templating.                                        |
-| filterParams   | list     | true         | A list of parameter objects that define the variables used in the `filterPayload`.                                                           |
+| filterParams   | list     | false        | A list of parameter objects that define the variables used in the `filterPayload`.                                                           |
 | projectPayload | string   | false        | An optional MongoDB projection document to specify which fields to include (1) or exclude (0) in the result.                                 |
 | projectParams  | list     | false        | A list of parameter objects for the `projectPayload`.                                                                                        |
 | sortPayload    | string   | false        | An optional MongoDB sort document. Useful for selecting which document to return if the filter matches multiple (e.g., get the most recent). |
