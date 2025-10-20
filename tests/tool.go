@@ -31,8 +31,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 // RunToolGet runs the tool get endpoint
@@ -1134,6 +1136,94 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 			got := string(bytes.TrimSpace(respBody))
 			if !strings.Contains(got, tc.wantBody) {
 				t.Fatalf("Expected substring not found:\ngot:  %q\nwant: %q (to be contained within got)", got, tc.wantBody)
+			}
+		})
+	}
+}
+
+func setupPostgresSchemas(t *testing.T, ctx context.Context, pool *pgxpool.Pool, schemaName string) func() {
+	createSchemaStmt := fmt.Sprintf("CREATE SCHEMA %s", schemaName)
+	_, err := pool.Exec(ctx, createSchemaStmt)
+	if err != nil {
+		t.Fatalf("failed to create schema: %v", err)
+	}
+
+	return func() {
+		dropSchemaStmt := fmt.Sprintf("DROP SCHEMA %s", schemaName)
+		_, err := pool.Exec(ctx, dropSchemaStmt)
+		if err != nil {
+			t.Fatalf("failed to drop schema: %v", err)
+		}
+	}
+}
+
+func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	schemaName := "test_schema_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	cleanup := setupPostgresSchemas(t, ctx, pool, schemaName)
+	defer cleanup()
+
+	wantSchema := map[string]any{"functions": float64(0), "grants": map[string]any{}, "owner": "postgres", "schema_name": schemaName, "tables": float64(0), "views": float64(0)}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           []map[string]any
+	}{
+		{
+			name:           "invoke list_schemas with schema_name",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"schema_name": "%s"}`, schemaName))),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantSchema},
+		},
+		{
+			name:           "invoke list_schemas with non-existent schema",
+			requestBody:    bytes.NewBuffer([]byte(`{"schema_name": "non_existent_schema"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_schemas/invoke"
+			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %v", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %v", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				body, _ := io.ReadAll(resp.Body)
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []map[string]any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v", err)
+			}
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("Unexpected result (-want +got):\n%s", diff)
 			}
 		})
 	}

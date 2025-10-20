@@ -135,6 +135,7 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CloudSQLPostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
+	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -158,6 +159,7 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+	tests.RunPostgresListSchemasTest(t, ctx, pool)
 }
 
 // Test connection with different IP type
