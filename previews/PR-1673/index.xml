@@ -901,7 +901,7 @@ inserted according to their name: e.g. &lt;code>@name&lt;/code>.&lt;/p>
 &lt;/svg>
 
  &lt;/span>Note&lt;/p></description></item><item><title>Cassandra</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1673/resources/sources/cassandra/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1673/resources/sources/cassandra/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://cassandra.apache.org/">Cassandra&lt;/a> is a NoSQL distributed database. By design, NoSQL databases are lightweight, open-source, non-relational, and largely distributed. Counted among their strengths are horizontal scalability, distributed architectures, and a flexible approach to schema definition.&lt;/p>
+&lt;p>&lt;a href="https://cassandra.apache.org/">Apache Cassandra&lt;/a> is a NoSQL distributed database. By design, NoSQL databases are lightweight, open-source, non-relational, and largely distributed. Counted among their strengths are horizontal scalability, distributed architectures, and a flexible approach to schema definition.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1673/resources/tools/cassandra/cassandra-cql/">&lt;code>cassandra-cql&lt;/code>&lt;/a>&lt;br>
