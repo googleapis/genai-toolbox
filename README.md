@@ -228,9 +228,9 @@ To run Toolbox from binary:
 ./toolbox --tools-file "tools.yaml"
 ```
 
-ⓘ **NOTE:**  
-Toolbox enables dynamic reloading by default. To disable, use the
-`--disable-reload` flag.
+> ⓘ Note  
+> Toolbox enables dynamic reloading by default. To disable, use the
+> `--disable-reload` flag.
 
 </details>
 
@@ -248,9 +248,9 @@ us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION \
 --tools-file "/app/tools.yaml"
 ```
 
-ⓘ **NOTE:**  
-The `-v` flag mounts your local `tools.yaml` into the container, and `-p` maps
-the container's port `5000` to your host's port `5000`.
+> ⓘ Note  
+> The `-v` flag mounts your local `tools.yaml` into the container, and `-p` maps
+> the container's port `5000` to your host's port `5000`.
 
 </details>
 
@@ -265,11 +265,11 @@ and run:
 go run .
 ```
 
-ⓘ **NOTE:**  
-This command runs the project from source, and is more suitable for development
-and testing. It does **not** compile a binary into your `$GOPATH`. If you want
-to compile a binary instead, refer the [Developer
-Documentation](./DEVELOPER.md#building-the-binary).
+> ⓘ Note  
+> This command runs the project from source, and is more suitable for development
+> and testing. It does **not** compile a binary into your `$GOPATH`. If you want
+> to compile a binary instead, refer the [Developer
+> Documentation](./DEVELOPER.md#building-the-binary).
 
 </details>
 
@@ -625,13 +625,11 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     package main
     import (
       "context"
-      "encoding/json"
+      "log"
 
-      "github.com/firebase/genkit/go/ai"
       "github.com/firebase/genkit/go/genkit"
       "github.com/googleapis/mcp-toolbox-sdk-go/core"
       "github.com/googleapis/mcp-toolbox-sdk-go/tbgenkit"
-      "github.com/invopop/jsonschema"
     )
 
     func main() {
@@ -639,7 +637,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
       // Update the url to point to your server
       URL := "http://127.0.0.1:5000"
       ctx := context.Background()
-      g, err := genkit.Init(ctx)
+      g := genkit.Init(ctx)
 
       client, err := core.NewToolboxClient(URL)
 
@@ -652,6 +650,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
       if err != nil {
         log.Fatalf("Failed to convert tool: %v\n", err)
       }
+      log.Printf("Successfully converted tool: %s", genkitTool.Name())
     }
     ```
 
