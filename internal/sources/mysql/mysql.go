@@ -127,7 +127,7 @@ func initMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, hos
 	if err != nil {
 		return nil, err
 	}
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&connectionAttributes=program_name:%s", user, pass, host, port, dbname, url.QueryEscape(userAgent))
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&connectionAttributes=program_name:%s", url.QueryEscape(user), url.QueryEscape(pass), host, port, url.QueryEscape(dbname), url.QueryEscape(userAgent))
 	if enc := values.Encode(); enc != "" {
 		dsn += "&" + enc
 	}
