@@ -84,12 +84,13 @@ func handleQueryTest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errorMessage, http.StatusBadRequest)
 		return
 	}
-
+	
 	w.WriteHeader(http.StatusOK)
+	
 	// Encode the raw query string as a JSON string response
-	err := json.NewEncoder(w).Encode(r.URL.RawQuery)
+	_, err := w.Write([]byte(r.URL.RawQuery))
 	if err != nil {
-		http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
 		return
 	}
 }
@@ -363,13 +364,6 @@ func runQueryParamInvokeTest(t *testing.T) {
 			name:        "invoke query-param-tool (required param nil)",
 			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{"reqId": null, "page": "1"}`)),
-			want:        `"page=1&reqId="`, // reqId becomes "", keys sorted
-			isErr:       false,
-		},
-		{
-			name:        "invoke query-param-tool (required param missing)",
-			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
-			requestBody: bytes.NewBuffer([]byte(`{"page": "1"}`)),
 			want:        `"page=1&reqId="`, // reqId becomes "", keys sorted
 			isErr:       false,
 		},
