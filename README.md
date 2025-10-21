@@ -766,14 +766,18 @@ For more detailed instructions on using the Toolbox Core SDK, see the
 
 ### Using Toolbox with Gemini CLI Extensisions
 
-[Gemini CLI extensions][gemini-cli-extensions] provide specialized tools to
-interact directly with your data sources. Many of these extensions are built on
-top of **Toolbox**, which provides the underlying capability to connect to and
-query these data systems.
-Below is a list of Gemini CLI extensions that uses Toobox. Click into the link to see
-detailed instructions on their usage.
+[Gemini CLI extensions][gemini-cli-extensions] provide tools to interact
+directly with your data sources from command line. Below is a list of Gemini CLI
+extensions that are built on top of **Toolbox**. They allow you to interact with
+your data sources through pre-defined or custom tools with natural language.
+Click into the link to see detailed instructions on their usage.
+
+To use **custom** tools with Gemini CLI:
 
 - [MCP Toolbox](https://github.com/gemini-cli-extensions/mcp-toolbox)
+
+To use **pre-defined** tools with Gemini CLI:
+
 - [AlloyDB for PostgreSQL](https://github.com/gemini-cli-extensions/alloydb)
 - [AlloyDB for PostgreSQL
   Observability](https://github.com/gemini-cli-extensions/alloydb-observability)
@@ -793,12 +797,12 @@ detailed instructions on their usage.
   Server](https://github.com/gemini-cli-extensions/cloud-sql-sqlserver)
 - [Cloud SQL for SQL Server
   Observability](https://github.com/gemini-cli-extensions/cloud-sql-sqlserver-observability)
-- [Dataplex](https://github.com/gemini-cli-extensions/dataplex)
-- [Firestore](https://github.com/gemini-cli-extensions/firestore-native)
 - [Looker](https://github.com/gemini-cli-extensions/looker)
+- [Dataplex](https://github.com/gemini-cli-extensions/dataplex)
 - [MySQL](https://github.com/gemini-cli-extensions/mysql)
 - [PostgreSQL](https://github.com/gemini-cli-extensions/postgres)
 - [Spanner](https://github.com/gemini-cli-extensions/spanner)
+- [Firestore](https://github.com/gemini-cli-extensions/firestore-native)
 - [SQL Server](https://github.com/gemini-cli-extensions/sql-server)
 
 [gemini-cli-extensions]:
