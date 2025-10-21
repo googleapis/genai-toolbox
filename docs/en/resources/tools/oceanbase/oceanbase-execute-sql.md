@@ -13,7 +13,7 @@ aliases:
 An `oceanbase-execute-sql` tool executes a SQL statement against an OceanBase
 database. It's compatible with the following source:
 
-- [oceanbase](../sources/oceanbase.md)
+- [oceanbase](../../sources/oceanbase.md)
 
 `oceanbase-execute-sql` takes one input parameter `sql` and runs the sql
 statement against the `source`.
