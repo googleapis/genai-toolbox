@@ -14,7 +14,7 @@ aliases:
 A `cassandra-cql` tool executes a pre-defined CQL statement against a Cassandra
 database. It's compatible with any of the following sources:
 
-- [cassandra](../sources/cassandra.md)
+- [cassandra](../../sources/cassandra.md)
 
 The specified CQL statement is executed as a [prepared statement][cassandra-prepare],
 and expects parameters in the CQL query to be in the form of placeholders `?`.
