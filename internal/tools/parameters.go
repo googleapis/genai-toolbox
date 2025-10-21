@@ -670,6 +670,20 @@ func NewIntParameter(name string, desc string) *IntParameter {
 	}
 }
 
+// NewIntParameterWithRange is a convenience function for initializing a IntParameter.
+func NewIntParameterWithRange(name string, desc string, minValue *int, maxValue *int) *IntParameter {
+	return &IntParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeInt,
+			Desc:         desc,
+			AuthServices: nil,
+		},
+		MinValue: minValue,
+		MaxValue: maxValue,
+	}
+}
+
 // NewIntParameterWithDefault is a convenience function for initializing a IntParameter with default value.
 func NewIntParameterWithDefault(name string, defaultV int, desc string) *IntParameter {
 	return &IntParameter{
@@ -727,6 +741,8 @@ var _ Parameter = &IntParameter{}
 type IntParameter struct {
 	CommonParameter `yaml:",inline"`
 	Default         *int `yaml:"default"`
+	MinValue        *int `yaml:"minValue"`
+	MaxValue        *int `yaml:"maxValue"`
 }
 
 func (p *IntParameter) Parse(v any) (any, error) {
@@ -749,6 +765,12 @@ func (p *IntParameter) Parse(v any) (any, error) {
 	}
 	if !p.IsAllowedValues(out) {
 		return nil, fmt.Errorf("%d is not an allowed value", out)
+	}
+	if p.MinValue != nil && out < *p.MinValue {
+		return nil, fmt.Errorf("%d is under the minimum value", out)
+	}
+	if p.MaxValue != nil && out > *p.MaxValue {
+		return nil, fmt.Errorf("%d is above the maximum value", out)
 	}
 	return out, nil
 }
@@ -787,6 +809,20 @@ func NewFloatParameter(name string, desc string) *FloatParameter {
 			Desc:         desc,
 			AuthServices: nil,
 		},
+	}
+}
+
+// NewFloatParameterWithRange is a convenience function for initializing a FloatParameter.
+func NewFloatParameterWithRange(name string, desc string, minValue *float64, maxValue *float64) *FloatParameter {
+	return &FloatParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeFloat,
+			Desc:         desc,
+			AuthServices: nil,
+		},
+		MinValue: minValue,
+		MaxValue: maxValue,
 	}
 }
 
@@ -847,6 +883,8 @@ var _ Parameter = &FloatParameter{}
 type FloatParameter struct {
 	CommonParameter `yaml:",inline"`
 	Default         *float64 `yaml:"default"`
+	MinValue        *float64 `yaml:"minValue"`
+	MaxValue        *float64 `yaml:"maxValue"`
 }
 
 func (p *FloatParameter) Parse(v any) (any, error) {
@@ -867,6 +905,12 @@ func (p *FloatParameter) Parse(v any) (any, error) {
 	}
 	if !p.IsAllowedValues(out) {
 		return nil, fmt.Errorf("%g is not an allowed value", out)
+	}
+	if p.MinValue != nil && out < *p.MinValue {
+		return nil, fmt.Errorf("%g is under the minimum value", out)
+	}
+	if p.MaxValue != nil && out > *p.MaxValue {
+		return nil, fmt.Errorf("%g is above the maximum value", out)
 	}
 	return out, nil
 }

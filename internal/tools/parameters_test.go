@@ -693,6 +693,8 @@ func TestAuthParametersMarshal(t *testing.T) {
 }
 
 func TestParametersParse(t *testing.T) {
+	intValue := 2
+	floatValue := 1.5
 	tcs := []struct {
 		name   string
 		params tools.Parameters
@@ -837,6 +839,44 @@ func TestParametersParse(t *testing.T) {
 			},
 		},
 		{
+			name: "int minValue",
+			params: tools.Parameters{
+				tools.NewIntParameterWithRange("my_int", "this param is an int", &intValue, nil),
+			},
+			in: map[string]any{
+				"my_int": 3,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 3}},
+		},
+		{
+			name: "int minValue disallow",
+			params: tools.Parameters{
+				tools.NewIntParameterWithRange("my_int", "this param is an int", &intValue, nil),
+			},
+			in: map[string]any{
+				"my_int": 1,
+			},
+		},
+		{
+			name: "int maxValue",
+			params: tools.Parameters{
+				tools.NewIntParameterWithRange("my_int", "this param is an int", nil, &intValue),
+			},
+			in: map[string]any{
+				"my_int": 1,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 1}},
+		},
+		{
+			name: "int maxValue disallow",
+			params: tools.Parameters{
+				tools.NewIntParameterWithRange("my_int", "this param is an int", nil, &intValue),
+			},
+			in: map[string]any{
+				"my_int": 3,
+			},
+		},
+		{
 			name: "float",
 			params: tools.Parameters{
 				tools.NewFloatParameter("my_float", "this param is a float"),
@@ -872,6 +912,44 @@ func TestParametersParse(t *testing.T) {
 			},
 			in: map[string]any{
 				"my_float": 1.2,
+			},
+		},
+		{
+			name: "float minValue",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithRange("my_float", "this param is a float", &floatValue, nil),
+			},
+			in: map[string]any{
+				"my_float": 1.8,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.8}},
+		},
+		{
+			name: "float minValue disallow",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithRange("my_float", "this param is a float", &floatValue, nil),
+			},
+			in: map[string]any{
+				"my_float": 1.2,
+			},
+		},
+		{
+			name: "float maxValue",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithRange("my_float", "this param is a float", nil, &floatValue),
+			},
+			in: map[string]any{
+				"my_float": 1.2,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.2}},
+		},
+		{
+			name: "float maxValue disallow",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithRange("my_float", "this param is a float", nil, &floatValue),
+			},
+			in: map[string]any{
+				"my_float": 1.8,
 			},
 		},
 		{
