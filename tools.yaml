@@ -1,0 +1,29 @@
+sources:
+  my-pg-instance:
+    kind: cloud-sql-postgres
+    project: duwenxin-space
+    region: us-central1
+    instance: ev-recommendation
+    database: postgres
+    user: postgres
+    password: postgres
+
+  bq-source:
+    kind: bigquery
+    project: toolbox-testing-438616
+
+
+authSources:
+  my-google-auth:
+    kind: google
+    clientId: 32555940559.apps.googleusercontent.com
+
+tools:
+  get-tracking-codes:
+      kind: bigquery-sql
+      source: bq-source
+      description: Retrieve shipment tracking codes.
+      statement: |
+        SELECT 1;
+
+
