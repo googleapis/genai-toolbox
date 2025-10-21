@@ -53,12 +53,12 @@ tools:
     long_running_transactions:
         kind: postgres-long-running-transactions
         source: alloydb-pg-source
-        description: "Identifies and lists database transactions that exceed a specified time limit. For each of the long running transactions, the output contains the process id, database name, user name, application name, client address, state, connection age, transaction age, query age, last activity age, wait event type, wait event, and query string."
+        description: "Identifies and lists database transactions that exceed a specified time limit. For each of the long running transactions, the output contains the process id, user name, database name, client address, transaction duration in seconds, query duration in seconds, state of the session and the currently running query string."
 
     list_locks:
         kind: postgres-list-locks
         source: alloydb-pg-source
-        description: "Identifies all locks held by active processes showing the process ID, user, query text, and an aggregated list of all transactions and specific locks (relation, mode, grant status) associated with each process."
+        description: "For all databases, or only the current database in the instance, lists all active database locks, showing the associated process id, user, database name, client address, query start time, query age, state, lock type, table name, lock mode, granted status, and query text."
 
     replication_stats:
         kind: postgres-replication-stats
@@ -200,6 +200,10 @@ toolsets:
         - list_replication_slots
         - list_invalid_indexes
         - get_query_plan
+        - long_running_transactions
+        - list_locks
+        - replication_stats
+        
         - long_running_transactions
         - list_locks
         - replication_stats

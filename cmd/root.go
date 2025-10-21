@@ -188,6 +188,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresreplicationstats"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttriggers"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistviews"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslongrunningtransactions"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresreplicationstats"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparkcancelbatch"
