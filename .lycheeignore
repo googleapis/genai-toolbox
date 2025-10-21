@@ -20,3 +20,4 @@
 ^https:\/\/claude\.ai\/download$
 
 ^https:\/\/(?:www|dev)\.mysql\.com\/.*$
+
