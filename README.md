@@ -764,6 +764,46 @@ For more detailed instructions on using the Toolbox Core SDK, see the
 </blockquote>
 </details>
 
+### Using Toolbox with Gemini CLI Extensisions
+
+[Gemini CLI extensions][gemini-cli-extensions] provide specialized tools to
+interact directly with your data sources. Many of these extensions are built on
+top of **Toolbox**, which provides the underlying capability to connect to and
+query these data systems.
+Below is a list of Gemini CLI extensions that uses Toobox. Click into the link to see
+detailed instructions on their usage.
+
+- [MCP Toolbox](https://github.com/gemini-cli-extensions/mcp-toolbox)
+- [AlloyDB for PostgreSQL](https://github.com/gemini-cli-extensions/alloydb)
+- [AlloyDB for PostgreSQL
+  Observability](https://github.com/gemini-cli-extensions/alloydb-observability)
+- [BigQuery Data
+  Analytics](https://github.com/gemini-cli-extensions/bigquery-data-analytics)
+- [BigQuery Conversational
+  Analytics](https://github.com/gemini-cli-extensions/bigquery-conversational-analytics)
+- [Cloud SQL for
+  MySQL](https://github.com/gemini-cli-extensions/cloud-sql-mysql)
+- [Cloud SQL for MySQL
+  Observability](https://github.com/gemini-cli-extensions/cloud-sql-mysql-observability)
+- [Cloud SQL for
+  PostgreSQL](https://github.com/gemini-cli-extensions/cloud-sql-postgresql)
+- [Cloud SQL for PostgreSQL
+  Observability](https://github.com/gemini-cli-extensions/cloud-sql-postgresql-observability)
+- [Cloud SQL for SQL
+  Server](https://github.com/gemini-cli-extensions/cloud-sql-sqlserver)
+- [Cloud SQL for SQL Server
+  Observability](https://github.com/gemini-cli-extensions/cloud-sql-sqlserver-observability)
+- [Dataplex](https://github.com/gemini-cli-extensions/dataplex)
+- [Firestore](https://github.com/gemini-cli-extensions/firestore-native)
+- [Looker](https://github.com/gemini-cli-extensions/looker)
+- [MySQL](https://github.com/gemini-cli-extensions/mysql)
+- [PostgreSQL](https://github.com/gemini-cli-extensions/postgres)
+- [Spanner](https://github.com/gemini-cli-extensions/spanner)
+- [SQL Server](https://github.com/gemini-cli-extensions/sql-server)
+
+[gemini-cli-extensions]:
+    https://github.com/google-gemini/gemini-cli/blob/main/docs/extensions/index.md
+
 ## Configuration
 
 The primary way to configure Toolbox is through the `tools.yaml` file. If you
