@@ -745,6 +745,78 @@ tools:
 
           The result is a list of objects that are candidates for deletion.
 
+    dev_mode:
+        kind: looker-dev-mode
+        source: looker-source
+        description: |
+          dev_mode Tool
+
+          Passing true to this tool switches the session to dev mode. Passing false to this tool switches the
+          session to production mode.
+
+    get_projects:
+        kind: looker-get-projects
+        source: looker-source
+        description: |
+          get_projects Tool
+
+          This tool returns the project_id and project_name for
+          all the LookML projects on the looker instance.
+
+    get_project_files:
+        kind: looker-get-project-files
+        source: looker-source
+        description: |
+          get_project_files Tool
+
+          Given a project_id this tool returns the details about
+          the LookML files that make up that project.
+
+    get_project_file:
+        kind: looker-get-project-file
+        source: looker-source
+        description: |
+          get_project_file Tool
+
+          Given a project_id and a file path within the project, this tool returns
+          the contents of the LookML file.
+
+    create_project_file:
+        kind: looker-create-project-file
+        source: looker-source
+        description: |
+          create_project_file Tool
+
+          Given a project_id and a file path within the project, as well as the content
+          of a LookML file, this tool will create a new file within the project.
+
+          This tool must be called after the dev_mode tool has changed the session to
+          dev mode.
+
+    update_project_file:
+        kind: looker-update-project-file
+        source: looker-source
+        description: |
+          update_project_file Tool
+
+          Given a project_id and a file path within the project, as well as the content
+          of a LookML file, this tool will modify the file within the project.
+
+          This tool must be called after the dev_mode tool has changed the session to
+          dev mode.
+
+    delete_project_file:
+        kind: looker-delete-project-file
+        source: looker-source
+        description: |
+          delete_project_file Tool
+
+          Given a project_id and a file path within the project, this tool will delete
+          the file from the project.
+
+          This tool must be called after the dev_mode tool has changed the session to
+          dev mode.
+
 toolsets:
     looker_tools:
         - get_models
@@ -765,3 +837,10 @@ toolsets:
         - health_pulse
         - health_analyze
         - health_vacuum
+        - dev_mode
+        - get_projects
+        - get_project_files
+        - get_project_file
+        - create_project_file
+        - update_project_file
+        - delete_project_file
