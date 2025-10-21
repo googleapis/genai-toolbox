@@ -49,6 +49,21 @@ tools:
         source: cloudsql-pg-source
         description: "List all installed PostgreSQL extensions with their name, version, schema, owner, and description."
 
+    long_running_transactions:
+        kind: postgres-long-running-transactions
+        source: cloudsql-pg-source
+        description: "Identifies and lists database transactions that exceed a specified time limit. For each of the long running transactions, the output contains the process id, user name, database name, client address, transaction duration in seconds, query duration in seconds, state of the session and the currently running query string."
+
+    list_locks:
+        kind: postgres-list-locks
+        source: cloudsql-pg-source
+        description: "For all databases, or only the current database in the instance, lists all active database locks, showing the associated process id, user, database name, client address, query start time, query age, state, lock type, table name, lock mode, granted status, and query text."
+
+    replication_stats:
+        kind: postgres-replication-stats
+        source: cloudsql-pg-source
+        description: "Lists each replica's application_name, client IP address, connection state, and sync_state, along with lag sizes in bytes for sent_lag (primary to sent), write_lag (sent to written), flush_lag (written to flushed), replay_lag (flushed to replayed), and the overall total_lag (primary to replayed)."
+
     list_autovacuum_configurations:
         kind: postgres-sql
         source: cloudsql-pg-source
@@ -168,3 +183,6 @@ toolsets:
         - list_replication_slots
         - list_invalid_indexes
         - get_query_plan
+        - long_running_transactions
+        - list_locks
+        - replication_stats
