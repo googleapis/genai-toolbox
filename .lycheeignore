@@ -1,13 +1,15 @@
 
 
-^https?:\\/\\/([a-zA-Z0-9-]+\\.)?example\\.com(:\\d+)?(\\/.*)?$
+<!-- ^https?:\\/\\/([a-zA-Z0-9-]+\\.)?example\\.com(:\\d+)?(\\/.*)?$ -->
+
 ^https:\\/\\/img\\.shields\\.io\\/.*
 ^mailto:
 ^https?:\\/\\/(127\\.0\\.0\\.1|localhost)(:\\d+)?(\\/.*)?$
-^https:\/\/localhost:8080\/$
-
-^http://localhost
 ^https?://127\.0\.0\.1
+
+^https:\/\/localhost:8080\/$
+^http://localhost
+
 ^http://example.net
 
 \.pdf$
