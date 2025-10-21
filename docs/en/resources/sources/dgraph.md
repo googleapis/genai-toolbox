@@ -19,7 +19,7 @@ Dgraph Cloud. If you're new to Dgraph, the fastest way to get started is to
 [sign up for Dgraph Cloud][dgraph-login].
 
 [dgraph-docs]: https://dgraph.io/docs
-[dgraph-login]: https://cloud.dgraph.io/login
+[dgraph-login]: https://discuss.hypermode.com/login
 
 ## Available Tools
 
