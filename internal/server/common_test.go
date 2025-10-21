@@ -25,6 +25,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/googleapis/genai-toolbox/internal/log"
+	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
@@ -32,7 +33,10 @@ import (
 // fakeVersionString is used as a temporary version string in tests
 const fakeVersionString = "0.0.0"
 
-var _ tools.Tool = &MockTool{}
+var (
+	_ tools.Tool     = &MockTool{}
+	_ prompts.Prompt = &MockPrompt{}
+)
 
 // MockTool is used to mock tools in tests
 type MockTool struct {
@@ -109,6 +113,40 @@ func (t MockTool) McpManifest() tools.McpManifest {
 	return mcpManifest
 }
 
+// MockPrompt is used to mock prompts in tests
+type MockPrompt struct {
+	Name        string
+	Description string
+	Args        prompts.Arguments
+}
+
+func (p MockPrompt) SubstituteParams(vals tools.ParamValues) (any, error) {
+	return fmt.Sprintf("substituted %s", p.Name), nil
+}
+
+func (p MockPrompt) ParseArgs(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
+	var parameters tools.Parameters
+	for _, arg := range p.Args {
+		parameters = append(parameters, arg.Parameter)
+	}
+	return tools.ParseParams(parameters, data, claimsMap)
+}
+
+func (p MockPrompt) Manifest() prompts.Manifest {
+	var argManifests []tools.ParameterManifest
+	for _, arg := range p.Args {
+		argManifests = append(argManifests, arg.Manifest())
+	}
+	return prompts.Manifest{
+		Description: p.Description,
+		Arguments:   argManifests,
+	}
+}
+
+func (p MockPrompt) McpManifest() prompts.McpManifest {
+	return prompts.GetMcpManifest(p.Name, p.Description, p.Args)
+}
+
 var tool1 = MockTool{
 	Name:   "no_params",
 	Params: []tools.Parameter{},
@@ -143,7 +181,7 @@ var tool5 = MockTool{
 }
 
 // setUpResources setups resources to test against
-func setUpResources(t *testing.T, mockTools []MockTool) (map[string]tools.Tool, map[string]tools.Toolset) {
+func setUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt) (map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset) {
 	toolsMap := make(map[string]tools.Tool)
 	var allTools []string
 	for _, tool := range mockTools {
@@ -165,11 +203,29 @@ func setUpResources(t *testing.T, mockTools []MockTool) (map[string]tools.Tool, 
 		}
 		toolsets[name] = m
 	}
-	return toolsMap, toolsets
+
+	promptsMap := make(map[string]prompts.Prompt)
+	var allPrompts []string
+	for _, prompt := range mockPrompts {
+		promptsMap[prompt.Name] = prompt
+		allPrompts = append(allPrompts, prompt.Name)
+	}
+
+	promptsets := make(map[string]prompts.Promptset)
+	if len(allPrompts) > 0 {
+		psc := prompts.PromptsetConfig{Name: "", PromptNames: allPrompts}
+		ps, err := psc.Initialize(fakeVersionString, promptsMap)
+		if err != nil {
+			t.Fatalf("unable to initialize default promptset: %s", err)
+		}
+		promptsets[""] = ps
+	}
+
+	return toolsMap, toolsets, promptsMap, promptsets
 }
 
-// setUpServer create a new server with tools and toolsets that are given
-func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset) (chi.Router, func()) {
+// setUpServer create a new server with tools, toolsets, prompts, and promptsets.
+func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset, prompts map[string]prompts.Prompt, promptsets map[string]prompts.Promptset) (chi.Router, func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
@@ -189,7 +245,7 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := NewResourceManager(nil, nil, tools, toolsets)
+	resourceManager := NewResourceManager(nil, nil, tools, toolsets, prompts, promptsets)
 
 	server := Server{
 		version:         fakeVersionString,
