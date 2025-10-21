@@ -85,7 +85,6 @@ type McpManifest struct {
 	Name        string           `json:"name"`
 	Description string           `json:"description,omitempty"`
 	Arguments   []McpArgManifest `json:"arguments,omitempty"`
-	Metadata    map[string]any   `json:"_meta,omitempty"`
 }
 
 func GetMcpManifest(name, desc string, args Arguments) McpManifest {
