@@ -316,7 +316,7 @@ func GetProjectFileContent(l *v4.LookerSDK, projectId string, filePath string, o
 	var result string
 	path := fmt.Sprintf("/projects/%s/file/content", url.PathEscape(projectId))
 	query := map[string]any{
-		"file_path": url.QueryEscape(filePath),
+		"file_path": filePath,
 	}
 	err := l.AuthSession.Do(&result, "GET", "/4.0", path, query, nil, options)
 	return result, err
@@ -325,7 +325,7 @@ func GetProjectFileContent(l *v4.LookerSDK, projectId string, filePath string, o
 func DeleteProjectFile(l *v4.LookerSDK, projectId string, filePath string, options *rtl.ApiSettings) error {
 	path := fmt.Sprintf("/projects/%s/files", url.PathEscape(projectId))
 	query := map[string]any{
-		"file_path": url.QueryEscape(filePath),
+		"file_path": filePath,
 	}
 	err := l.AuthSession.Do(nil, "DELETE", "/4.0", path, query, nil, options)
 	return err
