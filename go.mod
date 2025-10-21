@@ -10,7 +10,6 @@ require (
 	cloud.google.com/go/bigtable v1.40.1
 	cloud.google.com/go/cloudsqlconn v1.18.1
 	cloud.google.com/go/dataplex v1.27.1
-	cloud.google.com/go/dataproc/v2 v2.14.1
 	cloud.google.com/go/firestore v1.20.0
 	cloud.google.com/go/geminidataanalytics v0.2.1
 	cloud.google.com/go/spanner v1.86.0
