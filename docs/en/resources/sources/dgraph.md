@@ -43,7 +43,7 @@ and user credentials for that namespace.
 sources:
     my-dgraph-source:
         kind: dgraph
-        dgraphUrl: https://xxxx.cloud.dgraph.io
+        dgraphUrl: your_dgraph_url 
         user: ${USER_NAME}
         password: ${PASSWORD}
         apiKey: ${API_KEY}
