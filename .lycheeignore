@@ -13,3 +13,7 @@
 \.pdf$
 
 ^https://some-old-api-documentation.io/v1/deprecated$
+
+^https:\/\/www\.npmjs\.com\/package\/@toolbox-sdk\/core$
+^https:\/\/claude\.ai\/download$
+^https:\/\/www\.mysql\.com\/$
