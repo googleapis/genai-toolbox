@@ -19,7 +19,7 @@ Dgraph Cloud. If you're new to Dgraph, the fastest way to get started is to
 [sign up for Dgraph Cloud][dgraph-login].
 
 [dgraph-docs]: https://dgraph.io/docs
-[dgraph-login]: https://cloud.dgraph.io/login
+[dgraph-login]: https://discuss.hypermode.com/login
 
 ## Available Tools
 
@@ -43,7 +43,7 @@ and user credentials for that namespace.
 sources:
     my-dgraph-source:
         kind: dgraph
-        dgraphUrl: https://xxxx.cloud.dgraph.io
+        dgraphUrl: your_dgraph_url 
         user: ${USER_NAME}
         password: ${PASSWORD}
         apiKey: ${API_KEY}
@@ -60,7 +60,7 @@ instead of hardcoding your secrets into the configuration file.
 | **Field**   | **Type** | **Required** | **Description**                                                                                  |
 |-------------|:--------:|:------------:|--------------------------------------------------------------------------------------------------|
 | kind        |  string  |     true     | Must be "dgraph".                                                                                |
-| dgraphUrl   |  string  |     true     | Connection URI (e.g. "<https://xxx.cloud.dgraph.io>", "<https://localhost:8080>").               |
+| dgraphUrl   |  string  |     true     | Connection URI (e.g. "<your_dgraph_url >", "<https://localhost:8080>").                          |
 | user        |  string  |     false    | Name of the Dgraph user to connect as (e.g., "groot").                                           |
 | password    |  string  |     false    | Password of the Dgraph user (e.g., "password").                                                  |
 | apiKey      |  string  |     false    | API key to connect to a Dgraph Cloud instance.                                                   |
