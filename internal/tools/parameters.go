@@ -447,11 +447,10 @@ func (p *CommonParameter) GetAllowedValues() []any {
 
 // IsAllowedValues checks if the value is allowed.
 func (p *CommonParameter) IsAllowedValues(v any) bool {
-	a := p.AllowedValues
-	if len(a) == 0 {
+	if len(p.AllowedValues) == 0 {
 		return true
 	}
-	for _, av := range a {
+	for _, av := range p.AllowedValues {
 		if MatchStringOrRegex(v, av) {
 			return true
 		}
