@@ -215,3 +215,6 @@ toolsets:
         - list_triggers
         - list_indexes
         - list_sequences
+        - long_running_transactions
+        - list_locks
+        - replication_stats
