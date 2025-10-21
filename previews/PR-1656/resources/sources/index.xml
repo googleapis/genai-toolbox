@@ -524,7 +524,7 @@ basics&lt;/a>.&lt;/p>
 &lt;p>Firestore uses &lt;a href="https://cloud.google.com/firestore/docs/security/iam">Identity and Access Management (IAM)&lt;/a> to control
 user and group access to Firestore resources. Toolbox will use your &lt;a href="https://cloud.google.com/docs/authentication#adc">Application
 Default Credentials (ADC)&lt;/a> to authorize and authenticate when interacting
-with &lt;a href="https://cloud.google.com/firestore/docs">Firestore&lt;/a>.&lt;/p></description></item><item><title>Healthcare</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1656/resources/sources/healthcare/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1656/resources/sources/healthcare/</guid><description>&lt;h2 id="about">About&lt;/h2>
+with &lt;a href="https://cloud.google.com/firestore/docs">Firestore&lt;/a>.&lt;/p></description></item><item><title>Cloud Healthcare API</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1656/resources/sources/healthcare/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1656/resources/sources/healthcare/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;a href="https://cloud.google.com/healthcare/docs">Cloud Healthcare API&lt;/a> provides a managed solution
 for storing and accessing healthcare data in Google Cloud, providing a
 critical bridge between existing care systems and applications hosted on

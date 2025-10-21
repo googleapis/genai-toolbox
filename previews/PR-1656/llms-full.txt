@@ -7393,7 +7393,7 @@ sources:
 | database  |  string  |     false    | Name of the Firestore database to connect to. Defaults to "(default)" if not specified.                  |
 
 
-# Healthcare
+# Cloud Healthcare API
 The Cloud Healthcare API provides a managed solution for storing and accessing healthcare data in Google Cloud, providing a critical bridge  between existing care systems and applications hosted on Google Cloud.
 
 

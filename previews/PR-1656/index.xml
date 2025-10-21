@@ -2521,7 +2521,7 @@ in with the &lt;code>Client ID&lt;/code>.&lt;/p>
 &lt;h3 id="authorized-invocations">Authorized Invocations&lt;/h3>
 &lt;p>When using &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1656/resources/tools/#authorized-invocations">Authorized Invocations&lt;/a>, a tool will be
 considered authorized if it has a valid Oauth 2.0 token that matches the Client
-ID.&lt;/p></description></item><item><title>Healthcare</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1656/resources/sources/healthcare/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1656/resources/sources/healthcare/</guid><description>&lt;h2 id="about">About&lt;/h2>
+ID.&lt;/p></description></item><item><title>Cloud Healthcare API</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1656/resources/sources/healthcare/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1656/resources/sources/healthcare/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;a href="https://cloud.google.com/healthcare/docs">Cloud Healthcare API&lt;/a> provides a managed solution
 for storing and accessing healthcare data in Google Cloud, providing a
 critical bridge between existing care systems and applications hosted on
