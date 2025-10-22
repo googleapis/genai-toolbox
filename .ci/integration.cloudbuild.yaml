@@ -214,6 +214,28 @@ steps:
           dataform \
           dataform
 
+  - id: "healthcare"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "HEALTHCARE_PROJECT=$PROJECT_ID"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+      - "HEALTHCARE_REGION=$_REGION"
+      - "HEALTHCARE_DATASET=$_HEALTHCARE_DATASET"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Healthcare" \
+          healthcare \
+          healthcare
+
   - id: "postgres"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -813,6 +835,7 @@ substitutions:
   _ALLOYDB_AI_NL_CLUSTER: "alloydb-ai-nl-testing"
   _ALLOYDB_AI_NL_INSTANCE: "alloydb-ai-nl-testing-instance"
   _BIGTABLE_INSTANCE: "bigtable-testing-instance"
+  _HEALTHCARE_DATASET: "test-dataset"
   _POSTGRES_HOST: 127.0.0.1
   _POSTGRES_PORT: "5432"
   _SPANNER_INSTANCE: "spanner-testing"

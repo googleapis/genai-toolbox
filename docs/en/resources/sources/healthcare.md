@@ -34,6 +34,35 @@ If you are new to the Healthcare API, you can try to
 [healthcare-quickstart-curl]:
     https://cloud.google.com/healthcare-api/docs/store-healthcare-data-rest
 
+## Available Tools
+
+- [`get-healthcare-dataset`](../tools/healthcare/get-healthcare-dataset.md)
+  Retrieves a dataset’s details.
+
+- [`list-fhir-stores`](../tools/healthcare/list-fhir-stores.md)
+  Lists the available FHIR stores in the healthcare dataset.
+
+- [`list-dicom-stores`](../tools/healthcare/list-dicom-stores.md)
+  Lists the available DICOM stores in the healthcare dataset.
+
+- [`get-fhir-store`](../tools/healthcare/get-fhir-store.md)
+  Retrieves information about a FHIR store.
+
+- [`get-fhir-store-metrics`](../tools/healthcare/get-fhir-store-metrics.md)
+  Retrieves metrics for a FHIR store.
+
+- [`get-fhir-resource`](../tools/healthcare/get-fhir-resource.md)
+  Retrieves a specific FHIR resource from a FHIR store.
+
+- [`fhir-patient-search`](../tools/healthcare/fhir-patient-search.md)
+  Searches for patients in a FHIR store based on a set of criteria.
+
+- [`fhir-patient-everything`](../tools/healthcare/fhir-patient-everything.md)
+  Retrieves all information for a given patient.
+
+- [`fhir-fetch-page`](../tools/healthcare/fhir-fetch-page.md)
+  Fetches a page of FHIR resources from a given URL.
+
 ## Requirements
 
 ### IAM Permissions
