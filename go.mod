@@ -10,7 +10,7 @@ require (
 	cloud.google.com/go/bigtable v1.40.1
 	cloud.google.com/go/cloudsqlconn v1.18.1
 	cloud.google.com/go/dataplex v1.27.1
-	cloud.google.com/go/firestore v1.19.0
+	cloud.google.com/go/firestore v1.20.0
 	cloud.google.com/go/geminidataanalytics v0.2.1
 	cloud.google.com/go/spanner v1.86.0
 	github.com/ClickHouse/clickhouse-go/v2 v2.40.3
@@ -36,7 +36,8 @@ require (
 	github.com/microsoft/go-mssqldb v1.9.3
 	github.com/nakagami/firebirdsql v0.9.15
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.4
-	github.com/redis/go-redis/v9 v9.14.0
+	github.com/redis/go-redis/v9 v9.14.1
+	github.com/sijms/go-ora/v2 v2.9.0
 	github.com/spf13/cobra v1.10.1
 	github.com/thlib/go-timezone-local v0.0.7
 	github.com/trinodb/trino-go-client v0.329.0
@@ -54,7 +55,7 @@ require (
 	golang.org/x/oauth2 v0.32.0
 	google.golang.org/api v0.251.0
 	google.golang.org/genproto v0.0.0-20250929231259-57b25ae835d4
-	modernc.org/sqlite v1.39.0
+	modernc.org/sqlite v1.39.1
 )
 
 require (
@@ -181,7 +182,7 @@ require (
 	google.golang.org/protobuf v1.36.9 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
-	modernc.org/libc v1.66.3 // indirect
+	modernc.org/libc v1.66.10 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )

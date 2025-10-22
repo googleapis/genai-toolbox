@@ -18,6 +18,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -309,4 +310,40 @@ func RunInlineQuery(ctx context.Context, sdk *v4.LookerSDK, wq *v4.WriteQuery, f
 		resp, err = sdk.RunInlineQuery(req, options)
 	}
 	return resp, err
+}
+
+func GetProjectFileContent(l *v4.LookerSDK, projectId string, filePath string, options *rtl.ApiSettings) (string, error) {
+	var result string
+	path := fmt.Sprintf("/projects/%s/file/content", url.PathEscape(projectId))
+	query := map[string]any{
+		"file_path": filePath,
+	}
+	err := l.AuthSession.Do(&result, "GET", "/4.0", path, query, nil, options)
+	return result, err
+}
+
+func DeleteProjectFile(l *v4.LookerSDK, projectId string, filePath string, options *rtl.ApiSettings) error {
+	path := fmt.Sprintf("/projects/%s/files", url.PathEscape(projectId))
+	query := map[string]any{
+		"file_path": filePath,
+	}
+	err := l.AuthSession.Do(nil, "DELETE", "/4.0", path, query, nil, options)
+	return err
+}
+
+type FileContent struct {
+	Path    string `json:"path"`
+	Content string `json:"content"`
+}
+
+func CreateProjectFile(l *v4.LookerSDK, projectId string, fileContent FileContent, options *rtl.ApiSettings) error {
+	path := fmt.Sprintf("/projects/%s/files", url.PathEscape(projectId))
+	err := l.AuthSession.Do(nil, "POST", "/4.0", path, nil, fileContent, options)
+	return err
+}
+
+func UpdateProjectFile(l *v4.LookerSDK, projectId string, fileContent FileContent, options *rtl.ApiSettings) error {
+	path := fmt.Sprintf("/projects/%s/files", url.PathEscape(projectId))
+	err := l.AuthSession.Do(nil, "PUT", "/4.0", path, nil, fileContent, options)
+	return err
 }

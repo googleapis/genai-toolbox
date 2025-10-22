@@ -138,7 +138,7 @@ func TestPostgres(t *testing.T) {
 	}
 
 	// cleanup test environment
-	tests.CleanupPostgresTables(t, ctx, pool);
+	tests.CleanupPostgresTables(t, ctx, pool)
 
 	// create table name with UUID
 	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
