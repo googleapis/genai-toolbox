@@ -337,35 +337,35 @@ func runQueryParamInvokeTest(t *testing.T) {
 		name        string
 		api         string
 		requestBody io.Reader
-		want        string // This will be the expected raw query string
+		want        string
 		isErr       bool
 	}{
 		{
 			name:        "invoke query-param-tool (optional omitted)",
 			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test1"}`)),
-			want:        `"reqId=test1"`, // Only required param
+			want:        `"reqId=test1"`,
 			isErr:       false,
 		},
 		{
 			name:        "invoke query-param-tool (some optional nil)",
 			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test2", "page": "5", "filter": null}`)),
-			want:        `"page=5&reqId=test2"`, // 'filter' omitted, keys sorted
+			want:        `"page=5\u0026reqId=test2"`, // 'filter' omitted
 			isErr:       false,
 		},
 		{
 			name:        "invoke query-param-tool (some optional absent)",
 			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test2", "page": "5"}`)),
-			want:        `"page=5&reqId=test2"`, // 'filter' omitted, keys sorted
+			want:        `"page=5\u0026reqId=test2"`, // 'filter' omitted
 			isErr:       false,
 		},
 		{
 			name:        "invoke query-param-tool (required param nil)",
 			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{"reqId": null, "page": "1"}`)),
-			want:        `"page=1&reqId="`, // reqId becomes "", keys sorted
+			want:        `"page=1\u0026reqId="`, // reqId becomes "",
 			isErr:       false,
 		},
 	}
