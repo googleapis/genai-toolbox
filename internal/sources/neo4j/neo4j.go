@@ -21,10 +21,12 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	neo4jconf "github.com/neo4j/neo4j-go-driver/v5/neo4j/config"
 	"go.opentelemetry.io/otel/trace"
 )
 
 const SourceKind string = "neo4j"
+const UserAgent string = "genai-toolbox/neo4j-source"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
@@ -106,7 +108,9 @@ func initNeo4jDriver(ctx context.Context, tracer trace.Tracer, uri, user, passwo
 	defer span.End()
 
 	auth := neo4j.BasicAuth(user, password, "")
-	driver, err := neo4j.NewDriverWithContext(uri, auth)
+	driver, err := neo4j.NewDriverWithContext(uri, auth, func(config *neo4jconf.Config) {
+		config.UserAgent = UserAgent
+	})
 	if err != nil {
 		return nil, fmt.Errorf("unable to create connection driver: %w", err)
 	}
