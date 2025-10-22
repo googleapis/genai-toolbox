@@ -86,6 +86,8 @@ the parameter.
 | required      |      bool      |    false     | Indicate if the parameter is required. Default to `true`.                                                                                                                                                                              |
 | allowedValues |    []string    |    false     | Input value will be checked against this field. Regex is also supported.                                                                                                                                                               |
 | escape        |     string     |    false     | Only available for type `string`. Indicate the escaping delimiters used for the parameter. This field is intended to be used with templateParameters. Must be one of "single-quotes", "double-quotes", "backticks", "square-brackets". |
+| minValue      |  int or float  |    false     | Only available for type `integer` and `float`. Indicate the minimum value allowed.                                                                                                                                                     |
+| maxValue      |  int or float  |    false     | Only available for type `integer` and `float`. Indicate the maximum value allowed.                                                                                                                                                     |
 
 ### Array Parameters
 
@@ -213,7 +215,8 @@ for performance and safety reasons.
 To minimize SQL injection risk when using template parameters, always provide
 the `allowedValues` field within the parameter to restrict inputs.
 Alternatively, for `string` type parameters, you can use the `escape` field to
-add delimiters to the identifier.
+add delimiters to the identifier. For `integer` or `float` type parameters, you
+can use `minValue` and `maxValue` to define the allowable range.
 {{< /notice >}}
 
 ```yaml
