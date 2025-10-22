@@ -77,14 +77,15 @@ the parameter.
         description: Airline unique 2 letter identifier
 ```
 
-| **field**     |    **type**    | **required** | **description**                                                            |
-|---------------|:--------------:|:------------:|----------------------------------------------------------------------------|
-| name          |     string     |     true     | Name of the parameter.                                                     |
-| type          |     string     |     true     | Must be one of "string", "integer", "float", "boolean" "array"             |
-| description   |     string     |     true     | Natural language description of the parameter to describe it to the agent. |
-| default       | parameter type |    false     | Default value of the parameter. If provided, `required` will be `false`.   |
-| required      |      bool      |    false     | Indicate if the parameter is required. Default to `true`.                  |
-| allowedValues |    []string    |    false     | Input value will be checked against this field. Regex is also supported.   |
+| **field**     |    **type**    | **required** | **description**                                                                                                                                                                                                                        |
+|---------------|:--------------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| name          |     string     |     true     | Name of the parameter.                                                                                                                                                                                                                 |
+| type          |     string     |     true     | Must be one of "string", "integer", "float", "boolean" "array"                                                                                                                                                                         |
+| description   |     string     |     true     | Natural language description of the parameter to describe it to the agent.                                                                                                                                                             |
+| default       | parameter type |    false     | Default value of the parameter. If provided, `required` will be `false`.                                                                                                                                                               |
+| required      |      bool      |    false     | Indicate if the parameter is required. Default to `true`.                                                                                                                                                                              |
+| allowedValues |    []string    |    false     | Input value will be checked against this field. Regex is also supported.                                                                                                                                                               |
+| escape        |     string     |    false     | Only available for type `string`. Indicate the escaping delimiters used for the parameter. This field is intended to be used with templateParameters. Must be one of "single-quotes", "double-quotes", "backticks", "square-brackets". |
 
 ### Array Parameters
 
@@ -112,7 +113,7 @@ in the list using the items field:
 | description   |      string      |     true     | Natural language description of the parameter to describe it to the agent. |
 | default       |  parameter type  |    false     | Default value of the parameter. If provided, `required` will be `false`.   |
 | required      |       bool       |    false     | Indicate if the parameter is required. Default to `true`.                  |
-| allowedValues |    []string    |    false     | Input value will be checked against this field. Regex is also supported.     |
+| allowedValues |     []string     |    false     | Input value will be checked against this field. Regex is also supported.   |
 | items         | parameter object |     true     | Specify a Parameter object for the type of the values in the array.        |
 
 {{< notice note >}}
@@ -208,6 +209,13 @@ table names, they are prone to SQL injections. Basic parameters are preferred
 for performance and safety reasons.
 {{< /notice >}}
 
+{{< notice tip >}}
+To minimize SQL injection risk when using template parameters, always provide
+the `allowedValues` field within the parameter to restrict inputs.
+Alternatively, for `string` type parameters, you can use the `escape` field to
+add delimiters to the identifier.
+{{< /notice >}}
+
 ```yaml
 tools:
  select_columns_from_table:
@@ -233,6 +241,7 @@ tools:
           name: column
           type: string
           description: Name of a column to select
+          escape: double-quotes # with this, the statement will resolve to `SELECT "id", "name" FROM flights`
 ```
 
 | **field**     |     **type**     |  **required**   | **description**                                                                     |
@@ -242,7 +251,7 @@ tools:
 | description   |      string      |      true       | Natural language description of the template parameter to describe it to the agent. |
 | default       |  parameter type  |      false      | Default value of the parameter. If provided, `required` will be `false`.            |
 | required      |       bool       |      false      | Indicate if the parameter is required. Default to `true`.                           |
-| allowedValues |    []string    |    false     | Input value will be checked against this field. Regex is also supported.                 |
+| allowedValues |     []string     |      false      | Input value will be checked against this field. Regex is also supported.            |
 | items         | parameter object | true (if array) | Specify a Parameter object for the type of the values in the array (string only).   |
 
 ## Authorized Invocations

@@ -749,6 +749,46 @@ func TestParametersParse(t *testing.T) {
 			},
 		},
 		{
+			name: "string with escape backticks",
+			params: tools.Parameters{
+				tools.NewStringParameterWithEscape("my_string", "this param is a string", "backticks"),
+			},
+			in: map[string]any{
+				"my_string": "foo",
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "`foo`"}},
+		},
+		{
+			name: "string with escape double quotes",
+			params: tools.Parameters{
+				tools.NewStringParameterWithEscape("my_string", "this param is a string", "double-quotes"),
+			},
+			in: map[string]any{
+				"my_string": "foo",
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: `"foo"`}},
+		},
+		{
+			name: "string with escape single quotes",
+			params: tools.Parameters{
+				tools.NewStringParameterWithEscape("my_string", "this param is a string", "single-quotes"),
+			},
+			in: map[string]any{
+				"my_string": "foo",
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: `'foo'`}},
+		},
+		{
+			name: "string with escape square brackets",
+			params: tools.Parameters{
+				tools.NewStringParameterWithEscape("my_string", "this param is a string", "square-brackets"),
+			},
+			in: map[string]any{
+				"my_string": "foo",
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "[foo]"}},
+		},
+		{
 			name: "int",
 			params: tools.Parameters{
 				tools.NewIntParameter("my_int", "this param is an int"),
@@ -943,6 +983,16 @@ func TestParametersParse(t *testing.T) {
 			},
 			in:   map[string]any{},
 			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: nil}},
+		},
+		{
+			name: "array with string escape",
+			params: tools.Parameters{
+				tools.NewArrayParameter("my_array", "an array", tools.NewStringParameterWithEscape("my_string", "string item", "backticks")),
+			},
+			in: map[string]any{
+				"my_array": []string{"val1", "val2"},
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_array", Value: []any{string("`val1`"), string("`val2`")}}},
 		},
 		{
 			name: "map",

@@ -35,7 +35,14 @@ const (
 	typeBool   = "boolean"
 	typeArray  = "array"
 	typeMap    = "map"
-	typeEnum   = "enum"
+)
+
+// delimiters for string parameter escaping
+const (
+	escapeBackticks      = "backticks"
+	escapeDoubleQuotes   = "double-quotes"
+	escapeSingleQuotes   = "single-quotes"
+	escapeSquareBrackets = "square-brackets"
 )
 
 // ParamValues is an ordered list of ParamValue
@@ -536,6 +543,19 @@ func NewStringParameterWithDefault(name string, defaultV, desc string) *StringPa
 	}
 }
 
+// NewStringParameterWithEscape is a convenience function for initializing a StringParameter.
+func NewStringParameterWithEscape(name, desc, escape string) *StringParameter {
+	return &StringParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeString,
+			Desc:         desc,
+			AuthServices: nil,
+		},
+		Escape: &escape,
+	}
+}
+
 // NewStringParameterWithRequired is a convenience function for initializing a StringParameter.
 func NewStringParameterWithRequired(name string, desc string, required bool) *StringParameter {
 	return &StringParameter{
@@ -580,6 +600,7 @@ var _ Parameter = &StringParameter{}
 type StringParameter struct {
 	CommonParameter `yaml:",inline"`
 	Default         *string `yaml:"default"`
+	Escape          *string `yaml:"escape"`
 }
 
 // Parse casts the value "v" as a "string".
@@ -591,7 +612,25 @@ func (p *StringParameter) Parse(v any) (any, error) {
 	if !p.IsAllowedValues(newV) {
 		return nil, fmt.Errorf("%s is not an allowed value", newV)
 	}
+	if p.Escape != nil {
+		return applyEscape(*p.Escape, newV)
+	}
 	return newV, nil
+}
+
+func applyEscape(escape, v string) (any, error) {
+	switch escape {
+	case escapeBackticks:
+		return fmt.Sprintf("`%s`", v), nil
+	case escapeDoubleQuotes:
+		return fmt.Sprintf(`"%s"`, v), nil
+	case escapeSingleQuotes:
+		return fmt.Sprintf(`'%s'`, v), nil
+	case escapeSquareBrackets:
+		return fmt.Sprintf("[%s]", v), nil
+	default:
+		return nil, fmt.Errorf("%s is not an allowed escaping delimiter", escape)
+	}
 }
 
 func (p *StringParameter) GetAuthServices() []ParamAuthService {
