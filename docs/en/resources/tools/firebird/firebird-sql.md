@@ -132,4 +132,4 @@ tools:
 | description        |                      string                      |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement          |                      string                      |     true     | SQL statement to execute on.                                                                                                               |
 | parameters         |    [parameters](../#specifying-parameters)    |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the SQL statement.                                           |
-| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| templateParameters | [templateParameters](../#template-parameters) |    false     | List of [templateParameters](../#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
