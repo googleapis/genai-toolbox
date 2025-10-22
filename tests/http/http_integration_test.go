@@ -78,21 +78,22 @@ func multiTool(w http.ResponseWriter, r *http.Request) {
 // handleQueryTest simply returns the raw query string it received so the test
 // can verify it's formatted correctly.
 func handleQueryTest(w http.ResponseWriter, r *http.Request) {
-	// expect GET method
-	if r.Method != http.MethodGet {
-		errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
-		http.Error(w, errorMessage, http.StatusBadRequest)
-		return
-	}
-	
-	w.WriteHeader(http.StatusOK)
-	
-	// Encode the raw query string as a JSON string response
-	_, err := w.Write([]byte(r.URL.RawQuery))
-	if err != nil {
-		http.Error(w, "Failed to write response", http.StatusInternalServerError)
-		return
-	}
+    // expect GET method
+    if r.Method != http.MethodGet {
+        errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
+        http.Error(w, errorMessage, http.StatusBadRequest)
+        return
+    }
+
+    w.WriteHeader(http.StatusOK)
+    enc := json.NewEncoder(w)
+    enc.SetEscapeHTML(false) 
+
+    err := enc.Encode(r.URL.RawQuery)
+    if err != nil {
+        http.Error(w, "Failed to write response", http.StatusInternalServerError)
+        return
+    }
 }
 
 
