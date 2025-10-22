@@ -50,7 +50,7 @@ var (
 	healthcareDataset       = os.Getenv("HEALTHCARE_DATASET")
 )
 
-func verifyHealthcareVars(t *testing.T) {
+func getHealthcareVars(t *testing.T) map[string]any {
 	switch "" {
 	case healthcareProject:
 		t.Fatal("'HEALTHCARE_PROJECT' not set")
@@ -59,10 +59,16 @@ func verifyHealthcareVars(t *testing.T) {
 	case healthcareDataset:
 		t.Fatal("'HEALTHCARE_DATASET' not set")
 	}
+	return map[string]any{
+		"kind":    healthcareSourceKind,
+		"project": healthcareProject,
+		"region":  healthcareRegion,
+		"dataset": healthcareDataset,
+	}
 }
 
 func TestHealthcareToolEndpoints(t *testing.T) {
-	verifyHealthcareVars(t)
+	sourceConfig := getHealthcareVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -77,15 +83,8 @@ func TestHealthcareToolEndpoints(t *testing.T) {
 	teardown := setupHealthcareResources(t, ctx, healthcareService, healthcareDataset, fhirStoreID, dicomStoreID)
 	defer teardown(t)
 
-	sourceConfig := map[string]any{
-		"kind":    healthcareSourceKind,
-		"project": healthcareProject,
-		"region":  healthcareRegion,
-		"dataset": healthcareDataset,
-	}
-
 	toolsFile := getToolsConfig(sourceConfig)
-	toolsFile = addClientAuthSourceConfig(t, toolsFile, healthcareDataset)
+	toolsFile = addClientAuthSourceConfig(t, toolsFile)
 
 	var args []string
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
@@ -112,7 +111,7 @@ func TestHealthcareToolEndpoints(t *testing.T) {
 }
 
 func TestHealthcareToolWithStoreRestriction(t *testing.T) {
-	verifyHealthcareVars(t)
+	sourceConfig := getHealthcareVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -133,18 +132,8 @@ func TestHealthcareToolWithStoreRestriction(t *testing.T) {
 	defer teardownDisallowedStores(t)
 
 	// Configure source with dataset restriction.
-	sourceConfig := map[string]any{
-		"kind":    healthcareSourceKind,
-		"project": healthcareProject,
-		"region":  healthcareRegion,
-		"dataset": healthcareDataset,
-		"allowedFhirStores": []string{
-			allowedFHIRStoreID,
-		},
-		"allowedDicomStores": []string{
-			allowedDICOMStoreID,
-		},
-	}
+	sourceConfig["allowedFhirStores"] = []string{allowedFHIRStoreID}
+	sourceConfig["allowedDicomStores"] = []string{allowedDICOMStoreID}
 
 	// Configure tool
 	toolsConfig := map[string]any{
@@ -248,6 +237,21 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				"source":      "my-instance",
 				"description": "Tool to list DICOM stores",
 			},
+			"my-client-auth-get-dataset-tool": map[string]any{
+				"kind":        getDatasetToolKind,
+				"source":      "my-client-auth-source",
+				"description": "Tool to get a healthcare dataset",
+			},
+			"my-client-auth-list-fhir-stores-tool": map[string]any{
+				"kind":        listFHIRStoresToolKind,
+				"source":      "my-client-auth-source",
+				"description": "Tool to list FHIR stores",
+			},
+			"my-client-auth-list-dicom-stores-tool": map[string]any{
+				"kind":        listDICOMStoresToolKind,
+				"source":      "my-client-auth-source",
+				"description": "Tool to list DICOM stores",
+			},
 			"my-auth-get-dataset-tool": map[string]any{
 				"kind":        getDatasetToolKind,
 				"source":      "my-instance",
@@ -283,7 +287,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 	return config
 }
 
-func addClientAuthSourceConfig(t *testing.T, config map[string]any, datasetID string) map[string]any {
+func addClientAuthSourceConfig(t *testing.T, config map[string]any) map[string]any {
 	sources, ok := config["sources"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get sources from config")
@@ -292,7 +296,7 @@ func addClientAuthSourceConfig(t *testing.T, config map[string]any, datasetID st
 		"kind":           healthcareSourceKind,
 		"project":        healthcareProject,
 		"region":         healthcareRegion,
-		"dataset":        datasetID,
+		"dataset":        healthcareDataset,
 		"useClientOAuth": true,
 	}
 	config["sources"] = sources
@@ -357,10 +361,43 @@ func runGetDatasetToolInvokeTest(t *testing.T, want string) {
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
 		},
+		{
+			name:          "invoke my-client-auth-get-dataset-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-get-dataset-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-client-auth-get-dataset-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-get-dataset-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-client-auth-get-dataset-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-get-dataset-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			runTest(t, tc.api, tc.requestHeader, tc.requestBody, tc.want, tc.isErr)
+			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
+			if tc.isErr {
+				if status == http.StatusOK {
+					t.Errorf("expected error but got success")
+				}
+				return
+			}
+			if status != http.StatusOK {
+				t.Errorf("expected status OK but got %d", status)
+			} else if !strings.Contains(got, tc.want) {
+				t.Errorf("expected result to contain %q but got %q", tc.want, got)
+			}
 		})
 	}
 }
@@ -423,10 +460,43 @@ func runListFHIRStoresToolInvokeTest(t *testing.T, want string) {
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
 		},
+		{
+			name:          "invoke my-client-auth-list-fhir-stores-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-list-fhir-stores-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-client-auth-list-fhir-stores-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-list-fhir-stores-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-client-auth-list-fhir-stores-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-list-fhir-stores-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			runTest(t, tc.api, tc.requestHeader, tc.requestBody, tc.want, tc.isErr)
+			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
+			if tc.isErr {
+				if status == http.StatusOK {
+					t.Errorf("expected error but got success")
+				}
+				return
+			}
+			if status != http.StatusOK {
+				t.Errorf("expected status OK but got %d", status)
+			} else if !strings.Contains(got, tc.want) {
+				t.Errorf("expected result to contain %q but got %q", tc.want, got)
+			}
 		})
 	}
 }
@@ -489,39 +559,57 @@ func runListDICOMStoresToolInvokeTest(t *testing.T, want string) {
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
 			isErr:         true,
 		},
+		{
+			name:          "invoke my-client-auth-list-dicom-stores-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-list-dicom-stores-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-client-auth-list-dicom-stores-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-list-dicom-stores-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-client-auth-list-dicom-stores-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-list-dicom-stores-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			isErr:         true,
+		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			runTest(t, tc.api, tc.requestHeader, tc.requestBody, tc.want, tc.isErr)
+			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
+			if tc.isErr {
+				if status == http.StatusOK {
+					t.Errorf("expected error but got success")
+				}
+				return
+			}
+			if status != http.StatusOK {
+				t.Errorf("expected status OK but got %d", status)
+			} else if !strings.Contains(got, tc.want) {
+				t.Errorf("expected result to contain %q but got %q", tc.want, got)
+			}
 		})
 	}
 }
 
-func runTest(t *testing.T, api string, requestHeader map[string]string, requestBody io.Reader, want string, isErr bool) {
-	req, err := http.NewRequest(http.MethodPost, api, requestBody)
-	if err != nil {
-		t.Fatalf("unable to create request: %s", err)
-	}
-	req.Header.Add("Content-type", "application/json")
-	for k, v := range requestHeader {
-		req.Header.Add(k, v)
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("unable to send request: %s", err)
-	}
+func runTest(t *testing.T, api string, requestHeader map[string]string, requestBody io.Reader) (string, int) {
+	resp, bodyBytes := tests.RunRequest(t, http.MethodPost, api, requestBody, requestHeader)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		if isErr {
-			return
-		}
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+		return "", resp.StatusCode
 	}
 
 	var body map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&body)
+	err := json.Unmarshal(bodyBytes, &body)
 	if err != nil {
 		t.Fatalf("error parsing response body")
 	}
@@ -530,40 +618,14 @@ func runTest(t *testing.T, api string, requestHeader map[string]string, requestB
 	if !ok {
 		t.Fatalf("unable to find result in response body")
 	}
-
-	if !strings.Contains(got, want) {
-		t.Fatalf("expected %q to contain %q, but it did not", got, want)
-	}
+	return got, http.StatusOK
 }
 
 func runListFHIRStoresWithRestriction(t *testing.T, allowedFHIRStore, disallowedFHIRStore string) {
 	api := "http://127.0.0.1:5000/api/tool/list-fhir-stores-restricted/invoke"
-	req, err := http.NewRequest(http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)))
-	if err != nil {
-		t.Fatalf("unable to create request: %s", err)
-	}
-	req.Header.Add("Content-type", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("unable to send request: %s", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-	}
-
-	var body map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&body)
-	if err != nil {
-		t.Fatalf("error parsing response body")
-	}
-
-	got, ok := body["result"].(string)
-	if !ok {
-		t.Fatalf("unable to find result in response body")
+	got, status := runTest(t, api, map[string]string{"Content-type": "application/json"}, bytes.NewBuffer([]byte(`{}`)))
+	if status != http.StatusOK {
+		t.Fatalf("expected status OK but got %d", status)
 	}
 
 	if !strings.Contains(got, allowedFHIRStore) {
@@ -576,32 +638,9 @@ func runListFHIRStoresWithRestriction(t *testing.T, allowedFHIRStore, disallowed
 
 func runListDICOMStoresWithRestriction(t *testing.T, allowedDICOMStore, disallowedDICOMStore string) {
 	api := "http://127.0.0.1:5000/api/tool/list-dicom-stores-restricted/invoke"
-	req, err := http.NewRequest(http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)))
-	if err != nil {
-		t.Fatalf("unable to create request: %s", err)
-	}
-	req.Header.Add("Content-type", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatalf("unable to send request: %s", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-	}
-
-	var body map[string]interface{}
-	err = json.NewDecoder(resp.Body).Decode(&body)
-	if err != nil {
-		t.Fatalf("error parsing response body")
-	}
-
-	got, ok := body["result"].(string)
-	if !ok {
-		t.Fatalf("unable to find result in response body")
+	got, status := runTest(t, api, map[string]string{"Content-type": "application/json"}, bytes.NewBuffer([]byte(`{}`)))
+	if status != http.StatusOK {
+		t.Fatalf("expected status OK but got %d", status)
 	}
 
 	if !strings.Contains(got, allowedDICOMStore) {
