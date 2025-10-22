@@ -84,7 +84,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	cypherParameter := tools.NewStringParameter("cypher", "The cypher to execute.")
-	parameters := tools.Parameters{cypherParameter}
+	dryRunParameter := tools.NewBooleanParameterWithDefault(
+		"dry_run",
+		false,
+		"If set to true, the query will be validated and information about the execution "+
+			"will be returned without running the query. Defaults to false.",
+	)
+	parameters := tools.Parameters{cypherParameter, dryRunParameter}
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
 
@@ -124,11 +130,16 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	paramsMap := params.AsMap()
 	cypherStr, ok := paramsMap["cypher"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", paramsMap["cypher"])
+		return nil, fmt.Errorf("unable to cast cypher parameter %s", paramsMap["cypher"])
 	}
 
 	if cypherStr == "" {
 		return nil, fmt.Errorf("parameter 'cypher' must be a non-empty string")
+	}
+
+	dryRun, ok := paramsMap["dry_run"].(bool)
+	if !ok {
+		return nil, fmt.Errorf("unable to cast dry_run parameter %s", paramsMap["dry_run"])
 	}
 
 	// validate the cypher query before executing
@@ -141,6 +152,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("this tool is read-only and cannot execute write queries")
 	}
 
+	if dryRun {
+		// Add EXPLAIN to the beginning of the query to validate it without executing
+		cypherStr = "EXPLAIN " + cypherStr
+	}
+
 	config := neo4j.ExecuteQueryWithDatabase(t.Database)
 	results, err := neo4j.ExecuteQuery(ctx, t.Driver, cypherStr, nil,
 		neo4j.EagerResultTransformer, config)
@@ -148,9 +164,28 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
 
+	// If dry run, return the summary information only
+	if dryRun {
+		summary := results.Summary
+		plan := summary.Plan()
+		execPlan := map[string]any{
+			"queryType":     cf.Type.String(),
+			"statementType": summary.StatementType(),
+			"operator":      plan.Operator(),
+			"arguments":     plan.Arguments(),
+			"identifiers":   plan.Identifiers(),
+			"childrenCount": len(plan.Children()),
+		}
+		if len(plan.Children()) > 0 {
+			execPlan["children"] = t.addPlanChildren(plan)
+		}
+		return []map[string]any{execPlan}, nil
+	}
+
 	var out []any
 	keys := results.Keys
 	records := results.Records
+
 	for _, record := range records {
 		vMap := make(map[string]any)
 		for col, value := range record.Values {
@@ -180,4 +215,22 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
+}
+
+// Recursive function to add plan children
+func (t Tool) addPlanChildren(p neo4j.Plan) []map[string]any {
+	var children []map[string]any
+	for _, child := range p.Children() {
+		childMap := map[string]any{
+			"operator":       child.Operator(),
+			"arguments":      child.Arguments(),
+			"identifiers":    child.Identifiers(),
+			"children_count": len(child.Children()),
+		}
+		if len(child.Children()) > 0 {
+			childMap["children"] = t.addPlanChildren(child)
+		}
+		children = append(children, childMap)
+	}
+	return children
 }
