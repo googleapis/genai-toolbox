@@ -35,16 +35,16 @@ jobs:
         uses: lycheeverse/lychee-action@v2
         with:
           args: >
-            --verbose
-            --no-progress
-            --cache
-            --max-cache-age 1d
-            README.md
-            docs/
+            --verbose             # Print detailed output for debugging/info
+            --no-progress         # Disable the progress bar in CI logs
+            --cache               # Enable caching of checked URLs
+            --max-cache-age 1d    # Re-check cached links older than 1 day
+            README.md             # Target: Check links in the top-level README
+            docs/                 # Target: Recursively check all files in the docs/ directory
 
-          output: /tmp/foo.txt
-          fail: true
-          jobSummary: true
-          debug: true
+          output: /tmp/foo.txt    # Output the results to a temporary file
+          fail: true              # Fail the job if any broken link is found
+          jobSummary: true        # Post the results summary to the job summary
+          debug: true             # Enable debug output for the action itself
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
