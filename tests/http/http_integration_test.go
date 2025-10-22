@@ -44,6 +44,7 @@ func getHTTPSourceConfig(t *testing.T) map[string]any {
 		t.Fatalf("error getting ID token: %s", err)
 	}
 	idToken = "Bearer " + idToken
+	
 	return map[string]any{
 		"kind":    HttpSourceKind,
 		"headers": map[string]string{"Authorization": idToken},
@@ -345,28 +346,24 @@ func runQueryParamInvokeTest(t *testing.T) {
 			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test1"}`)),
 			want:        `"reqId=test1"`,
-			isErr:       false,
 		},
 		{
 			name:        "invoke query-param-tool (some optional nil)",
 			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test2", "page": "5", "filter": null}`)),
 			want:        `"page=5\u0026reqId=test2"`, // 'filter' omitted
-			isErr:       false,
 		},
 		{
 			name:        "invoke query-param-tool (some optional absent)",
 			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test2", "page": "5"}`)),
 			want:        `"page=5\u0026reqId=test2"`, // 'filter' omitted
-			isErr:       false,
 		},
 		{
 			name:        "invoke query-param-tool (required param nil)",
 			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
 			requestBody: bytes.NewBuffer([]byte(`{"reqId": null, "page": "1"}`)),
 			want:        `"page=1\u0026reqId="`, // reqId becomes "",
-			isErr:       false,
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -385,9 +382,6 @@ func runQueryParamInvokeTest(t *testing.T) {
 			defer resp.Body.Close()
 
 			if resp.StatusCode != http.StatusOK {
-				if tc.isErr == true {
-					return
-				}
 				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
 			}
@@ -588,23 +582,29 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"method":      "get",
 				"path":        "/{{.path}}?id=2",
 				"description": "some description",
-		"headers": map[string]string{
-					"X-Custom-Header": "example",
-				},
-				"pathParams": []tools.Parameter{
-					&tools.StringParameter{
-						CommonParameter: tools.CommonParameter{Name: "path", Type: "string", Desc: "path param"},
+				"headers": 
+					map[string]string{
+						"X-Custom-Header": "example",
 					},
-				},
-				"queryParams": []tools.Parameter{
-					tools.NewIntParameter("id", "user ID"), tools.NewStringParameter("country", "country")},
+				"pathParams":
+					[]tools.Parameter{
+						&tools.StringParameter{
+							CommonParameter: tools.CommonParameter{Name: "path", Type: "string", Desc: "path param"},
+						},
+					},
+				"queryParams":
+					[]tools.Parameter{
+						tools.NewIntParameter("id", "user ID"), tools.NewStringParameter("country", "country"),
+					},
 				"requestBody": `{
-"place": "zoo",
-"animals": {{json .animalArray }}
-}
-`,
-				"bodyParams":   []tools.Parameter{tools.NewArrayParameter("animalArray", "animals in the zoo", tools.NewStringParameter("animals", "desc"))},
-				"headerParams": []tools.Parameter{tools.NewStringParameter("X-Other-Header", "custom header")},
+					"place": "zoo",
+					"animals": {{json .animalArray }}
+					}
+					`,
+				"bodyParams":   
+					[]tools.Parameter{tools.NewArrayParameter("animalArray", "animals in the zoo", tools.NewStringParameter("animals", "desc"))},
+				"headerParams": 
+					[]tools.Parameter{tools.NewStringParameter("X-Other-Header", "custom header")},
 			},
 		},
 	}
