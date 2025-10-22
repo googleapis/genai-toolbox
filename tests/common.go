@@ -200,6 +200,8 @@ func AddPostgresPrebuiltConfig(t *testing.T, config map[string]any) map[string]a
 		PostgresListViewsToolKind               = "postgres-list-views"
 		PostgresDatabaseOverviewToolKind        = "postgres-database-overview"
 		PostgresListTriggersToolKind            = "postgres-list-triggers"
+		PostgresListIndexesToolKind             = "postgres-list-indexes"
+		PostgresListSequencesToolKind           = "postgres-list-sequences"
 	)
 
 	tools, ok := config["tools"].(map[string]any)
@@ -248,6 +250,16 @@ func AddPostgresPrebuiltConfig(t *testing.T, config map[string]any) map[string]a
 		"kind":   PostgresListTriggersToolKind,
 		"source": "my-instance",
 	}
+	tools["list_indexes"] = map[string]any{
+		"kind":   PostgresListIndexesToolKind,
+		"source": "my-instance",
+	}
+
+	tools["list_sequences"] = map[string]any{
+		"kind":   PostgresListSequencesToolKind,
+		"source": "my-instance",
+	}
+
 	config["tools"] = tools
 	return config
 }
