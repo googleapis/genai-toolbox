@@ -196,19 +196,24 @@ In most cases, the description will be provided to the LLM as context on
 specifying the parameter. Template parameters will be inserted into the SQL
 statement before executing the prepared statement. They will be inserted without
 quotes, so to insert a string using template parameters, quotes must be
-explicitly added within the string. Alternatively, the `escape` field could be
-used to add delimiters to the identifier.
+explicitly added within the string.
 
 Template parameter arrays can also be used similarly to basic parameters, and array
 items must be strings. Once inserted into the SQL statement, the outer layer of
 quotes will be removed. Therefore to insert strings into the SQL statement, a
-set of quotes must be explicitly added within the string. Alternatively, the
-`escape` field could be used to add delimiters to the identifier.
+set of quotes must be explicitly added within the string.
 
 {{< notice warning >}}
 Because template parameters can directly replace identifiers, column names, and
 table names, they are prone to SQL injections. Basic parameters are preferred
 for performance and safety reasons.
+{{< /notice >}}
+
+{{< notice tip >}}
+To minimize SQL injection risk when using template parameters, always provide
+the `allowedValues` field within the parameter to restrict inputs.
+Alternatively, for `string` type parameters, you can use the `escape` field to
+add delimiters to the identifier.
 {{< /notice >}}
 
 ```yaml
@@ -223,7 +228,7 @@ tools:
       Example:
       {{
           "tableName": "flights",
-          "columnNames": [id, name]
+          "columnNames": ["id", "name"]
       }}
     templateParameters:
       - name: tableName
@@ -236,7 +241,7 @@ tools:
           name: column
           type: string
           description: Name of a column to select
-          escape: double-quotes
+          escape: double-quotes # with this, the statement will resolve to `SELECT "id", "name" FROM flights`
 ```
 
 | **field**     |     **type**     |  **required**   | **description**                                                                     |
