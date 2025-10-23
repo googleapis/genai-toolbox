@@ -11,16 +11,12 @@
 
 ### Bug Fixes
 
-* Escape mysql user agent ([#1707](https://github.com/googleapis/genai-toolbox/issues/1707)) ([eeb694c](https://github.com/googleapis/genai-toolbox/commit/eeb694c20facc40a38bfa67073c4cb1f3dd657ff))
-* Escape program_name for MySQL ([#1717](https://github.com/googleapis/genai-toolbox/issues/1717)) ([02f7f8a](https://github.com/googleapis/genai-toolbox/commit/02f7f8af979057efe99fd138cb1b958130355b68))
+* **sources/mysql:** Escape mysql user agent ([#1707](https://github.com/googleapis/genai-toolbox/issues/1707)) ([eeb694c](https://github.com/googleapis/genai-toolbox/commit/eeb694c20facc40a38bfa67073c4cb1f3dd657ff))
+* **sources/mysql:** Escape program_name for MySQL ([#1717](https://github.com/googleapis/genai-toolbox/issues/1717)) ([02f7f8a](https://github.com/googleapis/genai-toolbox/commit/02f7f8af979057efe99fd138cb1b958130355b68))
 * **tools/http:** Allow 2xx status code on tool invocation ([#1761](https://github.com/googleapis/genai-toolbox/issues/1761)) ([a06d0d8](https://github.com/googleapis/genai-toolbox/commit/a06d0d8735fbec29bea97457248845a8c6b4aa3c))
 * **tools/http:** Omit optional nil query parameters ([#1762](https://github.com/googleapis/genai-toolbox/issues/1762)) ([bd16ba3](https://github.com/googleapis/genai-toolbox/commit/bd16ba3921e6177065780e5f29870859b8e18e4f))
 * **tools/looker:** Looker file content calls should not use url.QueryEscape ([#1758](https://github.com/googleapis/genai-toolbox/issues/1758)) ([336de1b](https://github.com/googleapis/genai-toolbox/commit/336de1bd04b869d322c0fd1f4667eb652159d791))
 
-
-### Miscellaneous Chores
-
-* Release 0.18.0 ([#1776](https://github.com/googleapis/genai-toolbox/issues/1776)) ([d95bbb5](https://github.com/googleapis/genai-toolbox/commit/d95bbb58cdd198096b461fc22b62e901a1f49c4f))
 
 ## [0.17.0](https://github.com/googleapis/genai-toolbox/compare/v0.16.0...v0.17.0) (2025-10-10)
 
