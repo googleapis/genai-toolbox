@@ -12,7 +12,7 @@ require (
 	cloud.google.com/go/dataplex v1.27.1
 	cloud.google.com/go/firestore v1.20.0
 	cloud.google.com/go/geminidataanalytics v0.2.1
-	cloud.google.com/go/spanner v1.86.0
+	cloud.google.com/go/spanner v1.86.1
 	github.com/ClickHouse/clickhouse-go/v2 v2.40.3
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.53.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.29.0
