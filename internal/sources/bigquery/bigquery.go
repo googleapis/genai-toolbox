@@ -84,33 +84,43 @@ func (r Config) SourceConfigKind() string {
 	// Returns BigQuery source kind
 	return SourceKind
 }
-
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	if r.WriteMode == "" {
 		r.WriteMode = WriteModeAllowed
 	}
 
-	if r.WriteMode == WriteModeProtected && r.UseClientOAuth {
-		return nil, fmt.Errorf("writeMode 'protected' cannot be used with useClientOAuth 'true'")
+	// Initialize Source struct first
+	s := &Source{
+		Name:               r.Name,
+		Kind:               SourceKind,
+		Project:            r.Project,
+		Location:           r.Location,
+		MaxQueryResultRows: 50,
+		WriteMode:          r.WriteMode,
+		UseClientOAuth:     r.UseClientOAuth,
 	}
 
-	var client *bigqueryapi.Client
-	var restService *bigqueryrestapi.Service
-	var tokenSource oauth2.TokenSource
-	var clientCreator BigqueryClientCreator // Renamed to internal
-	var err error
-
 	if r.UseClientOAuth {
-		clientCreator, err = newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.Name)
+		// use client OAUth
+		if r.WriteMode == WriteModeProtected {
+			return nil, fmt.Errorf("writeMode 'protected' cannot be used with useClientOAuth 'true'")
+		}
+
+		baseClientCreator, err := newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.Name)
 		if err != nil {
 			return nil, fmt.Errorf("error constructing client creator: %w", err)
 		}
+		s.setupClientCaching(baseClientCreator)
+
 	} else {
-		// Initializes a BigQuery Google SQL source
-		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location)
+		// use ADC
+		client, restService, tokenSource, err := initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from ADC: %w", err)
 		}
+		s.Client = client
+		s.RestService = restService
+		s.TokenSource = tokenSource
 	}
 
 	allowedDatasets := make(map[string]struct{})
@@ -132,8 +142,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 				allowedFullID = fmt.Sprintf("%s.%s", projectID, datasetID)
 			}
 
-			if client != nil {
-				dataset := client.DatasetInProject(projectID, datasetID)
+			if s.Client != nil {
+				dataset := s.Client.DatasetInProject(projectID, datasetID)
 				_, err := dataset.Metadata(ctx)
 				if err != nil {
 					if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
@@ -145,72 +155,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 			allowedDatasets[allowedFullID] = struct{}{}
 		}
 	}
-
-	s := &Source{
-		Name:               r.Name,
-		Kind:               SourceKind,
-		Project:            r.Project,
-		Location:           r.Location,
-		Client:             client,
-		RestService:        restService,
-		TokenSource:        tokenSource,
-		MaxQueryResultRows: 50,
-		WriteMode:       r.WriteMode,
-		AllowedDatasets: allowedDatasets,
-		UseClientOAuth:  r.UseClientOAuth,
-	}
-
-	if r.UseClientOAuth {
-		// Define eviction handlers
-		onBqEvict := func(key string, value interface{}) {
-			if client, ok := value.(*bigqueryapi.Client); ok && client != nil {
-				client.Close()
-			}
-		}
-		onDataplexEvict := func(key string, value interface{}) {
-			if client, ok := value.(*dataplexapi.CatalogClient); ok && client != nil {
-				client.Close()
-			}
-		}
-
-		// Initialize caches
-		s.bqClientCache = NewCache(onBqEvict)
-		s.bqRestCache = NewCache(nil)
-		s.dataplexCache = NewCache(onDataplexEvict)
-
-		// Create the caching wrapper for the client creator
-		s.ClientCreator = func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-			// Check cache
-			bqClientVal, bqFound := s.bqClientCache.Get(tokenString)
-
-			if wantRestService {
-				restServiceVal, restFound := s.bqRestCache.Get(tokenString)
-				if bqFound && restFound {
-					// Cache hit for both
-					return bqClientVal.(*bigqueryapi.Client), restServiceVal.(*bigqueryrestapi.Service), nil
-				}
-			} else {
-				if bqFound {
-					return bqClientVal.(*bigqueryapi.Client), nil, nil
-				}
-			}
-
-			// Cache miss - call the client creator
-			// This will create both even if only one was missing
-			client, restService, err := clientCreator(tokenString, wantRestService)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			// Set in cache
-			s.bqClientCache.Set(tokenString, client)
-			if wantRestService && restService != nil {
-				s.bqRestCache.Set(tokenString, restService)
-			}
-
-			return client, restService, nil
-		}
-	}
+	s.AllowedDatasets = allowedDatasets
 
 	s.SessionProvider = s.newBigQuerySessionProvider()
 
@@ -220,6 +165,58 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	s.makeDataplexCatalogClient = s.lazyInitDataplexClient(ctx, tracer)
 	return s, nil
 
+}
+
+// setupClientCaching initializes caches and wraps the base client creator with caching logic.
+func (s *Source) setupClientCaching(baseCreator BigqueryClientCreator) {
+	// Define eviction handlers
+	onBqEvict := func(key string, value interface{}) {
+		if client, ok := value.(*bigqueryapi.Client); ok && client != nil {
+			client.Close()
+		}
+	}
+	onDataplexEvict := func(key string, value interface{}) {
+		if client, ok := value.(*dataplexapi.CatalogClient); ok && client != nil {
+			client.Close()
+		}
+	}
+
+	// Initialize caches
+	s.bqClientCache = NewCache(onBqEvict)
+	s.bqRestCache = NewCache(nil)
+	s.dataplexCache = NewCache(onDataplexEvict)
+
+	// Create the caching wrapper for the client creator
+	s.ClientCreator = func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+		// Check cache
+		bqClientVal, bqFound := s.bqClientCache.Get(tokenString)
+
+		if wantRestService {
+			restServiceVal, restFound := s.bqRestCache.Get(tokenString)
+			if bqFound && restFound {
+				// Cache hit for both
+				return bqClientVal.(*bigqueryapi.Client), restServiceVal.(*bigqueryrestapi.Service), nil
+			}
+		} else {
+			if bqFound {
+				return bqClientVal.(*bigqueryapi.Client), nil, nil
+			}
+		}
+
+		// Cache miss - call the client creator
+		client, restService, err := baseCreator(tokenString, wantRestService)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		// Set in cache
+		s.bqClientCache.Set(tokenString, client)
+		if wantRestService && restService != nil {
+			s.bqRestCache.Set(tokenString, restService)
+		}
+
+		return client, restService, nil
+	}
 }
 
 var _ sources.Source = &Source{}
