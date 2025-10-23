@@ -52,7 +52,7 @@ List of reference documentation for resources in Toolbox.
   - [AlloyDB for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/sources/alloydb-pg/): AlloyDB for PostgreSQL is a fully-managed, PostgreSQL-compatible database for demanding transactional workloads.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/sources/bigquery/): BigQuery is Google Cloud's fully managed, petabyte-scale, and cost-effective analytics data warehouse that lets you run analytics over vast amounts of  data in near real time. With BigQuery, there's no infrastructure to set  up or manage, letting you focus on finding meaningful insights using  GoogleSQL and taking advantage of flexible pricing models across on-demand  and flat-rate options.
   - [Bigtable](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/sources/bigtable/): Bigtable is a low-latency NoSQL database service for machine learning, operational analytics, and user-facing operations. It's a wide-column, key-value store that can scale to billions of rows and thousands of columns. With Bigtable, you can replicate your data to regions across the world for high availability and data resiliency.
-  - [Cassandra](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/sources/cassandra/): Cassandra is a NoSQL distributed database known for its horizontal scalability, distributed architecture, and flexible schema definition.
+  - [Cassandra](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/sources/cassandra/): Apache Cassandra is a NoSQL distributed database known for its horizontal scalability, distributed architecture, and flexible schema definition.
   - [ClickHouse](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/sources/clickhouse/): ClickHouse is an open-source, OLTP database.
   - [Cloud Monitoring](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/sources/cloud-monitoring/): A "cloud-monitoring" source provides a client for the Cloud Monitoring API.
   - [Cloud SQL for MySQL](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/sources/cloud-sql-mysql/): Cloud SQL for MySQL is a fully-managed database service for MySQL.
@@ -70,6 +70,7 @@ List of reference documentation for resources in Toolbox.
   - [MySQL](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/sources/mysql/): MySQL is a relational database management system that stores and manages data.
   - [Neo4j](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/sources/neo4j/): Neo4j is a powerful, open source graph database system
   - [OceanBase](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/sources/oceanbase/): OceanBase is a distributed relational database that provides high availability, scalability, and compatibility with MySQL.
+  - [Oracle](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/sources/oracle/): Oracle Database is a widely-used relational database management system.
   - [PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/sources/postgres/): PostgreSQL is a powerful, open source object-relational database.
   - [Redis](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/sources/redis/): Redis is a in-memory data structure store.
   - [Spanner](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/sources/spanner/): Spanner is a fully managed database service from Google Cloud that combines  relational, key-value, graph, and search capabilities.
@@ -90,6 +91,7 @@ List of reference documentation for resources in Toolbox.
   - [Cloud Monitoring](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/cloudmonitoring/): Tools that work with Cloud Monitoring source.
   - [Cloud SQL](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/cloudsql/): Tools that work with Cloud SQL. 
   - [Couchbase](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/couchbase/): Tools that work with Couchbase Sources.
+  - [Dataform](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/dataform/): Tools that work with Dataform.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/dataplex/): Tools that work with Dataplex Sources.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/dgraph/): Tools that work with Dgraph Sources.
   - [Firebird](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/firebird/): Tools that work with Firebird Sources.
@@ -100,6 +102,7 @@ List of reference documentation for resources in Toolbox.
   - [MySQL](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/mysql/): Tools that work with MySQL Sources, such as Cloud SQL for MySQL.
   - [Neo4j](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/neo4j/): Tools that work with Neo4j Sources.
   - [OceanBase](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/oceanbase/): Tools that work with OceanBase Sources.
+  - [Oracle](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/oracle/): Tools that work with Oracle Sources.
   - [Postgres](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/postgres/): Tools that work with Postgres Sources, such as Cloud SQL for Postgres and AlloyDB. 
   - [Redis](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/redis/): Tools that work with Redis Sources.
   - [Spanner](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/spanner/): Tools that work with Spanner Sources.
@@ -109,7 +112,7 @@ List of reference documentation for resources in Toolbox.
   - [Trino](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/trino/): Tools that work with Trino Sources, such as distributed SQL query engine.
   - [Utility tools](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/utility/): Tools that provide utility.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/valkey/): Tools that work with Valkey Sources.
-  - [yugabytedb-sql](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/yugabytedb-sql/): A "yugabytedb-sql" tool executes a pre-defined SQL statement against a YugabyteDB database.
+  - [YugabyteDB](https://googleapis.github.io/genai-toolbox/previews/PR-1585/resources/tools/yuagbytedb/): Tools that work with Valkey Sources.
 
 ### Samples
 
