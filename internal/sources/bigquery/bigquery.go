@@ -103,7 +103,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	var client *bigqueryapi.Client
 	var restService *bigqueryrestapi.Service
 	var tokenSource oauth2.TokenSource
-	var clientCreator BigqueryClientCreator
+	var clientCreator BigqueryClientCreator // Renamed to internal
 	var err error
 
 	if r.UseClientOAuth {
@@ -167,6 +167,59 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		ClientCreator:             clientCreator,
 		ImpersonateServiceAccount: r.ImpersonateServiceAccount,
 	}
+
+	if r.UseClientOAuth {
+		// Define eviction handlers
+		onBqEvict := func(key string, value interface{}) {
+			if client, ok := value.(*bigqueryapi.Client); ok && client != nil {
+				client.Close()
+			}
+		}
+		onDataplexEvict := func(key string, value interface{}) {
+			if client, ok := value.(*dataplexapi.CatalogClient); ok && client != nil {
+				client.Close()
+			}
+		}
+
+		// Initialize caches
+		s.bqClientCache = NewCache(onBqEvict)
+		s.bqRestCache = NewCache(nil)
+		s.dataplexCache = NewCache(onDataplexEvict)
+
+		// Create the caching wrapper for the client creator
+		s.ClientCreator = func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+			// Check cache
+			bqClientVal, bqFound := s.bqClientCache.Get(tokenString)
+
+			if wantRestService {
+				restServiceVal, restFound := s.bqRestCache.Get(tokenString)
+				if bqFound && restFound {
+					// Cache hit for both
+					return bqClientVal.(*bigqueryapi.Client), restServiceVal.(*bigqueryrestapi.Service), nil
+				}
+			} else {
+				if bqFound {
+					return bqClientVal.(*bigqueryapi.Client), nil, nil
+				}
+			}
+
+			// Cache miss - call the client creator
+			// This will create both even if only one was missing
+			client, restService, err := clientCreator(tokenString, wantRestService)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			// Set in cache
+			s.bqClientCache.Set(tokenString, client)
+			if wantRestService && restService != nil {
+				s.bqRestCache.Set(tokenString, restService)
+			}
+
+			return client, restService, nil
+		}
+	}
+
 	s.SessionProvider = s.newBigQuerySessionProvider()
 
 	if r.WriteMode != WriteModeAllowed && r.WriteMode != WriteModeBlocked && r.WriteMode != WriteModeProtected {
@@ -197,6 +250,11 @@ type Source struct {
 	makeDataplexCatalogClient func() (*dataplexapi.CatalogClient, DataplexClientCreator, error)
 	SessionProvider           BigQuerySessionProvider
 	Session                   *Session
+
+	// Caches for OAuth clients
+	bqClientCache *Cache
+	bqRestCache   *Cache
+	dataplexCache *Cache
 }
 
 type Session struct {
@@ -397,7 +455,29 @@ func (s *Source) lazyInitDataplexClient(ctx context.Context, tracer trace.Tracer
 				return
 			}
 			client = c
-			clientCreator = cc
+
+			// If using OAuth, wrap the provided client creator (cc) with caching logic
+			if s.UseClientOAuth && cc != nil {
+				clientCreator = func(tokenString string) (*dataplexapi.CatalogClient, error) {
+					// Check cache
+					if val, found := s.dataplexCache.Get(tokenString); found {
+						return val.(*dataplexapi.CatalogClient), nil
+					}
+
+					// Cache miss - call client creator
+					dpClient, err := cc(tokenString)
+					if err != nil {
+						return nil, err
+					}
+
+					// Set in cache
+					s.dataplexCache.Set(tokenString, dpClient)
+					return dpClient, nil
+				}
+			} else {
+				// Not using OAuth or no creator was returned
+				clientCreator = cc
+			}
 		})
 		return client, clientCreator, err
 	}
