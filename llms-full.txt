@@ -89,7 +89,7 @@ following instructions for your OS and CPU architecture.
 To install Toolbox as a binary on Linux (AMD64):
 ```sh
 # see releases page for other versions
-export VERSION=0.17.0
+export VERSION=0.18.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -98,7 +98,7 @@ chmod +x toolbox
 To install Toolbox as a binary on macOS (Apple Silicon):
 ```sh
 # see releases page for other versions
-export VERSION=0.17.0
+export VERSION=0.18.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
 chmod +x toolbox
 ```
@@ -107,7 +107,7 @@ chmod +x toolbox
 To install Toolbox as a binary on macOS (Intel):
 ```sh
 # see releases page for other versions
-export VERSION=0.17.0
+export VERSION=0.18.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
 chmod +x toolbox
 ```
@@ -116,7 +116,7 @@ chmod +x toolbox
 To install Toolbox as a binary on Windows (AMD64):
 ```powershell
 # see releases page for other versions
-$VERSION = "0.17.0"
+$VERSION = "0.18.0"
 Invoke-WebRequest -Uri "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe" -OutFile "toolbox.exe"
 ```
 {{% /tab %}}
@@ -127,7 +127,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.17.0
+export VERSION=0.18.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -146,7 +146,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.17.0
+go install github.com/googleapis/genai-toolbox@v0.18.0
 ```
 
 {{% /tab %}}
@@ -1085,7 +1085,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -1674,19 +1674,19 @@ to expose your developer assistant tools to a Looker instance:
    <!-- {x-release-please-start-version} -->
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -1978,19 +1978,19 @@ expose your developer assistant tools to a MySQL instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -2293,19 +2293,19 @@ expose your developer assistant tools to a Neo4j instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -2613,19 +2613,19 @@ Omni](https://cloud.google.com/alloydb/omni/current/docs/overview).
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -2944,19 +2944,19 @@ instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3259,19 +3259,19 @@ to expose your developer assistant tools to a SQLite instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -6215,12 +6215,12 @@ sources:
 
 
 # Cassandra
-Cassandra is a NoSQL distributed database known for its horizontal scalability, distributed architecture, and flexible schema definition.
+Apache Cassandra is a NoSQL distributed database known for its horizontal scalability, distributed architecture, and flexible schema definition.
 
 
 ## About
 
-[Cassandra][cassandra-docs] is a NoSQL distributed database. By design, NoSQL databases are lightweight, open-source, non-relational, and largely distributed. Counted among their strengths are horizontal scalability, distributed architectures, and a flexible approach to schema definition.
+[Apache Cassandra][cassandra-docs] is a NoSQL distributed database. By design, NoSQL databases are lightweight, open-source, non-relational, and largely distributed. Counted among their strengths are horizontal scalability, distributed architectures, and a flexible approach to schema definition.
 
 [cassandra-docs]: https://cassandra.apache.org/
 
@@ -7821,14 +7821,6 @@ This source uses standard authentication. You will need to [create an Oracle use
 [oracle-users]:
     https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/CREATE-USER.html
 
-### Oracle Instant Client (OIC)
-
-The underlying database driver requires the [Oracle Instant Client][oracle-ic] libraries to connect to the database. These libraries must be installed on the machine where the application is running.
-
-After installing the client, ensure the library path is correctly configured for your operating system (e.g., by setting the `LD_LIBRARY_PATH` environment variable on Linux or adding the directory to the `PATH` on Windows) so the application can find the necessary files at runtime.
-
-[oracle-ic]: https://www.oracle.com/database/technologies/instant-client/downloads.html
-
 ## Connection Methods
 
 You can configure the connection to your Oracle database using one of the following three methods. **You should only use one method** in your source configuration.
@@ -8658,13 +8650,17 @@ the parameter.
         description: Airline unique 2 letter identifier
 ```
 
-| **field**   | **type**        | **required** | **description**                                                             |
-|-------------|:---------------:|:------------:|-----------------------------------------------------------------------------|
-| name        |  string         |     true     | Name of the parameter.                                                      |
-| type        |  string         |     true     | Must be one of "string", "integer", "float", "boolean" "array"              |
-| description |  string         |     true     | Natural language description of the parameter to describe it to the agent.  |
-| default     |  parameter type |     false    | Default value of the parameter. If provided, `required` will be `false`.    |
-| required    |  bool           |     false    | Indicate if the parameter is required. Default to `true`.                   |
+| **field**     |    **type**    | **required** | **description**                                                                                                                                                                                                                        |
+|---------------|:--------------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| name          |     string     |     true     | Name of the parameter.                                                                                                                                                                                                                 |
+| type          |     string     |     true     | Must be one of "string", "integer", "float", "boolean" "array"                                                                                                                                                                         |
+| description   |     string     |     true     | Natural language description of the parameter to describe it to the agent.                                                                                                                                                             |
+| default       | parameter type |    false     | Default value of the parameter. If provided, `required` will be `false`.                                                                                                                                                               |
+| required      |      bool      |    false     | Indicate if the parameter is required. Default to `true`.                                                                                                                                                                              |
+| allowedValues |    []string    |    false     | Input value will be checked against this field. Regex is also supported.                                                                                                                                                               |
+| escape        |     string     |    false     | Only available for type `string`. Indicate the escaping delimiters used for the parameter. This field is intended to be used with templateParameters. Must be one of "single-quotes", "double-quotes", "backticks", "square-brackets". |
+| minValue      |  int or float  |    false     | Only available for type `integer` and `float`. Indicate the minimum value allowed.                                                                                                                                                     |
+| maxValue      |  int or float  |    false     | Only available for type `integer` and `float`. Indicate the maximum value allowed.                                                                                                                                                     |
 
 ### Array Parameters
 
@@ -8685,14 +8681,15 @@ in the list using the items field:
       SELECT * FROM airlines WHERE preferred_airlines = ANY($1);
 ```
 
-| **field**   |     **type**     | **required** | **description**                                                             |
-|-------------|:----------------:|:------------:|-----------------------------------------------------------------------------|
-| name        |      string      |     true     | Name of the parameter.                                                      |
-| type        |      string      |     true     | Must be "array"                                                             |
-| description |      string      |     true     | Natural language description of the parameter to describe it to the agent.  |
-| default     |  parameter type |     false    | Default value of the parameter. If provided, `required` will be `false`.     |
-| required    |  bool           |     false    | Indicate if the parameter is required. Default to `true`.                    |
-| items       | parameter object |     true     | Specify a Parameter object for the type of the values in the array.         |
+| **field**     |     **type**     | **required** | **description**                                                            |
+|---------------|:----------------:|:------------:|----------------------------------------------------------------------------|
+| name          |      string      |     true     | Name of the parameter.                                                     |
+| type          |      string      |     true     | Must be "array"                                                            |
+| description   |      string      |     true     | Natural language description of the parameter to describe it to the agent. |
+| default       |  parameter type  |    false     | Default value of the parameter. If provided, `required` will be `false`.   |
+| required      |       bool       |    false     | Indicate if the parameter is required. Default to `true`.                  |
+| allowedValues |     []string     |    false     | Input value will be checked against this field. Regex is also supported.   |
+| items         | parameter object |     true     | Specify a Parameter object for the type of the values in the array.        |
 
 {{< notice note >}}
 Items in array should not have a `default` or `required` value. If provided, it
@@ -8762,10 +8759,10 @@ user's ID token.
                 field: sub
 ```
 
-| **field** | **type** | **required** | **description**                                                                         |
-|-----------|:--------:|:------------:|-----------------------------------------------------------------------------------------|
-| name      |  string  |     true     | Name of the [authServices](../authServices/) used to verify the OIDC auth token.         |
-| field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.           |
+| **field** | **type** | **required** | **description**                                                                  |
+|-----------|:--------:|:------------:|----------------------------------------------------------------------------------|
+| name      |  string  |     true     | Name of the [authServices](../authServices/) used to verify the OIDC auth token. |
+| field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.    |
 
 ### Template Parameters
 
@@ -8785,6 +8782,14 @@ set of quotes must be explicitly added within the string.
 Because template parameters can directly replace identifiers, column names, and
 table names, they are prone to SQL injections. Basic parameters are preferred
 for performance and safety reasons.
+{{< /notice >}}
+
+{{< notice tip >}}
+To minimize SQL injection risk when using template parameters, always provide
+the `allowedValues` field within the parameter to restrict inputs.
+Alternatively, for `string` type parameters, you can use the `escape` field to
+add delimiters to the identifier. For `integer` or `float` type parameters, you
+can use `minValue` and `maxValue` to define the allowable range.
 {{< /notice >}}
 
 ```yaml
@@ -8812,14 +8817,18 @@ tools:
           name: column
           type: string
           description: Name of a column to select
+          escape: double-quotes # with this, the statement will resolve to `SELECT "id", "name" FROM flights`
 ```
 
-| **field**   | **type**         | **required**  | **description**                                                                     |
-|-------------|:----------------:|:-------------:|-------------------------------------------------------------------------------------|
-| name        |  string          |     true      | Name of the template parameter.                                                     |
-| type        |  string          |     true      | Must be one of "string", "integer", "float", "boolean" "array"                      |
-| description |  string          |     true      | Natural language description of the template parameter to describe it to the agent. |
-| items       | parameter object |true (if array)| Specify a Parameter object for the type of the values in the array (string only).   |
+| **field**     |     **type**     |  **required**   | **description**                                                                     |
+|---------------|:----------------:|:---------------:|-------------------------------------------------------------------------------------|
+| name          |      string      |      true       | Name of the template parameter.                                                     |
+| type          |      string      |      true       | Must be one of "string", "integer", "float", "boolean", "array"                     |
+| description   |      string      |      true       | Natural language description of the template parameter to describe it to the agent. |
+| default       |  parameter type  |      false      | Default value of the parameter. If provided, `required` will be `false`.            |
+| required      |       bool       |      false      | Indicate if the parameter is required. Default to `true`.                           |
+| allowedValues |     []string     |      false      | Input value will be checked against this field. Regex is also supported.            |
+| items         | parameter object | true (if array) | Specify a Parameter object for the type of the values in the array (string only).   |
 
 ## Authorized Invocations
 
@@ -8993,103 +9002,9 @@ Tools that work with Valkey Sources.
 
 
 
-# yugabytedb-sql
-A "yugabytedb-sql" tool executes a pre-defined SQL statement against a YugabyteDB database.
+# YugabyteDB
+Tools that work with Valkey Sources.
 
-
-## About
-
-A `yugabytedb-sql` tool executes a pre-defined SQL statement against a YugabyteDB
-database.
-
-The specified SQL statement is executed as a prepared statement,
-and specified parameters will inserted according to their position: e.g. `1`
-will be the first parameter specified, `$@` will be the second parameter, and so
-on. If template parameters are included, they will be resolved before execution
-of the prepared statement.
-
-## Example
-
-> **Note:** This tool uses parameterized queries to prevent SQL injections.
-> Query parameters can be used as substitutes for arbitrary expressions.
-> Parameters cannot be used as substitutes for identifiers, column names, table
-> names, or other parts of the query.
-
-```yaml
-tools:
- search_flights_by_number:
-    kind: yugabytedb-sql
-    source: my-yb-instance
-    statement: |
-      SELECT * FROM flights
-      WHERE airline = $1
-      AND flight_number = $2
-      LIMIT 10
-    description: |
-      Use this tool to get information for a specific flight.
-      Takes an airline code and flight number and returns info on the flight.
-      Do NOT use this tool with a flight id. Do NOT guess an airline code or flight number.
-      A airline code is a code for an airline service consisting of two-character
-      airline designator and followed by flight number, which is 1 to 4 digit number.
-      For example, if given CY 0123, the airline is "CY", and flight_number is "123".
-      Another example for this is DL 1234, the airline is "DL", and flight_number is "1234".
-      If the tool returns more than one option choose the date closes to today.
-      Example:
-      {{
-          "airline": "CY",
-          "flight_number": "888",
-      }}
-      Example:
-      {{
-          "airline": "DL",
-          "flight_number": "1234",
-      }}
-    parameters:
-      - name: airline
-        type: string
-        description: Airline unique 2 letter identifier
-      - name: flight_number
-        type: string
-        description: 1 to 4 digit number
-```
-
-### Example with Template Parameters
-
-> **Note:** This tool allows direct modifications to the SQL statement,
-> including identifiers, column names, and table names. **This makes it more
-> vulnerable to SQL injections**. Using basic parameters  only (see above) is
-> recommended for performance and safety reasons. For more details, please check
-> [templateParameters](_index#template-parameters).
-
-```yaml
-tools:
- list_table:
-    kind: yugabytedb-sql
-    source: my-yb-instance
-    statement: |
-      SELECT * FROM {{.tableName}}
-    description: |
-      Use this tool to list all information from a specific table.
-      Example:
-      {{
-          "tableName": "flights",
-      }}
-    templateParameters:
-      - name: tableName
-        type: string
-        description: Table to select from
-```
-
-## Reference
-
-| **field**          |                     **type**                     | **required** | **description**                                                                                                                            |
-|--------------------|:------------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
-| kind               |                      string                      |     true     | Must be "yugabytedb-sql".                                                                                                                  |
-| source             |                      string                      |     true     | Name of the source the SQL should execute on.                                                                                              |
-| description        |                      string                      |     true     | Description of the tool that is passed to the LLM.                                                                                         |
-| statement          |                      string                      |     true     | SQL statement to execute on.                                                                                                               |
-| parameters         |    [parameters](_index#specifying-parameters)    |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
-| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
 
 
 # Samples
@@ -9222,7 +9137,7 @@ In this section, we will download and install the Toolbox binary.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    export VERSION="0.17.0"
+    export VERSION="0.18.0"
     curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -9651,7 +9566,7 @@ to use BigQuery, and then run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -10285,7 +10200,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -10479,7 +10394,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -10604,7 +10519,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -10714,7 +10629,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
