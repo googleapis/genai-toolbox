@@ -1,0 +1,191 @@
+//go:build oracleoci
+// +build oracleoci
+
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package oracleoci
+
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"os"
+	"strings"
+
+	"github.com/goccy/go-yaml"
+	_ "github.com/godror/godror"
+	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
+	"go.opentelemetry.io/otel/trace"
+)
+
+const SourceKind string = "oracle-oci"
+
+// validate interface
+var _ sources.SourceConfig = Config{}
+
+func init() {
+	if !sources.Register(SourceKind, newConfig) {
+		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	}
+}
+
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
+	actual := Config{Name: name}
+	if err := decoder.DecodeContext(ctx, &actual); err != nil {
+		return nil, err
+	}
+
+	// Validate that we have required fields
+	if err := actual.validate(); err != nil {
+		return nil, fmt.Errorf("invalid Oracle OCI configuration: %w", err)
+	}
+
+	return actual, nil
+}
+
+type Config struct {
+	Name             string `yaml:"name" validate:"required"`
+	Kind             string `yaml:"kind" validate:"required"`
+	ConnectionString string `yaml:"connectionString,omitempty"` // Direct connection string (hostname[:port]/servicename)
+	TnsAlias         string `yaml:"tnsAlias,omitempty"`         // TNS alias from tnsnames.ora
+	Host             string `yaml:"host,omitempty"`             // Optional when using connectionString/tnsAlias
+	Port             int    `yaml:"port,omitempty"`             // Explicit port support
+	ServiceName      string `yaml:"serviceName,omitempty"`      // Optional when using connectionString/tnsAlias
+	User             string `yaml:"user" validate:"required"`
+	Password         string `yaml:"password" validate:"required"`
+	TnsAdmin         string `yaml:"tnsAdmin,omitempty"` // Optional: override TNS_ADMIN environment variable
+}
+
+// validate ensures we have one of: tns_alias, connection_string, or host+service_name
+func (c Config) validate() error {
+	hasTnsAlias := strings.TrimSpace(c.TnsAlias) != ""
+	hasConnStr := strings.TrimSpace(c.ConnectionString) != ""
+	hasHostService := strings.TrimSpace(c.Host) != "" && strings.TrimSpace(c.ServiceName) != ""
+
+	connectionMethods := 0
+	if hasTnsAlias {
+		connectionMethods++
+	}
+	if hasConnStr {
+		connectionMethods++
+	}
+	if hasHostService {
+		connectionMethods++
+	}
+
+	if connectionMethods == 0 {
+		return fmt.Errorf("must provide one of: 'tnsAlias', 'connectionString', or both 'host' and 'serviceName'")
+	}
+
+	if connectionMethods > 1 {
+		return fmt.Errorf("provide only one connection method: 'tnsAlias', 'connectionString', or 'host'+'serviceName'")
+	}
+
+	return nil
+}
+
+func (r Config) SourceConfigKind() string {
+	return SourceKind
+}
+
+func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	db, err := initOracleConnection(ctx, tracer, r)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create Oracle OCI connection: %w", err)
+	}
+
+	err = db.PingContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to connect to Oracle successfully: %w", err)
+	}
+
+	s := &Source{
+		Name: r.Name,
+		Kind: SourceKind,
+		DB:   db,
+	}
+	return s, nil
+}
+
+var _ sources.Source = &Source{}
+
+type Source struct {
+	Name string `yaml:"name"`
+	Kind string `yaml:"kind"`
+	DB   *sql.DB
+}
+
+func (s *Source) SourceKind() string {
+	return SourceKind
+}
+
+func (s *Source) OracleDB() *sql.DB {
+	return s.DB
+}
+
+func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Config) (*sql.DB, error) {
+	//nolint:all // Reassigned ctx
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, config.Name)
+	defer span.End()
+
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	// Set TNS_ADMIN environment variable if specified in config.
+	if config.TnsAdmin != "" {
+		tnsAdmin := strings.TrimSpace(config.TnsAdmin)
+		originalTnsAdmin := os.Getenv("TNS_ADMIN")
+		os.Setenv("TNS_ADMIN", tnsAdmin)
+		logger.DebugContext(ctx, fmt.Sprintf("Setting TNS_ADMIN to: %s\n", tnsAdmin))
+		// Restore original TNS_ADMIN after connection
+		defer func() {
+			if originalTnsAdmin != "" {
+				os.Setenv("TNS_ADMIN", originalTnsAdmin)
+			} else {
+				os.Unsetenv("TNS_ADMIN")
+			}
+		}()
+	}
+
+	var serverString string
+	if config.TnsAlias != "" {
+		// Use TNS alias - godror handles this natively
+		serverString = strings.TrimSpace(config.TnsAlias)
+	} else if config.ConnectionString != "" {
+		// Use provided connection string directly
+		serverString = strings.TrimSpace(config.ConnectionString)
+	} else {
+		// Build connection string from host and service_name
+		if config.Port > 0 {
+			serverString = fmt.Sprintf("%s:%d/%s", config.Host, config.Port, config.ServiceName)
+		} else {
+			serverString = fmt.Sprintf("%s/%s", config.Host, config.ServiceName)
+		}
+	}
+
+	// Godror connection string format: user/password@server
+	connStr := fmt.Sprintf("%s/%s@%s",
+		config.User, config.Password, serverString)
+
+	db, err := sql.Open("godror", connStr)
+	if err != nil {
+		return nil, fmt.Errorf("unable to open Oracle OCI connection: %w", err)
+	}
+
+	return db, nil
+}
