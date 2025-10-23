@@ -44,6 +44,7 @@ func getHTTPSourceConfig(t *testing.T) map[string]any {
 		t.Fatalf("error getting ID token: %s", err)
 	}
 	idToken = "Bearer " + idToken
+
 	return map[string]any{
 		"kind":    HttpSourceKind,
 		"headers": map[string]string{"Authorization": idToken},
@@ -68,9 +69,32 @@ func multiTool(w http.ResponseWriter, r *http.Request) {
 		handleTool2(w, r)
 	case "tool3":
 		handleTool3(w, r)
+	case "toolQueryTest":
+		handleQueryTest(w, r)
 	default:
 		http.NotFound(w, r) // Return 404 for unknown paths
 	}
+}
+
+// handleQueryTest simply returns the raw query string it received so the test
+// can verify it's formatted correctly.
+func handleQueryTest(w http.ResponseWriter, r *http.Request) {
+    // expect GET method
+    if r.Method != http.MethodGet {
+        errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
+        http.Error(w, errorMessage, http.StatusBadRequest)
+        return
+    }
+
+    w.WriteHeader(http.StatusOK)
+    enc := json.NewEncoder(w)
+    enc.SetEscapeHTML(false) 
+
+    err := enc.Encode(r.URL.RawQuery)
+    if err != nil {
+        http.Error(w, "Failed to write response", http.StatusInternalServerError)
+        return
+    }
 }
 
 // handler function for the test server
@@ -162,8 +186,7 @@ func handleTool1Name(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name := r.URL.Query().Get("name")
-	if name == "" {
+	if !r.URL.Query().Has("name") {
 		response := "null"
 		_, err := w.Write([]byte(response))
 		if err != nil {
@@ -305,6 +328,80 @@ func TestHttpToolEndpoints(t *testing.T) {
 	tests.RunToolGetTest(t)
 	tests.RunToolInvokeTest(t, `"hello world"`, tests.DisableArrayTest())
 	runAdvancedHTTPInvokeTest(t)
+	runQueryParamInvokeTest(t)
+}
+
+// runQueryParamInvokeTest runs the tool invoke endpoint for the query param test tool
+func runQueryParamInvokeTest(t *testing.T) {
+	invokeTcs := []struct {
+		name        string
+		api         string
+		requestBody io.Reader
+		want        string
+		isErr       bool
+	}{
+		{
+			name:        "invoke query-param-tool (optional omitted)",
+			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test1"}`)),
+			want:        `"reqId=test1"`,
+		},
+		{
+			name:        "invoke query-param-tool (some optional nil)",
+			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test2", "page": "5", "filter": null}`)),
+			want:        `"page=5\u0026reqId=test2"`, // 'filter' omitted
+		},
+		{
+			name:        "invoke query-param-tool (some optional absent)",
+			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"reqId": "test2", "page": "5"}`)),
+			want:        `"page=5\u0026reqId=test2"`, // 'filter' omitted
+		},
+		{
+			name:        "invoke query-param-tool (required param nil)",
+			api:         "http://127.0.0.1:5000/api/tool/my-query-param-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"reqId": null, "page": "1"}`)),
+			want:        `"page=1\u0026reqId="`, // reqId becomes "",
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+			got, ok := body["result"].(string)
+			if !ok {
+				bodyBytes, _ := json.Marshal(body)
+				t.Fatalf("unable to find result in response body, got: %s", string(bodyBytes))
+			}
+
+			if got != tc.want {
+				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			}
+		})
+	}
 }
 
 // runToolInvoke runs the tool invoke endpoint
@@ -443,6 +540,18 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 					tools.NewStringParameterWithRequired("name", "user name", false)},
 				"headers": map[string]string{"Content-Type": "application/json"},
 			},
+			"my-query-param-tool": map[string]any{
+				"kind":        toolKind,
+				"source":      "my-instance",
+				"method":      "GET",
+				"path":        "/toolQueryTest",
+				"description": "Tool to test optional query parameters.",
+				"queryParams": []tools.Parameter{
+					tools.NewStringParameterWithRequired("reqId", "required ID", true),
+					tools.NewStringParameterWithRequired("page", "optional page number", false),
+					tools.NewStringParameterWithRequired("filter", "optional filter string", false),
+				},
+			},
 			"my-auth-tool": map[string]any{
 				"kind":        toolKind,
 				"source":      "my-instance",
@@ -470,23 +579,29 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"method":      "get",
 				"path":        "/{{.path}}?id=2",
 				"description": "some description",
-				"headers": map[string]string{
-					"X-Custom-Header": "example",
-				},
-				"pathParams": []tools.Parameter{
-					&tools.StringParameter{
-						CommonParameter: tools.CommonParameter{Name: "path", Type: "string", Desc: "path param"},
+				"headers": 
+					map[string]string{
+						"X-Custom-Header": "example",
 					},
-				},
-				"queryParams": []tools.Parameter{
-					tools.NewIntParameter("id", "user ID"), tools.NewStringParameter("country", "country")},
+				"pathParams":
+					[]tools.Parameter{
+						&tools.StringParameter{
+							CommonParameter: tools.CommonParameter{Name: "path", Type: "string", Desc: "path param"},
+						},
+					},
+				"queryParams":
+					[]tools.Parameter{
+						tools.NewIntParameter("id", "user ID"), tools.NewStringParameter("country", "country"),
+					},
 				"requestBody": `{
-"place": "zoo",
-"animals": {{json .animalArray }}
-}
-`,
-				"bodyParams":   []tools.Parameter{tools.NewArrayParameter("animalArray", "animals in the zoo", tools.NewStringParameter("animals", "desc"))},
-				"headerParams": []tools.Parameter{tools.NewStringParameter("X-Other-Header", "custom header")},
+					"place": "zoo",
+					"animals": {{json .animalArray }}
+					}
+					`,
+				"bodyParams":   
+					[]tools.Parameter{tools.NewArrayParameter("animalArray", "animals in the zoo", tools.NewStringParameter("animals", "desc"))},
+				"headerParams": 
+					[]tools.Parameter{tools.NewStringParameter("X-Other-Header", "custom header")},
 			},
 		},
 	}

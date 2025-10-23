@@ -77,13 +77,17 @@ the parameter.
         description: Airline unique 2 letter identifier
 ```
 
-| **field**   | **type**        | **required** | **description**                                                             |
-|-------------|:---------------:|:------------:|-----------------------------------------------------------------------------|
-| name        |  string         |     true     | Name of the parameter.                                                      |
-| type        |  string         |     true     | Must be one of "string", "integer", "float", "boolean" "array"              |
-| description |  string         |     true     | Natural language description of the parameter to describe it to the agent.  |
-| default     |  parameter type |     false    | Default value of the parameter. If provided, `required` will be `false`.    |
-| required    |  bool           |     false    | Indicate if the parameter is required. Default to `true`.                   |
+| **field**     |    **type**    | **required** | **description**                                                                                                                                                                                                                        |
+|---------------|:--------------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| name          |     string     |     true     | Name of the parameter.                                                                                                                                                                                                                 |
+| type          |     string     |     true     | Must be one of "string", "integer", "float", "boolean" "array"                                                                                                                                                                         |
+| description   |     string     |     true     | Natural language description of the parameter to describe it to the agent.                                                                                                                                                             |
+| default       | parameter type |    false     | Default value of the parameter. If provided, `required` will be `false`.                                                                                                                                                               |
+| required      |      bool      |    false     | Indicate if the parameter is required. Default to `true`.                                                                                                                                                                              |
+| allowedValues |    []string    |    false     | Input value will be checked against this field. Regex is also supported.                                                                                                                                                               |
+| escape        |     string     |    false     | Only available for type `string`. Indicate the escaping delimiters used for the parameter. This field is intended to be used with templateParameters. Must be one of "single-quotes", "double-quotes", "backticks", "square-brackets". |
+| minValue      |  int or float  |    false     | Only available for type `integer` and `float`. Indicate the minimum value allowed.                                                                                                                                                     |
+| maxValue      |  int or float  |    false     | Only available for type `integer` and `float`. Indicate the maximum value allowed.                                                                                                                                                     |
 
 ### Array Parameters
 
@@ -104,14 +108,15 @@ in the list using the items field:
       SELECT * FROM airlines WHERE preferred_airlines = ANY($1);
 ```
 
-| **field**   |     **type**     | **required** | **description**                                                             |
-|-------------|:----------------:|:------------:|-----------------------------------------------------------------------------|
-| name        |      string      |     true     | Name of the parameter.                                                      |
-| type        |      string      |     true     | Must be "array"                                                             |
-| description |      string      |     true     | Natural language description of the parameter to describe it to the agent.  |
-| default     |  parameter type |     false    | Default value of the parameter. If provided, `required` will be `false`.     |
-| required    |  bool           |     false    | Indicate if the parameter is required. Default to `true`.                    |
-| items       | parameter object |     true     | Specify a Parameter object for the type of the values in the array.         |
+| **field**     |     **type**     | **required** | **description**                                                            |
+|---------------|:----------------:|:------------:|----------------------------------------------------------------------------|
+| name          |      string      |     true     | Name of the parameter.                                                     |
+| type          |      string      |     true     | Must be "array"                                                            |
+| description   |      string      |     true     | Natural language description of the parameter to describe it to the agent. |
+| default       |  parameter type  |    false     | Default value of the parameter. If provided, `required` will be `false`.   |
+| required      |       bool       |    false     | Indicate if the parameter is required. Default to `true`.                  |
+| allowedValues |     []string     |    false     | Input value will be checked against this field. Regex is also supported.   |
+| items         | parameter object |     true     | Specify a Parameter object for the type of the values in the array.        |
 
 {{< notice note >}}
 Items in array should not have a `default` or `required` value. If provided, it
@@ -181,10 +186,10 @@ user's ID token.
                 field: sub
 ```
 
-| **field** | **type** | **required** | **description**                                                                         |
-|-----------|:--------:|:------------:|-----------------------------------------------------------------------------------------|
-| name      |  string  |     true     | Name of the [authServices](../authServices/) used to verify the OIDC auth token.         |
-| field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.           |
+| **field** | **type** | **required** | **description**                                                                  |
+|-----------|:--------:|:------------:|----------------------------------------------------------------------------------|
+| name      |  string  |     true     | Name of the [authServices](../authServices/) used to verify the OIDC auth token. |
+| field     |  string  |     true     | Claim field decoded from the OIDC token used to auto-populate this parameter.    |
 
 ### Template Parameters
 
@@ -204,6 +209,14 @@ set of quotes must be explicitly added within the string.
 Because template parameters can directly replace identifiers, column names, and
 table names, they are prone to SQL injections. Basic parameters are preferred
 for performance and safety reasons.
+{{< /notice >}}
+
+{{< notice tip >}}
+To minimize SQL injection risk when using template parameters, always provide
+the `allowedValues` field within the parameter to restrict inputs.
+Alternatively, for `string` type parameters, you can use the `escape` field to
+add delimiters to the identifier. For `integer` or `float` type parameters, you
+can use `minValue` and `maxValue` to define the allowable range.
 {{< /notice >}}
 
 ```yaml
@@ -231,14 +244,18 @@ tools:
           name: column
           type: string
           description: Name of a column to select
+          escape: double-quotes # with this, the statement will resolve to `SELECT "id", "name" FROM flights`
 ```
 
-| **field**   | **type**         | **required**  | **description**                                                                     |
-|-------------|:----------------:|:-------------:|-------------------------------------------------------------------------------------|
-| name        |  string          |     true      | Name of the template parameter.                                                     |
-| type        |  string          |     true      | Must be one of "string", "integer", "float", "boolean" "array"                      |
-| description |  string          |     true      | Natural language description of the template parameter to describe it to the agent. |
-| items       | parameter object |true (if array)| Specify a Parameter object for the type of the values in the array (string only).   |
+| **field**     |     **type**     |  **required**   | **description**                                                                     |
+|---------------|:----------------:|:---------------:|-------------------------------------------------------------------------------------|
+| name          |      string      |      true       | Name of the template parameter.                                                     |
+| type          |      string      |      true       | Must be one of "string", "integer", "float", "boolean", "array"                     |
+| description   |      string      |      true       | Natural language description of the template parameter to describe it to the agent. |
+| default       |  parameter type  |      false      | Default value of the parameter. If provided, `required` will be `false`.            |
+| required      |       bool       |      false      | Indicate if the parameter is required. Default to `true`.                           |
+| allowedValues |     []string     |      false      | Input value will be checked against this field. Regex is also supported.            |
+| items         | parameter object | true (if array) | Specify a Parameter object for the type of the values in the array (string only).   |
 
 ## Authorized Invocations
 
