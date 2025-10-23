@@ -177,7 +177,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			"childrenCount": len(plan.Children()),
 		}
 		if len(plan.Children()) > 0 {
-			execPlan["children"] = t.addPlanChildren(plan)
+			execPlan["children"] = addPlanChildren(plan)
 		}
 		return []map[string]any{execPlan}, nil
 	}
@@ -218,7 +218,7 @@ func (t Tool) RequiresClientAuthorization() bool {
 }
 
 // Recursive function to add plan children
-func (t Tool) addPlanChildren(p neo4j.Plan) []map[string]any {
+func addPlanChildren(p neo4j.Plan) []map[string]any {
 	var children []map[string]any
 	for _, child := range p.Children() {
 		childMap := map[string]any{
@@ -228,7 +228,7 @@ func (t Tool) addPlanChildren(p neo4j.Plan) []map[string]any {
 			"children_count": len(child.Children()),
 		}
 		if len(child.Children()) > 0 {
-			childMap["children"] = t.addPlanChildren(child)
+			childMap["children"] = addPlanChildren(child)
 		}
 		children = append(children, childMap)
 	}

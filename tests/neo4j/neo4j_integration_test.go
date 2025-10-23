@@ -260,11 +260,28 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 				if len(result) == 0 {
 					t.Fatalf("expected a query plan, but got an empty result")
 				}
-				if _, ok := result[0]["operator"]; !ok {
-					t.Errorf("expected key 'Operator' not found in dry_run response: %s", body)
+
+				operatorValue, ok := result[0]["operator"]
+				if !ok {
+					t.Fatalf("expected key 'Operator' not found in dry_run response: %s", body)
 				}
-				if _, ok := result[0]["childrenCount"]; !ok {
-					t.Errorf("expected key 'ChildrenCount' not found in dry_run response: %s", body)
+
+				operatorStr, ok := operatorValue.(string)
+				if !ok {
+					t.Fatalf("expected 'Operator' to be a string, but got %T", operatorValue)
+				}
+
+				if operatorStr != "ProduceResults@neo4j" {
+					t.Errorf("unexpected operator: got %q, want %q", operatorStr, "ProduceResults@neo4j")
+				}
+
+				childrenCount, ok := result[0]["childrenCount"]
+				if !ok {
+					t.Fatalf("expected key 'ChildrenCount' not found in dry_run response: %s", body)
+				}
+
+				if childrenCount.(float64) != 1 {
+					t.Errorf("unexpected children count: got %v, want %d", childrenCount, 1)
 				}
 			},
 		},
