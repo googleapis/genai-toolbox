@@ -91,6 +91,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		r.WriteMode = WriteModeAllowed
 	}
 
+    if r.WriteMode == WriteModeProtected && r.UseClientOAuth {
+		return nil, fmt.Errorf("writeMode 'protected' cannot be used with useClientOAuth 'true'")
+    }
 	// Initialize Source struct first
 	s := &Source{
 		Name:               r.Name,
