@@ -44,7 +44,7 @@ func getHTTPSourceConfig(t *testing.T) map[string]any {
 		t.Fatalf("error getting ID token: %s", err)
 	}
 	idToken = "Bearer " + idToken
-	
+
 	return map[string]any{
 		"kind":    HttpSourceKind,
 		"headers": map[string]string{"Authorization": idToken},
@@ -96,7 +96,6 @@ func handleQueryTest(w http.ResponseWriter, r *http.Request) {
         return
     }
 }
-
 
 // handler function for the test server
 func handleTool0(w http.ResponseWriter, r *http.Request) {
@@ -404,8 +403,6 @@ func runQueryParamInvokeTest(t *testing.T) {
 		})
 	}
 }
-
-// END: New test runner function
 
 // runToolInvoke runs the tool invoke endpoint
 func runAdvancedHTTPInvokeTest(t *testing.T) {
