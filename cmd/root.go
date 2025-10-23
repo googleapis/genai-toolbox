@@ -80,6 +80,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlmysql/cloudsqlmysqlcreateinstance"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg/cloudsqlpgcreateinstances"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/dataform/dataformcompilelocal"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexlookupentry"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchaspecttypes"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchentries"
@@ -97,6 +98,10 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorevalidaterules"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookeradddashboardelement"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookercreateprojectfile"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerconversationalanalytics"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerdeleteprojectfile"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerdevmode"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetdashboards"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetdimensions"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetexplores"
@@ -105,12 +110,19 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetmeasures"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetmodels"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetparameters"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetprojectfile"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetprojectfiles"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetprojects"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthanalyze"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthpulse"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerhealthvacuum"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookermakedashboard"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookermakelook"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerquery"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerquerysql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerqueryurl"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerrunlook"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerupdateprojectfile"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbaggregate"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbdeletemany"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbdeleteone"
@@ -134,6 +146,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/oceanbase/oceanbaseexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/oceanbase/oceanbasesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/oracle/oracleexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/oracle/oraclesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistactivequeries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistavailableextensions"
@@ -179,6 +193,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/oceanbase"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/oracle"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
@@ -655,20 +670,6 @@ func watchChanges(ctx context.Context, watchDirs map[string]bool, watchedFiles m
 	}
 }
 
-// updateLogLevel checks if Toolbox have to update the existing log level set by users.
-// stdio doesn't support "debug" and "info" logs.
-func updateLogLevel(stdio bool, logLevel string) bool {
-	if stdio {
-		switch strings.ToUpper(logLevel) {
-		case log.Debug, log.Info:
-			return true
-		default:
-			return false
-		}
-	}
-	return false
-}
-
 func resolveWatcherInputs(toolsFile string, toolsFiles []string, toolsFolder string) (map[string]bool, map[string]bool) {
 	var relevantFiles []string
 
@@ -697,10 +698,6 @@ func resolveWatcherInputs(toolsFile string, toolsFiles []string, toolsFolder str
 }
 
 func run(cmd *Command) error {
-	if updateLogLevel(cmd.cfg.Stdio, cmd.cfg.LogLevel.String()) {
-		cmd.cfg.LogLevel = server.StringLevel(log.Warn)
-	}
-
 	ctx, cancel := context.WithCancel(cmd.Context())
 	defer cancel()
 
@@ -724,16 +721,22 @@ func run(cmd *Command) error {
 		cancel()
 	}(ctx)
 
+	// If stdio, set logger's out stream (usually DEBUG and INFO logs) to errStream
+	loggerOut := cmd.outStream
+	if cmd.cfg.Stdio {
+		loggerOut = cmd.errStream
+	}
+
 	// Handle logger separately from config
 	switch strings.ToLower(cmd.cfg.LoggingFormat.String()) {
 	case "json":
-		logger, err := log.NewStructuredLogger(cmd.outStream, cmd.errStream, cmd.cfg.LogLevel.String())
+		logger, err := log.NewStructuredLogger(loggerOut, cmd.errStream, cmd.cfg.LogLevel.String())
 		if err != nil {
 			return fmt.Errorf("unable to initialize logger: %w", err)
 		}
 		cmd.logger = logger
 	case "standard":
-		logger, err := log.NewStdLogger(cmd.outStream, cmd.errStream, cmd.cfg.LogLevel.String())
+		logger, err := log.NewStdLogger(loggerOut, cmd.errStream, cmd.cfg.LogLevel.String())
 		if err != nil {
 			return fmt.Errorf("unable to initialize logger: %w", err)
 		}

@@ -106,6 +106,8 @@ func getOpts(ipType, userAgent string, useIAM bool) ([]alloydbconn.Option, error
 		opts = append(opts, alloydbconn.WithDefaultDialOptions(alloydbconn.WithPrivateIP()))
 	case "public":
 		opts = append(opts, alloydbconn.WithDefaultDialOptions(alloydbconn.WithPublicIP()))
+	case "psc":
+		opts = append(opts, alloydbconn.WithDefaultDialOptions(alloydbconn.WithPSC()))
 	default:
 		return nil, fmt.Errorf("invalid ipType %s", ipType)
 	}

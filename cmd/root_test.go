@@ -1244,6 +1244,7 @@ func TestPrebuiltTools(t *testing.T) {
 	mysql_config, _ := prebuiltconfigs.Get("mysql")
 	mssql_config, _ := prebuiltconfigs.Get("mssql")
 	looker_config, _ := prebuiltconfigs.Get("looker")
+	lookerca_config, _ := prebuiltconfigs.Get("looker-conversational-analytics")
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
@@ -1326,6 +1327,9 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("LOOKER_CLIENT_ID", "your_looker_client_id")
 	t.Setenv("LOOKER_CLIENT_SECRET", "your_looker_client_secret")
 	t.Setenv("LOOKER_VERIFY_SSL", "true")
+
+	t.Setenv("LOOKER_PROJECT", "your_project_id")
+	t.Setenv("LOOKER_LOCATION", "us")
 
 	t.Setenv("SQLITE_DATABASE", "test.db")
 
@@ -1489,7 +1493,17 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"looker_tools": tools.ToolsetConfig{
 					Name:      "looker_tools",
-					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "make_dashboard", "add_dashboard_element"},
+					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "make_dashboard", "add_dashboard_element", "health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file"},
+				},
+			},
+		},
+		{
+			name: "looker-conversational-analytics prebuilt tools",
+			in:   lookerca_config,
+			wantToolset: server.ToolsetConfigs{
+				"looker_conversational_analytics_tools": tools.ToolsetConfig{
+					Name:      "looker_conversational_analytics_tools",
+					ToolNames: []string{"ask_data_insights", "get_models", "get_explores"},
 				},
 			},
 		},
@@ -1593,54 +1607,6 @@ func TestPrebuiltTools(t *testing.T) {
 			}
 			if diff := cmp.Diff(tc.wantToolset, toolsFile.Toolsets); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
-			}
-		})
-	}
-}
-
-func TestUpdateLogLevel(t *testing.T) {
-	tcs := []struct {
-		desc     string
-		stdio    bool
-		logLevel string
-		want     bool
-	}{
-		{
-			desc:     "no stdio",
-			stdio:    false,
-			logLevel: "info",
-			want:     false,
-		},
-		{
-			desc:     "stdio with info log",
-			stdio:    true,
-			logLevel: "info",
-			want:     true,
-		},
-		{
-			desc:     "stdio with debug log",
-			stdio:    true,
-			logLevel: "debug",
-			want:     true,
-		},
-		{
-			desc:     "stdio with warn log",
-			stdio:    true,
-			logLevel: "warn",
-			want:     false,
-		},
-		{
-			desc:     "stdio with error log",
-			stdio:    true,
-			logLevel: "error",
-			want:     false,
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			got := updateLogLevel(tc.stdio, tc.logLevel)
-			if got != tc.want {
-				t.Fatalf("incorrect indication to update log level: got %t, want %t", got, tc.want)
 			}
 		})
 	}

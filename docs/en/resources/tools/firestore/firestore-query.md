@@ -146,6 +146,7 @@ templates throughout the configuration.
 ## Filter Format
 
 ### Simple Filter
+
 ```json
 {
   "field": "age",
@@ -155,6 +156,7 @@ templates throughout the configuration.
 ```
 
 ### AND Filter
+
 ```json
 {
   "and": [
@@ -165,6 +167,7 @@ templates throughout the configuration.
 ```
 
 ### OR Filter
+
 ```json
 {
   "or": [
@@ -175,6 +178,7 @@ templates throughout the configuration.
 ```
 
 ### Nested Filters
+
 ```json
 {
   "or": [
@@ -208,6 +212,7 @@ The tool supports all Firestore native JSON value types:
 ### Complex Type Examples
 
 **GeoPoint:**
+
 ```json
 {
   "field": "location",
@@ -222,6 +227,7 @@ The tool supports all Firestore native JSON value types:
 ```
 
 **Array:**
+
 ```json
 {
   "field": "tags",
@@ -366,6 +372,7 @@ curl -X POST http://localhost:5000/api/tool/your-tool-name/invoke \
 ### Response Format
 
 **Without analyzeQuery:**
+
 ```json
 [
   {
@@ -384,6 +391,7 @@ curl -X POST http://localhost:5000/api/tool/your-tool-name/invoke \
 ```
 
 **With analyzeQuery:**
+
 ```json
 {
   "documents": [...],
