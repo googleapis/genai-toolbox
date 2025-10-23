@@ -20,7 +20,7 @@ import (
 
 // Item holds the cached value and its expiration timestamp
 type Item struct {
-    Value     interface{}
+    Value     any
     ExpiresAt int64 // Unix nano timestamp
 }
 
@@ -30,7 +30,7 @@ func (item Item) IsExpired() bool {
 }
 
 // OnEvictFunc is the signature for the callback
-type OnEvictFunc func(key string, value interface{})
+type OnEvictFunc func(key string, value any)
 
 // Cache is a thread-safe, expiring key-value store
 type Cache struct {
@@ -71,7 +71,7 @@ func (c *Cache) delete(key string, item Item) {
 }
 
 // Set adds an item to the cache
-func (c *Cache) Set(key string, value interface{}) {
+func (c *Cache) Set(key string, value any) {
     const ttl = 55 * time.Minute
     expires := time.Now().Add(ttl).UnixNano()
 
@@ -90,7 +90,7 @@ func (c *Cache) Set(key string, value interface{}) {
 }
 
 // Get retrieves an item from the cache
-func (c *Cache) Get(key string) (interface{}, bool) {
+func (c *Cache) Get(key string) (any, bool) {
     c.mu.RLock()
     item, found := c.items[key]
     if !found || item.IsExpired() {
