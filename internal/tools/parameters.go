@@ -37,6 +37,14 @@ const (
 	TypeMap    = "map"
 )
 
+// delimiters for string parameter escaping
+const (
+	escapeBackticks      = "backticks"
+	escapeDoubleQuotes   = "double-quotes"
+	escapeSingleQuotes   = "single-quotes"
+	escapeSquareBrackets = "square-brackets"
+)
+
 // ParamValues is an ordered list of ParamValue
 type ParamValues []ParamValue
 
@@ -545,7 +553,7 @@ func NewStringParameterWithEscape(name, desc, escape string) *StringParameter {
 	return &StringParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         TypeString,
+			Type:         typeString,
 			Desc:         desc,
 			AuthServices: nil,
 		},
@@ -583,7 +591,7 @@ func NewStringParameterWithAllowedValues(name string, desc string, allowedValues
 	return &StringParameter{
 		CommonParameter: CommonParameter{
 			Name:          name,
-			Type:          TypeString,
+			Type:          typeString,
 			Desc:          desc,
 			AllowedValues: allowedValues,
 			AuthServices:  nil,
@@ -672,7 +680,7 @@ func NewIntParameterWithRange(name string, desc string, minValue *int, maxValue 
 	return &IntParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         TypeInt,
+			Type:         typeInt,
 			Desc:         desc,
 			AuthServices: nil,
 		},
@@ -724,7 +732,7 @@ func NewIntParameterWithAllowedValues(name string, desc string, allowedValues []
 	return &IntParameter{
 		CommonParameter: CommonParameter{
 			Name:          name,
-			Type:          TypeString,
+			Type:          typeString,
 			Desc:          desc,
 			AllowedValues: allowedValues,
 			AuthServices:  nil,
@@ -814,7 +822,7 @@ func NewFloatParameterWithRange(name string, desc string, minValue *float64, max
 	return &FloatParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         TypeFloat,
+			Type:         typeFloat,
 			Desc:         desc,
 			AuthServices: nil,
 		},
@@ -866,7 +874,7 @@ func NewFloatParameterWithAllowedValues(name string, desc string, allowedValues 
 	return &FloatParameter{
 		CommonParameter: CommonParameter{
 			Name:          name,
-			Type:          TypeFloat,
+			Type:          typeFloat,
 			Desc:          desc,
 			AllowedValues: allowedValues,
 			AuthServices:  nil,
@@ -1002,7 +1010,7 @@ func NewBooleanParameterWithAllowedValues(name string, desc string, allowedValue
 	return &BooleanParameter{
 		CommonParameter: CommonParameter{
 			Name:          name,
-			Type:          TypeBool,
+			Type:          typeBool,
 			Desc:          desc,
 			AllowedValues: allowedValues,
 			AuthServices:  nil,
@@ -1113,7 +1121,7 @@ func NewArrayParameterWithAllowedValues(name string, desc string, allowedValues 
 	return &ArrayParameter{
 		CommonParameter: CommonParameter{
 			Name:          name,
-			Type:          TypeArray,
+			Type:          typeArray,
 			Desc:          desc,
 			AllowedValues: allowedValues,
 			AuthServices:  nil,
