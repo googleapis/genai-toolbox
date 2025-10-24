@@ -1254,6 +1254,7 @@ func TestPrebuiltTools(t *testing.T) {
 	cloudsqlpgobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-postgres-observability")
 	cloudsqlmysqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mysql-observability")
 	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
+	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1304,6 +1305,9 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("CLOUD_SQL_MSSQL_USER", "your_cloudsql_mssql_user")
 	t.Setenv("CLOUD_SQL_MSSQL_PASSWORD", "your_cloudsql_mssql_password")
 	t.Setenv("CLOUD_SQL_POSTGRES_PASSWORD", "your_cloudsql_pg_password")
+
+	t.Setenv("SERVERLESS_SPARK_PROJECT", "your_gcp_project_id")
+	t.Setenv("SERVERLESS_SPARK_LOCATION", "your_gcp_location")
 
 	t.Setenv("POSTGRES_HOST", "localhost")
 	t.Setenv("POSTGRES_PORT", "5432")
@@ -1454,6 +1458,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"dataplex_tools": tools.ToolsetConfig{
 					Name:      "dataplex_tools",
 					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types"},
+				},
+			},
+		},
+		{
+			name: "serverless spark prebuilt tools",
+			in:   serverless_spark_config,
+			wantToolset: server.ToolsetConfigs{
+				"serverless_spark_tools": tools.ToolsetConfig{
+					Name:      "serverless_spark_tools",
+					ToolNames: []string{"list_batches"},
 				},
 			},
 		},
