@@ -693,6 +693,8 @@ func TestAuthParametersMarshal(t *testing.T) {
 }
 
 func TestParametersParse(t *testing.T) {
+	intValue := 2
+	floatValue := 1.5
 	tcs := []struct {
 		name   string
 		params tools.Parameters
@@ -718,6 +720,75 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_string": 4,
 			},
+		},
+		{
+			name: "string allowed",
+			params: tools.Parameters{
+				tools.NewStringParameterWithAllowedValues("my_string", "this param is a string", []any{"foo"}),
+			},
+			in: map[string]any{
+				"my_string": "foo",
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "foo"}},
+		},
+		{
+			name: "string allowed regex",
+			params: tools.Parameters{
+				tools.NewStringParameterWithAllowedValues("my_string", "this param is a string", []any{"^f.*"}),
+			},
+			in: map[string]any{
+				"my_string": "foo",
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "foo"}},
+		},
+		{
+			name: "string not allowed",
+			params: tools.Parameters{
+				tools.NewStringParameterWithAllowedValues("my_string", "this param is a string", []any{"foo"}),
+			},
+			in: map[string]any{
+				"my_string": "bar",
+			},
+		},
+		{
+			name: "string with escape backticks",
+			params: tools.Parameters{
+				tools.NewStringParameterWithEscape("my_string", "this param is a string", "backticks"),
+			},
+			in: map[string]any{
+				"my_string": "foo",
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "`foo`"}},
+		},
+		{
+			name: "string with escape double quotes",
+			params: tools.Parameters{
+				tools.NewStringParameterWithEscape("my_string", "this param is a string", "double-quotes"),
+			},
+			in: map[string]any{
+				"my_string": "foo",
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: `"foo"`}},
+		},
+		{
+			name: "string with escape single quotes",
+			params: tools.Parameters{
+				tools.NewStringParameterWithEscape("my_string", "this param is a string", "single-quotes"),
+			},
+			in: map[string]any{
+				"my_string": "foo",
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: `'foo'`}},
+		},
+		{
+			name: "string with escape square brackets",
+			params: tools.Parameters{
+				tools.NewStringParameterWithEscape("my_string", "this param is a string", "square-brackets"),
+			},
+			in: map[string]any{
+				"my_string": "foo",
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "[foo]"}},
 		},
 		{
 			name: "int",
@@ -749,6 +820,63 @@ func TestParametersParse(t *testing.T) {
 			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: math.MaxInt64}},
 		},
 		{
+			name: "int allowed",
+			params: tools.Parameters{
+				tools.NewIntParameterWithAllowedValues("my_int", "this param is an int", []any{1}),
+			},
+			in: map[string]any{
+				"my_int": 1,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 1}},
+		},
+		{
+			name: "int not allowed",
+			params: tools.Parameters{
+				tools.NewIntParameterWithAllowedValues("my_int", "this param is an int", []any{1}),
+			},
+			in: map[string]any{
+				"my_int": 2,
+			},
+		},
+		{
+			name: "int minValue",
+			params: tools.Parameters{
+				tools.NewIntParameterWithRange("my_int", "this param is an int", &intValue, nil),
+			},
+			in: map[string]any{
+				"my_int": 3,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 3}},
+		},
+		{
+			name: "int minValue disallow",
+			params: tools.Parameters{
+				tools.NewIntParameterWithRange("my_int", "this param is an int", &intValue, nil),
+			},
+			in: map[string]any{
+				"my_int": 1,
+			},
+		},
+		{
+			name: "int maxValue",
+			params: tools.Parameters{
+				tools.NewIntParameterWithRange("my_int", "this param is an int", nil, &intValue),
+			},
+			in: map[string]any{
+				"my_int": 1,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 1}},
+		},
+		{
+			name: "int maxValue disallow",
+			params: tools.Parameters{
+				tools.NewIntParameterWithRange("my_int", "this param is an int", nil, &intValue),
+			},
+			in: map[string]any{
+				"my_int": 3,
+			},
+		},
+		{
 			name: "float",
 			params: tools.Parameters{
 				tools.NewFloatParameter("my_float", "this param is a float"),
@@ -768,6 +896,63 @@ func TestParametersParse(t *testing.T) {
 			},
 		},
 		{
+			name: "float allowed",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithAllowedValues("my_float", "this param is a float", []any{1.1}),
+			},
+			in: map[string]any{
+				"my_float": 1.1,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.1}},
+		},
+		{
+			name: "float not allowed",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithAllowedValues("my_float", "this param is a float", []any{1.1}),
+			},
+			in: map[string]any{
+				"my_float": 1.2,
+			},
+		},
+		{
+			name: "float minValue",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithRange("my_float", "this param is a float", &floatValue, nil),
+			},
+			in: map[string]any{
+				"my_float": 1.8,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.8}},
+		},
+		{
+			name: "float minValue disallow",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithRange("my_float", "this param is a float", &floatValue, nil),
+			},
+			in: map[string]any{
+				"my_float": 1.2,
+			},
+		},
+		{
+			name: "float maxValue",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithRange("my_float", "this param is a float", nil, &floatValue),
+			},
+			in: map[string]any{
+				"my_float": 1.2,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.2}},
+		},
+		{
+			name: "float maxValue disallow",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithRange("my_float", "this param is a float", nil, &floatValue),
+			},
+			in: map[string]any{
+				"my_float": 1.8,
+			},
+		},
+		{
 			name: "bool",
 			params: tools.Parameters{
 				tools.NewBooleanParameter("my_bool", "this param is a bool"),
@@ -784,6 +969,25 @@ func TestParametersParse(t *testing.T) {
 			},
 			in: map[string]any{
 				"my_bool": 1.5,
+			},
+		},
+		{
+			name: "bool allowed",
+			params: tools.Parameters{
+				tools.NewBooleanParameterWithAllowedValues("my_bool", "this param is a bool", []any{false}),
+			},
+			in: map[string]any{
+				"my_bool": false,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: false}},
+		},
+		{
+			name: "bool not allowed",
+			params: tools.Parameters{
+				tools.NewBooleanParameterWithAllowedValues("my_bool", "this param is a bool", []any{false}),
+			},
+			in: map[string]any{
+				"my_bool": true,
 			},
 		},
 		{
@@ -859,6 +1063,16 @@ func TestParametersParse(t *testing.T) {
 			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: nil}},
 		},
 		{
+			name: "array with string escape",
+			params: tools.Parameters{
+				tools.NewArrayParameter("my_array", "an array", tools.NewStringParameterWithEscape("my_string", "string item", "backticks")),
+			},
+			in: map[string]any{
+				"my_array": []string{"val1", "val2"},
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_array", Value: []any{string("`val1`"), string("`val2`")}}},
+		},
+		{
 			name: "map",
 			params: tools.Parameters{
 				tools.NewMapParameter("my_map", "a map", "string"),
@@ -902,6 +1116,25 @@ func TestParametersParse(t *testing.T) {
 			},
 			in:   map[string]any{},
 			want: tools.ParamValues{tools.ParamValue{Name: "my_map_not_required", Value: nil}},
+		},
+		{
+			name: "map allowed",
+			params: tools.Parameters{
+				tools.NewMapParameterWithAllowedValues("my_map", "a map", []any{map[string]any{"key1": "val1"}}, "string"),
+			},
+			in: map[string]any{
+				"my_map": map[string]any{"key1": "val1"},
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_map", Value: map[string]any{"key1": "val1"}}},
+		},
+		{
+			name: "map not allowed",
+			params: tools.Parameters{
+				tools.NewMapParameterWithAllowedValues("my_map", "a map", []any{map[string]any{"key1": "val1"}}, "string"),
+			},
+			in: map[string]any{
+				"my_map": map[string]any{"key1": "val2"},
+			},
 		},
 	}
 	for _, tc := range tcs {
@@ -1497,7 +1730,7 @@ func TestFailParametersUnmarshal(t *testing.T) {
 					"description": "this is a param for string",
 				},
 			},
-			err: "parameter is missing 'type' field: %!w(<nil>)",
+			err: "parameter is missing 'type' field",
 		},
 		{
 			name: "common parameter missing description",
