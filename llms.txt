@@ -73,6 +73,7 @@ List of reference documentation for resources in Toolbox.
   - [Oracle](https://googleapis.github.io/genai-toolbox/resources/sources/oracle/): Oracle Database is a widely-used relational database management system.
   - [PostgreSQL](https://googleapis.github.io/genai-toolbox/resources/sources/postgres/): PostgreSQL is a powerful, open source object-relational database.
   - [Redis](https://googleapis.github.io/genai-toolbox/resources/sources/redis/): Redis is a in-memory data structure store.
+  - [Serverless for Apache Spark](https://googleapis.github.io/genai-toolbox/resources/sources/serverless-spark/): Google Cloud Serverless for Apache Spark lets you run Spark workloads without requiring you to provision and manage your own Spark cluster.
   - [Spanner](https://googleapis.github.io/genai-toolbox/resources/sources/spanner/): Spanner is a fully managed database service from Google Cloud that combines  relational, key-value, graph, and search capabilities.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/resources/sources/mssql/): SQL Server is a relational database management system (RDBMS).
   - [SQLite](https://googleapis.github.io/genai-toolbox/resources/sources/sqlite/): SQLite is a C-language library that implements a small, fast, self-contained,  high-reliability, full-featured, SQL database engine.
@@ -105,6 +106,7 @@ List of reference documentation for resources in Toolbox.
   - [Oracle](https://googleapis.github.io/genai-toolbox/resources/tools/oracle/): Tools that work with Oracle Sources.
   - [Postgres](https://googleapis.github.io/genai-toolbox/resources/tools/postgres/): Tools that work with Postgres Sources, such as Cloud SQL for Postgres and AlloyDB. 
   - [Redis](https://googleapis.github.io/genai-toolbox/resources/tools/redis/): Tools that work with Redis Sources.
+  - [Serverless for Apache Spark](https://googleapis.github.io/genai-toolbox/resources/tools/serverless-spark/): Tools that work with Google Cloud Serverless for Apache Spark Sources.
   - [Spanner](https://googleapis.github.io/genai-toolbox/resources/tools/spanner/): Tools that work with Spanner Sources.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/resources/tools/mssql/): Tools that work with SQL Server Sources, such as CloudSQL for SQL Server.
   - [SQLite](https://googleapis.github.io/genai-toolbox/resources/tools/sqlite/): Tools that work with SQLite Sources.
