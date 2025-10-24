@@ -31,7 +31,11 @@ tools:
     description: |
       Use this tool to perform data analysis, get insights,
       or answer complex questions about the contents of specific
-      BigQuery tables.
+      BigQuery tables. If the user question can be answered using other simple
+      tools, it is recommended to try them first. This tool is more of a
+      heavy-lifter with relatively longer latency and lesser transparency, and
+      should be used only if the other tools have failed to cater to the user
+      ask or the user has explicitly desired to use this tool.
 
   execute_sql:
     kind: bigquery-execute-sql
