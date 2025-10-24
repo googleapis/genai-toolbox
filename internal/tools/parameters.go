@@ -553,7 +553,7 @@ func NewStringParameterWithEscape(name, desc, escape string) *StringParameter {
 	return &StringParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeString,
+			Type:         TypeString,
 			Desc:         desc,
 			AuthServices: nil,
 		},
@@ -591,7 +591,7 @@ func NewStringParameterWithAllowedValues(name string, desc string, allowedValues
 	return &StringParameter{
 		CommonParameter: CommonParameter{
 			Name:          name,
-			Type:          typeString,
+			Type:          TypeString,
 			Desc:          desc,
 			AllowedValues: allowedValues,
 			AuthServices:  nil,
@@ -680,7 +680,7 @@ func NewIntParameterWithRange(name string, desc string, minValue *int, maxValue 
 	return &IntParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeInt,
+			Type:         TypeInt,
 			Desc:         desc,
 			AuthServices: nil,
 		},
@@ -732,7 +732,7 @@ func NewIntParameterWithAllowedValues(name string, desc string, allowedValues []
 	return &IntParameter{
 		CommonParameter: CommonParameter{
 			Name:          name,
-			Type:          typeString,
+			Type:          TypeString,
 			Desc:          desc,
 			AllowedValues: allowedValues,
 			AuthServices:  nil,
@@ -822,7 +822,7 @@ func NewFloatParameterWithRange(name string, desc string, minValue *float64, max
 	return &FloatParameter{
 		CommonParameter: CommonParameter{
 			Name:         name,
-			Type:         typeFloat,
+			Type:         TypeFloat,
 			Desc:         desc,
 			AuthServices: nil,
 		},
@@ -874,7 +874,7 @@ func NewFloatParameterWithAllowedValues(name string, desc string, allowedValues 
 	return &FloatParameter{
 		CommonParameter: CommonParameter{
 			Name:          name,
-			Type:          typeFloat,
+			Type:          TypeFloat,
 			Desc:          desc,
 			AllowedValues: allowedValues,
 			AuthServices:  nil,
@@ -1010,7 +1010,7 @@ func NewBooleanParameterWithAllowedValues(name string, desc string, allowedValue
 	return &BooleanParameter{
 		CommonParameter: CommonParameter{
 			Name:          name,
-			Type:          typeBool,
+			Type:          TypeBool,
 			Desc:          desc,
 			AllowedValues: allowedValues,
 			AuthServices:  nil,
@@ -1121,7 +1121,7 @@ func NewArrayParameterWithAllowedValues(name string, desc string, allowedValues 
 	return &ArrayParameter{
 		CommonParameter: CommonParameter{
 			Name:          name,
-			Type:          typeArray,
+			Type:          TypeArray,
 			Desc:          desc,
 			AllowedValues: allowedValues,
 			AuthServices:  nil,
