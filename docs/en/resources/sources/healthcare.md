@@ -34,6 +34,17 @@ If you are new to the Healthcare API, you can try to
 [healthcare-quickstart-curl]:
     https://cloud.google.com/healthcare-api/docs/store-healthcare-data-rest
 
+## Available Tools
+
+- [`get-healthcare-dataset`](../tools/healthcare/get-healthcare-dataset.md)
+  Retrieves a dataset’s details.
+
+- [`list-fhir-stores`](../tools/healthcare/list-fhir-stores.md)
+  Lists the available FHIR stores in the healthcare dataset.
+
+- [`list-dicom-stores`](../tools/healthcare/list-dicom-stores.md)
+  Lists the available DICOM stores in the healthcare dataset.
+
 ## Requirements
 
 ### IAM Permissions
