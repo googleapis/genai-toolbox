@@ -723,6 +723,25 @@ steps:
           "Oracle" \
           oracle \
           oracle
+
+  - id: "serverless-spark"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SERVERLESS_SPARK_PROJECT=$PROJECT_ID"
+      - "SERVERLESS_SPARK_LOCATION=$_REGION"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Serverless Spark" \
+          serverlessspark
             
 availableSecrets:
   secretManager:

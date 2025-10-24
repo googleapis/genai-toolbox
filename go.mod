@@ -10,6 +10,7 @@ require (
 	cloud.google.com/go/bigtable v1.40.1
 	cloud.google.com/go/cloudsqlconn v1.18.1
 	cloud.google.com/go/dataplex v1.27.1
+	cloud.google.com/go/dataproc/v2 v2.14.1
 	cloud.google.com/go/firestore v1.20.0
 	cloud.google.com/go/geminidataanalytics v0.2.1
 	cloud.google.com/go/spanner v1.86.0
@@ -36,7 +37,7 @@ require (
 	github.com/microsoft/go-mssqldb v1.9.3
 	github.com/nakagami/firebirdsql v0.9.15
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.4
-	github.com/redis/go-redis/v9 v9.14.1
+	github.com/redis/go-redis/v9 v9.16.0
 	github.com/sijms/go-ora/v2 v2.9.0
 	github.com/spf13/cobra v1.10.1
 	github.com/thlib/go-timezone-local v0.0.7
