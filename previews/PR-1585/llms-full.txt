@@ -8063,6 +8063,61 @@ sources:
 [auth]: https://cloud.google.com/memorystore/docs/redis/about-redis-auth
 
 
+# Serverless for Apache Spark
+Google Cloud Serverless for Apache Spark lets you run Spark workloads without requiring you to provision and manage your own Spark cluster.
+
+
+## About
+
+The [Serverless for Apache
+Spark](https://cloud.google.com/dataproc-serverless/docs/overview) source allows
+Toolbox to interact with Spark batches hosted on Google Cloud Serverless for
+Apache Spark.
+
+## Available Tools
+
+- [`serverless-spark-list-batches`](../tools/serverless-spark/serverless-spark-list-batches.md)
+  List and filter Serverless Spark batches.
+
+## Requirements
+
+### IAM Permissions
+
+Serverless for Apache Spark uses [Identity and Access Management
+(IAM)](https://cloud.google.com/bigquery/docs/access-control) to control user
+and group access to serverless Spark resources like batches and sessions.
+
+Toolbox will use your [Application Default Credentials
+(ADC)](https://cloud.google.com/docs/authentication#adc) to authorize and
+authenticate when interacting with Google Cloud Serverless for Apache Spark.
+When using this method, you need to ensure the IAM identity associated with your
+ADC has the correct
+[permissions](https://cloud.google.com/dataproc-serverless/docs/concepts/iam)
+for the actions you intend to perform. Common roles include
+`roles/dataproc.serverlessEditor` (which includes permissions to run batches) or
+`roles/dataproc.serverlessViewer`. Follow this
+[guide](https://cloud.google.com/docs/authentication/provide-credentials-adc) to
+set up your ADC.
+
+## Example
+
+```yaml
+sources:
+  my-serverless-spark-source:
+    kind: serverless-spark
+    project: my-project-id
+    location: us-central1
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description**                                                   |
+| --------- | :------: | :----------: | ----------------------------------------------------------------- |
+| kind      |  string  |     true     | Must be "serverless-spark".                                       |
+| project   |  string  |     true     | ID of the GCP project with Serverless for Apache Spark resources. |
+| location  |  string  |     true     | Location containing Serverless for Apache Spark resources.        |
+
+
 # Spanner
 Spanner is a fully managed database service from Google Cloud that combines  relational, key-value, graph, and search capabilities.
 
@@ -8964,6 +9019,11 @@ Tools that work with Postgres Sources, such as Cloud SQL for Postgres and AlloyD
 
 # Redis
 Tools that work with Redis Sources.
+
+
+
+# Serverless for Apache Spark
+Tools that work with Google Cloud Serverless for Apache Spark Sources.
 
 
 
@@ -11397,6 +11457,20 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_replication_slots`: Lists replication slots in the database.
     *   `list_invalid_indexes`: Lists invalid indexes in the database.
     *   `get_query_plan`: Generate the execution plan of a statement.
+
+## Google Cloud Serverless for Apache Spark
+
+*   `--prebuilt` value: `serverless-spark`
+*   **Environment Variables:**
+    *   `SERVERLESS_SPARK_PROJECT`: The GCP project ID
+    *   `SERVERLESS_SPARK_LOCATION`: The GCP Location.
+*   **Permissions:**
+    *   **Dataproc Serverless Viewer** (`roles/dataproc.serverlessViewer`) to
+        view serverless batches.
+    *   **Dataproc Serverless Editor** (`roles/dataproc.serverlessEditor`) to
+        view serverless batches.
+*   **Tools:**
+    *   `list_batches`: Lists Spark batches.
 
 ## Spanner (GoogleSQL dialect)
 
