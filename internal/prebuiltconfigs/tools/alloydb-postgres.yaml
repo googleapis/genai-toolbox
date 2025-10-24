@@ -156,6 +156,11 @@ tools:
               description: "The SQL statement for which you want to generate plan (omit the EXPLAIN keyword)."
               required: true
 
+    list_views:
+        kind: postgres-list-views
+        source: alloydb-pg-source
+        description: "Lists top N(default 50) views in the database from pg_views, ordered by viewname. Returns schemaname, viewname and the ownername."
+
 toolsets:
     alloydb_postgres_database_tools:
         - execute_sql
@@ -169,3 +174,4 @@ toolsets:
         - list_replication_slots
         - list_invalid_indexes
         - get_query_plan
+        - list_views
