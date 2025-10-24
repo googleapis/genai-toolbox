@@ -1,0 +1,50 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Link Checker
+
+on:
+  push:
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v5
+
+      - name: Restore lychee cache
+        uses: actions/cache@v4
+        with:
+          path: .lycheecache
+          key: cache-lychee-${{ github.sha }}
+          restore-keys: cache-lychee-
+
+      - name: Link Checker
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >
+            --verbose             # Print detailed output for debugging/info
+            --no-progress         # Disable the progress bar in CI logs
+            --cache               # Enable caching of checked URLs
+            --max-cache-age 1d    # Re-check cached links older than 1 day
+            README.md             # Target: Check links in the top-level README
+            docs/                 # Target: Recursively check all files in the docs/ directory
+
+          output: /tmp/foo.txt    # Output the results to a temporary file
+          fail: true              # Fail the job if any broken link is found
+          jobSummary: true        # Post the results summary to the job summary
+          debug: true             # Enable debug output for the action itself
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
