@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -93,8 +94,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	idParameter := tools.NewStringParameter(patientIDKey, "The ID of the patient FHIR resource for which the information is required.")
-	typeFilterParameter := tools.NewStringParameterWithDefault(typeFilterKey, "", "String of comma-delimited FHIR resource types. If provided, only resources of the specified resource type(s) are returned.")
+	idParameter := tools.NewStringParameter(patientIDKey, "The ID of the patient FHIR resource for which the information is required")
+	typeFilterParameter := tools.NewArrayParameterWithDefault(typeFilterKey, []any{}, "List of FHIR resource types. If provided, only resources of the specified resource type(s) are returned.", tools.NewStringParameter("resourceType", "A FHIR resource type"))
 	sinceFilterParameter := tools.NewStringParameterWithDefault(sinceFilterKey, "", "If provided, only resources updated after this time are returned. The time uses the format YYYY-MM-DDThh:mm:ss.sss+zz:zz. The time must be specified to the second and include a time zone. For example, 2015-02-07T13:28:17.239+02:00 or 2017-01-01T00:00:00Z")
 	parameters := tools.Parameters{idParameter, typeFilterParameter, sinceFilterParameter}
 	if len(s.AllowedFHIRStores()) != 1 {
@@ -164,11 +165,27 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	name := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/fhirStores/%s/fhir/Patient/%s", t.Project, t.Region, t.Dataset, storeID, patientID)
 	var opts []googleapi.CallOption
-	if typeFilter, ok := params.AsMap()[typeFilterKey].(string); ok && typeFilter != "" {
-		opts = append(opts, googleapi.QueryParameter("_type", typeFilter))
+	if val, ok := params.AsMap()[typeFilterKey]; ok {
+		types, ok := val.([]any)
+		if !ok {
+			return nil, fmt.Errorf("invalid '%s' parameter; expected a string array", typeFilterKey)
+		}
+		typeFilterSlice, err := tools.ConvertAnySliceToTyped(types, "string")
+		if err != nil {
+			return nil, fmt.Errorf("can't convert '%s' to array of strings: %s", typeFilterKey, err)
+		}
+		if len(typeFilterSlice.([]string)) != 0 {
+			opts = append(opts, googleapi.QueryParameter("_type", strings.Join(typeFilterSlice.([]string), ",")))
+		}
 	}
-	if sinceFilter, ok := params.AsMap()[sinceFilterKey].(string); ok && sinceFilter != "" {
-		opts = append(opts, googleapi.QueryParameter("_since", sinceFilter))
+	if since, ok := params.AsMap()[sinceFilterKey]; ok {
+		sinceStr, ok := since.(string)
+		if !ok {
+			return nil, fmt.Errorf("invalid '%s' parameter; expected a string", sinceFilterKey)
+		}
+		if sinceStr != "" {
+			opts = append(opts, googleapi.QueryParameter("_since", sinceStr))
+		}
 	}
 
 	resp, err := svc.Projects.Locations.Datasets.FhirStores.Fhir.PatientEverything(name).Do(opts...)
