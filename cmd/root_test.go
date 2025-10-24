@@ -1467,7 +1467,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"serverless_spark_tools": tools.ToolsetConfig{
 					Name:      "serverless_spark_tools",
-					ToolNames: []string{"list_batches"},
+					ToolNames: []string{"list_batches", "get_batch"},
 				},
 			},
 		},
