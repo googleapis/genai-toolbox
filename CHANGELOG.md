@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.19.0](https://github.com/googleapis/genai-toolbox/compare/v0.18.0...v0.19.0) (2025-10-24)
+
+
+### Features
+
+* **neo4j:** Add dry_run parameter to validate Cypher queries ([#1769](https://github.com/googleapis/genai-toolbox/issues/1769)) ([f475da6](https://github.com/googleapis/genai-toolbox/commit/f475da63ce1b65387b503ac497eca47635452723))
+* **server:** Expand init logs to list names of sources,toolsets,tools,authservices ([#1117](https://github.com/googleapis/genai-toolbox/issues/1117)) ([7a88161](https://github.com/googleapis/genai-toolbox/commit/7a88161f029161a5aae9d23c3f7a6ecab798a686))
+* **serverless-spark:** Add serverless-spark source with list_batches tool ([816dbce](https://github.com/googleapis/genai-toolbox/commit/816dbce268392046e54767732bd31488c6e89bdb))
+
 ## [0.18.0](https://github.com/googleapis/genai-toolbox/compare/v0.17.0...v0.18.0) (2025-10-23)
 
 
