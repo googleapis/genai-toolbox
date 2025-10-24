@@ -43,7 +43,7 @@ and user credentials for that namespace.
 sources:
     my-dgraph-source:
         kind: dgraph
-        dgraphUrl: your_dgraph_url 
+        dgraphUrl: https://xxxx.cloud.dgraph.io
         user: ${USER_NAME}
         password: ${PASSWORD}
         apiKey: ${API_KEY}
@@ -60,7 +60,7 @@ instead of hardcoding your secrets into the configuration file.
 | **Field**   | **Type** | **Required** | **Description**                                                                                  |
 |-------------|:--------:|:------------:|--------------------------------------------------------------------------------------------------|
 | kind        |  string  |     true     | Must be "dgraph".                                                                                |
-| dgraphUrl   |  string  |     true     | Connection URI (e.g. "<your_dgraph_url >", "<https://localhost:8080>").                          |
+| dgraphUrl   |  string  |     true     | Connection URI (e.g. "<https://xxxx.cloud.dgraph.io >", "<https://localhost:8080>").                          |
 | user        |  string  |     false    | Name of the Dgraph user to connect as (e.g., "groot").                                           |
 | password    |  string  |     false    | Password of the Dgraph user (e.g., "password").                                                  |
 | apiKey      |  string  |     false    | API key to connect to a Dgraph Cloud instance.                                                   |
