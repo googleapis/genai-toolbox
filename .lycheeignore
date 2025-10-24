@@ -14,8 +14,7 @@
 
 ^http://example.net
 
-
+^https:\/\/xxx\.cloud\.dgraph\.io$
 ^https:\/\/www\.npmjs\.com\/package\/@toolbox-sdk\/core$
 ^https:\/\/claude\.ai\/download$
-
 ^https:\/\/(?:www|dev)\.mysql\.com\/.*$
