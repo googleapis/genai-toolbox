@@ -14,9 +14,8 @@ This tool provisions a cluster with a **private IP address** within the specifie
   **Permissions & APIs Required:**
   Before using, ensure the following on your GCP project:
 
-1.  The [AlloyDB API](https://console.cloud.google.com/apis/library/alloydb.googleapis.com) is enabled.
-2.  The user or service account executing the tool has one of the following IAM roles:
-
+1. The [AlloyDB API](https://console.cloud.google.com/apis/library/alloydb.googleapis.com) is enabled.
+2. The user or service account executing the tool has one of the following IAM roles:
 
     - `roles/alloydb.admin` (the AlloyDB Admin predefined IAM role)
     - `roles/owner` (the Owner basic IAM role)

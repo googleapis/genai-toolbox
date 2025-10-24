@@ -3,7 +3,8 @@ title: "postgres-list-installed-extensions"
 type: docs
 weight: 1
 description: >
-  The "postgres-list-installed-extensions" tool retrieves all PostgreSQL extensions installed on a Postgres database.
+  The "postgres-list-installed-extensions" tool retrieves all PostgreSQL
+  extensions installed on a Postgres database.
 aliases:
 - /resources/tools/postgres-list-installed-extensions
 ---
