@@ -45,6 +45,7 @@ var (
 	PostgresListActiveQueriesToolKind       = "postgres-list-active-queries"
 	PostgresListInstalledExtensionsToolKind = "postgres-list-installed-extensions"
 	PostgresListAvailableExtensionsToolKind = "postgres-list-available-extensions"
+	PostgresListSchemasToolKind             = "postgres-list-schemas"
 	PostgresDatabase                        = os.Getenv("POSTGRES_DATABASE")
 	PostgresHost                            = os.Getenv("POSTGRES_HOST")
 	PostgresPort                            = os.Getenv("POSTGRES_PORT")
@@ -102,6 +103,12 @@ func addPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]any {
 		"kind":        PostgresListAvailableExtensionsToolKind,
 		"source":      "my-instance",
 		"description": "Lists available extensions in the database.",
+	}
+
+	tools["list_schemas"] = map[string]any{
+		"kind":        PostgresListSchemasToolKind,
+		"source":      "my-instance",
+		"description": "Lists all schemas in the database ordered by schema name excluding pg_catalog, information_schema, pg_toast, pg_temp_*. It returns the schema name, schema owner, grants, number of functions, number of tables and number of views.",
 	}
 
 	config["tools"] = tools
@@ -189,6 +196,7 @@ func TestPostgres(t *testing.T) {
 
 	// Run specific Postgres tool tests
 	runPostgresListTablesTest(t, tableNameParam, tableNameAuth)
+	runPostgresListSchemasTest(t, ctx, pool)
 	runPostgresListActiveQueriesTest(t, ctx, pool)
 	runPostgresListAvailableExtensionsTest(t)
 	runPostgresListInstalledExtensionsTest(t)
@@ -596,6 +604,126 @@ func runPostgresListInstalledExtensionsTest(t *testing.T) {
 
 			// Intentionally not adding the output check as output depends on the postgres instance used where the the functional test runs.
 			// Adding the check will make the test flaky.
+		})
+	}
+}
+
+func setupPostgresSchemas(t *testing.T, ctx context.Context, pool *pgxpool.Pool, schemaName string) func() {
+	createSchemaStmt := fmt.Sprintf("CREATE SCHEMA %s", schemaName)
+	_, err := pool.Exec(ctx, createSchemaStmt)
+	if err != nil {
+		t.Fatalf("failed to create schema: %v", err)
+	}
+
+	return func() {
+		dropSchemaStmt := fmt.Sprintf("DROP SCHEMA %s", schemaName)
+		_, err := pool.Exec(ctx, dropSchemaStmt)
+		if err != nil {
+			t.Fatalf("failed to drop schema: %v", err)
+		}
+	}
+}
+
+func runPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	// Create a couple of test schemas with different numbers of tables, views, and functions.
+	schema1Name := "test_schema_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	cleanup1 := setupPostgresSchemas(t, ctx, pool, schema1Name)
+	defer cleanup1()
+
+	schema2Name := "test_schema_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	cleanup2 := setupPostgresSchemas(t, ctx, pool, schema2Name)
+	defer cleanup2()
+
+	// Note: when unmarshalling JSON numbers into an interface{}, they are treated as float64.
+	schema1Want := map[string]any{"functions": float64(0), "grants": map[string]any{}, "owner": "postgres", "schema_name": schema1Name, "tables": float64(0), "views": float64(0)}
+	schema2Want := map[string]any{"functions": float64(0), "grants": map[string]any{}, "owner": "postgres", "schema_name": schema2Name, "tables": float64(0), "views": float64(0)}
+
+	want := []map[string]any{schema1Want, schema2Want}
+
+	// Test cases
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           string
+	}{
+		{
+			name:           "invoke list_schemas with schema_name",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"schema_name": "%s"}`, schema1Name))),
+			wantStatusCode: http.StatusOK,
+			want:           fmt.Sprintf(`[%s]`, schema1Want),
+		},
+		{
+			name:           "invoke list_schemas",
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusOK,
+			want:           fmt.Sprintf(`[%s,%s]`, schema1Want, schema2Want),
+		},
+		{
+			name:           "invoke list_schemas with non-existent schema",
+			requestBody:    bytes.NewBuffer([]byte(`{"schema_name": "non_existent_schema"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           `null`,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_schemas/invoke"
+			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %v", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %v", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				body, _ := io.ReadAll(resp.Body)
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []map[string]any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v", err)
+			}
+
+			// Filter out the public schema from the 'got' results.
+			var filteredGot []map[string]any
+			for _, schema := range got {
+				if schemaName, ok := schema["schema_name"].(string); ok && schemaName != "public" {
+					filteredGot = append(filteredGot, schema)
+				}
+			}
+
+			// Sort slices for consistent comparison.
+			sort.SliceStable(filteredGot, func(i, j int) bool {
+				return filteredGot[i]["schema_name"].(string) < filteredGot[j]["schema_name"].(string)
+			})
+			sort.SliceStable(want, func(i, j int) bool {
+				return want[i]["schema_name"].(string) < want[j]["schema_name"].(string)
+			})
+
+			if diff := cmp.Diff(want, filteredGot); diff != "" {
+				t.Errorf("Unexpected result (-want +got):\n%s", diff)
+			}
 		})
 	}
 }

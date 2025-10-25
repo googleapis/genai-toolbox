@@ -152,6 +152,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistactivequeries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistavailableextensions"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistinstalledextensions"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistschemas"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
