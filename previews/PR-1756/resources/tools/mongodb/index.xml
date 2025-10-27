@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>MongoDB on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/</link><description>Recent content in MongoDB on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/index.xml" rel="self" type="application/rss+xml"/><item><title>mongodb-aggregate</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-aggregate/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-aggregate/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>mongodb-aggregate&lt;/code> tool is the most powerful query tool for MongoDB,
+allowing you to process data through a multi-stage pipeline. Each stage
+transforms the documents as they pass through, enabling complex operations like
+grouping, filtering, reshaping documents, and performing calculations.&lt;/p>
+&lt;p>The core of this tool is the &lt;code>pipelinePayload&lt;/code>, which must be a string
+containing a &lt;strong>JSON array of pipeline stage documents&lt;/strong>. The tool returns a JSON
+array of documents produced by the final stage of the pipeline.&lt;/p></description></item><item><title>mongodb-delete-many</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-delete-many/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-delete-many/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>mongodb-delete-many&lt;/code> tool performs a &lt;strong>bulk destructive operation&lt;/strong>,
+deleting &lt;strong>ALL&lt;/strong> documents from a collection that match a specified filter.&lt;/p>
+&lt;p>The tool returns the total count of documents that were deleted. If the filter
+does not match any documents (i.e., the deleted count is 0), the tool will
+return an error.&lt;/p>
+&lt;p>This tool is compatible with the following source kind:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/sources/mongodb/">&lt;code>mongodb&lt;/code>&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>Here is an example that performs a cleanup task by deleting all products from
+the &lt;code>inventory&lt;/code> collection that belong to a discontinued brand.&lt;/p></description></item><item><title>mongodb-delete-one</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-delete-one/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-delete-one/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>mongodb-delete-one&lt;/code> tool performs a destructive operation, deleting the
+&lt;strong>first single document&lt;/strong> that matches a specified filter from a MongoDB
+collection.&lt;/p>
+&lt;p>If the filter matches multiple documents, only the first one found by the
+database will be deleted. This tool is useful for removing specific entries,
+such as a user account or a single item from an inventory based on a unique ID.&lt;/p>
+&lt;p>The tool returns the number of documents deleted, which will be either &lt;code>1&lt;/code> if a
+document was found and deleted, or &lt;code>0&lt;/code> if no matching document was found.&lt;/p></description></item><item><title>mongodb-find</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-find/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-find/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mongodb-find&lt;/code> tool is used to query a MongoDB collection and retrieve
+documents that match a specified filter. It&amp;rsquo;s a flexible tool that allows you to
+shape the output by selecting specific fields (&lt;strong>projection&lt;/strong>), ordering the
+results (&lt;strong>sorting&lt;/strong>), and restricting the number of documents returned
+(&lt;strong>limiting&lt;/strong>).&lt;/p>
+&lt;p>The tool returns a JSON array of the documents found.&lt;/p>
+&lt;p>This tool is compatible with the following source kind:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/sources/mongodb/">&lt;code>mongodb&lt;/code>&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>Here&amp;rsquo;s an example that finds up to 10 users from the &lt;code>customers&lt;/code> collection who
+live in a specific city. The results are sorted by their last name, and only
+their first name, last name, and email are returned.&lt;/p></description></item><item><title>mongodb-find-one</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-find-one/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-find-one/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mongodb-find-one&lt;/code> tool is used to retrieve the &lt;strong>first single document&lt;/strong> that
+matches a specified filter from a MongoDB collection. If multiple documents
+match the filter, you can use &lt;code>sort&lt;/code> options to control which document is
+returned. Otherwise, the selection is not guaranteed.&lt;/p>
+&lt;p>The tool returns a single JSON object representing the document, wrapped in a
+JSON array.&lt;/p>
+&lt;p>This tool is compatible with the following source kind:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/sources/mongodb/">&lt;code>mongodb&lt;/code>&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>Here&amp;rsquo;s a common use case: finding a specific user by their unique email address
+and returning their profile information, while excluding sensitive fields like
+the password hash.&lt;/p></description></item><item><title>mongodb-insert-many</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-insert-many/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-insert-many/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>mongodb-insert-many&lt;/code> tool inserts &lt;strong>multiple new documents&lt;/strong> into a
+specified MongoDB collection in a single bulk operation. This is highly
+efficient for adding large amounts of data at once.&lt;/p>
+&lt;p>This tool takes one required parameter named &lt;code>data&lt;/code>. This &lt;code>data&lt;/code> parameter must
+be a string containing a &lt;strong>JSON array of document objects&lt;/strong>. Upon successful
+insertion, the tool returns a JSON array containing the unique &lt;code>_id&lt;/code> of &lt;strong>each&lt;/strong>
+new document that was created.&lt;/p></description></item><item><title>mongodb-insert-one</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-insert-one/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-insert-one/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>mongodb-insert-one&lt;/code> tool inserts a &lt;strong>single new document&lt;/strong> into a specified
+MongoDB collection.&lt;/p>
+&lt;p>This tool takes one required parameter named &lt;code>data&lt;/code>, which must be a string
+containing the JSON object you want to insert. Upon successful insertion, the
+tool returns the unique &lt;code>_id&lt;/code> of the newly created document.&lt;/p>
+&lt;p>This tool is compatible with the following source kind:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/sources/mongodb/">&lt;code>mongodb&lt;/code>&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>Here is an example configuration for a tool that adds a new user to a &lt;code>users&lt;/code>
+collection.&lt;/p></description></item><item><title>mongodb-update-many</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-update-many/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-update-many/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mongodb-update-many&lt;/code> tool updates &lt;strong>all&lt;/strong> documents within a specified
+MongoDB collection that match a given filter. It locates the documents using a
+&lt;code>filterPayload&lt;/code> and applies the modifications defined in an &lt;code>updatePayload&lt;/code>.&lt;/p>
+&lt;p>The tool returns an array of three integers: &lt;code>[ModifiedCount, UpsertedCount, MatchedCount]&lt;/code>.&lt;/p>
+&lt;p>This tool is compatible with the following source kind:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/sources/mongodb/">&lt;code>mongodb&lt;/code>&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>Here&amp;rsquo;s an example configuration. This tool applies a discount to all items
+within a specific category and also marks them as being on sale.&lt;/p></description></item><item><title>mongodb-update-one</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-update-one/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/tools/mongodb/mongodb-update-one/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mongodb-update-one&lt;/code> tool updates a single document within a specified MongoDB
+collection. It locates the document to be updated using a &lt;code>filterPayload&lt;/code> and
+applies modifications defined in an &lt;code>updatePayload&lt;/code>. If the filter matches
+multiple documents, only the first one found will be updated.&lt;/p>
+&lt;p>This tool is compatible with the following source kind:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1756/resources/sources/mongodb/">&lt;code>mongodb&lt;/code>&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>Here&amp;rsquo;s an example of a &lt;code>mongodb-update-one&lt;/code> tool configuration. This tool
+updates the &lt;code>stock&lt;/code> and &lt;code>status&lt;/code> fields of a document in the &lt;code>inventory&lt;/code>
+collection where the &lt;code>item&lt;/code> field matches a provided value. If no matching
+document is found, the &lt;code>upsert: true&lt;/code> option will create a new one.&lt;/p></description></item></channel></rss>
