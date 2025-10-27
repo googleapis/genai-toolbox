@@ -42,7 +42,7 @@ func makeArrayArg(name, desc string, items tools.Parameter) Argument {
 	return Argument{Parameter: tools.NewArrayParameter(name, desc, items)}
 }
 
-func TestArgument_McpArgManifest(t *testing.T) {
+func TestArgMcpManifest(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		name     string
