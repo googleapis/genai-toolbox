@@ -15,7 +15,7 @@ name: Link Checker
 
 on:
   pull_request:
-    types: [opened,synchronize,reopened]
+
 
 jobs:
   link-check:
@@ -48,13 +48,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-# --verbose: Print detailed output for debugging/info.
-# --no-progress: Disable the progress bar (useful in CI logs).
-# --cache: Enable caching of checked URLs to speed up subsequent runs.
-# --max-cache-age 1d: Re-check cached links if they are older than 1 day.
-# README.md: Target file to check links in.
-# docs/: Target directory to recursively check all files in.
-# write in proper output: /tmp/foo.txt: Direct the tool to write results to this temporary file.
-# fail: true: Configuration option to fail the job if any broken link is found.
-# jobSummary: true: Configuration option to post the link check summary to the GitHub Actions job summary.
-# debug: true: Configuration option to enable debug output for the action wrapper itself.
