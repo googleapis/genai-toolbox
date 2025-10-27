@@ -300,24 +300,25 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 
 	// initialize and validate the prompts from configs
 	promptsMap := make(map[string]prompts.Prompt)
-	for name, tc := range cfg.PromptConfigs {
-		t, err := func() (prompts.Prompt, error) {
+	for name, pc := range cfg.PromptConfigs {
+		p, err := func() (prompts.Prompt, error) {
 			_, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/prompt/init",
+				trace.WithAttributes(attribute.String("prompt_kind", pc.PromptConfigKind())),
 				trace.WithAttributes(attribute.String("prompt_name", name)),
 			)
 			defer span.End()
-			t, err := tc.Initialize()
+			p, err := pc.Initialize()
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize prompt %q: %w", name, err)
 			}
-			return t, nil
+			return p, nil
 		}()
 		if err != nil {
 			return nil, nil, nil, nil, nil, nil, err
 		}
-		promptsMap[name] = t
+		promptsMap[name] = p
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d prompts.", len(promptsMap)))
 
@@ -333,24 +334,24 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 
 	// initialize and validate the promptsets from configs
 	promptsetsMap := make(map[string]prompts.Promptset)
-	for name, tc := range cfg.PromptsetConfigs {
-		t, err := func() (prompts.Promptset, error) {
+	for name, pc := range cfg.PromptsetConfigs {
+		p, err := func() (prompts.Promptset, error) {
 			_, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/prompset/init",
 				trace.WithAttributes(attribute.String("prompset_name", name)),
 			)
 			defer span.End()
-			t, err := tc.Initialize(cfg.Version, promptsMap)
+			p, err := pc.Initialize(cfg.Version, promptsMap)
 			if err != nil {
 				return prompts.Promptset{}, fmt.Errorf("unable to initialize promptset %q: %w", name, err)
 			}
-			return t, err
+			return p, err
 		}()
 		if err != nil {
 			return nil, nil, nil, nil, nil, nil, err
 		}
-		promptsetsMap[name] = t
+		promptsetsMap[name] = p
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d promptsets.", len(promptsetsMap)))
 
