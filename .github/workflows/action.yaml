@@ -11,15 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-name: Link Checker
+name: Link Check
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened,synchronize,reopened]
 
 jobs:
-  link-check:
+  linkChecker:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -36,16 +35,26 @@ jobs:
         uses: lycheeverse/lychee-action@v2
         with:
           args: >
-            --verbose             # Print detailed output for debugging/info
-            --no-progress         # Disable the progress bar in CI logs
-            --cache               # Enable caching of checked URLs
-            --max-cache-age 1d    # Re-check cached links older than 1 day
-            README.md             # Target: Check links in the top-level README
-            docs/                 # Target: Recursively check all files in the docs/ directory
-
-          output: /tmp/foo.txt    # Output the results to a temporary file
-          fail: true              # Fail the job if any broken link is found
-          jobSummary: true        # Post the results summary to the job summary
-          debug: true             # Enable debug output for the action itself
+            --verbose
+            --no-progress
+            --cache
+            --max-cache-age 1d
+            README.md
+            docs/
+          output: /tmp/foo.txt
+          fail: true
+          jobSummary: true
+          debug: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+# --verbose: Print detailed output for debugging/info.
+# --no-progress: Disable the progress bar (useful in CI logs).
+# --cache: Enable caching of checked URLs to speed up subsequent runs.
+# --max-cache-age 1d: Re-check cached links if they are older than 1 day.
+# README.md: Target file to check links in.
+# docs/: Target directory to recursively check all files in.
+# write in proper output: /tmp/foo.txt: Direct the tool to write results to this temporary file.
+# fail: true: Configuration option to fail the job if any broken link is found.
+# jobSummary: true: Configuration option to post the link check summary to the GitHub Actions job summary.
+# debug: true: Configuration option to enable debug output for the action wrapper itself.
