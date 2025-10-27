@@ -2,7 +2,7 @@
 &lt;p>A &lt;code>firebird-execute-sql&lt;/code> tool executes a SQL statement against a Firebird
 database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/firebird.md">firebird&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/firebird/">firebird&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>firebird-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the sql
 statement against the &lt;code>source&lt;/code>.&lt;/p>
