@@ -83,7 +83,7 @@ func TestArgument_McpArgManifest(t *testing.T) {
 }
 
 // TestArguments_UnmarshalYAML tests all unmarshaling logic for the Arguments type.
-func TestArguments_UnmarshalYAML(t *testing.T) {
+func TestArgumentsUnmarshalYAML(t *testing.T) {
 	t.Parallel()
 	// paramComparer allows cmp.Diff to intelligently compare the parsed results.
 	var transformFunc func(tools.Parameter) any
