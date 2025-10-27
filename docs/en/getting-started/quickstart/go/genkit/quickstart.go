@@ -46,7 +46,7 @@ func main() {
 	}
 
 	// Initialize Genkit
-	g, err := genkit.Init(ctx,
+	g := genkit.Init(ctx,
 		genkit.WithPlugins(&googlegenai.GoogleAI{}),
 		genkit.WithDefaultModel("googleai/gemini-2.0-flash"),
 	)
