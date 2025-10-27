@@ -256,7 +256,7 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 	return nil
 }
 
-// ToolConfigs is a type used to allow unmarshal of the toolset configs
+// ToolsetConfigs is a type used to allow unmarshal of the toolset configs
 type ToolsetConfigs map[string]tools.ToolsetConfig
 
 // validate interface
@@ -272,26 +272,6 @@ func (c *ToolsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(inter
 
 	for name, toolList := range raw {
 		(*c)[name] = tools.ToolsetConfig{Name: name, ToolNames: toolList}
-	}
-	return nil
-}
-
-// ToolConfigs is a type used to allow unmarshal of the toolset configs
-type PromptsetConfigs map[string]prompts.PromptsetConfig
-
-// validate interface
-var _ yaml.InterfaceUnmarshalerContext = &PromptsetConfigs{}
-
-func (c *PromptsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
-	*c = make(PromptsetConfigs)
-
-	var raw map[string][]string
-	if err := unmarshal(&raw); err != nil {
-		return err
-	}
-
-	for name, promptList := range raw {
-		(*c)[name] = prompts.PromptsetConfig{Name: name, PromptNames: promptList}
 	}
 	return nil
 }
@@ -338,6 +318,26 @@ func (c *PromptConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 			return err
 		}
 		(*c)[name] = promptCfg
+	}
+	return nil
+}
+
+// PromptsetConfigs is a type used to allow unmarshal of the PromptsetConfigs configs
+type PromptsetConfigs map[string]prompts.PromptsetConfig
+
+// validate interface
+var _ yaml.InterfaceUnmarshalerContext = &PromptsetConfigs{}
+
+func (c *PromptsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
+	*c = make(PromptsetConfigs)
+
+	var raw map[string][]string
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	for name, promptList := range raw {
+		(*c)[name] = prompts.PromptsetConfig{Name: name, PromptNames: promptList}
 	}
 	return nil
 }
