@@ -58,7 +58,7 @@ func SubstituteMessages(messages []Message, arguments Arguments, argValues tools
 
 	var parameters tools.Parameters
 	for _, arg := range arguments {
-		parameters = append(parameters, arg)
+		parameters = append(parameters, arg.Parameter)
 	}
 
 	for _, msg := range messages {
