@@ -15,7 +15,8 @@
 name: Link Checker
 
 on:
-  push:
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   link-check:
