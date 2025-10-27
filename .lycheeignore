@@ -14,7 +14,9 @@
 
 ^http://example.net
 
-^https:\/\/xxx\.cloud\.dgraph\.io$
-^https:\/\/www\.npmjs\.com\/package\/@toolbox-sdk\/core$
-^https:\/\/claude\.ai\/download$
-^https:\/\/(?:www|dev)\.mysql\.com\/.*$
+https://xxx.cloud.dgraph.io/
+https://www.npmjs.com/package/@toolbox-sdk/core
+https://dev.mysql.com/downloads/installer/
+https://cloud.dgraph.io/login
+https://www.mysql.com/
+https://claude.ai/download
