@@ -1046,9 +1046,9 @@ Run parameterized CQL queries in Cassandra.&lt;/li>
 &lt;p>A &lt;code>cassandra-cql&lt;/code> tool executes a pre-defined CQL statement against a Cassandra
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/cassandra.md">cassandra&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/cassandra/">cassandra&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>The specified CQL statement is executed as a &lt;a href="https://docs.datastax.com/en/developer/go-driver/4.8/cql-prepared-statements/">prepared statement&lt;/a>,
+&lt;p>The specified CQL statement is executed as a &lt;a href="https://docs.datastax.com/en/datastax-drivers/developing/prepared-statements.html">prepared statement&lt;/a>,
 and expects parameters in the CQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;blockquote>
@@ -1858,7 +1858,7 @@ applying artificial intelligence and machine learning.&lt;/p></description></ite
 &lt;p>A &lt;code>dataplex-lookup-entry&lt;/code> tool returns details of a particular entry in Dataplex
 Catalog. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/dataplex.md">dataplex&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/dataplex/">dataplex&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>dataplex-lookup-entry&lt;/code> takes a required &lt;code>name&lt;/code> parameter which contains the
 project and location to which the request should be attributed in the following
@@ -2022,7 +2022,7 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
 &lt;p>A &lt;code>firebird-sql&lt;/code> tool executes a pre-defined SQL statement against a Firebird
 database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/firebird.md">firebird&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/firebird/">firebird&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>The specified SQL statement is executed as a &lt;a href="https://firebirdsql.org/refdocs/langrefupd25-psql-execstat.html">prepared statement&lt;/a>,
 and supports both positional parameters (&lt;code>?&lt;/code>) and named parameters (&lt;code>:param_name&lt;/code>).
@@ -4890,7 +4890,7 @@ MySQL-compatible user management syntax.&lt;/p></description></item><item><title
 &lt;p>An &lt;code>oceanbase-execute-sql&lt;/code> tool executes a SQL statement against an OceanBase
 database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/oceanbase.md">oceanbase&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/oceanbase/">oceanbase&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>oceanbase-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the sql
 statement against the &lt;code>source&lt;/code>.&lt;/p>
@@ -4937,7 +4937,7 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
 &lt;p>An &lt;code>oceanbase-sql&lt;/code> tool executes a pre-defined SQL statement against an
 OceanBase database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/oceanbase.md">oceanbase&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/oceanbase/">oceanbase&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>The specified SQL statement is executed as a &lt;a href="https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html">prepared
 statement&lt;/a>, and expects parameters in the SQL query to be in the
@@ -5895,6 +5895,29 @@ database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
+&lt;h2 id="google-cloud-serverless-for-apache-spark">Google Cloud Serverless for Apache Spark&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>serverless-spark&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>SERVERLESS_SPARK_PROJECT&lt;/code>: The GCP project ID&lt;/li>
+&lt;li>&lt;code>SERVERLESS_SPARK_LOCATION&lt;/code>: The GCP Location.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Dataproc Serverless Viewer&lt;/strong> (&lt;code>roles/dataproc.serverlessViewer&lt;/code>) to
+view serverless batches.&lt;/li>
+&lt;li>&lt;strong>Dataproc Serverless Editor&lt;/strong> (&lt;code>roles/dataproc.serverlessEditor&lt;/code>) to
+view serverless batches.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>list_batches&lt;/code>: Lists Spark batches.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
 &lt;h2 id="spanner-googlesql-dialect">Spanner (GoogleSQL dialect)&lt;/h2>
 &lt;ul>
 &lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>spanner&lt;/code>&lt;/li>
@@ -6063,7 +6086,50 @@ Run Redis commands and interact with key-value pairs.&lt;/li>
 &lt;h3 id="redis">Redis&lt;/h3>
 &lt;p>&lt;a href="https://cloud.google.com/memorystore/docs/redis/about-redis-auth">AUTH string&lt;/a> is a password for connection to Redis. If you have the
 &lt;code>requirepass&lt;/code> directive set in your Redis configuration, incoming client
-connections must authenticate in order to connect.&lt;/p></description></item><item><title>Spanner</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/spanner/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/spanner/</guid><description>&lt;h1 id="spanner-source">Spanner Source&lt;/h1>
+connections must authenticate in order to connect.&lt;/p></description></item><item><title>Serverless for Apache Spark</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/serverless-spark/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/serverless-spark/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;a href="https://cloud.google.com/dataproc-serverless/docs/overview">Serverless for Apache
+Spark&lt;/a> source allows
+Toolbox to interact with Spark batches hosted on Google Cloud Serverless for
+Apache Spark.&lt;/p>
+&lt;h2 id="available-tools">Available Tools&lt;/h2>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/serverless-spark/serverless-spark-list-batches/">&lt;code>serverless-spark-list-batches&lt;/code>&lt;/a>
+List and filter Serverless Spark batches.&lt;/li>
+&lt;/ul>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
+&lt;p>Serverless for Apache Spark uses &lt;a href="https://cloud.google.com/bigquery/docs/access-control">Identity and Access Management
+(IAM)&lt;/a> to control user
+and group access to serverless Spark resources like batches and sessions.&lt;/p>
+&lt;p>Toolbox will use your &lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials
+(ADC)&lt;/a> to authorize and
+authenticate when interacting with Google Cloud Serverless for Apache Spark.
+When using this method, you need to ensure the IAM identity associated with your
+ADC has the correct
+&lt;a href="https://cloud.google.com/dataproc-serverless/docs/concepts/iam">permissions&lt;/a>
+for the actions you intend to perform. Common roles include
+&lt;code>roles/dataproc.serverlessEditor&lt;/code> (which includes permissions to run batches) or
+&lt;code>roles/dataproc.serverlessViewer&lt;/code>. Follow this
+&lt;a href="https://cloud.google.com/docs/authentication/provide-credentials-adc">guide&lt;/a> to
+set up your ADC.&lt;/p></description></item><item><title>serverless-spark-list-batches</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/serverless-spark/serverless-spark-list-batches/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/serverless-spark/serverless-spark-list-batches/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>serverless-spark-list-batches&lt;/code> tool returns a list of Spark batches from a
+Google Cloud Serverless for Apache Spark source. It&amp;rsquo;s compatible with the
+following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/serverless-spark/">serverless-spark&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>serverless-spark-list-batches&lt;/code> accepts the following parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>filter&lt;/code>&lt;/strong> (optional): A filter expression to limit the batches returned.
+Filters are case sensitive and may contain multiple clauses combined with
+logical operators (AND/OR). Supported fields are &lt;code>batch_id&lt;/code>, &lt;code>batch_uuid&lt;/code>,
+&lt;code>state&lt;/code>, &lt;code>create_time&lt;/code>, and &lt;code>labels&lt;/code>. For example: &lt;code>state = RUNNING AND create_time &amp;lt; &amp;quot;2023-01-01T00:00:00Z&amp;quot;&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>&lt;code>pageSize&lt;/code>&lt;/strong> (optional): The maximum number of batches to return in a single
+page.&lt;/li>
+&lt;li>&lt;strong>&lt;code>pageToken&lt;/code>&lt;/strong> (optional): A page token, received from a previous call, to
+retrieve the next page of results.&lt;/li>
+&lt;/ul>
+&lt;p>The tool gets the &lt;code>project&lt;/code> and &lt;code>location&lt;/code> from the source configuration.&lt;/p></description></item><item><title>Spanner</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/spanner/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/spanner/</guid><description>&lt;h1 id="spanner-source">Spanner Source&lt;/h1>
 &lt;p>&lt;a href="https://cloud.google.com/spanner/docs">Spanner&lt;/a> is a fully managed, mission-critical database service
 that brings together relational, graph, key-value, and search. It offers
 transactional consistency at global scale, automatic, synchronous replication
@@ -6263,7 +6329,7 @@ console.&lt;/p>
 &lt;p>A &lt;code>tidb-execute-sql&lt;/code> tool executes a SQL statement against a TiDB
 database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/tidb.md">tidb&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/tidb/">tidb&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>tidb-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and run the sql
 statement against the &lt;code>source&lt;/code>.&lt;/p>
@@ -6310,7 +6376,7 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
 &lt;p>A &lt;code>tidb-sql&lt;/code> tool executes a pre-defined SQL statement against a TiDB
 database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/tidb.md">tidb&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/tidb/">tidb&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>The specified SQL statement is executed as a &lt;a href="https://docs.pingcap.com/tidb/stable/sql-prepared-plan-cache">prepared statement&lt;/a>,
 and expects parameters in the SQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
@@ -6696,8 +6762,8 @@ browser) for each request.&lt;/li>
  &lt;/tbody>
 &lt;/table></description></item><item><title>AlloyDB Admin API using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1781/how-to/connect-ide/alloydb_pg_admin_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1781/how-to/connect-ide/alloydb_pg_admin_mcp/</guid><description>&lt;html>
  &lt;head>
- &lt;link rel="canonical" href="https://cloud.google.com/alloydb/docs/create-database-with-mcp-toolbox"/>
- &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/create-database-with-mcp-toolbox"/>
+ &lt;link rel="canonical" href="https://cloud.google.com/alloydb/docs/quickstart/create-and-connect"/>
+ &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/quickstart/create-and-connect"/>
  &lt;/head>
 &lt;/html></description></item><item><title>AlloyDB using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1781/how-to/connect-ide/alloydb_pg_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1781/how-to/connect-ide/alloydb_pg_mcp/</guid><description>&lt;html>
  &lt;head>
