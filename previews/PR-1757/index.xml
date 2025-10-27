@@ -1929,7 +1929,7 @@ as a distributed system, Dgraph processes queries in parallel to deliver the
 fastest result.&lt;/p>
 &lt;p>This source can connect to either a self-managed Dgraph cluster or one hosted on
 Dgraph Cloud. If you&amp;rsquo;re new to Dgraph, the fastest way to get started is to
-&lt;a href="https://discuss.hypermode.com/login">sign up for Dgraph Cloud&lt;/a>.&lt;/p>
+&lt;a href="https://cloud.dgraph.io/login">sign up for Dgraph Cloud&lt;/a>.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1757/resources/tools/dgraph/dgraph-dql/">&lt;code>dgraph-dql&lt;/code>&lt;/a>&lt;br>
