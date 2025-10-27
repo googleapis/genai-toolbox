@@ -84,7 +84,7 @@ type Manifest struct {
 type McpManifest struct {
 	Name        string           `json:"name"`
 	Description string           `json:"description,omitempty"`
-	Arguments   []McpArgManifest `json:"arguments,omitempty"`
+	Arguments   []ArgMcpManifest `json:"arguments,omitempty"`
 }
 
 func GetMcpManifest(name, desc string, args Arguments) McpManifest {

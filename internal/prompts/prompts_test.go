@@ -128,7 +128,7 @@ func TestGetMcpManifest(t *testing.T) {
 			want: prompts.McpManifest{
 				Name:        "test-prompt",
 				Description: "A test prompt.",
-				Arguments:   []prompts.McpArgManifest{},
+				Arguments:   []prompts.ArgMcpManifest{},
 			},
 		},
 		{
