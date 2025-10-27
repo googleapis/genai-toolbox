@@ -26,6 +26,11 @@ type Message struct {
 	Content string `yaml:"content"`
 }
 
+const (
+	userRole      = "user"
+	assistantRole = "assistant"
+)
+
 func (m *Message) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	// Use a type alias to prevent an infinite recursion loop. The alias
 	// has the same fields but lacks the UnmarshalYAML method.
@@ -37,9 +42,9 @@ func (m *Message) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 	*m = Message(alias)
 	if m.Role == "" {
-		m.Role = "user"
+		m.Role = userRole
 	}
-	if m.Role != "user" && m.Role != "assistant" {
+	if m.Role != userRole && m.Role != assistantRole {
 		return fmt.Errorf("invalid role %q: must be 'user' or 'assistant'", m.Role)
 	}
 	return nil
