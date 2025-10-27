@@ -118,6 +118,8 @@ tools:
           quotes. Filter expressions can be found at
           https://cloud.google.com/looker/docs/filter-expressions. There
           is one mistake in that, however, Use `not null` instead of `-NULL`.
+          If the condition is a string that contains a comma, use a second
+          set of quotes. For example, {"user.city": "'New York, NY'"}.
 
           Sorts can be specified like [ "field.id desc 0" ].
 
