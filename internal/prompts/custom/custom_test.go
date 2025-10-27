@@ -73,7 +73,7 @@ func TestConfig(t *testing.T) {
 		want := prompts.McpManifest{
 			Name:        "TestConfig",
 			Description: "A test config.",
-			Arguments: []prompts.McpArgManifest{
+			Arguments: []prompts.ArgMcpManifest{
 				{Name: "name", Description: "The name to use.", Required: true},
 				{Name: "location", Description: "The location.", Required: false},
 			},

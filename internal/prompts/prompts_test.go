@@ -128,7 +128,7 @@ func TestGetMcpManifest(t *testing.T) {
 			want: prompts.McpManifest{
 				Name:        "test-prompt",
 				Description: "A test prompt.",
-				Arguments:   []prompts.McpArgManifest{},
+				Arguments:   []prompts.ArgMcpManifest{},
 			},
 		},
 		{
@@ -142,7 +142,7 @@ func TestGetMcpManifest(t *testing.T) {
 			want: prompts.McpManifest{
 				Name:        "arg-prompt",
 				Description: "Prompt with args.",
-				Arguments: []prompts.McpArgManifest{
+				Arguments: []prompts.ArgMcpManifest{
 					{Name: "param1", Description: "First param", Required: true},
 					{Name: "param2", Description: "Second param", Required: false},
 				},

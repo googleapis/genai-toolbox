@@ -84,13 +84,13 @@ type Manifest struct {
 type McpManifest struct {
 	Name        string           `json:"name"`
 	Description string           `json:"description,omitempty"`
-	Arguments   []McpArgManifest `json:"arguments,omitempty"`
+	Arguments   []ArgMcpManifest `json:"arguments,omitempty"`
 }
 
 func GetMcpManifest(name, desc string, args Arguments) McpManifest {
-	mcpArgs := make([]McpArgManifest, 0, len(args))
+	mcpArgs := make([]ArgMcpManifest, 0, len(args))
 	for _, arg := range args {
-		mcpArgs = append(mcpArgs, arg.McpArgManifest())
+		mcpArgs = append(mcpArgs, arg.McpManifest())
 	}
 	return McpManifest{
 		Name:        name,
