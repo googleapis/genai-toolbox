@@ -13,7 +13,7 @@ aliases:
 An `oceanbase-sql` tool executes a pre-defined SQL statement against an
 OceanBase database. It's compatible with the following source:
 
-[oceanbase](../../sources/oceanbase.md)
+- [oceanbase](../../sources/oceanbase.md)
 
 The specified SQL statement is executed as a [prepared
 statement][mysql-prepare], and expects parameters in the SQL query to be in the
