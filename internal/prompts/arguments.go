@@ -79,6 +79,7 @@ func (args *Arguments) UnmarshalYAML(ctx context.Context, unmarshal func(interfa
 	return nil
 }
 
+// ParseArguments validates and processes the user-provided arguments against the prompt's requirements.
 func ParseArguments(arguments Arguments, args map[string]any, data map[string]map[string]any) (tools.ParamValues, error) {
 	var parameters tools.Parameters
 	for _, arg := range arguments {
