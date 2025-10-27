@@ -2,7 +2,7 @@
 &lt;p>An &lt;code>oceanbase-execute-sql&lt;/code> tool executes a SQL statement against an OceanBase
 database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/oceanbase.md">oceanbase&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/oceanbase/">oceanbase&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>oceanbase-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the sql
 statement against the &lt;code>source&lt;/code>.&lt;/p>
@@ -49,7 +49,7 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
 &lt;p>An &lt;code>oceanbase-sql&lt;/code> tool executes a pre-defined SQL statement against an
 OceanBase database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/oceanbase.md">oceanbase&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/oceanbase/">oceanbase&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>The specified SQL statement is executed as a &lt;a href="https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html">prepared
 statement&lt;/a>, and expects parameters in the SQL query to be in the
