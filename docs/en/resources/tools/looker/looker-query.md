@@ -61,6 +61,8 @@ tools:
           "field.id2": "condition2", ...}. Do not put the field.id in
           quotes. Filter expressions can be found at
           https://cloud.google.com/looker/docs/filter-expressions.
+          If the condition is a string that contains a comma, use a second
+          set of quotes. For example, {"user.city": "'New York, NY'"}.
 
           Sorts can be specified like [ "field.id desc 0" ].
 
