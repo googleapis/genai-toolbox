@@ -64,38 +64,6 @@ func getPostgresVars(t *testing.T) map[string]any {
 	}
 }
 
-func addPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]any {
-	tools, ok := config["tools"].(map[string]any)
-	if !ok {
-		t.Fatalf("unable to get tools from config")
-	}
-	tools["list_tables"] = map[string]any{
-		"kind":        PostgresListTablesToolKind,
-		"source":      "my-instance",
-		"description": "Lists tables in the database.",
-	}
-	tools["list_active_queries"] = map[string]any{
-		"kind":        PostgresListActiveQueriesToolKind,
-		"source":      "my-instance",
-		"description": "Lists active queries in the database.",
-	}
-
-	tools["list_installed_extensions"] = map[string]any{
-		"kind":        PostgresListInstalledExtensionsToolKind,
-		"source":      "my-instance",
-		"description": "Lists installed extensions in the database.",
-	}
-
-	tools["list_available_extensions"] = map[string]any{
-		"kind":        PostgresListAvailableExtensionsToolKind,
-		"source":      "my-instance",
-		"description": "Lists available extensions in the database.",
-	}
-
-	config["tools"] = tools
-	return config
-}
-
 // Copied over from postgres.go
 func initPostgresConnectionPool(host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
 	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
@@ -183,9 +151,6 @@ func TestPostgres(t *testing.T) {
 	tests.RunPostgresListInstalledExtensionsTest(t)
 	tests.RunPostgresDatabaseOverviewTest(t, ctx, pool)
 	tests.RunPostgresListTriggersTest(t, ctx, pool)
-	tests.RunPostgresLongRunningTransactionsTest(t, ctx, pool)
-	tests.RunPostgresListLocksTest(t, ctx, pool)
-	tests.RunPostgresReplicationStatsTest(t, ctx, pool)
 	tests.RunPostgresListIndexesTest(t, ctx, pool)
 	tests.RunPostgresListSequencesTest(t, ctx, pool)
 	tests.RunPostgresLongRunningTransactionsTest(t, ctx, pool)

@@ -205,9 +205,6 @@ toolsets:
         - list_replication_slots
         - list_invalid_indexes
         - get_query_plan
-        - long_running_transactions
-        - list_locks
-        - replication_stats
         - list_views
         - list_schemas
         - database_overview
