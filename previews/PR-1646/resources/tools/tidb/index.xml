@@ -2,7 +2,7 @@
 &lt;p>A &lt;code>tidb-execute-sql&lt;/code> tool executes a SQL statement against a TiDB
 database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/tidb.md">tidb&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1646/resources/sources/tidb/">tidb&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>tidb-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and run the sql
 statement against the &lt;code>source&lt;/code>.&lt;/p>
@@ -49,7 +49,7 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
 &lt;p>A &lt;code>tidb-sql&lt;/code> tool executes a pre-defined SQL statement against a TiDB
 database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/tidb.md">tidb&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1646/resources/sources/tidb/">tidb&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>The specified SQL statement is executed as a &lt;a href="https://docs.pingcap.com/tidb/stable/sql-prepared-plan-cache">prepared statement&lt;/a>,
 and expects parameters in the SQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
