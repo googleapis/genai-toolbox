@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
@@ -37,10 +38,21 @@ import (
 
 const SourceKind string = "bigquery"
 
+const (
+	// No write operations are allowed.
+	WriteModeBlocked string = "blocked"
+	// Only protected write operations are allowed in a BigQuery session.
+	WriteModeProtected string = "protected"
+	// All write operations are allowed.
+	WriteModeAllowed string = "allowed"
+)
+
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 type BigqueryClientCreator func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
+
+type BigQuerySessionProvider func(ctx context.Context) (*Session, error)
 
 type DataplexClientCreator func(tokenString string) (*dataplexapi.CatalogClient, error)
 
@@ -60,12 +72,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// BigQuery configs
-	Name                      string   `yaml:"name" validate:"required"`
-	Kind                      string   `yaml:"kind" validate:"required"`
-	Project                   string   `yaml:"project" validate:"required"`
-	Location                  string   `yaml:"location"`
-	AllowedDatasets           []string `yaml:"allowedDatasets"`
-	UseClientOAuth            bool     `yaml:"useClientOAuth"`
+	Name            string   `yaml:"name" validate:"required"`
+	Kind            string   `yaml:"kind" validate:"required"`
+	Project         string   `yaml:"project" validate:"required"`
+	Location        string   `yaml:"location"`
+	WriteMode       string   `yaml:"writeMode"`
+	AllowedDatasets []string `yaml:"allowedDatasets"`
+	UseClientOAuth  bool     `yaml:"useClientOAuth"`
 	ImpersonateServiceAccount string   `yaml:"impersonateServiceAccount"`
 }
 
@@ -75,6 +88,14 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
+	if r.WriteMode == "" {
+		r.WriteMode = WriteModeAllowed
+	}
+
+	if r.WriteMode == WriteModeProtected && r.UseClientOAuth {
+		return nil, fmt.Errorf("writeMode 'protected' cannot be used with useClientOAuth 'true'")
+	}
+
 	var client *bigqueryapi.Client
 	var restService *bigqueryrestapi.Service
 	var tokenSource oauth2.TokenSource
@@ -108,40 +129,46 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 				datasetID = parts[1]
 				allowedFullID = allowed
 			} else {
-				projectID = client.Project()
+				projectID = r.Project
 				datasetID = allowed
 				allowedFullID = fmt.Sprintf("%s.%s", projectID, datasetID)
 			}
 
-			dataset := client.DatasetInProject(projectID, datasetID)
-			_, err := dataset.Metadata(ctx)
-			if err != nil {
-				if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
-					return nil, fmt.Errorf("allowedDataset '%s' not found in project '%s'", datasetID, projectID)
+			if client != nil {
+				dataset := client.DatasetInProject(projectID, datasetID)
+				_, err := dataset.Metadata(ctx)
+				if err != nil {
+					if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
+						return nil, fmt.Errorf("allowedDataset '%s' not found in project '%s'", datasetID, projectID)
+					}
+					return nil, fmt.Errorf("failed to verify allowedDataset '%s' in project '%s': %w", datasetID, projectID, err)
 				}
-				return nil, fmt.Errorf("failed to verify allowedDataset '%s' in project '%s': %w", datasetID, projectID, err)
 			}
 			allowedDatasets[allowedFullID] = struct{}{}
 		}
 	}
 
 	s := &Source{
-		Name:                      r.Name,
-		Kind:                      SourceKind,
-		Project:                   r.Project,
-		Location:                  r.Location,
-		Client:                    client,
-		RestService:               restService,
-		TokenSource:               tokenSource,
-		MaxQueryResultRows:        50,
-		ClientCreator:             clientCreator,
-		AllowedDatasets:           allowedDatasets,
-		UseClientOAuth:            r.UseClientOAuth,
+		Name:               r.Name,
+		Kind:               SourceKind,
+		Project:            r.Project,
+		Location:           r.Location,
+		Client:             client,
+		RestService:        restService,
+		TokenSource:        tokenSource,
+		MaxQueryResultRows: 50,
+		WriteMode:          r.WriteMode,
+		AllowedDatasets:    allowedDatasets,
+		UseClientOAuth:     r.UseClientOAuth,
 		ImpersonateServiceAccount: r.ImpersonateServiceAccount,
+	}
+	s.SessionProvider = s.newBigQuerySessionProvider()
+
+	if r.WriteMode != WriteModeAllowed && r.WriteMode != WriteModeBlocked && r.WriteMode != WriteModeProtected {
+		return nil, fmt.Errorf("invalid writeMode %q: must be one of %q, %q, or %q", r.WriteMode, WriteModeAllowed, WriteModeProtected, WriteModeBlocked)
 	}
 	s.makeDataplexCatalogClient = s.lazyInitDataplexClient(ctx, tracer)
 	return s, nil
-
 }
 
 var _ sources.Source = &Source{}
@@ -160,7 +187,19 @@ type Source struct {
 	AllowedDatasets           map[string]struct{}
 	UseClientOAuth            bool
 	ImpersonateServiceAccount string
+	WriteMode                 string
+	sessionMutex              sync.Mutex
 	makeDataplexCatalogClient func() (*dataplexapi.CatalogClient, DataplexClientCreator, error)
+	SessionProvider           BigQuerySessionProvider
+	Session                   *Session
+}
+
+type Session struct {
+	ID           string
+	ProjectID    string
+	DatasetID    string
+	CreationTime time.Time
+	LastUsed     time.Time
 }
 
 func (s *Source) SourceKind() string {
@@ -174,6 +213,103 @@ func (s *Source) BigQueryClient() *bigqueryapi.Client {
 
 func (s *Source) BigQueryRestService() *bigqueryrestapi.Service {
 	return s.RestService
+}
+
+func (s *Source) BigQueryWriteMode() string {
+	return s.WriteMode
+}
+
+func (s *Source) BigQuerySession() BigQuerySessionProvider {
+	return s.SessionProvider
+}
+
+func (s *Source) newBigQuerySessionProvider() BigQuerySessionProvider {
+	return func(ctx context.Context) (*Session, error) {
+		if s.WriteMode != WriteModeProtected {
+			return nil, nil
+		}
+
+		s.sessionMutex.Lock()
+		defer s.sessionMutex.Unlock()
+
+		logger, err := util.LoggerFromContext(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get logger from context: %w", err)
+		}
+
+		if s.Session != nil {
+			// Absolute 7-day lifetime check.
+			const sessionMaxLifetime = 7 * 24 * time.Hour
+			// This assumes a single task will not exceed 30 minutes, preventing it from failing mid-execution.
+			const refreshThreshold = 30 * time.Minute
+			if time.Since(s.Session.CreationTime) > (sessionMaxLifetime - refreshThreshold) {
+				logger.DebugContext(ctx, "Session is approaching its 7-day maximum lifetime. Creating a new one.")
+			} else {
+				job := &bigqueryrestapi.Job{
+					Configuration: &bigqueryrestapi.JobConfiguration{
+						DryRun: true,
+						Query: &bigqueryrestapi.JobConfigurationQuery{
+							Query:                "SELECT 1",
+							UseLegacySql:         new(bool),
+							ConnectionProperties: []*bigqueryrestapi.ConnectionProperty{{Key: "session_id", Value: s.Session.ID}},
+						},
+					},
+				}
+				_, err := s.RestService.Jobs.Insert(s.Project, job).Do()
+				if err == nil {
+					s.Session.LastUsed = time.Now()
+					return s.Session, nil
+				}
+				logger.DebugContext(ctx, "Session validation failed (likely expired), creating a new one.", "error", err)
+			}
+		}
+
+		// Create a new session if one doesn't exist, it has passed its 7-day lifetime,
+		// or it failed the validation dry run.
+
+		creationTime := time.Now()
+		job := &bigqueryrestapi.Job{
+			JobReference: &bigqueryrestapi.JobReference{
+				ProjectId: s.Project,
+				Location:  s.Location,
+			},
+			Configuration: &bigqueryrestapi.JobConfiguration{
+				DryRun: true,
+				Query: &bigqueryrestapi.JobConfigurationQuery{
+					Query:         "SELECT 1",
+					CreateSession: true,
+				},
+			},
+		}
+
+		createdJob, err := s.RestService.Jobs.Insert(s.Project, job).Do()
+		if err != nil {
+			return nil, fmt.Errorf("failed to create new session: %w", err)
+		}
+
+		var sessionID, sessionDatasetID, projectID string
+		if createdJob.Status != nil && createdJob.Statistics.SessionInfo != nil {
+			sessionID = createdJob.Statistics.SessionInfo.SessionId
+		} else {
+			return nil, fmt.Errorf("failed to get session ID from new session job")
+		}
+
+		if createdJob.Configuration != nil && createdJob.Configuration.Query != nil && createdJob.Configuration.Query.DestinationTable != nil {
+			sessionDatasetID = createdJob.Configuration.Query.DestinationTable.DatasetId
+			projectID = createdJob.Configuration.Query.DestinationTable.ProjectId
+		} else {
+			return nil, fmt.Errorf("failed to get session dataset ID from new session job")
+		}
+
+		s.Session = &Session{
+			ID:           sessionID,
+			ProjectID:    projectID,
+			DatasetID:    sessionDatasetID,
+			CreationTime: creationTime,
+			LastUsed:     creationTime,
+		}
+		return s.Session, nil
+	}
 }
 
 func (s *Source) UseClientAuthorization() bool {
@@ -261,6 +397,11 @@ func initBigQueryConnection(
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
+
+	cred, err := google.FindDefaultCredentials(ctx, "https://www.googleapis.com/auth/cloud-platform")
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
+	}
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
