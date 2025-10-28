@@ -29,7 +29,7 @@ import (
 // Test type aliases for convenience.
 type (
 	Argument       = prompts.Argument
-	McpArgManifest = prompts.McpArgManifest
+	ArgMcpManifest = prompts.ArgMcpManifest
 	Arguments      = prompts.Arguments
 )
 
@@ -42,31 +42,31 @@ func makeArrayArg(name, desc string, items tools.Parameter) Argument {
 	return Argument{Parameter: tools.NewArrayParameter(name, desc, items)}
 }
 
-func TestArgument_McpArgManifest(t *testing.T) {
+func TestArgMcpManifest(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		name     string
 		arg      Argument
-		expected McpArgManifest
+		expected ArgMcpManifest
 	}{
 		{
 			name: "Required with no default",
 			arg:  Argument{Parameter: tools.NewStringParameterWithRequired("name1", "desc1", true)},
-			expected: McpArgManifest{
+			expected: ArgMcpManifest{
 				Name: "name1", Description: "desc1", Required: true,
 			},
 		},
 		{
 			name: "Not required with no default",
 			arg:  Argument{Parameter: tools.NewStringParameterWithRequired("name2", "desc2", false)},
-			expected: McpArgManifest{
+			expected: ArgMcpManifest{
 				Name: "name2", Description: "desc2", Required: false,
 			},
 		},
 		{
 			name: "Implicitly required with default",
 			arg:  Argument{Parameter: tools.NewStringParameterWithDefault("name3", "defaultVal", "desc3")},
-			expected: McpArgManifest{
+			expected: ArgMcpManifest{
 				Name: "name3", Description: "desc3", Required: false,
 			},
 		},
@@ -74,16 +74,16 @@ func TestArgument_McpArgManifest(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := tc.arg.McpArgManifest()
+			got := tc.arg.McpManifest()
 			if diff := cmp.Diff(tc.expected, got); diff != "" {
-				t.Errorf("McpArgManifest() mismatch (-want +got):\n%s", diff)
+				t.Errorf("McpManifest() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
 }
 
 // TestArguments_UnmarshalYAML tests all unmarshaling logic for the Arguments type.
-func TestArguments_UnmarshalYAML(t *testing.T) {
+func TestArgumentsUnmarshalYAML(t *testing.T) {
 	t.Parallel()
 	// paramComparer allows cmp.Diff to intelligently compare the parsed results.
 	var transformFunc func(tools.Parameter) any
