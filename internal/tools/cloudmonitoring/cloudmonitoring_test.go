@@ -62,7 +62,7 @@ func TestInitialize(t *testing.T) {
 			want: &tools.Manifest{
 				Description:  "A test description.",
 				Parameters:   wantParams.Manifest(),
-				AuthRequired: []string{},
+				AuthRequired: nil,
 			},
 		},
 		{
