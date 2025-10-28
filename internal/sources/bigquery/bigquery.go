@@ -96,6 +96,10 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("writeMode 'protected' cannot be used with useClientOAuth 'true'")
 	}
 
+	if r.UseClientOAuth && r.ImpersonateServiceAccount != "" {
+		return nil, fmt.Errorf("useClientOAuth cannot be used with impersonateServiceAccount")
+	}
+
 	var client *bigqueryapi.Client
 	var restService *bigqueryrestapi.Service
 	var tokenSource oauth2.TokenSource
@@ -149,17 +153,18 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name:               r.Name,
-		Kind:               SourceKind,
-		Project:            r.Project,
-		Location:           r.Location,
-		Client:             client,
-		RestService:        restService,
-		TokenSource:        tokenSource,
-		MaxQueryResultRows: 50,
-		WriteMode:          r.WriteMode,
-		AllowedDatasets:    allowedDatasets,
-		UseClientOAuth:     r.UseClientOAuth,
+		Name:                      r.Name,
+		Kind:                      SourceKind,
+		Project:                   r.Project,
+		Location:                  r.Location,
+		Client:                    client,
+		RestService:               restService,
+		TokenSource:               tokenSource,
+		MaxQueryResultRows:        50,
+		WriteMode:                 r.WriteMode,
+		AllowedDatasets:           allowedDatasets,
+		UseClientOAuth:            r.UseClientOAuth,
+		ClientCreator:             clientCreator,
 		ImpersonateServiceAccount: r.ImpersonateServiceAccount,
 	}
 	s.SessionProvider = s.newBigQuerySessionProvider()
@@ -329,6 +334,17 @@ func (s *Source) BigQueryTokenSource() oauth2.TokenSource {
 }
 
 func (s *Source) BigQueryTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error) {
+	if s.ImpersonateServiceAccount != "" {
+		// Create impersonated credentials token source with the requested scope
+		ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
+			TargetPrincipal: s.ImpersonateServiceAccount,
+			Scopes:          []string{scope},
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create impersonated credentials for %q with scope %q: %w", s.ImpersonateServiceAccount, scope, err)
+		}
+		return ts, nil
+	}
 	return google.DefaultTokenSource(ctx, scope)
 }
 
@@ -398,11 +414,6 @@ func initBigQueryConnection(
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
-	cred, err := google.FindDefaultCredentials(ctx, "https://www.googleapis.com/auth/cloud-platform")
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
-	}
-
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, nil, nil, err
@@ -412,18 +423,19 @@ func initBigQueryConnection(
 	var opts []option.ClientOption
 
 	if impersonateServiceAccount != "" {
-		// Create impersonated credentials token source
-		ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
+		// Create impersonated credentials token source with cloud-platform scope
+		// This broader scope is needed for tools like conversational analytics
+		cloudPlatformTokenSource, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
 			TargetPrincipal: impersonateServiceAccount,
-			Scopes:          []string{bigqueryapi.Scope},
+			Scopes:          []string{"https://www.googleapis.com/auth/cloud-platform"},
 		})
 		if err != nil {
 			return nil, nil, nil, fmt.Errorf("failed to create impersonated credentials for %q: %w", impersonateServiceAccount, err)
 		}
-		tokenSource = ts
+		tokenSource = cloudPlatformTokenSource
 		opts = []option.ClientOption{
 			option.WithUserAgent(userAgent),
-			option.WithTokenSource(ts),
+			option.WithTokenSource(cloudPlatformTokenSource),
 		}
 	} else {
 		// Use default credentials
