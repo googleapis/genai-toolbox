@@ -134,8 +134,10 @@ go test -race -v ./...
     ```shell
     go test -race -v ./tests/alloydbpg
     ```
+
 1. **Timeout:** The integration test should have a timeout on the server.
    Look for code like this:
+
    ```go
    ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
    defer cancel()
@@ -146,6 +148,7 @@ go test -race -v ./...
    }
    defer cleanup()
    ```
+
    Be sure to set the timeout to a reasonable value for your tests.
 
 #### Running on Pull Requests
@@ -259,7 +262,6 @@ There are 3 GHA workflows we use to achieve document versioning:
     This is a manual workflow, started from the GitHub Actions UI.
     To rebuild and redeploy documentation for an already released version that were released before this new system was in place. This workflow can be started on the UI by providing the git version tag which you want to create the documentation for.
     The specific versioned subdirectory and the root docs are updated on the versioned-gh-pages branch.
-
 
 #### Contributors
 
