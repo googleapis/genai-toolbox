@@ -41,15 +41,6 @@ to a database by following these instructions][csql-pg-quickstart].
 - [`postgres-list-installed-extensions`](../tools/postgres/postgres-list-installed-extensions.md)
   List installed extensions in a PostgreSQL database.
 
-- [`postgres-long-running-transactions`](../tools/postgres/postgres-long-running-transactions.md)
-  List long running transactions in a PostgreSQL database.
-
-- [`postgres-list-locks`](../tools/postgres/postgres-list-locks.md)
-  List lock stats in a PostgreSQL database.
-
-- [`postgres-replication-stats`](../tools/postgres/postgres-replication-stats.md)
-  List replication stats in a PostgreSQL database.
-
 - [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
   List views in a PostgreSQL database.
 

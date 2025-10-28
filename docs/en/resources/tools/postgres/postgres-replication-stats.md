@@ -34,7 +34,10 @@ Example response element:
 
 ```json
 {
+  "pid": 12345,
+  "usename": "replication_user",
   "application_name": "replica-1",
+  "backend_xmin": "0/0",
   "client_addr": "10.0.0.7",
   "state": "streaming",
   "sync_state": "sync",
@@ -50,7 +53,10 @@ Example response element:
 
 | field             | type    | required | description |
 |------------------:|:-------:|:--------:|:------------|
+| pid               | integer | true     | Process ID of the replication backend on the primary. |
+| usename           | string  | true     | Name of the user performing the replication connection. |
 | application_name  | string  | true     | Name of the application (replica) connecting to the primary. |
+| backend_xmin      | string  | false    | Standby's xmin horizon reported by hot_standby_feedback (may be null). |
 | client_addr       | string  | false    | Client IP address of the replica (may be null). |
 | state             | string  | true     | Connection state (e.g., streaming). |
 | sync_state        | string  | true     | Sync state (e.g., async, sync, potential). |
