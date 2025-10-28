@@ -144,12 +144,12 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 					description: some description
 				`,
 			want: server.ToolConfigs{
-				"example_tool": &cloudmonitoring.Config{
+				"example_tool": cloudmonitoring.Config{
 					Name:         "example_tool",
 					Kind:         "cloud-monitoring-query-prometheus",
 					Source:       "my-instance",
 					Description:  "some description",
-					AuthRequired: nil,
+					AuthRequired: []string{},
 				},
 			},
 		},
@@ -166,7 +166,7 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 						- other-auth-service
 			`,
 			want: server.ToolConfigs{
-				"example_tool": &cloudmonitoring.Config{
+				"example_tool": cloudmonitoring.Config{
 					Name:         "example_tool",
 					Kind:         "cloud-monitoring-query-prometheus",
 					Source:       "my-instance",
