@@ -52,7 +52,7 @@ const longRunningTransactions = `
         AND xact_start IS NOT NULL
         AND pid <> pg_backend_pid()
     ORDER BY
-        ORDER BY xact_age DESC
+        xact_age DESC
     LIMIT 
         COALESCE($2::int, 20);
 `
@@ -86,7 +86,7 @@ type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
+	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
@@ -115,6 +115,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		tools.NewIntParameterWithDefault("limit", 20, "Optional: The maximum number of long-running transactions to return. Defaults to 20."),
 	}
 	paramManifest := allParameters.Manifest()
+
+	if cfg.Description == "" {
+		cfg.Description = "Identifies and lists database transactions that exceed a specified time limit. For each of the long running transactions, the output contains the process id, database name, user name, application name, client address, state, connection age, transaction age, query age, last activity age, wait event type, wait event, and query string."
+	}
+
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	// finish tool setup
