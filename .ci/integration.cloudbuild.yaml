@@ -224,6 +224,7 @@ steps:
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
       - "HEALTHCARE_REGION=$_REGION"
       - "HEALTHCARE_DATASET=$_HEALTHCARE_DATASET"
+      - "HEALTHCARE_PREPOPULATED_DICOM_STORE=$_HEALTHCARE_PREPOPULATED_DICOM_STORE"
     secretEnv: ["CLIENT_ID"]
     volumes:
       - name: "go"
@@ -881,6 +882,7 @@ substitutions:
   _ALLOYDB_AI_NL_INSTANCE: "alloydb-ai-nl-testing-instance"
   _BIGTABLE_INSTANCE: "bigtable-testing-instance"
   _HEALTHCARE_DATASET: "test-dataset"
+  _HEALTHCARE_PREPOPULATED_DICOM_STORE: "prepopulated-test-dicom-store"
   _POSTGRES_HOST: 127.0.0.1
   _POSTGRES_PORT: "5432"
   _SPANNER_INSTANCE: "spanner-testing"

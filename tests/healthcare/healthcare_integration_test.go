@@ -41,19 +41,43 @@ import (
 )
 
 var (
-	healthcareSourceKind          = "healthcare"
-	getDatasetToolKind            = "get-healthcare-dataset"
-	listFHIRStoresToolKind        = "list-fhir-stores"
-	listDICOMStoresToolKind       = "list-dicom-stores"
-	getFHIRStoreToolKind          = "get-fhir-store"
-	getFHIRStoreMetricsToolKind   = "get-fhir-store-metrics"
-	getFHIRResourceToolKind       = "get-fhir-resource"
-	fhirPatientSearchToolKind     = "fhir-patient-search"
-	fhirPatientEverythingToolKind = "fhir-patient-everything"
-	fhirFetchPageToolKind         = "fhir-fetch-page"
-	healthcareProject             = os.Getenv("HEALTHCARE_PROJECT")
-	healthcareRegion              = os.Getenv("HEALTHCARE_REGION")
-	healthcareDataset             = os.Getenv("HEALTHCARE_DATASET")
+	healthcareSourceKind                  = "healthcare"
+	getDatasetToolKind                    = "get-healthcare-dataset"
+	listFHIRStoresToolKind                = "list-fhir-stores"
+	listDICOMStoresToolKind               = "list-dicom-stores"
+	getFHIRStoreToolKind                  = "get-fhir-store"
+	getFHIRStoreMetricsToolKind           = "get-fhir-store-metrics"
+	getFHIRResourceToolKind               = "get-fhir-resource"
+	fhirPatientSearchToolKind             = "fhir-patient-search"
+	fhirPatientEverythingToolKind         = "fhir-patient-everything"
+	fhirFetchPageToolKind                 = "fhir-fetch-page"
+	getDICOMStoreToolKind                 = "get-dicom-store"
+	getDICOMStoreMetricsToolKind          = "get-dicom-store-metrics"
+	searchDICOMStudiesToolKind            = "search-dicom-studies"
+	searchDICOMSeriesToolKind             = "search-dicom-series"
+	searchDICOMInstancesToolKind          = "search-dicom-instances"
+	retrieveRenderedDICOMInstanceToolKind = "retrieve-rendered-dicom-instance"
+	healthcareProject                     = os.Getenv("HEALTHCARE_PROJECT")
+	healthcareRegion                      = os.Getenv("HEALTHCARE_REGION")
+	healthcareDataset                     = os.Getenv("HEALTHCARE_DATASET")
+	healthcarePrepopulatedDICOMStore      = os.Getenv("HEALTHCARE_PREPOPULATED_DICOM_STORE")
+)
+
+type DICOMInstance struct {
+	study, series, instance string
+}
+
+var (
+	singleFrameDICOMInstance = DICOMInstance{
+		study:    "1.2.840.113619.2.176.3596.3364818.7819.1259708454.105",
+		series:   "1.2.840.113619.2.176.3596.3364818.7819.1259708454.108",
+		instance: "1.2.840.113619.2.176.3596.3364818.7271.1259708501.876",
+	}
+	multiFrameDICOMInstance = DICOMInstance{
+		study:    "1.2.826.0.1.3680043.9.5704.649259287",
+		series:   "1.2.826.0.1.3680043.9.5704.983743739",
+		instance: "1.2.826.0.1.3680043.9.5704.983743739.2",
+	}
 )
 
 func getHealthcareVars(t *testing.T) map[string]any {
@@ -64,6 +88,8 @@ func getHealthcareVars(t *testing.T) map[string]any {
 		t.Fatal("'HEALTHCARE_REGION' not set")
 	case healthcareDataset:
 		t.Fatal("'HEALTHCARE_DATASET' not set")
+	case healthcarePrepopulatedDICOMStore:
+		t.Fatal("'HEALTHCARE_PREPOPULATED_DICOM_STORE' not set")
 	}
 	return map[string]any{
 		"kind":    healthcareSourceKind,
@@ -122,6 +148,13 @@ func TestHealthcareToolEndpoints(t *testing.T) {
 
 	nextURL := getNextPageURLForPatientEverything(t, fhirStoreID, patient2ID)
 	runFHIRFetchPageToolInvokeTest(t, nextURL, `"total":1`)
+
+	runGetDICOMStoreToolInvokeTest(t, dicomStoreID, dicomStoreWant)
+	runGetDICOMStoreMetricsToolInvokeTest(t, healthcarePrepopulatedDICOMStore, `"structuredStorageSizeBytes"`)
+	runSearchDICOMStudiesToolInvokeTest(t, healthcarePrepopulatedDICOMStore)
+	runSearchDICOMSeriesToolInvokeTest(t, healthcarePrepopulatedDICOMStore)
+	runSearchDICOMInstancesToolInvokeTest(t, healthcarePrepopulatedDICOMStore)
+	runRetrieveRenderedDICOMInstanceToolInvokeTest(t, healthcarePrepopulatedDICOMStore)
 }
 
 func TestHealthcareToolWithStoreRestriction(t *testing.T) {
@@ -346,6 +379,36 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				"source":      "my-instance",
 				"description": "Tool to fetch a page of FHIR resources",
 			},
+			"my-get-dicom-store-tool": map[string]any{
+				"kind":        getDICOMStoreToolKind,
+				"source":      "my-instance",
+				"description": "Tool to get a DICOM store",
+			},
+			"my-get-dicom-store-metrics-tool": map[string]any{
+				"kind":        getDICOMStoreMetricsToolKind,
+				"source":      "my-instance",
+				"description": "Tool to get DICOM store metrics",
+			},
+			"my-search-dicom-studies-tool": map[string]any{
+				"kind":        searchDICOMStudiesToolKind,
+				"source":      "my-instance",
+				"description": "Tool to search DICOM studies",
+			},
+			"my-search-dicom-series-tool": map[string]any{
+				"kind":        searchDICOMSeriesToolKind,
+				"source":      "my-instance",
+				"description": "Tool to search DICOM series",
+			},
+			"my-search-dicom-instances-tool": map[string]any{
+				"kind":        searchDICOMInstancesToolKind,
+				"source":      "my-instance",
+				"description": "Tool to search DICOM instances",
+			},
+			"my-retrieve-rendered-dicom-instance-tool": map[string]any{
+				"kind":        retrieveRenderedDICOMInstanceToolKind,
+				"source":      "my-instance",
+				"description": "Tool to retrieve rendered DICOM instance",
+			},
 			"my-client-auth-get-dataset-tool": map[string]any{
 				"kind":        getDatasetToolKind,
 				"source":      "my-client-auth-source",
@@ -390,6 +453,36 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				"kind":        fhirFetchPageToolKind,
 				"source":      "my-client-auth-source",
 				"description": "Tool to fetch a page of FHIR resources",
+			},
+			"my-client-auth-get-dicom-store-tool": map[string]any{
+				"kind":        getDICOMStoreToolKind,
+				"source":      "my-client-auth-source",
+				"description": "Tool to get a DICOM store",
+			},
+			"my-client-auth-get-dicom-store-metrics-tool": map[string]any{
+				"kind":        getDICOMStoreMetricsToolKind,
+				"source":      "my-client-auth-source",
+				"description": "Tool to get DICOM store metrics",
+			},
+			"my-client-auth-search-dicom-studies-tool": map[string]any{
+				"kind":        searchDICOMStudiesToolKind,
+				"source":      "my-client-auth-source",
+				"description": "Tool to search DICOM studies",
+			},
+			"my-client-auth-search-dicom-series-tool": map[string]any{
+				"kind":        searchDICOMSeriesToolKind,
+				"source":      "my-client-auth-source",
+				"description": "Tool to search DICOM series",
+			},
+			"my-client-auth-search-dicom-instances-tool": map[string]any{
+				"kind":        searchDICOMInstancesToolKind,
+				"source":      "my-client-auth-source",
+				"description": "Tool to search DICOM instances",
+			},
+			"my-client-auth-retrieve-rendered-dicom-instance-tool": map[string]any{
+				"kind":        retrieveRenderedDICOMInstanceToolKind,
+				"source":      "my-client-auth-source",
+				"description": "Tool to retrieve rendered DICOM instance",
 			},
 			"my-auth-get-dataset-tool": map[string]any{
 				"kind":        getDatasetToolKind,
@@ -459,6 +552,54 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				"kind":        fhirFetchPageToolKind,
 				"source":      "my-instance",
 				"description": "Tool to fetch a page of FHIR resources",
+				"authRequired": []string{
+					"my-google-auth",
+				},
+			},
+			"my-auth-get-dicom-store-tool": map[string]any{
+				"kind":        getDICOMStoreToolKind,
+				"source":      "my-instance",
+				"description": "Tool to get a DICOM store",
+				"authRequired": []string{
+					"my-google-auth",
+				},
+			},
+			"my-auth-get-dicom-store-metrics-tool": map[string]any{
+				"kind":        getDICOMStoreMetricsToolKind,
+				"source":      "my-instance",
+				"description": "Tool to get DICOM store metrics",
+				"authRequired": []string{
+					"my-google-auth",
+				},
+			},
+			"my-auth-search-dicom-studies-tool": map[string]any{
+				"kind":        searchDICOMStudiesToolKind,
+				"source":      "my-instance",
+				"description": "Tool to search DICOM studies",
+				"authRequired": []string{
+					"my-google-auth",
+				},
+			},
+			"my-auth-search-dicom-series-tool": map[string]any{
+				"kind":        searchDICOMSeriesToolKind,
+				"source":      "my-instance",
+				"description": "Tool to search DICOM series",
+				"authRequired": []string{
+					"my-google-auth",
+				},
+			},
+			"my-auth-search-dicom-instances-tool": map[string]any{
+				"kind":        searchDICOMInstancesToolKind,
+				"source":      "my-instance",
+				"description": "Tool to search DICOM instances",
+				"authRequired": []string{
+					"my-google-auth",
+				},
+			},
+			"my-auth-retrieve-rendered-dicom-instance-tool": map[string]any{
+				"kind":        retrieveRenderedDICOMInstanceToolKind,
+				"source":      "my-instance",
+				"description": "Tool to retrieve rendered DICOM instance",
 				"authRequired": []string{
 					"my-google-auth",
 				},
@@ -1601,5 +1742,696 @@ func runListDICOMStoresWithRestriction(t *testing.T, allowedDICOMStore, disallow
 	}
 	if strings.Contains(got, disallowedDICOMStore) {
 		t.Fatalf("expected %q to NOT contain %q, but it did", got, disallowedDICOMStore)
+	}
+}
+
+func runGetDICOMStoreToolInvokeTest(t *testing.T, dicomStoreID, want string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-get-dicom-store-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-dicom-store-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-get-dicom-store-tool with auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-dicom-store-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-get-dicom-store-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-dicom-store-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-get-dicom-store-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-dicom-store-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-auth-get-dicom-store-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-dicom-store-tool/invoke",
+			requestHeader: map[string]string{"Authorization": "invalid-token"},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-get-dicom-store-tool with invalid storeID",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-dicom-store-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"invalid-store"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-client-auth-get-dicom-store-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-get-dicom-store-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-client-auth-get-dicom-store-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-get-dicom-store-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-client-auth-get-dicom-store-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-get-dicom-store-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
+			if tc.isErr {
+				if status == http.StatusOK {
+					t.Errorf("expected error but got success")
+				}
+				return
+			}
+			if status != http.StatusOK {
+				t.Errorf("expected status OK but got %d", status)
+			} else if !strings.Contains(got, tc.want) {
+				t.Errorf("expected result to contain %q but got %q", tc.want, got)
+			}
+		})
+	}
+}
+
+func runGetDICOMStoreMetricsToolInvokeTest(t *testing.T, dicomStoreID, want string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-get-dicom-store-metrics-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-dicom-store-metrics-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-get-dicom-store-metrics-tool with auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-dicom-store-metrics-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-get-dicom-store-metrics-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-dicom-store-metrics-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-get-dicom-store-metrics-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-dicom-store-metrics-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-auth-get-dicom-store-metrics-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-get-dicom-store-metrics-tool/invoke",
+			requestHeader: map[string]string{"Authorization": "invalid-token"},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-get-dicom-store-metrics-tool with invalid storeID",
+			api:           "http://127.0.0.1:5000/api/tool/my-get-dicom-store-metrics-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"invalid-store"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-client-auth-get-dicom-store-metrics-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-get-dicom-store-metrics-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          want,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-client-auth-get-dicom-store-metrics-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-get-dicom-store-metrics-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-client-auth-get-dicom-store-metrics-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-get-dicom-store-metrics-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
+			if tc.isErr {
+				if status == http.StatusOK {
+					t.Errorf("expected error but got success")
+				}
+				return
+			}
+			if status != http.StatusOK {
+				t.Errorf("expected status OK but got %d", status)
+			} else if !strings.Contains(got, tc.want) {
+				t.Errorf("expected result to contain %q but got %q", tc.want, got)
+			}
+		})
+	}
+}
+
+func runSearchDICOMStudiesToolInvokeTest(t *testing.T, dicomStoreID string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-search-dicom-studies-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-dicom-studies-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          singleFrameDICOMInstance.study,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-search-dicom-studies-tool with auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-dicom-studies-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          multiFrameDICOMInstance.study,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-search-dicom-studies-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-dicom-studies-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          multiFrameDICOMInstance.study,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-search-dicom-studies-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-dicom-studies-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-auth-search-dicom-studies-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-dicom-studies-tool/invoke",
+			requestHeader: map[string]string{"Authorization": "invalid-token"},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-search-dicom-studies-tool with invalid storeID",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-dicom-studies-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"invalid-store"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-client-auth-search-dicom-studies-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-dicom-studies-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          singleFrameDICOMInstance.study,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-client-auth-search-dicom-studies-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-dicom-studies-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-client-auth-search-dicom-studies-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-dicom-studies-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-search-dicom-studies-tool with patient name and fuzzy matching",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-dicom-studies-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `", "PatientName":"Andrew", "fuzzymatching":true}`)),
+			want:          multiFrameDICOMInstance.study,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-search-dicom-studies-tool with patient id filter",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-dicom-studies-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `", "PatientID":"Joelle-del"}`)),
+			want:          singleFrameDICOMInstance.study,
+			isErr:         false,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
+			if tc.isErr {
+				if status == http.StatusOK {
+					t.Errorf("expected error but got success")
+				}
+				return
+			}
+			if status != http.StatusOK {
+				t.Errorf("expected status OK but got %d", status)
+			} else if !strings.Contains(got, tc.want) {
+				t.Errorf("expected result to contain %q but got %q", tc.want, got)
+			}
+		})
+	}
+}
+
+func runSearchDICOMSeriesToolInvokeTest(t *testing.T, dicomStoreID string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-search-dicom-series-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-dicom-series-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          singleFrameDICOMInstance.series,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-search-dicom-series-tool with auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-dicom-series-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          multiFrameDICOMInstance.series,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-search-dicom-series-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-dicom-series-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          multiFrameDICOMInstance.series,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-search-dicom-series-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-dicom-series-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-auth-search-dicom-series-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-dicom-series-tool/invoke",
+			requestHeader: map[string]string{"Authorization": "invalid-token"},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-search-dicom-series-tool with invalid storeID",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-dicom-series-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"invalid-store"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-client-auth-search-dicom-series-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-dicom-series-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          singleFrameDICOMInstance.series,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-client-auth-search-dicom-series-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-dicom-series-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-client-auth-search-dicom-series-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-dicom-series-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-search-dicom-series-tool with study date and referring physician name filters",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-dicom-series-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `", "StudyDate":"20170101-20171231", "ReferringPhysicianName":"Frederick^Bryant^^Ph.D."}`)),
+			want:          multiFrameDICOMInstance.series,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-search-dicom-series-tool with series instance uid",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-dicom-series-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `", "SeriesInstanceUID":"1.2.840.113619.2.176.3596.3364818.7819.1259708454.108"}`)),
+			want:          singleFrameDICOMInstance.series,
+			isErr:         false,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
+			if tc.isErr {
+				if status == http.StatusOK {
+					t.Errorf("expected error but got success")
+				}
+				return
+			}
+			if status != http.StatusOK {
+				t.Errorf("expected status OK but got %d", status)
+			} else if !strings.Contains(got, tc.want) {
+				t.Errorf("expected result to contain %q but got %q", tc.want, got)
+			}
+		})
+	}
+}
+
+func runSearchDICOMInstancesToolInvokeTest(t *testing.T, dicomStoreID string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		want          string
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-search-dicom-instances-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-dicom-instances-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          singleFrameDICOMInstance.instance,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-search-dicom-instances-tool with auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-dicom-instances-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          multiFrameDICOMInstance.instance,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-search-dicom-instances-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-dicom-instances-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          multiFrameDICOMInstance.instance,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-search-dicom-instances-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-dicom-instances-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-auth-search-dicom-instances-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-search-dicom-instances-tool/invoke",
+			requestHeader: map[string]string{"Authorization": "invalid-token"},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-search-dicom-instances-tool with invalid storeID",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-dicom-instances-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"invalid-store"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-client-auth-search-dicom-instances-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-dicom-instances-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			want:          singleFrameDICOMInstance.instance,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-client-auth-search-dicom-instances-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-dicom-instances-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-client-auth-search-dicom-instances-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-search-dicom-instances-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-search-dicom-instances-tool with modality filter",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-dicom-instances-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `", "modality":"SM"}`)),
+			want:          multiFrameDICOMInstance.instance,
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-search-dicom-instances-tool with include attribute",
+			api:           "http://127.0.0.1:5000/api/tool/my-search-dicom-instances-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `", "includefield":["52009230"]}`)),
+			want:          `"52009230"`,
+			isErr:         false,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			got, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
+			if tc.isErr {
+				if status == http.StatusOK {
+					t.Errorf("expected error but got success")
+				}
+				return
+			}
+			if status != http.StatusOK {
+				t.Errorf("expected status OK but got %d", status)
+			} else if !strings.Contains(got, tc.want) {
+				t.Errorf("expected result to contain %q but got %q", tc.want, got)
+			}
+		})
+	}
+}
+
+func runRetrieveRenderedDICOMInstanceToolInvokeTest(t *testing.T, dicomStoreID string) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+
+	accessToken, err := sources.GetIAMAccessToken(t.Context())
+	if err != nil {
+		t.Fatalf("error getting access token from ADC: %s", err)
+	}
+	accessToken = "Bearer " + accessToken
+
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-retrieve-rendered-dicom-instance-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-retrieve-rendered-dicom-instance-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `", "StudyInstanceUID":"` + singleFrameDICOMInstance.study + `", "SeriesInstanceUID":"` + singleFrameDICOMInstance.series + `", "SOPInstanceUID":"` + singleFrameDICOMInstance.instance + `"}`)),
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-retrieve-rendered-dicom-instance-tool with auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-retrieve-rendered-dicom-instance-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `", "StudyInstanceUID":"` + singleFrameDICOMInstance.study + `", "SeriesInstanceUID":"` + singleFrameDICOMInstance.series + `", "SOPInstanceUID":"` + singleFrameDICOMInstance.instance + `"}`)),
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-retrieve-rendered-dicom-instance-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-retrieve-rendered-dicom-instance-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `", "StudyInstanceUID":"` + singleFrameDICOMInstance.study + `", "SeriesInstanceUID":"` + singleFrameDICOMInstance.series + `", "SOPInstanceUID":"` + singleFrameDICOMInstance.instance + `"}`)),
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-auth-retrieve-rendered-dicom-instance-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-retrieve-rendered-dicom-instance-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `", "StudyInstanceUID":"` + singleFrameDICOMInstance.study + `", "SeriesInstanceUID":"` + singleFrameDICOMInstance.series + `", "SOPInstanceUID":"` + singleFrameDICOMInstance.instance + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-auth-retrieve-rendered-dicom-instance-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-auth-retrieve-rendered-dicom-instance-tool/invoke",
+			requestHeader: map[string]string{"Authorization": "invalid-token"},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `", "StudyInstanceUID":"` + singleFrameDICOMInstance.study + `", "SeriesInstanceUID":"` + singleFrameDICOMInstance.series + `", "SOPInstanceUID":"` + singleFrameDICOMInstance.instance + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-retrieve-rendered-dicom-instance-tool with invalid storeID",
+			api:           "http://127.0.0.1:5000/api/tool/my-retrieve-rendered-dicom-instance-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"invalid-store", "StudyInstanceUID":"` + singleFrameDICOMInstance.study + `", "SeriesInstanceUID":"` + singleFrameDICOMInstance.series + `", "SOPInstanceUID":"` + singleFrameDICOMInstance.instance + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-client-auth-retrieve-rendered-dicom-instance-tool with client auth",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-retrieve-rendered-dicom-instance-tool/invoke",
+			requestHeader: map[string]string{"Authorization": accessToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `", "StudyInstanceUID":"` + singleFrameDICOMInstance.study + `", "SeriesInstanceUID":"` + singleFrameDICOMInstance.series + `", "SOPInstanceUID":"` + singleFrameDICOMInstance.instance + `"}`)),
+			isErr:         false,
+		},
+		{
+			name:          "invoke my-client-auth-retrieve-rendered-dicom-instance-tool without auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-retrieve-rendered-dicom-instance-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `", "StudyInstanceUID":"` + singleFrameDICOMInstance.study + `", "SeriesInstanceUID":"` + singleFrameDICOMInstance.series + `", "SOPInstanceUID":"` + singleFrameDICOMInstance.instance + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-client-auth-retrieve-rendered-dicom-instance-tool with invalid auth token",
+			api:           "http://127.0.0.1:5000/api/tool/my-client-auth-retrieve-rendered-dicom-instance-tool/invoke",
+			requestHeader: map[string]string{"my-google-auth_token": idToken},
+			requestBody:   bytes.NewBuffer([]byte(`{"storeID":"` + dicomStoreID + `", "StudyInstanceUID":"` + singleFrameDICOMInstance.study + `", "SeriesInstanceUID":"` + singleFrameDICOMInstance.series + `", "SOPInstanceUID":"` + singleFrameDICOMInstance.instance + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-retrieve-rendered-dicom-instance-tool second frame on single-frame instance",
+			api:           "http://127.0.0.1:5000/api/tool/my-retrieve-rendered-dicom-instance-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"FrameNumber": 2, "storeID":"` + dicomStoreID + `", "StudyInstanceUID":"` + singleFrameDICOMInstance.study + `", "SeriesInstanceUID":"` + singleFrameDICOMInstance.series + `", "SOPInstanceUID":"` + singleFrameDICOMInstance.instance + `"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-retrieve-rendered-dicom-instance-tool second frame on multi-frame instance",
+			api:           "http://127.0.0.1:5000/api/tool/my-retrieve-rendered-dicom-instance-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"FrameNumber": 2, "storeID":"` + dicomStoreID + `", "StudyInstanceUID":"` + multiFrameDICOMInstance.study + `", "SeriesInstanceUID":"` + multiFrameDICOMInstance.series + `", "SOPInstanceUID":"` + multiFrameDICOMInstance.instance + `"}`)),
+			isErr:         false,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			_, status := runTest(t, tc.api, tc.requestHeader, tc.requestBody)
+			if tc.isErr {
+				if status == http.StatusOK {
+					t.Errorf("expected error but got success")
+				}
+				return
+			}
+			if status != http.StatusOK {
+				t.Errorf("expected status OK but got %d", status)
+			}
+		})
 	}
 }
