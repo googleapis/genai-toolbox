@@ -819,6 +819,54 @@ tools:
           This tool must be called after the dev_mode tool has changed the session to
           dev mode.
 
+    get_connections:
+        kind: looker-get-connections
+        source: looker-source
+        description: |
+          get_connections Tool
+
+          This tool will list all the connections available in the Looker system, as
+          well as the dialect name, the default schema, the database if applicable,
+          and whether the connection supports multiple databases.
+
+    get_connection_schemas:
+        kind: looker-get-connection-schemas
+        source: looker-source
+        description: |
+          get_connection_schemas Tool
+
+          This tool will list the schemas available from a connection, filtered by
+          an optional database name.
+
+    get_connection_databases:
+        kind: looker-get-connection-databases
+        source: looker-source
+        description: |
+          get_connection_databases Tool
+
+          This tool will list the databases available from a connection if the connection
+          supports multiple databases.
+
+    get_connection_tables:
+        kind: looker-get-connection-tables
+        source: looker-source
+        description: |
+          get_connection_tables Tool
+
+          This tool will list the tables available from a connection, filtered by the 
+          schema name and optional database name.
+
+    get_connection_table_columns:
+        kind: looker-get-connection-table-columns
+        source: looker-source
+        description: |
+          get_connection_table_columns Tool
+
+          This tool will list the columns available from a connection, for all the tables
+          given in a comma separated list of table names, filtered by the 
+          schema name and optional database name.
+
+
 toolsets:
     looker_tools:
         - get_models
@@ -846,3 +894,8 @@ toolsets:
         - create_project_file
         - update_project_file
         - delete_project_file
+        - get_connections
+        - get_connection_schemas
+        - get_connection_databases
+        - get_connection_tables
+        - get_connection_table_columns

@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package lookergetmodels
+package lookergetconnections
 
 import (
 	"context"
@@ -28,7 +28,7 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const kind string = "looker-get-models"
+const kind string = "looker-get-connections"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -91,7 +91,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			AuthRequired: cfg.AuthRequired,
 		},
 		mcpManifest:      mcpManifest,
-		ShowHiddenModels: s.ShowHiddenModels,
 	}, nil
 }
 
@@ -108,7 +107,6 @@ type Tool struct {
 	Parameters       tools.Parameters `yaml:"parameters"`
 	manifest         tools.Manifest
 	mcpManifest      tools.McpManifest
-	ShowHiddenModels bool
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
@@ -117,32 +115,31 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
 	}
 
-	excludeEmpty := false
-	excludeHidden := !t.ShowHiddenModels
-	includeInternal := true
-
 	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
 	if err != nil {
 		return nil, fmt.Errorf("error getting sdk: %w", err)
 	}
-	req := v4.RequestAllLookmlModels{
-		ExcludeEmpty:    &excludeEmpty,
-		ExcludeHidden:   &excludeHidden,
-		IncludeInternal: &includeInternal,
-	}
-	resp, err := sdk.AllLookmlModels(req, t.ApiSettings)
+	resp, err := sdk.AllConnections("name, dialect(name), database, schema",t.ApiSettings)
 	if err != nil {
-		return nil, fmt.Errorf("error making get_models request: %s", err)
+		return nil, fmt.Errorf("error making get_connections request: %s", err)
 	}
 
 	var data []any
 	for _, v := range resp {
-		logger.DebugContext(ctx, "Got response element of %v\n", v)
 		vMap := make(map[string]any)
-		vMap["label"] = *v.Label
 		vMap["name"] = *v.Name
-		vMap["project_name"] = *v.ProjectName
-		vMap["connections"] = *v.AllowedDbConnectionNames
+		vMap["dialect_name"] = *v.Dialect.Name
+		if v.Database != nil {
+			vMap["database"] = *v.Database
+		}
+		if v.Schema != nil {
+			vMap["schema"] = *v.Schema
+		}
+		conn, err := sdk.ConnectionFeatures(*v.Name, "multiple_databases", t.ApiSettings)
+		if err != nil {
+			return nil, fmt.Errorf("error making get_connection_features request: %s", err)
+		}
+		vMap["supports_multiple_databases"] = *conn.MultipleDatabases
 		logger.DebugContext(ctx, "Converted to %v\n", vMap)
 		data = append(data, vMap)
 	}
