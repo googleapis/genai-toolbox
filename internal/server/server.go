@@ -320,7 +320,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		}
 		promptsMap[name] = p
 	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d prompts.", len(promptsMap)))
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d prompts: %s", len(promptsMap), strings.Join(promptNames, ", ")))
 
 	// create a default promptset that contains all prompts
 	allPromptNames := make([]string, 0, len(promptsMap))
@@ -353,7 +353,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		}
 		promptsetsMap[name] = p
 	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d promptsets.", len(promptsetsMap)))
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d promptsets: %s", len(toolsetsMap), strings.Join(promptsetNames, ", ")))
 
 	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
 }
