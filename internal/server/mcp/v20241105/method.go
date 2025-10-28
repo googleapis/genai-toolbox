@@ -273,9 +273,9 @@ func promptsGetHandler(id jsonrpc.RequestId, promptsMap map[string]prompts.Promp
 	}
 
 	// Format the response messages into the required structure.
-	responseMessages := make([]ResponseMessage, len(substitutedMessages))
+	promptMessages := make([]PromptMessage, len(substitutedMessages))
 	for i, msg := range substitutedMessages {
-		responseMessages[i] = ResponseMessage{
+		promptMessages[i] = PromptMessage{
 			Role: msg.Role,
 			Content: TextContent{
 				Type: "text",
@@ -286,7 +286,7 @@ func promptsGetHandler(id jsonrpc.RequestId, promptsMap map[string]prompts.Promp
 
 	result := GetPromptResult{
 		Description: prompt.Manifest().Description,
-		Messages:    responseMessages,
+		Messages:    promptMessages,
 	}
 
 	return jsonrpc.JSONRPCResponse{

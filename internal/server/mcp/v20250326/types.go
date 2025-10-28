@@ -197,12 +197,12 @@ type GetPromptRequest struct {
 // The server's response to a prompts/get request from the client.
 type GetPromptResult struct {
 	jsonrpc.Result
-	Description string            `json:"description,omitempty"`
-	Messages    []ResponseMessage `json:"messages"`
+	Description string          `json:"description,omitempty"`
+	Messages    []PromptMessage `json:"messages"`
 }
 
 // Describes a message returned as part of a prompt.
-type ResponseMessage struct {
+type PromptMessage struct {
 	Role    string      `json:"role"`
 	Content TextContent `json:"content"`
 }
