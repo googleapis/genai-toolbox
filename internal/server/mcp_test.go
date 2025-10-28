@@ -347,7 +347,8 @@ func TestMcpEndpointWithoutInitialized(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			reqMarshal, err := json.Marshal(tc.body)
+			var reqMarshal []byte
+			var err error
 			if tc.name == "invalid json" {
 				reqMarshal = []byte(`{"jsonrpc": "2.0", "id": "123", "method": "ping"`) // Intentionally broken JSON
 			} else {
