@@ -331,12 +331,30 @@ func TestMcpEndpointWithoutInitialized(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:  "invalid json",
+			url:   "/",
+			isErr: true,
+			body:  jsonrpc.JSONRPCRequest{}, // This body is a placeholder
+			want: map[string]any{
+				"jsonrpc": "2.0",
+				"error": map[string]any{
+					"code":    -32700.0,
+					"message": "parse error",
+				},
+			},
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			reqMarshal, err := json.Marshal(tc.body)
-			if err != nil {
-				t.Fatalf("unexpected error during marshaling of body")
+			if tc.name == "invalid json" {
+				reqMarshal = []byte(`{"jsonrpc": "2.0", "id": "123", "method": "ping"`) // Intentionally broken JSON
+			} else {
+				reqMarshal, err = json.Marshal(tc.body)
+				if err != nil {
+					t.Fatalf("unexpected error during marshaling of body")
+				}
 			}
 
 			resp, body, err := runRequest(ts, http.MethodPost, tc.url, bytes.NewBuffer(reqMarshal), nil)
