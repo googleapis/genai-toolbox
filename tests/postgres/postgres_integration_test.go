@@ -15,17 +15,12 @@
 package postgres
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"net/url"
 	"os"
 	"regexp"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -193,168 +188,7 @@ func TestPostgres(t *testing.T) {
 	tests.RunPostgresReplicationStatsTest(t, ctx, pool)
 	tests.RunPostgresListIndexesTest(t, ctx, pool)
 	tests.RunPostgresListSequencesTest(t, ctx, pool)
-}
-
-func runPostgresListLocksTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool, tableName string) {
-	invokeTcs := []struct {
-		name                string
-		requestBody         io.Reader
-		clientHoldSecs      int
-		waitSecsBeforeCheck int
-		wantStatusCode      int
-		expectLockPresent   bool
-	}{
-		{
-			name:                "invoke list_locks when the system is idle",
-			requestBody:         bytes.NewBufferString(`{}`),
-			clientHoldSecs:      0,
-			waitSecsBeforeCheck: 0,
-			wantStatusCode:      http.StatusOK,
-			expectLockPresent:   false,
-		},
-		{
-			name:                "invoke list_locks when a transaction holds a FOR UPDATE lock",
-			requestBody:         bytes.NewBufferString(`{}`),
-			clientHoldSecs:      8,
-			waitSecsBeforeCheck: 1,
-			wantStatusCode:      http.StatusOK,
-			expectLockPresent:   true,
-		},
-	}
-
-	var wg sync.WaitGroup
-	for _, tc := range invokeTcs {
-		tc := tc
-		t.Run(tc.name, func(t *testing.T) {
-			if tc.clientHoldSecs > 0 {
-				wg.Add(1)
-				go func() {
-					defer wg.Done()
-
-					tx, err := pool.Begin(ctx)
-					if err != nil {
-						t.Errorf("unable to begin transaction: %s", err)
-						return
-					}
-					defer func() { _ = tx.Rollback(ctx) }()
-
-					// acquire a row-level lock and hold it
-					rows, err := tx.Query(ctx, fmt.Sprintf("SELECT id FROM %s LIMIT 1 FOR UPDATE", tableName))
-					if err != nil {
-						t.Errorf("failed to execute FOR UPDATE: %v", err)
-						return
-					}
-					// ensure rows are read so the query is executed
-					for rows.Next() {
-						var id any
-						_ = rows.Scan(&id)
-					}
-					rows.Close()
-
-					time.Sleep(time.Duration(tc.clientHoldSecs) * time.Second)
-					// rollback to release lock
-					if err := tx.Rollback(ctx); err != nil {
-						// ignore errors from rollback during test shutdown
-					}
-				}()
-			}
-
-			if tc.waitSecsBeforeCheck > 0 {
-				time.Sleep(time.Duration(tc.waitSecsBeforeCheck) * time.Second)
-			}
-
-			const api = "http://127.0.0.1:5000/api/tool/list_locks/invoke"
-			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %v", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %v", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != tc.wantStatusCode {
-				body, _ := io.ReadAll(resp.Body)
-				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
-			}
-			if tc.wantStatusCode != http.StatusOK {
-				return
-			}
-
-			var bodyWrapper struct {
-				Result json.RawMessage `json:"result"`
-			}
-			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
-				t.Fatalf("error decoding response wrapper: %v", err)
-			}
-
-			var resultString string
-			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
-				resultString = string(bodyWrapper.Result)
-			}
-
-			var details []map[string]any
-			if err := json.Unmarshal([]byte(resultString), &details); err != nil {
-				t.Fatalf("failed to unmarshal nested locks result: %v", err)
-			}
-
-			// If we expect a lock present, verify at least one returned row's query contains FOR UPDATE
-			found := false
-			for _, item := range details {
-				if qv, ok := item["query"]; ok {
-					if qs, ok := qv.(string); ok && strings.Contains(strings.ToUpper(qs), "FOR UPDATE") {
-						found = true
-						break
-					}
-				}
-			}
-			if tc.expectLockPresent && !found {
-				t.Errorf("expected to find a FOR UPDATE lock in list_locks result, got: %#v", details)
-			}
-			if !tc.expectLockPresent && found {
-				t.Errorf("did not expect a FOR UPDATE lock, but found one in: %#v", details)
-			}
-		})
-	}
-	wg.Wait()
-}
-
-func runPostgresReplicationStatsTest(t *testing.T) {
-	invokeTcs := []struct {
-		name           string
-		api            string
-		requestBody    io.Reader
-		wantStatusCode int
-	}{
-		{
-			name:           "invoke replication_stats output",
-			api:            "http://127.0.0.1:5000/api/tool/replication_stats/invoke",
-			wantStatusCode: http.StatusOK,
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
-		},
-	}
-	for _, tc := range invokeTcs {
-		t.Run(tc.name, func(t *testing.T) {
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != tc.wantStatusCode {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-			}
-
-			// Intentionally not adding the output check as output depends on the postgres instance used where the functional test runs.
-		})
-	}
+	tests.RunPostgresLongRunningTransactionsTest(t, ctx, pool)
+	tests.RunPostgresListLocksTest(t, ctx, pool)
+	tests.RunPostgresReplicationStatsTest(t, ctx, pool)
 }
