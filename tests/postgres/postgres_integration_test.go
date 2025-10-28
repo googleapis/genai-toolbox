@@ -268,7 +268,7 @@ func runPostgresLongRunningTransactionsTest(t *testing.T, ctx context.Context, p
 		},
 		{
 			name:                "invoke long_running_transactions when 1 long running txn should show up",
-			requestBody:         bytes.NewBufferString(`{"min_duration": "1 seconds"}`),
+			requestBody:         bytes.NewBufferString(`{"min_duration": "1 seconds", "limit": 50}`),
 			clientSleepSecs:     10,
 			waitSecsBeforeCheck: 2,
 			wantStatusCode:      http.StatusOK,
@@ -785,7 +785,7 @@ func runPostgresListLocksTest(t *testing.T, ctx context.Context, pool *pgxpool.P
 		},
 		{
 			name:                "invoke list_locks when a transaction holds a FOR UPDATE lock",
-			requestBody:         bytes.NewBufferString(`{"only_current_database": true}`),
+			requestBody:         bytes.NewBufferString(`{}`),
 			clientHoldSecs:      8,
 			waitSecsBeforeCheck: 1,
 			wantStatusCode:      http.StatusOK,
