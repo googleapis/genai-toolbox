@@ -214,7 +214,7 @@ func runPostgresListLocksTest(t *testing.T, ctx context.Context, pool *pgxpool.P
 		},
 		{
 			name:                "invoke list_locks when a transaction holds a FOR UPDATE lock",
-			requestBody:         bytes.NewBufferString(`{"only_current_database": true}`),
+			requestBody:         bytes.NewBufferString(`{}`),
 			clientHoldSecs:      8,
 			waitSecsBeforeCheck: 1,
 			wantStatusCode:      http.StatusOK,
