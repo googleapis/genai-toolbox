@@ -34,6 +34,7 @@ documentation](https://googleapis.github.io/genai-toolbox/).
   - [Installing the server](#installing-the-server)
   - [Running the server](#running-the-server)
   - [Integrating your application](#integrating-your-application)
+  - [Using Toolbox with Gemini CLI Extensions](#using-toolbox-with-gemini-cli-extensions)
 - [Configuration](#configuration)
   - [Sources](#sources)
   - [Tools](#tools)
@@ -764,7 +765,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
 </blockquote>
 </details>
 
-### Using Toolbox with Gemini CLI Extensisions
+### Using Toolbox with Gemini CLI Extensions
 
 [Gemini CLI extensions][gemini-cli-extensions] provide tools to interact
 directly with your data sources from command line. Below is a list of Gemini CLI
@@ -776,7 +777,7 @@ To use **custom** tools with Gemini CLI:
 
 - [MCP Toolbox](https://github.com/gemini-cli-extensions/mcp-toolbox)
 
-To use **pre-defined** tools with Gemini CLI:
+To use [prebuilt tools][prebuilt] with Gemini CLI:
 
 - [AlloyDB for PostgreSQL](https://github.com/gemini-cli-extensions/alloydb)
 - [AlloyDB for PostgreSQL
@@ -805,6 +806,7 @@ To use **pre-defined** tools with Gemini CLI:
 - [Firestore](https://github.com/gemini-cli-extensions/firestore-native)
 - [SQL Server](https://github.com/gemini-cli-extensions/sql-server)
 
+[prebuilt]: https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/
 [gemini-cli-extensions]:
     https://github.com/google-gemini/gemini-cli/blob/main/docs/extensions/index.md
 
