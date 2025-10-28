@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package neo4j
+package serverlessspark
 
 import (
 	"context"
 	"fmt"
 
+	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	neo4jconf "github.com/neo4j/neo4j-go-driver/v5/neo4j/config"
 	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/api/option"
 )
 
-const SourceKind string = "neo4j"
+const SourceKind string = "serverless-spark"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
@@ -38,7 +38,7 @@ func init() {
 }
 
 func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources.SourceConfig, error) {
-	actual := Config{Name: name, Database: "neo4j"} // Default database
+	actual := Config{Name: name}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
@@ -48,10 +48,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	Name     string `yaml:"name" validate:"required"`
 	Kind     string `yaml:"kind" validate:"required"`
-	Uri      string `yaml:"uri" validate:"required"`
-	User     string `yaml:"user" validate:"required"`
-	Password string `yaml:"password" validate:"required"`
-	Database string `yaml:"database" validate:"required"`
+	Project  string `yaml:"project" validate:"required"`
+	Location string `yaml:"location" validate:"required"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -59,24 +57,22 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	driver, err := initNeo4jDriver(ctx, tracer, r.Uri, r.User, r.Password, r.Name)
+	ua, err := util.UserAgentFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to create driver: %w", err)
+		return nil, fmt.Errorf("error in User Agent retrieval: %s", err)
+	}
+	endpoint := fmt.Sprintf("%s-dataproc.googleapis.com:443", r.Location)
+	client, err := dataproc.NewBatchControllerClient(ctx, option.WithEndpoint(endpoint), option.WithUserAgent(ua))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create dataproc client: %w", err)
 	}
 
-	err = driver.VerifyConnectivity(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("unable to connect successfully: %w", err)
-	}
-
-	if r.Database == "" {
-		r.Database = "neo4j"
-	}
 	s := &Source{
 		Name:     r.Name,
 		Kind:     SourceKind,
-		Database: r.Database,
-		Driver:   driver,
+		Project:  r.Project,
+		Location: r.Location,
+		Client:   client,
 	}
 	return s, nil
 }
@@ -86,37 +82,15 @@ var _ sources.Source = &Source{}
 type Source struct {
 	Name     string `yaml:"name"`
 	Kind     string `yaml:"kind"`
-	Database string `yaml:"database"`
-	Driver   neo4j.DriverWithContext
+	Project  string
+	Location string
+	Client   *dataproc.BatchControllerClient
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
 }
 
-func (s *Source) Neo4jDriver() neo4j.DriverWithContext {
-	return s.Driver
-}
-
-func (s *Source) Neo4jDatabase() string {
-	return s.Database
-}
-
-func initNeo4jDriver(ctx context.Context, tracer trace.Tracer, uri, user, password, name string) (neo4j.DriverWithContext, error) {
-	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
-	defer span.End()
-
-	auth := neo4j.BasicAuth(user, password, "")
-	userAgent, err := util.UserAgentFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	driver, err := neo4j.NewDriverWithContext(uri, auth, func(config *neo4jconf.Config) {
-		config.UserAgent = userAgent
-	})
-	if err != nil {
-		return nil, fmt.Errorf("unable to create connection driver: %w", err)
-	}
-	return driver, nil
+func (s *Source) GetBatchControllerClient() *dataproc.BatchControllerClient {
+	return s.Client
 }
