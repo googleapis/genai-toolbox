@@ -121,7 +121,12 @@ type MockPrompt struct {
 }
 
 func (p MockPrompt) SubstituteParams(vals tools.ParamValues) (any, error) {
-	return fmt.Sprintf("substituted %s", p.Name), nil
+	return []prompts.Message{
+		{
+			Role:    "user",
+			Content: fmt.Sprintf("substituted %s", p.Name),
+		},
+	}, nil
 }
 
 func (p MockPrompt) ParseArgs(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
