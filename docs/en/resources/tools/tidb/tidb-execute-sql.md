@@ -14,7 +14,7 @@ aliases:
 A `tidb-execute-sql` tool executes a SQL statement against a TiDB
 database. It's compatible with the following source:
 
-- [tidb](../sources/tidb.md)
+- [tidb](../../sources/tidb.md)
 
 `tidb-execute-sql` takes one input parameter `sql` and run the sql
 statement against the `source`.
