@@ -8,7 +8,7 @@ description: >
 
 <html>
   <head>
-    <link rel="canonical" href="https://cloud.google.com/alloydb/docs/create-database-with-mcp-toolbox"/>
-    <meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/create-database-with-mcp-toolbox"/>
+   <link rel="canonical" href="https://cloud.google.com/alloydb/docs/quickstart/create-and-connect"/>
+    <meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/quickstart/create-and-connect"/>
   </head>
 </html>

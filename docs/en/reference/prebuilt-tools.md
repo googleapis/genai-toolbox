@@ -493,6 +493,20 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_invalid_indexes`: Lists invalid indexes in the database.
     *   `get_query_plan`: Generate the execution plan of a statement.
 
+## Google Cloud Serverless for Apache Spark
+
+*   `--prebuilt` value: `serverless-spark`
+*   **Environment Variables:**
+    *   `SERVERLESS_SPARK_PROJECT`: The GCP project ID
+    *   `SERVERLESS_SPARK_LOCATION`: The GCP Location.
+*   **Permissions:**
+    *   **Dataproc Serverless Viewer** (`roles/dataproc.serverlessViewer`) to
+        view serverless batches.
+    *   **Dataproc Serverless Editor** (`roles/dataproc.serverlessEditor`) to
+        view serverless batches.
+*   **Tools:**
+    *   `list_batches`: Lists Spark batches.
+
 ## Spanner (GoogleSQL dialect)
 
 *   `--prebuilt` value: `spanner`

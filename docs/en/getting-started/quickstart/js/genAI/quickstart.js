@@ -24,7 +24,6 @@ const queries = [
 
 function mapZodTypeToOpenAPIType(zodTypeName) {
 
-    console.log(zodTypeName)
     const typeMap = {
         'ZodString': 'string',
         'ZodNumber': 'number',

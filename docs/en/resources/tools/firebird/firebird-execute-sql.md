@@ -14,7 +14,7 @@ aliases:
 A `firebird-execute-sql` tool executes a SQL statement against a Firebird
 database. It's compatible with the following source:
 
-- [firebird](../sources/firebird.md)
+- [firebird](../../sources/firebird.md)
 
 `firebird-execute-sql` takes one input parameter `sql` and runs the sql
 statement against the `source`.
