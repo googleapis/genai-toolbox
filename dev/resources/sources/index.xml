@@ -939,6 +939,8 @@ Apache Spark.&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/tools/serverless-spark/serverless-spark-list-batches/">&lt;code>serverless-spark-list-batches&lt;/code>&lt;/a>
 List and filter Serverless Spark batches.&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/tools/serverless-spark/serverless-spark-get-batch/">&lt;code>serverless-spark-get-batch&lt;/code>&lt;/a>
+Get a Serverless Spark batch.&lt;/li>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
