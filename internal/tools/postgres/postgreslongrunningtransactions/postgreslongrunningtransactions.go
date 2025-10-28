@@ -32,21 +32,29 @@ const kind string = "postgres-long-running-transactions"
 const longRunningTransactions = `
 	SELECT
         pid,
-        usename,
         datname,
+        usename,
+        application_name as appname,
         client_addr,
-        EXTRACT(EPOCH FROM now() - xact_start) AS transaction_duration_seconds,
-        EXTRACT(EPOCH FROM now() - query_start) AS query_duration_seconds,
         state,
+        now() - backend_start as conn_age,
+        now() - xact_start as xact_age,
+        now() - query_start as query_age,
+        now() - state_change as last_activity_age,
+        wait_event_type,
+        wait_event,
         query
     FROM
-		pg_stat_activity
+        pg_stat_activity
     WHERE
-        (now() - xact_start) > COALESCE($1::INTERVAL, interval '5 minutes')
+        state <> 'idle'
+        AND (now() - xact_start) > COALESCE($1::INTERVAL, interval '5 minutes')
         AND xact_start IS NOT NULL
         AND pid <> pg_backend_pid()
     ORDER BY
-        transaction_duration_seconds DESC;
+        ORDER BY xact_age DESC
+    LIMIT 
+        COALESCE($2::int, 20);
 `
 
 func init() {
@@ -104,6 +112,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	allParameters := tools.Parameters{
 		tools.NewStringParameterWithDefault("min_duration", "5 minutes", "Optional: Only show transactions running at least this long (e.g., '1 minute', '15 minutes', '30 seconds')."),
+		tools.NewIntParameterWithDefault("limit", 20, "Optional: The maximum number of long-running transactions to return. Defaults to 20."),
 	}
 	paramManifest := allParameters.Manifest()
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)

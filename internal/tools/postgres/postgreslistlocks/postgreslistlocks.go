@@ -31,28 +31,23 @@ const kind string = "postgres-list-locks"
 
 const listLocks = `
 	SELECT
-        a.pid,
-        a.usename,
-        a.datname,
-        a.client_addr,
-        a.query_start,
-        age(now(), a.query_start) AS query_age,
-        a.state,
-        l.locktype,
-        l.relation::regclass AS table_name,
-        l.mode,
-        l.granted,
-        a.query
+        locked.pid,
+        locked.usename,
+        locked.query,
+        string_agg(locked.transactionid::text,':') as trxid,
+        string_agg(locked.lockinfo,'||') as locks
     FROM
-        pg_stat_activity AS a
-    JOIN
-        pg_locks AS l
-        ON l.pid = a.pid
-    WHERE
-        a.pid <> pg_backend_pid()
-        AND ($1::boolean IS NOT TRUE OR a.datname = current_database())
-    ORDER BY
-        a.datname, a.query_start;
+        (SELECT
+          a.pid,
+          a.usename,
+          a.query,
+          l.transactionid,
+          (l.granted::text||','||coalesce(l.relation::regclass,0)::text||','||l.mode::text)::text as lockinfo
+        FROM
+          pg_stat_activity a
+          JOIN pg_locks l ON l.pid = a.pid  AND a.pid != pg_backend_pid()) as locked
+    GROUP BY 
+        locked.pid, locked.usename, locked.query;
 `
 
 func init() {
@@ -108,9 +103,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	allParameters := tools.Parameters{
-		tools.NewBooleanParameterWithDefault("only_current_database", false, "Optional: If true, lists active locks for the current database only. If false (default), lists locks for all databases."),
-	}
+	allParameters := tools.Parameters{}
 	paramManifest := allParameters.Manifest()
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 

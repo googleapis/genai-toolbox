@@ -18,11 +18,33 @@ Compatible sources:
 - [cloud-sql-postgres](../../sources/cloud-sql-pg.md)
 - [postgres](../../sources/postgres.md)
 
-Parameters:
 
-- `only_current_database` (optional): If `true`, lists active locks for the current database only. If `false` (default), lists locks across all databases.
+This tool identifies all locks held by active processes showing the process ID, user, query text, and an aggregated list of all transactions and specific locks (relation, mode, grant status) associated with each process.
 
-The tool returns a JSON array; each element includes pid, user, database name, client address, query start/age, lock type, table name, lock mode, whether the lock is granted, and the query text.
+## Query
+
+The tool aggregates locks per backend (process) and returns the concatenated transaction ids and lock entries. The SQL used by the tool looks like:
+
+```sql
+SELECT
+    locked.pid,
+    locked.usename,
+    locked.query,
+    string_agg(locked.transactionid::text,':') as trxid,
+    string_agg(locked.lockinfo,'||') as locks
+FROM
+    (SELECT
+      a.pid,
+      a.usename,
+      a.query,
+      l.transactionid,
+      (l.granted::text||','||coalesce(l.relation::regclass,0)::text||','||l.mode::text)::text as lockinfo
+    FROM
+      pg_stat_activity a
+      JOIN pg_locks l ON l.pid = a.pid  AND a.pid != pg_backend_pid()) as locked
+GROUP BY 
+    locked.pid, locked.usename, locked.query;
+```
 
 ## Example
 
@@ -34,38 +56,24 @@ tools:
     description: "Lists active locks with associated process and query information."
 ```
 
-Example response element:
+Example response element (aggregated per process):
 
 ```json
 {
   "pid": 23456,
   "usename": "dbuser",
-  "datname": "my_database",
-  "client_addr": "10.0.0.6",
-  "query_start": "2025-10-21T12:34:56Z",
-  "query_age": "00:02:34",
-  "state": "active",
-  "locktype": "relation",
-  "table_name": "public.orders",
-  "mode": "RowExclusiveLock",
-  "granted": true,
-  "query": "INSERT INTO orders (...) VALUES (...);"
+  "query": "INSERT INTO orders (...) VALUES (...);",
+  "trxid": "12345:0",
+  "locks": "true,public.orders,RowExclusiveLock||false,0,ShareUpdateExclusiveLock"
 }
 ```
 
 ## Reference
 
-| field        | type    | required | description |
-|-------------:|:-------:|:--------:|:------------|
-| pid          | integer | true     | Process id (backend pid). |
-| usename      | string  | true     | Database user. |
-| datname      | string  | true     | Database name. |
-| client_addr  | string  | false    | Client IP address (may be null). |
-| query_start  | string  | true     | Timestamp when the current query started. |
-| query_age    | string  | true     | Human-readable age of the query (age(now(), query_start)). |
-| state        | string  | true     | Session state. |
-| locktype     | string  | true     | Type of lock (e.g., relation, tuple). |
-| table_name   | string  | false    | Relation name (resolved with regclass when available). |
-| mode         | string  | true     | Lock mode (e.g., AccessShareLock, RowExclusiveLock). |
-| granted      | boolean | true    | Whether the lock is granted (true) or waiting (false). |
-| query        | string  | true     | SQL text associated with the session. |
+| field   | type    | required | description |
+|:--------|:--------|:--------:|:------------|
+| pid     | integer | true     | Process id (backend pid). |
+| usename | string  | true     | Database user. |
+| query   | string  | true     | SQL text associated with the session. |
+| trxid   | string  | true     | Aggregated transaction ids for the process, joined by ':' (string). Each element is the transactionid as text. |
+| locks   | string  | true     | Aggregated lock info entries for the process, joined by '||'. Each entry is a comma-separated triple: `granted,relation,mode` where `relation` may be `0` when not resolvable via regclass. |
