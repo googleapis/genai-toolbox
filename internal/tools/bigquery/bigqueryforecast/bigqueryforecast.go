@@ -53,6 +53,7 @@ type compatibleSource interface {
 	UseClientAuthorization() bool
 	IsDatasetAllowed(projectID, datasetID string) bool
 	BigQueryAllowedDatasets() []string
+	BigQuerySession() bigqueryds.BigQuerySessionProvider
 }
 
 // validate compatible sources are still compatible
@@ -123,6 +124,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Client:           s.BigQueryClient(),
 		RestService:      s.BigQueryRestService(),
 		IsDatasetAllowed: s.IsDatasetAllowed,
+		SessionProvider:  s.BigQuerySession(),
 		AllowedDatasets:  allowedDatasets,
 		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:      mcpManifest,
@@ -145,6 +147,7 @@ type Tool struct {
 	ClientCreator    bigqueryds.BigqueryClientCreator
 	IsDatasetAllowed func(projectID, datasetID string) bool
 	AllowedDatasets  []string
+	SessionProvider  bigqueryds.BigQuerySessionProvider
 	manifest         tools.Manifest
 	mcpManifest      tools.McpManifest
 }
@@ -184,13 +187,39 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		}
 	}
 
+	bqClient := t.Client
+	restService := t.RestService
+	var err error
+
+	// Initialize new client if using user OAuth token
+	if t.UseClientOAuth {
+		tokenStr, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
+		bqClient, restService, err = t.ClientCreator(tokenStr, false)
+		if err != nil {
+			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
+		}
+	}
+
 	var historyDataSource string
 	trimmedUpperHistoryData := strings.TrimSpace(strings.ToUpper(historyData))
 	if strings.HasPrefix(trimmedUpperHistoryData, "SELECT") || strings.HasPrefix(trimmedUpperHistoryData, "WITH") {
 		if len(t.AllowedDatasets) > 0 {
-			dryRunJob, err := bqutil.DryRunQuery(ctx, t.RestService, t.Client.Project(), t.Client.Location, historyData, nil, nil)
+			var connProps []*bigqueryapi.ConnectionProperty
+			session, err := t.SessionProvider(ctx)
 			if err != nil {
-				return nil, fmt.Errorf("query validation failed during dry run: %w", err)
+				return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
+			}
+			if session != nil {
+				connProps = []*bigqueryapi.ConnectionProperty{
+					{Key: "session_id", Value: session.ID},
+				}
+			}
+			dryRunJob, err := bqutil.DryRunQuery(ctx, restService, t.Client.Project(), t.Client.Location, historyData, nil, connProps)
+			if err != nil {
+				return nil, fmt.Errorf("query validation failed: %w", err)
 			}
 			statementType := dryRunJob.Statistics.Query.StatementType
 			if statementType != "SELECT" {
@@ -246,24 +275,19 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			horizon => %d%s)`,
 		historyDataSource, dataCol, timestampCol, horizon, idColsArg)
 
-	bqClient := t.Client
-	var err error
-
-	// Initialize new client if using user OAuth token
-	if t.UseClientOAuth {
-		tokenStr, err := accessToken.ParseBearerToken()
-		if err != nil {
-			return nil, fmt.Errorf("error parsing access token: %w", err)
-		}
-		bqClient, _, err = t.ClientCreator(tokenStr, false)
-		if err != nil {
-			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
-		}
-	}
-
 	// JobStatistics.QueryStatistics.StatementType
 	query := bqClient.Query(sql)
 	query.Location = bqClient.Location
+	session, err := t.SessionProvider(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
+	}
+	if session != nil {
+		// Add session ID to the connection properties for subsequent calls.
+		query.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
+			{Key: "session_id", Value: session.ID},
+		}
+	}
 
 	// Log the query executed for debugging.
 	logger, err := util.LoggerFromContext(ctx)
@@ -276,9 +300,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	// We iterate through the results, convert each row into a map of
 	// column names to values, and return the collection of rows.
 	var out []any
-	it, err := query.Read(ctx)
+	job, err := query.Run(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	it, err := job.Read(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read query results: %w", err)
 	}
 	for {
 		var row map[string]bigqueryapi.Value
