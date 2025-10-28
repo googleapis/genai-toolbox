@@ -99,11 +99,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/healthcare/fhirfetchpage"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/healthcare/fhirpatienteverything"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/healthcare/fhirpatientsearch"
-<<<<<<< HEAD
 	_ "github.com/googleapis/genai-toolbox/internal/tools/healthcare/getdicomstore"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/healthcare/getdicomstoremetrics"
-=======
->>>>>>> healthcare
 	_ "github.com/googleapis/genai-toolbox/internal/tools/healthcare/getfhirresource"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/healthcare/getfhirstore"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/healthcare/getfhirstoremetrics"
