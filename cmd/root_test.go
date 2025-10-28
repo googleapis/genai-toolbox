@@ -531,6 +531,46 @@ func TestParseToolFile(t *testing.T) {
 				Promptsets: nil,
 			},
 		},
+		{
+			description: "with prompts and promptsets example",
+			in: `
+            prompts:
+                my-prompt:
+                    description: A prompt template for data analysis.
+                    arguments:
+                        - name: country
+                          description: The country to analyze.
+                    messages:
+                        - content: Analyze the data for {{.country}}.
+            promptsets:
+                my-prompt-set:
+                    - my-prompt
+            `,
+			wantToolsFile: ToolsFile{
+				Sources:      nil,
+				AuthServices: nil,
+				Tools:        nil,
+				Toolsets:     nil,
+				Prompts: server.PromptConfigs{
+					"my-prompt": &custom.Config{
+						Name:        "my-prompt",
+						Description: "A prompt template for data analysis.",
+						Arguments: prompts.Arguments{
+							{Parameter: tools.NewStringParameter("country", "The country to analyze.")},
+						},
+						Messages: []prompts.Message{
+							{Role: "user", Content: "Analyze the data for {{.country}}."},
+						},
+					},
+				},
+				Promptsets: server.PromptsetConfigs{
+					"my-prompt-set": prompts.PromptsetConfig{
+						Name:        "my-prompt-set",
+						PromptNames: []string{"my-prompt"},
+					},
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.description, func(t *testing.T) {
@@ -904,74 +944,6 @@ func TestParseToolFileWithAuth(t *testing.T) {
 		})
 	}
 
-}
-
-func TestParseToolFileWithPrompts(t *testing.T) {
-	ctx, err := testutils.ContextWithNewLogger()
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-
-	tcs := []struct {
-		description   string
-		in            string
-		wantToolsFile ToolsFile
-	}{
-		{
-			description: "with prompts and promptsets example",
-			in: `
-            prompts:
-                my-prompt:
-                    description: A prompt template for data analysis.
-                    arguments:
-                        - name: country
-                          description: The country to analyze.
-                    messages:
-                        - content: Analyze the data for {{.country}}.
-            promptsets:
-                my-prompt-set:
-                    - my-prompt
-            `,
-			wantToolsFile: ToolsFile{
-				Sources:      server.SourceConfigs{},
-				AuthServices: server.AuthServiceConfigs{},
-				Tools:        server.ToolConfigs{},
-				Toolsets:     server.ToolsetConfigs{},
-				Prompts: server.PromptConfigs{
-					"my-prompt": &custom.Config{
-						Name:        "my-prompt",
-						Description: "A prompt template for data analysis.",
-						Arguments: prompts.Arguments{
-							{Parameter: tools.NewStringParameter("country", "The country to analyze.")},
-						},
-						Messages: []prompts.Message{
-							{Role: "user", Content: "Analyze the data for {{.country}}."},
-						},
-					},
-				},
-				Promptsets: server.PromptsetConfigs{
-					"my-prompt-set": prompts.PromptsetConfig{
-						Name:        "my-prompt-set",
-						PromptNames: []string{"my-prompt"},
-					},
-				},
-			},
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.description, func(t *testing.T) {
-			toolsFile, err := parseToolsFile(ctx, testutils.FormatYaml(tc.in))
-			if err != nil {
-				t.Fatalf("failed to parse input: %v", err)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
-				t.Fatalf("incorrect prompts parse: diff %v", diff)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.Promptsets, toolsFile.Promptsets); diff != "" {
-				t.Fatalf("incorrect promptsets parse: diff %v", diff)
-			}
-		})
-	}
 }
 
 func TestEnvVarReplacement(t *testing.T) {
