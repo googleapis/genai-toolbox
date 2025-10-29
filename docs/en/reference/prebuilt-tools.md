@@ -499,6 +499,20 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
 
+## Google Cloud Serverless for Apache Spark
+
+*   `--prebuilt` value: `serverless-spark`
+*   **Environment Variables:**
+    *   `SERVERLESS_SPARK_PROJECT`: The GCP project ID
+    *   `SERVERLESS_SPARK_LOCATION`: The GCP Location.
+*   **Permissions:**
+    *   **Dataproc Serverless Viewer** (`roles/dataproc.serverlessViewer`) to
+        view serverless batches.
+    *   **Dataproc Serverless Editor** (`roles/dataproc.serverlessEditor`) to
+        view serverless batches.
+*   **Tools:**
+    *   `list_batches`: Lists Spark batches.
+
 ## Spanner (GoogleSQL dialect)
 
 *   `--prebuilt` value: `spanner`

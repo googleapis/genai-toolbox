@@ -160,6 +160,13 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 							"description": "The cypher to execute.",
 							"authSources": []any{},
 						},
+						map[string]any{
+							"name":        "dry_run",
+							"type":        "boolean",
+							"required":    false,
+							"description": "If set to true, the query will be validated and information about the execution will be returned without running the query. Defaults to false.",
+							"authSources": []any{},
+						},
 					},
 					"authRequired": []any{},
 				},
@@ -241,9 +248,61 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 			wantStatus:  http.StatusOK,
 		},
 		{
+			name:        "invoke my-simple-execute-cypher-tool with dry_run",
+			api:         "http://127.0.0.1:5000/api/tool/my-simple-execute-cypher-tool/invoke",
+			requestBody: bytes.NewBuffer([]byte(`{"cypher": "MATCH (n:Test) RETURN n", "dry_run": true}`)),
+			wantStatus:  http.StatusOK,
+			validateFunc: func(t *testing.T, body string) {
+				var result []map[string]any
+				if err := json.Unmarshal([]byte(body), &result); err != nil {
+					t.Fatalf("failed to unmarshal dry_run result: %v", err)
+				}
+				if len(result) == 0 {
+					t.Fatalf("expected a query plan, but got an empty result")
+				}
+
+				operatorValue, ok := result[0]["operator"]
+				if !ok {
+					t.Fatalf("expected key 'Operator' not found in dry_run response: %s", body)
+				}
+
+				operatorStr, ok := operatorValue.(string)
+				if !ok {
+					t.Fatalf("expected 'Operator' to be a string, but got %T", operatorValue)
+				}
+
+				if operatorStr != "ProduceResults@neo4j" {
+					t.Errorf("unexpected operator: got %q, want %q", operatorStr, "ProduceResults@neo4j")
+				}
+
+				childrenCount, ok := result[0]["childrenCount"]
+				if !ok {
+					t.Fatalf("expected key 'ChildrenCount' not found in dry_run response: %s", body)
+				}
+
+				if childrenCount.(float64) != 1 {
+					t.Errorf("unexpected children count: got %v, want %d", childrenCount, 1)
+				}
+			},
+		},
+		{
+			name:               "invoke my-simple-execute-cypher-tool with dry_run and invalid syntax",
+			api:                "http://127.0.0.1:5000/api/tool/my-simple-execute-cypher-tool/invoke",
+			requestBody:        bytes.NewBuffer([]byte(`{"cypher": "RTN 1", "dry_run": true}`)),
+			wantStatus:         http.StatusBadRequest,
+			wantErrorSubstring: "unable to execute query",
+		},
+		{
 			name:               "invoke readonly tool with write query",
 			api:                "http://127.0.0.1:5000/api/tool/my-readonly-execute-cypher-tool/invoke",
 			requestBody:        bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)"}`)),
+			wantStatus:         http.StatusBadRequest,
+			wantErrorSubstring: "this tool is read-only and cannot execute write queries",
+		},
+		{
+			name:               "invoke readonly tool with write query and dry_run",
+			api:                "http://127.0.0.1:5000/api/tool/my-readonly-execute-cypher-tool/invoke",
+			requestBody:        bytes.NewBuffer([]byte(`{"cypher": "CREATE (n:TestNode)", "dry_run": true}`)),
 			wantStatus:         http.StatusBadRequest,
 			wantErrorSubstring: "this tool is read-only and cannot execute write queries",
 		},
