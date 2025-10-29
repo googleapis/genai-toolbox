@@ -45,7 +45,7 @@ avoiding full table scans or complex filters.
   Allows conversational interaction with a BigQuery source.
 
 - [`bigquery-execute-sql`](../tools/bigquery/bigquery-execute-sql.md)  
-  Execute structured queries using parameters.
+  Executes a provided BigQuery SQL statement, with source-level security controls.
 
 - [`bigquery-forecast`](../tools/bigquery/bigquery-forecast.md)
   Forecasts time series data in BigQuery.
@@ -63,7 +63,7 @@ avoiding full table scans or complex filters.
   List tables in a given dataset.
 
 - [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
-  Run SQL queries directly against BigQuery datasets.
+  Executes a pre-defined BigQuery SQL statement using secure parameter binding.
 
 - [`bigquery-search-catalog`](../tools/bigquery/bigquery-search-catalog.md)
   List all entries in Dataplex Catalog (e.g. tables, views, models) that matches

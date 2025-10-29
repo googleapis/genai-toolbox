@@ -18,10 +18,10 @@ reputation for reliability, feature robustness, and performance.
 ## Available Tools
 
 - [`postgres-sql`](../tools/postgres/postgres-sql.md)
-  Execute SQL queries as prepared statements in PostgreSQL.
+  Runs PostgreSQL queries safely by using prepared statements.
 
 - [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)
-  Run parameterized SQL statements in PostgreSQL.
+  Executes a PostgreSQL statement securely using named parameter binding.
 
 - [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)
   List tables in a PostgreSQL database.

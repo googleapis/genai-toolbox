@@ -22,10 +22,10 @@ to a database by following these instructions][csql-mssql-connect].
 ## Available Tools
 
 - [`mssql-sql`](../tools/mssql/mssql-sql.md)  
-  Execute pre-defined SQL Server queries with placeholder parameters.
+  Execute pre-defined SQL Server queries securely using parameter binding.
 
 - [`mssql-execute-sql`](../tools/mssql/mssql-execute-sql.md)  
-  Run parameterized SQL Server queries in Cloud SQL for SQL Server.
+  Executes a SQL statement against a SQL Server database.
 
 - [`mssql-list-tables`](../tools/mssql/mssql-list-tables.md)  
   List tables in a Cloud SQL for SQL Server database.
