@@ -22,7 +22,6 @@ import (
 	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
-	//"github.com/googleapis/genai-toolbox/internal/util"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
@@ -111,10 +110,6 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
-	//logger, err := util.LoggerFromContext(ctx)
-	//if err != nil {
-	//	return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
-	//}
 	mapParams := params.AsMap()
 	conn, ok := mapParams["conn"].(string)
 	if !ok {

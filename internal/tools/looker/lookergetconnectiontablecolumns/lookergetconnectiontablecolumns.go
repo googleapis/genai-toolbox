@@ -123,10 +123,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if !ok {
 		return nil, fmt.Errorf("'conn' must be a string, got %T", mapParams["conn"])
 	}
-	db, ok := mapParams["db"].(string)
-	if !ok {
-		db = ""
-	}
+	db, _ := mapParams["db"].(string)
 	schema, ok := mapParams["schema"].(string)
 	if !ok {
 		return nil, fmt.Errorf("'schema' must be a string, got %T", mapParams["schema"])
@@ -142,11 +139,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 	req := v4.RequestConnectionColumns{
 		ConnectionName: conn,
+		Database:       &db,
 		SchemaName:     &schema,
 		TableNames:     &tables,
-	}
-	if db != "" {
-		req.Database = &db
 	}
 	resp, err := sdk.ConnectionColumns(req, t.ApiSettings)
 	if err != nil {

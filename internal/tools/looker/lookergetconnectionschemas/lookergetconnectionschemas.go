@@ -22,7 +22,6 @@ import (
 	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
-	//"github.com/googleapis/genai-toolbox/internal/util"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
@@ -92,7 +91,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Parameters:   parameters.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
-		mcpManifest:        mcpManifest,
+		mcpManifest: mcpManifest,
 	}, nil
 }
 
@@ -100,31 +99,24 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name               string `yaml:"name"`
-	Kind               string `yaml:"kind"`
-	UseClientOAuth     bool
-	Client             *v4.LookerSDK
-	ApiSettings        *rtl.ApiSettings
-	AuthRequired       []string         `yaml:"authRequired"`
-	Parameters         tools.Parameters `yaml:"parameters"`
-	manifest           tools.Manifest
-	mcpManifest        tools.McpManifest
+	Name           string `yaml:"name"`
+	Kind           string `yaml:"kind"`
+	UseClientOAuth bool
+	Client         *v4.LookerSDK
+	ApiSettings    *rtl.ApiSettings
+	AuthRequired   []string         `yaml:"authRequired"`
+	Parameters     tools.Parameters `yaml:"parameters"`
+	manifest       tools.Manifest
+	mcpManifest    tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
-	//logger, err := util.LoggerFromContext(ctx)
-	//if err != nil {
-	//	return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
-	//}
 	mapParams := params.AsMap()
 	conn, ok := mapParams["conn"].(string)
 	if !ok {
 		return nil, fmt.Errorf("'conn' must be a string, got %T", mapParams["conn"])
 	}
-	db, ok := mapParams["db"].(string)
-	if !ok {
-		db = ""
-	}
+	db, _ := mapParams["db"].(string)
 
 	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
 	if err != nil {
@@ -132,9 +124,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 	req := v4.RequestConnectionSchemas{
 		ConnectionName: conn,
-	}
-	if db != "" {
-		req.Database = &db
+		Database:       &db,
 	}
 	resp, err := sdk.ConnectionSchemas(req, t.ApiSettings)
 	if err != nil {

@@ -122,10 +122,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if !ok {
 		return nil, fmt.Errorf("'conn' must be a string, got %T", mapParams["conn"])
 	}
-	db, ok := mapParams["db"].(string)
-	if !ok {
-		db = ""
-	}
+	db, _ := mapParams["db"].(string)
 	schema, ok := mapParams["schema"].(string)
 	if !ok {
 		return nil, fmt.Errorf("'schema' must be a string, got %T", mapParams["schema"])
@@ -137,10 +134,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 	req := v4.RequestConnectionTables{
 		ConnectionName: conn,
+		Database:       &db,
 		SchemaName:     &schema,
-	}
-	if db != "" {
-		req.Database = &db
 	}
 	resp, err := sdk.ConnectionTables(req, t.ApiSettings)
 	if err != nil {
@@ -162,7 +157,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		data = append(data, vMap)
 	}
 	logger.DebugContext(ctx, "data = ", data)
-		
 
 	return data, nil
 }
