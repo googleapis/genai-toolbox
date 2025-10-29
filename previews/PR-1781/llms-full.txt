@@ -8079,6 +8079,8 @@ Apache Spark.
 
 - [`serverless-spark-list-batches`](../tools/serverless-spark/serverless-spark-list-batches.md)
   List and filter Serverless Spark batches.
+- [`serverless-spark-get-batch`](../tools/serverless-spark/serverless-spark-get-batch.md)
+  Get a Serverless Spark batch.
 
 ## Requirements
 
@@ -9026,6 +9028,9 @@ Tools that work with Redis Sources.
 # Serverless for Apache Spark
 Tools that work with Google Cloud Serverless for Apache Spark Sources.
 
+
+- [serverless-spark-get-batch](./serverless-spark-get-batch.md)
+- [serverless-spark-list-batches](./serverless-spark-list-batches.md)
 
 
 # Spanner
