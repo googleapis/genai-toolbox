@@ -19,6 +19,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"regexp"
 	"slices"
 	"strings"
 	"text/template"
@@ -33,6 +35,14 @@ const (
 	typeBool   = "boolean"
 	typeArray  = "array"
 	typeMap    = "map"
+)
+
+// delimiters for string parameter escaping
+const (
+	escapeBackticks      = "backticks"
+	escapeDoubleQuotes   = "double-quotes"
+	escapeSingleQuotes   = "single-quotes"
+	escapeSquareBrackets = "square-brackets"
 )
 
 // ParamValues is an ordered list of ParamValue
@@ -278,7 +288,7 @@ func parseParamFromDelayedUnmarshaler(ctx context.Context, u *util.DelayedUnmars
 
 	t, ok := p["type"]
 	if !ok {
-		return nil, fmt.Errorf("parameter is missing 'type' field: %w", err)
+		return nil, fmt.Errorf("parameter is missing 'type' field")
 	}
 
 	dec, err := util.NewStrictDecoder(p)
@@ -413,12 +423,13 @@ type ParameterMcpManifest struct {
 
 // CommonParameter are default fields that are emebdding in most Parameter implementations. Embedding this stuct will give the object Name() and Type() functions.
 type CommonParameter struct {
-	Name         string             `yaml:"name" validate:"required"`
-	Type         string             `yaml:"type" validate:"required"`
-	Desc         string             `yaml:"description" validate:"required"`
-	Required     *bool              `yaml:"required"`
-	AuthServices []ParamAuthService `yaml:"authServices"`
-	AuthSources  []ParamAuthService `yaml:"authSources"` // Deprecated: Kept for compatibility.
+	Name          string             `yaml:"name" validate:"required"`
+	Type          string             `yaml:"type" validate:"required"`
+	Desc          string             `yaml:"description" validate:"required"`
+	Required      *bool              `yaml:"required"`
+	AllowedValues []any              `yaml:"allowedValues"`
+	AuthServices  []ParamAuthService `yaml:"authServices"`
+	AuthSources   []ParamAuthService `yaml:"authSources"` // Deprecated: Kept for compatibility.
 }
 
 // GetName returns the name specified for the Parameter.
@@ -438,6 +449,39 @@ func (p *CommonParameter) GetRequired() bool {
 		return true
 	}
 	return *p.Required
+}
+
+// GetAllowedValues returns the allowed values for the Parameter.
+func (p *CommonParameter) GetAllowedValues() []any {
+	return p.AllowedValues
+}
+
+// IsAllowedValues checks if the value is allowed.
+func (p *CommonParameter) IsAllowedValues(v any) bool {
+	if len(p.AllowedValues) == 0 {
+		return true
+	}
+	for _, av := range p.AllowedValues {
+		if MatchStringOrRegex(v, av) {
+			return true
+		}
+	}
+	return false
+}
+
+// MatchStringOrRegex checks if the input matches the target
+func MatchStringOrRegex(input, target any) bool {
+	targetS, ok := target.(string)
+	if !ok {
+		return input == target
+	}
+	re, err := regexp.Compile(targetS)
+	if err != nil {
+		// if target is not regex, run direct comparison
+		return input == target
+	}
+	inputS := fmt.Sprintf("%s", input)
+	return re.MatchString(inputS)
 }
 
 // McpManifest returns the MCP manifest for the Parameter.
@@ -499,6 +543,19 @@ func NewStringParameterWithDefault(name string, defaultV, desc string) *StringPa
 	}
 }
 
+// NewStringParameterWithEscape is a convenience function for initializing a StringParameter.
+func NewStringParameterWithEscape(name, desc, escape string) *StringParameter {
+	return &StringParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeString,
+			Desc:         desc,
+			AuthServices: nil,
+		},
+		Escape: &escape,
+	}
+}
+
 // NewStringParameterWithRequired is a convenience function for initializing a StringParameter.
 func NewStringParameterWithRequired(name string, desc string, required bool) *StringParameter {
 	return &StringParameter{
@@ -524,12 +581,26 @@ func NewStringParameterWithAuth(name string, desc string, authServices []ParamAu
 	}
 }
 
+// NewStringParameterWithAllowedValues is a convenience function for initializing a StringParameter with a list of allowedValues
+func NewStringParameterWithAllowedValues(name string, desc string, allowedValues []any) *StringParameter {
+	return &StringParameter{
+		CommonParameter: CommonParameter{
+			Name:          name,
+			Type:          typeString,
+			Desc:          desc,
+			AllowedValues: allowedValues,
+			AuthServices:  nil,
+		},
+	}
+}
+
 var _ Parameter = &StringParameter{}
 
 // StringParameter is a parameter representing the "string" type.
 type StringParameter struct {
 	CommonParameter `yaml:",inline"`
 	Default         *string `yaml:"default"`
+	Escape          *string `yaml:"escape"`
 }
 
 // Parse casts the value "v" as a "string".
@@ -538,7 +609,28 @@ func (p *StringParameter) Parse(v any) (any, error) {
 	if !ok {
 		return nil, &ParseTypeError{p.Name, p.Type, v}
 	}
+	if !p.IsAllowedValues(newV) {
+		return nil, fmt.Errorf("%s is not an allowed value", newV)
+	}
+	if p.Escape != nil {
+		return applyEscape(*p.Escape, newV)
+	}
 	return newV, nil
+}
+
+func applyEscape(escape, v string) (any, error) {
+	switch escape {
+	case escapeBackticks:
+		return fmt.Sprintf("`%s`", v), nil
+	case escapeDoubleQuotes:
+		return fmt.Sprintf(`"%s"`, v), nil
+	case escapeSingleQuotes:
+		return fmt.Sprintf(`'%s'`, v), nil
+	case escapeSquareBrackets:
+		return fmt.Sprintf("[%s]", v), nil
+	default:
+		return nil, fmt.Errorf("%s is not an allowed escaping delimiter", escape)
+	}
 }
 
 func (p *StringParameter) GetAuthServices() []ParamAuthService {
@@ -575,6 +667,20 @@ func NewIntParameter(name string, desc string) *IntParameter {
 			Desc:         desc,
 			AuthServices: nil,
 		},
+	}
+}
+
+// NewIntParameterWithRange is a convenience function for initializing a IntParameter.
+func NewIntParameterWithRange(name string, desc string, minValue *int, maxValue *int) *IntParameter {
+	return &IntParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeInt,
+			Desc:         desc,
+			AuthServices: nil,
+		},
+		MinValue: minValue,
+		MaxValue: maxValue,
 	}
 }
 
@@ -616,12 +722,27 @@ func NewIntParameterWithAuth(name string, desc string, authServices []ParamAuthS
 	}
 }
 
+// NewIntParameterWithAllowedValues is a convenience function for initializing a IntParameter with a list of allowedValues
+func NewIntParameterWithAllowedValues(name string, desc string, allowedValues []any) *IntParameter {
+	return &IntParameter{
+		CommonParameter: CommonParameter{
+			Name:          name,
+			Type:          typeString,
+			Desc:          desc,
+			AllowedValues: allowedValues,
+			AuthServices:  nil,
+		},
+	}
+}
+
 var _ Parameter = &IntParameter{}
 
 // IntParameter is a parameter representing the "int" type.
 type IntParameter struct {
 	CommonParameter `yaml:",inline"`
 	Default         *int `yaml:"default"`
+	MinValue        *int `yaml:"minValue"`
+	MaxValue        *int `yaml:"maxValue"`
 }
 
 func (p *IntParameter) Parse(v any) (any, error) {
@@ -641,6 +762,15 @@ func (p *IntParameter) Parse(v any) (any, error) {
 			return nil, &ParseTypeError{p.Name, p.Type, v}
 		}
 		out = int(newI)
+	}
+	if !p.IsAllowedValues(out) {
+		return nil, fmt.Errorf("%d is not an allowed value", out)
+	}
+	if p.MinValue != nil && out < *p.MinValue {
+		return nil, fmt.Errorf("%d is under the minimum value", out)
+	}
+	if p.MaxValue != nil && out > *p.MaxValue {
+		return nil, fmt.Errorf("%d is above the maximum value", out)
 	}
 	return out, nil
 }
@@ -682,6 +812,20 @@ func NewFloatParameter(name string, desc string) *FloatParameter {
 	}
 }
 
+// NewFloatParameterWithRange is a convenience function for initializing a FloatParameter.
+func NewFloatParameterWithRange(name string, desc string, minValue *float64, maxValue *float64) *FloatParameter {
+	return &FloatParameter{
+		CommonParameter: CommonParameter{
+			Name:         name,
+			Type:         typeFloat,
+			Desc:         desc,
+			AuthServices: nil,
+		},
+		MinValue: minValue,
+		MaxValue: maxValue,
+	}
+}
+
 // NewFloatParameterWithDefault is a convenience function for initializing a FloatParameter with default value.
 func NewFloatParameterWithDefault(name string, defaultV float64, desc string) *FloatParameter {
 	return &FloatParameter{
@@ -720,12 +864,27 @@ func NewFloatParameterWithAuth(name string, desc string, authServices []ParamAut
 	}
 }
 
+// NewFloatParameterWithAllowedValues is a convenience function for initializing a FloatParameter with a list of allowed values.
+func NewFloatParameterWithAllowedValues(name string, desc string, allowedValues []any) *FloatParameter {
+	return &FloatParameter{
+		CommonParameter: CommonParameter{
+			Name:          name,
+			Type:          typeFloat,
+			Desc:          desc,
+			AllowedValues: allowedValues,
+			AuthServices:  nil,
+		},
+	}
+}
+
 var _ Parameter = &FloatParameter{}
 
 // FloatParameter is a parameter representing the "float" type.
 type FloatParameter struct {
 	CommonParameter `yaml:",inline"`
 	Default         *float64 `yaml:"default"`
+	MinValue        *float64 `yaml:"minValue"`
+	MaxValue        *float64 `yaml:"maxValue"`
 }
 
 func (p *FloatParameter) Parse(v any) (any, error) {
@@ -743,6 +902,15 @@ func (p *FloatParameter) Parse(v any) (any, error) {
 			return nil, &ParseTypeError{p.Name, p.Type, v}
 		}
 		out = float64(newI)
+	}
+	if !p.IsAllowedValues(out) {
+		return nil, fmt.Errorf("%g is not an allowed value", out)
+	}
+	if p.MinValue != nil && out < *p.MinValue {
+		return nil, fmt.Errorf("%g is under the minimum value", out)
+	}
+	if p.MaxValue != nil && out > *p.MaxValue {
+		return nil, fmt.Errorf("%g is above the maximum value", out)
 	}
 	return out, nil
 }
@@ -832,6 +1000,19 @@ func NewBooleanParameterWithAuth(name string, desc string, authServices []ParamA
 	}
 }
 
+// NewBooleanParameterWithAllowedValues is a convenience function for initializing a BooleanParameter with a list of allowed values.
+func NewBooleanParameterWithAllowedValues(name string, desc string, allowedValues []any) *BooleanParameter {
+	return &BooleanParameter{
+		CommonParameter: CommonParameter{
+			Name:          name,
+			Type:          typeBool,
+			Desc:          desc,
+			AllowedValues: allowedValues,
+			AuthServices:  nil,
+		},
+	}
+}
+
 var _ Parameter = &BooleanParameter{}
 
 // BooleanParameter is a parameter representing the "boolean" type.
@@ -844,6 +1025,9 @@ func (p *BooleanParameter) Parse(v any) (any, error) {
 	newV, ok := v.(bool)
 	if !ok {
 		return nil, &ParseTypeError{p.Name, p.Type, v}
+	}
+	if !p.IsAllowedValues(newV) {
+		return nil, fmt.Errorf("%t is not an allowed value", newV)
 	}
 	return newV, nil
 }
@@ -927,6 +1111,20 @@ func NewArrayParameterWithAuth(name string, desc string, items Parameter, authSe
 	}
 }
 
+// NewArrayParameterWithAllowedValues is a convenience function for initializing a ArrayParameter with a list of allowed values.
+func NewArrayParameterWithAllowedValues(name string, desc string, allowedValues []any, items Parameter) *ArrayParameter {
+	return &ArrayParameter{
+		CommonParameter: CommonParameter{
+			Name:          name,
+			Type:          typeArray,
+			Desc:          desc,
+			AllowedValues: allowedValues,
+			AuthServices:  nil,
+		},
+		Items: items,
+	}
+}
+
 var _ Parameter = &ArrayParameter{}
 
 // ArrayParameter is a parameter representing the "array" type.
@@ -959,10 +1157,26 @@ func (p *ArrayParameter) UnmarshalYAML(ctx context.Context, unmarshal func(inter
 	return nil
 }
 
+func (p *ArrayParameter) IsAllowedValues(v []any) bool {
+	a := p.GetAllowedValues()
+	if len(a) == 0 {
+		return true
+	}
+	for _, av := range a {
+		if reflect.DeepEqual(v, av) {
+			return true
+		}
+	}
+	return false
+}
+
 func (p *ArrayParameter) Parse(v any) (any, error) {
 	arrVal, ok := v.([]any)
 	if !ok {
 		return nil, &ParseTypeError{p.Name, p.Type, arrVal}
+	}
+	if !p.IsAllowedValues(arrVal) {
+		return nil, fmt.Errorf("%s is not an allowed value", arrVal)
 	}
 	rtn := make([]any, 0, len(arrVal))
 	for idx, val := range arrVal {
@@ -1083,6 +1297,19 @@ func NewMapParameterWithAuth(name string, desc string, valueType string, authSer
 	}
 }
 
+// NewMapParameterWithAllowedValues is a convenience function for initializing a MapParameter with a list of allowed values.
+func NewMapParameterWithAllowedValues(name string, desc string, allowedValues []any, valueType string) *MapParameter {
+	return &MapParameter{
+		CommonParameter: CommonParameter{
+			Name:          name,
+			Type:          "map",
+			Desc:          desc,
+			AllowedValues: allowedValues,
+		},
+		ValueType: valueType,
+	}
+}
+
 // UnmarshalYAML handles parsing the MapParameter from YAML input.
 func (p *MapParameter) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
 	var rawItem struct {
@@ -1124,11 +1351,27 @@ func getPrototypeParameter(typeName string) (Parameter, error) {
 	}
 }
 
+func (p *MapParameter) IsAllowedValues(v map[string]any) bool {
+	a := p.GetAllowedValues()
+	if len(a) == 0 {
+		return true
+	}
+	for _, av := range a {
+		if reflect.DeepEqual(v, av) {
+			return true
+		}
+	}
+	return false
+}
+
 // Parse validates and parses an incoming value for the map parameter.
 func (p *MapParameter) Parse(v any) (any, error) {
 	m, ok := v.(map[string]any)
 	if !ok {
 		return nil, &ParseTypeError{p.Name, p.Type, m}
+	}
+	if !p.IsAllowedValues(m) {
+		return nil, fmt.Errorf("%s is not an allowed value", m)
 	}
 	// for generic maps, convert json.Numbers to their corresponding types
 	if p.ValueType == "" {

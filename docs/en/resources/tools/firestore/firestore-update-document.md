@@ -41,6 +41,7 @@ The tool requires Firestore's native JSON format for document data. Each field
 must be wrapped with its type indicator:
 
 ### Basic Types
+
 - **String**: `{"stringValue": "your string"}`
 - **Integer**: `{"integerValue": "123"}` or `{"integerValue": 123}`
 - **Double**: `{"doubleValue": 123.45}`
@@ -50,6 +51,7 @@ must be wrapped with its type indicator:
 - **Timestamp**: `{"timestampValue": "2025-01-07T10:00:00Z"}` (RFC3339 format)
 
 ### Complex Types
+
 - **GeoPoint**: `{"geoPointValue": {"latitude": 34.052235, "longitude": -118.243683}}`
 - **Array**: `{"arrayValue": {"values": [{"stringValue": "item1"}, {"integerValue": "2"}]}}`
 - **Map**: `{"mapValue": {"fields": {"key1": {"stringValue": "value1"}, "key2": {"booleanValue": true}}}}`
@@ -77,7 +79,6 @@ deleted. To delete a field, include it in the `updateMask` but omit it from
 | kind        |     string     |     true     | Must be "firestore-update-document".                     |
 | source      |     string     |     true     | Name of the Firestore source to update documents in.     |
 | description |     string     |     true     | Description of the tool that is passed to the LLM.       |
-
 
 ## Examples
 
@@ -155,6 +156,7 @@ To delete fields, include them in the `updateMask` but omit them from `documentD
 ```
 
 In this example:
+
 - `name` will be updated to "John Smith"
 - `temporaryField` and `obsoleteData` will be deleted from the document (they are in the mask but not in the data)
 
@@ -302,8 +304,11 @@ tools:
       - google-oauth
       - api-key
 ```
+
 ## Error Handling
+
 Common errors include:
+
 - Document not found (when using update with a non-existent document)
 - Invalid document path
 - Missing or invalid document data
@@ -311,6 +316,7 @@ Common errors include:
 - Invalid data type conversions
 
 ## Best Practices
+
 1. **Use update masks for precision**: When you only need to update specific fields, use the `updateMask` parameter to avoid unintended changes
 2. **Always use typed values**: Every field must be wrapped with its appropriate type indicator (e.g., `{"stringValue": "text"}`)
 3. **Integer values can be strings**: The tool accepts integer values as strings (e.g., `{"integerValue": "1500"}`)

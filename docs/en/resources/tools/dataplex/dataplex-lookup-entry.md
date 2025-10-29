@@ -13,7 +13,7 @@ aliases:
 A `dataplex-lookup-entry` tool returns details of a particular entry in Dataplex
 Catalog. It's compatible with the following sources:
 
-- [dataplex](../sources/dataplex.md)
+- [dataplex](../../sources/dataplex.md)
 
 `dataplex-lookup-entry` takes a required `name` parameter which contains the
 project and location to which the request should be attributed in the following
@@ -21,14 +21,15 @@ form: projects/{project}/locations/{location} and also a required `entry`
 parameter which is the resource name of the entry in the following form:
 projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.
 It also optionally accepts following parameters:
-  - `view` - View to control which parts of an entry the service should return.
+
+- `view` - View to control which parts of an entry the service should return.
     It takes integer values from 1-4 corresponding to type of view - BASIC,
     FULL, CUSTOM, ALL
-  - `aspectTypes` - Limits the aspects returned to the provided aspect types in
+- `aspectTypes` - Limits the aspects returned to the provided aspect types in
     the format
     `projects/{project}/locations/{location}/aspectTypes/{aspectType}`. It only
     works for CUSTOM view.
-  - `paths` - Limits the aspects returned to those associated with the provided
+- `paths` - Limits the aspects returned to those associated with the provided
     paths within the Entry. It only works for CUSTOM view.
 
 ## Requirements
@@ -36,13 +37,13 @@ It also optionally accepts following parameters:
 ### IAM Permissions
 
 Dataplex uses [Identity and Access Management (IAM)][iam-overview] to control
-user and group access to Dataplex resources. Toolbox will use your 
-[Application Default Credentials (ADC)][adc] to authorize and authenticate when 
+user and group access to Dataplex resources. Toolbox will use your
+[Application Default Credentials (ADC)][adc] to authorize and authenticate when
 interacting with [Dataplex][dataplex-docs].
 
 In addition to [setting the ADC for your server][set-adc], you need to ensure
 the IAM identity has been given the correct IAM permissions for the tasks you
-intend to perform. See [Dataplex Universal Catalog IAM permissions][iam-permissions] 
+intend to perform. See [Dataplex Universal Catalog IAM permissions][iam-permissions]
 and [Dataplex Universal Catalog IAM roles][iam-roles] for more information on
 applying IAM permissions and roles to an identity.
 

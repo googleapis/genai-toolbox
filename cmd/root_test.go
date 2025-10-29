@@ -1244,6 +1244,7 @@ func TestPrebuiltTools(t *testing.T) {
 	mysql_config, _ := prebuiltconfigs.Get("mysql")
 	mssql_config, _ := prebuiltconfigs.Get("mssql")
 	looker_config, _ := prebuiltconfigs.Get("looker")
+	lookerca_config, _ := prebuiltconfigs.Get("looker-conversational-analytics")
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
@@ -1253,6 +1254,7 @@ func TestPrebuiltTools(t *testing.T) {
 	cloudsqlpgobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-postgres-observability")
 	cloudsqlmysqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mysql-observability")
 	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
+	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1304,6 +1306,9 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("CLOUD_SQL_MSSQL_PASSWORD", "your_cloudsql_mssql_password")
 	t.Setenv("CLOUD_SQL_POSTGRES_PASSWORD", "your_cloudsql_pg_password")
 
+	t.Setenv("SERVERLESS_SPARK_PROJECT", "your_gcp_project_id")
+	t.Setenv("SERVERLESS_SPARK_LOCATION", "your_gcp_location")
+
 	t.Setenv("POSTGRES_HOST", "localhost")
 	t.Setenv("POSTGRES_PORT", "5432")
 	t.Setenv("POSTGRES_DATABASE", "your_postgres_db")
@@ -1326,6 +1331,9 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("LOOKER_CLIENT_ID", "your_looker_client_id")
 	t.Setenv("LOOKER_CLIENT_SECRET", "your_looker_client_secret")
 	t.Setenv("LOOKER_VERIFY_SSL", "true")
+
+	t.Setenv("LOOKER_PROJECT", "your_project_id")
+	t.Setenv("LOOKER_LOCATION", "us")
 
 	t.Setenv("SQLITE_DATABASE", "test.db")
 
@@ -1454,6 +1462,16 @@ func TestPrebuiltTools(t *testing.T) {
 			},
 		},
 		{
+			name: "serverless spark prebuilt tools",
+			in:   serverless_spark_config,
+			wantToolset: server.ToolsetConfigs{
+				"serverless_spark_tools": tools.ToolsetConfig{
+					Name:      "serverless_spark_tools",
+					ToolNames: []string{"list_batches", "get_batch"},
+				},
+			},
+		},
+		{
 			name: "firestore prebuilt tools",
 			in:   firestoreconfig,
 			wantToolset: server.ToolsetConfigs{
@@ -1489,7 +1507,17 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"looker_tools": tools.ToolsetConfig{
 					Name:      "looker_tools",
-					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "make_dashboard", "add_dashboard_element"},
+					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "make_dashboard", "add_dashboard_element", "health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file"},
+				},
+			},
+		},
+		{
+			name: "looker-conversational-analytics prebuilt tools",
+			in:   lookerca_config,
+			wantToolset: server.ToolsetConfigs{
+				"looker_conversational_analytics_tools": tools.ToolsetConfig{
+					Name:      "looker_conversational_analytics_tools",
+					ToolNames: []string{"ask_data_insights", "get_models", "get_explores"},
 				},
 			},
 		},
@@ -1596,4 +1624,73 @@ func TestPrebuiltTools(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMutuallyExclusiveFlags(t *testing.T) {
+	testCases := []struct {
+		desc      string
+		args      []string
+		errString string
+	}{
+		{
+			desc:      "--prebuilt and --tools-file",
+			args:      []string{"--prebuilt", "alloydb", "--tools-file", "my.yaml"},
+			errString: "--prebuilt and --tools-file/--tools-files/--tools-folder flags cannot be used simultaneously",
+		},
+		{
+			desc:      "--tools-file and --tools-files",
+			args:      []string{"--tools-file", "my.yaml", "--tools-files", "a.yaml,b.yaml"},
+			errString: "--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously",
+		},
+		{
+			desc:      "--tools-folder and --tools-files",
+			args:      []string{"--tools-folder", "./", "--tools-files", "a.yaml,b.yaml"},
+			errString: "--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			cmd := NewCommand()
+			cmd.SetArgs(tc.args)
+			err := cmd.Execute()
+			if err == nil {
+				t.Fatalf("expected an error but got none")
+			}
+			if !strings.Contains(err.Error(), tc.errString) {
+				t.Errorf("expected error message to contain %q, but got %q", tc.errString, err.Error())
+			}
+		})
+	}
+}
+
+func TestFileLoadingErrors(t *testing.T) {
+	t.Run("non-existent tools-file", func(t *testing.T) {
+		cmd := NewCommand()
+		// Use a file that is guaranteed not to exist
+		nonExistentFile := filepath.Join(t.TempDir(), "non-existent-tools.yaml")
+		cmd.SetArgs([]string{"--tools-file", nonExistentFile})
+
+		err := cmd.Execute()
+		if err == nil {
+			t.Fatal("expected an error for non-existent file but got none")
+		}
+		if !strings.Contains(err.Error(), "unable to read tool file") {
+			t.Errorf("expected error about reading file, but got: %v", err)
+		}
+	})
+
+	t.Run("non-existent tools-folder", func(t *testing.T) {
+		cmd := NewCommand()
+		nonExistentFolder := filepath.Join(t.TempDir(), "non-existent-folder")
+		cmd.SetArgs([]string{"--tools-folder", nonExistentFolder})
+
+		err := cmd.Execute()
+		if err == nil {
+			t.Fatal("expected an error for non-existent folder but got none")
+		}
+		if !strings.Contains(err.Error(), "unable to access tools folder") {
+			t.Errorf("expected error about accessing folder, but got: %v", err)
+		}
+	})
 }

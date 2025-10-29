@@ -24,6 +24,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -122,7 +123,11 @@ func initMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, hos
 		values.Set(k, v)
 	}
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, pass, host, port, dbname)
+	userAgent, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&connectionAttributes=program_name:%s", user, pass, host, port, dbname, url.QueryEscape(userAgent))
 	if enc := values.Encode(); enc != "" {
 		dsn += "&" + enc
 	}
