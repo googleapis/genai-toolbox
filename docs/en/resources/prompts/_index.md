@@ -40,7 +40,7 @@ prompts:
 
 ## Argument Schema
 
-An argument is a [Parameter](../tools/_index.md#basic-parameters) with a single change:
+An argument is a [Parameter](../tools/_index.md#specifying-parameters) with a single change:
 
 - The type for an argument is not required but defaults to `String`.
 
