@@ -1,7 +1,7 @@
 ---
 title: "Prompts"
 type: docs
-weight: 2
+weight: 3
 description: >
    Prompts allow servers to provide structured messages and instructions for interacting with language models.
 ---
