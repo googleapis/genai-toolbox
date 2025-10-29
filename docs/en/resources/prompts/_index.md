@@ -40,12 +40,9 @@ prompts:
 
 ## Argument Schema
 
-| Field | Type | Required | Description |
-| --- | --- | --- | --- |
-| name | String | Yes | The name of the argument. |
-| description | String | No | A short description of the argument. |
-| type | String | No | The data type of the argument ( `string`, `int`, `float` or `boolean`). Defaults to `string`. |
-| required | Boolean | No | Whether the argument must be provided. Defaults to `true`. |
+An argument is a [Parameter](../tools/_index.md#basic-parameters) with a single change:
+
+- The type for an argument is not required but defaults to `String`.
 
 ## Usage with Gemini CLI
 
