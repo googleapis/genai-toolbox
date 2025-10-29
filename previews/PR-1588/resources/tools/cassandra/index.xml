@@ -2,9 +2,9 @@
 &lt;p>A &lt;code>cassandra-cql&lt;/code> tool executes a pre-defined CQL statement against a Cassandra
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/cassandra.md">cassandra&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/cassandra/">cassandra&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>The specified CQL statement is executed as a &lt;a href="https://docs.datastax.com/en/developer/go-driver/4.8/cql-prepared-statements/">prepared statement&lt;/a>,
+&lt;p>The specified CQL statement is executed as a &lt;a href="https://docs.datastax.com/en/datastax-drivers/developing/prepared-statements.html">prepared statement&lt;/a>,
 and expects parameters in the CQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;blockquote>

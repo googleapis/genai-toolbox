@@ -2,7 +2,7 @@
 &lt;p>A &lt;code>dataplex-lookup-entry&lt;/code> tool returns details of a particular entry in Dataplex
 Catalog. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/dataplex.md">dataplex&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/dataplex/">dataplex&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>dataplex-lookup-entry&lt;/code> takes a required &lt;code>name&lt;/code> parameter which contains the
 project and location to which the request should be attributed in the following

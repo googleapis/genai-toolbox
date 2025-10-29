@@ -593,16 +593,7 @@ insights to return, ranked by apriori support. Default to &amp;lsquo;30&amp;rsqu
 insights. Can be &lt;code>'NO_PRUNING'&lt;/code> or &lt;code>'PRUNE_REDUNDANT_INSIGHTS'&lt;/code>. Defaults to
 &lt;code>'PRUNE_REDUNDANT_INSIGHTS'&lt;/code>.&lt;/li>
 &lt;/ul>
-&lt;h2 id="example">Example&lt;/h2>
-&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">contribution_analyzer&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">bigquery-analyze-contribution&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-bigquery-source&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to run contribution analysis on a dataset in BigQuery.&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="sample-prompt">Sample Prompt&lt;/h2>
-&lt;p>You can prepare a sample table following
-&lt;a href="https://cloud.google.com/bigquery/docs/get-contribution-analysis-insights">https://cloud.google.com/bigquery/docs/get-contribution-analysis-insights&lt;/a>.
-And use the following sample prompts to call this tool:&lt;/p></description></item><item><title>bigquery-conversational-analytics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/bigquery/bigquery-conversational-analytics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/bigquery/bigquery-conversational-analytics/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its &lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-conversational-analytics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/bigquery/bigquery-conversational-analytics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/bigquery/bigquery-conversational-analytics/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-conversational-analytics&lt;/code> tool allows you to ask questions about
 your data in natural language.&lt;/p>
 &lt;p>This function takes a user&amp;rsquo;s question (which can include conversational history
@@ -623,60 +614,14 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;li>&lt;strong>&lt;code>dry_run&lt;/code>&lt;/strong> (optional): If set to &lt;code>true&lt;/code>, the query is validated but not run,
 returning information about the execution instead. Defaults to &lt;code>false&lt;/code>.&lt;/li>
 &lt;/ul>
+&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its &lt;code>bigquery&lt;/code> source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>allowed&lt;/code> (default):&lt;/strong> All SQL statements are permitted.&lt;/li>
+&lt;li>&lt;strong>&lt;code>blocked&lt;/code>:&lt;/strong> Only &lt;code>SELECT&lt;/code> statements are allowed. Any other type of statement (e.g., &lt;code>INSERT&lt;/code>, &lt;code>UPDATE&lt;/code>, &lt;code>CREATE&lt;/code>) will be rejected.&lt;/li>
+&lt;li>&lt;strong>&lt;code>protected&lt;/code>:&lt;/strong> This mode enables session-based execution. &lt;code>SELECT&lt;/code> statements can be used on all tables, while write operations are allowed only for the session&amp;rsquo;s temporary dataset (e.g., &lt;code>CREATE TEMP TABLE ...&lt;/code>). This prevents modifications to permanent datasets while allowing stateful, multi-step operations within a secure session.&lt;/li>
+&lt;/ul>
 &lt;p>The tool&amp;rsquo;s behavior is influenced by the &lt;code>allowedDatasets&lt;/code> restriction on the
-&lt;code>bigquery&lt;/code> source:&lt;/p>
-&lt;ul>
-&lt;li>&lt;strong>Without &lt;code>allowedDatasets&lt;/code> restriction:&lt;/strong> The tool can execute any valid GoogleSQL
-query.&lt;/li>
-&lt;li>&lt;strong>With &lt;code>allowedDatasets&lt;/code> restriction:&lt;/strong> Before execution, the tool performs a dry run
-to analyze the query.
-It will reject the query if it attempts to access any table outside the
-allowed &lt;code>datasets&lt;/code> list. To enforce this restriction, the following operations
-are also disallowed:
-&lt;ul>
-&lt;li>&lt;strong>Dataset-level operations&lt;/strong> (e.g., &lt;code>CREATE SCHEMA&lt;/code>, &lt;code>ALTER SCHEMA&lt;/code>).&lt;/li>
-&lt;li>&lt;strong>Unanalyzable operations&lt;/strong> where the accessed tables cannot be determined
-statically (e.g., &lt;code>EXECUTE IMMEDIATE&lt;/code>, &lt;code>CREATE PROCEDURE&lt;/code>, &lt;code>CALL&lt;/code>).&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="example">Example&lt;/h2>
-&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">execute_sql_tool&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">bigquery-execute-sql&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-bigquery-source&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to execute sql statement.&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
-&lt;table>
- &lt;thead>
- &lt;tr>
- &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
- &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
- &lt;/tr>
- &lt;/thead>
- &lt;tbody>
- &lt;tr>
- &lt;td>kind&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Must be &amp;ldquo;bigquery-execute-sql&amp;rdquo;.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>source&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Name of the source the SQL should execute on.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>description&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
- &lt;/tr>
- &lt;/tbody>
-&lt;/table></description></item><item><title>bigquery-forecast</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/bigquery/bigquery-forecast/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/bigquery/bigquery-forecast/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;code>bigquery&lt;/code> source. Similar to &lt;code>writeMode&lt;/code>, this setting provides an additional layer of security by controlling which datasets can be accessed:&lt;/p></description></item><item><title>bigquery-forecast</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/bigquery/bigquery-forecast/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/bigquery/bigquery-forecast/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-forecast&lt;/code> tool forecasts time series data in BigQuery.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -700,7 +645,7 @@ empty array if not provided.&lt;/li>
 &lt;li>&lt;strong>horizon&lt;/strong> (integer, optional): The number of future time steps you want to
 predict. It defaults to 10 if not specified.&lt;/li>
 &lt;/ul>
-&lt;p>The tool&amp;rsquo;s behavior regarding these parameters is influenced by the &lt;code>allowedDatasets&lt;/code> restriction on the &lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-get-dataset-info</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/bigquery/bigquery-get-dataset-info/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/bigquery/bigquery-get-dataset-info/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its &lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-get-dataset-info</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/bigquery/bigquery-get-dataset-info/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/bigquery/bigquery-get-dataset-info/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-get-dataset-info&lt;/code> tool retrieves metadata for a BigQuery dataset.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -752,55 +697,34 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>bigquery-get-table-info&lt;/code> takes &lt;code>dataset&lt;/code> and &lt;code>table&lt;/code> parameters to specify
-the target table. It also optionally accepts a &lt;code>project&lt;/code> parameter to define
-the Google Cloud project ID. If the &lt;code>project&lt;/code> parameter is not provided, the
-tool defaults to using the project defined in the source configuration.&lt;/p>
-&lt;h2 id="example">Example&lt;/h2>
-&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">bigquery_get_table_info&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">bigquery-get-table-info&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-bigquery-source&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to get table metadata.&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
-&lt;table>
- &lt;thead>
- &lt;tr>
- &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
- &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
- &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
- &lt;/tr>
- &lt;/thead>
- &lt;tbody>
- &lt;tr>
- &lt;td>kind&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Must be &amp;ldquo;bigquery-get-table-info&amp;rdquo;.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>source&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Name of the source the SQL should execute on.&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td>description&lt;/td>
- &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
- &lt;/tr>
- &lt;/tbody>
-&lt;/table></description></item><item><title>bigquery-list-dataset-ids</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/bigquery/bigquery-list-dataset-ids/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/bigquery/bigquery-list-dataset-ids/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;code>bigquery-get-table-info&lt;/code> accepts the following parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>table&lt;/code>&lt;/strong> (required): The name of the table for which to retrieve metadata.&lt;/li>
+&lt;li>&lt;strong>&lt;code>dataset&lt;/code>&lt;/strong> (required): The dataset containing the specified table.&lt;/li>
+&lt;li>&lt;strong>&lt;code>project&lt;/code>&lt;/strong> (optional): The Google Cloud project ID. If not provided, the
+tool defaults to the project from the source configuration.&lt;/li>
+&lt;/ul>
+&lt;p>The tool&amp;rsquo;s behavior regarding these parameters is influenced by the
+&lt;code>allowedDatasets&lt;/code> restriction on the &lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-list-dataset-ids</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/bigquery/bigquery-list-dataset-ids/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/bigquery/bigquery-list-dataset-ids/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-list-dataset-ids&lt;/code> tool returns all dataset IDs from the source.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>bigquery-list-dataset-ids&lt;/code> optionally accepts a &lt;code>project&lt;/code> parameter to define
-the Google Cloud project ID. If the &lt;code>project&lt;/code> parameter is not provided, the
-tool defaults to using the project defined in the source configuration.&lt;/p>
+&lt;p>&lt;code>bigquery-list-dataset-ids&lt;/code> accepts the following parameter:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>project&lt;/code>&lt;/strong> (optional): Defines the Google Cloud project ID. If not provided,
+the tool defaults to the project from the source configuration.&lt;/li>
+&lt;/ul>
+&lt;p>The tool&amp;rsquo;s behavior regarding this parameter is influenced by the
+&lt;code>allowedDatasets&lt;/code> restriction on the &lt;code>bigquery&lt;/code> source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Without &lt;code>allowedDatasets&lt;/code> restriction:&lt;/strong> The tool can list datasets from any
+project specified by the &lt;code>project&lt;/code> parameter.&lt;/li>
+&lt;li>&lt;strong>With &lt;code>allowedDatasets&lt;/code> restriction:&lt;/strong> The tool directly returns the
+pre-configured list of dataset IDs from the source, and the &lt;code>project&lt;/code>
+parameter is ignored.&lt;/li>
+&lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">bigquery_list_dataset_ids&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -878,19 +802,17 @@ the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
+&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its &lt;code>bigquery&lt;/code> source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>allowed&lt;/code> (default) and &lt;code>blocked&lt;/code>:&lt;/strong> These modes do not impose any restrictions on the &lt;code>bigquery-sql&lt;/code> tool. The pre-defined SQL statement will be executed as-is.&lt;/li>
+&lt;li>&lt;strong>&lt;code>protected&lt;/code>:&lt;/strong> This mode enables session-based execution. The tool will operate within the same BigQuery session as other tools using the same source, allowing it to interact with temporary resources like &lt;code>TEMP&lt;/code> tables created within that session.&lt;/li>
+&lt;/ul>
 &lt;h3 id="googlesql">GoogleSQL&lt;/h3>
 &lt;p>BigQuery uses &lt;a href="https://cloud.google.com/bigquery/docs/reference/standard-sql/">GoogleSQL&lt;/a> for querying data. The integration
 with Toolbox supports this dialect. The specified SQL statement is executed, and
 parameters can be inserted into the query. BigQuery supports both named parameters
 (e.g., &lt;code>@name&lt;/code>) and positional parameters (&lt;code>?&lt;/code>), but they cannot be mixed in the
-same query.&lt;/p>
-&lt;h2 id="example">Example&lt;/h2>
-&lt;blockquote>
-&lt;p>&lt;strong>Note:&lt;/strong> This tool uses &lt;a href="https://cloud.google.com/bigquery/docs/parameterized-queries">parameterized
-queries&lt;/a> to
-prevent SQL injections. Query parameters can be used as substitutes for
-arbitrary expressions. Parameters cannot be used as substitutes for
-identifiers, column names, table names, or other parts of the query.&lt;/p></description></item><item><title>Bigtable</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/bigtable/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/bigtable/</guid><description>&lt;h1 id="bigtable-source">Bigtable Source&lt;/h1>
+same query.&lt;/p></description></item><item><title>Bigtable</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/bigtable/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/bigtable/</guid><description>&lt;h1 id="bigtable-source">Bigtable Source&lt;/h1>
 &lt;p>&lt;a href="https://cloud.google.com/bigtable/docs">Bigtable&lt;/a> is a low-latency NoSQL database service for machine
 learning, operational analytics, and user-facing operations. It&amp;rsquo;s a wide-column,
 key-value store that can scale to billions of rows and thousands of columns.
@@ -1030,7 +952,7 @@ inserted according to their name: e.g. &lt;code>@name&lt;/code>.&lt;/p>
 &lt;/svg>
 
  &lt;/span>Note&lt;/p></description></item><item><title>Cassandra</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/cassandra/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/cassandra/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://cassandra.apache.org/">Cassandra&lt;/a> is a NoSQL distributed database. By design, NoSQL databases are lightweight, open-source, non-relational, and largely distributed. Counted among their strengths are horizontal scalability, distributed architectures, and a flexible approach to schema definition.&lt;/p>
+&lt;p>&lt;a href="https://cassandra.apache.org/">Apache Cassandra&lt;/a> is a NoSQL distributed database. By design, NoSQL databases are lightweight, open-source, non-relational, and largely distributed. Counted among their strengths are horizontal scalability, distributed architectures, and a flexible approach to schema definition.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/cassandra/cassandra-cql/">&lt;code>cassandra-cql&lt;/code>&lt;/a>&lt;br>
@@ -1175,9 +1097,9 @@ Run parameterized CQL queries in Cassandra.&lt;/li>
 &lt;p>A &lt;code>cassandra-cql&lt;/code> tool executes a pre-defined CQL statement against a Cassandra
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/cassandra.md">cassandra&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/cassandra/">cassandra&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>The specified CQL statement is executed as a &lt;a href="https://docs.datastax.com/en/developer/go-driver/4.8/cql-prepared-statements/">prepared statement&lt;/a>,
+&lt;p>The specified CQL statement is executed as a &lt;a href="https://docs.datastax.com/en/datastax-drivers/developing/prepared-statements.html">prepared statement&lt;/a>,
 and expects parameters in the CQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;blockquote>
@@ -1471,7 +1393,7 @@ Execute pre-defined SQL Server queries with placeholder parameters.&lt;/p>
 &lt;li>
 &lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/mssql/mssql-execute-sql/">&lt;code>mssql-execute-sql&lt;/code>&lt;/a>&lt;br>
 Run parameterized SQL Server queries in Cloud SQL for SQL Server.&lt;/p></description></item><item><title>Cloud SQL Admin</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/cloud-sql-admin/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/cloud-sql-admin/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>cloud-sql-admin&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/sql/docs/mysql/admin-api/v1">Google
+&lt;p>The &lt;code>cloud-sql-admin&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/sql/docs/mysql/admin-api">Google
 Cloud SQL Admin API&lt;/a>. This
 allows tools to perform administrative tasks on Cloud SQL instances, such as
 creating users and databases.&lt;/p>
@@ -1971,7 +1893,17 @@ parameters will be used according to their name: e.g. &lt;code>$id&lt;/code>.&lt
 &lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
-names, or other parts of the query.&lt;/p></description></item><item><title>Dataplex</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/dataplex/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/dataplex/</guid><description>&lt;h1 id="dataplex-source">Dataplex Source&lt;/h1>
+names, or other parts of the query.&lt;/p></description></item><item><title>dataform-compile-local</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/dataform/dataform-compile-local/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/dataform/dataform-compile-local/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>dataform-compile-local&lt;/code> tool runs the &lt;code>dataform compile&lt;/code> command on a local Dataform project.&lt;/p>
+&lt;p>It is a standalone tool and &lt;strong>is not&lt;/strong> compatible with any sources.&lt;/p>
+&lt;p>At invocation time, the tool executes &lt;code>dataform compile --json&lt;/code> in the specified project directory and returns the resulting JSON object from the CLI.&lt;/p>
+&lt;p>&lt;code>dataform-compile-local&lt;/code> takes the following parameter:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>project_dir&lt;/code> (string): The absolute or relative path to the local Dataform project directory. The server process must have read access to this path.&lt;/li>
+&lt;/ul>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="dataform-cli">Dataform CLI&lt;/h3>
+&lt;p>This tool executes the &lt;code>dataform&lt;/code> command-line interface (CLI) via a system call. You must have the &lt;strong>&lt;code>dataform&lt;/code> CLI&lt;/strong> installed and available in the server&amp;rsquo;s system &lt;code>PATH&lt;/code>.&lt;/p></description></item><item><title>Dataplex</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/dataplex/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/dataplex/</guid><description>&lt;h1 id="dataplex-source">Dataplex Source&lt;/h1>
 &lt;p>&lt;a href="https://cloud.google.com/dataplex/docs">Dataplex&lt;/a> Universal Catalog is a unified, intelligent governance
 solution for data and AI assets in Google Cloud. Dataplex Universal Catalog
 powers AI, analytics, and business intelligence at scale.&lt;/p>
@@ -1983,7 +1915,7 @@ applying artificial intelligence and machine learning.&lt;/p></description></ite
 &lt;p>A &lt;code>dataplex-lookup-entry&lt;/code> tool returns details of a particular entry in Dataplex
 Catalog. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/dataplex.md">dataplex&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/dataplex/">dataplex&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>dataplex-lookup-entry&lt;/code> takes a required &lt;code>name&lt;/code> parameter which contains the
 project and location to which the request should be attributed in the following
@@ -2095,12 +2027,12 @@ Run parameterized SQL statements in Firebird.&lt;/p>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-user">Database User&lt;/h3>
-&lt;p>This source uses standard authentication. You will need to &lt;a href="https://firebirdsql.org/refdocs/langrefupd25-sql-create-user.html">create a Firebird
+&lt;p>This source uses standard authentication. You will need to &lt;a href="https://www.firebirdsql.org/refdocs/langrefupd25-security-sql-user-mgmt.html#langrefupd25-security-create-user">create a Firebird
 user&lt;/a> to login to the database with.&lt;/p></description></item><item><title>firebird-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/firebird/firebird-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/firebird/firebird-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>firebird-execute-sql&lt;/code> tool executes a SQL statement against a Firebird
 database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/firebird.md">firebird&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/firebird/">firebird&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>firebird-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the sql
 statement against the &lt;code>source&lt;/code>.&lt;/p>
@@ -2147,7 +2079,7 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
 &lt;p>A &lt;code>firebird-sql&lt;/code> tool executes a pre-defined SQL statement against a Firebird
 database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/firebird.md">firebird&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/firebird/">firebird&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>The specified SQL statement is executed as a &lt;a href="https://firebirdsql.org/refdocs/langrefupd25-psql-execstat.html">prepared statement&lt;/a>,
 and supports both positional parameters (&lt;code>?&lt;/code>) and named parameters (&lt;code>:param_name&lt;/code>).
@@ -2403,7 +2335,7 @@ types. This tool is designed for querying single collection, which is the
 standard pattern in Firestore. The collection path itself can be parameterized,
 making it flexible for various use cases. This tool is particularly useful when
 you need to create reusable query templates with parameters that can be
-substituted at runtime.&lt;/p></description></item><item><title>firestore-query-collection</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/firestore/firestore-query-collection/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/firestore/firestore-query-collection/</guid><description>&lt;h1 id="about">About&lt;/h1>
+substituted at runtime.&lt;/p></description></item><item><title>firestore-query-collection</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/firestore/firestore-query-collection/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/firestore/firestore-query-collection/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>firestore-query-collection&lt;/code> tool allows you to query Firestore collections
 with filters, ordering, and limit capabilities.&lt;/p>
 &lt;h2 id="configuration">Configuration&lt;/h2>
@@ -2713,22 +2645,131 @@ Make HTTP requests to REST APIs or other web services.&lt;/li>
 tool that provides a semantic layer to facilitate querying. It can be deployed
 in the cloud, on GCP, or on premises.&lt;/p>
 &lt;h2 id="requirements">Requirements&lt;/h2>
-&lt;h3 id="database-user">Database User&lt;/h3>
+&lt;h3 id="looker-user">Looker User&lt;/h3>
 &lt;p>This source only uses API authentication. You will need to
 &lt;a href="https://cloud.google.com/looker/docs/api-auth#authentication_with_an_sdk">create an API user&lt;/a> to login to Looker.&lt;/p>
-&lt;h2 id="example">Example&lt;/h2>
-&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-looker-source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">base_url&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">http://looker.example.com&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">client_id&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${LOOKER_CLIENT_ID}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">client_secret&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${LOOKER_CLIENT_SECRET}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">verify_ssl&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">true&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">timeout&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">600s&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The Looker base url will look like &amp;ldquo;&lt;a href="https://looker.example.com">https://looker.example.com&lt;/a>&amp;rdquo;, don&amp;rsquo;t include
-a trailing &amp;ldquo;/&amp;rdquo;. In some cases, especially if your Looker is deployed
-on-premises, you may need to add the API port number like
-&amp;ldquo;&lt;a href="https://looker.example.com:19999">https://looker.example.com:19999&lt;/a>&amp;rdquo;.&lt;/p></description></item><item><title>looker-add-dashboard-element</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-add-dashboard-element/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-add-dashboard-element/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;style type="text/css">
+ 
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #6be;
+ --content-color: #444;
+ --content-background-color: #e7f2fa;
+ }
+
+ .notice.info {
+ --title-background-color: #fb7;
+ --content-background-color: #fec;
+ }
+
+ .notice.tip {
+ --title-background-color: #5a5;
+ --content-background-color: #efe;
+ }
+
+ .notice.warning {
+ --title-background-color: #c33;
+ --content-background-color: #fee;
+ }
+
+ 
+ @media (prefers-color-scheme:dark) {
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+ }
+
+ body.dark .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ body.dark .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ body.dark .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ body.dark .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+
+ 
+ .notice {
+ padding: 18px;
+ line-height: 24px;
+ margin-bottom: 24px;
+ border-radius: 4px;
+ color: var(--content-color);
+ background: var(--content-background-color);
+ }
+
+ .notice p:last-child {
+ margin-bottom: 0
+ }
+
+ 
+ .notice-title {
+ margin: -18px -18px 12px;
+ padding: 4px 18px;
+ border-radius: 4px 4px 0 0;
+ font-weight: 700;
+ color: var(--title-color);
+ background: var(--title-background-color);
+ }
+
+ 
+ .icon-notice {
+ display: inline-flex;
+ align-self: center;
+ margin-right: 8px;
+ }
+
+ .icon-notice img,
+ .icon-notice svg {
+ height: 1em;
+ width: 1em;
+ fill: currentColor;
+ }
+
+ .icon-notice img,
+ .icon-notice.baseline svg {
+ top: .125em;
+ position: relative;
+ }
+&lt;/style>&lt;div class="notice note" >
+ &lt;p class="notice-title">
+ &lt;span class="icon-notice baseline">
+ &lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 128 300 300">
+ &lt;path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/>
+&lt;/svg>
+
+ &lt;/span>Note&lt;/p></description></item><item><title>looker-add-dashboard-element</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-add-dashboard-element/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-add-dashboard-element/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>looker-add-dashboard-element&lt;/code> creates a dashboard element
 in the given dashboard.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
@@ -2789,6 +2830,205 @@ in the given dashboard.&lt;/p>
  &lt;td style="text-align: center">string&lt;/td>
  &lt;td style="text-align: center">true&lt;/td>
  &lt;td>Name of the source the SQL should execute on.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>looker-conversational-analytics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-conversational-analytics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-conversational-analytics/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>looker-conversational-analytics&lt;/code> tool allows you to ask questions about your Looker data.&lt;/p>
+&lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/looker/">looker&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>looker-conversational-analytics&lt;/code> accepts two parameters:&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>user_query_with_context&lt;/code>: The question asked of the Conversational Analytics system.&lt;/li>
+&lt;li>&lt;code>explore_references&lt;/code>: A list of one to five explores that can be queried to answer the
+question. The form of the entry is &lt;code>[{&amp;quot;model&amp;quot;: &amp;quot;model name&amp;quot;, &amp;quot;explore&amp;quot;: &amp;quot;explore name&amp;quot;}, ...]&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">ask_data_insights&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-conversational-analytics&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Use this tool to perform data analysis, get insights,
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> or answer complex questions about the contents of specific
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Looker explores.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;lookerca-conversational-analytics&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the source the SQL should execute on.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>looker-create-project-file</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-create-project-file/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-create-project-file/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>looker-create-project-file&lt;/code> tool creates a new LookML file in a project&lt;/p>
+&lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/looker/">looker&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>looker-create-project-file&lt;/code> accepts a project_id parameter and a file_path parameter
+as well as the file content.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">create_project_file&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-create-project-file&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> create_project_file Tool
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Given a project_id and a file path within the project, as well as the content
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> of a LookML file, this tool will create a new file within the project.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> This tool must be called after the dev_mode tool has changed the session to
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> dev mode.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;looker-create-project-file&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the source Looker instance.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>looker-delete-project-file</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-delete-project-file/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-delete-project-file/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>looker-delete-project-file&lt;/code> tool deletes a LookML file in a project&lt;/p>
+&lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/looker/">looker&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>looker-delete-project-file&lt;/code> accepts a project_id parameter and a file_path parameter.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">delete_project_file&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-delete-project-file&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> delete_project_file Tool
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Given a project_id and a file path within the project, this tool will delete
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> the file from the project.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> This tool must be called after the dev_mode tool has changed the session to
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> dev mode.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;looker-delete-project-file&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the source Looker instance.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>looker-dev-mode</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-dev-mode/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-dev-mode/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>looker-dev-mode&lt;/code> tool changes the session into and out of dev mode.&lt;/p>
+&lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/looker/">looker&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>looker-dev-mode&lt;/code> accepts a boolean parameter, true to enter dev mode and false to exit dev mode.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">dev_mode&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-dev-mode&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> dev_mode Tool
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Passing true to this tool switches the session to dev mode. Passing false to this tool switches the
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> session to production mode.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;looker-dev-mode&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the source Looker instance.&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td>description&lt;/td>
@@ -3111,7 +3351,372 @@ in a given model in the source.&lt;/p>
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> It takes two parameters, the model_name looked up from get_models and the
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> explore_name looked up from get_explores.&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>looker-make-dashboard</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-make-dashboard/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-make-dashboard/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>looker-get-project-file</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-get-project-file/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-get-project-file/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>looker-get-project-file&lt;/code> tool returns the contents of a LookML file.&lt;/p>
+&lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/looker/">looker&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>looker-get-project-file&lt;/code> accepts a project_id parameter and a file_path parameter.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_project_file&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-get-project-file&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> get_project_file Tool
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Given a project_id and a file path within the project, this tool returns
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> the contents of the LookML file.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;looker-get-project-file&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the source Looker instance.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>looker-get-project-files</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-get-project-files/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-get-project-files/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>looker-get-project-files&lt;/code> tool returns all the lookml files in a project in the source.&lt;/p>
+&lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/looker/">looker&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>looker-get-project-files&lt;/code> accepts a project_id parameter.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_project_files&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-get-project-files&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> get_project_files Tool
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Given a project_id this tool returns the details about
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> the LookML files that make up that project.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;looker-get-project-files&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the source Looker instance.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>looker-get-projects</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-get-projects/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-get-projects/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>looker-get-projects&lt;/code> tool returns all the projects in the source.&lt;/p>
+&lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/looker/">looker&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>looker-get-projects&lt;/code> accepts no parameters.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_projects&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-get-projects&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> get_projects Tool
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> This tool returns the project_id and project_name for
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> all the LookML projects on the looker instance.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;looker-get-projects&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the source Looker instance.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>looker-health-analyze</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-health-analyze/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-health-analyze/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>looker-health-analyze&lt;/code> tool performs various analysis tasks on a Looker instance. The &lt;code>action&lt;/code> parameter selects the type of analysis to perform:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>projects&lt;/code>: Analyzes all projects or a specified project, reporting on the number of models and view files, as well as Git connection and validation status.&lt;/li>
+&lt;li>&lt;code>models&lt;/code>: Analyzes all models or a specified model, providing a count of explores, unused explores, and total query counts.&lt;/li>
+&lt;li>&lt;code>explores&lt;/code>: Analyzes all explores or a specified explore, reporting on the number of joins, unused joins, fields, unused fields, and query counts. Being classified as &lt;strong>Unused&lt;/strong> is determined by whether a field has been used as a field or filter within the past 90 days in production.&lt;/li>
+&lt;/ul>
+&lt;h2 id="parameters">Parameters&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th style="text-align: left">&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: left">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: left">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th style="text-align: left">&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td style="text-align: left">kind&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">true&lt;/td>
+ &lt;td style="text-align: left">Must be &amp;ldquo;looker-health-analyze&amp;rdquo;&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">source&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">true&lt;/td>
+ &lt;td style="text-align: left">Looker source name&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">action&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">true&lt;/td>
+ &lt;td style="text-align: left">The analysis to perform: &lt;code>projects&lt;/code>, &lt;code>models&lt;/code>, or &lt;code>explores&lt;/code>.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">project&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">false&lt;/td>
+ &lt;td style="text-align: left">The name of the Looker project to analyze.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">model&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">false&lt;/td>
+ &lt;td style="text-align: left">The name of the Looker model to analyze. Required for &lt;code>explores&lt;/code> actions.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">explore&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">false&lt;/td>
+ &lt;td style="text-align: left">The name of the Looker explore to analyze. Required for the &lt;code>explores&lt;/code> action.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">timeframe&lt;/td>
+ &lt;td style="text-align: left">int&lt;/td>
+ &lt;td style="text-align: left">false&lt;/td>
+ &lt;td style="text-align: left">The timeframe in days to analyze. Defaults to 90.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">min_queries&lt;/td>
+ &lt;td style="text-align: left">int&lt;/td>
+ &lt;td style="text-align: left">false&lt;/td>
+ &lt;td style="text-align: left">The minimum number of queries for a model or explore to be considered used. Defaults to 1.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>Analyze all models in &lt;code>thelook&lt;/code> project.&lt;/p></description></item><item><title>looker-health-pulse</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-health-pulse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-health-pulse/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>looker-health-pulse&lt;/code> tool performs health checks on a Looker instance. The &lt;code>action&lt;/code> parameter selects the type of check to perform:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>check_db_connections&lt;/code>: Checks all database connections, runs supported tests, and reports query counts.&lt;/li>
+&lt;li>&lt;code>check_dashboard_performance&lt;/code>: Finds dashboards with slow running queries in the last 7 days.&lt;/li>
+&lt;li>&lt;code>check_dashboard_errors&lt;/code>: Lists dashboards with erroring queries in the last 7 days.&lt;/li>
+&lt;li>&lt;code>check_explore_performance&lt;/code>: Lists the slowest explores in the last 7 days and reports average query runtime.&lt;/li>
+&lt;li>&lt;code>check_schedule_failures&lt;/code>: Lists schedules that have failed in the last 7 days.&lt;/li>
+&lt;li>&lt;code>check_legacy_features&lt;/code>: Lists enabled legacy features. (&lt;em>To note, this function is not available in Looker Core. You will get an error running this command with a Core instance configured.&lt;/em>)&lt;/li>
+&lt;/ul>
+&lt;h2 id="parameters">Parameters&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;looker-health-pulse&amp;rdquo;&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Looker source name&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>action&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The health check to perform&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">pulse&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-health-pulse&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Pulse Tool
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Performs health checks on Looker instance.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Specify the `action` parameter to select the check.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">parameters&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">action&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">check_dashboard_performance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>action&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>check_db_connections&lt;/td>
+ &lt;td>Checks all database connections and reports query counts and errors&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>check_dashboard_performance&lt;/td>
+ &lt;td>Finds dashboards with slow queries (&amp;gt;30s) in the last 7 days&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>check_dashboard_errors&lt;/td>
+ &lt;td>Lists dashboards with erroring queries in the last 7 days&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>check_explore_performance&lt;/td>
+ &lt;td>Lists slowest explores and average query runtime&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>check_schedule_failures&lt;/td>
+ &lt;td>Lists failed schedules in the last 7 days&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>check_legacy_features&lt;/td>
+ &lt;td>Lists enabled legacy features&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>looker-health-vacuum</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-health-vacuum/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-health-vacuum/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>looker-health-vacuum&lt;/code> tool helps you identify unused LookML objects such as models, explores, joins, and fields. The &lt;code>action&lt;/code> parameter selects the type of vacuum to perform:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>models&lt;/code>: Identifies unused explores within a model.&lt;/li>
+&lt;li>&lt;code>explores&lt;/code>: Identifies unused joins and fields within an explore.&lt;/li>
+&lt;/ul>
+&lt;h2 id="parameters">Parameters&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th style="text-align: left">&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: left">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: left">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th style="text-align: left">&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td style="text-align: left">kind&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">true&lt;/td>
+ &lt;td style="text-align: left">Must be &amp;ldquo;looker-health-vacuum&amp;rdquo;&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">source&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">true&lt;/td>
+ &lt;td style="text-align: left">Looker source name&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">action&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">true&lt;/td>
+ &lt;td style="text-align: left">The vacuum to perform: &lt;code>models&lt;/code>, or &lt;code>explores&lt;/code>.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">project&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">false&lt;/td>
+ &lt;td style="text-align: left">The name of the Looker project to vacuum.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">model&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">false&lt;/td>
+ &lt;td style="text-align: left">The name of the Looker model to vacuum.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">explore&lt;/td>
+ &lt;td style="text-align: left">string&lt;/td>
+ &lt;td style="text-align: left">false&lt;/td>
+ &lt;td style="text-align: left">The name of the Looker explore to vacuum.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">timeframe&lt;/td>
+ &lt;td style="text-align: left">int&lt;/td>
+ &lt;td style="text-align: left">false&lt;/td>
+ &lt;td style="text-align: left">The timeframe in days to analyze for usage. Defaults to 90.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">min_queries&lt;/td>
+ &lt;td style="text-align: left">int&lt;/td>
+ &lt;td style="text-align: left">false&lt;/td>
+ &lt;td style="text-align: left">The minimum number of queries for an object to be considered used. Defaults to 1.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;p>Identify unnused fields (&lt;em>in this case, less than 1 query in the last 20 days&lt;/em>) and joins in the &lt;code>order_items&lt;/code> explore and &lt;code>thelook&lt;/code> model&lt;/p></description></item><item><title>looker-make-dashboard</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-make-dashboard/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-make-dashboard/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>looker-make-dashboard&lt;/code> creates a dashboard in the user&amp;rsquo;s
 Looker personal folder.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
@@ -3829,6 +4434,57 @@ saved Look.&lt;/p>
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
+&lt;/table></description></item><item><title>looker-update-project-file</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-update-project-file/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/looker/looker-update-project-file/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>looker-update-project-file&lt;/code> tool updates the content of a LookML file.&lt;/p>
+&lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/looker/">looker&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>looker-update-project-file&lt;/code> accepts a project_id parameter and a file_path parameter
+as well as the new file content.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">update_project_file&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-update-project-file&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> update_project_file Tool
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Given a project_id and a file path within the project, as well as the content
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> of a LookML file, this tool will modify the file within the project.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> This tool must be called after the dev_mode tool has changed the session to
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> dev mode.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;looker-update-project-file&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the source Looker instance.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
 &lt;/table></description></item><item><title>MongoDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/mongodb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/mongodb/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://www.mongodb.com/docs/atlas/getting-started/">MongoDB&lt;/a> is a popular NoSQL database that stores data in
 flexible, JSON-like documents, making it easy to develop and scale applications.&lt;/p>
@@ -4291,7 +4947,7 @@ MySQL-compatible user management syntax.&lt;/p></description></item><item><title
 &lt;p>An &lt;code>oceanbase-execute-sql&lt;/code> tool executes a SQL statement against an OceanBase
 database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/oceanbase.md">oceanbase&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/oceanbase/">oceanbase&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>oceanbase-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the sql
 statement against the &lt;code>source&lt;/code>.&lt;/p>
@@ -4338,11 +4994,57 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
 &lt;p>An &lt;code>oceanbase-sql&lt;/code> tool executes a pre-defined SQL statement against an
 OceanBase database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/oceanbase.md">oceanbase&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/oceanbase/">oceanbase&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>The specified SQL statement is executed as a &lt;a href="https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html">prepared
 statement&lt;/a>, and expects parameters in the SQL query to be in the
 form of placeholders &lt;code>?&lt;/code>.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
+Query parameters can be used as substitutes for arbitrary expressions.
+Parameters cannot be used as substitutes for identifiers, column names, table
+names, or other parts of the query.&lt;/p></description></item><item><title>Oracle</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/oracle/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/oracle/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://www.oracle.com/database/">Oracle Database&lt;/a> is a multi-model database management system produced and marketed by Oracle Corporation. It is commonly used for running online transaction processing (OLTP), data warehousing (DW), and mixed (OLTP &amp;amp; DW) database workloads.&lt;/p>
+&lt;h2 id="available-tools">Available Tools&lt;/h2>
+&lt;ul>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/oracle/oracle-sql/">&lt;code>oracle-sql&lt;/code>&lt;/a>
+Execute pre-defined prepared SQL queries in Oracle.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/oracle/oracle-execute-sql/">&lt;code>oracle-execute-sql&lt;/code>&lt;/a>
+Run parameterized SQL queries in Oracle.&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="database-user">Database User&lt;/h3>
+&lt;p>This source uses standard authentication. You will need to &lt;a href="https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/CREATE-USER.html">create an Oracle user&lt;/a> to log in to the database with the necessary permissions.&lt;/p></description></item><item><title>oracle-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/oracle/oracle-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/oracle/oracle-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>An &lt;code>oracle-execute-sql&lt;/code> tool executes a SQL statement against an Oracle
+database. It&amp;rsquo;s compatible with the following source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/oracle/">oracle&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>oracle-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the sql
+statement against the &lt;code>source&lt;/code>.&lt;/p>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool is intended for developer assistant workflows with
+human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&lt;/blockquote>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">execute_sql_tool&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">oracle-execute-sql&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-oracle-instance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to execute sql statement.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div></description></item><item><title>oracle-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/oracle/oracle-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/oracle/oracle-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>An &lt;code>oracle-sql&lt;/code> tool executes a pre-defined SQL statement against an
+Oracle database. It&amp;rsquo;s compatible with the following source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/oracle/">oracle&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>The specified SQL statement is executed using &lt;a href="https://docs.oracle.com/javase/tutorial/jdbc/basics/prepared.html">prepared statements&lt;/a>
+for security and performance. It expects parameter placeholders in the SQL query
+to be in the native Oracle format (e.g., &lt;code>:1&lt;/code>, &lt;code>:2&lt;/code>).&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;blockquote>
 &lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
@@ -4532,12 +5234,12 @@ following sources:&lt;/p>
 &lt;/ul>
 &lt;p>&lt;code>postgres-list-tables&lt;/code> lists detailed schema information (object type, columns,
 constraints, indexes, triggers, owner, comment) as JSON for user-created tables
-(ordinary or partitioned). The tool takes the following input parameters:
-* &lt;code>table_names&lt;/code> (optional): Filters by a comma-separated list of names. By
-default, it lists all tables in user schemas.
-* &lt;code>output_format&lt;/code> (optional): Indicate the output format of table schema.
-&lt;code>simple&lt;/code> will return only the table names, &lt;code>detailed&lt;/code> will return the full
-table information. Default: &lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/postgres/postgres-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/postgres/postgres-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+(ordinary or partitioned). The tool takes the following input parameters: *
+&lt;code>table_names&lt;/code> (optional): Filters by a comma-separated list of names. By
+default, it lists all tables in user schemas.* &lt;code>output_format&lt;/code> (optional):
+Indicate the output format of table schema. &lt;code>simple&lt;/code> will return only the
+table names, &lt;code>detailed&lt;/code> will return the full table information. Default:
+&lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/postgres/postgres-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/postgres/postgres-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>postgres-sql&lt;/code> tool executes a pre-defined SQL statement against a Postgres
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
@@ -4671,6 +5373,8 @@ PromQL query.&lt;/li>
 &lt;ul>
 &lt;li>&lt;code>BIGQUERY_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
 &lt;li>&lt;code>BIGQUERY_LOCATION&lt;/code>: (Optional) The dataset location.&lt;/li>
+&lt;li>&lt;code>BIGQUERY_USE_CLIENT_OAUTH&lt;/code>: (Optional) If &lt;code>true&lt;/code>, forwards the client&amp;rsquo;s
+OAuth access token for authentication. Defaults to &lt;code>false&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -4734,6 +5438,10 @@ execute queries.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Provides information about how MySQL executes a SQL
 statement.&lt;/li>
+&lt;li>&lt;code>list_active_queries&lt;/code>: Lists ongoing queries.&lt;/li>
+&lt;li>&lt;code>list_tables_missing_unique_indexes&lt;/code>: Looks for tables that do not have
+primary or unique key contraint.&lt;/li>
+&lt;li>&lt;code>list_table_fragmentation&lt;/code>: Displays table fragmentation in MySQL.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -5058,6 +5766,10 @@ and validation errors.&lt;/li>
 &lt;li>&lt;code>LOOKER_CLIENT_ID&lt;/code>: The client ID for the Looker API.&lt;/li>
 &lt;li>&lt;code>LOOKER_CLIENT_SECRET&lt;/code>: The client secret for the Looker API.&lt;/li>
 &lt;li>&lt;code>LOOKER_VERIFY_SSL&lt;/code>: Whether to verify SSL certificates.&lt;/li>
+&lt;li>&lt;code>LOOKER_USE_CLIENT_OAUTH&lt;/code>: Whether to use OAuth for authentication.&lt;/li>
+&lt;li>&lt;code>LOOKER_SHOW_HIDDEN_MODELS&lt;/code>: Whether to show hidden models.&lt;/li>
+&lt;li>&lt;code>LOOKER_SHOW_HIDDEN_EXPLORES&lt;/code>: Whether to show hidden explores.&lt;/li>
+&lt;li>&lt;code>LOOKER_SHOW_HIDDEN_FIELDS&lt;/code>: Whether to show hidden fields.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>&lt;strong>Permissions:&lt;/strong>
@@ -5083,6 +5795,44 @@ explores, and data is required.&lt;/li>
 &lt;li>&lt;code>get_dashboards&lt;/code>: Searches for saved dashboards.&lt;/li>
 &lt;li>&lt;code>make_dashboard&lt;/code>: Creates a new dashboard.&lt;/li>
 &lt;li>&lt;code>add_dashboard_element&lt;/code>: Adds a tile to a dashboard.&lt;/li>
+&lt;li>&lt;code>health_pulse&lt;/code>: Test the health of a Looker instance.&lt;/li>
+&lt;li>&lt;code>health_analyze&lt;/code>: Analyze the LookML usage of a Looker instance.&lt;/li>
+&lt;li>&lt;code>health_vacuum&lt;/code>: Suggest LookML elements that can be removed.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="looker-conversational-analytics">Looker Conversational Analytics&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>looker-conversational-analytics&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>LOOKER_BASE_URL&lt;/code>: The URL of your Looker instance.&lt;/li>
+&lt;li>&lt;code>LOOKER_CLIENT_ID&lt;/code>: The client ID for the Looker API.&lt;/li>
+&lt;li>&lt;code>LOOKER_CLIENT_SECRET&lt;/code>: The client secret for the Looker API.&lt;/li>
+&lt;li>&lt;code>LOOKER_VERIFY_SSL&lt;/code>: Whether to verify SSL certificates.&lt;/li>
+&lt;li>&lt;code>LOOKER_USE_CLIENT_OAUTH&lt;/code>: Whether to use OAuth for authentication.&lt;/li>
+&lt;li>&lt;code>LOOKER_PROJECT&lt;/code>: The GCP Project to use for Conversational Analytics.&lt;/li>
+&lt;li>&lt;code>LOOKER_LOCATION&lt;/code>: The GCP Location to use for Conversational Analytics.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>A Looker account with permissions to access the desired models,
+explores, and data is required.&lt;/li>
+&lt;li>&lt;strong>Looker Instance User&lt;/strong> (&lt;code>roles/looker.instanceUser&lt;/code>): IAM role to
+access Looker.&lt;/li>
+&lt;li>&lt;strong>Gemini for Google Cloud User&lt;/strong> (&lt;code>roles/cloudaicompanion.user&lt;/code>): IAM
+role to access Conversational Analytics.&lt;/li>
+&lt;li>&lt;strong>Gemini Data Analytics Stateless Chat User (Beta)&lt;/strong>
+(&lt;code>roles/geminidataanalytics.dataAgentStatelessUser&lt;/code>): IAM role to
+access Conversational Analytics.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>ask_data_insights&lt;/code>: Ask a question of the data.&lt;/li>
+&lt;li>&lt;code>get_models&lt;/code>: Retrieves the list of LookML models.&lt;/li>
+&lt;li>&lt;code>get_explores&lt;/code>: Retrieves the list of explores in a model.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -5135,6 +5885,10 @@ execute queries.&lt;/li>
 &lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Provides information about how MySQL executes a SQL
 statement.&lt;/li>
+&lt;li>&lt;code>list_active_queries&lt;/code>: Lists ongoing queries.&lt;/li>
+&lt;li>&lt;code>list_tables_missing_unique_indexes&lt;/code>: Looks for tables that do not have
+primary or unique key contraint.&lt;/li>
+&lt;li>&lt;code>list_table_fragmentation&lt;/code>: Displays table fragmentation in MySQL.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -5195,6 +5949,29 @@ database.&lt;/li>
 &lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
 &lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="google-cloud-serverless-for-apache-spark">Google Cloud Serverless for Apache Spark&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>serverless-spark&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>SERVERLESS_SPARK_PROJECT&lt;/code>: The GCP project ID&lt;/li>
+&lt;li>&lt;code>SERVERLESS_SPARK_LOCATION&lt;/code>: The GCP Location.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Dataproc Serverless Viewer&lt;/strong> (&lt;code>roles/dataproc.serverlessViewer&lt;/code>) to
+view serverless batches.&lt;/li>
+&lt;li>&lt;strong>Dataproc Serverless Editor&lt;/strong> (&lt;code>roles/dataproc.serverlessEditor&lt;/code>) to
+view serverless batches.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>list_batches&lt;/code>: Lists Spark batches.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -5356,7 +6133,7 @@ cache, and message broker. It supports data structures such as strings, hashes,
 lists, sets, sorted sets with range queries, bitmaps, hyperloglogs, and
 geospatial indexes with radius queries.&lt;/p>
 &lt;p>If you are new to Redis, you can find installation and getting started guides on
-the &lt;a href="https://redis.io/docs/getting-started/">official Redis website&lt;/a>.&lt;/p>
+the &lt;a href="https://redis.io/docs/">official Redis website&lt;/a>.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/redis/redis/">&lt;code>redis&lt;/code>&lt;/a>&lt;br>
@@ -5366,7 +6143,73 @@ Run Redis commands and interact with key-value pairs.&lt;/li>
 &lt;h3 id="redis">Redis&lt;/h3>
 &lt;p>&lt;a href="https://cloud.google.com/memorystore/docs/redis/about-redis-auth">AUTH string&lt;/a> is a password for connection to Redis. If you have the
 &lt;code>requirepass&lt;/code> directive set in your Redis configuration, incoming client
-connections must authenticate in order to connect.&lt;/p></description></item><item><title>Spanner</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/spanner/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/spanner/</guid><description>&lt;h1 id="spanner-source">Spanner Source&lt;/h1>
+connections must authenticate in order to connect.&lt;/p></description></item><item><title>Serverless for Apache Spark</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/serverless-spark/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/serverless-spark/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;a href="https://cloud.google.com/dataproc-serverless/docs/overview">Serverless for Apache
+Spark&lt;/a> source allows
+Toolbox to interact with Spark batches hosted on Google Cloud Serverless for
+Apache Spark.&lt;/p>
+&lt;h2 id="available-tools">Available Tools&lt;/h2>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/serverless-spark/serverless-spark-list-batches/">&lt;code>serverless-spark-list-batches&lt;/code>&lt;/a>
+List and filter Serverless Spark batches.&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/serverless-spark/serverless-spark-get-batch/">&lt;code>serverless-spark-get-batch&lt;/code>&lt;/a>
+Get a Serverless Spark batch.&lt;/li>
+&lt;/ul>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
+&lt;p>Serverless for Apache Spark uses &lt;a href="https://cloud.google.com/bigquery/docs/access-control">Identity and Access Management
+(IAM)&lt;/a> to control user
+and group access to serverless Spark resources like batches and sessions.&lt;/p>
+&lt;p>Toolbox will use your &lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials
+(ADC)&lt;/a> to authorize and
+authenticate when interacting with Google Cloud Serverless for Apache Spark.
+When using this method, you need to ensure the IAM identity associated with your
+ADC has the correct
+&lt;a href="https://cloud.google.com/dataproc-serverless/docs/concepts/iam">permissions&lt;/a>
+for the actions you intend to perform. Common roles include
+&lt;code>roles/dataproc.serverlessEditor&lt;/code> (which includes permissions to run batches) or
+&lt;code>roles/dataproc.serverlessViewer&lt;/code>. Follow this
+&lt;a href="https://cloud.google.com/docs/authentication/provide-credentials-adc">guide&lt;/a> to
+set up your ADC.&lt;/p></description></item><item><title>serverless-spark-get-batch</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/serverless-spark/serverless-spark-get-batch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/serverless-spark/serverless-spark-get-batch/</guid><description>&lt;h1 id="serverless-spark-get-batch">serverless-spark-get-batch&lt;/h1>
+&lt;p>The &lt;code>serverless-spark-get-batch&lt;/code> tool allows you to retrieve a specific
+Serverless Spark batch job. It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/serverless-spark/">serverless-spark&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>serverless-spark-list-batches&lt;/code> accepts the following parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>name&lt;/code>&lt;/strong>: The short name of the batch, e.g. for
+&lt;code>projects/my-project/locations/us-central1/my-batch&lt;/code>, pass &lt;code>my-batch&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;p>The tool gets the &lt;code>project&lt;/code> and &lt;code>location&lt;/code> from the source configuration.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_my_batch&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">serverless-spark-get-batch&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-serverless-spark-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to get a serverless spark batch.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="response-format">Response Format&lt;/h2>
+&lt;p>The response is a full Batch JSON object as defined in the &lt;a href="https://cloud.google.com/dataproc-serverless/docs/reference/rest/v1/projects.locations.batches#Batch">API
+spec&lt;/a>.
+Example with a reduced set of fields:&lt;/p></description></item><item><title>serverless-spark-list-batches</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/serverless-spark/serverless-spark-list-batches/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/serverless-spark/serverless-spark-list-batches/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>serverless-spark-list-batches&lt;/code> tool returns a list of Spark batches from a
+Google Cloud Serverless for Apache Spark source. It&amp;rsquo;s compatible with the
+following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/serverless-spark/">serverless-spark&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>serverless-spark-list-batches&lt;/code> accepts the following parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>filter&lt;/code>&lt;/strong> (optional): A filter expression to limit the batches returned.
+Filters are case sensitive and may contain multiple clauses combined with
+logical operators (AND/OR). Supported fields are &lt;code>batch_id&lt;/code>, &lt;code>batch_uuid&lt;/code>,
+&lt;code>state&lt;/code>, &lt;code>create_time&lt;/code>, and &lt;code>labels&lt;/code>. For example: &lt;code>state = RUNNING AND create_time &amp;lt; &amp;quot;2023-01-01T00:00:00Z&amp;quot;&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>&lt;code>pageSize&lt;/code>&lt;/strong> (optional): The maximum number of batches to return in a single
+page.&lt;/li>
+&lt;li>&lt;strong>&lt;code>pageToken&lt;/code>&lt;/strong> (optional): A page token, received from a previous call, to
+retrieve the next page of results.&lt;/li>
+&lt;/ul>
+&lt;p>The tool gets the &lt;code>project&lt;/code> and &lt;code>location&lt;/code> from the source configuration.&lt;/p></description></item><item><title>Spanner</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/spanner/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/spanner/</guid><description>&lt;h1 id="spanner-source">Spanner Source&lt;/h1>
 &lt;p>&lt;a href="https://cloud.google.com/spanner/docs">Spanner&lt;/a> is a fully managed, mission-critical database service
 that brings together relational, graph, key-value, and search. It offers
 transactional consistency at global scale, automatic, synchronous replication
@@ -5566,7 +6409,7 @@ console.&lt;/p>
 &lt;p>A &lt;code>tidb-execute-sql&lt;/code> tool executes a SQL statement against a TiDB
 database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/tidb.md">tidb&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/tidb/">tidb&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>tidb-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and run the sql
 statement against the &lt;code>source&lt;/code>.&lt;/p>
@@ -5613,7 +6456,7 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
 &lt;p>A &lt;code>tidb-sql&lt;/code> tool executes a pre-defined SQL statement against a TiDB
 database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/tidb.md">tidb&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/sources/tidb/">tidb&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>The specified SQL statement is executed as a &lt;a href="https://docs.pingcap.com/tidb/stable/sql-prepared-plan-cache">prepared statement&lt;/a>,
 and expects parameters in the SQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
@@ -5939,7 +6782,7 @@ compatibility.&lt;/p>
  &lt;td>Time (in seconds) to wait before trying to connect to failed nodes. The default value of is 5.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>yugabytedb-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/yugabytedb-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/yugabytedb-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>yugabytedb-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/yuagbytedb/yugabytedb-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/resources/tools/yuagbytedb/yugabytedb-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>yugabytedb-sql&lt;/code> tool executes a pre-defined SQL statement against a YugabyteDB
 database.&lt;/p>
 &lt;p>The specified SQL statement is executed as a prepared statement,
@@ -5954,8 +6797,8 @@ Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
 names, or other parts of the query.&lt;/p></description></item><item><title>AlloyDB Admin API using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/how-to/connect-ide/alloydb_pg_admin_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/how-to/connect-ide/alloydb_pg_admin_mcp/</guid><description>&lt;html>
  &lt;head>
- &lt;link rel="canonical" href="https://cloud.google.com/alloydb/docs/create-database-with-mcp-toolbox"/>
- &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/create-database-with-mcp-toolbox"/>
+ &lt;link rel="canonical" href="https://cloud.google.com/alloydb/docs/quickstart/create-and-connect"/>
+ &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/quickstart/create-and-connect"/>
  &lt;/head>
 &lt;/html></description></item><item><title>AlloyDB using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1588/how-to/connect-ide/alloydb_pg_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1588/how-to/connect-ide/alloydb_pg_mcp/</guid><description>&lt;html>
  &lt;head>
