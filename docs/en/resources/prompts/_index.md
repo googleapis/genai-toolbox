@@ -24,28 +24,28 @@ prompts:
 
 ## Prompt Schema
 
-| Field | Type | Description | Required |
+| Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `description` | String | A brief explanation of what the prompt does. | No |
-| `kind` | String | The kind of prompt. Defaults to `"custom"`. | No |
-| `messages` | []Message | A list of one or more message objects that make up the prompt's content. | Yes |
-| `arguments` | []Argument | A list of arguments that can be interpolated into the prompt's content.| No |
+| description | String | No | A brief explanation of what the prompt does. |
+| kind | String | No | The kind of prompt. Defaults to `"custom"`. |
+| messages | []Message | Yes | A list of one or more message objects that make up the prompt's content. |
+| arguments | []Argument | No | A list of arguments that can be interpolated into the prompt's content.|
 
 ## Message Schema
 
-| Field | Type | Description | Required |
+| Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `role` | String | The role of the sender. Can be `"user"` or `"assistant"`. Defaults to `"user"`. | No |
-| `content` | String | The text of the message. You can include placeholders for arguments using `{{.argument_name}}` syntax. | Yes |
+| role | String | No | The role of the sender. Can be `"user"` or `"assistant"`. Defaults to `"user"`. |
+| content | String | Yes | The text of the message. You can include placeholders for arguments using `{{.argument_name}}` syntax. |
 
 ## Argument Schema
 
-| Field | Type | Description | Required |
+| Field | Type | Required | Description |
 | --- | --- | --- | --- |
-| `name` | String | The name of the argument. | Yes |
-| `description` | String | A short description of the argument. | No |
-| `type` | String | The data type of the argument ( `string`, `int`, `float` or `boolean`). Defaults to `string`. | No |
-| `required` | Boolean | Whether the argument must be provided. Defaults to `true`. | No |
+| name | String | Yes | The name of the argument. |
+| description | String | No | A short description of the argument. |
+| type | String | No | The data type of the argument ( `string`, `int`, `float` or `boolean`). Defaults to `string`. |
+| required | Boolean | No | Whether the argument must be provided. Defaults to `true`. |
 
 ## Usage with Gemini CLI
 
