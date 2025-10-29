@@ -79,7 +79,7 @@ tools:
     source: healthcare-source
   retrieve_rendered_dicom_instance:
     kind: retrieve-rendered-dicom-instance
-    description: Use this tool to retrieve a base64 encoding of a rendered DICOM instance from a DICOM store in PNG format
+    description: Use this tool to retrieve a base64 encoding of a rendered DICOM instance from a DICOM store in JPEG format
     source: healthcare-source
 
 toolsets:

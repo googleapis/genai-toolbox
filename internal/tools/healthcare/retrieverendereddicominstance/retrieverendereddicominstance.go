@@ -179,7 +179,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	name := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/dicomStores/%s", t.Project, t.Region, t.Dataset, storeID)
 	dicomWebPath := fmt.Sprintf("studies/%s/series/%s/instances/%s/frames/%d/rendered", study, series, sop, frame)
 	call := svc.Projects.Locations.Datasets.DicomStores.Studies.Series.Instances.Frames.RetrieveRendered(name, dicomWebPath)
-	call.Header().Set("Accept", "image/png")
+	call.Header().Set("Accept", "image/jpeg")
 	resp, err := call.Do()
 	if err != nil {
 		return nil, fmt.Errorf("unable to retrieve dicom instance rendered image: %w", err)

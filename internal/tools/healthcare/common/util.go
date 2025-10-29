@@ -82,7 +82,7 @@ func ParseDICOMSearchParameters(params tools.ParamValues, paramKeys []string) ([
 			if _, ok := v.(string); !ok {
 				return nil, fmt.Errorf("invalid '%s' parameter; expected a string", k)
 			}
-			if v.(string) == "" {
+			if v.(string) != "" {
 				opts = append(opts, googleapi.QueryParameter(k, v.(string)))
 			}
 		}
