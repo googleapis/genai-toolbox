@@ -29,7 +29,7 @@ prompts:
 | --- | --- | --- | --- |
 | `description` | String | A brief explanation of what the prompt does. | No |
 | `kind` | String | The kind of prompt. Defaults to `"custom"`. | No |
-| `messages` | List | A list of one or more message objects that make up the prompt's content. | Yes |
+| `messages` | []Message | A list of one or more message objects that make up the prompt's content. | Yes |
 | `arguments` | List | A list of arguments that can be interpolated into the prompt's content.| No |
 
 ## Message Schema
