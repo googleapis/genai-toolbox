@@ -106,3 +106,5 @@ prompts:
       - role: "assistant"
         content: "Okay, I understand. I am ready. What happens next?"
 ```
+
+## Kinds of prompts
