@@ -34,7 +34,8 @@ steps:
         path: "/gopath"
     script: |
       go test -c -race -cover \
-        -coverpkg=./internal/sources/...,./internal/tools/... ./tests/...
+      -coverpkg=./internal/sources/...,./internal/tools/... \
+      $(go list ./tests/... | grep -v '/tests/prompts')
       chmod +x .ci/test_with_coverage.sh
 
   - id: "compile-prompt-test-binary"
