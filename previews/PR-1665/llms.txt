@@ -82,7 +82,6 @@ List of reference documentation for resources in Toolbox.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1665/resources/sources/valkey/): Valkey is an open-source, in-memory data structure store, forked from Redis.
   - [YugabyteDB](https://googleapis.github.io/genai-toolbox/previews/PR-1665/resources/sources/yugabytedb/): YugabyteDB is a high-performance, distributed SQL database. 
   - [AlloyDB Admin](https://googleapis.github.io/genai-toolbox/previews/PR-1665/resources/sources/alloydb-admin/): The "alloydb-admin" source provides a client for the AlloyDB API.
-- [Prompts](https://googleapis.github.io/genai-toolbox/previews/PR-1665/resources/prompts/): Prompts allow servers to provide structured messages and instructions for interacting with language models.
 - [Tools](https://googleapis.github.io/genai-toolbox/previews/PR-1665/resources/tools/): Tools define actions an agent can take -- such as reading and writing to a source.
   - [AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/previews/PR-1665/resources/tools/alloydbainl/): AlloyDB AI NL Tool.
   - [AlloyDB for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-1665/resources/tools/alloydb/): Tools for AlloyDB for PostgreSQL.
@@ -116,6 +115,7 @@ List of reference documentation for resources in Toolbox.
   - [Utility tools](https://googleapis.github.io/genai-toolbox/previews/PR-1665/resources/tools/utility/): Tools that provide utility.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1665/resources/tools/valkey/): Tools that work with Valkey Sources.
   - [YugabyteDB](https://googleapis.github.io/genai-toolbox/previews/PR-1665/resources/tools/yuagbytedb/): Tools that work with Valkey Sources.
+- [Prompts](https://googleapis.github.io/genai-toolbox/previews/PR-1665/resources/prompts/): Prompts allow servers to provide structured messages and instructions for interacting with language models.
 
 ### Samples
 
