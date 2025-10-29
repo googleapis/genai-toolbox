@@ -151,53 +151,39 @@ go test -race -v ./cmd/... ./internal/...
 
    Be sure to set the timeout to a reasonable value for your tests.
    
-### Link Checks 
+## How to Fix Failing Link Checks
 
-We use **[lychee]((https://github.com/lycheeverse/lychee-action)** to quickly check all links in our repository.
+We use **[lychee](https://github.com/lycheeverse/lychee-action)** to quickly check all links in our repository.
 
-####  Usage
+### Primary Fix: Update the Link
+* The first and best step is always to fix the broken link or update the content where it is used.
 
-1.  **Install:**
-    ```sh
-    # Choose one:
-    brew install lychee   # macOS
-    snap install lychee   # Ubuntu
-    cargo install lychee  # All Platforms
-    ```
+### Secondary Fix: Ignoring Links
+* If you cannot fix the link (e.g., due to an external service's rate-limit or if it's a local-only URL), you can tell `lychee` to ignore it.
 
-2.  **Run Check:**
-    ```sh
-    # Check all files recursively
-    lychee .
-    ```
+* To do this, create a file named `.lycheeignore` in the root of your repository.
 
-3.  **CI/Quiet Check (Recommended):**
-    ```sh
-    # Use -q for quiet output, --no-progress for CI, --offline for local links only
-    lychee -q --no-progress . 
-    
-    # Or to skip rate limits on GitHub links:
-    GITHUB_TOKEN=xxxx lychee .
-    ```
+* List regular expressions or direct links, with one entry per line, that should be skipped.
 
-###  Ignoring Links
 
-To permanently skip certain links from checking, create a file named **`.lycheeignore`** in the root of the repository.
+### When to Ignore a Link
+* External Flakes/Rate-Limits: Use .lycheeignore to skip checking links that frequently fail due to external service issues like rate-limiting.
+* Local-Only URLs: Skip URLs that are only meant to work in a specific local environment.
 
-* This file lists **regular expressions or direct links** (one per line) for links that should be **ignored**.
+###  Best Practice for Ignoring
 
+* To permanently skip certain links from checking,include that links in  **`.lycheeignore`** .
+
+* Always add a comment in `.lycheeignore` explaining why the link is being skipped. This prevents link rot and helps future maintainers.
+
+**Example** `.lycheeignore`
 ```text
 # Example .lycheeignore content:
 ^mailto:.*
 ^https://example\.com/temp-link.*
 https://www.sql.com/downloads/
 ```
-####  Why and When to Ignore
 
-* **Action for Broken Link:** **First step is always to fix the link** or update the content.
-* **Exception 1:** Use `.lycheeignore` for **External Flakes/Rate-Limits**.
-* **Exception 2:** Use `.lycheeignore` for **Local-Only URLs**.
-* **Best Practice:** **Always add a comment** in `.lycheeignore` explaining *why* the link is skipped to prevent link rot.
 
 
 #### Running on Pull Requests
