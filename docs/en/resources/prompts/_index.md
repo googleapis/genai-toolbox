@@ -20,7 +20,6 @@ prompts:
       content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
   arguments:
     - name: "code"
-      type: string
       description: "The code to review"
 ```
 
