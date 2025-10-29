@@ -9,7 +9,7 @@ description: >
 A `prompt` represents a reusable prompt template that can be retrieved and used
 by MCP clients.
 
-A Prompt is essentially a template for a message or a series of messages that can be sent to a Large Language Model (LLM). The Toolbox server implements the `prompts/list` and `prompts/get methods` from the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/docs/getting-started/intro) specification, allowing clients to discover and retrieve these prompts.
+A Prompt is essentially a template for a message or a series of messages that can be sent to a Large Language Model (LLM). The Toolbox server implements the `prompts/list` and `prompts/get` methods from the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/docs/getting-started/intro) specification, allowing clients to discover and retrieve these prompts.
 
 ```yaml
 code_review:
