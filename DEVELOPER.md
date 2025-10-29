@@ -153,7 +153,7 @@ go test -race -v ./cmd/... ./internal/...
    
 ### Link Checks 
 
-We use **lychee** to quickly check all links in our repository.
+We use **[lychee]((https://github.com/lycheeverse/lychee-action)** to quickly check all links in our repository.
 
 ####  Usage
 
@@ -192,6 +192,13 @@ To permanently skip certain links from checking, create a file named **`.lycheei
 ^https://example\.com/temp-link.*
 https://www.sql.com/downloads/
 ```
+####  Why and When to Ignore
+
+* **Action for Broken Link:** **First step is always to fix the link** or update the content.
+* **Exception 1:** Use `.lycheeignore` for **External Flakes/Rate-Limits**.
+* **Exception 2:** Use `.lycheeignore` for **Local-Only URLs**.
+* **Best Practice:** **Always add a comment** in `.lycheeignore` explaining *why* the link is skipped to prevent link rot.
+
 
 #### Running on Pull Requests
 
