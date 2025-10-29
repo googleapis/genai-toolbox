@@ -16,7 +16,7 @@ It's compatible with the following sources:
 
 - [healthcare](../../sources/healthcare.md)
 
-`retrieve-rendered-dicom-instance` returns a base64 encoded string of the image in png format.
+`retrieve-rendered-dicom-instance` returns a base64 encoded string of the image in JPEG format.
 
 ## Example
 

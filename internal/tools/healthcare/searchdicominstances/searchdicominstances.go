@@ -32,17 +32,15 @@ import (
 
 const kind string = "search-dicom-instances"
 const (
-	studyInstanceUIDKey               = "StudyInstanceUID"
-	patientNameKey                    = "PatientName"
-	patientIDKey                      = "PatientID"
-	accessionNumberKey                = "AccessionNumber"
-	referringPhysicianNameKey         = "ReferringPhysicianName"
-	studyDateKey                      = "StudyDate"
-	seriesInstanceUIDKey              = "SeriesInstanceUID"
-	modalityKey                       = "Modality"
-	sopInstanceUIDKey                 = "SOPInstanceUID"
-	enablePatientNameFuzzyMatchingKey = "fuzzymatching"
-	includeAttributesKey              = "includefield"
+	studyInstanceUIDKey       = "StudyInstanceUID"
+	patientNameKey            = "PatientName"
+	patientIDKey              = "PatientID"
+	accessionNumberKey        = "AccessionNumber"
+	referringPhysicianNameKey = "ReferringPhysicianName"
+	studyDateKey              = "StudyDate"
+	seriesInstanceUIDKey      = "SeriesInstanceUID"
+	modalityKey               = "Modality"
+	sopInstanceUIDKey         = "SOPInstanceUID"
 )
 
 func init() {
@@ -112,8 +110,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		tools.NewStringParameterWithDefault(seriesInstanceUIDKey, "", "The UID of the DICOM series"),
 		tools.NewStringParameterWithDefault(modalityKey, "", "The modality of the series"),
 		tools.NewStringParameterWithDefault(sopInstanceUIDKey, "", "The UID of the SOP instance."),
-		tools.NewBooleanParameterWithDefault(enablePatientNameFuzzyMatchingKey, false, `Whether to enable fuzzy matching for patient names. Fuzzy matching will perform tokenization and normalization of both the value of PatientName in the query and the stored value. It will match if any search token is a prefix of any stored token. For example, if PatientName is "John^Doe", then "jo", "Do" and "John Doe" will all match. However "ohn" will not match`),
-		tools.NewArrayParameterWithDefault(includeAttributesKey, []any{}, "List of attributeIDs, such as DICOM tag IDs or keywords. Set to [\"all\"] to return all available tags.", tools.NewStringParameter("attributeID", "The attributeID to include. Set to 'all' to return all available tags")),
+		tools.NewBooleanParameterWithDefault(common.EnablePatientNameFuzzyMatchingKey, false, `Whether to enable fuzzy matching for patient names. Fuzzy matching will perform tokenization and normalization of both the value of PatientName in the query and the stored value. It will match if any search token is a prefix of any stored token. For example, if PatientName is "John^Doe", then "jo", "Do" and "John Doe" will all match. However "ohn" will not match`),
+		tools.NewArrayParameterWithDefault(common.IncludeAttributesKey, []any{}, "List of attributeIDs, such as DICOM tag IDs or keywords. Set to [\"all\"] to return all available tags.", tools.NewStringParameter("attributeID", "The attributeID to include. Set to 'all' to return all available tags")),
 	}
 	if len(s.AllowedDICOMStores()) != 1 {
 		parameters = append(parameters, tools.NewStringParameter(common.StoreKey, "The DICOM store ID to get details for."))
@@ -176,84 +174,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		}
 	}
 
+	opts, err := common.ParseDICOMSearchParameters(params, []string{sopInstanceUIDKey, patientNameKey, patientIDKey, accessionNumberKey, referringPhysicianNameKey, studyDateKey, modalityKey})
+	if err != nil {
+		return nil, err
+	}
 	paramsMap := params.AsMap()
-	var opts []googleapi.CallOption
-	if attributes, ok := paramsMap[includeAttributesKey]; ok {
-		if _, ok := attributes.([]any); !ok {
-			return nil, fmt.Errorf("invalid '%s' parameter; expected a string array", includeAttributesKey)
-		}
-		attributeIDsSlice, err := tools.ConvertAnySliceToTyped(attributes.([]any), "string")
-		if err != nil {
-			return nil, fmt.Errorf("can't convert '%s' to array of strings: %s", includeAttributesKey, err)
-		}
-		attributeIDs := attributeIDsSlice.([]string)
-		if len(attributeIDs) != 0 {
-			opts = append(opts, googleapi.QueryParameter(includeAttributesKey, strings.Join(attributeIDs, ",")))
-		}
-	}
-	if fuzzymatching, ok := paramsMap[enablePatientNameFuzzyMatchingKey]; ok {
-		if _, ok := fuzzymatching.(bool); !ok {
-			return nil, fmt.Errorf("invalid '%s' parameter; expected a boolean", enablePatientNameFuzzyMatchingKey)
-		}
-		opts = append(opts, googleapi.QueryParameter(enablePatientNameFuzzyMatchingKey, fmt.Sprintf("%t", fuzzymatching.(bool))))
-	}
-	if sopInstanceUID, ok := paramsMap[sopInstanceUIDKey]; ok {
-		if _, ok := sopInstanceUID.(string); !ok {
-			return nil, fmt.Errorf("invalid '%s' parameter; expected a string", sopInstanceUIDKey)
-		}
-		if sopInstanceUID.(string) == "" {
-			opts = append(opts, googleapi.QueryParameter(sopInstanceUIDKey, sopInstanceUID.(string)))
-		}
-	}
-	if patientName, ok := paramsMap[patientNameKey]; ok {
-		if _, ok := patientName.(string); !ok {
-			return nil, fmt.Errorf("invalid '%s' parameter; expected a string", patientNameKey)
-		}
-		if patientName.(string) != "" {
-			opts = append(opts, googleapi.QueryParameter(patientNameKey, patientName.(string)))
-		}
-	}
-	if patientID, ok := paramsMap[patientIDKey]; ok {
-		if _, ok := patientID.(string); !ok {
-			return nil, fmt.Errorf("invalid '%s' parameter; expected a string", patientIDKey)
-		}
-		if patientID.(string) != "" {
-			opts = append(opts, googleapi.QueryParameter(patientIDKey, patientID.(string)))
-		}
-	}
-	if accessionNumber, ok := paramsMap[accessionNumberKey]; ok {
-		if _, ok := accessionNumber.(string); !ok {
-			return nil, fmt.Errorf("invalid '%s' parameter; expected a string", accessionNumberKey)
-		}
-		if accessionNumber.(string) != "" {
-			opts = append(opts, googleapi.QueryParameter(accessionNumberKey, accessionNumber.(string)))
-		}
-	}
-	if referringPhysicianName, ok := paramsMap[referringPhysicianNameKey]; ok {
-		if _, ok := referringPhysicianName.(string); !ok {
-			return nil, fmt.Errorf("invalid '%s' parameter; expected a string", referringPhysicianNameKey)
-		}
-		if referringPhysicianName.(string) != "" {
-			opts = append(opts, googleapi.QueryParameter(referringPhysicianNameKey, referringPhysicianName.(string)))
-		}
-	}
-	if studyDate, ok := paramsMap[studyDateKey]; ok {
-		if _, ok := studyDate.(string); !ok {
-			return nil, fmt.Errorf("invalid '%s' parameter; expected a string", studyDateKey)
-		}
-		if studyDate.(string) != "" {
-			opts = append(opts, googleapi.QueryParameter(studyDateKey, studyDate.(string)))
-		}
-	}
-	if modality, ok := paramsMap[modalityKey]; ok {
-		if _, ok := modality.(string); !ok {
-			return nil, fmt.Errorf("invalid '%s' parameter; expected a string", modalityKey)
-		}
-		if modality.(string) != "" {
-			opts = append(opts, googleapi.QueryParameter(modalityKey, modality.(string)))
-		}
-	}
-
 	dicomWebPath := "instances"
 	if studyInstanceUID, ok := paramsMap[studyInstanceUIDKey]; ok {
 		id, ok := studyInstanceUID.(string)
