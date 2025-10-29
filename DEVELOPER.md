@@ -185,6 +185,9 @@ variables for each source.
 * Couchbase - setup in the test project via the Marketplace
 * DGraph - using the public dgraph interface <https://play.dgraph.io> for
   testing
+* Looker
+  * The Cloud Build service account is a user for conversational analytics
+  * The Looker instance runs under google.com:looker-sandbox.
 * Memorystore Redis - setup in the test project using a Memorystore for Redis
   standalone instance
   * Memorystore Redis Cluster, Memorystore Valkey standalone, and Memorystore
