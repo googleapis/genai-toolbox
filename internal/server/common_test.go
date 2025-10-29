@@ -121,7 +121,12 @@ type MockPrompt struct {
 }
 
 func (p MockPrompt) SubstituteParams(vals tools.ParamValues) (any, error) {
-	return fmt.Sprintf("substituted %s", p.Name), nil
+	return []prompts.Message{
+		{
+			Role:    "user",
+			Content: fmt.Sprintf("substituted %s", p.Name),
+		},
+	}, nil
 }
 
 func (p MockPrompt) ParseArgs(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
@@ -178,6 +183,18 @@ var tool5 = MockTool{
 	Name:                         "require_client_auth_tool",
 	Params:                       []tools.Parameter{},
 	requiresClientAuthrorization: true,
+}
+
+var prompt1 = MockPrompt{
+	Name: "prompt1",
+	Args: prompts.Arguments{},
+}
+
+var prompt2 = MockPrompt{
+	Name: "prompt2",
+	Args: prompts.Arguments{
+		{Parameter: tools.NewStringParameter("arg1", "This is the first argument.")},
+	},
 }
 
 // setUpResources setups resources to test against
