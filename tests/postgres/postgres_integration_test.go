@@ -423,6 +423,7 @@ func runPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 		wantStatusCode      int
 		want                any
 	}{
+		// exclude background monitoring apps such as "wal_uploader"
 		{
 			name:                "invoke list_active_queries when the system is idle",
 			requestBody:         bytes.NewBufferString(`{"exclude_application_names": "wal_uploader"}`),
