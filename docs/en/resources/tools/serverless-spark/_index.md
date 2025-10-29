@@ -8,3 +8,4 @@ description: >
 
 - [serverless-spark-get-batch](./serverless-spark-get-batch.md)
 - [serverless-spark-list-batches](./serverless-spark-list-batches.md)
+- [serverless-spark-cancel-batch](./serverless-spark-cancel-batch.md)
