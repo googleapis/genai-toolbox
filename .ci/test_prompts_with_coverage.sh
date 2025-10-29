@@ -14,7 +14,7 @@ set -e
 
 # The first argument is the prompt type (e.g., "custom").
 PROMPT_TYPE=$1
-COVERAGE_THRESHOLD=50 # Minimum coverage percentage required.
+COVERAGE_THRESHOLD=80 # Minimum coverage percentage required.
 
 if [ -z "$PROMPT_TYPE" ]; then
     echo "Error: No prompt type provided. Please call this script with an argument."
