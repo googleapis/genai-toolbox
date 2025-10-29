@@ -332,9 +332,15 @@ for instructions on developing Toolbox SDKs.
 
 ### Team
 
-Team, `@googleapis/senseai-eco`, has been set as
+Team `@googleapis/senseai-eco` has been set as
 [CODEOWNERS](.github/CODEOWNERS). The GitHub TeamSync tool is used to create
 this team from MDB Group, `senseai-eco`.
+
+Team `@googleapis/toolbox-contributors` has write access to this repo. They
+can create branches and approve test runs. But they do not have the ability
+to approve PRs for main. TeamSync is used to create this team from the MDB
+Group `toolbox-contributors`. Googlers who are developing for MCP-Toolbox
+but aren't part of the core team should join this group.
 
 ### Releasing
 
