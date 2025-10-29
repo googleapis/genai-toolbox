@@ -430,9 +430,10 @@ func runPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 		wantStatusCode      int
 		want                any
 	}{
+		// exclude background monitoring apps such as "wal_uploader"
 		{
 			name:                "invoke list_active_queries when the system is idle",
-			requestBody:         bytes.NewBufferString(`{}`),
+			requestBody:         bytes.NewBufferString(`{"exclude_application_names": "wal_uploader"}`),
 			clientSleepSecs:     0,
 			waitSecsBeforeCheck: 0,
 			wantStatusCode:      http.StatusOK,
@@ -440,7 +441,7 @@ func runPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 		},
 		{
 			name:                "invoke list_active_queries when there is 1 ongoing but lower than the threshold",
-			requestBody:         bytes.NewBufferString(`{"min_duration": "100 seconds"}`),
+			requestBody:         bytes.NewBufferString(`{"min_duration": "100 seconds", "exclude_application_names": "wal_uploader"}`),
 			clientSleepSecs:     1,
 			waitSecsBeforeCheck: 1,
 			wantStatusCode:      http.StatusOK,
@@ -448,7 +449,7 @@ func runPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 		},
 		{
 			name:                "invoke list_active_queries when 1 ongoing query should show up",
-			requestBody:         bytes.NewBufferString(`{"min_duration": "1 seconds"}`),
+			requestBody:         bytes.NewBufferString(`{"min_duration": "1 seconds", "exclude_application_names": "wal_uploader"}`),
 			clientSleepSecs:     10,
 			waitSecsBeforeCheck: 5,
 			wantStatusCode:      http.StatusOK,
