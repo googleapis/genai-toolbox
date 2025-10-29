@@ -150,6 +150,48 @@ go test -race -v ./cmd/... ./internal/...
    ```
 
    Be sure to set the timeout to a reasonable value for your tests.
+   
+### Link Checks 
+
+We use **lychee** to quickly check all links in our repository.
+
+####  Usage
+
+1.  **Install:**
+    ```sh
+    # Choose one:
+    brew install lychee   # macOS
+    snap install lychee   # Ubuntu
+    cargo install lychee  # All Platforms
+    ```
+
+2.  **Run Check:**
+    ```sh
+    # Check all files recursively
+    lychee .
+    ```
+
+3.  **CI/Quiet Check (Recommended):**
+    ```sh
+    # Use -q for quiet output, --no-progress for CI, --offline for local links only
+    lychee -q --no-progress . 
+    
+    # Or to skip rate limits on GitHub links:
+    GITHUB_TOKEN=xxxx lychee .
+    ```
+
+###  Ignoring Links
+
+To permanently skip certain links from checking, create a file named **`.lycheeignore`** in the root of the repository.
+
+* This file lists **regular expressions or direct links** (one per line) for links that should be **ignored**.
+
+```text
+# Example .lycheeignore content:
+^mailto:.*
+^https://example\.com/temp-link.*
+https://www.sql.com/downloads/
+```
 
 #### Running on Pull Requests
 
