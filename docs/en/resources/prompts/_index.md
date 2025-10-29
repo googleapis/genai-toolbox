@@ -14,13 +14,12 @@ A Prompt is essentially a template for a message or a series of messages that ca
 ```yaml
 prompts:
   code_review:
-  description: "Asks the LLM to analyze code quality and suggest improvements."
-  messages:
-    - role: "user"
-      content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
-  arguments:
-    - name: "code"
-      description: "The code to review"
+    description: "Asks the LLM to analyze code quality and suggest improvements."
+    messages:
+      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+    arguments:
+      - name: "code"
+        description: "The code to review"
 ```
 
 ## Prompt Schema
@@ -84,13 +83,10 @@ prompts:
   code_review:
     description: "Asks the LLM to analyze code quality and suggest improvements."
     messages:
-      - role: "user"
-        content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
     arguments:
       - name: "code"
         description: "The code to review"
-        type: "string"
-        required: true
 ```
 
 ### Multi-message prompt
