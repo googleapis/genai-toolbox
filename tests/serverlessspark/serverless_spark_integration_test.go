@@ -118,16 +118,95 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 	}
 	defer client.Close()
 
-	runListBatchesTest(t, client, ctx)
+	t.Run("list-batches", func(t *testing.T) {
+		// list-batches is sensitive to state changes, so this test must run sequentially.
+		t.Run("success", func(t *testing.T) {
+			runListBatchesTest(t, client, ctx)
+		})
+		t.Run("errors", func(t *testing.T) {
+			t.Parallel()
+			tcs := []struct {
+				name     string
+				toolName string
+				request  map[string]any
+				wantCode int
+				wantMsg  string
+			}{
+				{
+					name:     "zero page size",
+					toolName: "list-batches",
+					request:  map[string]any{"pageSize": 0},
+					wantCode: http.StatusBadRequest,
+					wantMsg:  "pageSize must be positive: 0",
+				},
+				{
+					name:     "negative page size",
+					toolName: "list-batches",
+					request:  map[string]any{"pageSize": -1},
+					wantCode: http.StatusBadRequest,
+					wantMsg:  "pageSize must be positive: -1",
+				},
+			}
+			for _, tc := range tcs {
+				t.Run(tc.name, func(t *testing.T) {
+					t.Parallel()
+					testError(t, tc.toolName, tc.request, tc.wantCode, tc.wantMsg)
+				})
+			}
+		})
+		t.Run("auth", func(t *testing.T) {
+			t.Parallel()
+			runAuthTest(t, "list-batches-with-auth", map[string]any{"pageSize": 1}, http.StatusOK)
+		})
+	})
 
-	fullName := listBatchesRpc(t, client, ctx, "", 1, true)[0].Name
-	runGetBatchTest(t, client, ctx, fullName)
-
-	runErrorTest(t)
-
-	// Get the most recent batch, which is all we need for this test.
-	runAuthTest(t, "list-batches-with-auth", map[string]any{"pageSize": 1})
-	runAuthTest(t, "get-batch-with-auth", map[string]any{"name": shortName(fullName)})
+	// The following tool tests are independent and can run in parallel with each other.
+	t.Run("parallel-tool-tests", func(t *testing.T) {
+		t.Run("get-batch", func(t *testing.T) {
+			t.Parallel()
+			fullName := listBatchesRpc(t, client, ctx, "", 1, true)[0].Name
+			t.Run("success", func(t *testing.T) {
+				t.Parallel()
+				runGetBatchTest(t, client, ctx, fullName)
+			})
+			t.Run("errors", func(t *testing.T) {
+				t.Parallel()
+				missingBatchFullName := fmt.Sprintf("projects/%s/locations/%s/batches/INVALID_BATCH", serverlessSparkProject, serverlessSparkLocation)
+				tcs := []struct {
+					name     string
+					toolName string
+					request  map[string]any
+					wantCode int
+					wantMsg  string
+				}{
+					{
+						name:     "missing batch",
+						toolName: "get-batch",
+						request:  map[string]any{"name": "INVALID_BATCH"},
+						wantCode: http.StatusBadRequest,
+						wantMsg:  fmt.Sprintf("Not found: Batch projects/%s/locations/%s/batches/INVALID_BATCH", serverlessSparkProject, serverlessSparkLocation),
+					},
+					{
+						name:     "full batch name",
+						toolName: "get-batch",
+						request:  map[string]any{"name": missingBatchFullName},
+						wantCode: http.StatusBadRequest,
+						wantMsg:  fmt.Sprintf("name must be a short batch name without '/': %s", missingBatchFullName),
+					},
+				}
+				for _, tc := range tcs {
+					t.Run(tc.name, func(t *testing.T) {
+						t.Parallel()
+						testError(t, tc.toolName, tc.request, tc.wantCode, tc.wantMsg)
+					})
+				}
+			})
+			t.Run("auth", func(t *testing.T) {
+				t.Parallel()
+				runAuthTest(t, "get-batch-with-auth", map[string]any{"name": shortName(fullName)}, http.StatusOK)
+			})
+		})
+	})
 }
 
 // runListBatchesTest invokes the running list-batches tool and ensures it returns the correct
@@ -165,7 +244,8 @@ func runListBatchesTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 	}
 
 	for _, tc := range tcs {
-		t.Run("list-batches "+tc.name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			var actual []serverlesssparklistbatches.Batch
 			var pageToken string
 			for i := 0; i < tc.numPages; i++ {
@@ -241,7 +321,7 @@ func listBatchesRpc(t *testing.T, client *dataproc.BatchControllerClient, ctx co
 	return serverlesssparklistbatches.ToBatches(batchPbs)
 }
 
-func runAuthTest(t *testing.T, toolName string, request map[string]any) {
+func runAuthTest(t *testing.T, toolName string, request map[string]any, wantStatus int) {
 	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
 		t.Fatalf("error getting Google ID token: %s", err)
@@ -254,7 +334,7 @@ func runAuthTest(t *testing.T, toolName string, request map[string]any) {
 		{
 			name:       "valid auth token",
 			headers:    map[string]string{"my-google-auth_token": idToken},
-			wantStatus: http.StatusOK,
+			wantStatus: wantStatus,
 		},
 		{
 			name:       "invalid auth token",
@@ -269,7 +349,8 @@ func runAuthTest(t *testing.T, toolName string, request map[string]any) {
 	}
 
 	for _, tc := range tcs {
-		t.Run(toolName+" "+tc.name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			resp, err := invokeTool(toolName, request, tc.headers)
 			if err != nil {
 				t.Fatalf("invokeTool failed: %v", err)
@@ -317,7 +398,8 @@ func runGetBatchTest(t *testing.T, client *dataproc.BatchControllerClient, ctx c
 	}
 
 	for _, tc := range tcs {
-		t.Run("get-batch "+tc.name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
 			request := map[string]any{"name": tc.batchName}
 			resp, err := invokeTool("get-batch", request, nil)
 			if err != nil {
@@ -351,67 +433,25 @@ func runGetBatchTest(t *testing.T, client *dataproc.BatchControllerClient, ctx c
 	}
 }
 
-func runErrorTest(t *testing.T) {
-	missingBatchFullName := fmt.Sprintf("projects/%s/locations/%s/batches/INVALID_BATCH", serverlessSparkProject, serverlessSparkLocation)
-	tcs := []struct {
-		name     string
-		toolName string
-		request  map[string]any
-		wantCode int
-		wantMsg  string
-	}{
-		{
-			name:     "list-batches zero page size",
-			toolName: "list-batches",
-			request:  map[string]any{"pageSize": 0},
-			wantCode: http.StatusBadRequest,
-			wantMsg:  "pageSize must be positive: 0",
-		},
-		{
-			name:     "list-batches negative page size",
-			toolName: "list-batches",
-			request:  map[string]any{"pageSize": -1},
-			wantCode: http.StatusBadRequest,
-			wantMsg:  "pageSize must be positive: -1",
-		},
-		{
-			name:     "get-batch missing batch",
-			toolName: "get-batch",
-			request:  map[string]any{"name": "INVALID_BATCH"},
-			wantCode: http.StatusBadRequest,
-			wantMsg:  fmt.Sprintf("Not found: Batch projects/%s/locations/%s/batches/INVALID_BATCH", serverlessSparkProject, serverlessSparkLocation),
-		},
-		{
-			name:     "get-batch full batch name",
-			toolName: "get-batch",
-			request:  map[string]any{"name": missingBatchFullName},
-			wantCode: http.StatusBadRequest,
-			wantMsg:  fmt.Sprintf("name must be a short batch name without '/': %s", missingBatchFullName),
-		},
+func testError(t *testing.T, toolName string, request map[string]any, wantCode int, wantMsg string) {
+	resp, err := invokeTool(toolName, request, nil)
+	if err != nil {
+		t.Fatalf("invokeTool failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != wantCode {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		t.Fatalf("response status code is not %d, got %d: %s", wantCode, resp.StatusCode, string(bodyBytes))
 	}
 
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			resp, err := invokeTool(tc.toolName, tc.request, nil)
-			if err != nil {
-				t.Fatalf("invokeTool failed: %v", err)
-			}
-			defer resp.Body.Close()
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("failed to read response body: %v", err)
+	}
 
-			if resp.StatusCode != tc.wantCode {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not %d, got %d: %s", tc.wantCode, resp.StatusCode, string(bodyBytes))
-			}
-
-			bodyBytes, err := io.ReadAll(resp.Body)
-			if err != nil {
-				t.Fatalf("failed to read response body: %v", err)
-			}
-
-			if !bytes.Contains(bodyBytes, []byte(tc.wantMsg)) {
-				t.Fatalf("response body does not contain %q: %s", tc.wantMsg, string(bodyBytes))
-			}
-		})
+	if !bytes.Contains(bodyBytes, []byte(wantMsg)) {
+		t.Fatalf("response body does not contain %q: %s", wantMsg, string(bodyBytes))
 	}
 }
 
