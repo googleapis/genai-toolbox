@@ -162,19 +162,19 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	study, ok := params.AsMap()[studyInstanceUIDKey].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", studyInstanceUIDKey)
+		return nil, fmt.Errorf("invalid '%s' parameter; expected a string", studyInstanceUIDKey)
 	}
 	series, ok := params.AsMap()[seriesInstanceUIDKey].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", seriesInstanceUIDKey)
+		return nil, fmt.Errorf("invalid '%s' parameter; expected a string", seriesInstanceUIDKey)
 	}
 	sop, ok := params.AsMap()[sopInstanceUIDKey].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", sopInstanceUIDKey)
+		return nil, fmt.Errorf("invalid '%s' parameter; expected a string", sopInstanceUIDKey)
 	}
 	frame, ok := params.AsMap()[frameNumberKey].(int)
 	if !ok {
-		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected an integer", frameNumberKey)
+		return nil, fmt.Errorf("invalid '%s' parameter; expected an integer", frameNumberKey)
 	}
 	name := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/dicomStores/%s", t.Project, t.Region, t.Dataset, storeID)
 	dicomWebPath := fmt.Sprintf("studies/%s/series/%s/instances/%s/frames/%d/rendered", study, series, sop, frame)
