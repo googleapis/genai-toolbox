@@ -156,6 +156,8 @@ go test -race -v ./...
 * **Internal Contributors:** Testing workflows should trigger automatically.
 * **External Contributors:** Request Toolbox maintainers to trigger the testing
   workflows on your PR.
+  * Maintainers can comment `/gcbrun` to execute the integration tests.
+  * Maintainers can add the label `tests:run` to execute the unit tests.
 
 #### Test Resources
 
