@@ -22,7 +22,11 @@ tools:
   list_batches:
     kind: serverless-spark-list-batches
     source: serverless-spark-source
+  get_batch:
+    kind: serverless-spark-get-batch
+    source: serverless-spark-source
 
 toolsets:
   serverless_spark_tools:
     - list_batches
+    - get_batch
