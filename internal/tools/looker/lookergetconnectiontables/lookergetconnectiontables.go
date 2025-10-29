@@ -134,8 +134,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 	req := v4.RequestConnectionTables{
 		ConnectionName: conn,
-		Database:       &db,
 		SchemaName:     &schema,
+	}
+	if db != "" {
+		req.Database = &db
 	}
 	resp, err := sdk.ConnectionTables(req, t.ApiSettings)
 	if err != nil {
