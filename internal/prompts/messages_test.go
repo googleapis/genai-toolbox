@@ -24,7 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
-func TestMessage_UnmarshalYAML(t *testing.T) {
+func TestMessageUnmarshalYAML(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		name      string

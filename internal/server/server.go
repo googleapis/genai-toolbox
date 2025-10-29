@@ -21,6 +21,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -194,7 +195,11 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		}
 		sourcesMap[name] = s
 	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d sources.", len(sourcesMap)))
+	sourceNames := make([]string, 0, len(sourcesMap))
+	for name := range sourcesMap {
+		sourceNames = append(sourceNames, name)
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d sources: %s", len(sourcesMap), strings.Join(sourceNames, ", ")))
 
 	// initialize and validate the auth services from configs
 	authServicesMap := make(map[string]auth.AuthService)
@@ -218,7 +223,11 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		}
 		authServicesMap[name] = a
 	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d authServices.", len(authServicesMap)))
+	authServiceNames := make([]string, 0, len(authServicesMap))
+	for name := range authServicesMap {
+		authServiceNames = append(authServiceNames, name)
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d authServices: %s", len(authServicesMap), strings.Join(authServiceNames, ", ")))
 
 	// initialize and validate the tools from configs
 	toolsMap := make(map[string]tools.Tool)
@@ -242,7 +251,11 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		}
 		toolsMap[name] = t
 	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools.", len(toolsMap)))
+	toolNames := make([]string, 0, len(toolsMap))
+	for name := range toolsMap {
+		toolNames = append(toolNames, name)
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d tools: %s", len(toolsMap), strings.Join(toolNames, ", ")))
 
 	// create a default toolset that contains all tools
 	allToolNames := make([]string, 0, len(toolsMap))
@@ -275,30 +288,43 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		}
 		toolsetsMap[name] = t
 	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d toolsets.", len(toolsetsMap)))
+	toolsetNames := make([]string, 0, len(toolsetsMap))
+	for name := range toolsetsMap {
+		if name == "" {
+			toolsetNames = append(toolsetNames, "default")
+		} else {
+			toolsetNames = append(toolsetNames, name)
+		}
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d toolsets: %s", len(toolsetsMap), strings.Join(toolsetNames, ", ")))
 
 	// initialize and validate the prompts from configs
 	promptsMap := make(map[string]prompts.Prompt)
-	for name, tc := range cfg.PromptConfigs {
-		t, err := func() (prompts.Prompt, error) {
+	for name, pc := range cfg.PromptConfigs {
+		p, err := func() (prompts.Prompt, error) {
 			_, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/prompt/init",
+				trace.WithAttributes(attribute.String("prompt_kind", pc.PromptConfigKind())),
 				trace.WithAttributes(attribute.String("prompt_name", name)),
 			)
 			defer span.End()
-			t, err := tc.Initialize()
+			p, err := pc.Initialize()
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize prompt %q: %w", name, err)
 			}
-			return t, nil
+			return p, nil
 		}()
 		if err != nil {
 			return nil, nil, nil, nil, nil, nil, err
 		}
-		promptsMap[name] = t
+		promptsMap[name] = p
 	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d prompts.", len(promptsMap)))
+	promptNames := make([]string, 0, len(promptsMap))
+	for name := range promptsMap {
+		promptNames = append(promptNames, name)
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d prompts: %s", len(promptsMap), strings.Join(promptNames, ", ")))
 
 	// create a default promptset that contains all prompts
 	allPromptNames := make([]string, 0, len(promptsMap))
@@ -312,26 +338,34 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 
 	// initialize and validate the promptsets from configs
 	promptsetsMap := make(map[string]prompts.Promptset)
-	for name, tc := range cfg.PromptsetConfigs {
-		t, err := func() (prompts.Promptset, error) {
+	for name, pc := range cfg.PromptsetConfigs {
+		p, err := func() (prompts.Promptset, error) {
 			_, span := instrumentation.Tracer.Start(
 				ctx,
 				"toolbox/server/prompset/init",
 				trace.WithAttributes(attribute.String("prompset_name", name)),
 			)
 			defer span.End()
-			t, err := tc.Initialize(cfg.Version, promptsMap)
+			p, err := pc.Initialize(cfg.Version, promptsMap)
 			if err != nil {
 				return prompts.Promptset{}, fmt.Errorf("unable to initialize promptset %q: %w", name, err)
 			}
-			return t, err
+			return p, err
 		}()
 		if err != nil {
 			return nil, nil, nil, nil, nil, nil, err
 		}
-		promptsetsMap[name] = t
+		promptsetsMap[name] = p
 	}
-	l.InfoContext(ctx, fmt.Sprintf("Initialized %d promptsets.", len(promptsetsMap)))
+	promptsetNames := make([]string, 0, len(promptsetsMap))
+	for name := range promptsetsMap {
+		if name == "" {
+			promptsetNames = append(promptsetNames, "default")
+		} else {
+			promptsetNames = append(promptsetNames, name)
+		}
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d promptsets: %s", len(promptsetsMap), strings.Join(promptsetNames, ", ")))
 
 	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
 }

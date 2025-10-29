@@ -338,7 +338,6 @@ func TestMcpEndpointWithoutInitialized(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error during marshaling of body")
 			}
-
 			resp, body, err := runRequest(ts, http.MethodPost, tc.url, bytes.NewBuffer(reqMarshal), nil)
 			if err != nil {
 				t.Fatalf("unexpected error during request: %s", err)

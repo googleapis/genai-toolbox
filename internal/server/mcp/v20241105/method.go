@@ -40,9 +40,9 @@ func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, too
 	case TOOLS_CALL:
 		return toolsCallHandler(ctx, id, tools, authServices, body, header)
 	case PROMPTS_LIST:
-		return promptsListHandler(id, promptset, body)
+		return promptsListHandler(ctx, id, promptset, body)
 	case PROMPTS_GET:
-		return promptsGetHandler(id, prompts, body)
+		return promptsGetHandler(ctx, id, prompts, body)
 	default:
 		err := fmt.Errorf("invalid method %s", method)
 		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
@@ -219,7 +219,14 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 }
 
 // promptsListHandler handles the "prompts/list" method.
-func promptsListHandler(id jsonrpc.RequestId, promptset prompts.Promptset, body []byte) (any, error) {
+func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, promptset prompts.Promptset, body []byte) (any, error) {
+	// retrieve logger from context
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+	logger.DebugContext(ctx, "handling prompts/list request")
+
 	var req ListPromptsRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp prompts list request: %w", err)
@@ -229,6 +236,7 @@ func promptsListHandler(id jsonrpc.RequestId, promptset prompts.Promptset, body 
 	result := ListPromptsResult{
 		Prompts: promptset.McpManifest,
 	}
+	logger.DebugContext(ctx, fmt.Sprintf("returning %d prompts", len(promptset.McpManifest)))
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
@@ -237,7 +245,14 @@ func promptsListHandler(id jsonrpc.RequestId, promptset prompts.Promptset, body 
 }
 
 // promptsGetHandler handles the "prompts/get" method.
-func promptsGetHandler(id jsonrpc.RequestId, promptsMap map[string]prompts.Prompt, body []byte) (any, error) {
+func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, promptsMap map[string]prompts.Prompt, body []byte) (any, error) {
+	// retrieve logger from context
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+	}
+	logger.DebugContext(ctx, "handling prompts/get request")
+
 	var req GetPromptRequest
 	if err := json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp prompts/get request: %w", err)
@@ -245,6 +260,7 @@ func promptsGetHandler(id jsonrpc.RequestId, promptsMap map[string]prompts.Promp
 	}
 
 	promptName := req.Params.Name
+	logger.DebugContext(ctx, fmt.Sprintf("prompt name: %s", promptName))
 	prompt, ok := promptsMap[promptName]
 	if !ok {
 		err := fmt.Errorf("prompt with name %q does not exist", promptName)
@@ -257,6 +273,7 @@ func promptsGetHandler(id jsonrpc.RequestId, promptsMap map[string]prompts.Promp
 		err = fmt.Errorf("invalid arguments for prompt %q: %w", promptName, err)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
+	logger.DebugContext(ctx, fmt.Sprintf("parsed args: %v", argValues))
 
 	// Substitute the argument values into the prompt's messages.
 	substituted, err := prompt.SubstituteParams(argValues)
@@ -264,6 +281,7 @@ func promptsGetHandler(id jsonrpc.RequestId, promptsMap map[string]prompts.Promp
 		err = fmt.Errorf("error substituting params for prompt %q: %w", promptName, err)
 		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
+	logger.DebugContext(ctx, "substituted params successfully")
 
 	// Cast the result to the expected []prompts.Message type.
 	substitutedMessages, ok := substituted.([]prompts.Message)
@@ -273,9 +291,9 @@ func promptsGetHandler(id jsonrpc.RequestId, promptsMap map[string]prompts.Promp
 	}
 
 	// Format the response messages into the required structure.
-	responseMessages := make([]ResponseMessage, len(substitutedMessages))
+	promptMessages := make([]PromptMessage, len(substitutedMessages))
 	for i, msg := range substitutedMessages {
-		responseMessages[i] = ResponseMessage{
+		promptMessages[i] = PromptMessage{
 			Role: msg.Role,
 			Content: TextContent{
 				Type: "text",
@@ -286,7 +304,7 @@ func promptsGetHandler(id jsonrpc.RequestId, promptsMap map[string]prompts.Promp
 
 	result := GetPromptResult{
 		Description: prompt.Manifest().Description,
-		Messages:    responseMessages,
+		Messages:    promptMessages,
 	}
 
 	return jsonrpc.JSONRPCResponse{
