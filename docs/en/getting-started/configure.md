@@ -102,15 +102,14 @@ my_second_toolset = client.load_toolset("my_second_toolset")
 The `prompts` section of your `tools.yaml` defines the templates containing structured messages and instructions for interacting with language models.
 
 ```yaml
-code_review:
-  description: "Asks the LLM to analyze code quality and suggest improvements."
-  messages:
-    - role: "user"
-      content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
-  arguments:
-    - name: "code"
-      type: string
-      description: "The code to review"
+prompts:
+  code_review:
+    description: "Asks the LLM to analyze code quality and suggest improvements."
+    messages:
+      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+    arguments:
+      - name: "code"
+        description: "The code to review"
 ```
 
 For more details on configuring different types of prompts, see the
