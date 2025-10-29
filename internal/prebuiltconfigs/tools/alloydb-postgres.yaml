@@ -156,6 +156,9 @@ tools:
               description: "The SQL statement for which you want to generate plan (omit the EXPLAIN keyword)."
               required: true
 
+    list_views:
+        kind: postgres-list-views
+        source: alloydb-pg-source
 toolsets:
     alloydb_postgres_database_tools:
         - execute_sql
@@ -169,3 +172,4 @@ toolsets:
         - list_replication_slots
         - list_invalid_indexes
         - get_query_plan
+        - list_views
