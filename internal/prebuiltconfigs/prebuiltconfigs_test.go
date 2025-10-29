@@ -37,6 +37,9 @@ var expectedToolSources = []string{
 	"cloud-sql-postgres",
 	"dataplex",
 	"firestore",
+	"healthcare-dicom",
+	"healthcare-fhir",
+	"healthcare",
 	"looker-conversational-analytics",
 	"looker",
 	"mssql",
@@ -120,6 +123,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	spannerpg_config, _ := Get("spanner-postgres")
 	sqlite_config, _ := Get("sqlite")
 	neo4jconfig, _ := Get("neo4j")
+	healthcare_config, _ := Get("healthcare")
+	healthcare_dicom_config, _ := Get("healthcare-dicom")
+	healthcare_fhir_config, _ := Get("healthcare-fhir")
 	if len(alloydb_admin_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
 	}
@@ -197,6 +203,15 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(neo4jconfig) <= 0 {
 		t.Fatalf("unexpected error: could not fetch neo4j prebuilt tools yaml")
+	}
+	if len(healthcare_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch healthcare prebuilt tools yaml")
+	}
+	if len(healthcare_dicom_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch healthcare dicom prebuilt tools yaml")
+	}
+	if len(healthcare_fhir_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch healthcare fhir prebuilt tools yaml")
 	}
 }
 
