@@ -3454,18 +3454,6 @@ in a given model in the source.&lt;/p>
  &lt;/thead>
  &lt;tbody>
  &lt;tr>
- &lt;td style="text-align: left">kind&lt;/td>
- &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">true&lt;/td>
- &lt;td style="text-align: left">Must be &amp;ldquo;looker-health-analyze&amp;rdquo;&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td style="text-align: left">source&lt;/td>
- &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">true&lt;/td>
- &lt;td style="text-align: left">Looker source name&lt;/td>
- &lt;/tr>
- &lt;tr>
  &lt;td style="text-align: left">action&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
  &lt;td style="text-align: left">true&lt;/td>
@@ -3504,17 +3492,23 @@ in a given model in the source.&lt;/p>
  &lt;/tbody>
 &lt;/table>
 &lt;h2 id="example">Example&lt;/h2>
-&lt;p>Analyze all models in &lt;code>thelook&lt;/code> project.&lt;/p></description></item><item><title>looker-health-pulse</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/looker/looker-health-pulse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/looker/looker-health-pulse/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>looker-health-pulse&lt;/code> tool performs health checks on a Looker instance. The &lt;code>action&lt;/code> parameter selects the type of check to perform:&lt;/p>
-&lt;ul>
-&lt;li>&lt;code>check_db_connections&lt;/code>: Checks all database connections, runs supported tests, and reports query counts.&lt;/li>
-&lt;li>&lt;code>check_dashboard_performance&lt;/code>: Finds dashboards with slow running queries in the last 7 days.&lt;/li>
-&lt;li>&lt;code>check_dashboard_errors&lt;/code>: Lists dashboards with erroring queries in the last 7 days.&lt;/li>
-&lt;li>&lt;code>check_explore_performance&lt;/code>: Lists the slowest explores in the last 7 days and reports average query runtime.&lt;/li>
-&lt;li>&lt;code>check_schedule_failures&lt;/code>: Lists schedules that have failed in the last 7 days.&lt;/li>
-&lt;li>&lt;code>check_legacy_features&lt;/code>: Lists enabled legacy features. (&lt;em>To note, this function is not available in Looker Core. You will get an error running this command with a Core instance configured.&lt;/em>)&lt;/li>
-&lt;/ul>
-&lt;h2 id="parameters">Parameters&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">health_analyze&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-health-analyze&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> health-analyze Tool
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> This tool calculates the usage of projects, models and explores.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> It accepts 6 parameters:
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> 1. `action`: can be &amp;#34;projects&amp;#34;, &amp;#34;models&amp;#34;, or &amp;#34;explores&amp;#34;
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> 2. `project`: the project to analyze (optional)
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> 3. `model`: the model to analyze (optional)
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> 4. `explore`: the explore to analyze (optional)
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> 5. `timeframe`: the lookback period in days, default is 90
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> 6. `min_queries`: the minimum number of queries to consider a resource as active, default is 1&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
 &lt;table>
  &lt;thead>
  &lt;tr>
@@ -3529,7 +3523,7 @@ in a given model in the source.&lt;/p>
  &lt;td>kind&lt;/td>
  &lt;td style="text-align: center">string&lt;/td>
  &lt;td style="text-align: center">true&lt;/td>
- &lt;td>Must be &amp;ldquo;looker-health-pulse&amp;rdquo;&lt;/td>
+ &lt;td>Must be &amp;ldquo;looker-health-analyze&amp;rdquo;&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td>source&lt;/td>
@@ -3538,6 +3532,35 @@ in a given model in the source.&lt;/p>
  &lt;td>Looker source name&lt;/td>
  &lt;/tr>
  &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>looker-health-pulse</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/looker/looker-health-pulse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/looker/looker-health-pulse/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>looker-health-pulse&lt;/code> tool performs health checks on a Looker instance. The &lt;code>action&lt;/code> parameter selects the type of check to perform:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>check_db_connections&lt;/code>: Checks all database connections, runs supported tests, and reports query counts.&lt;/li>
+&lt;li>&lt;code>check_dashboard_performance&lt;/code>: Finds dashboards with slow running queries in the last 7 days.&lt;/li>
+&lt;li>&lt;code>check_dashboard_errors&lt;/code>: Lists dashboards with erroring queries in the last 7 days.&lt;/li>
+&lt;li>&lt;code>check_explore_performance&lt;/code>: Lists the slowest explores in the last 7 days and reports average query runtime.&lt;/li>
+&lt;li>&lt;code>check_schedule_failures&lt;/code>: Lists schedules that have failed in the last 7 days.&lt;/li>
+&lt;li>&lt;code>check_legacy_features&lt;/code>: Lists enabled legacy features. (&lt;em>To note, this function is not
+available in Looker Core.&lt;/em>)&lt;/li>
+&lt;/ul>
+&lt;h2 id="parameters">Parameters&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
  &lt;td>action&lt;/td>
  &lt;td style="text-align: center">string&lt;/td>
  &lt;td style="text-align: center">true&lt;/td>
@@ -3545,19 +3568,6 @@ in a given model in the source.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;h2 id="example">Example&lt;/h2>
-&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">pulse&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-health-pulse&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-source&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Pulse Tool
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Performs health checks on Looker instance.
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Specify the `action` parameter to select the check.&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">parameters&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">action&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">check_dashboard_performance&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
 &lt;table>
  &lt;thead>
  &lt;tr>
@@ -3591,6 +3601,57 @@ in a given model in the source.&lt;/p>
  &lt;td>Lists enabled legacy features&lt;/td>
  &lt;/tr>
  &lt;/tbody>
+&lt;/table>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">health_pulse&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-health-pulse&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> health-pulse Tool
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> This tool takes the pulse of a Looker instance by taking
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> one of the following actions:
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> 1. `check_db_connections`,
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> 2. `check_dashboard_performance`,
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> 3. `check_dashboard_errors`,
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> 4. `check_explore_performance`,
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> 5. `check_schedule_failures`, or
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> 6. `check_legacy_features`
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> The `check_legacy_features` action is only available in Looker Core. If
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> it is called on a Looker Core instance, you will get a notice. That notice
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> should not be reported as an error.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;looker-health-pulse&amp;rdquo;&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Looker source name&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
 &lt;/table></description></item><item><title>looker-health-vacuum</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/looker/looker-health-vacuum/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/looker/looker-health-vacuum/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>looker-health-vacuum&lt;/code> tool helps you identify unused LookML objects such as models, explores, joins, and fields. The &lt;code>action&lt;/code> parameter selects the type of vacuum to perform:&lt;/p>
 &lt;ul>
@@ -3608,18 +3669,6 @@ in a given model in the source.&lt;/p>
  &lt;/tr>
  &lt;/thead>
  &lt;tbody>
- &lt;tr>
- &lt;td style="text-align: left">kind&lt;/td>
- &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">true&lt;/td>
- &lt;td style="text-align: left">Must be &amp;ldquo;looker-health-vacuum&amp;rdquo;&lt;/td>
- &lt;/tr>
- &lt;tr>
- &lt;td style="text-align: left">source&lt;/td>
- &lt;td style="text-align: left">string&lt;/td>
- &lt;td style="text-align: left">true&lt;/td>
- &lt;td style="text-align: left">Looker source name&lt;/td>
- &lt;/tr>
  &lt;tr>
  &lt;td style="text-align: left">action&lt;/td>
  &lt;td style="text-align: left">string&lt;/td>
