@@ -3152,7 +3152,6 @@ func runAnalyzeContributionWithRestriction(t *testing.T, allowedTableFullName, d
 			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/analyze-contribution-restricted/invoke", body, nil)
 
 			if resp.StatusCode != tc.wantStatusCode {
-				bodyBytes, _ := io.ReadAll(resp.Body)
 				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 
