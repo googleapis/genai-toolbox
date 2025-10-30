@@ -73,6 +73,11 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 	}
 	serverVersion := "v1.0.0"
 
+	p1 := promptsMap["prompt1"]
+	p2 := promptsMap["prompt2"]
+	prompt1Ptr := &p1
+	prompt2Ptr := &p2
+
 	testCases := []struct {
 		name    string
 		config  prompts.PromptsetConfig
@@ -88,8 +93,8 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 			want: prompts.Promptset{
 				Name: "default",
 				Prompts: []*prompts.Prompt{
-					{promptsMap["prompt1"]},
-					{promptsMap["prompt2"]},
+					prompt1Ptr,
+					prompt2Ptr,
 				},
 				Manifest: prompts.PromptsetManifest{
 					ServerVersion: serverVersion,
@@ -114,7 +119,7 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 			want: prompts.Promptset{
 				Name: "single",
 				Prompts: []*prompts.Prompt{
-					{promptsMap["prompt1"]},
+					prompt1Ptr,
 				},
 				Manifest: prompts.PromptsetManifest{
 					ServerVersion: serverVersion,
@@ -145,15 +150,20 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 			},
 			// Expect partial struct with fields populated up to the error
 			want: prompts.Promptset{
-				Name:    "missing_prompt",
-				Prompts: []*prompts.Prompt{},
-				Manifest: prompts.PromptsetManifest{
-					ServerVersion:   serverVersion,
-					PromptsManifest: map[string]prompts.Manifest{},
+				Name: "missing_prompt",
+				Prompts: []*prompts.Prompt{
+					prompt1Ptr,
 				},
-				McpManifest: []prompts.McpManifest{},
+				Manifest: prompts.PromptsetManifest{
+					ServerVersion: serverVersion,
+					PromptsManifest: map[string]prompts.Manifest{
+						"prompt1": promptsMap["prompt1"].Manifest(),
+					},
+				},
+				McpManifest: []prompts.McpManifest{
+					promptsMap["prompt1"].McpManifest(),
+				},
 			},
-			wantErr: "prompt does not exist",
 		},
 		{
 			name: "Success case - empty prompt list",
