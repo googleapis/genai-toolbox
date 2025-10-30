@@ -3149,16 +3149,7 @@ func runAnalyzeContributionWithRestriction(t *testing.T, allowedTableFullName, d
 			}
 			body := bytes.NewBuffer(bodyBytes)
 
-			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/api/tool/analyze-contribution-restricted/invoke", body)
-			if err != nil {
-				t.Fatalf("unable to create request: %s", err)
-			}
-			req.Header.Add("Content-type", "application/json")
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				t.Fatalf("unable to send request: %s", err)
-			}
-			defer resp.Body.Close()
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/analyze-contribution-restricted/invoke", body, nil)
 
 			if resp.StatusCode != tc.wantStatusCode {
 				bodyBytes, _ := io.ReadAll(resp.Body)
