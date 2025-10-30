@@ -22,6 +22,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -2480,12 +2481,15 @@ func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName1, allowed
 	testCases := []struct {
 		name           string
 		wantStatusCode int
-		wantResult     string
+		wantElements   []string
 	}{
 		{
 			name:           "invoke list-dataset-ids with restriction",
 			wantStatusCode: http.StatusOK,
-			wantResult:     fmt.Sprintf(`["%s.%s","%s.%s"]`, BigqueryProject, allowedDatasetName1, BigqueryProject, allowedDatasetName2),
+			wantElements: []string{
+				fmt.Sprintf("%s.%s", BigqueryProject, allowedDatasetName1),
+				fmt.Sprintf("%s.%s", BigqueryProject, allowedDatasetName2),
+			},
 		},
 	}
 
@@ -2502,27 +2506,22 @@ func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName1, allowed
 			if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
 				t.Fatalf("error parsing response body: %v", err)
 			}
-			got, ok := respBody["result"].(string)
+
+			gotJSON, ok := respBody["result"].(string)
 			if !ok {
-				t.Fatalf("unable to find result in response body")
+				t.Fatalf("unable to find 'result' as a string in response body: %s", string(bodyBytes))
 			}
 
-			var gotSlice, wantSlice []string
-			if err := json.Unmarshal([]byte(got), &gotSlice); err != nil {
-				t.Fatalf("failed to unmarshal 'got' result: %v", err)
-			}
-			if err := json.Unmarshal([]byte(tc.wantResult), &wantSlice); err != nil {
-				t.Fatalf("failed to unmarshal 'want' result: %v", err)
+			// Unmarshal the result string into a slice to compare contents.
+			var gotElements []string
+			if err := json.Unmarshal([]byte(gotJSON), &gotElements); err != nil {
+				t.Fatalf("error parsing result field JSON %q: %v", gotJSON, err)
 			}
 
-			sort.Strings(gotSlice)
-			sort.Strings(wantSlice)
-
-			sortedGot, _ := json.Marshal(gotSlice)
-			sortedWant, _ := json.Marshal(wantSlice)
-
-			if string(sortedGot) != string(sortedWant) {
-				t.Errorf("unexpected result: got %q, want %q", string(sortedGot), string(sortedWant))
+			sort.Strings(gotElements)
+			sort.Strings(tc.wantElements)
+			if !reflect.DeepEqual(gotElements, tc.wantElements) {
+				t.Errorf("unexpected result:\n got: %v\nwant: %v", gotElements, tc.wantElements)
 			}
 		})
 	}
