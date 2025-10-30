@@ -3167,7 +3167,7 @@ func runAnalyzeContributionWithRestriction(t *testing.T, allowedTableFullName, d
 				}
 
 				if !strings.Contains(got, tc.wantInResult) {
-					t.Errorf("unexpected result: got %q, want to contain %q", string(respBodyBytes), tc.wantInResult)
+					t.Errorf("unexpected result: got %q, want to contain %q", string(bodyBytes), tc.wantInResult)
 				}
 			}
 
