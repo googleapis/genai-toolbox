@@ -3155,7 +3155,6 @@ func runAnalyzeContributionWithRestriction(t *testing.T, allowedTableFullName, d
 				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 
-			respBodyBytes, _ := io.ReadAll(resp.Body)
 			var respBody map[string]interface{}
 			if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
 				t.Fatalf("error parsing response body: %v", err)
