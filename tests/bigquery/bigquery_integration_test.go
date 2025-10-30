@@ -295,6 +295,11 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 			"source":      "my-instance",
 			"description": "Tool to list table within a dataset",
 		},
+		"get-dataset-info-restricted": map[string]any{
+			"kind":        "bigquery-get-dataset-info",
+			"source":      "my-instance",
+			"description": "Tool to get dataset info",
+		},
 		"get-table-info-restricted": map[string]any{
 			"kind":        "bigquery-get-table-info",
 			"source":      "my-instance",
@@ -349,6 +354,8 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	runListDatasetIdsWithRestriction(t, allowedDatasetName1, allowedDatasetName2)
 	runListTableIdsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, allowedForecastTableName1, allowedAnalyzeContributionTableName1)
 	runListTableIdsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, allowedForecastTableName2, allowedAnalyzeContributionTableName2)
+	runGetDatasetInfoWithRestriction(t, allowedDatasetName1, disallowedDatasetName)
+	runGetDatasetInfoWithRestriction(t, allowedDatasetName2, disallowedDatasetName)
 	runGetTableInfoWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, disallowedTableName)
 	runGetTableInfoWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, disallowedTableName)
 	runExecuteSqlWithRestriction(t, allowedTableNameParam1, disallowedTableNameParam)
@@ -2501,7 +2508,7 @@ func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName1, allowed
 	testCases := []struct {
 		name           string
 		wantStatusCode int
-		wantElements []string
+		wantElements   []string
 	}{
 		{
 			name:           "invoke list-dataset-ids with restriction",
@@ -2526,7 +2533,7 @@ func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName1, allowed
 			if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
 				t.Fatalf("error parsing response body: %v", err)
 			}
-			
+
 			gotJSON, ok := respBody["result"].(string)
 			if !ok {
 				t.Fatalf("unable to find 'result' as a string in response body: %s", string(bodyBytes))
@@ -2618,6 +2625,55 @@ func runListTableIdsWithRestriction(t *testing.T, allowedDatasetName, disallowed
 				if string(sortedGotBytes) != tc.wantInResult {
 					t.Errorf("unexpected result: got %q, want %q", string(sortedGotBytes), tc.wantInResult)
 				}
+			}
+
+			if tc.wantInError != "" {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				if !strings.Contains(string(bodyBytes), tc.wantInError) {
+					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
+				}
+			}
+		})
+	}
+}
+
+func runGetDatasetInfoWithRestriction(t *testing.T, allowedDatasetName, disallowedDatasetName string) {
+	testCases := []struct {
+		name           string
+		dataset        string
+		wantStatusCode int
+		wantInError    string
+	}{
+		{
+			name:           "invoke on allowed dataset",
+			dataset:        allowedDatasetName,
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "invoke on disallowed dataset",
+			dataset:        disallowedDatasetName,
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    fmt.Sprintf("access denied to dataset '%s'", disallowedDatasetName),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			body := bytes.NewBuffer([]byte(fmt.Sprintf(`{"dataset":"%s"}`, tc.dataset)))
+			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/api/tool/get-dataset-info-restricted/invoke", body)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 
 			if tc.wantInError != "" {
