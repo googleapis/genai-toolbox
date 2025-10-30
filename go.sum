@@ -1134,8 +1134,8 @@ github.com/kylelemons/godebug v1.1.0 h1:RPNrshWIDI6G2gRW9EHilWtl7Z6Sb1BR0xunSBf0
 github.com/kylelemons/godebug v1.1.0/go.mod h1:9/0rRGxNHcop5bhtWyNeEfOS8JIWk580+fNqagV/RAw=
 github.com/leodido/go-urn v1.4.0 h1:WT9HwE9SGECu3lg4d/dIA+jxlljEa1/ffXKmRjqdmIQ=
 github.com/leodido/go-urn v1.4.0/go.mod h1:bvxc+MVxLKB4z00jd1z+Dvzr47oO32F/QSNjSBOlFxI=
-github.com/looker-open-source/sdk-codegen/go v0.25.16 h1:eOSGfU9Vls4nlA2rOxy8SNqFOW5PRDgC5p9jsS+lYJc=
-github.com/looker-open-source/sdk-codegen/go v0.25.16/go.mod h1:Br1ntSiruDJ/4nYNjpYyWyCbqJ7+GQceWbIgn0hYims=
+github.com/looker-open-source/sdk-codegen/go v0.25.18 h1:me1JBFRnOBCrDWwpoSUVDVDFcFmcYMR2ijbx6ATtwTs=
+github.com/looker-open-source/sdk-codegen/go v0.25.18/go.mod h1:Br1ntSiruDJ/4nYNjpYyWyCbqJ7+GQceWbIgn0hYims=
 github.com/lyft/protoc-gen-star v0.6.0/go.mod h1:TGAoBVkt8w7MPG72TrKIu85MIdXwDuzJYeZuUPFPNwA=
 github.com/lyft/protoc-gen-star v0.6.1/go.mod h1:TGAoBVkt8w7MPG72TrKIu85MIdXwDuzJYeZuUPFPNwA=
 github.com/lyft/protoc-gen-star/v2 v2.0.1/go.mod h1:RcCdONR2ScXaYnQC5tUzxzlpA3WVYF7/opLeUgcQs/o=
