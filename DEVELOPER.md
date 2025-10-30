@@ -151,38 +151,37 @@ go test -race -v ./cmd/... ./internal/...
 
    Be sure to set the timeout to a reasonable value for your tests.
    
-## How to Fix Failing Link Checks
+## Link Checks
 
-We use **[lychee](https://github.com/lycheeverse/lychee-action)** to quickly check all links in our repository.
+We use **[lychee](https://github.com/lycheeverse/lychee-action)** to check all links in our repository.
 
+Checking and updating broken links locally [reference](https://github.com/lycheeverse/lychee?tab=readme-ov-file#compile-and-install-lychee)
+  
 ### Primary Fix: Update the Link
-* The first and best step is always to fix the broken link or update the content where it is used.
+* Fix the broken link or update the content where it is used.
 
 ### Secondary Fix: Ignoring Links
 * If you cannot fix the link (e.g., due to an external service's rate-limit or if it's a local-only URL), you can tell `lychee` to ignore it.
 
-* To do this, create a file named `.lycheeignore` in the root of your repository.
-
-* List regular expressions or direct links, with one entry per line, that should be skipped.
+* List regular expressions or direct links in  **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/link-checker-workflow/.lycheeignore)** , with one entry per line, that should be skipped  .
 
 
 ### When to Ignore a Link
-* External Flakes/Rate-Limits: Use .lycheeignore to skip checking links that frequently fail due to external service issues like rate-limiting.
+* External Rate-Limits: You can skip checking links that frequently fail due to external service issues like rate-limiting.
 * Local-Only URLs: Skip URLs that are only meant to work in a specific local environment.
+
+**Example** `.lycheeignore`
+
+```text
+# These are email addresses, not standard web URLs, and usually cause check failures . 
+^mailto:.*
+```
 
 ###  Best Practice for Ignoring
 
-* To permanently skip certain links from checking,include that links in  **`.lycheeignore`** .
+* To permanently skip certain links from checking,include that links in  **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/link-checker-workflow/.lycheeignore)** .
 
 * Always add a comment in `.lycheeignore` explaining why the link is being skipped. This prevents link rot and helps future maintainers.
-
-**Example** `.lycheeignore`
-```text
-# Example .lycheeignore content:
-^mailto:.*
-^https://example\.com/temp-link.*
-https://www.sql.com/downloads/
-```
 
 
 
