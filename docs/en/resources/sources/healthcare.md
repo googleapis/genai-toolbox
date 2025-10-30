@@ -63,6 +63,24 @@ If you are new to the Healthcare API, you can try to
 - [`fhir-fetch-page`](../tools/healthcare/fhir-fetch-page.md)
   Fetches a page of FHIR resources from a given URL.
 
+- [`get-dicom-store`](../tools/healthcare/get-dicom-store.md)
+  Retrieves information about a DICOM store.
+
+- [`get-dicom-store-metrics`](../tools/healthcare/get-dicom-store-metrics.md)
+  Retrieves metrics for a DICOM store.
+
+- [`search-dicom-studies`](../tools/healthcare/search-dicom-studies.md)
+  Searches for DICOM studies in a DICOM store.
+
+- [`search-dicom-series`](../tools/healthcare/search-dicom-series.md)
+  Searches for DICOM series in a DICOM store.
+
+- [`search-dicom-instances`](../tools/healthcare/search-dicom-instances.md)
+  Searches for DICOM instances in a DICOM store.
+
+- [`retrieve-rendered-dicom-instance`](../tools/healthcare/retrieve-rendered-dicom-instance.md)
+  Retrieves a rendered DICOM instance from a DICOM store.
+
 ## Requirements
 
 ### IAM Permissions

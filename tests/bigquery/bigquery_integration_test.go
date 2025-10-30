@@ -2474,7 +2474,7 @@ func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName1, allowed
 	testCases := []struct {
 		name           string
 		wantStatusCode int
-		wantElements []string
+		wantElements   []string
 	}{
 		{
 			name:           "invoke list-dataset-ids with restriction",
@@ -2499,7 +2499,7 @@ func runListDatasetIdsWithRestriction(t *testing.T, allowedDatasetName1, allowed
 			if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
 				t.Fatalf("error parsing response body: %v", err)
 			}
-			
+
 			gotJSON, ok := respBody["result"].(string)
 			if !ok {
 				t.Fatalf("unable to find 'result' as a string in response body: %s", string(bodyBytes))
