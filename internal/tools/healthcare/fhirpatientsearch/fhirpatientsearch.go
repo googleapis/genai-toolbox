@@ -231,11 +231,15 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			if len(parts) != 2 {
 				return nil, fmt.Errorf("invalid '%s' format; expected YYYY-MM-DD/YYYY-MM-DD", k)
 			}
+			var values []string
 			if parts[0] != "" {
-				opts = append(opts, googleapi.QueryParameter(key, "ge"+parts[0]))
+				values = append(values, "ge"+parts[0])
 			}
 			if parts[1] != "" {
-				opts = append(opts, googleapi.QueryParameter(key, "le"+parts[1]))
+				values = append(values, "le"+parts[1])
+			}
+			if len(values) != 0 {
+				opts = append(opts, googleapi.QueryParameter(key, values...))
 			}
 		case addressUseKey:
 			opts = append(opts, googleapi.QueryParameter("address-use", val))
