@@ -1256,8 +1256,6 @@ func TestPrebuiltTools(t *testing.T) {
 	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
 	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
 	healthcare_config, _ := prebuiltconfigs.Get("healthcare")
-	healthcare_fhir_config, _ := prebuiltconfigs.Get("healthcare-fhir")
-	healthcare_dicom_config, _ := prebuiltconfigs.Get("healthcare-dicom")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1622,29 +1620,17 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "healthcare prebuilt tools",
 			in:   healthcare_config,
 			wantToolset: server.ToolsetConfigs{
-				"healthcare_tools": tools.ToolsetConfig{
-					Name:      "healthcare_tools",
-					ToolNames: []string{"get_dataset", "list_dicom_stores", "list_fhir_stores", "get_fhir_store", "get_fhir_store_metrics", "get_fhir_resource", "fhir_patient_search", "fhir_patient_everything", "fhir_fetch_page", "get_dicom_store", "get_dicom_store_metrics", "search_dicom_studies", "search_dicom_series", "search_dicom_instances", "retrieve_rendered_dicom_instance"},
+				"healthcare_dataset_tools": tools.ToolsetConfig{
+					Name:      "healthcare_dataset_tools",
+					ToolNames: []string{"get_dataset", "list_dicom_stores", "list_fhir_stores"},
 				},
-			},
-		},
-		{
-			name: "healthcare dicom prebuilt tools",
-			in:   healthcare_dicom_config,
-			wantToolset: server.ToolsetConfigs{
-				"healthcare_dicom_tools": tools.ToolsetConfig{
-					Name:      "healthcare_dicom_tools",
-					ToolNames: []string{"get_dataset", "list_dicom_stores", "get_dicom_store", "get_dicom_store_metrics", "search_dicom_studies", "search_dicom_series", "search_dicom_instances", "retrieve_rendered_dicom_instance"},
-				},
-			},
-		},
-		{
-			name: "healthcare fhir prebuilt tools",
-			in:   healthcare_fhir_config,
-			wantToolset: server.ToolsetConfigs{
 				"healthcare_fhir_tools": tools.ToolsetConfig{
 					Name:      "healthcare_fhir_tools",
-					ToolNames: []string{"get_dataset", "list_fhir_stores", "get_fhir_store", "get_fhir_store_metrics", "get_fhir_resource", "fhir_patient_search", "fhir_patient_everything", "fhir_fetch_page"},
+					ToolNames: []string{"get_fhir_store", "get_fhir_store_metrics", "get_fhir_resource", "fhir_patient_search", "fhir_patient_everything", "fhir_fetch_page"},
+				},
+				"healthcare_dicom_tools": tools.ToolsetConfig{
+					Name:      "healthcare_dicom_tools",
+					ToolNames: []string{"get_dicom_store", "get_dicom_store_metrics", "search_dicom_studies", "search_dicom_series", "search_dicom_instances", "retrieve_rendered_dicom_instance"},
 				},
 			},
 		},

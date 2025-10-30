@@ -83,16 +83,18 @@ tools:
     source: healthcare-source
 
 toolsets:
-  healthcare_tools:
+  healthcare_dataset_tools:
     - get_dataset
     - list_dicom_stores
     - list_fhir_stores
+  healthcare_fhir_tools:
     - get_fhir_store
     - get_fhir_store_metrics
     - get_fhir_resource
     - fhir_patient_search
     - fhir_patient_everything
     - fhir_fetch_page
+  healthcare_dicom_tools:
     - get_dicom_store
     - get_dicom_store_metrics
     - search_dicom_studies
