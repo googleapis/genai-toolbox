@@ -703,22 +703,6 @@ steps:
           trino \
           trinosql trinoexecutesql
 
-  - id: "utility"
-    name: golang:1
-    waitFor: ["compile-test-binary"]
-    entrypoint: /bin/bash
-    env:
-      - "GOPATH=/gopath"
-    volumes:
-      - name: "go"
-        path: "/gopath"
-    args:
-      - -c
-      - |
-        .ci/test_with_coverage.sh \
-          "Utility" \
-          utility
-
   - id: "yugabytedb"
     name: golang:1
     waitFor: ["compile-test-binary"]
