@@ -85,6 +85,35 @@ func TestParseFromYamlCloudSQLMssql(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with deprecated ipAddress",
+			in: `
+			sources:
+				my-instance:
+					kind: cloud-sql-mssql
+					project: my-project
+					region: my-region
+					instance: my-instance
+					ipAddress: random
+					database: my_db
+					user: my_user
+					password: my_pass
+			`,
+			want: server.SourceConfigs{
+				"my-instance": cloudsqlmssql.Config{
+					Name:      "my-instance",
+					Kind:      cloudsqlmssql.SourceKind,
+					Project:   "my-project",
+					Region:    "my-region",
+					Instance:  "my-instance",
+					IPAddress: "random",
+					IPType:    "public",
+					Database:  "my_db",
+					User:      "my_user",
+					Password:  "my_pass",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
