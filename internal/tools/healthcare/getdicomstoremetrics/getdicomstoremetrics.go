@@ -4,30 +4,29 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//	http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package lookerdeleteprojectfile
+
+package getdicomstoremetrics
 
 import (
 	"context"
 	"fmt"
 
-	yaml "github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
+	healthcareds "github.com/googleapis/genai-toolbox/internal/sources/healthcare"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
-
-	"github.com/looker-open-source/sdk-codegen/go/rtl"
-	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
+	"github.com/googleapis/genai-toolbox/internal/tools/healthcare/common"
+	"google.golang.org/api/healthcare/v1"
 )
 
-const kind string = "looker-delete-project-file"
+const kind string = "get-dicom-store-metrics"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -42,6 +41,21 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	}
 	return actual, nil
 }
+
+type compatibleSource interface {
+	Project() string
+	Region() string
+	DatasetID() string
+	AllowedDICOMStores() map[string]struct{}
+	Service() *healthcare.Service
+	ServiceCreator() healthcareds.HealthcareServiceCreator
+	UseClientAuthorization() bool
+}
+
+// validate compatible sources are still compatible
+var _ compatibleSource = &healthcareds.Source{}
+
+var compatibleSources = [...]string{healthcareds.SourceKind}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
@@ -66,76 +80,79 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// verify the source is compatible
-	s, ok := rawS.(*lookersrc.Source)
+	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	projectIdParameter := tools.NewStringParameter("project_id", "The id of the project containing the files")
-	filePathParameter := tools.NewStringParameter("file_path", "The path of the file within the project")
-	parameters := tools.Parameters{projectIdParameter, filePathParameter}
-
+	parameters := tools.Parameters{}
+	if len(s.AllowedDICOMStores()) != 1 {
+		parameters = append(parameters, tools.NewStringParameter(common.StoreKey, "The DICOM store ID to get metrics for."))
+	}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
 
 	// finish tool setup
-	return Tool{
+	t := Tool{
 		Name:           cfg.Name,
 		Kind:           kind,
 		Parameters:     parameters,
 		AuthRequired:   cfg.AuthRequired,
-		UseClientOAuth: s.UseClientOAuth,
-		Client:         s.Client,
-		ApiSettings:    s.ApiSettings,
-		manifest: tools.Manifest{
-			Description:  cfg.Description,
-			Parameters:   parameters.Manifest(),
-			AuthRequired: cfg.AuthRequired,
-		},
-		mcpManifest: mcpManifest,
-	}, nil
+		Project:        s.Project(),
+		Region:         s.Region(),
+		Dataset:        s.DatasetID(),
+		AllowedStores:  s.AllowedDICOMStores(),
+		UseClientOAuth: s.UseClientAuthorization(),
+		ServiceCreator: s.ServiceCreator(),
+		Service:        s.Service(),
+		manifest:       tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:    mcpManifest,
+	}
+	return t, nil
 }
 
 // validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string `yaml:"name"`
-	Kind           string `yaml:"kind"`
-	UseClientOAuth bool
-	Client         *v4.LookerSDK
-	ApiSettings    *rtl.ApiSettings
+	Name           string           `yaml:"name"`
+	Kind           string           `yaml:"kind"`
 	AuthRequired   []string         `yaml:"authRequired"`
+	UseClientOAuth bool             `yaml:"useClientOAuth"`
 	Parameters     tools.Parameters `yaml:"parameters"`
-	manifest       tools.Manifest
-	mcpManifest    tools.McpManifest
+
+	Project, Region, Dataset string
+	AllowedStores            map[string]struct{}
+	Service                  *healthcare.Service
+	ServiceCreator           healthcareds.HealthcareServiceCreator
+	manifest                 tools.Manifest
+	mcpManifest              tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
-	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
+	storeID, err := common.ValidateAndFetchStoreID(params, t.AllowedStores)
 	if err != nil {
-		return nil, fmt.Errorf("error getting sdk: %w", err)
+		return nil, err
 	}
 
-	mapParams := params.AsMap()
-	projectId, ok := mapParams["project_id"].(string)
-	if !ok {
-		return nil, fmt.Errorf("'project_id' must be a string, got %T", mapParams["project_id"])
-	}
-	filePath, ok := mapParams["file_path"].(string)
-	if !ok {
-		return nil, fmt.Errorf("'file_path' must be a string, got %T", mapParams["file_path"])
+	svc := t.Service
+	// Initialize new service if using user OAuth token
+	if t.UseClientOAuth {
+		tokenStr, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
+		svc, err = t.ServiceCreator(tokenStr)
+		if err != nil {
+			return nil, fmt.Errorf("error creating service from OAuth access token: %w", err)
+		}
 	}
 
-	err = lookercommon.DeleteProjectFile(sdk, projectId, filePath, t.ApiSettings)
+	storeName := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/dicomStores/%s", t.Project, t.Region, t.Dataset, storeID)
+	store, err := svc.Projects.Locations.Datasets.DicomStores.GetDICOMStoreMetrics(storeName).Do()
 	if err != nil {
-		return nil, fmt.Errorf("error making delete_project_file request: %s", err)
+		return nil, fmt.Errorf("failed to get metrics for DICOM store %q: %w", storeName, err)
 	}
-
-	data := make(map[string]any)
-	data["type"] = "text"
-	data["text"] = fmt.Sprintf("deleted file %s in project %s", filePath, projectId)
-
-	return data, nil
+	return store, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
