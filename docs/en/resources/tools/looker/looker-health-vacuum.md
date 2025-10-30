@@ -17,16 +17,14 @@ The `looker-health-vacuum` tool helps you identify unused LookML objects such as
 
 ## Parameters
 
-| **field** | **type** | **required** | **description** |
-| :--- | :--- | :--- | :--- |
-| kind | string | true | Must be "looker-health-vacuum" |
-| source | string | true | Looker source name |
-| action | string | true | The vacuum to perform: `models`, or `explores`. |
-| project | string | false | The name of the Looker project to vacuum. |
-| model | string | false | The name of the Looker model to vacuum. |
-| explore | string | false | The name of the Looker explore to vacuum. |
-| timeframe | int | false | The timeframe in days to analyze for usage. Defaults to 90. |
-| min_queries | int | false | The minimum number of queries for an object to be considered used. Defaults to 1. |
+| **field**   | **type** | **required** | **description**                                                                   |
+|:------------|:---------|:-------------|:----------------------------------------------------------------------------------|
+| action      | string   | true         | The vacuum to perform: `models`, or `explores`.                                   |
+| project     | string   | false        | The name of the Looker project to vacuum.                                         |
+| model       | string   | false        | The name of the Looker model to vacuum.                                           |
+| explore     | string   | false        | The name of the Looker explore to vacuum.                                         |
+| timeframe   | int      | false        | The timeframe in days to analyze for usage. Defaults to 90.                       |
+| min_queries | int      | false        | The minimum number of queries for an object to be considered used. Defaults to 1. |
 
 ## Example
 
@@ -53,3 +51,10 @@ tools:
 
       The result is a list of objects that are candidates for deletion.
 ```
+
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "looker-health-vacuum"                     |
+| source      |  string  |     true     | Looker source name                                 |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

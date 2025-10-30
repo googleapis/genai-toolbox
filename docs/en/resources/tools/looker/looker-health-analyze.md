@@ -18,16 +18,14 @@ The `looker-health-analyze` tool performs various analysis tasks on a Looker ins
 
 ## Parameters
 
-| **field** | **type** | **required** | **description** |
-| :--- | :--- | :--- | :--- |
-| kind | string | true | Must be "looker-health-analyze" |
-| source | string | true | Looker source name |
-| action | string | true | The analysis to perform: `projects`, `models`, or `explores`. |
-| project | string | false | The name of the Looker project to analyze. |
-| model | string | false | The name of the Looker model to analyze. Required for `explores` actions. |
-| explore | string | false | The name of the Looker explore to analyze. Required for the `explores` action. |
-| timeframe | int | false | The timeframe in days to analyze. Defaults to 90. |
-| min_queries | int | false | The minimum number of queries for a model or explore to be considered used. Defaults to 1. |
+| **field**   | **type** | **required** | **description**                                                                            |
+|:------------|:---------|:-------------|:-------------------------------------------------------------------------------------------|
+| action      | string   | true         | The analysis to perform: `projects`, `models`, or `explores`.                              |
+| project     | string   | false        | The name of the Looker project to analyze.                                                 |
+| model       | string   | false        | The name of the Looker model to analyze. Required for `explores` actions.                  |
+| explore     | string   | false        | The name of the Looker explore to analyze. Required for the `explores` action.             |
+| timeframe   | int      | false        | The timeframe in days to analyze. Defaults to 90.                                          |
+| min_queries | int      | false        | The minimum number of queries for a model or explore to be considered used. Defaults to 1. |
 
 ## Example
 
@@ -49,3 +47,11 @@ tools:
         5. `timeframe`: the lookback period in days, default is 90
         6. `min_queries`: the minimum number of queries to consider a resource as active, default is 1
 ```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "looker-health-analyze"                    |
+| source      |  string  |     true     | Looker source name                                 |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
