@@ -36,8 +36,8 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker-get-connection-table-columns".                                                   |
-| source      |                   string                   |     true     | Name of the source Looker instance.                                                              |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "looker-get-connection-table-columns".     |
+| source      |  string  |     true     | Name of the source Looker instance.                |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
