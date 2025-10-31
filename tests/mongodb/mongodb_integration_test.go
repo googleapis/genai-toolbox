@@ -498,8 +498,6 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"filterParams":   []any{},
 				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
 				"database":       MongoDbDatabase,
-				"limit":          1,
-				"sort":           `{ "id": 1 }`,
 			},
 			"my-tool": map[string]any{
 				"kind":          toolKind,
