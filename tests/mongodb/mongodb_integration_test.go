@@ -446,7 +446,6 @@ func setupMongoDB(t *testing.T, ctx context.Context, database *mongo.Database) f
 
 	documents := []map[string]any{
 		{"_id": 1, "id": 1, "name": "Alice", "email": ServiceAccountEmail},
-		{"_id": 1, "id": 2, "name": "FakeAlice", "email": "fakeAlice@gmail.com"},
 		{"_id": 2, "id": 2, "name": "Jane"},
 		{"_id": 3, "id": 3, "name": "Sid"},
 		{"_id": 4, "id": 4, "name": nil},
