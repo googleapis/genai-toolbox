@@ -44,7 +44,7 @@ require (
 	github.com/trinodb/trino-go-client v0.329.0
 	github.com/valkey-io/valkey-go v1.0.67
 	github.com/yugabyte/pgx/v5 v5.5.3-yb-5
-	go.mongodb.org/mongo-driver v1.17.4
+	go.mongodb.org/mongo-driver v1.17.6
 	go.opentelemetry.io/contrib/propagators/autoprop v0.62.0
 	go.opentelemetry.io/otel v1.38.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.37.0
