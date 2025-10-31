@@ -1,0 +1,73 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Publish to MCP Registry
+
+on:
+  push:
+    tags: ["v*"]  # Triggers on version tags like v1.0.0
+  # allow manual triggering with no inputs required
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for OIDC authentication
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Wait for image in Artifact Registry
+        shell: bash
+        run: |
+          MAX_ATTEMPTS=3
+          VERSION=$(jq -r '.version' server.json)
+          REGISTRY_URL="https://us-central1-docker.pkg.dev/v2/database-toolbox/toolbox/toolbox/manifests/${VERSION}"
+
+          # initially sleep time to wait for the version release
+          sleep 10m
+
+          for i in $(seq 1 ${MAX_ATTEMPTS}); do
+            echo "Attempt $i: Checking for image ${REGISTRY_URL}..."
+            # Use curl to check the manifest header
+            # Using -I to fetch headers only, -s silent, -f fail fast on errors.
+            curl -Isf "${REGISTRY_URL}" > /dev/null
+
+            if [ $? -eq 0 ]; then
+              echo "✅ Image found! Continuing to next steps."
+              exit 0
+            else
+              echo "❌ Image not found (likely 404 error) on attempt $i."
+              if [ $i -lt ${MAX_ATTEMPTS} ]; then
+                echo "Sleeping for 5 minutes before next attempt..."
+                sleep 5m
+              else
+                echo "Maximum attempts reached. Image not found."
+                exit 1
+              fi
+            fi
+          done
+
+      - name: Install MCP Publisher
+        run: |
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/').tar.gz" | tar xz mcp-publisher
+
+      - name: Login to MCP Registry
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish to MCP Registry
+        run: ./mcp-publisher publish --file=.registry/server.json
