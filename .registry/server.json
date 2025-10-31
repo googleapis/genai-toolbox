@@ -1,0 +1,65 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "io.github.googleapis/genai-toolbox",
+  "description": "MCP Toolbox for Databases enables your agent to connect to your database.",
+  "status": "active",
+  "repository": {
+    "url": "https://github.com/googleapis/genai-toolbox",
+    "source": "github"
+  },
+  "version": "0.18.0",
+  "packages": [
+    {
+      "registryType": "oci",
+      "registryBaseUrl": "https://artifactregistry.googleapis.com",
+      "identifier": "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.18.0",
+      "transport": {
+        "type": "streamable-http",
+        "url": "http://{host}:{port}"
+      },
+      "packageArguments": [
+        {
+            "type": "named",
+            "name": "--tools-file",
+            "description": "File path specifying the tool configuration.",
+            "default": "tools.yaml",
+            "isRequired": false
+        },
+        {
+            "type": "named",
+            "name": "--address",
+            "description": "Address of the interface the server will listen on.",
+            "value": "{host}",
+            "variables": {
+                "host": {
+                    "description": "address",
+                    "isRequired": true,
+                    "default": "127.0.0.1"
+                }
+            }
+        },
+        {
+            "type": "named",
+            "name": "--port",
+            "description": "Port the server will listen on.",
+            "value": "{port}",
+            "variables": {
+                "host": {
+                    "description": "port",
+                    "isRequired": true,
+                    "default": "5000"
+                }
+            }
+        },
+        {
+            "type": "named",
+            "name": "--log-level",
+            "description": "Specify the minimum level logged.",
+            "default": "info",
+            "choices": ["debug", "info", "warn", "error"],
+            "isRequired": true
+        }
+      ]
+    }
+  ]
+}
