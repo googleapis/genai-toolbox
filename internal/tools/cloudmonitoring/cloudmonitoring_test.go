@@ -4,7 +4,7 @@
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,184 +12,144 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudmonitoring
+package cloudmonitoring_test
 
 import (
-	"context"
-	"net/http"
 	"strings"
 	"testing"
 
-	"github.com/goccy/go-yaml"
+	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	cloudmonitoringsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudmonitoring"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
 )
 
-func TestInitialize(t *testing.T) {
-	t.Parallel()
-
-	cfg := Config{
-		Name:        "test-tool",
-		Kind:        kind,
-		Source:      "test-source",
-		Description: "A test tool",
+func TestParseFromYamlCloudMonitoring(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
 	}
-
-	srcs := map[string]sources.Source{
-		"test-source": &cloudmonitoringsrc.Source{
-			BaseURL: "http://localhost",
-			Client:  &http.Client{},
+	tcs := []struct {
+		desc string
+		in   string
+		want server.ToolConfigs
+	}{
+		{
+			desc: "basic example",
+			in: `
+			tools:
+				example_tool:
+					kind: cloud-monitoring-query-prometheus
+					source: my-instance
+					description: some description
+				`,
+			want: server.ToolConfigs{
+				"example_tool": cloudmonitoring.Config{
+					Name:         "example_tool",
+					Kind:         "cloud-monitoring-query-prometheus",
+					Source:       "my-instance",
+					Description:  "some description",
+					AuthRequired: []string{},
+				},
+			},
+		},
+		{
+			desc: "advanced example",
+			in: `
+			tools:
+				example_tool:
+					kind: cloud-monitoring-query-prometheus
+					source: my-instance
+					description: some description
+					authRequired:
+						- my-google-auth-service
+						- other-auth-service
+			`,
+			want: server.ToolConfigs{
+				"example_tool": cloudmonitoring.Config{
+					Name:         "example_tool",
+					Kind:         "cloud-monitoring-query-prometheus",
+					Source:       "my-instance",
+					Description:  "some description",
+					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+				},
+			},
 		},
 	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Tools server.ToolConfigs `yaml:"tools"`
+			}{}
+			// Parse contents
+			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			if err != nil {
+				t.Fatalf("unable to unmarshal: %s", err)
+			}
+			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+				t.Fatalf("incorrect parse: diff %v", diff)
+			}
+		})
+	}
+}
 
-	itool, err := cfg.Initialize(srcs)
+func TestFailParseFromYamlCloudMonitoring(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
-		t.Fatalf("Initialize() error = %v", err)
+		t.Fatalf("unexpected error: %s", err)
 	}
-
-	tool, ok := itool.(Tool)
-	if !ok {
-		t.Fatalf("Initialize() did not return a cloudmonitoring.Tool")
-	}
-
-	if tool.Name != "test-tool" {
-		t.Errorf("tool.Name = %q, want %q", tool.Name, "test-tool")
-	}
-}
-
-func TestInitialize_NoSource(t *testing.T) {
-	t.Parallel()
-
-	cfg := Config{
-		Name:   "test-tool",
-		Kind:   kind,
-		Source: "test-source",
-	}
-
-	srcs := map[string]sources.Source{}
-
-	_, err := cfg.Initialize(srcs)
-	if err == nil {
-		t.Fatal("Initialize() error = nil, want error")
-	}
-}
-
-func TestInitialize_InvalidSource(t *testing.T) {
-	t.Parallel()
-
-	cfg := Config{
-		Name:   "test-tool",
-		Kind:   kind,
-		Source: "test-source",
-	}
-
-	// A dummy source that is not a cloudmonitoring source
-	type invalidSource struct{ sources.Source }
-	srcs := map[string]sources.Source{
-		"test-source": &invalidSource{},
-	}
-
-	_, err := cfg.Initialize(srcs)
-	if err == nil {
-		t.Fatal("Initialize() error = nil, want error")
-	}
-}
-
-func TestToolConfigKind(t *testing.T) {
-	t.Parallel()
-	cfg := Config{}
-	if cfg.ToolConfigKind() != kind {
-		t.Errorf("ToolConfigKind() = %q, want %q", cfg.ToolConfigKind(), kind)
-	}
-}
-
-func TestNewConfig(t *testing.T) {
-	t.Parallel()
-	yamlString := `
-name: test-tool
-kind: cloud-monitoring-query-prometheus
-source: test-source
-description: A test tool
-`
-	decoder := yaml.NewDecoder(strings.NewReader(yamlString))
-	cfg, err := newConfig(context.Background(), "test-tool", decoder)
-	if err != nil {
-		t.Fatalf("newConfig() error = %v", err)
-	}
-
-	expected := Config{
-		Name:        "test-tool",
-		Kind:        "cloud-monitoring-query-prometheus",
-		Source:      "test-source",
-		Description: "A test tool",
-	}
-
-	if diff := cmp.Diff(expected, cfg); diff != "" {
-		t.Errorf("newConfig() mismatch (-want +got): %s", diff)
-	}
-}
-
-func TestParseParams(t *testing.T) {
-	t.Parallel()
-	tool := Tool{
-		AllParams: tools.Parameters{
-			tools.NewStringParameterWithRequired("projectId", "The Id of the Google Cloud project.", true),
-			tools.NewStringParameterWithRequired("query", "The promql query to execute.", true),
+	tcs := []struct {
+		desc string
+		in   string
+		err  string
+	}{
+		{
+			desc: "Invalid kind",
+			in: `
+			tools:
+				example_tool:
+					kind: invalid-kind
+					source: my-instance
+					description: some description
+			`,
+			err: `unknown tool kind: "invalid-kind"`,
+		},
+		{
+			desc: "missing source",
+			in: `
+			tools:
+				example_tool:
+					kind: cloud-monitoring-query-prometheus
+					description: some description
+			`,
+			err: `Key: 'Config.Source' Error:Field validation for 'Source' failed on the 'required' tag`,
+		},
+		{
+			desc: "missing description",
+			in: `
+			tools:
+				example_tool:
+					kind: cloud-monitoring-query-prometheus
+					source: my-instance
+			`,
+			err: `Key: 'Config.Description' Error:Field validation for 'Description' failed on the 'required' tag`,
 		},
 	}
-
-	data := map[string]any{
-		"projectId": "test-project",
-		"query":     "up",
-	}
-
-	params, err := tool.ParseParams(data, nil)
-	if err != nil {
-		t.Fatalf("ParseParams() error = %v", err)
-	}
-
-	expected := tools.ParamValues{
-		{Name: "projectId", Value: "test-project"},
-		{Name: "query", Value: "up"},
-	}
-
-	if diff := cmp.Diff(expected, params); diff != "" {
-		t.Errorf("ParseParams() mismatch (-want +got): %s", diff)
-	}
-}
-
-func TestManifest(t *testing.T) {
-	t.Parallel()
-	expected := tools.Manifest{Description: "desc"}
-	tool := Tool{manifest: expected}
-	if diff := cmp.Diff(expected, tool.Manifest()); diff != "" {
-		t.Errorf("Manifest() mismatch (-want +got): %s", diff)
-	}
-}
-
-func TestMcpManifest(t *testing.T) {
-	t.Parallel()
-	expected := tools.McpManifest{Name: "mcp-manifest"}
-	tool := Tool{mcpManifest: expected}
-	if diff := cmp.Diff(expected, tool.McpManifest()); diff != "" {
-		t.Errorf("McpManifest() mismatch (-want +got): %s", diff)
-	}
-}
-
-func TestAuthorized(t *testing.T) {
-	t.Parallel()
-	tool := Tool{}
-	if !tool.Authorized(nil) {
-		t.Error("Authorized() = false, want true")
-	}
-}
-
-func TestRequiresClientAuthorization(t *testing.T) {
-	t.Parallel()
-	tool := Tool{}
-	if tool.RequiresClientAuthorization() {
-		t.Error("RequiresClientAuthorization() = true, want false")
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			got := struct {
+				Tools server.ToolConfigs `yaml:"tools"`
+			}{}
+			// Parse contents
+			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			if err == nil {
+				t.Fatalf("expect parsing to fail")
+			}
+			errStr := err.Error()
+			if !strings.Contains(errStr, tc.err) {
+				t.Fatalf("unexpected error string: got %q, want substring %q", errStr, tc.err)
+			}
+		})
 	}
 }
