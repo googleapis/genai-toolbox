@@ -264,7 +264,6 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `CLOUD_SQL_MSSQL_REGION`: The region of your Cloud SQL instance.
     *   `CLOUD_SQL_MSSQL_INSTANCE`: The ID of your Cloud SQL instance.
     *   `CLOUD_SQL_MSSQL_DATABASE`: The name of the database to connect to.
-    *   `CLOUD_SQL_MSSQL_IP_ADDRESS`: The IP address of the Cloud SQL instance.
     *   `CLOUD_SQL_MSSQL_USER`: The database username.
     *   `CLOUD_SQL_MSSQL_PASSWORD`: The password for the database user.
     *   `CLOUD_SQL_MSSQL_IP_TYPE`: (Optional) The IP type i.e. "Public" or
