@@ -113,7 +113,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		if err != nil {
 			return nil, fmt.Errorf("error constructing client creator: %w", err)
 		}
-		s.setupClientCaching(baseClientCreator)
+		setupClientCaching(s, baseClientCreator)
 
 	} else {
 		// use ADC
@@ -171,7 +171,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 }
 
 // setupClientCaching initializes caches and wraps the base client creator with caching logic.
-func (s *Source) setupClientCaching(baseCreator BigqueryClientCreator) {
+func setupClientCaching(s *Source, baseCreator BigqueryClientCreator) {
 	// Define eviction handlers
 	onBqEvict := func(key string, value interface{}) {
 		if client, ok := value.(*bigqueryapi.Client); ok && client != nil {
