@@ -36,6 +36,7 @@ var expectedToolSources = []string{
 	"cloud-sql-postgres-observability",
 	"cloud-sql-postgres",
 	"dataplex",
+	"elasticsearch",
 	"firestore",
 	"looker-conversational-analytics",
 	"looker",

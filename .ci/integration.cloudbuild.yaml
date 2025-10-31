@@ -684,7 +684,26 @@ steps:
       - |
         ./yugabytedb.test -test.v
 
- 
+  - id: "elasticsearch"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID", "ELASTICSEARCH_USER", "ELASTICSEARCH_PASS", "ELASTICSEARCH_HOST"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Elasticsearch" \
+          elasticsearch \
+          elasticsearch
+
+
   - id: "cassandra"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -742,7 +761,7 @@ steps:
         .ci/test_with_coverage.sh \
           "Serverless Spark" \
           serverlessspark
-            
+
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_user/versions/latest
@@ -827,6 +846,12 @@ availableSecrets:
       env: YUGABYTEDB_USER
     - versionName: projects/$PROJECT_ID/secrets/yugabytedb_pass/versions/latest
       env: YUGABYTEDB_PASS
+    - versionName: projects/$PROJECT_ID/secrets/elastic_search_host/versions/latest
+      env: ELASTICSEARCH_HOST
+    - versionName: projects/$PROJECT_ID/secrets/elastic_search_user/versions/latest
+      env: ELASTICSEARCH_USER
+    - versionName: projects/$PROJECT_ID/secrets/elastic_search_pass/versions/latest
+      env: ELASTICSEARCH_PASS
     - versionName: projects/$PROJECT_ID/secrets/cassandra_user/versions/latest
       env: CASSANDRA_USER
     - versionName: projects/$PROJECT_ID/secrets/cassandra_pass/versions/latest
