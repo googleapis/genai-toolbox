@@ -19,6 +19,8 @@ Apache Spark.
   List and filter Serverless Spark batches.
 - [`serverless-spark-get-batch`](../tools/serverless-spark/serverless-spark-get-batch.md)
   Get a Serverless Spark batch.
+- [`serverless-spark-cancel-batch`](../tools/serverless-spark/serverless-spark-cancel-batch.md)
+  Cancel a running Serverless Spark batch operation.
 
 ## Requirements
 
