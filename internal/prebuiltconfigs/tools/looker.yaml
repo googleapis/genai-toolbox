@@ -711,6 +711,10 @@ tools:
             4. `check_explore_performance`,
             5. `check_schedule_failures`, or
             6. `check_legacy_features`
+      
+          The `check_legacy_features` action is only available in Looker Core. If
+          it is called on a Looker Core instance, you will get a notice. That notice
+          should not be reported as an error.
 
     health_analyze:
         kind: looker-health-analyze
