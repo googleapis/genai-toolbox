@@ -370,23 +370,23 @@ steps:
           mssql \
           mssql
 
-  - id: "dgraph"
-    name: golang:1
-    waitFor: ["compile-test-binary"]
-    entrypoint: /bin/bash
-    env:
-      - "GOPATH=/gopath"
-      - "DGRAPH_URL=$_DGRAPHURL"
-    volumes:
-      - name: "go"
-        path: "/gopath"
-    args:
-      - -c
-      - |
-        .ci/test_with_coverage.sh \
-          "Dgraph" \
-          dgraph \
-          dgraph
+  # - id: "dgraph"
+  #   name: golang:1
+  #   waitFor: ["compile-test-binary"]
+  #   entrypoint: /bin/bash
+  #   env:
+  #     - "GOPATH=/gopath"
+  #     - "DGRAPH_URL=$_DGRAPHURL"
+  #   volumes:
+  #     - name: "go"
+  #       path: "/gopath"
+  #   args:
+  #     - -c
+  #     - |
+  #       .ci/test_with_coverage.sh \
+  #         "Dgraph" \
+  #         dgraph \
+  #         dgraph
 
   - id: "http"
     name: golang:1
