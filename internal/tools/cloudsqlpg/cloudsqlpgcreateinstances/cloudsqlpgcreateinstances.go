@@ -70,8 +70,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-sql-admin`", kind)
 	}
 
+	project := s.DefaultProject
+	var projectParam tools.Parameter
+	if project != "" {
+		projectParam = tools.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+	} else {
+		projectParam = tools.NewStringParameter("project", "The project ID")
+	}
+
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("project", "The project ID"),
+		projectParam,
 		tools.NewStringParameter("name", "The name of the instance"),
 		tools.NewStringParameterWithDefault("databaseVersion", "POSTGRES_17", "The database version for Postgres. If not specified, defaults to the latest available version (e.g., POSTGRES_17)."),
 		tools.NewStringParameter("rootPassword", "The root password for the instance"),
