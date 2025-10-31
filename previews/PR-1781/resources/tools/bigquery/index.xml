@@ -85,10 +85,22 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>bigquery-get-dataset-info&lt;/code> takes a &lt;code>dataset&lt;/code> parameter to specify the dataset
-on the given source. It also optionally accepts a &lt;code>project&lt;/code> parameter to
-define the Google Cloud project ID. If the &lt;code>project&lt;/code> parameter is not provided,
-the tool defaults to using the project defined in the source configuration.&lt;/p>
+&lt;p>&lt;code>bigquery-get-dataset-info&lt;/code> accepts the following parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>dataset&lt;/code>&lt;/strong> (required): Specifies the dataset for which to retrieve metadata.&lt;/li>
+&lt;li>&lt;strong>&lt;code>project&lt;/code>&lt;/strong> (optional): Defines the Google Cloud project ID. If not provided,
+the tool defaults to the project from the source configuration.&lt;/li>
+&lt;/ul>
+&lt;p>The tool&amp;rsquo;s behavior regarding these parameters is influenced by the
+&lt;code>allowedDatasets&lt;/code> restriction on the &lt;code>bigquery&lt;/code> source:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Without &lt;code>allowedDatasets&lt;/code> restriction:&lt;/strong> The tool can retrieve metadata for
+any dataset specified by the &lt;code>dataset&lt;/code> and &lt;code>project&lt;/code> parameters.&lt;/li>
+&lt;li>&lt;strong>With &lt;code>allowedDatasets&lt;/code> restriction:&lt;/strong> Before retrieving metadata, the tool
+verifies that the requested dataset is in the allowed list. If it is not, the
+request is denied. If only one dataset is specified in the &lt;code>allowedDatasets&lt;/code>
+list, it will be used as the default value for the &lt;code>dataset&lt;/code> parameter.&lt;/li>
+&lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">bigquery_get_dataset_info&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
