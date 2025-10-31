@@ -39,6 +39,7 @@ var expectedToolSources = []string{
 	"firestore",
 	"looker-conversational-analytics",
 	"looker",
+	"mindsdb",
 	"mssql",
 	"mysql",
 	"neo4j",
@@ -118,8 +119,10 @@ func TestGetPrebuiltTool(t *testing.T) {
 	postgresconfig, _ := Get("postgres")
 	spanner_config, _ := Get("spanner")
 	spannerpg_config, _ := Get("spanner-postgres")
+	mindsdb_config, _ := Get("mindsdb")
 	sqlite_config, _ := Get("sqlite")
 	neo4jconfig, _ := Get("neo4j")
+
 	if len(alloydb_admin_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
 	}
@@ -192,9 +195,15 @@ func TestGetPrebuiltTool(t *testing.T) {
 	if len(spannerpg_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch spanner pg prebuilt tools yaml")
 	}
+
+	if len(mindsdb_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch spanner pg prebuilt tools yaml")
+  }
+  
 	if len(sqlite_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch sqlite prebuilt tools yaml")
 	}
+  
 	if len(neo4jconfig) <= 0 {
 		t.Fatalf("unexpected error: could not fetch neo4j prebuilt tools yaml")
 	}

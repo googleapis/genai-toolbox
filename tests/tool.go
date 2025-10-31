@@ -373,6 +373,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:        configs.supportSelect1Auth,
 			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       "",
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
@@ -381,15 +382,15 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:        true,
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       "",
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
-			name:          "Invoke my-auth-required-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
-			enabled:       configs.supportSelect1Auth,
-			requestHeader: map[string]string{"my-google-auth_token": idToken},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-
+			name:           "Invoke my-auth-required-tool with auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
+			enabled:        configs.supportSelect1Auth,
+			requestHeader:  map[string]string{"my-google-auth_token": idToken},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
 			wantBody:       select1Want,
 			wantStatusCode: http.StatusOK,
 		},
@@ -399,6 +400,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:        true,
 			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       "",
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
@@ -407,6 +409,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:        true,
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       "",
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
