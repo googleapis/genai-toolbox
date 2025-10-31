@@ -4,7 +4,7 @@ go 1.24.6
 
 require (
 	github.com/firebase/genkit/go v1.1.0
-	github.com/googleapis/mcp-toolbox-sdk-go v0.3.1-0.20251016052017-eae3dce21f7b
+	github.com/googleapis/mcp-toolbox-sdk-go v0.3.1-0.20251021051241-eb73e0c6c414
 )
 
 require (

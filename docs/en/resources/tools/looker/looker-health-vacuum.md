@@ -17,16 +17,14 @@ The `looker-health-vacuum` tool helps you identify unused LookML objects such as
 
 ## Parameters
 
-| **field** | **type** | **required** | **description** |
-| :--- | :--- | :--- | :--- |
-| kind | string | true | Must be "looker-health-vacuum" |
-| source | string | true | Looker source name |
-| action | string | true | The vacuum to perform: `models`, or `explores`. |
-| project | string | false | The name of the Looker project to vacuum. |
-| model | string | false | The name of the Looker model to vacuum. |
-| explore | string | false | The name of the Looker explore to vacuum. |
-| timeframe | int | false | The timeframe in days to analyze for usage. Defaults to 90. |
-| min_queries | int | false | The minimum number of queries for an object to be considered used. Defaults to 1. |
+| **field**   | **type** | **required** | **description**                                                                   |
+|:------------|:---------|:-------------|:----------------------------------------------------------------------------------|
+| action      | string   | true         | The vacuum to perform: `models`, or `explores`.                                   |
+| project     | string   | false        | The name of the Looker project to vacuum.                                         |
+| model       | string   | false        | The name of the Looker model to vacuum.                                           |
+| explore     | string   | false        | The name of the Looker explore to vacuum.                                         |
+| timeframe   | int      | false        | The timeframe in days to analyze for usage. Defaults to 90.                       |
+| min_queries | int      | false        | The minimum number of queries for an object to be considered used. Defaults to 1. |
 
 ## Example
 
@@ -34,30 +32,29 @@ Identify unnused fields (*in this case, less than 1 query in the last 20 days*) 
 
 ```yaml
 tools:
-  vacuum-tool:
+  health_vacuum:
     kind: looker-health-vacuum
     source: looker-source
     description: |
-      Vacuums the Looker instance by identifying unused explores, fields, and joins.
-    parameters:
-      action: explores
-      project: "thelook_core"
-      model: "thelook"
-      explore: "order_items"
-      timeframe: 20
-      min_queries: 1
+      health-vacuum Tool
+
+      This tool suggests models or explores that can removed
+      because they are unused.
+
+      It accepts 6 parameters:
+        1. `action`: can be "models" or "explores"
+        2. `project`: the project to vacuum (optional)
+        3. `model`: the model to vacuum (optional)
+        4. `explore`: the explore to vacuum (optional)
+        5. `timeframe`: the lookback period in days, default is 90
+        6. `min_queries`: the minimum number of queries to consider a resource as active, default is 1
+
+      The result is a list of objects that are candidates for deletion.
 ```
 
-Identify unnused explores across all models in `thelook_core` project. 
 
-```yaml
-tools:
-  vacuum-tool:
-    kind: looker-health-vacuum
-    source: looker-source
-    description: |
-      Vacuums the Looker instance by identifying unused explores, fields, and joins.
-    parameters:
-      action: models
-      project: "thelook_core"
-     
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "looker-health-vacuum"                     |
+| source      |  string  |     true     | Looker source name                                 |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

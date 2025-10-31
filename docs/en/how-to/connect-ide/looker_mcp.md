@@ -48,19 +48,19 @@ to expose your developer assistant tools to a Looker instance:
    <!-- {x-release-please-start-version} -->
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.17.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -304,6 +304,16 @@ The following tools are available to the LLM:
 1. **get_dashboards**: Return the saved dashboards that match a title or description
 1. **make_dashboard**: Create a saved dashboard in Looker and return the URL
 1. **add_dashboard_element**: Add a tile to a dashboard
+1. **health_pulse**: Check the health of a Looker intance
+1. **health_analyze**: Analyze the usage of a Looker object
+1. **health_vacuum**: Find LookML elements that might be unused
+1. **dev_mode**: Activate dev mode.
+1. **get_projects**: Get the list of LookML projects
+1. **get_project_files**: Get the list of files in a project
+1. **get_project_file**: Get the contents of a file in a project
+1. **create_project_file**: Create a file in a project
+1. **update_project_file**: Update the contents of a file in a project
+1. **delete_project_file**: Delete a file in a project
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
