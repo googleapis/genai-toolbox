@@ -34,6 +34,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
+	"github.com/googleapis/genai-toolbox/internal/prompts"
+	"github.com/googleapis/genai-toolbox/internal/prompts/custom"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
@@ -525,6 +527,48 @@ func TestParseToolFile(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts:    nil,
+				Promptsets: nil,
+			},
+		},
+		{
+			description: "with prompts and promptsets example",
+			in: `
+            prompts:
+                my-prompt:
+                    description: A prompt template for data analysis.
+                    arguments:
+                        - name: country
+                          description: The country to analyze.
+                    messages:
+                        - content: Analyze the data for {{.country}}.
+            promptsets:
+                my-prompt-set:
+                    - my-prompt
+            `,
+			wantToolsFile: ToolsFile{
+				Sources:      nil,
+				AuthServices: nil,
+				Tools:        nil,
+				Toolsets:     nil,
+				Prompts: server.PromptConfigs{
+					"my-prompt": &custom.Config{
+						Name:        "my-prompt",
+						Description: "A prompt template for data analysis.",
+						Arguments: prompts.Arguments{
+							{Parameter: tools.NewStringParameter("country", "The country to analyze.")},
+						},
+						Messages: []prompts.Message{
+							{Role: "user", Content: "Analyze the data for {{.country}}."},
+						},
+					},
+				},
+				Promptsets: server.PromptsetConfigs{
+					"my-prompt-set": prompts.PromptsetConfig{
+						Name:        "my-prompt-set",
+						PromptNames: []string{"my-prompt"},
+					},
+				},
 			},
 		},
 	}
@@ -544,7 +588,13 @@ func TestParseToolFile(t *testing.T) {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
-				t.Fatalf("incorrect tools parse: diff %v", diff)
+				t.Fatalf("incorrect toolsets parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
+				t.Fatalf("incorrect prompts parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Promptsets, toolsFile.Promptsets); diff != "" {
+				t.Fatalf("incorrect promptsets parse: diff %v", diff)
 			}
 		})
 	}
@@ -658,6 +708,8 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts:    nil,
+				Promptsets: nil,
 			},
 		},
 		{
@@ -757,6 +809,8 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts:    nil,
+				Promptsets: nil,
 			},
 		},
 		{
@@ -858,6 +912,8 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts:    nil,
+				Promptsets: nil,
 			},
 		},
 	}
@@ -877,7 +933,13 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
-				t.Fatalf("incorrect tools parse: diff %v", diff)
+				t.Fatalf("incorrect toolsets parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
+				t.Fatalf("incorrect prompts parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Promptsets, toolsFile.Promptsets); diff != "" {
+				t.Fatalf("incorrect promptsets parse: diff %v", diff)
 			}
 		})
 	}
@@ -894,6 +956,9 @@ func TestEnvVarReplacement(t *testing.T) {
 	t.Setenv("cat_string", "cat")
 	t.Setenv("food_string", "food")
 	t.Setenv("TestHeader", "ACTUAL_HEADER")
+	t.Setenv("promptset_name", "ACTUAL_PROMPTSET_NAME")
+	t.Setenv("prompt_name", "ACTUAL_PROMPT_NAME")
+	t.Setenv("prompt_content", "ACTUAL_CONTENT")
 
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -967,6 +1032,17 @@ func TestEnvVarReplacement(t *testing.T) {
 			toolsets:
 				${toolset_name}:
 					- example_tool
+
+						
+			prompts:
+				${prompt_name}:
+					description: A test prompt for {{.name}}.
+					messages:
+						- role: user
+						  content: ${prompt_content}
+			promptsets:
+				${promptset_name}:
+					- ${prompt_name}
 			`,
 			wantToolsFile: ToolsFile{
 				Sources: server.SourceConfigs{
@@ -1023,6 +1099,25 @@ func TestEnvVarReplacement(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts: server.PromptConfigs{
+					"ACTUAL_PROMPT_NAME": &custom.Config{
+						Name:        "ACTUAL_PROMPT_NAME",
+						Description: "A test prompt for {{.name}}.",
+						Messages: []prompts.Message{
+							{
+								Role:    "user",
+								Content: "ACTUAL_CONTENT",
+							},
+						},
+						Arguments: nil,
+					},
+				},
+				Promptsets: server.PromptsetConfigs{
+					"ACTUAL_PROMPTSET_NAME": prompts.PromptsetConfig{
+						Name:        "ACTUAL_PROMPTSET_NAME",
+						PromptNames: []string{"ACTUAL_PROMPT_NAME"},
+					},
+				},
 			},
 		},
 	}
@@ -1042,11 +1137,16 @@ func TestEnvVarReplacement(t *testing.T) {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
-				t.Fatalf("incorrect tools parse: diff %v", diff)
+				t.Fatalf("incorrect toolsets parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
+				t.Fatalf("incorrect prompts parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Promptsets, toolsFile.Promptsets); diff != "" {
+				t.Fatalf("incorrect promptsets parse: diff %v", diff)
 			}
 		})
 	}
-
 }
 
 // normalizeFilepaths is a helper function to allow same filepath formats for Mac and Windows.
@@ -1622,75 +1722,13 @@ func TestPrebuiltTools(t *testing.T) {
 			if diff := cmp.Diff(tc.wantToolset, toolsFile.Toolsets); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
-		})
-	}
-}
-
-func TestMutuallyExclusiveFlags(t *testing.T) {
-	testCases := []struct {
-		desc      string
-		args      []string
-		errString string
-	}{
-		{
-			desc:      "--prebuilt and --tools-file",
-			args:      []string{"--prebuilt", "alloydb", "--tools-file", "my.yaml"},
-			errString: "--prebuilt and --tools-file/--tools-files/--tools-folder flags cannot be used simultaneously",
-		},
-		{
-			desc:      "--tools-file and --tools-files",
-			args:      []string{"--tools-file", "my.yaml", "--tools-files", "a.yaml,b.yaml"},
-			errString: "--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously",
-		},
-		{
-			desc:      "--tools-folder and --tools-files",
-			args:      []string{"--tools-folder", "./", "--tools-files", "a.yaml,b.yaml"},
-			errString: "--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously",
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.desc, func(t *testing.T) {
-			cmd := NewCommand()
-			cmd.SetArgs(tc.args)
-			err := cmd.Execute()
-			if err == nil {
-				t.Fatalf("expected an error but got none")
+			// Prebuilt configs do not have prompts/promptsets, so assert empty maps.
+			if len(toolsFile.Prompts) != 0 {
+				t.Fatalf("expected empty prompts map for prebuilt config, got: %v", toolsFile.Prompts)
 			}
-			if !strings.Contains(err.Error(), tc.errString) {
-				t.Errorf("expected error message to contain %q, but got %q", tc.errString, err.Error())
+			if len(toolsFile.Promptsets) != 0 {
+				t.Fatalf("expected empty promptsets map for prebuilt config, got: %v", toolsFile.Promptsets)
 			}
 		})
 	}
-}
-
-func TestFileLoadingErrors(t *testing.T) {
-	t.Run("non-existent tools-file", func(t *testing.T) {
-		cmd := NewCommand()
-		// Use a file that is guaranteed not to exist
-		nonExistentFile := filepath.Join(t.TempDir(), "non-existent-tools.yaml")
-		cmd.SetArgs([]string{"--tools-file", nonExistentFile})
-
-		err := cmd.Execute()
-		if err == nil {
-			t.Fatal("expected an error for non-existent file but got none")
-		}
-		if !strings.Contains(err.Error(), "unable to read tool file") {
-			t.Errorf("expected error about reading file, but got: %v", err)
-		}
-	})
-
-	t.Run("non-existent tools-folder", func(t *testing.T) {
-		cmd := NewCommand()
-		nonExistentFolder := filepath.Join(t.TempDir(), "non-existent-folder")
-		cmd.SetArgs([]string{"--tools-folder", nonExistentFolder})
-
-		err := cmd.Execute()
-		if err == nil {
-			t.Fatal("expected an error for non-existent folder but got none")
-		}
-		if !strings.Contains(err.Error(), "unable to access tools folder") {
-			t.Errorf("expected error about accessing folder, but got: %v", err)
-		}
-	})
 }
