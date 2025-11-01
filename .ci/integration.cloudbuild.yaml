@@ -889,8 +889,6 @@ substitutions:
   _TRINO_SCHEMA: "default"
   _KDB_HOST: 127.0.0.1
   _KDB_PORT: "5001"
-  _KDB_HOST: 127.0.0.1
-  _KDB_PORT: "5001"
   _OCEANBASE_PORT: "2883"
   _OCEANBASE_DATABASE: "oceanbase"
   _YUGABYTEDB_DATABASE: "yugabyte"
