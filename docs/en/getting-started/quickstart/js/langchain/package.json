@@ -14,6 +14,6 @@
     "@langchain/google-genai": "^0.2.17",
     "@langchain/langgraph": "^0.4.9",
     "@toolbox-sdk/core": "^0.1.2",
-    "langchain": "^0.3.33"
+    "langchain": "^1.0.0"
   }
 }
