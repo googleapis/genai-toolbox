@@ -59,11 +59,6 @@ func getKDBVars(t *testing.T) map[string]any {
 }
 
 func initKDBConnection(host, port, user, pass string) (*kdbgo.KDBConn, error) {
-	var auth string
-	if user != "" {
-		auth = user + ":" + pass
-	}
-
 	var portInt, err = strconv.Atoi(port)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse port: %w", err)
