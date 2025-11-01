@@ -42,6 +42,14 @@ the steps listed in the [Generate SQL queries that answer natural language
 questions][alloydb-ai-gen-nl], including enabling the extension and configuring
 context for your application.
 
+{{< notice note >}}
+Configuration update required for v0.19.0+. Starting with Toolbox v0.19.0, users
+who previously used the create_configuration operation for the natural language
+configuration must update it. To do so, please drop the existing configuration
+and redefine it using the instructions
+[here](https://docs.cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#create-config).
+{{< /notice >}}
+
 [alloydb-ai-nl-overview]: https://cloud.google.com/alloydb/docs/ai/natural-language-overview
 [alloydb-ai-gen-nl]: https://cloud.google.com/alloydb/docs/ai/generate-sql-queries-natural-language
 
