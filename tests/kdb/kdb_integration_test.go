@@ -55,8 +55,6 @@ func getKDBVars(t *testing.T) map[string]any {
 		"kind":     KdbSourceKind,
 		"host":     KDBHost,
 		"port":     KDBPort,
-		"username": KDBUser,
-		"password": KDBPass,
 	}
 }
 
