@@ -116,8 +116,12 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	var err error
 
 	if r.UseClientOAuth {
-		// use client OAUth
+		// use client OAuth
 		if r.WriteMode == WriteModeProtected {
+			// The protected mode only allows write operations to the session's temporary datasets.
+			// when using client OAuth, a new session is created every
+			// time a BigQuery tool is invoked. Therefore, no session data can
+			// be preserved as needed by the protected mode.
 			return nil, fmt.Errorf("writeMode 'protected' cannot be used with useClientOAuth 'true'")
 		}
 
