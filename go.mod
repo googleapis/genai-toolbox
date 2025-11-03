@@ -40,7 +40,6 @@ require (
 	github.com/redis/go-redis/v9 v9.16.0
 	github.com/sijms/go-ora/v2 v2.9.0
 	github.com/spf13/cobra v1.10.1
-  github.com/spf13/cobra v1.9.1
 	github.com/sv/kdbgo v0.20.0
 	github.com/thlib/go-timezone-local v0.0.7
 	github.com/trinodb/trino-go-client v0.329.0
