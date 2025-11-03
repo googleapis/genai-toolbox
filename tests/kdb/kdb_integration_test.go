@@ -52,9 +52,9 @@ func getKDBVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     KdbSourceKind,
-		"host":     KDBHost,
-		"port":     KDBPort,
+		"kind": KdbSourceKind,
+		"host": KDBHost,
+		"port": KDBPort,
 	}
 }
 
@@ -64,7 +64,7 @@ func initKDBConnection(host, port, user, pass string) (*kdbgo.KDBConn, error) {
 		return nil, fmt.Errorf("unable to parse port: %w", err)
 	}
 
-	db, err := kdbgo.DialKDB(host, portInt, auth)
+	db, err := kdbgo.DialKDB(host, portInt, "")
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to kdb: %w", err)
 	}
