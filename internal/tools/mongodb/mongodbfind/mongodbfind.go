@@ -178,12 +178,12 @@ func getOptions(ctx context.Context, sortParameters tools.Parameters, projectPay
 		}
 
 		opts = opts.SetProjection(projection)
-		logger.DebugContext(ctx, "Projection is set to %v", projection)
+		logger.DebugContext(ctx, fmt.Sprintf("Projection is set to %v", projection))
 	}
 
 	if limit > 0 {
 		opts = opts.SetLimit(limit)
-		logger.DebugContext(ctx, "Limit is being set to %d", limit)
+		logger.DebugContext(ctx, fmt.Sprintf("Limit is being set to %d", limit))
 	}
 	return opts, nil
 }
