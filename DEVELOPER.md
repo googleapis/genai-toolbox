@@ -151,19 +151,18 @@ go test -race -v ./cmd/... ./internal/...
 
    Be sure to set the timeout to a reasonable value for your tests.
    
-## Link Checks
+### Link Checks
 
 We use **[lychee](https://github.com/lycheeverse/lychee-action)** to check all links in our repository.
 
-Checking and updating broken links locally [reference](https://github.com/lycheeverse/lychee?tab=readme-ov-file#compile-and-install-lychee)
-  
+To run the link checker locally, see [this](https://github.com/lycheeverse/lychee?tab=readme-ov-file#commandline-usage)
+### Fixing Links
+
 ### Primary Fix: Update the Link
 * Fix the broken link or update the content where it is used.
 
 ### Secondary Fix: Ignoring Links
-* If you cannot fix the link (e.g., due to an external service's rate-limit or if it's a local-only URL), you can tell `lychee` to ignore it.
-
-* List regular expressions or direct links in  **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/link-checker-workflow/.lycheeignore)** , with one entry per line, that should be skipped  .
+* If you cannot fix the link (e.g., due to an external service's rate-limit or if it's a local-only URL), you can tell `lychee` to ignore it.List regular expressions or direct links in  **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/link-checker-workflow/.lycheeignore)** , with one entry per line, that should be skipped . Always add a comment in `.lycheeignore` explaining why the link is being skipped. This prevents link rot and helps future maintainers.
 
 
 ### When to Ignore a Link
@@ -180,8 +179,6 @@ Checking and updating broken links locally [reference](https://github.com/lychee
 ###  Best Practice for Ignoring
 
 * To permanently skip certain links from checking,include that links in  **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/link-checker-workflow/.lycheeignore)** .
-
-* Always add a comment in `.lycheeignore` explaining why the link is being skipped. This prevents link rot and helps future maintainers.
 
 
 
