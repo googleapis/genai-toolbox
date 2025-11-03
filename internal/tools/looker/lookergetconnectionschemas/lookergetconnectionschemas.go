@@ -11,7 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package lookergetmodels
+package lookergetconnectionschemas
 
 import (
 	"context"
@@ -22,13 +22,12 @@ import (
 	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
-	"github.com/googleapis/genai-toolbox/internal/util"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const kind string = "looker-get-models"
+const kind string = "looker-get-connection-schemas"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -72,7 +71,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
 	}
 
-	parameters := tools.Parameters{}
+	connParameter := tools.NewStringParameter("conn", "The connection containing the schemas.")
+	dbParameter := tools.NewStringParameterWithRequired("db", "The optional database to search", false)
+	parameters := tools.Parameters{connParameter, dbParameter}
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
 
@@ -90,8 +91,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Parameters:   parameters.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
-		mcpManifest:      mcpManifest,
-		ShowHiddenModels: s.ShowHiddenModels,
+		mcpManifest: mcpManifest,
 	}, nil
 }
 
@@ -99,60 +99,44 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name             string `yaml:"name"`
-	Kind             string `yaml:"kind"`
-	UseClientOAuth   bool
-	Client           *v4.LookerSDK
-	ApiSettings      *rtl.ApiSettings
-	AuthRequired     []string         `yaml:"authRequired"`
-	Parameters       tools.Parameters `yaml:"parameters"`
-	manifest         tools.Manifest
-	mcpManifest      tools.McpManifest
-	ShowHiddenModels bool
+	Name           string `yaml:"name"`
+	Kind           string `yaml:"kind"`
+	UseClientOAuth bool
+	Client         *v4.LookerSDK
+	ApiSettings    *rtl.ApiSettings
+	AuthRequired   []string         `yaml:"authRequired"`
+	Parameters     tools.Parameters `yaml:"parameters"`
+	manifest       tools.Manifest
+	mcpManifest    tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
-	logger, err := util.LoggerFromContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+	mapParams := params.AsMap()
+	conn, ok := mapParams["conn"].(string)
+	if !ok {
+		return nil, fmt.Errorf("'conn' must be a string, got %T", mapParams["conn"])
 	}
-
-	excludeEmpty := false
-	excludeHidden := !t.ShowHiddenModels
-	includeInternal := true
+	db, _ := mapParams["db"].(string)
 
 	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
 	if err != nil {
 		return nil, fmt.Errorf("error getting sdk: %w", err)
 	}
-	req := v4.RequestAllLookmlModels{
-		ExcludeEmpty:    &excludeEmpty,
-		ExcludeHidden:   &excludeHidden,
-		IncludeInternal: &includeInternal,
+	req := v4.RequestConnectionSchemas{
+		ConnectionName: conn,
 	}
-	resp, err := sdk.AllLookmlModels(req, t.ApiSettings)
+	if db != "" {
+		req.Database = &db
+	}
+	resp, err := sdk.ConnectionSchemas(req, t.ApiSettings)
 	if err != nil {
-		return nil, fmt.Errorf("error making get_models request: %s", err)
+		return nil, fmt.Errorf("error making get_connection_schemas request: %s", err)
 	}
-
-	var data []any
-	for _, v := range resp {
-		logger.DebugContext(ctx, "Got response element of %v\n", v)
-		vMap := make(map[string]any)
-		vMap["label"] = *v.Label
-		vMap["name"] = *v.Name
-		vMap["project_name"] = *v.ProjectName
-		vMap["connections"] = *v.AllowedDbConnectionNames
-		logger.DebugContext(ctx, "Converted to %v\n", vMap)
-		data = append(data, vMap)
-	}
-	logger.DebugContext(ctx, "data = ", data)
-
-	return data, nil
+	return resp, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParamValues{}, nil
+	return tools.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
