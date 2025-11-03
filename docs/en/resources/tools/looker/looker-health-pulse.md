@@ -17,33 +17,15 @@ The `looker-health-pulse` tool performs health checks on a Looker instance. The 
 - `check_dashboard_errors`: Lists dashboards with erroring queries in the last 7 days.
 - `check_explore_performance`: Lists the slowest explores in the last 7 days and reports average query runtime.
 - `check_schedule_failures`: Lists schedules that have failed in the last 7 days.
-- `check_legacy_features`: Lists enabled legacy features. (*To note, this function is not available in Looker Core. You will get an error running this command with a Core instance configured.*)
+- `check_legacy_features`: Lists enabled legacy features. (*To note, this function is not
+  available in Looker Core.*)
 
 ## Parameters
 
 | **field**     | **type** | **required** | **description**                             |
 |---------------|:--------:|:------------:|---------------------------------------------|
-| kind          | string   | true         | Must be "looker-health-pulse"                      |
-| source        | string   | true         | Looker source name                          |
 | action        | string   | true         | The health check to perform                 |
 
-## Example
-
-```yaml
-tools:
-  pulse:
-    kind: looker-health-pulse
-    source: looker-source
-    description: |
-      Pulse Tool
-
-      Performs health checks on Looker instance.
-      Specify the `action` parameter to select the check.
-    parameters:
-      action: check_dashboard_performance
-```
-
-## Reference
 
 | **action**                | **description**                                                                |
 |---------------------------|--------------------------------------------------------------------------------|
@@ -53,3 +35,35 @@ tools:
 | check_explore_performance | Lists slowest explores and average query runtime                               |
 | check_schedule_failures   | Lists failed schedules in the last 7 days                                      |
 | check_legacy_features     | Lists enabled legacy features                                                  |
+
+## Example
+
+```yaml
+tools:
+  health_pulse:
+    kind: looker-health-pulse
+    source: looker-source
+    description: |
+      health-pulse Tool
+
+      This tool takes the pulse of a Looker instance by taking
+      one of the following actions:
+        1. `check_db_connections`,
+        2. `check_dashboard_performance`,
+        3. `check_dashboard_errors`,
+        4. `check_explore_performance`,
+        5. `check_schedule_failures`, or
+        6. `check_legacy_features`
+      
+      The `check_legacy_features` action is only available in Looker Core. If
+      it is called on a Looker Core instance, you will get a notice. That notice
+      should not be reported as an error.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "looker-health-pulse"                      |
+| source      |  string  |     true     | Looker source name                                 |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
