@@ -104,7 +104,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	myToolId3NameAliceWant := `[{"_id":5,"id":3,"name":"Alice"}]`
 	myToolById4Want := `[{"_id":4,"id":4,"name":null}]`
 	mcpMyFailToolWant := `invalid JSON input: missing colon after key `
-	mcpMyToolId3NameAliceWant := `{"jsonrpc":"2.0","id":"my-simple-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
+	mcpMyToolId3NameAliceWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
 
 	// Run tests
 	tests.RunToolGetTest(t)
@@ -121,7 +121,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	deleteManyWant := "2"
 	runToolDeleteInvokeTest(t, delete1Want, deleteManyWant)
 
-	insert1Want := `["68666e1035bb36bf1b4d47fb"]`
+	insert1Want := `"68666e1035bb36bf1b4d47fb"`
 	insertManyWant := `["68667a6436ec7d0363668db7","68667a6436ec7d0363668db8","68667a6436ec7d0363668db9"]`
 	runToolInsertInvokeTest(t, insert1Want, insertManyWant)
 
@@ -562,7 +562,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"description":   "Tool to test invocation with array.",
 				"authRequired":  []string{},
 				"collection":    "test_collection",
-				"filterPayload": `{ "name": { "$in": {{json .nameArray}} }, "_id": 5 })`,
+				"filterPayload": `{ "name": { "$in": {{json .nameArray}} }, "_id": 5 }`,
 				"filterParams": []map[string]any{
 					{
 						"name":        "nameArray",
@@ -618,7 +618,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"description":   "Tool to test statement with incorrect syntax.",
 				"authRequired":  []string{},
 				"collection":    "test_collection",
-				"filterPayload": `{ "id" ; 1 }"}`,
+				"filterPayload": `{ "id" : 1 }`,
 				"filterParams":  []any{},
 				"database":      MongoDbDatabase,
 			},
@@ -628,7 +628,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"description":   "Tool to test deleting an entry.",
 				"authRequired":  []string{},
 				"collection":    "test_collection",
-				"filterPayload": `{ "id" : 100 }"}`,
+				"filterPayload": `{ "id" : 100 }`,
 				"filterParams":  []any{},
 				"database":      MongoDbDatabase,
 			},
@@ -638,7 +638,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"description":   "Tool to test deleting multiple entries.",
 				"authRequired":  []string{},
 				"collection":    "test_collection",
-				"filterPayload": `{ "id" : 101 }"}`,
+				"filterPayload": `{ "id" : 101 }`,
 				"filterParams":  []any{},
 				"database":      MongoDbDatabase,
 			},

@@ -220,18 +220,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, err
 	}
 
-	var final []any
-	for _, item := range data {
-		tmp, _ := bson.MarshalExtJSON(item, false, false)
-		var tmp2 any
-		err = json.Unmarshal(tmp, &tmp2)
-		if err != nil {
-			return nil, err
-		}
-		final = append(final, tmp2)
-	}
-
-	return final, err
+	return data, err
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
