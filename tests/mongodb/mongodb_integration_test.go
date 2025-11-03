@@ -104,7 +104,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	myToolId3NameAliceWant := `[{"_id":5,"id":3,"name":"Alice"}]`
 	myToolById4Want := `[{"_id":4,"id":4,"name":null}]`
 	mcpMyFailToolWant := `invalid JSON input: missing colon after key `
-	mcpMyToolId3NameAliceWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
+	mcpMyToolId3NameAliceWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"[{\"_id\":5,\"id\":3,\"name\":\"Alice\"}]"}]}}`
 
 	// Run tests
 	tests.RunToolGetTest(t)
@@ -618,7 +618,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"description":   "Tool to test statement with incorrect syntax.",
 				"authRequired":  []string{},
 				"collection":    "test_collection",
-				"filterPayload": `{ "id" : 1 }`,
+				"filterPayload": `{ "id" ; 1 }"}`,
 				"filterParams":  []any{},
 				"database":      MongoDbDatabase,
 			},
