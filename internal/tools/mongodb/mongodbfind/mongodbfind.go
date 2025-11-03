@@ -15,7 +15,6 @@ package mongodbfind
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"slices"
 
