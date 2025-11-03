@@ -57,7 +57,7 @@ require (
 	google.golang.org/api v0.251.0
 	google.golang.org/genproto v0.0.0-20251022142026-3a174f9686a8
 	google.golang.org/protobuf v1.36.10
-	modernc.org/sqlite v1.39.1
+	modernc.org/sqlite v1.40.0
 )
 
 require (
