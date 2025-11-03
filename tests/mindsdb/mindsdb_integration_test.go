@@ -265,9 +265,6 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 	tests.RunToolGetTest(t)
 	tests.RunToolInvokeTest(t, select1Want,
 		tests.DisableArrayTest(), // MindsDB doesn't support array parameters
-		tests.WithMyToolId3NameAliceWant("[{\"id\":1,\"name\":\"Alice\"},{\"id\":3,\"name\":\"Sid\"}]"),
-		tests.WithMyToolById4Want("[{\"id\":4,\"name\":null}]"),
-		tests.WithNullWant("null"),
 	)
 
 	t.Run("mindsdb_core_functionality", func(t *testing.T) {
