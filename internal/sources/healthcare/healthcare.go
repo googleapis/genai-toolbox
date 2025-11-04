@@ -158,6 +158,7 @@ func initHealthcareConnectionWithOAuthToken(ctx context.Context, tracer trace.Tr
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Healthcare service: %w", err)
 	}
+	service.UserAgent = userAgent
 	return service, nil
 }
 
@@ -179,6 +180,7 @@ func initHealthcareConnection(ctx context.Context, tracer trace.Tracer, name str
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create Healthcare service: %w", err)
 	}
+	service.UserAgent = userAgent
 	return service, cred.TokenSource, nil
 }
 
