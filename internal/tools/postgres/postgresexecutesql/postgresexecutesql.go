@@ -20,6 +20,7 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/orderedmap"
 	"github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
@@ -142,11 +143,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse row: %w", err)
 		}
-		vMap := make(map[string]any)
+		row := orderedmap.Row{}
 		for i, f := range fields {
-			vMap[f.Name] = v[i]
+			row.Add(f.Name, v[i])
 		}
-		out = append(out, vMap)
+		out = append(out, row)
 	}
 
 	if err := results.Err(); err != nil {

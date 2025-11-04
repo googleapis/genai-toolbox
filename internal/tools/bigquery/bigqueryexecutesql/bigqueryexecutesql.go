@@ -22,6 +22,7 @@ import (
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/orderedmap"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -323,20 +324,21 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, fmt.Errorf("unable to read query results: %w", err)
 	}
+	schema := it.Schema
 	for {
-		var row map[string]bigqueryapi.Value
-		err = it.Next(&row)
+		var values []bigqueryapi.Value
+		err = it.Next(&values)
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
 			return nil, fmt.Errorf("unable to iterate through query results: %w", err)
 		}
-		vMap := make(map[string]any)
-		for key, value := range row {
-			vMap[key] = value
+		row := orderedmap.Row{}
+		for i, field := range schema {
+			row.Add(field.Name, values[i])
 		}
-		out = append(out, vMap)
+		out = append(out, row)
 	}
 	// If the query returned any rows, return them directly.
 	if len(out) > 0 {

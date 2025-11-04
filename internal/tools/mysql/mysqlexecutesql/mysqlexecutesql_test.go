@@ -15,12 +15,18 @@
 package mysqlexecutesql_test
 
 import (
+	"database/sql"
+	"encoding/json"
 	"testing"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/orderedmap"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlexecutesql"
 )
 
@@ -73,4 +79,86 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 		})
 	}
 
+}
+
+func TestTool_Invoke(t *testing.T) {
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer db.Close()
+
+	tool := newMockTool(t, db)
+	params, err := tool.ParseParams(map[string]any{"sql": "SELECT C, A, B FROM users"}, nil)
+	if err != nil {
+		t.Fatalf("failed to parse params: %s", err)
+	}
+
+	rows := sqlmock.NewRows([]string{"C", "A", "B"}).
+		AddRow("c1", "a1", "b1").
+		AddRow("c2", "a2", "b2")
+
+	mock.ExpectQuery("SELECT C, A, B FROM users").WillReturnRows(rows)
+
+	var accessToken tools.AccessToken
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	result, err := tool.Invoke(ctx, params, accessToken)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	want := []orderedmap.Row{
+		{Columns: []orderedmap.Column{{Name: "C", Value: "c1"}, {Name: "A", Value: "a1"}, {Name: "B", Value: "b1"}}},
+		{Columns: []orderedmap.Column{{Name: "C", Value: "c2"}, {Name: "A", Value: "a2"}, {Name: "B", Value: "b2"}}},
+	}
+
+	resultJSON, err := json.Marshal(result)
+	if err != nil {
+		t.Fatalf("failed to marshal result to JSON: %s", err)
+	}
+
+	wantJSON, err := json.Marshal(want)
+	if err != nil {
+		t.Fatalf("failed to marshal want to JSON: %s", err)
+	}
+
+	if string(resultJSON) != string(wantJSON) {
+		t.Errorf("unexpected result: got %s, want %s", string(resultJSON), string(wantJSON))
+	}
+}
+
+func newMockTool(t *testing.T, db *sql.DB) tools.Tool {
+	t.Helper()
+
+	cfg := mysqlexecutesql.Config{
+		Name:        "test-tool",
+		Kind:        "mysql-execute-sql",
+		Source:      "test-source",
+		Description: "test description",
+	}
+
+	mockSource := &mockSource{pool: db}
+	srcs := map[string]sources.Source{"test-source": mockSource}
+
+	tool, err := cfg.Initialize(srcs)
+	if err != nil {
+		t.Fatalf("failed to initialize tool: %s", err)
+	}
+
+	return tool
+}
+
+type mockSource struct {
+	pool *sql.DB
+}
+
+func (s *mockSource) MySQLPool() *sql.DB {
+	return s.pool
+}
+
+func (s *mockSource) SourceKind() string {
+	return "mock-mysql"
 }

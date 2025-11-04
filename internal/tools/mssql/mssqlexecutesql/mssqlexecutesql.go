@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/orderedmap"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
 	"github.com/googleapis/genai-toolbox/internal/sources/mssql"
@@ -152,11 +153,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			if scanErr != nil {
 				return nil, fmt.Errorf("unable to parse row: %w", scanErr)
 			}
-			vMap := make(map[string]any)
+			row := orderedmap.Row{}
 			for i, name := range cols {
-				vMap[name] = rawValues[i]
+				row.Add(name, rawValues[i])
 			}
-			out = append(out, vMap)
+			out = append(out, row)
 		}
 	}
 
