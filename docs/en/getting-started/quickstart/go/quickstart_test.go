@@ -32,6 +32,8 @@ func TestQuickstartSample(t *testing.T) {
 		if os.Getenv("OPENAI_API_KEY") == "" {
 			t.Skip("Skipping test: OPENAI_API_KEY environment variable is not set for openAI framework.")
 		}
+	} else if framework == "adkgo" {
+		t.Skip("Skipping test: ADK Go module is not publicly available")
 	} else {
 		if os.Getenv("GOOGLE_API_KEY") == "" {
 			t.Skipf("Skipping test for %s: GOOGLE_API_KEY environment variable is not set.", framework)
