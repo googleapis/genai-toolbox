@@ -176,6 +176,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
+
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for MySQL instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -184,6 +186,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_databases`: Lists all databases for a Cloud SQL instance.
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
+    *   `clone_instance`: Creates a clone for an existing Cloud SQL for MySQL instance.
 
 ## Cloud SQL for PostgreSQL
 
@@ -253,6 +256,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for PostgreSQL instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -261,6 +265,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_databases`: Lists all databases for a Cloud SQL instance.
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
+    *   `clone_instance`: Creates a clone for an existing Cloud SQL for PostgreSQL instance.
 
 ## Cloud SQL for SQL Server
 
@@ -312,6 +317,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for SQL Server instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -320,6 +326,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_databases`: Lists all databases for a Cloud SQL instance.
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
+    *   `clone_instance`: Creates a clone for an existing Cloud SQL for SQL Server instance.
 
 ## Dataplex
 

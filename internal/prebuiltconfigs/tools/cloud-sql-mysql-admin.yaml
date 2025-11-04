@@ -39,6 +39,10 @@ tools:
   wait_for_operation:
     kind: cloud-sql-wait-for-operation
     source: cloud-sql-admin-source
+    multiplier: 4
+  clone_instance:
+    kind: cloud-sql-clone-instance
+    source: cloud-sql-admin-source
 
 toolsets:
   cloud_sql_mysql_admin_tools:
@@ -49,3 +53,4 @@ toolsets:
     - list_databases
     - create_user
     - wait_for_operation
+    - clone_instance

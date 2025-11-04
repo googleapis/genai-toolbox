@@ -1447,7 +1447,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "clone_instance", "create_database", "list_databases", "create_user", "wait_for_operation"},
 				},
 			},
 		},
@@ -1457,7 +1457,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_mysql_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mysql_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "clone_instance", "create_database", "list_databases", "create_user", "wait_for_operation"},
 				},
 			},
 		},
@@ -1467,7 +1467,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_mssql_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mssql_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "clone_instance", "create_database", "list_databases", "create_user", "wait_for_operation"},
 				},
 			},
 		},
