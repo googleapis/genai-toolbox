@@ -54,7 +54,7 @@ type Config struct {
 	Database       string           `yaml:"database" validate:"required"`
 	Collection     string           `yaml:"collection" validate:"required"`
 	FilterPayload  string           `yaml:"filterPayload" validate:"required"`
-	FilterParams   tools.Parameters `yaml:"filterParams" validate:"required"`
+	FilterParams   tools.Parameters `yaml:"filterParams"`
 	ProjectPayload string           `yaml:"projectPayload"`
 	ProjectParams  tools.Parameters `yaml:"projectParams"`
 	SortPayload    string           `yaml:"sortPayload"`

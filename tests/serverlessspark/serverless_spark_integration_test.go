@@ -24,16 +24,20 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
 	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
+	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparklistbatches"
 	"github.com/googleapis/genai-toolbox/tests"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 var (
@@ -81,6 +85,15 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				"source":       "my-spark",
 				"authRequired": []string{"my-google-auth"},
 			},
+			"get-batch": map[string]any{
+				"kind":   "serverless-spark-get-batch",
+				"source": "my-spark",
+			},
+			"get-batch-with-auth": map[string]any{
+				"kind":         "serverless-spark-get-batch",
+				"source":       "my-spark",
+				"authRequired": []string{"my-google-auth"},
+			},
 		},
 	}
 
@@ -106,13 +119,20 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 	defer client.Close()
 
 	runListBatchesTest(t, client, ctx)
-	runListBatchesErrorTest(t)
-	runListBatchesAuthTest(t)
+
+	fullName := listBatchesRpc(t, client, ctx, "", 1, true)[0].Name
+	runGetBatchTest(t, client, ctx, fullName)
+
+	runErrorTest(t)
+
+	// Get the most recent batch, which is all we need for this test.
+	runAuthTest(t, "list-batches-with-auth", map[string]any{"pageSize": 1})
+	runAuthTest(t, "get-batch-with-auth", map[string]any{"name": shortName(fullName)})
 }
 
 // runListBatchesTest invokes the running list-batches tool and ensures it returns the correct
-// number of results. It can run successfully against any GCP project that has at least 2 succeeded
-// or failed Serverless Spark batches, of any age.
+// number of results. It can run successfully against any GCP project that contains at least 2 total
+// Serverless Spark batches.
 func runListBatchesTest(t *testing.T, client *dataproc.BatchControllerClient, ctx context.Context) {
 	batch2 := listBatchesRpc(t, client, ctx, "", 2, true)
 	batch20 := listBatchesRpc(t, client, ctx, "", 20, false)
@@ -145,7 +165,7 @@ func runListBatchesTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 	}
 
 	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run("list-batches "+tc.name, func(t *testing.T) {
 			var actual []serverlesssparklistbatches.Batch
 			var pageToken string
 			for i := 0; i < tc.numPages; i++ {
@@ -157,9 +177,9 @@ func runListBatchesTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 					request["pageSize"] = tc.pageSize
 				}
 
-				resp, err := invokeListBatches("list-batches", request, nil)
+				resp, err := invokeTool("list-batches", request, nil)
 				if err != nil {
-					t.Fatalf("invokeListBatches failed: %v", err)
+					t.Fatalf("invokeTool failed: %v", err)
 				}
 				defer resp.Body.Close()
 
@@ -221,35 +241,160 @@ func listBatchesRpc(t *testing.T, client *dataproc.BatchControllerClient, ctx co
 	return serverlesssparklistbatches.ToBatches(batchPbs)
 }
 
-func runListBatchesErrorTest(t *testing.T) {
+func runAuthTest(t *testing.T, toolName string, request map[string]any) {
+	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
+	if err != nil {
+		t.Fatalf("error getting Google ID token: %s", err)
+	}
+	tcs := []struct {
+		name       string
+		headers    map[string]string
+		wantStatus int
+	}{
+		{
+			name:       "valid auth token",
+			headers:    map[string]string{"my-google-auth_token": idToken},
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:       "invalid auth token",
+			headers:    map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
+			wantStatus: http.StatusUnauthorized,
+		},
+		{
+			name:       "no auth token",
+			headers:    nil,
+			wantStatus: http.StatusUnauthorized,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(toolName+" "+tc.name, func(t *testing.T) {
+			resp, err := invokeTool(toolName, request, tc.headers)
+			if err != nil {
+				t.Fatalf("invokeTool failed: %v", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatus {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not %d, got %d: %s", tc.wantStatus, resp.StatusCode, string(bodyBytes))
+			}
+		})
+	}
+}
+
+func runGetBatchTest(t *testing.T, client *dataproc.BatchControllerClient, ctx context.Context, fullName string) {
+	// First get the batch details directly from the Go proto API.
+	req := &dataprocpb.GetBatchRequest{
+		Name: fullName,
+	}
+	rawWantBatchPb, err := client.GetBatch(ctx, req)
+	if err != nil {
+		t.Fatalf("failed to get batch: %s", err)
+	}
+
+	// Trim unknown fields from the proto by marshalling and unmarshalling.
+	jsonBytes, err := protojson.Marshal(rawWantBatchPb)
+	if err != nil {
+		t.Fatalf("failed to marshal batch to JSON: %s", err)
+	}
+	var wantBatchPb dataprocpb.Batch
+	if err := protojson.Unmarshal(jsonBytes, &wantBatchPb); err != nil {
+		t.Fatalf("error unmarshalling result: %s", err)
+	}
+
+	tcs := []struct {
+		name      string
+		batchName string
+		want      *dataprocpb.Batch
+	}{
+		{
+			name:      "found batch",
+			batchName: shortName(fullName),
+			want:      &wantBatchPb,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run("get-batch "+tc.name, func(t *testing.T) {
+			request := map[string]any{"name": tc.batchName}
+			resp, err := invokeTool("get-batch", request, nil)
+			if err != nil {
+				t.Fatalf("invokeTool failed: %v", err)
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode != http.StatusOK {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+			var body map[string]any
+			if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+			result, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			// Unmarshal JSON to proto for proto-aware deep comparison.
+			var batch dataprocpb.Batch
+			if err := protojson.Unmarshal([]byte(result), &batch); err != nil {
+				t.Fatalf("error unmarshalling result: %s", err)
+			}
+
+			if !cmp.Equal(&batch, tc.want, protocmp.Transform()) {
+				diff := cmp.Diff(&batch, tc.want, protocmp.Transform())
+				t.Errorf("GetBatch() returned diff (-got +want):\n%s", diff)
+			}
+		})
+	}
+}
+
+func runErrorTest(t *testing.T) {
+	missingBatchFullName := fmt.Sprintf("projects/%s/locations/%s/batches/INVALID_BATCH", serverlessSparkProject, serverlessSparkLocation)
 	tcs := []struct {
 		name     string
-		pageSize int
+		toolName string
+		request  map[string]any
 		wantCode int
 		wantMsg  string
 	}{
 		{
-			name:     "zero page size",
-			pageSize: 0,
+			name:     "list-batches zero page size",
+			toolName: "list-batches",
+			request:  map[string]any{"pageSize": 0},
 			wantCode: http.StatusBadRequest,
 			wantMsg:  "pageSize must be positive: 0",
 		},
 		{
-			name:     "negative page size",
-			pageSize: -1,
+			name:     "list-batches negative page size",
+			toolName: "list-batches",
+			request:  map[string]any{"pageSize": -1},
 			wantCode: http.StatusBadRequest,
 			wantMsg:  "pageSize must be positive: -1",
+		},
+		{
+			name:     "get-batch missing batch",
+			toolName: "get-batch",
+			request:  map[string]any{"name": "INVALID_BATCH"},
+			wantCode: http.StatusBadRequest,
+			wantMsg:  fmt.Sprintf("Not found: Batch projects/%s/locations/%s/batches/INVALID_BATCH", serverlessSparkProject, serverlessSparkLocation),
+		},
+		{
+			name:     "get-batch full batch name",
+			toolName: "get-batch",
+			request:  map[string]any{"name": missingBatchFullName},
+			wantCode: http.StatusBadRequest,
+			wantMsg:  fmt.Sprintf("name must be a short batch name without '/': %s", missingBatchFullName),
 		},
 	}
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			request := map[string]any{
-				"pageSize": tc.pageSize,
-			}
-			resp, err := invokeListBatches("list-batches", request, nil)
+			resp, err := invokeTool(tc.toolName, tc.request, nil)
 			if err != nil {
-				t.Fatalf("invokeListBatches failed: %v", err)
+				t.Fatalf("invokeTool failed: %v", err)
 			}
 			defer resp.Body.Close()
 
@@ -270,57 +415,7 @@ func runListBatchesErrorTest(t *testing.T) {
 	}
 }
 
-func runListBatchesAuthTest(t *testing.T) {
-	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
-	if err != nil {
-		t.Fatalf("error getting Google ID token: %s", err)
-	}
-	tcs := []struct {
-		name       string
-		toolName   string
-		headers    map[string]string
-		wantStatus int
-	}{
-		{
-			name:       "valid auth token",
-			toolName:   "list-batches-with-auth",
-			headers:    map[string]string{"my-google-auth_token": idToken},
-			wantStatus: http.StatusOK,
-		},
-		{
-			name:       "invalid auth token",
-			toolName:   "list-batches-with-auth",
-			headers:    map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
-			wantStatus: http.StatusUnauthorized,
-		},
-		{
-			name:       "no auth token",
-			toolName:   "list-batches-with-auth",
-			headers:    nil,
-			wantStatus: http.StatusUnauthorized,
-		},
-	}
-
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			request := map[string]any{
-				"pageSize": 1,
-			}
-			resp, err := invokeListBatches(tc.toolName, request, tc.headers)
-			if err != nil {
-				t.Fatalf("invokeListBatches failed: %v", err)
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode != tc.wantStatus {
-				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not %d, got %d: %s", tc.wantStatus, resp.StatusCode, string(bodyBytes))
-			}
-		})
-	}
-}
-
-func invokeListBatches(toolName string, request map[string]any, headers map[string]string) (*http.Response, error) {
+func invokeTool(toolName string, request map[string]any, headers map[string]string) (*http.Response, error) {
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
@@ -337,4 +432,9 @@ func invokeListBatches(toolName string, request map[string]any, headers map[stri
 	}
 
 	return http.DefaultClient.Do(req)
+}
+
+func shortName(fullName string) string {
+	parts := strings.Split(fullName, "/")
+	return parts[len(parts)-1]
 }

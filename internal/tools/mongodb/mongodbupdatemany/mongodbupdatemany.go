@@ -52,7 +52,7 @@ type Config struct {
 	Database      string           `yaml:"database" validate:"required"`
 	Collection    string           `yaml:"collection" validate:"required"`
 	FilterPayload string           `yaml:"filterPayload" validate:"required"`
-	FilterParams  tools.Parameters `yaml:"filterParams" validate:"required"`
+	FilterParams  tools.Parameters `yaml:"filterParams"`
 	UpdatePayload string           `yaml:"updatePayload" validate:"required"`
 	UpdateParams  tools.Parameters `yaml:"updateParams" validate:"required"`
 	Canonical     bool             `yaml:"canonical" validate:"required"`
@@ -127,7 +127,7 @@ type Tool struct {
 	Description   string           `yaml:"description"`
 	Collection    string           `yaml:"collection"`
 	FilterPayload string           `yaml:"filterPayload" validate:"required"`
-	FilterParams  tools.Parameters `yaml:"filterParams" validate:"required"`
+	FilterParams  tools.Parameters `yaml:"filterParams"`
 	UpdatePayload string           `yaml:"updatePayload" validate:"required"`
 	UpdateParams  tools.Parameters `yaml:"updateParams" validate:"required"`
 	AllParams     tools.Parameters `yaml:"allParams"`

@@ -43,6 +43,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_replication_slots`: Lists replication slots in the database.
     *   `list_invalid_indexes`: Lists invalid indexes in the database.
     *   `get_query_plan`: Generate the execution plan of a statement.
+    *   `list_views`: Lists views in the database from pg_views with a default
+        limit of 50 rows. Returns schemaname, viewname and the ownername.
 
 ## AlloyDB Postgres Admin
 
@@ -210,6 +212,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_replication_slots`: Lists replication slots in the database.
     *   `list_invalid_indexes`: Lists invalid indexes in the database.
     *   `get_query_plan`: Generate the execution plan of a statement.
+    *   `list_views`: Lists views in the database from pg_views with a default
+        limit of 50 rows. Returns schemaname, viewname and the ownername.
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -260,7 +264,6 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `CLOUD_SQL_MSSQL_REGION`: The region of your Cloud SQL instance.
     *   `CLOUD_SQL_MSSQL_INSTANCE`: The ID of your Cloud SQL instance.
     *   `CLOUD_SQL_MSSQL_DATABASE`: The name of the database to connect to.
-    *   `CLOUD_SQL_MSSQL_IP_ADDRESS`: The IP address of the Cloud SQL instance.
     *   `CLOUD_SQL_MSSQL_USER`: The database username.
     *   `CLOUD_SQL_MSSQL_PASSWORD`: The password for the database user.
     *   `CLOUD_SQL_MSSQL_IP_TYPE`: (Optional) The IP type i.e. "Public" or
@@ -492,6 +495,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_replication_slots`: Lists replication slots in the database.
     *   `list_invalid_indexes`: Lists invalid indexes in the database.
     *   `get_query_plan`: Generate the execution plan of a statement.
+    *   `list_views`: Lists views in the database from pg_views with a default
+        limit of 50 rows. Returns schemaname, viewname and the ownername.
 
 ## Google Cloud Serverless for Apache Spark
 
