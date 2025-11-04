@@ -255,8 +255,8 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 	}
 
 	defer func() {
-		pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE IF EXISTS files.%s", tableNameParam))
-		pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE IF EXISTS files.%s", tableNameAuth))
+		_, _ = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE IF EXISTS files.%s", tableNameParam))
+		_, _ = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE IF EXISTS files.%s", tableNameAuth))
 	}()
 
 	select1Want := "[{\"1\":1}]"
