@@ -142,6 +142,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		vMap["label"] = *v.Label
 		vMap["name"] = *v.Name
 		vMap["project_name"] = *v.ProjectName
+		vMap["connections"] = *v.AllowedDbConnectionNames
 		logger.DebugContext(ctx, "Converted to %v\n", vMap)
 		data = append(data, vMap)
 	}

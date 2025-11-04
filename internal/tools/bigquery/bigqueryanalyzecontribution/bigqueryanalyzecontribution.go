@@ -25,6 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
@@ -50,6 +51,8 @@ type compatibleSource interface {
 	BigQueryRestService() *bigqueryrestapi.Service
 	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
 	UseClientAuthorization() bool
+	IsDatasetAllowed(projectID, datasetID string) bool
+	BigQueryAllowedDatasets() []string
 	BigQuerySession() bigqueryds.BigQuerySessionProvider
 }
 
@@ -86,8 +89,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	inputDataParameter := tools.NewStringParameter("input_data",
-		"The data that contain the test and control data to analyze. Can be a fully qualified BigQuery table ID or a SQL query.")
+	allowedDatasets := s.BigQueryAllowedDatasets()
+	inputDataDescription := "The data that contain the test and control data to analyze. Can be a fully qualified BigQuery table ID or a SQL query."
+	if len(allowedDatasets) > 0 {
+		datasetIDs := []string{}
+		for _, ds := range allowedDatasets {
+			datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
+		}
+		inputDataDescription += fmt.Sprintf(" The query or table must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", "))
+	}
+
+	inputDataParameter := tools.NewStringParameter("input_data", inputDataDescription)
 	contributionMetricParameter := tools.NewStringParameter("contribution_metric",
 		`The name of the column that contains the metric to analyze.
 		Provides the expression to use to calculate the metric you are analyzing.
@@ -123,17 +135,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:            cfg.Name,
-		Kind:            kind,
-		Parameters:      parameters,
-		AuthRequired:    cfg.AuthRequired,
-		UseClientOAuth:  s.UseClientAuthorization(),
-		ClientCreator:   s.BigQueryClientCreator(),
-		Client:          s.BigQueryClient(),
-		RestService:     s.BigQueryRestService(),
-		SessionProvider: s.BigQuerySession(),
-		manifest:        tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:     mcpManifest,
+		Name:             cfg.Name,
+		Kind:             kind,
+		Parameters:       parameters,
+		AuthRequired:     cfg.AuthRequired,
+		UseClientOAuth:   s.UseClientAuthorization(),
+		ClientCreator:    s.BigQueryClientCreator(),
+		Client:           s.BigQueryClient(),
+		RestService:      s.BigQueryRestService(),
+		IsDatasetAllowed: s.IsDatasetAllowed,
+		AllowedDatasets:  allowedDatasets,
+		SessionProvider:  s.BigQuerySession(),
+		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:      mcpManifest,
 	}
 	return t, nil
 }
@@ -148,12 +162,14 @@ type Tool struct {
 	UseClientOAuth bool             `yaml:"useClientOAuth"`
 	Parameters     tools.Parameters `yaml:"parameters"`
 
-	Client          *bigqueryapi.Client
-	RestService     *bigqueryrestapi.Service
-	ClientCreator   bigqueryds.BigqueryClientCreator
-	SessionProvider bigqueryds.BigQuerySessionProvider
-	manifest        tools.Manifest
-	mcpManifest     tools.McpManifest
+	Client           *bigqueryapi.Client
+	RestService      *bigqueryrestapi.Service
+	ClientCreator    bigqueryds.BigqueryClientCreator
+	IsDatasetAllowed func(projectID, datasetID string) bool
+	AllowedDatasets  []string
+	SessionProvider  bigqueryds.BigQuerySessionProvider
+	manifest         tools.Manifest
+	mcpManifest      tools.McpManifest
 }
 
 // Invoke runs the contribution analysis.
@@ -162,6 +178,22 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	inputData, ok := paramsMap["input_data"].(string)
 	if !ok {
 		return nil, fmt.Errorf("unable to cast input_data parameter %s", paramsMap["input_data"])
+	}
+
+	bqClient := t.Client
+	restService := t.RestService
+	var err error
+
+	// Initialize new client if using user OAuth token
+	if t.UseClientOAuth {
+		tokenStr, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
+		bqClient, restService, err = t.ClientCreator(tokenStr, true)
+		if err != nil {
+			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
+		}
 	}
 
 	modelID := fmt.Sprintf("contribution_analysis_model_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
@@ -196,8 +228,54 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	var inputDataSource string
 	trimmedUpperInputData := strings.TrimSpace(strings.ToUpper(inputData))
 	if strings.HasPrefix(trimmedUpperInputData, "SELECT") || strings.HasPrefix(trimmedUpperInputData, "WITH") {
+		if len(t.AllowedDatasets) > 0 {
+			var connProps []*bigqueryapi.ConnectionProperty
+			session, err := t.SessionProvider(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
+			}
+			if session != nil {
+				connProps = []*bigqueryapi.ConnectionProperty{
+					{Key: "session_id", Value: session.ID},
+				}
+			}
+			dryRunJob, err := bqutil.DryRunQuery(ctx, restService, t.Client.Project(), t.Client.Location, inputData, nil, connProps)
+			if err != nil {
+				return nil, fmt.Errorf("query validation failed: %w", err)
+			}
+			statementType := dryRunJob.Statistics.Query.StatementType
+			if statementType != "SELECT" {
+				return nil, fmt.Errorf("the 'input_data' parameter only supports a table ID or a SELECT query. The provided query has statement type '%s'", statementType)
+			}
+
+			queryStats := dryRunJob.Statistics.Query
+			if queryStats != nil {
+				for _, tableRef := range queryStats.ReferencedTables {
+					if !t.IsDatasetAllowed(tableRef.ProjectId, tableRef.DatasetId) {
+						return nil, fmt.Errorf("query in input_data accesses dataset '%s.%s', which is not in the allowed list", tableRef.ProjectId, tableRef.DatasetId)
+					}
+				}
+			} else {
+				return nil, fmt.Errorf("could not analyze query in input_data to validate against allowed datasets")
+			}
+		}
 		inputDataSource = fmt.Sprintf("(%s)", inputData)
 	} else {
+		if len(t.AllowedDatasets) > 0 {
+			parts := strings.Split(inputData, ".")
+			var projectID, datasetID string
+			switch len(parts) {
+			case 3: // project.dataset.table
+				projectID, datasetID = parts[0], parts[1]
+			case 2: // dataset.table
+				projectID, datasetID = t.Client.Project(), parts[0]
+			default:
+				return nil, fmt.Errorf("invalid table ID format for 'input_data': %q. Expected 'dataset.table' or 'project.dataset.table'", inputData)
+			}
+			if !t.IsDatasetAllowed(projectID, datasetID) {
+				return nil, fmt.Errorf("access to dataset '%s.%s' (from table '%s') is not allowed", projectID, datasetID, inputData)
+			}
+		}
 		inputDataSource = fmt.Sprintf("SELECT * FROM `%s`", inputData)
 	}
 
@@ -208,21 +286,6 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		strings.Join(options, ", "),
 		inputDataSource,
 	)
-
-	bqClient := t.Client
-	var err error
-
-	// Initialize new client if using user OAuth token
-	if t.UseClientOAuth {
-		tokenStr, err := accessToken.ParseBearerToken()
-		if err != nil {
-			return nil, fmt.Errorf("error parsing access token: %w", err)
-		}
-		bqClient, _, err = t.ClientCreator(tokenStr, false)
-		if err != nil {
-			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
-		}
-	}
 
 	createModelQuery := bqClient.Query(createModelSQL)
 

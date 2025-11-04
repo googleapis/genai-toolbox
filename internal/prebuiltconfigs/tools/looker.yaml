@@ -118,6 +118,8 @@ tools:
           quotes. Filter expressions can be found at
           https://cloud.google.com/looker/docs/filter-expressions. There
           is one mistake in that, however, Use `not null` instead of `-NULL`.
+          If the condition is a string that contains a comma, use a second
+          set of quotes. For example, {"user.city": "'New York, NY'"}.
 
           Sorts can be specified like [ "field.id desc 0" ].
 
@@ -709,6 +711,10 @@ tools:
             4. `check_explore_performance`,
             5. `check_schedule_failures`, or
             6. `check_legacy_features`
+      
+          The `check_legacy_features` action is only available in Looker Core. If
+          it is called on a Looker Core instance, you will get a notice. That notice
+          should not be reported as an error.
 
     health_analyze:
         kind: looker-health-analyze
@@ -745,6 +751,126 @@ tools:
 
           The result is a list of objects that are candidates for deletion.
 
+    dev_mode:
+        kind: looker-dev-mode
+        source: looker-source
+        description: |
+          dev_mode Tool
+
+          Passing true to this tool switches the session to dev mode. Passing false to this tool switches the
+          session to production mode.
+
+    get_projects:
+        kind: looker-get-projects
+        source: looker-source
+        description: |
+          get_projects Tool
+
+          This tool returns the project_id and project_name for
+          all the LookML projects on the looker instance.
+
+    get_project_files:
+        kind: looker-get-project-files
+        source: looker-source
+        description: |
+          get_project_files Tool
+
+          Given a project_id this tool returns the details about
+          the LookML files that make up that project.
+
+    get_project_file:
+        kind: looker-get-project-file
+        source: looker-source
+        description: |
+          get_project_file Tool
+
+          Given a project_id and a file path within the project, this tool returns
+          the contents of the LookML file.
+
+    create_project_file:
+        kind: looker-create-project-file
+        source: looker-source
+        description: |
+          create_project_file Tool
+
+          Given a project_id and a file path within the project, as well as the content
+          of a LookML file, this tool will create a new file within the project.
+
+          This tool must be called after the dev_mode tool has changed the session to
+          dev mode.
+
+    update_project_file:
+        kind: looker-update-project-file
+        source: looker-source
+        description: |
+          update_project_file Tool
+
+          Given a project_id and a file path within the project, as well as the content
+          of a LookML file, this tool will modify the file within the project.
+
+          This tool must be called after the dev_mode tool has changed the session to
+          dev mode.
+
+    delete_project_file:
+        kind: looker-delete-project-file
+        source: looker-source
+        description: |
+          delete_project_file Tool
+
+          Given a project_id and a file path within the project, this tool will delete
+          the file from the project.
+
+          This tool must be called after the dev_mode tool has changed the session to
+          dev mode.
+
+    get_connections:
+        kind: looker-get-connections
+        source: looker-source
+        description: |
+          get_connections Tool
+
+          This tool will list all the connections available in the Looker system, as
+          well as the dialect name, the default schema, the database if applicable,
+          and whether the connection supports multiple databases.
+
+    get_connection_schemas:
+        kind: looker-get-connection-schemas
+        source: looker-source
+        description: |
+          get_connection_schemas Tool
+
+          This tool will list the schemas available from a connection, filtered by
+          an optional database name.
+
+    get_connection_databases:
+        kind: looker-get-connection-databases
+        source: looker-source
+        description: |
+          get_connection_databases Tool
+
+          This tool will list the databases available from a connection if the connection
+          supports multiple databases.
+
+    get_connection_tables:
+        kind: looker-get-connection-tables
+        source: looker-source
+        description: |
+          get_connection_tables Tool
+
+          This tool will list the tables available from a connection, filtered by the 
+          schema name and optional database name.
+
+    get_connection_table_columns:
+        kind: looker-get-connection-table-columns
+        source: looker-source
+        description: |
+          get_connection_table_columns Tool
+
+          This tool will list the columns available from a connection, for all the tables
+          given in a comma separated list of table names, filtered by the 
+          schema name and optional database name.
+
+
 toolsets:
     looker_tools:
         - get_models
@@ -765,3 +891,15 @@ toolsets:
         - health_pulse
         - health_analyze
         - health_vacuum
+        - dev_mode
+        - get_projects
+        - get_project_files
+        - get_project_file
+        - create_project_file
+        - update_project_file
+        - delete_project_file
+        - get_connections
+        - get_connection_schemas
+        - get_connection_databases
+        - get_connection_tables
+        - get_connection_table_columns

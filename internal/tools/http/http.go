@@ -210,11 +210,17 @@ func getURL(baseURL, path string, pathParams, queryParams tools.Parameters, defa
 	// Set dynamic query parameters
 	query := parsedURL.Query()
 	for _, p := range queryParams {
-		v := paramsMap[p.GetName()]
-		if v == nil {
+		v, ok := paramsMap[p.GetName()]
+		if !ok || v == nil {
+			if !p.GetRequired(){
+				// If the param is not required AND
+				// Not provodid OR provided with a nil value 
+				// Omitted from the URL
+				continue
+			}
 			v = ""
-		}
-		query.Add(p.GetName(), fmt.Sprintf("%v", v))
+    	}	
+    	query.Add(p.GetName(), fmt.Sprintf("%v", v))
 	}
 	parsedURL.RawQuery = query.Encode()
 	return parsedURL.String(), nil
@@ -277,8 +283,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+    	return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
 	}
 
 	var data any

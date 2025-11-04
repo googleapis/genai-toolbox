@@ -154,7 +154,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, listTablesMissingUniqueIndexesStatement)
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, listTablesMissingUniqueIndexesStatement))
 
 	results, err := t.Pool.QueryContext(ctx, listTablesMissingUniqueIndexesStatement, table_schema, table_schema, limit)
 	if err != nil {
