@@ -103,6 +103,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	select1Want := `[{"_id":3,"id":3,"name":"Sid"}]`
 	myToolId3NameAliceWant := `[{"_id":5,"id":3,"name":"Alice"}]`
 	myToolById4Want := `[{"_id":4,"id":4,"name":null}]`
+	myToolByNameNilResponseWant := `[{"_id":4,"id":4,"name":null}]`
 	mcpMyFailToolWant := `invalid JSON input: missing colon after key `
 	mcpMyToolId3NameAliceWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
 	mcpAuthRequiredWant := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"_id\":3,\"id\":3,\"name\":\"Sid\"}"}]}}`
@@ -113,6 +114,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 		tests.WithMyToolId3NameAliceWant(myToolId3NameAliceWant),
 		tests.WithMyArrayToolWant(myToolId3NameAliceWant),
 		tests.WithMyToolById4Want(myToolById4Want),
+		tests.WithMyToolByNameNilResponseWant(myToolByNameNilResponseWant),
 	)
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpAuthRequiredWant,
 		tests.WithMcpMyToolId3NameAliceWant(mcpMyToolId3NameAliceWant),
