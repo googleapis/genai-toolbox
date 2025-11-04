@@ -34,6 +34,7 @@ documentation](https://googleapis.github.io/genai-toolbox/).
   - [Installing the server](#installing-the-server)
   - [Running the server](#running-the-server)
   - [Integrating your application](#integrating-your-application)
+  - [Using Toolbox with Gemini CLI Extensions](#using-toolbox-with-gemini-cli-extensions)
 - [Configuration](#configuration)
   - [Sources](#sources)
   - [Tools](#tools)
@@ -763,6 +764,51 @@ For more detailed instructions on using the Toolbox Core SDK, see the
 </details>
 </blockquote>
 </details>
+
+### Using Toolbox with Gemini CLI Extensions
+
+[Gemini CLI extensions][gemini-cli-extensions] provide tools to interact
+directly with your data sources from command line. Below is a list of Gemini CLI
+extensions that are built on top of **Toolbox**. They allow you to interact with
+your data sources through pre-defined or custom tools with natural language.
+Click into the link to see detailed instructions on their usage.
+
+To use **custom** tools with Gemini CLI:
+
+- [MCP Toolbox](https://github.com/gemini-cli-extensions/mcp-toolbox)
+
+To use [prebuilt tools][prebuilt] with Gemini CLI:
+
+- [AlloyDB for PostgreSQL](https://github.com/gemini-cli-extensions/alloydb)
+- [AlloyDB for PostgreSQL
+  Observability](https://github.com/gemini-cli-extensions/alloydb-observability)
+- [BigQuery Data
+  Analytics](https://github.com/gemini-cli-extensions/bigquery-data-analytics)
+- [BigQuery Conversational
+  Analytics](https://github.com/gemini-cli-extensions/bigquery-conversational-analytics)
+- [Cloud SQL for
+  MySQL](https://github.com/gemini-cli-extensions/cloud-sql-mysql)
+- [Cloud SQL for MySQL
+  Observability](https://github.com/gemini-cli-extensions/cloud-sql-mysql-observability)
+- [Cloud SQL for
+  PostgreSQL](https://github.com/gemini-cli-extensions/cloud-sql-postgresql)
+- [Cloud SQL for PostgreSQL
+  Observability](https://github.com/gemini-cli-extensions/cloud-sql-postgresql-observability)
+- [Cloud SQL for SQL
+  Server](https://github.com/gemini-cli-extensions/cloud-sql-sqlserver)
+- [Cloud SQL for SQL Server
+  Observability](https://github.com/gemini-cli-extensions/cloud-sql-sqlserver-observability)
+- [Looker](https://github.com/gemini-cli-extensions/looker)
+- [Dataplex](https://github.com/gemini-cli-extensions/dataplex)
+- [MySQL](https://github.com/gemini-cli-extensions/mysql)
+- [PostgreSQL](https://github.com/gemini-cli-extensions/postgres)
+- [Spanner](https://github.com/gemini-cli-extensions/spanner)
+- [Firestore](https://github.com/gemini-cli-extensions/firestore-native)
+- [SQL Server](https://github.com/gemini-cli-extensions/sql-server)
+
+[prebuilt]: https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/
+[gemini-cli-extensions]:
+    https://github.com/google-gemini/gemini-cli/blob/main/docs/extensions/index.md
 
 ## Configuration
 
