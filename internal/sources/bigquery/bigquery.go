@@ -91,6 +91,18 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		r.WriteMode = WriteModeAllowed
 	}
 
+	if r.WriteMode == WriteModeProtected && r.UseClientOAuth {
+		// The protected mode only allows write operations to the session's temporary datasets.
+		// when using client OAuth, a new session is created every
+		// time a BigQuery tool is invoked. Therefore, no session data can
+		// be preserved as needed by the protected mode.
+		return nil, fmt.Errorf("writeMode 'protected' cannot be used with useClientOAuth 'true'")
+	}
+
+	if r.UseClientOAuth && r.ImpersonateServiceAccount != "" {
+		return nil, fmt.Errorf("useClientOAuth cannot be used with impersonateServiceAccount")
+	}
+
 	var client *bigqueryapi.Client
 	var restService *bigqueryrestapi.Service
 	var tokenSource oauth2.TokenSource
@@ -114,18 +126,6 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	if r.UseClientOAuth {
 		// use client OAuth
-		if r.WriteMode == WriteModeProtected {
-			// The protected mode only allows write operations to the session's temporary datasets.
-			// when using client OAuth, a new session is created every
-			// time a BigQuery tool is invoked. Therefore, no session data can
-			// be preserved as needed by the protected mode.
-			return nil, fmt.Errorf("writeMode 'protected' cannot be used with useClientOAuth 'true'")
-		}
-
-        if r.ImpersonateServiceAccount != ""{
-            return nil, fmt.Errorf("useClientOAuth cannot be used with impersonateServiceAccount")
-        }
-
 		baseClientCreator, err := newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.Name)
 		if err != nil {
 			return nil, fmt.Errorf("error constructing client creator: %w", err)
@@ -175,7 +175,6 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 			allowedDatasets[allowedFullID] = struct{}{}
 		}
 	}
-    s.AllowedDatasets = allowedDatasets
 
 	s.SessionProvider = s.newBigQuerySessionProvider()
 
