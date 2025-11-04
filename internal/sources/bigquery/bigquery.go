@@ -91,29 +91,26 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		r.WriteMode = WriteModeAllowed
 	}
 
-    if r.WriteMode == WriteModeProtected && r.UseClientOAuth {
-		return nil, fmt.Errorf("writeMode 'protected' cannot be used with useClientOAuth 'true'")
-    }
-	// Initialize Source struct first
-	s := &Source{
-		Name:               r.Name,
-		Kind:               SourceKind,
-		Project:            r.Project,
-		Location:           r.Location,
-		MaxQueryResultRows: 50,
-		WriteMode:          r.WriteMode,
-		UseClientOAuth:     r.UseClientOAuth,
-	}
-
-	if r.UseClientOAuth && r.ImpersonateServiceAccount != "" {
-		return nil, fmt.Errorf("useClientOAuth cannot be used with impersonateServiceAccount")
-	}
-
 	var client *bigqueryapi.Client
 	var restService *bigqueryrestapi.Service
 	var tokenSource oauth2.TokenSource
 	var clientCreator BigqueryClientCreator // Renamed to internal
 	var err error
+
+    s := &Source{
+		Name:                      r.Name,
+		Kind:                      SourceKind,
+		Project:                   r.Project,
+		Location:                  r.Location,
+		Client:                    client,
+		RestService:               restService,
+		TokenSource:               tokenSource,
+		MaxQueryResultRows:        50,
+		WriteMode:                 r.WriteMode,
+		UseClientOAuth:            r.UseClientOAuth,
+		ClientCreator:             clientCreator,
+		ImpersonateServiceAccount: r.ImpersonateServiceAccount,
+	}
 
 	if r.UseClientOAuth {
 		// use client OAuth
@@ -124,6 +121,10 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 			// be preserved as needed by the protected mode.
 			return nil, fmt.Errorf("writeMode 'protected' cannot be used with useClientOAuth 'true'")
 		}
+
+        if r.ImpersonateServiceAccount != ""{
+            return nil, fmt.Errorf("useClientOAuth cannot be used with impersonateServiceAccount")
+        }
 
 		baseClientCreator, err := newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.Name)
 		if err != nil {
@@ -174,23 +175,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 			allowedDatasets[allowedFullID] = struct{}{}
 		}
 	}
+    s.AllowedDatasets = allowedDatasets
 
-	s := &Source{
-		Name:                      r.Name,
-		Kind:                      SourceKind,
-		Project:                   r.Project,
-		Location:                  r.Location,
-		Client:                    client,
-		RestService:               restService,
-		TokenSource:               tokenSource,
-		MaxQueryResultRows:        50,
-		WriteMode:                 r.WriteMode,
-		AllowedDatasets:           allowedDatasets,
-		UseClientOAuth:            r.UseClientOAuth,
-		ClientCreator:             clientCreator,
-		ImpersonateServiceAccount: r.ImpersonateServiceAccount,
-	}
-
+	
 	if r.UseClientOAuth {
 		// Define eviction handlers
 		onBqEvict := func(key string, value interface{}) {
