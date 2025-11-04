@@ -43,7 +43,10 @@ questions][alloydb-ai-gen-nl], including enabling the extension and configuring
 context for your application.
 
 {{< notice note >}}
-Configuration update required for v0.19.0+. Starting with Toolbox v0.19.0, users
+As of AlloyDB AI NL v1.0.3+, the signature of `execute_nl_query` has been
+updated. Run `SELECT extversion FROM pg_extension WHERE extname =
+'alloydb_ai_nl';` to check which version your instance is using.
+AlloyDB AI NL v1.0.3+ is required for Toolbox v0.19.0+. Starting with Toolbox v0.19.0, users
 who previously used the create_configuration operation for the natural language
 configuration must update it. To do so, please drop the existing configuration
 and redefine it using the instructions
