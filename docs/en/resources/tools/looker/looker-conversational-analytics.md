@@ -38,7 +38,7 @@ tools:
 
 ## Reference
 
-| **field**   | **type** | **required** | **description**                                   |
+| **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
 | kind        |  string  |     true     | Must be "lookerca-conversational-analytics".       |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |

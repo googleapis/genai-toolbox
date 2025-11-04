@@ -6,7 +6,7 @@ toolchain go1.25.2
 
 require (
 	cloud.google.com/go/alloydbconn v1.15.5
-	cloud.google.com/go/bigquery v1.71.0
+	cloud.google.com/go/bigquery v1.72.0
 	cloud.google.com/go/bigtable v1.40.1
 	cloud.google.com/go/cloudsqlconn v1.18.1
 	cloud.google.com/go/dataplex v1.27.1
@@ -57,7 +57,7 @@ require (
 	google.golang.org/api v0.254.0
 	google.golang.org/genproto v0.0.0-20251022142026-3a174f9686a8
 	google.golang.org/protobuf v1.36.10
-	modernc.org/sqlite v1.39.1
+	modernc.org/sqlite v1.40.0
 )
 
 require (

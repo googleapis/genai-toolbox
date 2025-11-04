@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
 )
 
 const kind string = "bigquery-get-dataset-info"
@@ -48,6 +49,8 @@ type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
 	UseClientAuthorization() bool
+	IsDatasetAllowed(projectID, datasetID string) bool
+	BigQueryAllowedDatasets() []string
 }
 
 // validate compatible sources are still compatible
@@ -83,23 +86,33 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	projectParameter := tools.NewStringParameterWithDefault(projectKey, s.BigQueryProject(), "The Google Cloud project ID containing the dataset.")
-	datasetParameter := tools.NewStringParameter(datasetKey, "The dataset to get metadata information.")
+	defaultProjectID := s.BigQueryProject()
+	projectDescription := "The Google Cloud project ID containing the dataset."
+	datasetDescription := "The dataset to get metadata information. Can be in `project.dataset` format."
+	var datasetParameter tools.Parameter
+	var projectParameter tools.Parameter
+
+	projectParameter, datasetParameter = bqutil.InitializeDatasetParameters(
+		s.BigQueryAllowedDatasets(),
+		defaultProjectID,
+		projectKey, datasetKey,
+		projectDescription, datasetDescription)
 	parameters := tools.Parameters{projectParameter, datasetParameter}
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
 
 	// finish tool setup
 	t := Tool{
-		Name:           cfg.Name,
-		Kind:           kind,
-		Parameters:     parameters,
-		AuthRequired:   cfg.AuthRequired,
-		UseClientOAuth: s.UseClientAuthorization(),
-		ClientCreator:  s.BigQueryClientCreator(),
-		Client:         s.BigQueryClient(),
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:    mcpManifest,
+		Name:             cfg.Name,
+		Kind:             kind,
+		Parameters:       parameters,
+		AuthRequired:     cfg.AuthRequired,
+		UseClientOAuth:   s.UseClientAuthorization(),
+		ClientCreator:    s.BigQueryClientCreator(),
+		Client:           s.BigQueryClient(),
+		IsDatasetAllowed: s.IsDatasetAllowed,
+		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:      mcpManifest,
 	}
 	return t, nil
 }
@@ -114,11 +127,12 @@ type Tool struct {
 	UseClientOAuth bool             `yaml:"useClientOAuth"`
 	Parameters     tools.Parameters `yaml:"parameters"`
 
-	Client        *bigqueryapi.Client
-	ClientCreator bigqueryds.BigqueryClientCreator
-	Statement     string
-	manifest      tools.Manifest
-	mcpManifest   tools.McpManifest
+	Client           *bigqueryapi.Client
+	ClientCreator    bigqueryds.BigqueryClientCreator
+	Statement        string
+	IsDatasetAllowed func(projectID, datasetID string) bool
+	manifest         tools.Manifest
+	mcpManifest      tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
@@ -147,11 +161,16 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
 		}
 	}
+
+	if !t.IsDatasetAllowed(projectId, datasetId) {
+		return nil, fmt.Errorf("access denied to dataset '%s' because it is not in the configured list of allowed datasets for project '%s'", datasetId, projectId)
+	}
+
 	dsHandle := bqClient.DatasetInProject(projectId, datasetId)
 
 	metadata, err := dsHandle.Metadata(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get metadata for dataset %s (in project %s): %w", datasetId, bqClient.Project(), err)
+		return nil, fmt.Errorf("failed to get metadata for dataset %s (in project %s): %w", datasetId, projectId, err)
 	}
 
 	return metadata, nil

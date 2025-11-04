@@ -156,6 +156,8 @@ go test -race -v ./...
 * **Internal Contributors:** Testing workflows should trigger automatically.
 * **External Contributors:** Request Toolbox maintainers to trigger the testing
   workflows on your PR.
+  * Maintainers can comment `/gcbrun` to execute the integration tests.
+  * Maintainers can add the label `tests:run` to execute the unit tests.
 
 #### Test Resources
 
@@ -183,6 +185,9 @@ variables for each source.
 * Couchbase - setup in the test project via the Marketplace
 * DGraph - using the public dgraph interface <https://play.dgraph.io> for
   testing
+* Looker
+  * The Cloud Build service account is a user for conversational analytics
+  * The Looker instance runs under google.com:looker-sandbox.
 * Memorystore Redis - setup in the test project using a Memorystore for Redis
   standalone instance
   * Memorystore Redis Cluster, Memorystore Valkey standalone, and Memorystore
@@ -330,9 +335,15 @@ for instructions on developing Toolbox SDKs.
 
 ### Team
 
-Team, `@googleapis/senseai-eco`, has been set as
+Team `@googleapis/senseai-eco` has been set as
 [CODEOWNERS](.github/CODEOWNERS). The GitHub TeamSync tool is used to create
 this team from MDB Group, `senseai-eco`.
+
+Team `@googleapis/toolbox-contributors` has write access to this repo. They
+can create branches and approve test runs. But they do not have the ability
+to approve PRs for main. TeamSync is used to create this team from the MDB
+Group `toolbox-contributors`. Googlers who are developing for MCP-Toolbox
+but aren't part of the core team should join this group.
 
 ### Releasing
 

@@ -199,6 +199,31 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
+			"get_connections": map[string]any{
+				"kind":        "looker-get-connections",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_connection_schemas": map[string]any{
+				"kind":        "looker-get-connection-schemas",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_connection_databases": map[string]any{
+				"kind":        "looker-get-connection-databases",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_connection_tables": map[string]any{
+				"kind":        "looker-get-connection-tables",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_connection_table_columns": map[string]any{
+				"kind":        "looker-get-connection-table-columns",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 		},
 	}
 
@@ -992,8 +1017,127 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "get_connections",
+		map[string]any{
+			"get_connections": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters":   []any{},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_connection_schemas",
+		map[string]any{
+			"get_connection_schemas": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The connection containing the schemas.",
+						"name":        "conn",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The optional database to search",
+						"name":        "db",
+						"required":    false,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_connection_databases",
+		map[string]any{
+			"get_connection_databases": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The connection containing the databases.",
+						"name":        "conn",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_connection_tables",
+		map[string]any{
+			"get_connection_tables": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The connection containing the tables.",
+						"name":        "conn",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The optional database to search",
+						"name":        "db",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The schema containing the tables.",
+						"name":        "schema",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_connection_table_columns",
+		map[string]any{
+			"get_connection_table_columns": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The connection containing the tables.",
+						"name":        "conn",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The optional database to search",
+						"name":        "db",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The schema containing the tables.",
+						"name":        "schema",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "A comma separated list of tables containing the columns.",
+						"name":        "tables",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
 
-	wantResult := "{\"label\":\"System Activity\",\"name\":\"system__activity\",\"project_name\":\"system__activity\"}"
+	wantResult := "{\"connections\":[],\"label\":\"System Activity\",\"name\":\"system__activity\",\"project_name\":\"system__activity\"}"
 	tests.RunToolInvokeSimpleTest(t, "get_models", wantResult)
 
 	wantResult = "{\"description\":\"Data about Look and dashboard usage, including frequency of views, favoriting, scheduling, embedding, and access via the API. Also includes details about individual Looks and dashboards.\",\"group_label\":\"System Activity\",\"label\":\"Content Usage\",\"name\":\"content_usage\"}"
@@ -1070,6 +1214,21 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "production"
 	tests.RunToolInvokeParametersTest(t, "dev_mode", []byte(`{"devMode": false}`), wantResult)
+
+	wantResult = "thelook"
+	tests.RunToolInvokeSimpleTest(t, "get_connections", wantResult)
+
+	wantResult = "{\"name\":\"demo_db\",\"is_default\":true}"
+	tests.RunToolInvokeParametersTest(t, "get_connection_schemas", []byte(`{"conn": "thelook"}`), wantResult)
+
+	wantResult = "[]"
+	tests.RunToolInvokeParametersTest(t, "get_connection_databases", []byte(`{"conn": "thelook"}`), wantResult)
+
+	wantResult = "Employees"
+	tests.RunToolInvokeParametersTest(t, "get_connection_tables", []byte(`{"conn": "thelook", "schema": "demo_db"}`), wantResult)
+
+	wantResult = "{\"column_name\":\"EmpID\",\"data_type_database\":\"int\",\"data_type_looker\":\"number\",\"sql_escaped_column_name\":\"EmpID\"}"
+	tests.RunToolInvokeParametersTest(t, "get_connection_table_columns", []byte(`{"conn": "thelook", "schema": "demo_db", "tables": "Employees"}`), wantResult)
 }
 
 func runConversationalAnalytics(t *testing.T, modelName, exploreName string) {

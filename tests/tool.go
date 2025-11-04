@@ -746,6 +746,20 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, configs.select1Statement))),
 			isErr:         true,
 		},
+		{
+			name:          "invoke my-exec-sql-tool with invalid SELECT SQL",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT * FROM non_existent_table"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-exec-sql-tool with invalid ALTER SQL",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"ALTER TALE t ALTER COLUMN id DROP NOT NULL"}`)),
+			isErr:         true,
+		},
 	}
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
