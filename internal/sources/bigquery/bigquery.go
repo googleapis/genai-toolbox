@@ -94,7 +94,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	var client *bigqueryapi.Client
 	var restService *bigqueryrestapi.Service
 	var tokenSource oauth2.TokenSource
-	var clientCreator BigqueryClientCreator // Renamed to internal
+	var clientCreator BigqueryClientCreator
 	var err error
 
     s := &Source{
@@ -176,59 +176,6 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		}
 	}
     s.AllowedDatasets = allowedDatasets
-
-	
-	if r.UseClientOAuth {
-		// Define eviction handlers
-		onBqEvict := func(key string, value interface{}) {
-			if client, ok := value.(*bigqueryapi.Client); ok && client != nil {
-				client.Close()
-			}
-		}
-		onDataplexEvict := func(key string, value interface{}) {
-			if client, ok := value.(*dataplexapi.CatalogClient); ok && client != nil {
-				client.Close()
-			}
-		}
-
-		// Initialize caches
-		s.bqClientCache = NewCache(onBqEvict)
-		s.bqRestCache = NewCache(nil)
-		s.dataplexCache = NewCache(onDataplexEvict)
-
-		// Create the caching wrapper for the client creator
-		s.ClientCreator = func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-			// Check cache
-			bqClientVal, bqFound := s.bqClientCache.Get(tokenString)
-
-			if wantRestService {
-				restServiceVal, restFound := s.bqRestCache.Get(tokenString)
-				if bqFound && restFound {
-					// Cache hit for both
-					return bqClientVal.(*bigqueryapi.Client), restServiceVal.(*bigqueryrestapi.Service), nil
-				}
-			} else {
-				if bqFound {
-					return bqClientVal.(*bigqueryapi.Client), nil, nil
-				}
-			}
-
-			// Cache miss - call the client creator
-			// This will create both even if only one was missing
-			client, restService, err := clientCreator(tokenString, wantRestService)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			// Set in cache
-			s.bqClientCache.Set(tokenString, client)
-			if wantRestService && restService != nil {
-				s.bqRestCache.Set(tokenString, restService)
-			}
-
-			return client, restService, nil
-		}
-	}
 
 	s.SessionProvider = s.newBigQuerySessionProvider()
 
