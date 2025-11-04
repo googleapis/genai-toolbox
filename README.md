@@ -28,21 +28,23 @@ documentation](https://googleapis.github.io/genai-toolbox/).
 
 <!-- TOC -->
 
-- [Why Toolbox?](#why-toolbox)
-- [General Architecture](#general-architecture)
-- [Getting Started](#getting-started)
-  - [Installing the server](#installing-the-server)
-  - [Running the server](#running-the-server)
-  - [Integrating your application](#integrating-your-application)
-- [Configuration](#configuration)
-  - [Sources](#sources)
-  - [Tools](#tools)
-  - [Toolsets](#toolsets)
-- [Versioning](#versioning)
-  - [Pre-1.0.0 Versioning](#pre-100-versioning)
-  - [Post-1.0.0 Versioning](#post-100-versioning)
-- [Contributing](#contributing)
-- [Community](#community)
+- [MCP Toolbox for Databases](#mcp-toolbox-for-databases)
+  - [Table of Contents](#table-of-contents)
+  - [Why Toolbox?](#why-toolbox)
+  - [General Architecture](#general-architecture)
+  - [Getting Started](#getting-started)
+    - [Installing the server](#installing-the-server)
+    - [Running the server](#running-the-server)
+    - [Integrating your application](#integrating-your-application)
+  - [Configuration](#configuration)
+    - [Sources](#sources)
+    - [Tools](#tools)
+    - [Toolsets](#toolsets)
+  - [Versioning](#versioning)
+    - [Pre-1.0.0 Versioning](#pre-100-versioning)
+    - [Post-1.0.0 Versioning](#post-100-versioning)
+  - [Contributing](#contributing)
+  - [Community](#community)
 
 <!-- /TOC -->
 
@@ -758,6 +760,50 @@ For more detailed instructions on using the Toolbox Core SDK, see the
 
     }
     ```
+
+  </details>
+  <details open>
+    <summary>ADK Go</summary>
+
+1. Install [Toolbox Go SDK][toolbox-go]:
+
+    ```bash
+    go get github.com/googleapis/mcp-toolbox-sdk-go
+    ```
+
+1. Load tools:
+
+    ```go
+    package main
+
+    import (
+      "github.com/googleapis/mcp-toolbox-sdk-go/tbadk"
+      "context"
+    )
+
+    func main() {
+      // Make sure to add the error checks
+      // Update the url to point to your server
+      URL := "http://127.0.0.1:5000"
+      ctx := context.Background()
+      client, err := tbadk.NewToolboxClient(URL)
+      if err != nil {
+        return fmt.Sprintln("Could not start Toolbox Client", err)
+      }
+
+      // Use this tool with ADK Go
+      tool, err := client.LoadTool("toolName", ctx)
+      if err != nil {
+        return fmt.Sprintln("Could not load Toolbox Tool", err)
+      }
+    }
+    ```
+
+    For more detailed instructions on using the Toolbox Go SDK, see the
+    [project's README][toolbox-core-go-readme].
+
+    [toolbox-go]: https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/core
+    [toolbox-core-go-readme]: https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md
 
   </details>
 </details>
