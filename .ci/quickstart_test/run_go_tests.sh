@@ -70,7 +70,7 @@ run_orch_test() {
   local orch_name
   orch_name=$(basename "$orch_dir")
 
-  if [ "$orch_name" == "openAI" || "$orch_name" == "adkgo"]; then
+  if [[ "$orch_name" == "openAI" || "$orch_name" == "adkgo" ]]; then
       echo -e "\nSkipping framework '${orch_name}': Temporarily excluded."
       return
   fi
