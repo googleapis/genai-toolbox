@@ -72,13 +72,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// BigQuery configs
-	Name            string   `yaml:"name" validate:"required"`
-	Kind            string   `yaml:"kind" validate:"required"`
-	Project         string   `yaml:"project" validate:"required"`
-	Location        string   `yaml:"location"`
-	WriteMode       string   `yaml:"writeMode"`
-	AllowedDatasets []string `yaml:"allowedDatasets"`
-	UseClientOAuth  bool     `yaml:"useClientOAuth"`
+	Name                      string   `yaml:"name" validate:"required"`
+	Kind                      string   `yaml:"kind" validate:"required"`
+	Project                   string   `yaml:"project" validate:"required"`
+	Location                  string   `yaml:"location"`
+	WriteMode                 string   `yaml:"writeMode"`
+	AllowedDatasets           []string `yaml:"allowedDatasets"`
+	UseClientOAuth            bool     `yaml:"useClientOAuth"`
 	ImpersonateServiceAccount string   `yaml:"impersonateServiceAccount"`
 }
 
@@ -109,7 +109,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	var clientCreator BigqueryClientCreator
 	var err error
 
-    s := &Source{
+	s := &Source{
 		Name:                      r.Name,
 		Kind:                      SourceKind,
 		Project:                   r.Project,
