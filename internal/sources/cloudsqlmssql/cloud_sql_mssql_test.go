@@ -40,22 +40,20 @@ func TestParseFromYamlCloudSQLMssql(t *testing.T) {
 					region: my-region
 					instance: my-instance
 					database: my_db
-					ipAddress: localhost
 					user: my_user
 					password: my_pass
 			`,
 			want: server.SourceConfigs{
 				"my-instance": cloudsqlmssql.Config{
-					Name:      "my-instance",
-					Kind:      cloudsqlmssql.SourceKind,
-					Project:   "my-project",
-					Region:    "my-region",
-					Instance:  "my-instance",
-					IPAddress: "localhost",
-					IPType:    "public",
-					Database:  "my_db",
-					User:      "my_user",
-					Password:  "my_pass",
+					Name:     "my-instance",
+					Kind:     cloudsqlmssql.SourceKind,
+					Project:  "my-project",
+					Region:   "my-region",
+					Instance: "my-instance",
+					IPType:   "public",
+					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
 				},
 			},
 		},
@@ -69,10 +67,37 @@ func TestParseFromYamlCloudSQLMssql(t *testing.T) {
 					region: my-region
 					instance: my-instance
 					database: my_db
-					ipAddress: localhost
 					user: my_user
 					password: my_pass
 					ipType: psc
+			`,
+			want: server.SourceConfigs{
+				"my-instance": cloudsqlmssql.Config{
+					Name:     "my-instance",
+					Kind:     cloudsqlmssql.SourceKind,
+					Project:  "my-project",
+					Region:   "my-region",
+					Instance: "my-instance",
+					IPType:   "psc",
+					Database: "my_db",
+					User:     "my_user",
+					Password: "my_pass",
+				},
+			},
+		},
+		{
+			desc: "with deprecated ipAddress",
+			in: `
+			sources:
+				my-instance:
+					kind: cloud-sql-mssql
+					project: my-project
+					region: my-region
+					instance: my-instance
+					ipAddress: random
+					database: my_db
+					user: my_user
+					password: my_pass
 			`,
 			want: server.SourceConfigs{
 				"my-instance": cloudsqlmssql.Config{
@@ -81,8 +106,8 @@ func TestParseFromYamlCloudSQLMssql(t *testing.T) {
 					Project:   "my-project",
 					Region:    "my-region",
 					Instance:  "my-instance",
-					IPAddress: "localhost",
-					IPType:    "psc",
+					IPAddress: "random",
+					IPType:    "public",
 					Database:  "my_db",
 					User:      "my_user",
 					Password:  "my_pass",
@@ -125,7 +150,6 @@ func TestFailParseFromYaml(t *testing.T) {
 					instance: my-instance
 					ipType: fail
 					database: my_db
-					ipAddress: localhost
 					user: my_user
 					password: my_pass
 			`,
@@ -141,12 +165,11 @@ func TestFailParseFromYaml(t *testing.T) {
 					region: my-region
 					instance: my-instance
 					database: my_db
-					ipAddress: localhost
 					user: my_user
 					password: my_pass
 					foo: bar
 			`,
-			err: "unable to parse source \"my-instance\" as \"cloud-sql-mssql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | ipAddress: localhost\n   5 | kind: cloud-sql-mssql\n   6 | ",
+			err: "unable to parse source \"my-instance\" as \"cloud-sql-mssql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | kind: cloud-sql-mssql\n   5 | password: my_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
@@ -157,7 +180,6 @@ func TestFailParseFromYaml(t *testing.T) {
 					region: my-region
 					instance: my-instance
 					database: my_db
-					ipAddress: localhost
 					user: my_user
 					password: my_pass
 			`,

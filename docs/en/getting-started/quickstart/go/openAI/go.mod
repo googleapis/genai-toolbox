@@ -4,9 +4,9 @@ go 1.24.6
 
 require (
 	github.com/googleapis/mcp-toolbox-sdk-go v0.3.0
-	github.com/openai/openai-go v1.12.0
 	github.com/openai/openai-go/v3 v3.3.0
 )
+
 
 require (
 	cloud.google.com/go/auth v0.16.5 // indirect

@@ -1402,7 +1402,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"alloydb_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "alloydb_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views"},
 				},
 			},
 		},
@@ -1432,7 +1432,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views"},
 				},
 			},
 		},
@@ -1472,7 +1472,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"serverless_spark_tools": tools.ToolsetConfig{
 					Name:      "serverless_spark_tools",
-					ToolNames: []string{"list_batches"},
+					ToolNames: []string{"list_batches", "get_batch"},
 				},
 			},
 		},
@@ -1512,7 +1512,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"looker_tools": tools.ToolsetConfig{
 					Name:      "looker_tools",
-					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "make_dashboard", "add_dashboard_element", "health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file"},
+					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "make_dashboard", "add_dashboard_element", "health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns"},
 				},
 			},
 		},
@@ -1532,7 +1532,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"postgres_database_tools": tools.ToolsetConfig{
 					Name:      "postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views"},
 				},
 			},
 		},
@@ -1647,4 +1647,73 @@ func TestPrebuiltTools(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMutuallyExclusiveFlags(t *testing.T) {
+	testCases := []struct {
+		desc      string
+		args      []string
+		errString string
+	}{
+		{
+			desc:      "--prebuilt and --tools-file",
+			args:      []string{"--prebuilt", "alloydb", "--tools-file", "my.yaml"},
+			errString: "--prebuilt and --tools-file/--tools-files/--tools-folder flags cannot be used simultaneously",
+		},
+		{
+			desc:      "--tools-file and --tools-files",
+			args:      []string{"--tools-file", "my.yaml", "--tools-files", "a.yaml,b.yaml"},
+			errString: "--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously",
+		},
+		{
+			desc:      "--tools-folder and --tools-files",
+			args:      []string{"--tools-folder", "./", "--tools-files", "a.yaml,b.yaml"},
+			errString: "--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			cmd := NewCommand()
+			cmd.SetArgs(tc.args)
+			err := cmd.Execute()
+			if err == nil {
+				t.Fatalf("expected an error but got none")
+			}
+			if !strings.Contains(err.Error(), tc.errString) {
+				t.Errorf("expected error message to contain %q, but got %q", tc.errString, err.Error())
+			}
+		})
+	}
+}
+
+func TestFileLoadingErrors(t *testing.T) {
+	t.Run("non-existent tools-file", func(t *testing.T) {
+		cmd := NewCommand()
+		// Use a file that is guaranteed not to exist
+		nonExistentFile := filepath.Join(t.TempDir(), "non-existent-tools.yaml")
+		cmd.SetArgs([]string{"--tools-file", nonExistentFile})
+
+		err := cmd.Execute()
+		if err == nil {
+			t.Fatal("expected an error for non-existent file but got none")
+		}
+		if !strings.Contains(err.Error(), "unable to read tool file") {
+			t.Errorf("expected error about reading file, but got: %v", err)
+		}
+	})
+
+	t.Run("non-existent tools-folder", func(t *testing.T) {
+		cmd := NewCommand()
+		nonExistentFolder := filepath.Join(t.TempDir(), "non-existent-folder")
+		cmd.SetArgs([]string{"--tools-folder", nonExistentFolder})
+
+		err := cmd.Execute()
+		if err == nil {
+			t.Fatal("expected an error for non-existent folder but got none")
+		}
+		if !strings.Contains(err.Error(), "unable to access tools folder") {
+			t.Errorf("expected error about accessing folder, but got: %v", err)
+		}
+	})
 }
