@@ -468,8 +468,7 @@ func main() {
 	}
 }
 {{< /highlight >}}
-For end-to-end samples on using the Toolbox Go SDK with orchestration
-frameworks, see the [project's
+For end-to-end samples on using the Toolbox Go SDK with LangChain Go, see the [project's
 samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 {{% /tab %}}
@@ -571,8 +570,7 @@ func main() {
 	}
 }
 {{< /highlight >}}
-For end-to-end samples on using the Toolbox Go SDK with orchestration
-frameworks, see the [project's
+For end-to-end samples on using the Toolbox Go SDK with Go GenAI, see the [project's
 samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 {{% /tab %}}
@@ -627,8 +625,7 @@ func main() {
 	}
 }
 {{< /highlight >}}
-For end-to-end samples on using the Toolbox Go SDK with orchestration
-frameworks, see the [project's
+For end-to-end samples on using the Toolbox Go SDK with OpenAI Go, see the [project's
 samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 {{% /tab %}}
@@ -672,7 +669,3 @@ samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbadk/sample
 For more detailed instructions on using the Toolbox Go SDK, see the
 [project's
 README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md).
-
-For end-to-end samples on using the Toolbox Go SDK with orchestration
-frameworks, see the [project's
-samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
