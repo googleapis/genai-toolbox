@@ -2,17 +2,18 @@ module github.com/googleapis/genai-toolbox
 
 go 1.24.7
 
-toolchain go1.25.1
+toolchain go1.25.2
 
 require (
 	cloud.google.com/go/alloydbconn v1.15.5
-	cloud.google.com/go/bigquery v1.71.0
+	cloud.google.com/go/bigquery v1.72.0
 	cloud.google.com/go/bigtable v1.40.1
 	cloud.google.com/go/cloudsqlconn v1.18.1
 	cloud.google.com/go/dataplex v1.27.1
+	cloud.google.com/go/dataproc/v2 v2.15.0
 	cloud.google.com/go/firestore v1.20.0
 	cloud.google.com/go/geminidataanalytics v0.2.1
-	cloud.google.com/go/spanner v1.86.0
+	cloud.google.com/go/spanner v1.86.1
 	github.com/ClickHouse/clickhouse-go/v2 v2.40.3
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.53.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.29.0
@@ -32,16 +33,16 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/json-iterator/go v1.1.12
-	github.com/looker-open-source/sdk-codegen/go v0.25.16
+	github.com/looker-open-source/sdk-codegen/go v0.25.18
 	github.com/microsoft/go-mssqldb v1.9.3
 	github.com/nakagami/firebirdsql v0.9.15
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.4
-	github.com/redis/go-redis/v9 v9.14.1
+	github.com/redis/go-redis/v9 v9.16.0
 	github.com/sijms/go-ora/v2 v2.9.0
 	github.com/spf13/cobra v1.10.1
 	github.com/thlib/go-timezone-local v0.0.7
 	github.com/trinodb/trino-go-client v0.329.0
-	github.com/valkey-io/valkey-go v1.0.66
+	github.com/valkey-io/valkey-go v1.0.67
 	github.com/yugabyte/pgx/v5 v5.5.3-yb-5
 	go.mongodb.org/mongo-driver v1.17.4
 	go.opentelemetry.io/contrib/propagators/autoprop v0.62.0
@@ -54,8 +55,9 @@ require (
 	go.opentelemetry.io/otel/trace v1.38.0
 	golang.org/x/oauth2 v0.32.0
 	google.golang.org/api v0.251.0
-	google.golang.org/genproto v0.0.0-20250929231259-57b25ae835d4
-	modernc.org/sqlite v1.39.1
+	google.golang.org/genproto v0.0.0-20251022142026-3a174f9686a8
+	google.golang.org/protobuf v1.36.10
+	modernc.org/sqlite v1.40.0
 )
 
 require (
@@ -77,10 +79,10 @@ require (
 	cloud.google.com/go/auth v0.16.5 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
-	cloud.google.com/go/iam v1.5.2 // indirect
-	cloud.google.com/go/longrunning v0.6.7 // indirect
-	cloud.google.com/go/monitoring v1.24.2 // indirect
-	cloud.google.com/go/trace v1.11.6 // indirect
+	cloud.google.com/go/iam v1.5.3 // indirect
+	cloud.google.com/go/longrunning v0.7.0 // indirect
+	cloud.google.com/go/monitoring v1.24.3 // indirect
+	cloud.google.com/go/trace v1.11.7 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/GoogleCloudPlatform/grpc-gcp-go/grpcgcp v1.5.3 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.29.0 // indirect
@@ -176,10 +178,9 @@ require (
 	golang.org/x/time v0.13.0 // indirect
 	golang.org/x/tools v0.36.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250922171735-9219d122eba9 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250929231259-57b25ae835d4 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20251014184007-4626949a642f // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20251014184007-4626949a642f // indirect
 	google.golang.org/grpc v1.75.1 // indirect
-	google.golang.org/protobuf v1.36.9 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	modernc.org/libc v1.66.10 // indirect

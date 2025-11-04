@@ -94,7 +94,6 @@ sources:
      region: my-region
      instance: my-instance
      database: my_db
-     ipAddress: localhost
      user: ${USER_NAME}
      password: ${PASSWORD}
      # ipType: private
@@ -114,7 +113,6 @@ instead of hardcoding your secrets into the configuration file.
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                         |
 | instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                              |
 | database  |  string  |     true     | Name of the Cloud SQL database to connect to (e.g. "my_db").                                         |
-| ipAddress |  string  |     true     | IP address of the Cloud SQL instance to connect to.                                                  |
 | user      |  string  |     true     | Name of the SQL Server user to connect as (e.g. "my-pg-user").                                       |
 | password  |  string  |     true     | Password of the SQL Server user (e.g. "my-password").                                                |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public`,  `private`, or `psc`. Default: `public`. |
