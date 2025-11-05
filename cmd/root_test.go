@@ -527,12 +527,11 @@ func TestParseToolFile(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
-				Prompts:    nil,
-				Promptsets: nil,
+				Prompts: nil,
 			},
 		},
 		{
-			description: "with prompts and promptsets example",
+			description: "with prompts example",
 			in: `
             prompts:
                 my-prompt:
@@ -542,9 +541,6 @@ func TestParseToolFile(t *testing.T) {
                           description: The country to analyze.
                     messages:
                         - content: Analyze the data for {{.country}}.
-            promptsets:
-                my-prompt-set:
-                    - my-prompt
             `,
 			wantToolsFile: ToolsFile{
 				Sources:      nil,
@@ -561,12 +557,6 @@ func TestParseToolFile(t *testing.T) {
 						Messages: []prompts.Message{
 							{Role: "user", Content: "Analyze the data for {{.country}}."},
 						},
-					},
-				},
-				Promptsets: server.PromptsetConfigs{
-					"my-prompt-set": prompts.PromptsetConfig{
-						Name:        "my-prompt-set",
-						PromptNames: []string{"my-prompt"},
 					},
 				},
 			},
@@ -592,9 +582,6 @@ func TestParseToolFile(t *testing.T) {
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
 				t.Fatalf("incorrect prompts parse: diff %v", diff)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.Promptsets, toolsFile.Promptsets); diff != "" {
-				t.Fatalf("incorrect promptsets parse: diff %v", diff)
 			}
 		})
 	}
@@ -708,8 +695,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
-				Prompts:    nil,
-				Promptsets: nil,
+				Prompts: nil,
 			},
 		},
 		{
@@ -809,8 +795,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
-				Prompts:    nil,
-				Promptsets: nil,
+				Prompts: nil,
 			},
 		},
 		{
@@ -912,8 +897,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
-				Prompts:    nil,
-				Promptsets: nil,
+				Prompts: nil,
 			},
 		},
 	}
@@ -938,9 +922,6 @@ func TestParseToolFileWithAuth(t *testing.T) {
 			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
 				t.Fatalf("incorrect prompts parse: diff %v", diff)
 			}
-			if diff := cmp.Diff(tc.wantToolsFile.Promptsets, toolsFile.Promptsets); diff != "" {
-				t.Fatalf("incorrect promptsets parse: diff %v", diff)
-			}
 		})
 	}
 
@@ -956,7 +937,6 @@ func TestEnvVarReplacement(t *testing.T) {
 	t.Setenv("cat_string", "cat")
 	t.Setenv("food_string", "food")
 	t.Setenv("TestHeader", "ACTUAL_HEADER")
-	t.Setenv("promptset_name", "ACTUAL_PROMPTSET_NAME")
 	t.Setenv("prompt_name", "ACTUAL_PROMPT_NAME")
 	t.Setenv("prompt_content", "ACTUAL_CONTENT")
 
@@ -1040,9 +1020,6 @@ func TestEnvVarReplacement(t *testing.T) {
 					messages:
 						- role: user
 						  content: ${prompt_content}
-			promptsets:
-				${promptset_name}:
-					- ${prompt_name}
 			`,
 			wantToolsFile: ToolsFile{
 				Sources: server.SourceConfigs{
@@ -1112,12 +1089,6 @@ func TestEnvVarReplacement(t *testing.T) {
 						Arguments: nil,
 					},
 				},
-				Promptsets: server.PromptsetConfigs{
-					"ACTUAL_PROMPTSET_NAME": prompts.PromptsetConfig{
-						Name:        "ACTUAL_PROMPTSET_NAME",
-						PromptNames: []string{"ACTUAL_PROMPT_NAME"},
-					},
-				},
 			},
 		},
 	}
@@ -1141,9 +1112,6 @@ func TestEnvVarReplacement(t *testing.T) {
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
 				t.Fatalf("incorrect prompts parse: diff %v", diff)
-			}
-			if diff := cmp.Diff(tc.wantToolsFile.Promptsets, toolsFile.Promptsets); diff != "" {
-				t.Fatalf("incorrect promptsets parse: diff %v", diff)
 			}
 		})
 	}
@@ -1722,12 +1690,9 @@ func TestPrebuiltTools(t *testing.T) {
 			if diff := cmp.Diff(tc.wantToolset, toolsFile.Toolsets); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
-			// Prebuilt configs do not have prompts/promptsets, so assert empty maps.
+			// Prebuilt configs do not have prompts, so assert empty maps.
 			if len(toolsFile.Prompts) != 0 {
 				t.Fatalf("expected empty prompts map for prebuilt config, got: %v", toolsFile.Prompts)
-			}
-			if len(toolsFile.Promptsets) != 0 {
-				t.Fatalf("expected empty promptsets map for prebuilt config, got: %v", toolsFile.Promptsets)
 			}
 		})
 	}
