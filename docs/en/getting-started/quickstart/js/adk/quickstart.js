@@ -1,4 +1,4 @@
-import { InMemoryRunner, LlmAgent } from '@google/adk';
+import { InMemoryRunner, LlmAgent, LogLevel } from '@google/adk';
 import { ToolboxClient } from '@toolbox-sdk/adk';
 
 const prompt = `
@@ -12,11 +12,13 @@ Don't ask for confirmations from the user.
 `;
 
 const queries = [
-  "Find hotels in Basel with Basel in its name.",
+  "Find hotels with Basel in its name.",
   "Can you book the Hilton Basel for me?",
   "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
   "My check in dates would be from April 10, 2024 to April 19, 2024.",
 ];
+
+process.env.GOOGLE_GENAI_API_KEY = process.env.GOOGLE_API_KEY || 'your-api-key'; // Replace it with your API key
 
 async function main() {
   const userId = 'test_user';
@@ -32,10 +34,10 @@ async function main() {
   });
 
   const appName = rootAgent.name;
-  const runner = new InMemoryRunner({ agent: rootAgent, appName });
+  const runner = new InMemoryRunner({ agent: rootAgent, appName, logLevel: LogLevel.ERROR, });
   const session = await runner.sessionService.createSession({ appName, userId });
 
-  for (query in queries) {
+  for (const query of queries) {
     await runPrompt(runner, userId, session.id, query);
   }
 }
@@ -48,7 +50,7 @@ async function runPrompt(runner, userId, sessionId, prompt) {
       .flatMap((e) => e.content?.parts?.map((p) => p.text) ?? [])
       .join('');
 
-  console.log(accumulatedResponse);
+  console.log(`\nMODEL RESPONSE: ${accumulatedResponse}\n`);
 }
 
-main().catch(console.error);
+main();
