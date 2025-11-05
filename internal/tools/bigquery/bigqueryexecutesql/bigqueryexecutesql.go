@@ -27,6 +27,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
@@ -309,7 +310,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
 
 	// This block handles SELECT statements, which return a row set.
 	// We iterate through the results, convert each row into a map of
@@ -324,19 +325,19 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("unable to read query results: %w", err)
 	}
 	for {
-		var row map[string]bigqueryapi.Value
-		err = it.Next(&row)
+		var val map[string]bigqueryapi.Value
+		err = it.Next(&val)
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
 			return nil, fmt.Errorf("unable to iterate through query results: %w", err)
 		}
-		vMap := make(map[string]any)
-		for key, value := range row {
-			vMap[key] = value
+		row := orderedmap.Row{}
+		for key, value := range val {
+			row.Add(key, value)
 		}
-		out = append(out, vMap)
+		out = append(out, row)
 	}
 	// If the query returned any rows, return them directly.
 	if len(out) > 0 {
