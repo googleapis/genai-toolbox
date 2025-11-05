@@ -118,7 +118,7 @@ steps:
       - "ALLOYDB_AI_NL_PROJECT=$PROJECT_ID"
       - "ALLOYDB_AI_NL_CLUSTER=$_ALLOYDB_AI_NL_CLUSTER"
       - "ALLOYDB_AI_NL_INSTANCE=$_ALLOYDB_AI_NL_INSTANCE"
-      - "ALLOYDB_AI_NL_DATABASE=$_AI_NL_DATABASE_NAME"
+      - "ALLOYDB_AI_NL_DATABASE=$_DATABASE_NAME"
       - "ALLOYDB_AI_NL_REGION=$_REGION"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
     secretEnv: ["ALLOYDB_AI_NL_USER", "ALLOYDB_AI_NL_PASS", "CLIENT_ID"]
@@ -878,7 +878,6 @@ options:
 
 substitutions:
   _DATABASE_NAME: test_database
-  _AI_NL_DATABASE_NAME: ainl_update_testing
   _FIREBIRD_DATABASE_NAME: /firebird/test_database.fdb
   _REGION: "us-central1"
   _CLOUD_SQL_POSTGRES_INSTANCE: "cloud-sql-pg-testing"
