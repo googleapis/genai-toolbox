@@ -943,23 +943,14 @@ Apache Spark.&lt;/p>
 List and filter Serverless Spark batches.&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/serverless-spark/serverless-spark-get-batch/">&lt;code>serverless-spark-get-batch&lt;/code>&lt;/a>
 Get a Serverless Spark batch.&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/serverless-spark/serverless-spark-cancel-batch/">&lt;code>serverless-spark-cancel-batch&lt;/code>&lt;/a>
+Cancel a running Serverless Spark batch operation.&lt;/li>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
 &lt;p>Serverless for Apache Spark uses &lt;a href="https://cloud.google.com/bigquery/docs/access-control">Identity and Access Management
 (IAM)&lt;/a> to control user
-and group access to serverless Spark resources like batches and sessions.&lt;/p>
-&lt;p>Toolbox will use your &lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials
-(ADC)&lt;/a> to authorize and
-authenticate when interacting with Google Cloud Serverless for Apache Spark.
-When using this method, you need to ensure the IAM identity associated with your
-ADC has the correct
-&lt;a href="https://cloud.google.com/dataproc-serverless/docs/concepts/iam">permissions&lt;/a>
-for the actions you intend to perform. Common roles include
-&lt;code>roles/dataproc.serverlessEditor&lt;/code> (which includes permissions to run batches) or
-&lt;code>roles/dataproc.serverlessViewer&lt;/code>. Follow this
-&lt;a href="https://cloud.google.com/docs/authentication/provide-credentials-adc">guide&lt;/a> to
-set up your ADC.&lt;/p></description></item><item><title>Spanner</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/spanner/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/spanner/</guid><description>&lt;h1 id="spanner-source">Spanner Source&lt;/h1>
+and group access to serverless Spark resources like batches and sessions.&lt;/p></description></item><item><title>Spanner</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/spanner/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/spanner/</guid><description>&lt;h1 id="spanner-source">Spanner Source&lt;/h1>
 &lt;p>&lt;a href="https://cloud.google.com/spanner/docs">Spanner&lt;/a> is a fully managed, mission-critical database service
 that brings together relational, graph, key-value, and search. It offers
 transactional consistency at global scale, automatic, synchronous replication
