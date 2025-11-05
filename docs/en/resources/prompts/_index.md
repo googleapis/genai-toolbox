@@ -68,43 +68,4 @@ Prompts defined in your `tools.yaml` can be seamlessly integrated with the Gemin
 
 5. **Response:** This completed prompt is then sent to the Gemini model, and the model's response is displayed back to you in the CLI.
 
-## Examples
-
-### Basic Prompt
-
-Here is an example of a simple prompt that takes a single argument, code, and
-asks an LLM to review it.
-
-```yaml
-prompts:
-  code_review:
-    description: "Asks the LLM to analyze code quality and suggest improvements."
-    messages:
-      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
-    arguments:
-      - name: "code"
-        description: "The code to review"
-```
-
-### Multi-message prompt
-
-You can define prompts with multiple messages to set up more complex
-conversational contexts, like a role-playing scenario.
-
-```yaml
-prompts:
-  roleplay_scenario:
-    description: "Sets up a roleplaying scenario with initial messages."
-    arguments:
-      - name: "character"
-        description: "The character the AI should embody."
-      - name: "situation"
-        description: "The initial situation for the roleplay."
-    messages:
-      - role: "user"
-        content: "Let's roleplay. You are {{.character}}. The situation is: {{.situation}}"
-      - role: "assistant"
-        content: "Okay, I understand. I am ready. What happens next?"
-```
-
 ## Kinds of prompts
