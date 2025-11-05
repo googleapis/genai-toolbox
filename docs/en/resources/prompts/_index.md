@@ -24,7 +24,7 @@ prompts:
 
 ## Prompt Schema
 
-| Field | Type | Required | Description |
+| **field**      | **type** | **required** | **description**  |
 | --- | --- | --- | --- |
 | description | String | No | A brief explanation of what the prompt does. |
 | kind | String | No | The kind of prompt. Defaults to `"custom"`. |
