@@ -6260,6 +6260,7 @@ explores, and data is required.&lt;/li>
 &lt;li>&lt;code>run_look&lt;/code>: Runs the query associated with a look.&lt;/li>
 &lt;li>&lt;code>make_look&lt;/code>: Creates a new look.&lt;/li>
 &lt;li>&lt;code>get_dashboards&lt;/code>: Searches for saved dashboards.&lt;/li>
+&lt;li>&lt;code>run_dashboard&lt;/code>: Runs the queries associated with a dashboard.&lt;/li>
 &lt;li>&lt;code>make_dashboard&lt;/code>: Creates a new dashboard.&lt;/li>
 &lt;li>&lt;code>add_dashboard_element&lt;/code>: Adds a tile to a dashboard.&lt;/li>
 &lt;li>&lt;code>health_pulse&lt;/code>: Test the health of a Looker instance.&lt;/li>
