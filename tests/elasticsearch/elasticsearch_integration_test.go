@@ -57,7 +57,6 @@ type ElasticsearchWants struct {
 	Null                  string
 	McpMyFailTool         string
 	McpMyToolId3NameAlice string
-	MyAuthTool            string
 	McpSelect1            string
 }
 
@@ -145,7 +144,6 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 		tests.WithMyToolId3NameAliceWant(wants.MyToolId3NameAlice),
 		tests.WithMyToolById4Want(wants.MyToolById4),
 		tests.WithNullWant(wants.Null),
-		tests.WithMyAuthToolWant(wants.MyAuthTool),
 	)
 	tests.RunMCPToolCallMethod(t, wants.McpMyFailTool, wants.McpSelect1, tests.WithMcpMyToolId3NameAliceWant(wants.McpMyToolId3NameAlice))
 }
@@ -166,7 +164,6 @@ func getElasticsearchWants() ElasticsearchWants {
 	nullWant := `{"error":{"root_cause":[{"type":"verification_exception","reason":"Found 1 problem\nline 1:25: first argument of [name == ?name] is [text] so second argument must also be [text] but was [null]"}],"type":"verification_exception","reason":"Found 1 problem\nline 1:25: first argument of [name == ?name] is [text] so second argument must also be [text] but was [null]"},"status":400}`
 	mcpMyFailToolWant := `{"content":[{"type":"text","text":"{\"error\":{\"root_cause\":[{\"type\":\"parsing_exception\",\"reason\":\"line 1:1: mismatched input 'SELEC' expecting {, 'row', 'from', 'show'}\"}],\"type\":\"parsing_exception\",\"reason\":\"line 1:1: mismatched input 'SELEC' expecting {, 'row', 'from', 'show'}\",\"caused_by\":{\"type\":\"input_mismatch_exception\",\"reason\":null}},\"status\":400}"}]}`
 	mcpMyToolId3NameAliceWant := fmt.Sprintf(`{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"[{\"email\":\"%[1]s\",\"email.keyword\":\"%[1]s\",\"id\":1,\"name\":\"Alice\",\"name.keyword\":\"Alice\"},{\"email\":null,\"email.keyword\":null,\"id\":3,\"name\":\"Sid\",\"name.keyword\":\"Sid\"}]"}]}}`, tests.ServiceAccountEmail)
-	myAuthToolWant := `[]`
 	mcpSelect1Want := fmt.Sprintf(`{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"[{\"email\":\"%[1]s\",\"email.keyword\":\"%[1]s\",\"id\":1,\"name\":\"Alice\",\"name.keyword\":\"Alice\"},{\"email\":\"janedoe@gmail.com\",\"email.keyword\":\"janedoe@gmail.com\",\"id\":2,\"name\":\"Jane\",\"name.keyword\":\"Jane\"},{\"email\":null,\"email.keyword\":null,\"id\":3,\"name\":\"Sid\",\"name.keyword\":\"Sid\"},{\"email\":null,\"email.keyword\":null,\"id\":4,\"name\":\"null\",\"name.keyword\":\"null\"}]"}]}}`, tests.ServiceAccountEmail)
 
 	return ElasticsearchWants{
@@ -176,7 +173,6 @@ func getElasticsearchWants() ElasticsearchWants {
 		Null:                  nullWant,
 		McpMyFailTool:         mcpMyFailToolWant,
 		McpMyToolId3NameAlice: mcpMyToolId3NameAliceWant,
-		MyAuthTool:            myAuthToolWant,
 		McpSelect1:            mcpSelect1Want,
 	}
 }
