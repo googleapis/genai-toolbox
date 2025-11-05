@@ -26,23 +26,23 @@ prompts:
 
 | **field**      | **type** | **required** | **description**  |
 | --- | --- | --- | --- |
-| description | String | No | A brief explanation of what the prompt does. |
-| kind | String | No | The kind of prompt. Defaults to `"custom"`. |
+| description | string | No | A brief explanation of what the prompt does. |
+| kind | string | No | The kind of prompt. Defaults to `"custom"`. |
 | messages | []Message | Yes | A list of one or more message objects that make up the prompt's content. |
 | arguments | []Argument | No | A list of arguments that can be interpolated into the prompt's content.|
 
 ## Message Schema
 
-| Field | Type | Required | Description |
+| **field** | **type** | **required** | **description** |
 | --- | --- | --- | --- |
-| role | String | No | The role of the sender. Can be `"user"` or `"assistant"`. Defaults to `"user"`. |
-| content | String | Yes | The text of the message. You can include placeholders for arguments using `{{.argument_name}}` syntax. |
+| role | string | No | The role of the sender. Can be `"user"` or `"assistant"`. Defaults to `"user"`. |
+| content | string | Yes | The text of the message. You can include placeholders for arguments using `{{.argument_name}}` syntax. |
 
 ## Argument Schema
 
 An argument is a [Parameter](../tools/_index.md#specifying-parameters) with a single change:
 
-- The type for an argument is not required but defaults to `String`.
+- The type for an argument is not required but defaults to `string`.
 
 ## Usage with Gemini CLI
 
