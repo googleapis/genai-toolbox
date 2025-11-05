@@ -43,6 +43,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_replication_slots`: Lists replication slots in the database.
     *   `list_invalid_indexes`: Lists invalid indexes in the database.
     *   `get_query_plan`: Generate the execution plan of a statement.
+    *   `list_views`: Lists views in the database from pg_views with a default
+        limit of 50 rows. Returns schemaname, viewname and the ownername.
 
 ## AlloyDB Postgres Admin
 
@@ -210,6 +212,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_replication_slots`: Lists replication slots in the database.
     *   `list_invalid_indexes`: Lists invalid indexes in the database.
     *   `get_query_plan`: Generate the execution plan of a statement.
+    *   `list_views`: Lists views in the database from pg_views with a default
+        limit of 50 rows. Returns schemaname, viewname and the ownername.
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -260,7 +264,6 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `CLOUD_SQL_MSSQL_REGION`: The region of your Cloud SQL instance.
     *   `CLOUD_SQL_MSSQL_INSTANCE`: The ID of your Cloud SQL instance.
     *   `CLOUD_SQL_MSSQL_DATABASE`: The name of the database to connect to.
-    *   `CLOUD_SQL_MSSQL_IP_ADDRESS`: The IP address of the Cloud SQL instance.
     *   `CLOUD_SQL_MSSQL_USER`: The database username.
     *   `CLOUD_SQL_MSSQL_PASSWORD`: The password for the database user.
     *   `CLOUD_SQL_MSSQL_IP_TYPE`: (Optional) The IP type i.e. "Public" or
@@ -492,6 +495,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_replication_slots`: Lists replication slots in the database.
     *   `list_invalid_indexes`: Lists invalid indexes in the database.
     *   `get_query_plan`: Generate the execution plan of a statement.
+    *   `list_views`: Lists views in the database from pg_views with a default
+        limit of 50 rows. Returns schemaname, viewname and the ownername.
 
 ## Google Cloud Serverless for Apache Spark
 
@@ -569,3 +574,33 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 *   **Tools:**
     *   `execute_cypher`: Executes a Cypher query.
     *   `get_schema`: Retrieves the schema of the Neo4j database.
+
+## Google Cloud Healthcare API
+*   `--prebuilt` value: `healthcare`
+*   **Environment Variables:**
+    *   `HEALTHCARE_PROJECT`: The GCP project ID.
+    *   `HEALTHCARE_REGION`: The healthcare dataset region.
+    *   `HEALTHCARE_DATASET`: The healthcare dataset ID.
+    *   `HEALTHCARE_USE_CLIENT_OAUTH`: (Optional) If `true`, forwards the client's
+        OAuth access token for authentication. Defaults to `false`.
+*   **Permissions:**
+    *   **Healthcare FHIR Resource Reader** (`roles/healthcare.fhirResourceReader`) to read an
+        search FHIR resources.
+    *   **Healthcare DICOM Viewer** (`roles/healthcare.dicomViewer`) to retrieve DICOM images from a
+        DICOM store.
+*   **Tools:**
+    *   `get_dataset`: Gets information about a healthcare dataset.
+    *   `list_dicom_stores`: Lists DICOM stores in a healthcare dataset.
+    *   `list_fhir_stores`: Lists FHIR stores in a healthcare dataset.
+    *   `get_fhir_store`: Gets information about a FHIR store.
+    *   `get_fhir_store_metrics`: Gets metrics for a FHIR store.
+    *   `get_fhir_resource`: Gets a FHIR resource from a FHIR store.
+    *   `fhir_patient_search`: Searches for patient resource(s) based on a set of criteria.
+    *   `fhir_patient_everything`: Retrieves resources related to a given patient.
+    *   `fhir_fetch_page`: Fetches a page of FHIR resources.
+    *   `get_dicom_store`: Gets information about a DICOM store.
+    *   `get_dicom_store_metrics`: Gets metrics for a DICOM store.
+    *   `search_dicom_studies`: Searches for DICOM studies.
+    *   `search_dicom_series`: Searches for DICOM series.
+    *   `search_dicom_instances`: Searches for DICOM instances.
+    *   `retrieve_rendered_dicom_instance`: Retrieves a rendered DICOM instance.

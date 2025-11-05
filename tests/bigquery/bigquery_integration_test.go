@@ -205,7 +205,7 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 }
 
 func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Minute)
 	defer cancel()
 
 	client, err := initBigQueryConnection(BigqueryProject)
@@ -225,6 +225,9 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	allowedForecastTableName2 := "allowed_forecast_table_2"
 	disallowedForecastTableName := "disallowed_forecast_table"
 
+	allowedAnalyzeContributionTableName1 := "allowed_analyze_contribution_table_1"
+	allowedAnalyzeContributionTableName2 := "allowed_analyze_contribution_table_2"
+	disallowedAnalyzeContributionTableName := "disallowed_analyze_contribution_table"
 	// Setup allowed table
 	allowedTableNameParam1 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName1, allowedTableName1)
 	createAllowedTableStmt1 := fmt.Sprintf("CREATE TABLE %s (id INT64)", allowedTableNameParam1)
@@ -259,6 +262,23 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	teardownDisallowedForecast := setupBigQueryTable(t, ctx, client, createDisallowedForecastStmt, insertDisallowedForecastStmt, disallowedDatasetName, disallowedForecastTableFullName, disallowedForecastParams)
 	defer teardownDisallowedForecast(t)
 
+	// Setup allowed analyze contribution table
+	allowedAnalyzeContributionTableFullName1 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName1, allowedAnalyzeContributionTableName1)
+	createAnalyzeContributionStmt1, insertAnalyzeContributionStmt1, analyzeContributionParams1 := getBigQueryAnalyzeContributionToolInfo(allowedAnalyzeContributionTableFullName1)
+	teardownAllowedAnalyzeContribution1 := setupBigQueryTable(t, ctx, client, createAnalyzeContributionStmt1, insertAnalyzeContributionStmt1, allowedDatasetName1, allowedAnalyzeContributionTableFullName1, analyzeContributionParams1)
+	defer teardownAllowedAnalyzeContribution1(t)
+
+	allowedAnalyzeContributionTableFullName2 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName2, allowedAnalyzeContributionTableName2)
+	createAnalyzeContributionStmt2, insertAnalyzeContributionStmt2, analyzeContributionParams2 := getBigQueryAnalyzeContributionToolInfo(allowedAnalyzeContributionTableFullName2)
+	teardownAllowedAnalyzeContribution2 := setupBigQueryTable(t, ctx, client, createAnalyzeContributionStmt2, insertAnalyzeContributionStmt2, allowedDatasetName2, allowedAnalyzeContributionTableFullName2, analyzeContributionParams2)
+	defer teardownAllowedAnalyzeContribution2(t)
+
+	// Setup disallowed analyze contribution table
+	disallowedAnalyzeContributionTableFullName := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, disallowedDatasetName, disallowedAnalyzeContributionTableName)
+	createDisallowedAnalyzeContributionStmt, insertDisallowedAnalyzeContributionStmt, disallowedAnalyzeContributionParams := getBigQueryAnalyzeContributionToolInfo(disallowedAnalyzeContributionTableFullName)
+	teardownDisallowedAnalyzeContribution := setupBigQueryTable(t, ctx, client, createDisallowedAnalyzeContributionStmt, insertDisallowedAnalyzeContributionStmt, disallowedDatasetName, disallowedAnalyzeContributionTableFullName, disallowedAnalyzeContributionParams)
+	defer teardownDisallowedAnalyzeContribution(t)
+
 	// Configure source with dataset restriction.
 	sourceConfig := getBigQueryVars(t)
 	sourceConfig["allowedDatasets"] = []string{allowedDatasetName1, allowedDatasetName2}
@@ -274,6 +294,11 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 			"kind":        "bigquery-list-table-ids",
 			"source":      "my-instance",
 			"description": "Tool to list table within a dataset",
+		},
+		"get-dataset-info-restricted": map[string]any{
+			"kind":        "bigquery-get-dataset-info",
+			"source":      "my-instance",
+			"description": "Tool to get dataset info",
 		},
 		"get-table-info-restricted": map[string]any{
 			"kind":        "bigquery-get-table-info",
@@ -294,6 +319,11 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 			"kind":        "bigquery-forecast",
 			"source":      "my-instance",
 			"description": "Tool to forecast",
+		},
+		"analyze-contribution-restricted": map[string]any{
+			"kind":        "bigquery-analyze-contribution",
+			"source":      "my-instance",
+			"description": "Tool to analyze contribution",
 		},
 	}
 
@@ -322,8 +352,10 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 
 	// Run tests
 	runListDatasetIdsWithRestriction(t, allowedDatasetName1, allowedDatasetName2)
-	runListTableIdsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, allowedForecastTableName1)
-	runListTableIdsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, allowedForecastTableName2)
+	runListTableIdsWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, allowedForecastTableName1, allowedAnalyzeContributionTableName1)
+	runListTableIdsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, allowedForecastTableName2, allowedAnalyzeContributionTableName2)
+	runGetDatasetInfoWithRestriction(t, allowedDatasetName1, disallowedDatasetName)
+	runGetDatasetInfoWithRestriction(t, allowedDatasetName2, disallowedDatasetName)
 	runGetTableInfoWithRestriction(t, allowedDatasetName1, disallowedDatasetName, allowedTableName1, disallowedTableName)
 	runGetTableInfoWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, disallowedTableName)
 	runExecuteSqlWithRestriction(t, allowedTableNameParam1, disallowedTableNameParam)
@@ -332,6 +364,8 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	runConversationalAnalyticsWithRestriction(t, allowedDatasetName2, disallowedDatasetName, allowedTableName2, disallowedTableName)
 	runForecastWithRestriction(t, allowedForecastTableFullName1, disallowedForecastTableFullName)
 	runForecastWithRestriction(t, allowedForecastTableFullName2, disallowedForecastTableFullName)
+	runAnalyzeContributionWithRestriction(t, allowedAnalyzeContributionTableFullName1, disallowedAnalyzeContributionTableFullName)
+	runAnalyzeContributionWithRestriction(t, allowedAnalyzeContributionTableFullName2, disallowedAnalyzeContributionTableFullName)
 }
 
 func TestBigQueryWriteModeAllowed(t *testing.T) {
@@ -2603,6 +2637,55 @@ func runListTableIdsWithRestriction(t *testing.T, allowedDatasetName, disallowed
 	}
 }
 
+func runGetDatasetInfoWithRestriction(t *testing.T, allowedDatasetName, disallowedDatasetName string) {
+	testCases := []struct {
+		name           string
+		dataset        string
+		wantStatusCode int
+		wantInError    string
+	}{
+		{
+			name:           "invoke on allowed dataset",
+			dataset:        allowedDatasetName,
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "invoke on disallowed dataset",
+			dataset:        disallowedDatasetName,
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    fmt.Sprintf("access denied to dataset '%s'", disallowedDatasetName),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			body := bytes.NewBuffer([]byte(fmt.Sprintf(`{"dataset":"%s"}`, tc.dataset)))
+			req, err := http.NewRequest(http.MethodPost, "http://127.0.0.1:5000/api/tool/get-dataset-info-restricted/invoke", body)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
+			}
+
+			if tc.wantInError != "" {
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				if !strings.Contains(string(bodyBytes), tc.wantInError) {
+					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
+				}
+			}
+		})
+	}
+}
+
 func runGetTableInfoWithRestriction(t *testing.T, allowedDatasetName, disallowedDatasetName, allowedTableName, disallowedTableName string) {
 	testCases := []struct {
 		name           string
@@ -3062,6 +3145,89 @@ func runForecastWithRestriction(t *testing.T, allowedTableFullName, disallowedTa
 
 			if tc.wantInError != "" {
 				bodyBytes, _ := io.ReadAll(resp.Body)
+				if !strings.Contains(string(bodyBytes), tc.wantInError) {
+					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
+				}
+			}
+		})
+	}
+}
+
+func runAnalyzeContributionWithRestriction(t *testing.T, allowedTableFullName, disallowedTableFullName string) {
+	allowedTableUnquoted := strings.ReplaceAll(allowedTableFullName, "`", "")
+	disallowedTableUnquoted := strings.ReplaceAll(disallowedTableFullName, "`", "")
+	disallowedDatasetFQN := strings.Join(strings.Split(disallowedTableUnquoted, ".")[0:2], ".")
+
+	testCases := []struct {
+		name           string
+		inputData      string
+		wantStatusCode int
+		wantInResult   string
+		wantInError    string
+	}{
+		{
+			name:           "invoke with allowed table name",
+			inputData:      allowedTableUnquoted,
+			wantStatusCode: http.StatusOK,
+			wantInResult:   `"relative_difference"`,
+		},
+		{
+			name:           "invoke with disallowed table name",
+			inputData:      disallowedTableUnquoted,
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    fmt.Sprintf("access to dataset '%s' (from table '%s') is not allowed", disallowedDatasetFQN, disallowedTableUnquoted),
+		},
+		{
+			name:           "invoke with query on allowed table",
+			inputData:      fmt.Sprintf("SELECT * FROM %s", allowedTableFullName),
+			wantStatusCode: http.StatusOK,
+			wantInResult:   `"relative_difference"`,
+		},
+		{
+			name:           "invoke with query on disallowed table",
+			inputData:      fmt.Sprintf("SELECT * FROM %s", disallowedTableFullName),
+			wantStatusCode: http.StatusBadRequest,
+			wantInError:    fmt.Sprintf("query in input_data accesses dataset '%s', which is not in the allowed list", disallowedDatasetFQN),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			requestBodyMap := map[string]any{
+				"input_data":          tc.inputData,
+				"contribution_metric": "SUM(metric)",
+				"is_test_col":         "is_test",
+				"dimension_id_cols":   []string{"dim1", "dim2"},
+			}
+			bodyBytes, err := json.Marshal(requestBodyMap)
+			if err != nil {
+				t.Fatalf("failed to marshal request body: %v", err)
+			}
+			body := bytes.NewBuffer(bodyBytes)
+
+			resp, bodyBytes := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/analyze-contribution-restricted/invoke", body, nil)
+
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
+			}
+
+			var respBody map[string]interface{}
+			if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
+				t.Fatalf("error parsing response body: %v", err)
+			}
+
+			if tc.wantInResult != "" {
+				got, ok := respBody["result"].(string)
+				if !ok {
+					t.Fatalf("unable to find result in response body")
+				}
+
+				if !strings.Contains(got, tc.wantInResult) {
+					t.Errorf("unexpected result: got %q, want to contain %q", string(bodyBytes), tc.wantInResult)
+				}
+			}
+
+			if tc.wantInError != "" {
 				if !strings.Contains(string(bodyBytes), tc.wantInError) {
 					t.Errorf("unexpected error message: got %q, want to contain %q", string(bodyBytes), tc.wantInError)
 				}
