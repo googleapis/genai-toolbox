@@ -54,8 +54,8 @@ prompts:
 
 | **field** | **type** | **required** | **description** |
 | --- | --- | --- | --- |
+| kind | string | No | The kind of prompt. Must be `"custom"`. |
 | description | string | No | A brief explanation of what the prompt does. |
-| kind | string | No | The kind of prompt. Defaults to `"custom"`. |
 | messages | []Message | Yes | A list of one or more message objects that make up the prompt's content. |
 | arguments | []Argument | No | A list of arguments that can be interpolated into the prompt's content.|
 
