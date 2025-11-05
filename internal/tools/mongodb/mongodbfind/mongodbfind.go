@@ -93,7 +93,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Verify 'limit' value
-	if cfg.Limit <= 0 {
+	if cfg.Limit < 0 {
 		return nil, fmt.Errorf("limit must be a positive number, but got %d", cfg.Limit)
 	}
 
