@@ -751,8 +751,9 @@ steps:
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
-      - "SERVERLESS_SPARK_PROJECT=$PROJECT_ID"
       - "SERVERLESS_SPARK_LOCATION=$_REGION"
+      - "SERVERLESS_SPARK_PROJECT=$PROJECT_ID"
+      - "SERVERLESS_SPARK_SERVICE_ACCOUNT=$SERVICE_ACCOUNT_EMAIL"
     secretEnv: ["CLIENT_ID"]
     volumes:
       - name: "go"
