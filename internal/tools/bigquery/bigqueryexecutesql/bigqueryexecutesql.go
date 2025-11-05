@@ -22,12 +22,12 @@ import (
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/orderedmap"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
@@ -324,10 +324,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, fmt.Errorf("unable to read query results: %w", err)
 	}
-	schema := it.Schema
 	for {
-		var values []bigqueryapi.Value
-		err = it.Next(&values)
+		var val map[string]bigqueryapi.Value
+		err = it.Next(&val)
 		if err == iterator.Done {
 			break
 		}
@@ -335,8 +334,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			return nil, fmt.Errorf("unable to iterate through query results: %w", err)
 		}
 		row := orderedmap.Row{}
-		for i, field := range schema {
-			row.Add(field.Name, values[i])
+		for key, value := range val {
+			row.Add(key, value)
 		}
 		out = append(out, row)
 	}
