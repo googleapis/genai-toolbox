@@ -1349,7 +1349,6 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("NEO4J_USERNAME", "your_neo4j_user")
 	t.Setenv("NEO4J_PASSWORD", "your_neo4j_password")
 
-
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -1566,10 +1565,10 @@ func TestPrebuiltTools(t *testing.T) {
 				"mindsdb-tools": tools.ToolsetConfig{
 					Name:      "mindsdb-tools",
 					ToolNames: []string{"mindsdb-execute-sql", "mindsdb-sql"},
-        },
+				},
 			},
 		},
-    {
+		{
 			name: "sqlite prebuilt tools",
 			in:   sqlite_config,
 			wantToolset: server.ToolsetConfigs{
