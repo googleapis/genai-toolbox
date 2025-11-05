@@ -114,18 +114,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	tokenSource, _ = initGoogleCloudConnection(ctx)
 
 	s := &Source{
-		Name:               r.Name,
-		Kind:               SourceKind,
-		Timeout:            r.Timeout,
-		UseClientOAuth:     r.UseClientOAuth,
-		ApiSettings:        &cfg,
-		ShowHiddenModels:   r.ShowHiddenModels,
-		ShowHiddenExplores: r.ShowHiddenExplores,
-		ShowHiddenFields:   r.ShowHiddenFields,
-		Project:            r.Project,
-		Location:           r.Location,
-		TokenSource:        tokenSource,
-		SessionLength:      r.SessionLength,
+		Config:      r,
+		ApiSettings: &cfg,
+		TokenSource: tokenSource,
 	}
 
 	if !r.UseClientOAuth {
@@ -147,23 +138,18 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name               string `yaml:"name"`
-	Kind               string `yaml:"kind"`
-	Timeout            string `yaml:"timeout"`
-	Client             *v4.LookerSDK
-	ApiSettings        *rtl.ApiSettings
-	UseClientOAuth     bool   `yaml:"use_client_oauth"`
-	ShowHiddenModels   bool   `yaml:"show_hidden_models"`
-	ShowHiddenExplores bool   `yaml:"show_hidden_explores"`
-	ShowHiddenFields   bool   `yaml:"show_hidden_fields"`
-	Project            string `yaml:"project"`
-	Location           string `yaml:"location"`
-	TokenSource        oauth2.TokenSource
-	SessionLength      int64
+	Config
+	Client      *v4.LookerSDK
+	ApiSettings *rtl.ApiSettings
+	TokenSource oauth2.TokenSource
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 func (s *Source) GetApiSettings() *rtl.ApiSettings {

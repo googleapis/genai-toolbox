@@ -469,3 +469,7 @@ type mockIncompatibleSource struct{}
 func (m *mockIncompatibleSource) SourceKind() string {
 	return "mock"
 }
+
+func (m *mockIncompatibleSource) ToConfig() sources.SourceConfig {
+	return nil
+}

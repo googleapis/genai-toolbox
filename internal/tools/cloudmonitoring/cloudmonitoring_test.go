@@ -34,7 +34,7 @@ type mockIncompatibleSource struct{ sources.Source }
 
 func TestInitialize(t *testing.T) {
 	t.Parallel()
-	testSource := &cloudmonitoringsrc.Source{Kind: "cloud-monitoring"}
+	testSource := &cloudmonitoringsrc.Source{Config: cloudmonitoringsrc.Config{Kind: "cloud-monitoring"}}
 	srcs := map[string]sources.Source{
 		"my-monitoring-source": testSource,
 		"incompatible-source":  &mockIncompatibleSource{},

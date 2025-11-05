@@ -172,6 +172,10 @@ func (m *mockIncompatibleSource) SourceKind() string {
 	return "mock"
 }
 
+func (m *mockIncompatibleSource) ToConfig() sources.SourceConfig {
+	return nil
+}
+
 func TestSQLConfigInitializeIncompatibleSource(t *testing.T) {
 	config := Config{
 		Name:        "test-tool",
