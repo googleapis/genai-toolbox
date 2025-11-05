@@ -373,6 +373,25 @@ const tools = toolboxTools.map(getTool);
 {{< /highlight >}}
 
 {{% /tab %}}
+{{% tab header="ADK TS" lang="en" %}}
+
+{{< highlight javascript >}}
+import { ToolboxClient } from '@toolbox-sdk/adk';
+
+// Replace with the actual URL where your Toolbox service is running
+const URL = 'http://127.0.0.1:5000';
+
+let client = new ToolboxClient(URL);
+const tools = await client.loadToolset();
+
+// Use the client and tools as per requirement
+
+{{< /highlight >}}
+
+For detailed samples on using the Toolbox JS SDK with ADK JS, see the [project's
+readme](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main/packages/toolbox-adk/README.md)
+
+{{% /tab %}}
 {{< /tabpane >}}
 
 For more detailed instructions on using the Toolbox Core SDK, see the
