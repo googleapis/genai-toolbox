@@ -7,7 +7,7 @@ description: >
 ---
 
 Custom prompts are defined by the user to be exposed through their MCP server.
-They are the `default` type for prompts.
+They are the default type for prompts.
 
 ## Examples
 
