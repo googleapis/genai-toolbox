@@ -9212,15 +9212,12 @@ prompts:
 
 ### Message Schema
 
-| **field** | **type** | **required** | **description** |
-| --- | --- | --- | --- |
-| role | string | No | The role of the sender. Can be `"user"` or `"assistant"`. Defaults to `"user"`. |
-| content | string | Yes | The text of the message. You can include placeholders for arguments using `{{.argument_name}}` syntax. |
+Refer to the default prompt [Message Schema](../_index.md#message-schema).
 
 ### Argument Schema
 
-An argument can be any [Parameter](../../tools/_index.md#specifying-parameters)
-type. If the `type` field is not specified, it will default to `string`.
+Refer to the default prompt [Argument Schema](../_index.md#argument-schema).
+
 
 
 # Samples
