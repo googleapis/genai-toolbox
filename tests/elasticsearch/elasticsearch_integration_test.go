@@ -292,7 +292,7 @@ func getElasticsearchToolsConfig(sourceConfig map[string]any, toolKind, paramToo
 				"kind":        toolKind,
 				"source":      "my-instance",
 				"description": "Tool to test auth required invocation.",
-				"query":       "FROM test-index ORDER BY id ASC",
+				"query":       "FROM test-index | SORT id ASC",
 				"authRequired": []string{
 					"my-google-auth",
 				},
