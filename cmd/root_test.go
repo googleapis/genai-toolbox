@@ -1248,6 +1248,7 @@ func TestPrebuiltTools(t *testing.T) {
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
+	mindsdb_config, _ := prebuiltconfigs.Get("mindsdb")
 	sqlite_config, _ := prebuiltconfigs.Get("sqlite")
 	neo4jconfig, _ := prebuiltconfigs.Get("neo4j")
 	alloydbobsvconfig, _ := prebuiltconfigs.Get("alloydb-postgres-observability")
@@ -1327,6 +1328,12 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("MSSQL_USER", "your_mssql_user")
 	t.Setenv("MSSQL_PASSWORD", "your_mssql_password")
 
+	t.Setenv("MINDSDB_HOST", "localhost")
+	t.Setenv("MINDSDB_PORT", "47334")
+	t.Setenv("MINDSDB_DATABASE", "your_mindsdb_db")
+	t.Setenv("MINDSDB_USER", "your_mindsdb_user")
+	t.Setenv("MINDSDB_PASS", "your_mindsdb_password")
+
 	t.Setenv("LOOKER_BASE_URL", "https://your_company.looker.com")
 	t.Setenv("LOOKER_CLIENT_ID", "your_looker_client_id")
 	t.Setenv("LOOKER_CLIENT_SECRET", "your_looker_client_secret")
@@ -1341,6 +1348,7 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("NEO4J_DATABASE", "neo4j")
 	t.Setenv("NEO4J_USERNAME", "your_neo4j_user")
 	t.Setenv("NEO4J_PASSWORD", "your_neo4j_password")
+
 
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -1397,7 +1405,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"alloydb_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "alloydb_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "long_running_transactions", "list_locks", "replication_stats"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "long_running_transactions", "list_locks", "replication_stats"},
 				},
 			},
 		},
@@ -1427,7 +1435,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "long_running_transactions", "list_locks", "replication_stats"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "long_running_transactions", "list_locks", "replication_stats"},
 				},
 			},
 		},
@@ -1507,7 +1515,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"looker_tools": tools.ToolsetConfig{
 					Name:      "looker_tools",
-					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "make_dashboard", "add_dashboard_element", "health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file"},
+					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "make_dashboard", "add_dashboard_element", "health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns"},
 				},
 			},
 		},
@@ -1527,7 +1535,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"postgres_database_tools": tools.ToolsetConfig{
 					Name:      "postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "long_running_transactions", "list_locks", "replication_stats"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "long_running_transactions", "list_locks", "replication_stats"},
 				},
 			},
 		},
@@ -1552,6 +1560,16 @@ func TestPrebuiltTools(t *testing.T) {
 			},
 		},
 		{
+			name: "mindsdb prebuilt tools",
+			in:   mindsdb_config,
+			wantToolset: server.ToolsetConfigs{
+				"mindsdb-tools": tools.ToolsetConfig{
+					Name:      "mindsdb-tools",
+					ToolNames: []string{"mindsdb-execute-sql", "mindsdb-sql"},
+        },
+			},
+		},
+    {
 			name: "sqlite prebuilt tools",
 			in:   sqlite_config,
 			wantToolset: server.ToolsetConfigs{

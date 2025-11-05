@@ -373,6 +373,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:        configs.supportSelect1Auth,
 			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       "",
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
@@ -381,15 +382,15 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:        true,
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       "",
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
-			name:          "Invoke my-auth-required-tool with auth token",
-			api:           "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
-			enabled:       configs.supportSelect1Auth,
-			requestHeader: map[string]string{"my-google-auth_token": idToken},
-			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-
+			name:           "Invoke my-auth-required-tool with auth token",
+			api:            "http://127.0.0.1:5000/api/tool/my-auth-required-tool/invoke",
+			enabled:        configs.supportSelect1Auth,
+			requestHeader:  map[string]string{"my-google-auth_token": idToken},
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
 			wantBody:       select1Want,
 			wantStatusCode: http.StatusOK,
 		},
@@ -399,6 +400,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:        true,
 			requestHeader:  map[string]string{"my-google-auth_token": "INVALID_TOKEN"},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       "",
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
@@ -407,6 +409,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:        true,
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantBody:       "",
 			wantStatusCode: http.StatusUnauthorized,
 		},
 		{
@@ -744,6 +747,20 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 			api:           "http://127.0.0.1:5000/api/tool/my-auth-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, configs.select1Statement))),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-exec-sql-tool with invalid SELECT SQL",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT * FROM non_existent_table"}`)),
+			isErr:         true,
+		},
+		{
+			name:          "invoke my-exec-sql-tool with invalid ALTER SQL",
+			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{"sql":"ALTER TALE t ALTER COLUMN id DROP NOT NULL"}`)),
 			isErr:         true,
 		},
 	}

@@ -169,6 +169,10 @@ tools:
               description: "The SQL statement for which you want to generate plan (omit the EXPLAIN keyword)."
               required: true
 
+    list_views:
+        kind: postgres-list-views
+        source: postgresql-source
+
 toolsets:
     postgres_database_tools:
         - execute_sql
@@ -185,3 +189,4 @@ toolsets:
         - long_running_transactions
         - list_locks
         - replication_stats
+        - list_views

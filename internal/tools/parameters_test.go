@@ -751,6 +751,43 @@ func TestParametersParse(t *testing.T) {
 			},
 		},
 		{
+			name: "string not allowed regex",
+			params: tools.Parameters{
+				tools.NewStringParameterWithAllowedValues("my_string", "this param is a string", []any{"^f.*"}),
+			},
+			in: map[string]any{
+				"my_string": "bar",
+			},
+		},
+		{
+			name: "string excluded",
+			params: tools.Parameters{
+				tools.NewStringParameterWithExcludedValues("my_string", "this param is a string", []any{"foo"}),
+			},
+			in: map[string]any{
+				"my_string": "foo",
+			},
+		},
+		{
+			name: "string excluded regex",
+			params: tools.Parameters{
+				tools.NewStringParameterWithExcludedValues("my_string", "this param is a string", []any{"^f.*"}),
+			},
+			in: map[string]any{
+				"my_string": "foo",
+			},
+		},
+		{
+			name: "string not excluded",
+			params: tools.Parameters{
+				tools.NewStringParameterWithExcludedValues("my_string", "this param is a string", []any{"foo"}),
+			},
+			in: map[string]any{
+				"my_string": "bar",
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "bar"}},
+		},
+		{
 			name: "string with escape backticks",
 			params: tools.Parameters{
 				tools.NewStringParameterWithEscape("my_string", "this param is a string", "backticks"),
@@ -830,6 +867,16 @@ func TestParametersParse(t *testing.T) {
 			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 1}},
 		},
 		{
+			name: "int allowed regex",
+			params: tools.Parameters{
+				tools.NewIntParameterWithAllowedValues("my_int", "this param is an int", []any{"^\\d{2}$"}),
+			},
+			in: map[string]any{
+				"my_int": 10,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 10}},
+		},
+		{
 			name: "int not allowed",
 			params: tools.Parameters{
 				tools.NewIntParameterWithAllowedValues("my_int", "this param is an int", []any{1}),
@@ -837,6 +884,53 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_int": 2,
 			},
+		},
+		{
+			name: "int not allowed regex",
+			params: tools.Parameters{
+				tools.NewIntParameterWithAllowedValues("my_int", "this param is an int", []any{"^\\d{2}$"}),
+			},
+			in: map[string]any{
+				"my_int": 100,
+			},
+		},
+		{
+			name: "int excluded",
+			params: tools.Parameters{
+				tools.NewIntParameterWithExcludedValues("my_int", "this param is an int", []any{1}),
+			},
+			in: map[string]any{
+				"my_int": 1,
+			},
+		},
+		{
+			name: "int excluded regex",
+			params: tools.Parameters{
+				tools.NewIntParameterWithExcludedValues("my_int", "this param is an int", []any{"^\\d{2}$"}),
+			},
+			in: map[string]any{
+				"my_int": 10,
+			},
+		},
+		{
+			name: "int not excluded",
+			params: tools.Parameters{
+				tools.NewIntParameterWithExcludedValues("my_int", "this param is an int", []any{1}),
+			},
+			in: map[string]any{
+				"my_int": 2,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 2}},
+		},
+		{
+			name: "int not excluded regex",
+			params: tools.Parameters{
+				tools.NewIntParameterWithExcludedValues("my_int", "this param is an int", []any{"^\\d{2}$"}),
+			},
+			in: map[string]any{
+				"my_int": 2,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 2}},
 		},
 		{
 			name: "int minValue",
@@ -906,6 +1000,16 @@ func TestParametersParse(t *testing.T) {
 			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.1}},
 		},
 		{
+			name: "float allowed regex",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithAllowedValues("my_float", "this param is a float", []any{"^0\\.\\d+$"}),
+			},
+			in: map[string]any{
+				"my_float": 0.99,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 0.99}},
+		},
+		{
 			name: "float not allowed",
 			params: tools.Parameters{
 				tools.NewFloatParameterWithAllowedValues("my_float", "this param is a float", []any{1.1}),
@@ -914,6 +1018,54 @@ func TestParametersParse(t *testing.T) {
 				"my_float": 1.2,
 			},
 		},
+		{
+			name: "float not allowed regex",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithAllowedValues("my_float", "this param is a float", []any{"^0\\.\\d+$"}),
+			},
+			in: map[string]any{
+				"my_float": 1.99,
+			},
+		},
+		{
+			name: "float excluded",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithExcludedValues("my_float", "this param is a float", []any{1.1}),
+			},
+			in: map[string]any{
+				"my_float": 1.1,
+			},
+		},
+		{
+			name: "float excluded regex",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithExcludedValues("my_float", "this param is a float", []any{"^0\\.\\d+$"}),
+			},
+			in: map[string]any{
+				"my_float": 0.99,
+			},
+		},
+		{
+			name: "float not excluded",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithExcludedValues("my_float", "this param is a float", []any{1.1}),
+			},
+			in: map[string]any{
+				"my_float": 1.2,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.2}},
+		},
+		{
+			name: "float not excluded regex",
+			params: tools.Parameters{
+				tools.NewFloatParameterWithExcludedValues("my_float", "this param is a float", []any{"^0\\.\\d+$"}),
+			},
+			in: map[string]any{
+				"my_float": 1.99,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.99}},
+		},
+
 		{
 			name: "float minValue",
 			params: tools.Parameters{
@@ -989,6 +1141,25 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_bool": true,
 			},
+		},
+		{
+			name: "bool excluded",
+			params: tools.Parameters{
+				tools.NewBooleanParameterWithExcludedValues("my_bool", "this param is a bool", []any{true}),
+			},
+			in: map[string]any{
+				"my_bool": true,
+			},
+		},
+		{
+			name: "bool not excluded",
+			params: tools.Parameters{
+				tools.NewBooleanParameterWithExcludedValues("my_bool", "this param is a bool", []any{false}),
+			},
+			in: map[string]any{
+				"my_bool": true,
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}},
 		},
 		{
 			name: "string default",
@@ -1135,6 +1306,25 @@ func TestParametersParse(t *testing.T) {
 			in: map[string]any{
 				"my_map": map[string]any{"key1": "val2"},
 			},
+		},
+		{
+			name: "map excluded",
+			params: tools.Parameters{
+				tools.NewMapParameterWithExcludedValues("my_map", "a map", []any{map[string]any{"key1": "val1"}}, "string"),
+			},
+			in: map[string]any{
+				"my_map": map[string]any{"key1": "val1"},
+			},
+		},
+		{
+			name: "map not excluded",
+			params: tools.Parameters{
+				tools.NewMapParameterWithExcludedValues("my_map", "a map", []any{map[string]any{"key1": "val1"}}, "string"),
+			},
+			in: map[string]any{
+				"my_map": map[string]any{"key1": "val2"},
+			},
+			want: tools.ParamValues{tools.ParamValue{Name: "my_map", Value: map[string]any{"key1": "val2"}}},
 		},
 	}
 	for _, tc := range tcs {

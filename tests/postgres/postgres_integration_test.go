@@ -48,6 +48,7 @@ var (
 	PostgresLongRunningTransactionsToolKind = "postgres-long-running-transactions"
 	PostgresListLocksToolKind               = "postgres-list-locks"
 	PostgresReplicationStatsToolKind        = "postgres-replication-stats"
+	PostgresListViewsToolKind               = "postgres-list-views"
 	PostgresDatabase                        = os.Getenv("POSTGRES_DATABASE")
 	PostgresHost                            = os.Getenv("POSTGRES_HOST")
 	PostgresPort                            = os.Getenv("POSTGRES_PORT")
@@ -123,6 +124,10 @@ func addPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]any {
 		"kind":        PostgresReplicationStatsToolKind,
 		"source":      "my-instance",
 		"description": "Lists replication statistics in the instance.",
+
+	tools["list_views"] = map[string]any{
+		"kind":   PostgresListViewsToolKind,
+		"source": "my-instance",
 	}
 
 	config["tools"] = tools
@@ -210,6 +215,7 @@ func TestPostgres(t *testing.T) {
 
 	// Run specific Postgres tool tests
 	runPostgresListTablesTest(t, tableNameParam, tableNameAuth)
+	runPostgresListViewsTest(t, ctx, pool, tableNameParam)
 	runPostgresListActiveQueriesTest(t, ctx, pool)
 	runPostgresListAvailableExtensionsTest(t)
 	runPostgresListInstalledExtensionsTest(t)
@@ -589,9 +595,10 @@ func runPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 		wantStatusCode      int
 		want                any
 	}{
+		// exclude background monitoring apps such as "wal_uploader"
 		{
 			name:                "invoke list_active_queries when the system is idle",
-			requestBody:         bytes.NewBufferString(`{}`),
+			requestBody:         bytes.NewBufferString(`{"exclude_application_names": "wal_uploader"}`),
 			clientSleepSecs:     0,
 			waitSecsBeforeCheck: 0,
 			wantStatusCode:      http.StatusOK,
@@ -599,7 +606,7 @@ func runPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 		},
 		{
 			name:                "invoke list_active_queries when there is 1 ongoing but lower than the threshold",
-			requestBody:         bytes.NewBufferString(`{"min_duration": "100 seconds"}`),
+			requestBody:         bytes.NewBufferString(`{"min_duration": "100 seconds", "exclude_application_names": "wal_uploader"}`),
 			clientSleepSecs:     1,
 			waitSecsBeforeCheck: 1,
 			wantStatusCode:      http.StatusOK,
@@ -607,7 +614,7 @@ func runPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 		},
 		{
 			name:                "invoke list_active_queries when 1 ongoing query should show up",
-			requestBody:         bytes.NewBufferString(`{"min_duration": "1 seconds"}`),
+			requestBody:         bytes.NewBufferString(`{"min_duration": "1 seconds", "exclude_application_names": "wal_uploader"}`),
 			clientSleepSecs:     10,
 			waitSecsBeforeCheck: 5,
 			wantStatusCode:      http.StatusOK,
@@ -688,6 +695,94 @@ func runPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *p
 		})
 	}
 	wg.Wait()
+}
+
+func setUpPostgresViews(t *testing.T, ctx context.Context, pool *pgxpool.Pool, viewName, tableName string) func() {
+	createView := fmt.Sprintf("CREATE VIEW %s AS SELECT name FROM %s", viewName, tableName)
+	_, err := pool.Exec(ctx, createView)
+	if err != nil {
+		t.Fatalf("failed to create view: %v", err)
+	}
+	return func() {
+		dropView := fmt.Sprintf("DROP VIEW %s", viewName)
+		_, err := pool.Exec(ctx, dropView)
+		if err != nil {
+			t.Fatalf("failed to drop view: %v", err)
+		}
+	}
+}
+
+func runPostgresListViewsTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool, tableName string) {
+	viewName1 := "test_view_1" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	dropViewfunc1 := setUpPostgresViews(t, ctx, pool, viewName1, tableName)
+	defer dropViewfunc1()
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           string
+	}{
+		{
+			name:           "invoke list_views with newly created view",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"viewname": "%s"}`, viewName1))),
+			wantStatusCode: http.StatusOK,
+			want:           fmt.Sprintf(`[{"schemaname":"public","viewname":"%s","viewowner":"postgres"}]`, viewName1),
+		},
+		{
+			name:           "invoke list_views with non-existent_view",
+			requestBody:    bytes.NewBuffer([]byte(`{"viewname": "non_existent_view"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           `null`,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_views/invoke"
+			req, err := http.NewRequest(http.MethodPost, api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %v", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %v", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != tc.wantStatusCode {
+				body, _ := io.ReadAll(resp.Body)
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.NewDecoder(resp.Body).Decode(&bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got, want any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v", err)
+			}
+			if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
+				t.Fatalf("failed to unmarshal want string: %v", err)
+			}
+
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("Unexpected result (-want +got):\n%s", diff)
+			}
+		})
+	}
 }
 
 func runPostgresListAvailableExtensionsTest(t *testing.T) {
