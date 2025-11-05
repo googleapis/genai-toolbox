@@ -44,6 +44,7 @@ from Toolbox.
    {{< tabpane persist=header >}}
 {{< tab header="LangChain" lang="bash" >}}
 npm install @toolbox-sdk/core
+{{< /tab >}}
 {{< tab header="GenkitJS" lang="bash" >}}
 npm install @toolbox-sdk/core
 {{< /tab >}}
