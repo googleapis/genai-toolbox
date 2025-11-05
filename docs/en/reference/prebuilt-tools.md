@@ -384,11 +384,24 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `run_look`: Runs the query associated with a look.
     *   `make_look`: Creates a new look.
     *   `get_dashboards`: Searches for saved dashboards.
+    *   `run_dashboard`: Runs the queries associated with a dashboard.
     *   `make_dashboard`: Creates a new dashboard.
     *   `add_dashboard_element`: Adds a tile to a dashboard.
     *   `health_pulse`: Test the health of a Looker instance.
     *   `health_analyze`: Analyze the LookML usage of a Looker instance.
     *   `health_vacuum`: Suggest LookML elements that can be removed.
+    *   `dev_mode`: Activate developer mode.
+    *   `get_projects`: Get the LookML projects in a Looker instance.
+    *   `get_project_files`: List the project files in a project.
+    *   `get_project_file`: Get the content of a LookML file.
+    *   `create_project_file`: Create a new LookML file.
+    *   `update_project_file`: Update an existing LookML file.
+    *   `delete_project_file`: Delete a LookML file.
+    *   `get_connections`: Get the available connections in a Looker instance.
+    *   `get_connection_schemas`: Get the available schemas in a connection.
+    *   `get_connection_databases`: Get the available databases in a connection.
+    *   `get_connection_tables`: Get the available tables in a connection.
+    *   `get_connection_table_columns`: Get the available columns for a table.
 
 ## Looker Conversational Analytics
 
