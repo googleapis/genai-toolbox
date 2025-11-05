@@ -896,6 +896,7 @@ toolsets:
         - run_look
         - make_look
         - get_dashboards
+        - run_dashboard
         - make_dashboard
         - add_dashboard_element
         - health_pulse
