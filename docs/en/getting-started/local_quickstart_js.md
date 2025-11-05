@@ -54,7 +54,7 @@ npm install @toolbox-sdk/core
 {{< tab header="GoogleGenAI" lang="bash" >}}
 npm install @toolbox-sdk/core
 {{< /tab >}}
-{{< tab header="adk" lang="bash" >}}
+{{< tab header="ADK" lang="bash" >}}
 npm install @toolbox-sdk/adk
 {{< /tab >}}
 {{< /tabpane >}}
@@ -74,7 +74,7 @@ npm install llamaindex @llamaindex/google @llamaindex/workflow
 {{< tab header="GoogleGenAI" lang="bash" >}}
 npm install @google/genai
 {{< /tab >}}
-{{< tab header="adk" lang="bash" >}}
+{{< tab header="ADK" lang="bash" >}}
 npm install @google/adk
 {{< /tab >}}
 {{< /tabpane >}}
@@ -107,7 +107,7 @@ npm install @google/adk
 
 {{< /tab >}}
 
-{{< tab header="adk" lang="js" >}}
+{{< tab header="ADK" lang="js" >}}
 
 {{< include "quickstart/js/adk/quickstart.js" >}}
 
