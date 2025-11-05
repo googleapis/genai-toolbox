@@ -1697,7 +1697,7 @@ Authenticated Parameters and Authorized invocation).&lt;/p>
 &lt;p>We recommend using the native SDKs over MCP clients to leverage these features.
 The native SDKs can be combined with MCP clients in many cases.&lt;/p>
 &lt;h3 id="protocol-versions">Protocol Versions&lt;/h3>
-&lt;p>Toolbox currently supports the following versions of MCP specification:&lt;/p></description></item><item><title>couchbase</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/sources/couchbase/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/sources/couchbase/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>Toolbox currently supports the following versions of MCP specification:&lt;/p></description></item><item><title>Couchbase</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/sources/couchbase/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/sources/couchbase/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>couchbase&lt;/code> source establishes a connection to a Couchbase database cluster,
 allowing tools to execute SQL queries against it.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
@@ -4727,7 +4727,7 @@ as well as the new file content.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>MindsDB</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/sources/mindsdb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/sources/mindsdb/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://docs.mindsdb.com/">MindsDB&lt;/a> is the most widely adopted AI federated database in the world. It allows you to combine information from hundreds of datasources as if they were SQL, supporting joins across datasources and enabling you to query all unstructured data as if it were structured.&lt;/p>
+&lt;p>&lt;a href="https://docs.mindsdb.com/">MindsDB&lt;/a> is an AI federated database in the world. It allows you to combine information from hundreds of datasources as if they were SQL, supporting joins across datasources and enabling you to query all unstructured data as if it were structured.&lt;/p>
 &lt;p>MindsDB translates MySQL queries into whatever API is needed - whether it&amp;rsquo;s REST APIs, GraphQL, or native database protocols. This means you can write standard SQL queries and MindsDB automatically handles the translation to APIs like Salesforce, Jira, GitHub, email systems, MongoDB, and hundreds of other datasources.&lt;/p></description></item><item><title>mindsdb-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/mindsdb/mindsdb-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/mindsdb/mindsdb-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>mindsdb-execute-sql&lt;/code> tool executes a SQL statement against a MindsDB
 federated database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
