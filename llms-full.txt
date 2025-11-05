@@ -8289,6 +8289,8 @@ Apache Spark.
   List and filter Serverless Spark batches.
 - [`serverless-spark-get-batch`](../tools/serverless-spark/serverless-spark-get-batch.md)
   Get a Serverless Spark batch.
+- [`serverless-spark-cancel-batch`](../tools/serverless-spark/serverless-spark-cancel-batch.md)
+  Cancel a running Serverless Spark batch operation.
 
 ## Requirements
 
@@ -9358,6 +9360,7 @@ Tools that work with Google Cloud Serverless for Apache Spark Sources.
 
 - [serverless-spark-get-batch](./serverless-spark-get-batch.md)
 - [serverless-spark-list-batches](./serverless-spark-list-batches.md)
+- [serverless-spark-cancel-batch](./serverless-spark-cancel-batch.md)
 
 
 # Spanner

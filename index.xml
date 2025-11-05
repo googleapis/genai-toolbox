@@ -6586,23 +6586,14 @@ Apache Spark.&lt;/p>
 List and filter Serverless Spark batches.&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/tools/serverless-spark/serverless-spark-get-batch/">&lt;code>serverless-spark-get-batch&lt;/code>&lt;/a>
 Get a Serverless Spark batch.&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/tools/serverless-spark/serverless-spark-cancel-batch/">&lt;code>serverless-spark-cancel-batch&lt;/code>&lt;/a>
+Cancel a running Serverless Spark batch operation.&lt;/li>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
 &lt;p>Serverless for Apache Spark uses &lt;a href="https://cloud.google.com/bigquery/docs/access-control">Identity and Access Management
 (IAM)&lt;/a> to control user
-and group access to serverless Spark resources like batches and sessions.&lt;/p>
-&lt;p>Toolbox will use your &lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials
-(ADC)&lt;/a> to authorize and
-authenticate when interacting with Google Cloud Serverless for Apache Spark.
-When using this method, you need to ensure the IAM identity associated with your
-ADC has the correct
-&lt;a href="https://cloud.google.com/dataproc-serverless/docs/concepts/iam">permissions&lt;/a>
-for the actions you intend to perform. Common roles include
-&lt;code>roles/dataproc.serverlessEditor&lt;/code> (which includes permissions to run batches) or
-&lt;code>roles/dataproc.serverlessViewer&lt;/code>. Follow this
-&lt;a href="https://cloud.google.com/docs/authentication/provide-credentials-adc">guide&lt;/a> to
-set up your ADC.&lt;/p></description></item><item><title>serverless-spark-get-batch</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/serverless-spark/serverless-spark-get-batch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/serverless-spark/serverless-spark-get-batch/</guid><description>&lt;h1 id="serverless-spark-get-batch">serverless-spark-get-batch&lt;/h1>
+and group access to serverless Spark resources like batches and sessions.&lt;/p></description></item><item><title>serverless-spark-get-batch</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/serverless-spark/serverless-spark-get-batch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/serverless-spark/serverless-spark-get-batch/</guid><description>&lt;h1 id="serverless-spark-get-batch">serverless-spark-get-batch&lt;/h1>
 &lt;p>The &lt;code>serverless-spark-get-batch&lt;/code> tool allows you to retrieve a specific
 Serverless Spark batch job. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -7927,7 +7918,20 @@ on how to &lt;a href="https://googleapis.github.io/genai-toolbox/how-to/connect_
 your Looker instance. Refer to the documentation
 &lt;a href="https://cloud.google.com/looker/docs/api-auth#authentication_with_an_sdk">here&lt;/a>.
 You may need to ask an administrator to get the Client ID and Client Secret
-for you.&lt;/p></description></item><item><title>Spanner using MCP</title><link>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/spanner_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/spanner_mcp/</guid><description>&lt;html>
+for you.&lt;/p></description></item><item><title>serverless-spark-cancel-batch</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/serverless-spark/serverless-spark-cancel-batch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/serverless-spark/serverless-spark-cancel-batch/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;code>serverless-spark-cancel-batch&lt;/code> tool cancels a running Spark batch operation in
+a Google Cloud Serverless for Apache Spark source. The cancellation request is
+asynchronous, so the batch state will not change immediately after the tool
+returns; it can take a minute or so for the cancellation to be reflected.&lt;/p>
+&lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/serverless-spark/">serverless-spark&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>serverless-spark-cancel-batch&lt;/code> accepts the following parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>operation&lt;/code>&lt;/strong> (required): The name of the operation to cancel. For example, for &lt;code>projects/my-project/locations/us-central1/operations/my-operation&lt;/code>, you would pass &lt;code>my-operation&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;p>The tool inherits the &lt;code>project&lt;/code> and &lt;code>location&lt;/code> from the source configuration.&lt;/p></description></item><item><title>Spanner using MCP</title><link>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/spanner_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/how-to/connect-ide/spanner_mcp/</guid><description>&lt;html>
  &lt;head>
  &lt;link rel="canonical" href="https://cloud.google.com/spanner/docs/pre-built-tools-with-mcp-toolbox"/>
  &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/spanner/docs/pre-built-tools-with-mcp-toolbox"/>
