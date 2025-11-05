@@ -583,6 +583,14 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `HEALTHCARE_DATASET`: The healthcare dataset ID.
     *   `HEALTHCARE_USE_CLIENT_OAUTH`: (Optional) If `true`, forwards the client's
         OAuth access token for authentication. Defaults to `false`.
+    *   `HEALTHCARE_ALLOWED_FHIR_STORES`: (Optional) Restricts tool access to a specific list of 
+        FHIR store IDs (e.g. `[store1,store2]`). If a single store is provided, it will be treated
+        as the default for prebuilt tools. Defaults to `[]` allowing access to all FHIR stores in
+        the healthcare dataset.
+    *   `HEALTHCARE_ALLOWED_DICOM_STORES`: (Optional) Restricts tool access to a specific list of 
+        DICOM store IDs (e.g. `[store1,store2]`). If a single store is provided, it will be treated 
+        as the default for prebuilt tools. Defaults to `[]` allowing access to all DICOM stores in
+        the healthcare dataset.
 *   **Permissions:**
     *   **Healthcare FHIR Resource Reader** (`roles/healthcare.fhirResourceReader`) to read an
         search FHIR resources.

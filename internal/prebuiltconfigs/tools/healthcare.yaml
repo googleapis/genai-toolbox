@@ -19,6 +19,8 @@ sources:
     region: ${HEALTHCARE_REGION}
     dataset: ${HEALTHCARE_DATASET}
     useClientOAuth: ${HEALTHCARE_USE_CLIENT_OAUTH:false}
+    allowedDicomStores: ${HEALTHCARE_ALLOWED_DICOM_STORES:}
+    allowedFhirStores: ${HEALTHCARE_ALLOWED_FHIR_STORES:}
 
 tools:
   get_dataset:
