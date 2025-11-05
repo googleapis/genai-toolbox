@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package firebirdexecutesql
+package mindsdbexecutesql
 
 import (
 	"context"
@@ -21,12 +21,12 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/firebird"
+	"github.com/googleapis/genai-toolbox/internal/sources/mindsdb"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
 )
 
-const kind string = "firebird-execute-sql"
+const kind string = "mindsdb-execute-sql"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -43,12 +43,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	FirebirdDB() *sql.DB
+	MindsDBPool() *sql.DB
 }
 
-var _ compatibleSource = &firebird.Source{}
+// validate compatible sources are still compatible
+var _ compatibleSource = &mindsdb.Source{}
 
-var compatibleSources = [...]string{firebird.SourceKind}
+var compatibleSources = [...]string{mindsdb.SourceKind}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
@@ -58,6 +59,7 @@ type Config struct {
 	AuthRequired []string `yaml:"authRequired"`
 }
 
+// validate interface
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigKind() string {
@@ -65,11 +67,13 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
+	// verify source exists
 	rawS, ok := srcs[cfg.Source]
 	if !ok {
 		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
 	}
 
+	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
@@ -78,20 +82,28 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
 	parameters := tools.Parameters{sqlParameter}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	inputSchema, _ := parameters.McpManifest()
+	mcpManifest := tools.McpManifest{
+		Name:        cfg.Name,
+		Description: cfg.Description,
+		InputSchema: inputSchema,
+	}
 
-	t := &Tool{
+	// finish tool setup
+	t := Tool{
 		Name:         cfg.Name,
+		Kind:         kind,
 		Parameters:   parameters,
 		AuthRequired: cfg.AuthRequired,
-		Db:           s.FirebirdDB(),
+		Pool:         s.MindsDBPool(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
 	return t, nil
 }
 
-var _ tools.Tool = &Tool{}
+// validate interface
+var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Name         string           `yaml:"name"`
@@ -99,82 +111,84 @@ type Tool struct {
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
 
-	Db          *sql.DB
+	Pool        *sql.DB
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	sql, ok := paramsMap["sql"].(string)
 	if !ok {
 		return nil, fmt.Errorf("unable to get cast %s", paramsMap["sql"])
 	}
 
-	// Log the query executed for debugging.
-	logger, err := util.LoggerFromContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("error getting logger: %s", err)
-	}
-	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
-
-	rows, err := t.Db.QueryContext(ctx, sql)
+	results, err := t.Pool.QueryContext(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
-	defer rows.Close()
+	defer results.Close()
 
-	cols, err := rows.Columns()
+	cols, err := results.Columns()
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve rows column name: %w", err)
+	}
+
+	// create an array of values for each column, which can be re-used to scan each row
+	rawValues := make([]any, len(cols))
+	values := make([]any, len(cols))
+	for i := range rawValues {
+		values[i] = &rawValues[i]
+	}
+
+	colTypes, err := results.ColumnTypes()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get column types: %w", err)
+	}
 
 	var out []any
-	if err == nil && len(cols) > 0 {
-		values := make([]any, len(cols))
-		scanArgs := make([]any, len(values))
-		for i := range values {
-			scanArgs[i] = &values[i]
+	for results.Next() {
+		err := results.Scan(values...)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
 		}
+		vMap := make(map[string]any)
+		for i, name := range cols {
+			val := rawValues[i]
+			if val == nil {
+				vMap[name] = nil
+				continue
+			}
 
-		for rows.Next() {
-			err = rows.Scan(scanArgs...)
+			// MindsDB uses mysql driver
+			vMap[name], err = mysqlcommon.ConvertToType(colTypes[i], val)
 			if err != nil {
-				return nil, fmt.Errorf("unable to parse row: %w", err)
+				return nil, fmt.Errorf("errors encountered when converting values: %w", err)
 			}
-
-			vMap := make(map[string]any)
-			for i, colName := range cols {
-				if b, ok := values[i].([]byte); ok {
-					vMap[colName] = string(b)
-				} else {
-					vMap[colName] = values[i]
-				}
-			}
-			out = append(out, vMap)
 		}
+		out = append(out, vMap)
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating rows: %w", err)
+	if err := results.Err(); err != nil {
+		return nil, fmt.Errorf("errors encountered during row iteration: %w", err)
 	}
 
-	// In most cases, DML/DDL statements like INSERT, UPDATE, CREATE, etc. might return no rows
-	// However, it is also possible that this was a query that was expected to return rows
-	// but returned none, a case that we cannot distinguish here.
 	return out, nil
 }
 
-func (t *Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
 	return tools.ParseParams(t.Parameters, data, claims)
 }
 
-func (t *Tool) Manifest() tools.Manifest {
+func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-func (t *Tool) McpManifest() tools.McpManifest {
+func (t Tool) McpManifest() tools.McpManifest {
 	return t.mcpManifest
 }
 
-func (t *Tool) Authorized(verifiedAuthServices []string) bool {
+func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
