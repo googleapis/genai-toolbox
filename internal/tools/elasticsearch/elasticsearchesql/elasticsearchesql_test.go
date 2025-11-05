@@ -21,7 +21,6 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources/elasticsearch"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
@@ -109,21 +108,6 @@ func TestParseFromYamlElasticsearchEsql(t *testing.T) {
 }
 
 func TestTool_esqlToMap(t1 *testing.T) {
-	type fields struct {
-		Name         string
-		Kind         string
-		AuthRequired []string
-		Parameters   tools.Parameters
-		Query        string
-		Format       string
-		Timeout      int
-		manifest     tools.Manifest
-		mcpManifest  tools.McpManifest
-		EsClient     elasticsearch.EsClient
-	}
-	type args struct {
-		result esqlResult
-	}
 	tests := []struct {
 		name   string
 		result esqlResult
