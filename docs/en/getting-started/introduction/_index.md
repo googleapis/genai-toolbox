@@ -309,6 +309,9 @@ const getTool = (toolboxTool) => tool(currTool, {
 // Use these tools in your Langchain/Langraph applications
 const tools = toolboxTools.map(getTool);
 {{< /highlight >}}
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's
+README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
 
 {{% /tab %}}
 {{% tab header="Genkit" lang="en" %}}
@@ -344,6 +347,9 @@ const getTool = (toolboxTool) => ai.defineTool({
 // Use these tools in your Genkit applications
 const tools = toolboxTools.map(getTool);
 {{< /highlight >}}
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's
+README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
 
 {{% /tab %}}
 {{% tab header="LlamaIndex" lang="en" %}}
@@ -371,6 +377,9 @@ const getTool = (toolboxTool) => tool({
 const tools = toolboxTools.map(getTool);
 
 {{< /highlight >}}
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's
+README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
 
 {{% /tab %}}
 {{% tab header="ADK TS" lang="en" %}}
@@ -394,9 +403,6 @@ readme](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main/packages/tool
 {{% /tab %}}
 {{< /tabpane >}}
 
-For more detailed instructions on using the Toolbox Core SDK, see the
-[project's
-README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
 
 #### Go
 
