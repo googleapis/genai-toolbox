@@ -68,6 +68,5 @@ prompts:
 
 ### Argument Schema
 
-An argument is a [Parameter](../../tools/_index.md#specifying-parameters) with a single change:
-
-- The type for an argument is not required but defaults to `string`.
+An argument can be any [Parameter](../../tools/_index.md#specifying-parameters)
+type. If the `type` field is not specified, it will default to `string`.
