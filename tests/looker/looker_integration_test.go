@@ -71,7 +71,7 @@ func getLookerVars(t *testing.T) map[string]any {
 
 func TestLooker(t *testing.T) {
 	sourceConfig := getLookerVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")

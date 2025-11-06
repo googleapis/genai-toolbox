@@ -18,7 +18,9 @@ steps:
     script: |
         #!/usr/bin/env bash
         docker buildx create --name container-builder --driver docker-container --bootstrap --use
-        docker buildx build --platform linux/amd64,linux/arm64 --build-arg COMMIT_SHA=$(git rev-parse --short HEAD) -t ${_DOCKER_URI}:$REF_NAME --push .
+
+        export TAGS="-t ${_DOCKER_URI}:$SHORT_SHA -t ${_DOCKER_URI}:$REF_NAME"
+        docker buildx build --platform linux/amd64,linux/arm64 --build-arg COMMIT_SHA=$(git rev-parse --short HEAD) $TAGS --push .
 
   - id: "install-dependencies"
     name: golang:1

@@ -98,7 +98,9 @@ centralized location to store and update tools, allowing you to share tools
 between agents and applications and update those tools without necessarily
 redeploying your application.
 
-![architecture](./docs/en/getting-started/introduction/architecture.png)
+<p align="center">
+<img src="./docs/en/getting-started/introduction/architecture.png" alt="architecture" width="50%"/>
+</p>
 
 ## Getting Started
 
@@ -519,7 +521,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
   <br>
   <blockquote>
 
-  <details open>
+  <details>
     <summary>Core</summary>
 
 1. Install [Toolbox Go SDK][toolbox-go]:
@@ -528,7 +530,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     go get github.com/googleapis/mcp-toolbox-sdk-go
     ```
 
-1. Load tools:
+2. Load tools:
 
     ```go
     package main
@@ -759,6 +761,50 @@ For more detailed instructions on using the Toolbox Core SDK, see the
 
     }
     ```
+
+  </details>
+  <details open>
+    <summary>ADK Go</summary>
+
+1. Install [Toolbox Go SDK][toolbox-go]:
+
+    ```bash
+    go get github.com/googleapis/mcp-toolbox-sdk-go
+    ```
+
+1. Load tools:
+
+    ```go
+    package main
+
+    import (
+      "github.com/googleapis/mcp-toolbox-sdk-go/tbadk"
+      "context"
+    )
+
+    func main() {
+      // Make sure to add the error checks
+      // Update the url to point to your server
+      URL := "http://127.0.0.1:5000"
+      ctx := context.Background()
+      client, err := tbadk.NewToolboxClient(URL)
+      if err != nil {
+        return fmt.Sprintln("Could not start Toolbox Client", err)
+      }
+
+      // Use this tool with ADK Go
+      tool, err := client.LoadTool("toolName", ctx)
+      if err != nil {
+        return fmt.Sprintln("Could not load Toolbox Tool", err)
+      }
+    }
+    ```
+
+    For more detailed instructions on using the Toolbox Go SDK, see the
+    [project's README][toolbox-core-go-readme].
+
+    [toolbox-go]: https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/core
+    [toolbox-core-go-readme]: https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md
 
   </details>
 </details>

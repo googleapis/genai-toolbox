@@ -351,6 +351,9 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 				[]byte(`{"sql": "`+caseSQL+`"}`), "")
 		})
 
+		tests.RunToolInvokeParametersTest(t, "my-exec-sql-tool",
+			[]byte(`{"sql": "DROP TABLE IF EXISTS files.test_product_summary"}`), "")
+
 		t.Run("data_manipulation", func(t *testing.T) {
 			summarySQL := `CREATE TABLE files.test_product_summary (SELECT p.product_id, p.product_name, p.category, COUNT(r.review) as total_reviews, AVG(r.rating) as avg_rating, MAX(r.rating) as max_rating, MIN(r.rating) as min_rating FROM files.test_products p LEFT JOIN files.test_reviews r ON p.product_id = r.product_id GROUP BY p.product_id, p.product_name, p.category)`
 			tests.RunToolInvokeParametersTest(t, "my-exec-sql-tool",
@@ -377,6 +380,11 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 		tests.RunToolInvokeParametersTest(t, "my-exec-sql-tool",
 			[]byte(`{"sql": "SHOW TABLES FROM files"}`), "")
 
+		tests.RunToolInvokeParametersTest(t, "my-exec-sql-tool",
+			[]byte(`{"sql": "DROP TABLE IF EXISTS files.test_integration_data"}`), "")
+		tests.RunToolInvokeParametersTest(t, "my-exec-sql-tool",
+			[]byte(`{"sql": "DROP TABLE IF EXISTS files.test_local_data"}`), "")
+
 		createIntegrationTableSQL := `CREATE TABLE files.test_integration_data (SELECT 1 as id, 'Data from integration' as description, CURDATE() as created_at UNION ALL SELECT 2, 'Another record', CURDATE() UNION ALL SELECT 3, 'Third record', CURDATE())`
 		tests.RunToolInvokeParametersTest(t, "my-exec-sql-tool",
 			[]byte(`{"sql": "`+createIntegrationTableSQL+`"}`), "")
@@ -400,6 +408,11 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 
 	// Test data transformation with customer order data
 	t.Run("mindsdb_data_transformation", func(t *testing.T) {
+		tests.RunToolInvokeParametersTest(t, "my-exec-sql-tool",
+			[]byte(`{"sql": "DROP TABLE IF EXISTS files.test_orders"}`), "")
+		tests.RunToolInvokeParametersTest(t, "my-exec-sql-tool",
+			[]byte(`{"sql": "DROP TABLE IF EXISTS files.test_customer_summary"}`), "")
+
 		createOrdersSQL := `CREATE TABLE files.test_orders (SELECT 1 as order_id, 'CUST001' as customer_id, 100.50 as amount, '2024-01-15' as order_date UNION ALL SELECT 2, 'CUST001', 250.00, '2024-02-20' UNION ALL SELECT 3, 'CUST002', 75.25, '2024-01-18' UNION ALL SELECT 4, 'CUST003', 500.00, '2024-03-10' UNION ALL SELECT 5, 'CUST002', 150.00, '2024-02-25')`
 		tests.RunToolInvokeParametersTest(t, "my-exec-sql-tool",
 			[]byte(`{"sql": "`+createOrdersSQL+`"}`), "")

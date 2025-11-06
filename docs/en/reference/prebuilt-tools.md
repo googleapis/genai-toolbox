@@ -45,6 +45,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## AlloyDB Postgres Admin
 
@@ -214,6 +215,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -384,6 +386,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `run_look`: Runs the query associated with a look.
     *   `make_look`: Creates a new look.
     *   `get_dashboards`: Searches for saved dashboards.
+    *   `run_dashboard`: Runs the queries associated with a dashboard.
     *   `make_dashboard`: Creates a new dashboard.
     *   `add_dashboard_element`: Adds a tile to a dashboard.
     *   `health_pulse`: Test the health of a Looker instance.
@@ -509,6 +512,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## Google Cloud Serverless for Apache Spark
 
