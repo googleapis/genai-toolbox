@@ -492,7 +492,16 @@ Run DQL (Dgraph Query Language) queries.&lt;/li>
 &lt;h3 id="database-user">Database User&lt;/h3>
 &lt;p>When &lt;strong>connecting to a hosted Dgraph database&lt;/strong>, this source uses the API key
 for access. If you are using a dedicated environment, you will additionally need
-the namespace and user credentials for that namespace.&lt;/p></description></item><item><title>Firebird</title><link>https://googleapis.github.io/genai-toolbox/resources/sources/firebird/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/sources/firebird/</guid><description>&lt;h2 id="about">About&lt;/h2>
+the namespace and user credentials for that namespace.&lt;/p></description></item><item><title>Elasticsearch</title><link>https://googleapis.github.io/genai-toolbox/resources/sources/elasticsearch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/sources/elasticsearch/</guid><description>&lt;h1 id="elasticsearch-source">Elasticsearch Source&lt;/h1>
+&lt;p>&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">Elasticsearch&lt;/a> is a distributed, free and open search and analytics engine
+for all types of data, including textual, numerical, geospatial, structured,
+and unstructured.&lt;/p>
+&lt;p>If you are new to Elasticsearch, you can learn how to
+&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started.html">set up a cluster and start indexing data&lt;/a>.&lt;/p>
+&lt;p>Elasticsearch uses &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/esql.html">ES|QL&lt;/a> for querying data. ES|QL
+is a powerful query language that allows you to search and aggregate data in
+Elasticsearch.&lt;/p>
+&lt;p>See the &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">official documentation&lt;/a> for more information.&lt;/p></description></item><item><title>Firebird</title><link>https://googleapis.github.io/genai-toolbox/resources/sources/firebird/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/sources/firebird/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://firebirdsql.org/">Firebird&lt;/a> is a relational database management system offering many
 ANSI SQL standard features that runs on Linux, Windows, and a variety of Unix
 platforms. It is known for its small footprint, powerful features, and easy

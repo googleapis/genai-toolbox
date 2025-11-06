@@ -62,6 +62,7 @@ List of reference documentation for resources in Toolbox.
   - [Couchbase](https://googleapis.github.io/genai-toolbox/resources/sources/couchbase/): A "couchbase" source connects to a Couchbase database.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/resources/sources/dataplex/): Dataplex Universal Catalog is a unified, intelligent governance solution for data and AI assets in Google Cloud. Dataplex Universal Catalog powers AI, analytics, and business intelligence at scale.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/resources/sources/dgraph/): Dgraph is fully open-source, built-for-scale graph database for Gen AI workloads
+  - [Elasticsearch](https://googleapis.github.io/genai-toolbox/resources/sources/elasticsearch/): Elasticsearch is a distributed, free and open search and analytics engine  for all types of data, including textual, numerical, geospatial, structured,  and unstructured.
   - [Firebird](https://googleapis.github.io/genai-toolbox/resources/sources/firebird/): Firebird is a powerful, cross-platform, and open-source relational database.
   - [Firestore](https://googleapis.github.io/genai-toolbox/resources/sources/firestore/): Firestore is a NoSQL document database built for automatic scaling, high performance, and ease of application development. It's a fully managed, serverless database that supports mobile, web, and server development.
   - [HTTP](https://googleapis.github.io/genai-toolbox/resources/sources/http/): The HTTP source enables the Toolbox to retrieve data from a remote server using HTTP requests.
@@ -96,6 +97,7 @@ List of reference documentation for resources in Toolbox.
   - [Dataform](https://googleapis.github.io/genai-toolbox/resources/tools/dataform/): Tools that work with Dataform.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/resources/tools/dataplex/): Tools that work with Dataplex Sources.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/resources/tools/dgraph/): Tools that work with Dgraph Sources.
+  - [Elasticsearch](https://googleapis.github.io/genai-toolbox/resources/tools/elasticsearch/): Tools that work with Elasticsearch Sources.
   - [Firebird](https://googleapis.github.io/genai-toolbox/resources/tools/firebird/): Tools that work with Firebird Sources.
   - [Firestore](https://googleapis.github.io/genai-toolbox/resources/tools/firestore/): Tools that work with Firestore Sources.
   - [HTTP](https://googleapis.github.io/genai-toolbox/resources/tools/http/): Tools that work with HTTP Sources.
