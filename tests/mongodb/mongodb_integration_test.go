@@ -132,6 +132,9 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	aggregate1Want := `[{"id":2}]`
 	aggregateManyWant := `[{"id":500},{"id":501}]`
 	runToolAggregateInvokeTest(t, aggregate1Want, aggregateManyWant)
+
+	// Test discovery tools
+	runToolDiscoveryInvokeTest(t)
 }
 
 func runToolDeleteInvokeTest(t *testing.T, delete1Want, deleteManyWant string) {
@@ -765,9 +768,101 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				},
 				"database": MongoDbDatabase,
 			},
+			"my-list-databases-tool": map[string]any{
+				"kind":         "mongodb-list-database-names",
+				"source":       "my-instance",
+				"description":  "Tool to list all databases.",
+				"authRequired": []string{},
+			},
+			"my-list-collections-tool": map[string]any{
+				"kind":         "mongodb-list-collection-names",
+				"source":       "my-instance",
+				"description":  "Tool to list all collections in a database.",
+				"authRequired": []string{},
+				"database":     MongoDbDatabase,
+			},
 		},
 	}
 
 	return toolsFile
 
+}
+
+func runToolDiscoveryInvokeTest(t *testing.T) {
+	// Test tool invoke endpoint for discovery tools
+	invokeTcs := []struct {
+		name          string
+		api           string
+		requestHeader map[string]string
+		requestBody   io.Reader
+		checkResult   func(string) bool
+		isErr         bool
+	}{
+		{
+			name:          "invoke my-list-databases-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-list-databases-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			checkResult: func(result string) bool {
+				// Check that result is a JSON array containing the test database
+				return len(result) > 0 && result[0] == '[' && result[len(result)-1] == ']'
+			},
+			isErr: false,
+		},
+		{
+			name:          "invoke my-list-collections-tool",
+			api:           "http://127.0.0.1:5000/api/tool/my-list-collections-tool/invoke",
+			requestHeader: map[string]string{},
+			requestBody:   bytes.NewBuffer([]byte(`{}`)),
+			checkResult: func(result string) bool {
+				// Check that result contains "test_collection"
+				return len(result) > 0 && result[0] == '[' && result[len(result)-1] == ']'
+			},
+			isErr: false,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+
+		t.Run(tc.name, func(t *testing.T) {
+			// Send Tool invocation request
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			if err != nil {
+				t.Fatalf("unable to create request: %s", err)
+			}
+			req.Header.Add("Content-type", "application/json")
+			for k, v := range tc.requestHeader {
+				req.Header.Add(k, v)
+			}
+			resp, err := http.DefaultClient.Do(req)
+			if err != nil {
+				t.Fatalf("unable to send request: %s", err)
+			}
+			defer resp.Body.Close()
+
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+			}
+
+			// Check response body
+			var body map[string]interface{}
+			err = json.NewDecoder(resp.Body).Decode(&body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
+
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+
+			if !tc.checkResult(got) {
+				t.Fatalf("unexpected value: got %q", got)
+			}
+		})
+	}
 }
