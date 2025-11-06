@@ -1697,7 +1697,7 @@ Authenticated Parameters and Authorized invocation).&lt;/p>
 &lt;p>We recommend using the native SDKs over MCP clients to leverage these features.
 The native SDKs can be combined with MCP clients in many cases.&lt;/p>
 &lt;h3 id="protocol-versions">Protocol Versions&lt;/h3>
-&lt;p>Toolbox currently supports the following versions of MCP specification:&lt;/p></description></item><item><title>couchbase</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/couchbase/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/couchbase/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>Toolbox currently supports the following versions of MCP specification:&lt;/p></description></item><item><title>Couchbase</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/couchbase/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/couchbase/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>couchbase&lt;/code> source establishes a connection to a Couchbase database cluster,
 allowing tools to execute SQL queries against it.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
@@ -1964,7 +1964,16 @@ query.&lt;/p>
 &lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
-names, or other parts of the query.&lt;/p></description></item><item><title>Firebird</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/firebird/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/firebird/</guid><description>&lt;h2 id="about">About&lt;/h2>
+names, or other parts of the query.&lt;/p></description></item><item><title>Elasticsearch</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/elasticsearch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/elasticsearch/</guid><description>&lt;h1 id="elasticsearch-source">Elasticsearch Source&lt;/h1>
+&lt;p>&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">Elasticsearch&lt;/a> is a distributed, free and open search and analytics engine
+for all types of data, including textual, numerical, geospatial, structured,
+and unstructured.&lt;/p>
+&lt;p>If you are new to Elasticsearch, you can learn how to
+&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started.html">set up a cluster and start indexing data&lt;/a>.&lt;/p>
+&lt;p>Elasticsearch uses &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/esql.html">ES|QL&lt;/a> for querying data. ES|QL
+is a powerful query language that allows you to search and aggregate data in
+Elasticsearch.&lt;/p>
+&lt;p>See the &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">official documentation&lt;/a> for more information.&lt;/p></description></item><item><title>Firebird</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/firebird/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/firebird/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://firebirdsql.org/">Firebird&lt;/a> is a relational database management system offering many
 ANSI SQL standard features that runs on Linux, Windows, and a variety of Unix
 platforms. It is known for its small footprint, powerful features, and easy
@@ -4727,7 +4736,7 @@ as well as the new file content.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>MindsDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/mindsdb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/mindsdb/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://docs.mindsdb.com/">MindsDB&lt;/a> is the most widely adopted AI federated database in the world. It allows you to combine information from hundreds of datasources as if they were SQL, supporting joins across datasources and enabling you to query all unstructured data as if it were structured.&lt;/p>
+&lt;p>&lt;a href="https://docs.mindsdb.com/">MindsDB&lt;/a> is an AI federated database in the world. It allows you to combine information from hundreds of datasources as if they were SQL, supporting joins across datasources and enabling you to query all unstructured data as if it were structured.&lt;/p>
 &lt;p>MindsDB translates MySQL queries into whatever API is needed - whether it&amp;rsquo;s REST APIs, GraphQL, or native database protocols. This means you can write standard SQL queries and MindsDB automatically handles the translation to APIs like Salesforce, Jira, GitHub, email systems, MongoDB, and hundreds of other datasources.&lt;/p></description></item><item><title>mindsdb-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/mindsdb/mindsdb-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/mindsdb/mindsdb-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>mindsdb-execute-sql&lt;/code> tool executes a SQL statement against a MindsDB
 federated database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
@@ -5590,7 +5599,27 @@ support any input parameter.&lt;/p>
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>postgres-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>postgres-list-schemas</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-schemas/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-schemas/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-schemas&lt;/code> tool retrieves information about schemas in a database excluding system
+and temporary schemas. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-list-schemas&lt;/code> lists detailed information as JSON for each schema. The tool takes the following
+input parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>schema_name&lt;/code> (optional): A pattern to filter schema names using SQL LIKE operator.
+If omitted, all user-defined schemas are returned.&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_schemas&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-list-schemas&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s2">&amp;#34;Lists all schemas in the database ordered by schema name and excluding system and temporary schemas. It returns the schema name, schema owner, grants, number of functions, number of tables and number of views within each schema.&amp;#34;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>postgres-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>postgres-list-tables&lt;/code> tool retrieves schema information for all or
 specified tables in a Postgres database. It&amp;rsquo;s compatible with any of the
 following sources:&lt;/p>
@@ -5734,6 +5763,7 @@ database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
 limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
+&lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -5963,6 +5993,7 @@ database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
 limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
+&lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -6381,6 +6412,7 @@ database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
 limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
+&lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -7537,7 +7569,63 @@ instance in a specified Google Cloud project.&lt;/p>
  &lt;/span>Info&lt;/p></description></item><item><title>Connect via Gemini CLI Extensions</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/how-to/connect_via_geminicli/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/how-to/connect_via_geminicli/</guid><description>&lt;h2 id="gemini-cli-extensions">Gemini CLI Extensions&lt;/h2>
 &lt;p>&lt;a href="https://google-gemini.github.io/gemini-cli/">Gemini CLI&lt;/a> is an open-source AI agent designed to assist with development workflows by assisting with coding, debugging, data exploration, and content creation. Its mission is to provide an agentic interface for interacting with database and analytics services and popular open-source databases.&lt;/p>
 &lt;h3 id="how-extensions-work">How extensions work&lt;/h3>
-&lt;p>Gemini CLI is highly extensible, allowing for the addition of new tools and capabilities through extensions. You can load the extensions from a GitHub URL, a local directory, or a configurable registry. They provide new tools, slash commands, and prompts to assist with your workflow.&lt;/p></description></item><item><title>FAQ</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/about/faq/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/about/faq/</guid><description>&lt;h2 id="how-can-i-deploy-or-run-toolbox">How can I deploy or run Toolbox?&lt;/h2>
+&lt;p>Gemini CLI is highly extensible, allowing for the addition of new tools and capabilities through extensions. You can load the extensions from a GitHub URL, a local directory, or a configurable registry. They provide new tools, slash commands, and prompts to assist with your workflow.&lt;/p></description></item><item><title>elasticsearch-esql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/elasticsearch/elasticsearch-esql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/elasticsearch/elasticsearch-esql/</guid><description>&lt;h1 id="elasticsearch-esql">elasticsearch-esql&lt;/h1>
+&lt;p>Execute ES|QL queries.&lt;/p>
+&lt;p>This tool allows you to execute ES|QL queries against your Elasticsearch
+cluster. You can use this to perform complex searches and aggregations.&lt;/p>
+&lt;p>See the &lt;a href="https://www.elastic.co/docs/reference/query-languages/esql/esql-getting-started">official documentation&lt;/a> for more information.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">query_my_index&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">elasticsearch-esql&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">elasticsearch-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to execute ES|QL queries.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">query&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> FROM my-index
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> | KEEP *
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> | LIMIT ?limit&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">parameters&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>- &lt;span class="nt">name&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">limit&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">type&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">integer&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Limit the number of results.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">required&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">true&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="parameters">Parameters&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>name&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>query&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The ES|QL query to run. Can also be passed by parameters.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>format&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The format of the query. Default is json. Valid values are csv, json, tsv, txt, yaml, cbor, smile, or arrow.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>timeout&lt;/td>
+ &lt;td style="text-align: center">integer&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The timeout for the query in seconds. Default is 60 (1 minute).&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>parameters&lt;/td>
+ &lt;td style="text-align: center">&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/#specifying-parameters">parameters&lt;/a>&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>List of &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/#specifying-parameters">parameters&lt;/a> that will be used with the ES|QL query.&lt;br/>Only supports “string”, “integer”, “float”, “boolean”.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>FAQ</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/about/faq/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/about/faq/</guid><description>&lt;h2 id="how-can-i-deploy-or-run-toolbox">How can I deploy or run Toolbox?&lt;/h2>
 &lt;p>MCP Toolbox for Databases is open-source and can be run or deployed to a
 multitude of environments. For convenience, we release &lt;a href="https://github.com/googleapis/genai-toolbox/releases/">compiled binaries and
 docker images&lt;/a> (but you can always compile yourself as well!).&lt;/p>
