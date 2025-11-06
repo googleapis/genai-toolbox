@@ -108,8 +108,8 @@ google.golang.org/adk v0.0.0-20251105212711-ccd61aa4a1b6 h1:LiCwUK/a39m3ZJYOBfJX
 google.golang.org/adk v0.0.0-20251105212711-ccd61aa4a1b6/go.mod h1:NvtSLoNx7UzZIiUAI1KoJQLMmt9sG3oCgiCx1TLqKFw=
 google.golang.org/api v0.254.0 h1:jl3XrGj7lRjnlUvZAbAdhINTLbsg5dbjmR90+pTQvt4=
 google.golang.org/api v0.254.0/go.mod h1:5BkSURm3D9kAqjGvBNgf0EcbX6Rnrf6UArKkwBzAyqQ=
-google.golang.org/genai v1.30.0 h1:7021aneIvl24nEBLbtQFEWleHsMbjzpcQvkT4WcJ1dc=
-google.golang.org/genai v1.30.0/go.mod h1:7pAilaICJlQBonjKKJNhftDFv3SREhZcTe9F6nRcjbg=
+google.golang.org/genai v1.34.0 h1:lPRJRO+HqRX1SwFo1Xb/22nZ5MBEPUbXDl61OoDxlbY=
+google.golang.org/genai v1.34.0/go.mod h1:7pAilaICJlQBonjKKJNhftDFv3SREhZcTe9F6nRcjbg=
 google.golang.org/genproto v0.0.0-20251014184007-4626949a642f h1:vLd1CJuJOUgV6qijD7KT5Y2ZtC97ll4dxjTUappMnbo=
 google.golang.org/genproto v0.0.0-20251014184007-4626949a642f/go.mod h1:PI3KrSadr00yqfv6UDvgZGFsmLqeRIwt8x4p5Oo7CdM=
 google.golang.org/genproto/googleapis/api v0.0.0-20251014184007-4626949a642f h1:OiFuztEyBivVKDvguQJYWq1yDcfAHIID/FVrPR4oiI0=
