@@ -164,19 +164,19 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	return out, nil
 }
 
-func (t *Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
-func (t *Tool) Manifest() tools.Manifest {
+func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-func (t *Tool) McpManifest() tools.McpManifest {
+func (t Tool) McpManifest() tools.McpManifest {
 	return t.mcpManifest
 }
 
-func (t *Tool) Authorized(verifiedAuthServices []string) bool {
+func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 

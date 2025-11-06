@@ -90,7 +90,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	return Tool{
 		Config:      cfg,
-		Source:      s,
+		source:      s,
 		AllParams:   allParameters,
 		manifest:    tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
@@ -101,7 +101,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 type Tool struct {
 	Config
 	AllParams   parameters.Parameters `yaml:"allParams"`
-	Source      *cloudsqladminsrc.Source
+	source      *cloudsqladminsrc.Source
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -119,7 +119,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		return nil, fmt.Errorf("missing 'project' parameter")
 	}
 
-	service, err := t.Source.GetService(ctx, string(accessToken))
+	service, err := t.source.GetService(ctx, string(accessToken))
 	if err != nil {
 		return nil, err
 	}
@@ -170,5 +170,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return t.Source.UseClientAuthorization()
+	return t.source.UseClientAuthorization()
 }

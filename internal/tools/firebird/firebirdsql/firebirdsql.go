@@ -188,8 +188,13 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	return out, nil
 }
 
+<<<<<<< HEAD
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.AllParams, data, claims)
+=======
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.AllParams, data, claims)
+>>>>>>> 84fd697096 (fix commit)
 }
 
 func (t Tool) Manifest() tools.Manifest {

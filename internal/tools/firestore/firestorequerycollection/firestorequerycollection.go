@@ -135,11 +135,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Config:       cfg,
-		Parameters:   parameters,
-		Client:       s.FirestoreClient(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		Parameters:  parameters,
+		Client:      s.FirestoreClient(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -198,10 +198,8 @@ var _ tools.Tool = Tool{}
 
 // Tool represents the Firestore query collection tool
 type Tool struct {
-	Name         string                `yaml:"name"`
-	Kind         string                `yaml:"kind"`
-	AuthRequired []string              `yaml:"authRequired"`
-	Parameters   parameters.Parameters `yaml:"parameters"`
+	Config
+	Parameters parameters.Parameters `yaml:"parameters"`
 
 	Client      *firestoreapi.Client
 	manifest    tools.Manifest

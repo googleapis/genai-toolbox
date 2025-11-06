@@ -92,13 +92,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Config:       cfg,
-		Parameters:   parameters,
-		RulesClient:  s.FirebaseRulesClient(),
-		ProjectId:    s.GetProjectId(),
-		DatabaseId:   s.GetDatabaseId(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		Parameters:  parameters,
+		RulesClient: s.FirebaseRulesClient(),
+		ProjectId:   s.GetProjectId(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -117,14 +116,11 @@ func createParameters() parameters.Parameters {
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string                `yaml:"name"`
-	Kind         string                `yaml:"kind"`
-	AuthRequired []string              `yaml:"authRequired"`
-	Parameters   parameters.Parameters `yaml:"parameters"`
+	Config
+	Parameters parameters.Parameters `yaml:"parameters"`
 
 	RulesClient *firebaserules.Service
 	ProjectId   string
-	DatabaseId  string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
