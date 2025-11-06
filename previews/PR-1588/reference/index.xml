@@ -151,6 +151,9 @@ database.&lt;/li>
 &lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
 &lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
+&lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
+limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
+&lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -378,6 +381,9 @@ database.&lt;/li>
 &lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
 &lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
+&lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
+limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
+&lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -452,7 +458,6 @@ all resources.
 &lt;li>&lt;code>CLOUD_SQL_MSSQL_REGION&lt;/code>: The region of your Cloud SQL instance.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MSSQL_INSTANCE&lt;/code>: The ID of your Cloud SQL instance.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MSSQL_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_MSSQL_IP_ADDRESS&lt;/code>: The IP address of the Cloud SQL instance.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MSSQL_USER&lt;/code>: The database username.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MSSQL_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
 &lt;li>&lt;code>CLOUD_SQL_MSSQL_IP_TYPE&lt;/code>: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or
@@ -632,6 +637,18 @@ explores, and data is required.&lt;/li>
 &lt;li>&lt;code>health_pulse&lt;/code>: Test the health of a Looker instance.&lt;/li>
 &lt;li>&lt;code>health_analyze&lt;/code>: Analyze the LookML usage of a Looker instance.&lt;/li>
 &lt;li>&lt;code>health_vacuum&lt;/code>: Suggest LookML elements that can be removed.&lt;/li>
+&lt;li>&lt;code>dev_mode&lt;/code>: Activate developer mode.&lt;/li>
+&lt;li>&lt;code>get_projects&lt;/code>: Get the LookML projects in a Looker instance.&lt;/li>
+&lt;li>&lt;code>get_project_files&lt;/code>: List the project files in a project.&lt;/li>
+&lt;li>&lt;code>get_project_file&lt;/code>: Get the content of a LookML file.&lt;/li>
+&lt;li>&lt;code>create_project_file&lt;/code>: Create a new LookML file.&lt;/li>
+&lt;li>&lt;code>update_project_file&lt;/code>: Update an existing LookML file.&lt;/li>
+&lt;li>&lt;code>delete_project_file&lt;/code>: Delete a LookML file.&lt;/li>
+&lt;li>&lt;code>get_connections&lt;/code>: Get the available connections in a Looker instance.&lt;/li>
+&lt;li>&lt;code>get_connection_schemas&lt;/code>: Get the available schemas in a connection.&lt;/li>
+&lt;li>&lt;code>get_connection_databases&lt;/code>: Get the available databases in a connection.&lt;/li>
+&lt;li>&lt;code>get_connection_tables&lt;/code>: Get the available tables in a connection.&lt;/li>
+&lt;li>&lt;code>get_connection_table_columns&lt;/code>: Get the available columns for a table.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -783,6 +800,9 @@ database.&lt;/li>
 &lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
 &lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
+&lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
+limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
+&lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
