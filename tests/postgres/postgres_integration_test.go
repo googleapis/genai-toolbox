@@ -168,6 +168,7 @@ func TestPostgres(t *testing.T) {
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, PostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	toolsFile = addPrebuiltToolConfig(t, toolsFile)
+	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -196,6 +197,7 @@ func TestPostgres(t *testing.T) {
 	// Run specific Postgres tool tests
 	runPostgresListTablesTest(t, tableNameParam, tableNameAuth)
 	runPostgresListViewsTest(t, ctx, pool, tableNameParam)
+	tests.RunPostgresListSchemasTest(t, ctx, pool)
 	runPostgresListActiveQueriesTest(t, ctx, pool)
 	runPostgresListAvailableExtensionsTest(t)
 	runPostgresListInstalledExtensionsTest(t)

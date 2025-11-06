@@ -3,12 +3,12 @@ title: "MindsDB"
 type: docs
 weight: 1
 description: >
-  MindsDB is the most widely adopted AI federated database that enables SQL queries across hundreds of datasources and ML models.
+  MindsDB is an AI federated database that enables SQL queries across hundreds of datasources and ML models.
 ---
 
 ## About
 
-[MindsDB][mindsdb-docs] is the most widely adopted AI federated database in the world. It allows you to combine information from hundreds of datasources as if they were SQL, supporting joins across datasources and enabling you to query all unstructured data as if it were structured.
+[MindsDB][mindsdb-docs] is an AI federated database in the world. It allows you to combine information from hundreds of datasources as if they were SQL, supporting joins across datasources and enabling you to query all unstructured data as if it were structured.
 
 MindsDB translates MySQL queries into whatever API is needed - whether it's REST APIs, GraphQL, or native database protocols. This means you can write standard SQL queries and MindsDB automatically handles the translation to APIs like Salesforce, Jira, GitHub, email systems, MongoDB, and hundreds of other datasources.
 
