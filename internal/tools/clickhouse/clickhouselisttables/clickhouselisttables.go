@@ -81,17 +81,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	t := Tool{
-<<<<<<< HEAD
-		Name:         cfg.Name,
-		Kind:         listTablesKind,
-		Parameters:   params,
-=======
-		Config:       cfg,
->>>>>>> dd29623cef (I have refactored all the tools in the `internal/tools/alloydb` directory by embedding the `Config` struct, removing duplicated fields, and adding a `ToConfig()` method.)
-		AllParams:    allParameters,
-		Pool:         s.ClickHousePool(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		AllParams:   allParameters,
+		Pool:        s.ClickHousePool(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -100,7 +94,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	AllParams    parameters.Parameters `yaml:"allParams"`
+	AllParams parameters.Parameters `yaml:"allParams"`
 
 	Pool        *sql.DB
 	manifest    tools.Manifest

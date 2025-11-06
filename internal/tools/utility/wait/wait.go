@@ -62,8 +62,7 @@ func (cfg Config) Initialize(_ map[string]sources.Source) (tools.Tool, error) {
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	t := Tool{
-		Name:        cfg.Name,
-		Kind:        kind,
+		Config:      cfg,
 		Parameters:  params,
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
@@ -75,8 +74,7 @@ func (cfg Config) Initialize(_ map[string]sources.Source) (tools.Tool, error) {
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name        string
-	Kind        string
+	Config
 	Parameters  parameters.Parameters
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
@@ -118,4 +116,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }

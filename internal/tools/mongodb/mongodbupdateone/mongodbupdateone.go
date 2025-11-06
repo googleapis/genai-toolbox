@@ -102,20 +102,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		Name:          cfg.Name,
-		Kind:          kind,
-		AuthRequired:  cfg.AuthRequired,
-		Collection:    cfg.Collection,
-		FilterPayload: cfg.FilterPayload,
-		FilterParams:  cfg.FilterParams,
-		UpdatePayload: cfg.UpdatePayload,
-		UpdateParams:  cfg.UpdateParams,
-		Canonical:     cfg.Canonical,
-		Upsert:        cfg.Upsert,
-		AllParams:     allParameters,
-		database:      s.Client.Database(cfg.Database),
-		manifest:      tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:   mcpManifest,
+		Config:      cfg,
+		AllParams:   allParameters,
+		database:    s.Client.Database(cfg.Database),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}, nil
 }
 
@@ -123,18 +114,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name          string   `yaml:"name"`
-	Kind          string   `yaml:"kind"`
-	AuthRequired  []string `yaml:"authRequired"`
-	Description   string   `yaml:"description"`
-	Collection    string   `yaml:"collection"`
-	FilterPayload string   `yaml:"filterPayload" validate:"required"`
-	FilterParams  parameters.Parameters
-	UpdatePayload string `yaml:"updatePayload" validate:"required"`
-	UpdateParams  parameters.Parameters
-	AllParams     parameters.Parameters
-	Canonical     bool `yaml:"canonical" validation:"required"`
-	Upsert        bool `yaml:"upsert"`
+	Config
+	AllParams parameters.Parameters
 
 	database    *mongo.Database
 	manifest    tools.Manifest
@@ -192,4 +173,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }

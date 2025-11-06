@@ -269,7 +269,9 @@ func TestToolAuthorized(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tool := Tool{
-				AuthRequired: tt.authRequired,
+				Config: Config{
+					AuthRequired: tt.authRequired,
+				},
 			}
 
 			authorized := tool.Authorized(tt.verifiedAuthServices)

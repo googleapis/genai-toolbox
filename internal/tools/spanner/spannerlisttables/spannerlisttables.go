@@ -104,14 +104,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		AllParams:    allParameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.SpannerClient(),
-		dialect:      s.DatabaseDialect(),
-		manifest:     tools.Manifest{Description: description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		AllParams:   allParameters,
+		Client:      s.SpannerClient(),
+		dialect:     s.DatabaseDialect(),
+		manifest:    tools.Manifest{Description: description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -120,14 +118,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string                `yaml:"name"`
-	Kind         string                `yaml:"kind"`
-	AuthRequired []string              `yaml:"authRequired"`
-	AllParams    parameters.Parameters `yaml:"allParams"`
-	Client       *spanner.Client
-	dialect      string
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Config
+	AllParams   parameters.Parameters `yaml:"allParams"`
+	Client      *spanner.Client
+	dialect     string
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 // processRows iterates over the spanner.RowIterator and converts each row to a map[string]any.
@@ -232,6 +228,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 // PostgreSQL statement for listing tables

@@ -176,15 +176,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	return Tool{
-		Config:       cfg,
-		Source:       s,
-		AllParams:    allParameters,
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
-		Delay:        delay,
-		MaxDelay:     maxDelay,
-		Multiplier:   multiplier,
-		MaxRetries:   maxRetries,
+		Config:      cfg,
+		Source:      s,
+		AllParams:   allParameters,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
+		Delay:       delay,
+		MaxDelay:    maxDelay,
+		Multiplier:  multiplier,
+		MaxRetries:  maxRetries,
 	}, nil
 }
 

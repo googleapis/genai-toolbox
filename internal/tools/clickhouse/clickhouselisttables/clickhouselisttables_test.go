@@ -96,8 +96,10 @@ func TestParseFromYamlClickHouseListTables(t *testing.T) {
 func TestListTablesToolParseParams(t *testing.T) {
 	databaseParam := parameters.NewStringParameter("database", "The database to list tables from.")
 	tool := Tool{
-		Parameters: parameters.Parameters{databaseParam},
-		AllParams:  parameters.Parameters{databaseParam},
+		Config: Config{
+			Parameters: parameters.Parameters{databaseParam},
+		},
+		AllParams: parameters.Parameters{databaseParam},
 	}
 
 	params, err := tool.ParseParams(map[string]any{"database": "test_db"}, map[string]map[string]any{})

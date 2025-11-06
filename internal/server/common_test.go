@@ -54,6 +54,10 @@ func (t MockTool) Invoke(context.Context, parameters.ParamValues, tools.AccessTo
 	return mock, nil
 }
 
+func (t MockTool) ToConfig() tools.ToolConfig {
+	return nil
+}
+
 // claims is a map of user info decoded from an auth token
 func (t MockTool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Params, data, claimsMap)

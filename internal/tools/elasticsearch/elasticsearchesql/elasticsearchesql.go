@@ -74,14 +74,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Tool struct {
-	Name         string                `yaml:"name"`
-	Kind         string                `yaml:"kind"`
-	AuthRequired []string              `yaml:"authRequired"`
-	Parameters   parameters.Parameters `yaml:"parameters"`
-	Query        string                `yaml:"query"`
-	Format       string                `yaml:"format" default:"json"`
-	Timeout      int                   `yaml:"timeout"`
-
+	Config
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 	EsClient    es.EsClient

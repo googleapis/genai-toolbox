@@ -120,8 +120,9 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	UseClientOAuth  bool                  `yaml:"useClientOAuth"`
-	AllParams       parameters.Parameters `yaml:"allParams"`
+	UseClientOAuth bool                  `yaml:"useClientOAuth"`
+	AllParams      parameters.Parameters `yaml:"allParams"`
+
 	Client          *bigqueryapi.Client
 	RestService     *bigqueryrestapi.Service
 	SessionProvider bigqueryds.BigQuerySessionProvider

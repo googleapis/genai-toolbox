@@ -302,12 +302,14 @@ func TestTool_Invoke(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tr := &sqliteexecutesql.Tool{
-				Name:         tt.fields.Name,
-				Kind:         tt.fields.Kind,
-				AuthRequired: tt.fields.AuthRequired,
-				Parameters:   tt.fields.Parameters,
-				DB:           tt.fields.DB,
+			tr := sqliteexecutesql.Tool{
+				Config: sqliteexecutesql.Config{
+					Name:         tt.fields.Name,
+					Kind:         tt.fields.Kind,
+					AuthRequired: tt.fields.AuthRequired,
+				},
+				Parameters: tt.fields.Parameters,
+				DB:         tt.fields.DB,
 			}
 			got, err := tr.Invoke(tt.args.ctx, tt.args.params, tt.args.accessToken)
 			if (err != nil) != tt.wantErr {
