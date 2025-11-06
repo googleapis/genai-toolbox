@@ -1697,7 +1697,7 @@ Authenticated Parameters and Authorized invocation).&lt;/p>
 &lt;p>We recommend using the native SDKs over MCP clients to leverage these features.
 The native SDKs can be combined with MCP clients in many cases.&lt;/p>
 &lt;h3 id="protocol-versions">Protocol Versions&lt;/h3>
-&lt;p>Toolbox currently supports the following versions of MCP specification:&lt;/p></description></item><item><title>couchbase</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/couchbase/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/couchbase/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>Toolbox currently supports the following versions of MCP specification:&lt;/p></description></item><item><title>Couchbase</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/couchbase/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/couchbase/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>couchbase&lt;/code> source establishes a connection to a Couchbase database cluster,
 allowing tools to execute SQL queries against it.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
@@ -1964,7 +1964,16 @@ query.&lt;/p>
 &lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
-names, or other parts of the query.&lt;/p></description></item><item><title>fhir-fetch-page</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/healthcare/fhir-fetch-page/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/healthcare/fhir-fetch-page/</guid><description>&lt;h2 id="about">About&lt;/h2>
+names, or other parts of the query.&lt;/p></description></item><item><title>Elasticsearch</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/elasticsearch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/elasticsearch/</guid><description>&lt;h1 id="elasticsearch-source">Elasticsearch Source&lt;/h1>
+&lt;p>&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">Elasticsearch&lt;/a> is a distributed, free and open search and analytics engine
+for all types of data, including textual, numerical, geospatial, structured,
+and unstructured.&lt;/p>
+&lt;p>If you are new to Elasticsearch, you can learn how to
+&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started.html">set up a cluster and start indexing data&lt;/a>.&lt;/p>
+&lt;p>Elasticsearch uses &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/esql.html">ES|QL&lt;/a> for querying data. ES|QL
+is a powerful query language that allows you to search and aggregate data in
+Elasticsearch.&lt;/p>
+&lt;p>See the &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">official documentation&lt;/a> for more information.&lt;/p></description></item><item><title>fhir-fetch-page</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/healthcare/fhir-fetch-page/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/healthcare/fhir-fetch-page/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>fhir-fetch-page&lt;/code> tool fetches a page of FHIR resources from a given URL. It&amp;rsquo;s
 compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -5518,7 +5527,133 @@ as well as the new file content.&lt;/p>
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>MongoDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/mongodb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/mongodb/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>MindsDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/mindsdb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/mindsdb/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://docs.mindsdb.com/">MindsDB&lt;/a> is an AI federated database in the world. It allows you to combine information from hundreds of datasources as if they were SQL, supporting joins across datasources and enabling you to query all unstructured data as if it were structured.&lt;/p>
+&lt;p>MindsDB translates MySQL queries into whatever API is needed - whether it&amp;rsquo;s REST APIs, GraphQL, or native database protocols. This means you can write standard SQL queries and MindsDB automatically handles the translation to APIs like Salesforce, Jira, GitHub, email systems, MongoDB, and hundreds of other datasources.&lt;/p></description></item><item><title>mindsdb-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/mindsdb/mindsdb-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/mindsdb/mindsdb-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mindsdb-execute-sql&lt;/code> tool executes a SQL statement against a MindsDB
+federated database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="../sources/mindsdb.md">mindsdb&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>mindsdb-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the SQL
+statement against the &lt;code>source&lt;/code>. This tool enables you to:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Query Multiple Datasources&lt;/strong>: Execute SQL across hundreds of connected datasources&lt;/li>
+&lt;li>&lt;strong>Cross-Datasource Joins&lt;/strong>: Perform joins between different databases, APIs, and file systems&lt;/li>
+&lt;li>&lt;strong>ML Model Predictions&lt;/strong>: Query ML models as virtual tables for real-time predictions&lt;/li>
+&lt;li>&lt;strong>Unstructured Data&lt;/strong>: Query documents, images, and other unstructured data as structured tables&lt;/li>
+&lt;li>&lt;strong>Federated Analytics&lt;/strong>: Perform analytics across multiple datasources simultaneously&lt;/li>
+&lt;li>&lt;strong>API Translation&lt;/strong>: Automatically translate SQL queries into REST APIs, GraphQL, and native protocols&lt;/li>
+&lt;/ul>
+&lt;h2 id="example-queries">Example Queries&lt;/h2>
+&lt;h3 id="cross-datasource-analytics">Cross-Datasource Analytics&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-sql" data-lang="sql">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- Join Salesforce opportunities with GitHub activity
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="k">SELECT&lt;/span>&lt;span class="w"> 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">opportunity_name&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">amount&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">g&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">repository_name&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">COUNT&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="k">g&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">commits&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">as&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">commit_count&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">FROM&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">salesforce&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">opportunities&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">JOIN&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">github&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">repositories&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">g&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">ON&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">account_id&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">g&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">owner_id&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">WHERE&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">stage&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s1">&amp;#39;Closed Won&amp;#39;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">GROUP&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">BY&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">opportunity_name&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">amount&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">g&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">repository_name&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="email--communication-analysis">Email &amp;amp; Communication Analysis&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-sql" data-lang="sql">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- Analyze email patterns with Slack activity
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="k">SELECT&lt;/span>&lt;span class="w"> 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">e&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">sender&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">e&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">subject&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">channel_name&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">COUNT&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">messages&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">as&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">message_count&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">FROM&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">gmail&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">emails&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">e&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">JOIN&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">slack&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">messages&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">ON&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">e&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">sender&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">user_name&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">WHERE&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">e&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nb">date&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;gt;=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s1">&amp;#39;2024-01-01&amp;#39;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">GROUP&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">BY&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">e&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">sender&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">e&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">subject&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">channel_name&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ml-model-predictions">ML Model Predictions&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-sql" data-lang="sql">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- Use ML model to predict customer churn
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="k">SELECT&lt;/span>&lt;span class="w"> 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">customer_id&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">customer_name&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">predicted_churn_probability&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">recommended_action&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">FROM&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">customer_churn_model&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">WHERE&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">predicted_churn_probability&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="mi">8&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="mongodb-query">MongoDB Query&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-sql" data-lang="sql">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- Query MongoDB collections as structured tables
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="k">SELECT&lt;/span>&lt;span class="w"> 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">name&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">email&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">department&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">created_at&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">FROM&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">mongodb&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">users&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">WHERE&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">department&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s1">&amp;#39;Engineering&amp;#39;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">ORDER&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">BY&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">created_at&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">DESC&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool is intended for developer assistant workflows with
+human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p></description></item><item><title>mindsdb-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/mindsdb/mindsdb-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/mindsdb/mindsdb-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>mindsdb-sql&lt;/code> tool executes a pre-defined SQL statement against a MindsDB
+federated database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="../sources/mindsdb.md">mindsdb&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>The specified SQL statement is executed as a &lt;a href="https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html">prepared statement&lt;/a>,
+and expects parameters in the SQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
+&lt;p>This tool enables you to:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Query Multiple Datasources&lt;/strong>: Execute parameterized SQL across hundreds of connected datasources&lt;/li>
+&lt;li>&lt;strong>Cross-Datasource Joins&lt;/strong>: Perform joins between different databases, APIs, and file systems&lt;/li>
+&lt;li>&lt;strong>ML Model Predictions&lt;/strong>: Query ML models as virtual tables for real-time predictions&lt;/li>
+&lt;li>&lt;strong>Unstructured Data&lt;/strong>: Query documents, images, and other unstructured data as structured tables&lt;/li>
+&lt;li>&lt;strong>Federated Analytics&lt;/strong>: Perform analytics across multiple datasources simultaneously&lt;/li>
+&lt;li>&lt;strong>API Translation&lt;/strong>: Automatically translate SQL queries into REST APIs, GraphQL, and native protocols&lt;/li>
+&lt;/ul>
+&lt;h2 id="example-queries">Example Queries&lt;/h2>
+&lt;h3 id="cross-datasource-analytics">Cross-Datasource Analytics&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-sql" data-lang="sql">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- Join Salesforce opportunities with GitHub activity
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="k">SELECT&lt;/span>&lt;span class="w"> 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">opportunity_name&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">amount&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">g&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">repository_name&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">COUNT&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="k">g&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">commits&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">as&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">commit_count&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">FROM&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">salesforce&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">opportunities&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">JOIN&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">github&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">repositories&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">g&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">ON&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">account_id&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">g&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">owner_id&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">WHERE&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">stage&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">?&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">GROUP&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">BY&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">opportunity_name&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">amount&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">g&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">repository_name&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="email--communication-analysis">Email &amp;amp; Communication Analysis&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-sql" data-lang="sql">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- Analyze email patterns with Slack activity
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="k">SELECT&lt;/span>&lt;span class="w"> 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">e&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">sender&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">e&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">subject&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">channel_name&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">COUNT&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">messages&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">as&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">message_count&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">FROM&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">gmail&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">emails&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">e&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">JOIN&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">slack&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">messages&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">ON&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">e&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">sender&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">user_name&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">WHERE&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">e&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nb">date&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;gt;=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">?&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">GROUP&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">BY&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">e&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">sender&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">e&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">subject&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">s&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">channel_name&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="ml-model-predictions">ML Model Predictions&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-sql" data-lang="sql">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- Use ML model to predict customer churn
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="k">SELECT&lt;/span>&lt;span class="w"> 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">customer_id&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">customer_name&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">predicted_churn_probability&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">recommended_action&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">FROM&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">customer_churn_model&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">WHERE&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">predicted_churn_probability&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">?&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="mongodb-query">MongoDB Query&lt;/h3>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-sql" data-lang="sql">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- Query MongoDB collections as structured tables
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">&lt;/span>&lt;span class="k">SELECT&lt;/span>&lt;span class="w"> 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">name&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">email&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">department&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">created_at&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">FROM&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">mongodb&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="n">users&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">WHERE&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">department&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">?&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">ORDER&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">BY&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">created_at&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">DESC&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="example">Example&lt;/h2>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
+Query parameters can be used as substitutes for arbitrary expressions.
+Parameters cannot be used as substitutes for identifiers, column names, table
+names, or other parts of the query.&lt;/p></description></item><item><title>MongoDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/mongodb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/mongodb/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://www.mongodb.com/docs/atlas/getting-started/">MongoDB&lt;/a> is a popular NoSQL database that stores data in
 flexible, JSON-like documents, making it easy to develop and scale applications.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
@@ -6882,6 +7017,18 @@ explores, and data is required.&lt;/li>
 &lt;li>&lt;code>health_pulse&lt;/code>: Test the health of a Looker instance.&lt;/li>
 &lt;li>&lt;code>health_analyze&lt;/code>: Analyze the LookML usage of a Looker instance.&lt;/li>
 &lt;li>&lt;code>health_vacuum&lt;/code>: Suggest LookML elements that can be removed.&lt;/li>
+&lt;li>&lt;code>dev_mode&lt;/code>: Activate developer mode.&lt;/li>
+&lt;li>&lt;code>get_projects&lt;/code>: Get the LookML projects in a Looker instance.&lt;/li>
+&lt;li>&lt;code>get_project_files&lt;/code>: List the project files in a project.&lt;/li>
+&lt;li>&lt;code>get_project_file&lt;/code>: Get the content of a LookML file.&lt;/li>
+&lt;li>&lt;code>create_project_file&lt;/code>: Create a new LookML file.&lt;/li>
+&lt;li>&lt;code>update_project_file&lt;/code>: Update an existing LookML file.&lt;/li>
+&lt;li>&lt;code>delete_project_file&lt;/code>: Delete a LookML file.&lt;/li>
+&lt;li>&lt;code>get_connections&lt;/code>: Get the available connections in a Looker instance.&lt;/li>
+&lt;li>&lt;code>get_connection_schemas&lt;/code>: Get the available schemas in a connection.&lt;/li>
+&lt;li>&lt;code>get_connection_databases&lt;/code>: Get the available databases in a connection.&lt;/li>
+&lt;li>&lt;code>get_connection_tables&lt;/code>: Get the available tables in a connection.&lt;/li>
+&lt;li>&lt;code>get_connection_table_columns&lt;/code>: Get the available columns for a table.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -7730,23 +7877,14 @@ Apache Spark.&lt;/p>
 List and filter Serverless Spark batches.&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/serverless-spark/serverless-spark-get-batch/">&lt;code>serverless-spark-get-batch&lt;/code>&lt;/a>
 Get a Serverless Spark batch.&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/serverless-spark/serverless-spark-cancel-batch/">&lt;code>serverless-spark-cancel-batch&lt;/code>&lt;/a>
+Cancel a running Serverless Spark batch operation.&lt;/li>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
 &lt;p>Serverless for Apache Spark uses &lt;a href="https://cloud.google.com/bigquery/docs/access-control">Identity and Access Management
 (IAM)&lt;/a> to control user
-and group access to serverless Spark resources like batches and sessions.&lt;/p>
-&lt;p>Toolbox will use your &lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials
-(ADC)&lt;/a> to authorize and
-authenticate when interacting with Google Cloud Serverless for Apache Spark.
-When using this method, you need to ensure the IAM identity associated with your
-ADC has the correct
-&lt;a href="https://cloud.google.com/dataproc-serverless/docs/concepts/iam">permissions&lt;/a>
-for the actions you intend to perform. Common roles include
-&lt;code>roles/dataproc.serverlessEditor&lt;/code> (which includes permissions to run batches) or
-&lt;code>roles/dataproc.serverlessViewer&lt;/code>. Follow this
-&lt;a href="https://cloud.google.com/docs/authentication/provide-credentials-adc">guide&lt;/a> to
-set up your ADC.&lt;/p></description></item><item><title>serverless-spark-get-batch</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/serverless-spark/serverless-spark-get-batch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/serverless-spark/serverless-spark-get-batch/</guid><description>&lt;h1 id="serverless-spark-get-batch">serverless-spark-get-batch&lt;/h1>
+and group access to serverless Spark resources like batches and sessions.&lt;/p></description></item><item><title>serverless-spark-get-batch</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/serverless-spark/serverless-spark-get-batch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/serverless-spark/serverless-spark-get-batch/</guid><description>&lt;h1 id="serverless-spark-get-batch">serverless-spark-get-batch&lt;/h1>
 &lt;p>The &lt;code>serverless-spark-get-batch&lt;/code> tool allows you to retrieve a specific
 Serverless Spark batch job. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -8690,7 +8828,63 @@ instance in a specified Google Cloud project.&lt;/p>
  &lt;/span>Info&lt;/p></description></item><item><title>Connect via Gemini CLI Extensions</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/how-to/connect_via_geminicli/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/how-to/connect_via_geminicli/</guid><description>&lt;h2 id="gemini-cli-extensions">Gemini CLI Extensions&lt;/h2>
 &lt;p>&lt;a href="https://google-gemini.github.io/gemini-cli/">Gemini CLI&lt;/a> is an open-source AI agent designed to assist with development workflows by assisting with coding, debugging, data exploration, and content creation. Its mission is to provide an agentic interface for interacting with database and analytics services and popular open-source databases.&lt;/p>
 &lt;h3 id="how-extensions-work">How extensions work&lt;/h3>
-&lt;p>Gemini CLI is highly extensible, allowing for the addition of new tools and capabilities through extensions. You can load the extensions from a GitHub URL, a local directory, or a configurable registry. They provide new tools, slash commands, and prompts to assist with your workflow.&lt;/p></description></item><item><title>FAQ</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/about/faq/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/about/faq/</guid><description>&lt;h2 id="how-can-i-deploy-or-run-toolbox">How can I deploy or run Toolbox?&lt;/h2>
+&lt;p>Gemini CLI is highly extensible, allowing for the addition of new tools and capabilities through extensions. You can load the extensions from a GitHub URL, a local directory, or a configurable registry. They provide new tools, slash commands, and prompts to assist with your workflow.&lt;/p></description></item><item><title>elasticsearch-esql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/elasticsearch/elasticsearch-esql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/elasticsearch/elasticsearch-esql/</guid><description>&lt;h1 id="elasticsearch-esql">elasticsearch-esql&lt;/h1>
+&lt;p>Execute ES|QL queries.&lt;/p>
+&lt;p>This tool allows you to execute ES|QL queries against your Elasticsearch
+cluster. You can use this to perform complex searches and aggregations.&lt;/p>
+&lt;p>See the &lt;a href="https://www.elastic.co/docs/reference/query-languages/esql/esql-getting-started">official documentation&lt;/a> for more information.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">query_my_index&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">elasticsearch-esql&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">elasticsearch-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to execute ES|QL queries.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">query&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> FROM my-index
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> | KEEP *
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> | LIMIT ?limit&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">parameters&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>- &lt;span class="nt">name&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">limit&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">type&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">integer&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Limit the number of results.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">required&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">true&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="parameters">Parameters&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>name&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>query&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The ES|QL query to run. Can also be passed by parameters.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>format&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The format of the query. Default is json. Valid values are csv, json, tsv, txt, yaml, cbor, smile, or arrow.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>timeout&lt;/td>
+ &lt;td style="text-align: center">integer&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The timeout for the query in seconds. Default is 60 (1 minute).&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>parameters&lt;/td>
+ &lt;td style="text-align: center">&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/#specifying-parameters">parameters&lt;/a>&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>List of &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/#specifying-parameters">parameters&lt;/a> that will be used with the ES|QL query.&lt;br/>Only supports “string”, “integer”, “float”, “boolean”.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>FAQ</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/about/faq/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/about/faq/</guid><description>&lt;h2 id="how-can-i-deploy-or-run-toolbox">How can I deploy or run Toolbox?&lt;/h2>
 &lt;p>MCP Toolbox for Databases is open-source and can be run or deployed to a
 multitude of environments. For convenience, we release &lt;a href="https://github.com/googleapis/genai-toolbox/releases/">compiled binaries and
 docker images&lt;/a> (but you can always compile yourself as well!).&lt;/p>
@@ -9071,7 +9265,20 @@ on how to &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-185
 your Looker instance. Refer to the documentation
 &lt;a href="https://cloud.google.com/looker/docs/api-auth#authentication_with_an_sdk">here&lt;/a>.
 You may need to ask an administrator to get the Client ID and Client Secret
-for you.&lt;/p></description></item><item><title>Spanner using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/how-to/connect-ide/spanner_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/how-to/connect-ide/spanner_mcp/</guid><description>&lt;html>
+for you.&lt;/p></description></item><item><title>serverless-spark-cancel-batch</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/serverless-spark/serverless-spark-cancel-batch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/serverless-spark/serverless-spark-cancel-batch/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;code>serverless-spark-cancel-batch&lt;/code> tool cancels a running Spark batch operation in
+a Google Cloud Serverless for Apache Spark source. The cancellation request is
+asynchronous, so the batch state will not change immediately after the tool
+returns; it can take a minute or so for the cancellation to be reflected.&lt;/p>
+&lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/serverless-spark/">serverless-spark&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>serverless-spark-cancel-batch&lt;/code> accepts the following parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>operation&lt;/code>&lt;/strong> (required): The name of the operation to cancel. For example, for &lt;code>projects/my-project/locations/us-central1/operations/my-operation&lt;/code>, you would pass &lt;code>my-operation&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;p>The tool inherits the &lt;code>project&lt;/code> and &lt;code>location&lt;/code> from the source configuration.&lt;/p></description></item><item><title>Spanner using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/how-to/connect-ide/spanner_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/how-to/connect-ide/spanner_mcp/</guid><description>&lt;html>
  &lt;head>
  &lt;link rel="canonical" href="https://cloud.google.com/spanner/docs/pre-built-tools-with-mcp-toolbox"/>
  &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/spanner/docs/pre-built-tools-with-mcp-toolbox"/>

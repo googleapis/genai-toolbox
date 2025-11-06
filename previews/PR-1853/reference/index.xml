@@ -635,6 +635,18 @@ explores, and data is required.&lt;/li>
 &lt;li>&lt;code>health_pulse&lt;/code>: Test the health of a Looker instance.&lt;/li>
 &lt;li>&lt;code>health_analyze&lt;/code>: Analyze the LookML usage of a Looker instance.&lt;/li>
 &lt;li>&lt;code>health_vacuum&lt;/code>: Suggest LookML elements that can be removed.&lt;/li>
+&lt;li>&lt;code>dev_mode&lt;/code>: Activate developer mode.&lt;/li>
+&lt;li>&lt;code>get_projects&lt;/code>: Get the LookML projects in a Looker instance.&lt;/li>
+&lt;li>&lt;code>get_project_files&lt;/code>: List the project files in a project.&lt;/li>
+&lt;li>&lt;code>get_project_file&lt;/code>: Get the content of a LookML file.&lt;/li>
+&lt;li>&lt;code>create_project_file&lt;/code>: Create a new LookML file.&lt;/li>
+&lt;li>&lt;code>update_project_file&lt;/code>: Update an existing LookML file.&lt;/li>
+&lt;li>&lt;code>delete_project_file&lt;/code>: Delete a LookML file.&lt;/li>
+&lt;li>&lt;code>get_connections&lt;/code>: Get the available connections in a Looker instance.&lt;/li>
+&lt;li>&lt;code>get_connection_schemas&lt;/code>: Get the available schemas in a connection.&lt;/li>
+&lt;li>&lt;code>get_connection_databases&lt;/code>: Get the available databases in a connection.&lt;/li>
+&lt;li>&lt;code>get_connection_tables&lt;/code>: Get the available tables in a connection.&lt;/li>
+&lt;li>&lt;code>get_connection_table_columns&lt;/code>: Get the available columns for a table.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
