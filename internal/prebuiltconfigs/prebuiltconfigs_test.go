@@ -36,6 +36,7 @@ var expectedToolSources = []string{
 	"cloud-sql-postgres-observability",
 	"cloud-sql-postgres",
 	"dataplex",
+	"elasticsearch",
 	"firestore",
 	"looker-conversational-analytics",
 	"looker",
@@ -198,12 +199,12 @@ func TestGetPrebuiltTool(t *testing.T) {
 
 	if len(mindsdb_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch spanner pg prebuilt tools yaml")
-  }
-  
+	}
+
 	if len(sqlite_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch sqlite prebuilt tools yaml")
 	}
-  
+
 	if len(neo4jconfig) <= 0 {
 		t.Fatalf("unexpected error: could not fetch neo4j prebuilt tools yaml")
 	}
