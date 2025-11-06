@@ -36,6 +36,7 @@ var expectedToolSources = []string{
 	"cloud-sql-postgres-observability",
 	"cloud-sql-postgres",
 	"dataplex",
+	"elasticsearch",
 	"firestore",
 	"looker-conversational-analytics",
 	"looker",
@@ -46,6 +47,7 @@ var expectedToolSources = []string{
 	"oceanbase",
 	"postgres",
 	"serverless-spark",
+	"singlestore",
 	"spanner-postgres",
 	"spanner",
 	"sqlite",
@@ -117,6 +119,7 @@ func TestGetPrebuiltTool(t *testing.T) {
 	mssql_config, _ := Get("mssql")
 	oceanbase_config, _ := Get("oceanbase")
 	postgresconfig, _ := Get("postgres")
+	singlestore_config, _ := Get("singlestore")
 	spanner_config, _ := Get("spanner")
 	spannerpg_config, _ := Get("spanner-postgres")
 	mindsdb_config, _ := Get("mindsdb")
@@ -188,6 +191,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(postgresconfig) <= 0 {
 		t.Fatalf("unexpected error: could not fetch postgres prebuilt tools yaml")
+	}
+	if len(singlestore_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch singlestore prebuilt tools yaml")
 	}
 	if len(spanner_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch spanner prebuilt tools yaml")
