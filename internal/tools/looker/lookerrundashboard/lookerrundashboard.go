@@ -147,7 +147,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	for i, element := range *dashboard.DashboardElements {
 		channels[i] = tileQueryWorker(ctx, sdk, t.ApiSettings, i, element)
 	}
-	
+
 	for resp := range merge(channels...) {
 		data["tiles"] = append(data["tiles"].([]any), resp)
 	}
