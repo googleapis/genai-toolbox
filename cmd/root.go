@@ -42,6 +42,9 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 
+	// Import prompt packages for side effect of registration
+	_ "github.com/googleapis/genai-toolbox/internal/prompts/custom"
+
 	// Import tool packages for side effect of registration
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreatecluster"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreateinstance"
@@ -99,8 +102,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorevalidaterules"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookeradddashboardelement"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookercreateprojectfile"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerconversationalanalytics"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookercreateprojectfile"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerdeleteprojectfile"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerdevmode"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetdashboards"
