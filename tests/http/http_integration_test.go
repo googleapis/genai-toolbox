@@ -79,22 +79,22 @@ func multiTool(w http.ResponseWriter, r *http.Request) {
 // handleQueryTest simply returns the raw query string it received so the test
 // can verify it's formatted correctly.
 func handleQueryTest(w http.ResponseWriter, r *http.Request) {
-    // expect GET method
-    if r.Method != http.MethodGet {
-        errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
-        http.Error(w, errorMessage, http.StatusBadRequest)
-        return
-    }
+	// expect GET method
+	if r.Method != http.MethodGet {
+		errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
+		http.Error(w, errorMessage, http.StatusBadRequest)
+		return
+	}
 
-    w.WriteHeader(http.StatusOK)
-    enc := json.NewEncoder(w)
-    enc.SetEscapeHTML(false) 
+	w.WriteHeader(http.StatusOK)
+	enc := json.NewEncoder(w)
+	enc.SetEscapeHTML(false)
 
-    err := enc.Encode(r.URL.RawQuery)
-    if err != nil {
-        http.Error(w, "Failed to write response", http.StatusInternalServerError)
-        return
-    }
+	err := enc.Encode(r.URL.RawQuery)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // handler function for the test server
@@ -579,29 +579,24 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"method":      "get",
 				"path":        "/{{.path}}?id=2",
 				"description": "some description",
-				"headers": 
-					map[string]string{
-						"X-Custom-Header": "example",
+				"headers": map[string]string{
+					"X-Custom-Header": "example",
+				},
+				"pathParams": []tools.Parameter{
+					&tools.StringParameter{
+						CommonParameter: tools.CommonParameter{Name: "path", Type: "string", Desc: "path param"},
 					},
-				"pathParams":
-					[]tools.Parameter{
-						&tools.StringParameter{
-							CommonParameter: tools.CommonParameter{Name: "path", Type: "string", Desc: "path param"},
-						},
-					},
-				"queryParams":
-					[]tools.Parameter{
-						tools.NewIntParameter("id", "user ID"), tools.NewStringParameter("country", "country"),
-					},
+				},
+				"queryParams": []tools.Parameter{
+					tools.NewIntParameter("id", "user ID"), tools.NewStringParameter("country", "country"),
+				},
 				"requestBody": `{
 					"place": "zoo",
 					"animals": {{json .animalArray }}
 					}
 					`,
-				"bodyParams":   
-					[]tools.Parameter{tools.NewArrayParameter("animalArray", "animals in the zoo", tools.NewStringParameter("animals", "desc"))},
-				"headerParams": 
-					[]tools.Parameter{tools.NewStringParameter("X-Other-Header", "custom header")},
+				"bodyParams":   []tools.Parameter{tools.NewArrayParameter("animalArray", "animals in the zoo", tools.NewStringParameter("animals", "desc"))},
+				"headerParams": []tools.Parameter{tools.NewStringParameter("X-Other-Header", "custom header")},
 			},
 		},
 	}

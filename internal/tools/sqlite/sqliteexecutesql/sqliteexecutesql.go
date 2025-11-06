@@ -25,6 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources/sqlite"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 )
 
 const kind string = "sqlite-execute-sql"
@@ -125,7 +126,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
 
 	results, err := t.DB.QueryContext(ctx, sql)
 	if err != nil {
@@ -155,11 +156,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse row: %w", err)
 		}
-		vMap := make(map[string]any)
+		row := orderedmap.Row{}
 		for i, name := range cols {
 			val := rawValues[i]
 			if val == nil {
-				vMap[name] = nil
+				row.Add(name, nil)
 				continue
 			}
 
@@ -167,13 +168,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			if jsonString, ok := val.(string); ok {
 				var unmarshaledData any
 				if json.Unmarshal([]byte(jsonString), &unmarshaledData) == nil {
-					vMap[name] = unmarshaledData
+					row.Add(name, unmarshaledData)
 					continue
 				}
 			}
-			vMap[name] = val
+			row.Add(name, val)
 		}
-		out = append(out, vMap)
+		out = append(out, row)
 	}
 
 	if err := results.Err(); err != nil {

@@ -43,6 +43,9 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_replication_slots`: Lists replication slots in the database.
     *   `list_invalid_indexes`: Lists invalid indexes in the database.
     *   `get_query_plan`: Generate the execution plan of a statement.
+    *   `list_views`: Lists views in the database from pg_views with a default
+        limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## AlloyDB Postgres Admin
 
@@ -210,6 +213,9 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_replication_slots`: Lists replication slots in the database.
     *   `list_invalid_indexes`: Lists invalid indexes in the database.
     *   `get_query_plan`: Generate the execution plan of a statement.
+    *   `list_views`: Lists views in the database from pg_views with a default
+        limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -260,7 +266,6 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `CLOUD_SQL_MSSQL_REGION`: The region of your Cloud SQL instance.
     *   `CLOUD_SQL_MSSQL_INSTANCE`: The ID of your Cloud SQL instance.
     *   `CLOUD_SQL_MSSQL_DATABASE`: The name of the database to connect to.
-    *   `CLOUD_SQL_MSSQL_IP_ADDRESS`: The IP address of the Cloud SQL instance.
     *   `CLOUD_SQL_MSSQL_USER`: The database username.
     *   `CLOUD_SQL_MSSQL_PASSWORD`: The password for the database user.
     *   `CLOUD_SQL_MSSQL_IP_TYPE`: (Optional) The IP type i.e. "Public" or
@@ -386,6 +391,18 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `health_pulse`: Test the health of a Looker instance.
     *   `health_analyze`: Analyze the LookML usage of a Looker instance.
     *   `health_vacuum`: Suggest LookML elements that can be removed.
+    *   `dev_mode`: Activate developer mode.
+    *   `get_projects`: Get the LookML projects in a Looker instance.
+    *   `get_project_files`: List the project files in a project.
+    *   `get_project_file`: Get the content of a LookML file.
+    *   `create_project_file`: Create a new LookML file.
+    *   `update_project_file`: Update an existing LookML file.
+    *   `delete_project_file`: Delete a LookML file.
+    *   `get_connections`: Get the available connections in a Looker instance.
+    *   `get_connection_schemas`: Get the available schemas in a connection.
+    *   `get_connection_databases`: Get the available databases in a connection.
+    *   `get_connection_tables`: Get the available tables in a connection.
+    *   `get_connection_table_columns`: Get the available columns for a table.
 
 ## Looker Conversational Analytics
 
@@ -492,6 +509,9 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_replication_slots`: Lists replication slots in the database.
     *   `list_invalid_indexes`: Lists invalid indexes in the database.
     *   `get_query_plan`: Generate the execution plan of a statement.
+    *   `list_views`: Lists views in the database from pg_views with a default
+        limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## Google Cloud Serverless for Apache Spark
 

@@ -87,7 +87,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		BaseURL:     s.BaseURL,
 		UserAgent:   s.UserAgent,
 		Client:      s.Client,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest()},
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}, nil
 }
