@@ -24,10 +24,14 @@ type ToolsetConfig struct {
 }
 
 type Toolset struct {
-	Name        string          `yaml:"name"`
+	ToolsetConfig
 	Tools       []*Tool         `yaml:",inline"`
 	Manifest    ToolsetManifest `yaml:",inline"`
 	McpManifest []McpManifest   `yaml:",inline"`
+}
+
+func (t Toolset) ToConfig() ToolsetConfig {
+	return t.ToolsetConfig
 }
 
 type ToolsetManifest struct {

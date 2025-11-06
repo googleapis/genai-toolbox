@@ -144,7 +144,10 @@ func TestUpdateServer(t *testing.T) {
 	newTools := map[string]tools.Tool{"example-tool": nil}
 	newToolsets := map[string]tools.Toolset{
 		"example-toolset": {
-			Name: "example-toolset", Tools: []*tools.Tool{},
+			ToolsetConfig: tools.ToolsetConfig{
+				Name: "example-toolset",
+			},
+			Tools: []*tools.Tool{},
 		},
 	}
 	s.ResourceMgr.SetResources(newSources, newAuth, newTools, newToolsets)
