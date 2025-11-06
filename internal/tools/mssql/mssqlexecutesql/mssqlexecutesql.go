@@ -25,6 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 )
 
 const kind string = "mssql-execute-sql"
@@ -152,11 +153,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			if scanErr != nil {
 				return nil, fmt.Errorf("unable to parse row: %w", scanErr)
 			}
-			vMap := make(map[string]any)
+			row := orderedmap.Row{}
 			for i, name := range cols {
-				vMap[name] = rawValues[i]
+				row.Add(name, rawValues[i])
 			}
-			out = append(out, vMap)
+			out = append(out, row)
 		}
 	}
 
