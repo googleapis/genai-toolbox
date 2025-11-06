@@ -329,7 +329,7 @@ browser) for each request.&lt;/li>
  &lt;td>If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to &lt;code>false&lt;/code>.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>couchbase</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/couchbase/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/couchbase/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>Couchbase</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/couchbase/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/couchbase/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>couchbase&lt;/code> source establishes a connection to a Couchbase database cluster,
 allowing tools to execute SQL queries against it.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
@@ -797,7 +797,7 @@ in the cloud, on GCP, or on premises.&lt;/p>
 &lt;/svg>
 
  &lt;/span>Note&lt;/p></description></item><item><title>MindsDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/mindsdb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/mindsdb/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://docs.mindsdb.com/">MindsDB&lt;/a> is the most widely adopted AI federated database in the world. It allows you to combine information from hundreds of datasources as if they were SQL, supporting joins across datasources and enabling you to query all unstructured data as if it were structured.&lt;/p>
+&lt;p>&lt;a href="https://docs.mindsdb.com/">MindsDB&lt;/a> is an AI federated database in the world. It allows you to combine information from hundreds of datasources as if they were SQL, supporting joins across datasources and enabling you to query all unstructured data as if it were structured.&lt;/p>
 &lt;p>MindsDB translates MySQL queries into whatever API is needed - whether it&amp;rsquo;s REST APIs, GraphQL, or native database protocols. This means you can write standard SQL queries and MindsDB automatically handles the translation to APIs like Salesforce, Jira, GitHub, email systems, MongoDB, and hundreds of other datasources.&lt;/p></description></item><item><title>MongoDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/mongodb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/mongodb/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://www.mongodb.com/docs/atlas/getting-started/">MongoDB&lt;/a> is a popular NoSQL database that stores data in
 flexible, JSON-like documents, making it easy to develop and scale applications.&lt;/p>
