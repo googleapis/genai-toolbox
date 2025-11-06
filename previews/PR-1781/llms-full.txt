@@ -471,6 +471,8 @@ func main() {
 	}
 }
 {{< /highlight >}}
+For end-to-end samples on using the Toolbox Go SDK with LangChain Go, see the [project's
+samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 {{% /tab %}}
 {{% tab header="Genkit Go" lang="en" %}}
@@ -515,6 +517,8 @@ func main() {
 	}
 }
 {{< /highlight >}}
+For end-to-end samples on using the Toolbox Go SDK with Genkit Go, see the [project's
+samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbgenkit/samples)
 
 {{% /tab %}}
 {{% tab header="Go GenAI" lang="en" %}}
@@ -569,6 +573,8 @@ func main() {
 	}
 }
 {{< /highlight >}}
+For end-to-end samples on using the Toolbox Go SDK with Go GenAI, see the [project's
+samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 {{% /tab %}}
 
@@ -622,6 +628,43 @@ func main() {
 	}
 }
 {{< /highlight >}}
+For end-to-end samples on using the Toolbox Go SDK with OpenAI Go, see the [project's
+samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
+
+{{% /tab %}}
+
+{{% tab header="ADK Go" lang="en" %}}
+
+{{< highlight go >}}
+package main
+
+import (
+  	"context"
+  	"fmt"
+  	"github.com/googleapis/mcp-toolbox-sdk-go/tbadk"
+)
+
+func main() {
+  	// Make sure to add the error checks
+	// Update the url to point to your server
+	URL := "http://127.0.0.1:5000"
+	ctx := context.Background()
+  	client, err := tbadk.NewToolboxClient(URL)
+  	if err != nil {
+		return fmt.Sprintln("Could not start Toolbox Client", err)
+  	}
+
+  	// Use this tool with ADK Go
+  	tool, err := client.LoadTool("toolName", ctx)
+  	if err != nil {
+		return fmt.Sprintln("Could not load Toolbox Tool", err)
+  	}
+}
+
+{{< /highlight >}}
+
+For end-to-end samples on using the Toolbox Go SDK with ADK Go, see the [project's
+samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbadk/samples)
 
 {{% /tab %}}
 {{< /tabpane >}}
@@ -629,10 +672,6 @@ func main() {
 For more detailed instructions on using the Toolbox Go SDK, see the
 [project's
 README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md).
-
-For end-to-end samples on using the Toolbox Go SDK with orchestration
-frameworks, see the [project's
-samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 
 # Python Quickstart (Local)
@@ -962,6 +1001,12 @@ from Toolbox.
 {{< include "quickstart/go/openAI/quickstart.go" >}}
 
 {{< /tab >}}
+
+{{< tab header="ADK Go" lang="go" >}}
+
+{{< include "quickstart/go/adkgo/quickstart.go" >}}
+
+{{< /tab >}}
 {{< /tabpane >}}
 
 1. Ensure all dependencies are installed:
@@ -970,7 +1015,7 @@ from Toolbox.
     go mod tidy
     ```
 
-1. Run your agent, and observe the results:
+2. Run your agent, and observe the results:
 
     ```sh
     go run hotelagent.go
@@ -5931,6 +5976,9 @@ cluster][alloydb-free-trial].
 - [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
   List views in an AlloyDB for PostgreSQL database.
 
+- [`postgres-list-schemas`](../tools/postgres/postgres-list-schemas.md)
+  List schemas in an AlloyDB for PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
@@ -6607,6 +6655,9 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
   List views in a PostgreSQL database.
+
+- [`postgres-list-schemas`](../tools/postgres/postgres-list-schemas.md)
+  List schemas in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -7309,6 +7360,70 @@ instead of hardcoding your secrets into the configuration file.
 | password    |  string  |     false    | Password of the Dgraph user (e.g., "password").                                                  |
 | apiKey      |  string  |     false    | API key to connect to a Dgraph Cloud instance.                                                   |
 | namespace   |  uint64  |     false    | Dgraph namespace (not required for Dgraph Cloud Shared Clusters).                                |
+
+
+# Elasticsearch
+Elasticsearch is a distributed, free and open search and analytics engine  for all types of data, including textual, numerical, geospatial, structured,  and unstructured.
+
+
+# Elasticsearch Source
+
+[Elasticsearch][elasticsearch-docs] is a distributed, free and open search and analytics engine
+for all types of data, including textual, numerical, geospatial, structured,
+and unstructured.
+
+If you are new to Elasticsearch, you can learn how to 
+[set up a cluster and start indexing data][elasticsearch-quickstart].
+
+Elasticsearch uses [ES|QL][elasticsearch-esql] for querying data. ES|QL
+is a powerful query language that allows you to search and aggregate data in
+Elasticsearch.
+
+See the [official documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html) for more information.
+
+[elasticsearch-docs]: https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html
+[elasticsearch-quickstart]: https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started.html
+[elasticsearch-esql]: https://www.elastic.co/guide/en/elasticsearch/reference/current/esql.html
+
+## Available Tools
+
+- [`elasticsearch-esql`](../tools/elasticsearch/elasticsearch-esql.md)
+  Execute ES|QL queries.
+
+## Requirements
+
+### API Key
+
+Toolbox uses an [API key][api-key] to authorize and authenticate when
+interacting with [Elasticsearch][elasticsearch-docs].
+
+In addition to [setting the API key for your server][set-api-key], you need to
+ensure the API key has the correct permissions for the queries you intend to
+run. See [API key management][api-key-management] for more information on
+applying permissions to an API key.
+
+[api-key]: https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-api-key.html
+[set-api-key]: https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-api-key.html
+[api-key-management]: https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-get-api-key.html
+
+## Example
+
+```yaml
+sources:
+  my-elasticsearch-source:
+    kind: "elasticsearch"
+    addresses:
+      - "http://localhost:9200"
+    apikey: "my-api-key"
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description**                                                               |
+|-----------|:--------:|:------------:|-------------------------------------------------------------------------------|
+| kind      |  string  |     true     | Must be "elasticsearch".                                                      |
+| addresses | []string |     true     | List of Elasticsearch hosts to connect to.                                    |
+| apikey    |  string  |     true     | The API key to use for authentication.                                        |
 
 
 # Firebird
@@ -8129,6 +8244,9 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
   List views in a PostgreSQL database.
 
+- [`postgres-list-schemas`](../tools/postgres/postgres-list-views.md)
+  List schemas in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)
@@ -8329,6 +8447,67 @@ sources:
 | kind      |  string  |     true     | Must be "serverless-spark".                                       |
 | project   |  string  |     true     | ID of the GCP project with Serverless for Apache Spark resources. |
 | location  |  string  |     true     | Location containing Serverless for Apache Spark resources.        |
+
+
+# SingleStore
+SingleStore is the cloud-native database built with speed and scale to power data-intensive applications.
+
+
+## About
+
+[SingleStore][singlestore-docs] is a distributed SQL database built to power intelligent applications. It is both relational and multi-model, enabling developers to easily build and scale applications and workloads.
+
+SingleStore is built around Universal Storage which combines in-memory rowstore and on-disk columnstore data formats to deliver a single table type that is optimized to handle both transactional and analytical workloads.
+
+[singlestore-docs]: https://docs.singlestore.com/
+
+## Available Tools
+
+- [`singlestore-sql`](../tools/singlestore/singlestore-sql.md)  
+  Execute pre-defined prepared SQL queries in SingleStore.
+
+- [`singlestore-execute-sql`](../tools/singlestore/singlestore-execute-sql.md)  
+  Run parameterized SQL queries in SingleStore.
+
+## Requirements
+
+### Database User
+
+This source only uses standard authentication. You will need to [create a
+database user][singlestore-user] to login to the database with.
+
+[singlestore-user]: https://docs.singlestore.com/cloud/reference/sql-reference/security-management-commands/create-user/
+
+## Example
+
+```yaml
+sources:
+    my-singlestore-source:
+        kind: singlestore
+        host: 127.0.0.1
+        port: 3306
+        database: my_db
+        user: ${USER_NAME}
+        password: ${PASSWORD}
+        queryTimeout: 30s # Optional: query timeout duration
+```
+
+{{< notice tip >}}
+Use environment variable replacement with the format ${ENV_NAME}
+instead of hardcoding your secrets into the configuration file.
+{{< /notice >}}
+
+## Reference
+
+| **field**    | **type** | **required** | **description**                                                                                 |
+| ------------ | :------: | :----------: | ----------------------------------------------------------------------------------------------- |
+| kind         |  string  |     true     | Must be "singlestore".                                                                          |
+| host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
+| port         |  string  |     true     | Port to connect to (e.g. "3306").                                                               |
+| database     |  string  |     true     | Name of the SingleStore database to connect to (e.g. "my_db").                                  |
+| user         |  string  |     true     | Name of the SingleStore database user to connect as (e.g. "admin").                             |
+| password     |  string  |     true     | Password of the SingleStore database user.                                                      |
+| queryTimeout |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied. |
 
 
 # Spanner
@@ -9186,6 +9365,11 @@ Tools that work with Dgraph Sources.
 
 
 
+# Elasticsearch
+Tools that work with Elasticsearch Sources.
+
+
+
 # Firebird
 Tools that work with Firebird Sources.
 
@@ -9361,6 +9545,11 @@ Tools that work with Google Cloud Serverless for Apache Spark Sources.
 - [serverless-spark-get-batch](./serverless-spark-get-batch.md)
 - [serverless-spark-list-batches](./serverless-spark-list-batches.md)
 - [serverless-spark-cancel-batch](./serverless-spark-cancel-batch.md)
+
+
+# SingleStore
+Tools that work with SingleStore Sources
+
 
 
 # Spanner
@@ -11346,6 +11535,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## AlloyDB Postgres Admin
 
@@ -11515,6 +11705,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -11810,6 +12001,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## Google Cloud Serverless for Apache Spark
 

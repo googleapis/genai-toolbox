@@ -62,6 +62,7 @@ List of reference documentation for resources in Toolbox.
   - [Couchbase](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/couchbase/): A "couchbase" source connects to a Couchbase database.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/dataplex/): Dataplex Universal Catalog is a unified, intelligent governance solution for data and AI assets in Google Cloud. Dataplex Universal Catalog powers AI, analytics, and business intelligence at scale.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/dgraph/): Dgraph is fully open-source, built-for-scale graph database for Gen AI workloads
+  - [Elasticsearch](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/elasticsearch/): Elasticsearch is a distributed, free and open search and analytics engine  for all types of data, including textual, numerical, geospatial, structured,  and unstructured.
   - [Firebird](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/firebird/): Firebird is a powerful, cross-platform, and open-source relational database.
   - [Firestore](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/firestore/): Firestore is a NoSQL document database built for automatic scaling, high performance, and ease of application development. It's a fully managed, serverless database that supports mobile, web, and server development.
   - [HTTP](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/http/): The HTTP source enables the Toolbox to retrieve data from a remote server using HTTP requests.
@@ -75,6 +76,7 @@ List of reference documentation for resources in Toolbox.
   - [PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/postgres/): PostgreSQL is a powerful, open source object-relational database.
   - [Redis](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/redis/): Redis is a in-memory data structure store.
   - [Serverless for Apache Spark](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/serverless-spark/): Google Cloud Serverless for Apache Spark lets you run Spark workloads without requiring you to provision and manage your own Spark cluster.
+  - [SingleStore](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/singlestore/): SingleStore is the cloud-native database built with speed and scale to power data-intensive applications.
   - [Spanner](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/spanner/): Spanner is a fully managed database service from Google Cloud that combines  relational, key-value, graph, and search capabilities.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/mssql/): SQL Server is a relational database management system (RDBMS).
   - [SQLite](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/sources/sqlite/): SQLite is a C-language library that implements a small, fast, self-contained,  high-reliability, full-featured, SQL database engine.
@@ -96,6 +98,7 @@ List of reference documentation for resources in Toolbox.
   - [Dataform](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/dataform/): Tools that work with Dataform.
   - [Dataplex](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/dataplex/): Tools that work with Dataplex Sources.
   - [Dgraph](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/dgraph/): Tools that work with Dgraph Sources.
+  - [Elasticsearch](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/elasticsearch/): Tools that work with Elasticsearch Sources.
   - [Firebird](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/firebird/): Tools that work with Firebird Sources.
   - [Firestore](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/firestore/): Tools that work with Firestore Sources.
   - [HTTP](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/http/): Tools that work with HTTP Sources.
@@ -109,6 +112,7 @@ List of reference documentation for resources in Toolbox.
   - [Postgres](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/postgres/): Tools that work with Postgres Sources, such as Cloud SQL for Postgres and AlloyDB. 
   - [Redis](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/redis/): Tools that work with Redis Sources.
   - [Serverless for Apache Spark](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/serverless-spark/): Tools that work with Google Cloud Serverless for Apache Spark Sources.
+  - [SingleStore](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/singlestore/): Tools that work with SingleStore Sources
   - [Spanner](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/spanner/): Tools that work with Spanner Sources.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/mssql/): Tools that work with SQL Server Sources, such as CloudSQL for SQL Server.
   - [SQLite](https://googleapis.github.io/genai-toolbox/previews/PR-1781/resources/tools/sqlite/): Tools that work with SQLite Sources.
