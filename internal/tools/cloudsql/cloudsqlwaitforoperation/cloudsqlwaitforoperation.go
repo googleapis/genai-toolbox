@@ -176,9 +176,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		AuthRequired: cfg.AuthRequired,
+		Config:       cfg,
 		Source:       s,
 		AllParams:    allParameters,
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
@@ -192,11 +190,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 // Tool represents the wait-for-operation tool.
 type Tool struct {
-	Name         string   `yaml:"name"`
-	Kind         string   `yaml:"kind"`
-	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
-
+	Config
 	Source    *cloudsqladmin.Source
 	AllParams parameters.Parameters `yaml:"allParams"`
 
@@ -208,6 +202,10 @@ type Tool struct {
 
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 // Invoke executes the tool's logic.

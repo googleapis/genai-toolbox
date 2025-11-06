@@ -92,12 +92,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
+		Config:       cfg,
 		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
 		RulesClient:  s.FirebaseRulesClient(),
 		ProjectId:    s.GetProjectId(),
+		DatabaseId:   s.GetDatabaseId(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
@@ -125,8 +124,13 @@ type Tool struct {
 
 	RulesClient *firebaserules.Service
 	ProjectId   string
+	DatabaseId  string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 // Issue represents a validation issue in the rules

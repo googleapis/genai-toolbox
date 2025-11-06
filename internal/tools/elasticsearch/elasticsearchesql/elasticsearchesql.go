@@ -105,17 +105,15 @@ func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, c.Parameters)
 
 	return Tool{
-		Name:         c.Name,
-		Kind:         kind,
-		Parameters:   c.Parameters,
-		Query:        c.Query,
-		Format:       c.Format,
-		Timeout:      c.Timeout,
-		AuthRequired: c.AuthRequired,
-		EsClient:     s.ElasticsearchClient(),
-		manifest:     tools.Manifest{Description: c.Description, Parameters: c.Parameters.Manifest(), AuthRequired: c.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      c,
+		EsClient:    s.ElasticsearchClient(),
+		manifest:    tools.Manifest{Description: c.Description, Parameters: c.Parameters.Manifest(), AuthRequired: c.AuthRequired},
+		mcpManifest: mcpManifest,
 	}, nil
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 type esqlColumn struct {

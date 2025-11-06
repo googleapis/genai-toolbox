@@ -73,22 +73,20 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
 	}
 
-	parameters := lookercommon.GetFieldParameters()
+	params := lookercommon.GetFieldParameters()
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	return Tool{
-		Name:           cfg.Name,
-		Kind:           kind,
-		Parameters:     parameters,
-		AuthRequired:   cfg.AuthRequired,
+		Config:         cfg,
+		Parameters:     params,
 		UseClientOAuth: s.UseClientOAuth,
 		Client:         s.Client,
 		ApiSettings:    s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
-			Parameters:   parameters.Manifest(),
+			Parameters:   params.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
 		mcpManifest:      mcpManifest,
@@ -100,16 +98,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name             string `yaml:"name"`
-	Kind             string `yaml:"kind"`
+	Config
 	UseClientOAuth   bool
 	Client           *v4.LookerSDK
 	ApiSettings      *rtl.ApiSettings
-	AuthRequired     []string              `yaml:"authRequired"`
 	Parameters       parameters.Parameters `yaml:"parameters"`
 	manifest         tools.Manifest
 	mcpManifest      tools.McpManifest
 	ShowHiddenFields bool
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {

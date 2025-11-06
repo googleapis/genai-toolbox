@@ -90,10 +90,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		Name:           cfg.Name,
-		Kind:           kind,
+		Config:         cfg,
 		Parameters:     params,
-		AuthRequired:   cfg.AuthRequired,
 		UseClientOAuth: s.UseClientOAuth,
 		Client:         s.Client,
 		ApiSettings:    s.ApiSettings,
@@ -110,15 +108,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string `yaml:"name"`
-	Kind           string `yaml:"kind"`
+	Config
 	UseClientOAuth bool
 	Client         *v4.LookerSDK
 	ApiSettings    *rtl.ApiSettings
-	AuthRequired   []string              `yaml:"authRequired"`
 	Parameters     parameters.Parameters `yaml:"parameters"`
 	manifest       tools.Manifest
 	mcpManifest    tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 var (

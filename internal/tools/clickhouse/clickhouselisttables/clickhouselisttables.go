@@ -81,11 +81,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	t := Tool{
+<<<<<<< HEAD
 		Name:         cfg.Name,
 		Kind:         listTablesKind,
 		Parameters:   params,
+=======
+		Config:       cfg,
+>>>>>>> dd29623cef (I have refactored all the tools in the `internal/tools/alloydb` directory by embedding the `Config` struct, removing duplicated fields, and adding a `ToConfig()` method.)
 		AllParams:    allParameters,
-		AuthRequired: cfg.AuthRequired,
 		Pool:         s.ClickHousePool(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
@@ -96,15 +99,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string                `yaml:"name"`
-	Kind         string                `yaml:"kind"`
-	AuthRequired []string              `yaml:"authRequired"`
-	Parameters   parameters.Parameters `yaml:"parameters"`
+	Config
 	AllParams    parameters.Parameters `yaml:"allParams"`
 
 	Pool        *sql.DB
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, token tools.AccessToken) (any, error) {

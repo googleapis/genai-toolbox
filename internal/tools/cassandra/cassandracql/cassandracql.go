@@ -83,16 +83,11 @@ func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, allParameters)
 
 	t := Tool{
-		Name:               c.Name,
-		Kind:               kind,
-		Parameters:         c.Parameters,
-		TemplateParameters: c.TemplateParameters,
-		AllParams:          allParameters,
-		Statement:          c.Statement,
-		AuthRequired:       c.AuthRequired,
-		Session:            s.CassandraSession(),
-		manifest:           tools.Manifest{Description: c.Description, Parameters: paramManifest, AuthRequired: c.AuthRequired},
-		mcpManifest:        mcpManifest,
+		Config:      c,
+		AllParams:   allParameters,
+		Session:     s.CassandraSession(),
+		manifest:    tools.Manifest{Description: c.Description, Parameters: paramManifest, AuthRequired: c.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -105,17 +100,16 @@ func (c Config) ToolConfigKind() string {
 var _ tools.ToolConfig = Config{}
 
 type Tool struct {
-	Name               string                `yaml:"name"`
-	Kind               string                `yaml:"kind"`
-	AuthRequired       []string              `yaml:"authRequired"`
-	Parameters         parameters.Parameters `yaml:"parameters"`
-	TemplateParameters parameters.Parameters `yaml:"templateParameters"`
-	AllParams          parameters.Parameters `yaml:"allParams"`
+	Config
+	AllParams parameters.Parameters `yaml:"allParams"`
 
 	Session     *gocql.Session
-	Statement   string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 // RequiresClientAuthorization implements tools.Tool.

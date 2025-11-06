@@ -87,14 +87,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   cfg.Parameters,
-		Statement:    cfg.Statement,
-		AuthRequired: cfg.AuthRequired,
+		Config:       cfg,
 		DgraphClient: s.DgraphClient(),
-		IsQuery:      cfg.IsQuery,
-		Timeout:      cfg.Timeout,
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
@@ -105,16 +99,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string                `yaml:"name"`
-	Kind         string                `yaml:"kind"`
-	Parameters   parameters.Parameters `yaml:"parameters"`
-	AuthRequired []string              `yaml:"authRequired"`
+	Config
 	DgraphClient *dgraph.DgraphClient
-	IsQuery      bool
-	Timeout      string
-	Statement    string
 	manifest     tools.Manifest
 	mcpManifest  tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {

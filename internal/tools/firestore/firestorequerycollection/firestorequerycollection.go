@@ -135,15 +135,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
+		Config:       cfg,
 		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
 		Client:       s.FirestoreClient(),
 		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
 	return t, nil
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 // createParameters creates the parameter definitions for the tool

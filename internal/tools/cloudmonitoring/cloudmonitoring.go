@@ -81,9 +81,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	return Tool{
-		Name:        cfg.Name,
-		Kind:        kind,
-		Description: cfg.Description,
+		Config:      cfg,
 		AllParams:   allParameters,
 		BaseURL:     s.BaseURL,
 		UserAgent:   s.UserAgent,
@@ -97,15 +95,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name        string                `yaml:"name"`
-	Kind        string                `yaml:"kind"`
-	Description string                `yaml:"description"`
+	Config
 	AllParams   parameters.Parameters `yaml:"allParams"`
 	BaseURL     string                `yaml:"baseURL"`
 	UserAgent   string
 	Client      *http.Client
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {

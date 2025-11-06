@@ -92,15 +92,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 	// finish tool setup
 	t := Tool{
-		Name:                 cfg.Name,
-		Kind:                 kind,
-		Parameters:           cfg.Parameters,
-		TemplateParameters:   cfg.TemplateParameters,
+		Config:               cfg,
 		AllParams:            allParameters,
-		Statement:            cfg.Statement,
 		Scope:                s.CouchbaseScope(),
 		QueryScanConsistency: s.CouchbaseQueryScanConsistency(),
-		AuthRequired:         cfg.AuthRequired,
 		manifest:             tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:          mcpManifest,
 	}
@@ -111,18 +106,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name               string                `yaml:"name"`
-	Kind               string                `yaml:"kind"`
-	Parameters         parameters.Parameters `yaml:"parameters"`
-	TemplateParameters parameters.Parameters `yaml:"templateParameters"`
-	AllParams          parameters.Parameters `yaml:"allParams"`
-	AuthRequired       []string              `yaml:"authRequired"`
+	Config
+	AllParams parameters.Parameters `yaml:"allParams"`
 
 	Scope                *gocb.Scope
 	QueryScanConsistency uint
-	Statement            string
 	manifest             tools.Manifest
 	mcpManifest          tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {

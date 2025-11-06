@@ -136,19 +136,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:                   cfg.Name,
-		Kind:                   kind,
-		AuthRequired:           cfg.AuthRequired,
-		Client:                 s.FirestoreClient(),
-		CollectionPathTemplate: cfg.CollectionPath,
-		FiltersTemplate:        cfg.Filters,
-		SelectTemplate:         cfg.Select,
-		OrderByTemplate:        cfg.OrderBy,
-		LimitTemplate:          cfg.Limit,
-		AnalyzeQuery:           cfg.AnalyzeQuery,
-		Parameters:             cfg.Parameters,
-		manifest:               tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:            mcpManifest,
+		Config:      cfg,
+		Client:      s.FirestoreClient(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -158,21 +149,15 @@ var _ tools.Tool = Tool{}
 
 // Tool represents the Firestore query tool
 type Tool struct {
-	Name         string   `yaml:"name"`
-	Kind         string   `yaml:"kind"`
-	AuthRequired []string `yaml:"authRequired"`
-
-	Client                 *firestoreapi.Client
-	CollectionPathTemplate string
-	FiltersTemplate        string
-	SelectTemplate         []string
-	OrderByTemplate        map[string]any
-	LimitTemplate          string
-	AnalyzeQuery           bool
-	Parameters             parameters.Parameters
+	Config
+	Client *firestoreapi.Client
 
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 // SimplifiedFilter represents the simplified filter format
@@ -219,7 +204,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	paramsMap := params.AsMap()
 
 	// Process collection path with template substitution
-	collectionPath, err := parameters.PopulateTemplate("collectionPath", t.CollectionPathTemplate, paramsMap)
+	collectionPath, err := parameters.PopulateTemplate("collectionPath", t.CollectionPath, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process collection path: %w", err)
 	}
@@ -240,9 +225,9 @@ func (t Tool) buildQuery(collectionPath string, params map[string]any) (*firesto
 	query := collection.Query
 
 	// Process and apply filters if template is provided
-	if t.FiltersTemplate != "" {
+	if t.Filters != "" {
 		// Apply template substitution to filters
-		filtersJSON, err := parameters.PopulateTemplateWithJSON("filters", t.FiltersTemplate, params)
+		filtersJSON, err := parameters.PopulateTemplateWithJSON("filters", t.Filters, params)
 		if err != nil {
 			return nil, fmt.Errorf("failed to process filters template: %w", err)
 		}
@@ -350,7 +335,7 @@ func (t Tool) processSelectFields(params map[string]any) ([]string, error) {
 	var selectFields []string
 
 	// Process configured select fields with template substitution
-	for _, field := range t.SelectTemplate {
+	for _, field := range t.Select {
 		// Check if it's a template
 		if strings.Contains(field, "{{") {
 			processed, err := parameters.PopulateTemplate("selectField", field, params)
@@ -386,7 +371,7 @@ func (t Tool) processSelectFields(params map[string]any) ([]string, error) {
 
 // getOrderBy processes the orderBy configuration with parameter substitution
 func (t Tool) getOrderBy(params map[string]any) (*OrderByConfig, error) {
-	if t.OrderByTemplate == nil {
+	if t.OrderBy == nil {
 		return nil, nil
 	}
 
@@ -414,7 +399,7 @@ func (t Tool) getOrderBy(params map[string]any) (*OrderByConfig, error) {
 }
 
 func (t Tool) getOrderByForKey(key string, params map[string]any) (string, error) {
-	value, ok := t.OrderByTemplate[key].(string)
+	value, ok := t.OrderBy[key].(string)
 	if !ok {
 		return "", nil
 	}
@@ -430,8 +415,8 @@ func (t Tool) getOrderByForKey(key string, params map[string]any) (string, error
 // processLimit processes the limit field with parameter substitution
 func (t Tool) getLimit(params map[string]any) (int, error) {
 	limit := defaultLimit
-	if t.LimitTemplate != "" {
-		processedValue, err := parameters.PopulateTemplate("limit", t.LimitTemplate, params)
+	if t.Limit != "" {
+		processedValue, err := parameters.PopulateTemplate("limit", t.Limit, params)
 		if err != nil {
 			return 0, err
 		}

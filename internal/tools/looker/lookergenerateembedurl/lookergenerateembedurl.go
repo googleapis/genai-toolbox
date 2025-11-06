@@ -87,7 +87,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return Tool{
 		Name:           cfg.Name,
 		Kind:           kind,
-		Parameters:     parameters,
+		Parameters:     params,
 		AuthRequired:   cfg.AuthRequired,
 		UseClientOAuth: s.UseClientOAuth,
 		Client:         s.Client,

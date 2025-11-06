@@ -113,17 +113,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		Name:               cfg.Name,
-		Kind:               kind,
+		Config:             cfg,
 		BaseURL:            s.BaseURL,
-		Path:               cfg.Path,
-		Method:             cfg.Method,
-		AuthRequired:       cfg.AuthRequired,
-		RequestBody:        cfg.RequestBody,
-		PathParams:         cfg.PathParams,
-		QueryParams:        cfg.QueryParams,
-		BodyParams:         cfg.BodyParams,
-		HeaderParams:       cfg.HeaderParams,
 		Headers:            combinedHeaders,
 		DefaultQueryParams: s.QueryParams,
 		Client:             s.Client,
@@ -137,27 +128,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string   `yaml:"name"`
-	Kind         string   `yaml:"kind"`
-	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
-
-	BaseURL            string            `yaml:"baseURL"`
-	Path               string            `yaml:"path"`
-	Method             tools.HTTPMethod  `yaml:"method"`
-	Headers            map[string]string `yaml:"headers"`
-	DefaultQueryParams map[string]string `yaml:"defaultQueryParams"`
-
-	RequestBody  string                `yaml:"requestBody"`
-	PathParams   parameters.Parameters `yaml:"pathParams"`
-	QueryParams  parameters.Parameters `yaml:"queryParams"`
-	BodyParams   parameters.Parameters `yaml:"bodyParams"`
-	HeaderParams parameters.Parameters `yaml:"headerParams"`
-	AllParams    parameters.Parameters `yaml:"allParams"`
+	Config
+	BaseURL            string                `yaml:"baseURL"`
+	Headers            map[string]string     `yaml:"headers"`
+	DefaultQueryParams map[string]string     `yaml:"defaultQueryParams"`
+	AllParams          parameters.Parameters `yaml:"allParams"`
 
 	Client      *http.Client
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 // Helper function to generate the HTTP request body upon Tool invocation.
