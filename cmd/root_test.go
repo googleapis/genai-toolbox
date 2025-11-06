@@ -1256,7 +1256,7 @@ func TestPrebuiltTools(t *testing.T) {
 	cloudsqlmysqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mysql-observability")
 	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
 	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
-	healthcare_config, _ := prebuiltconfigs.Get("healthcare")
+	cloudhealthcare_config, _ := prebuiltconfigs.Get("cloud-healthcare")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1350,9 +1350,9 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("NEO4J_USERNAME", "your_neo4j_user")
 	t.Setenv("NEO4J_PASSWORD", "your_neo4j_password")
 
-	t.Setenv("HEALTHCARE_PROJECT", "your_gcp_project_id")
-	t.Setenv("HEALTHCARE_REGION", "your_gcp_region")
-	t.Setenv("HEALTHCARE_DATASET", "your_healthcare_dataset")
+	t.Setenv("CLOUD_HEALTHCARE_PROJECT", "your_gcp_project_id")
+	t.Setenv("CLOUD_HEALTHCARE_REGION", "your_gcp_region")
+	t.Setenv("CLOUD_HEALTHCARE_DATASET", "your_healthcare_dataset")
 
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -1634,19 +1634,19 @@ func TestPrebuiltTools(t *testing.T) {
 			},
 		},
 		{
-			name: "healthcare prebuilt tools",
-			in:   healthcare_config,
+			name: "cloud healthcare prebuilt tools",
+			in:   cloudhealthcare_config,
 			wantToolset: server.ToolsetConfigs{
-				"healthcare_dataset_tools": tools.ToolsetConfig{
-					Name:      "healthcare_dataset_tools",
+				"cloud_healthcare_dataset_tools": tools.ToolsetConfig{
+					Name:      "cloud_healthcare_dataset_tools",
 					ToolNames: []string{"get_dataset", "list_dicom_stores", "list_fhir_stores"},
 				},
-				"healthcare_fhir_tools": tools.ToolsetConfig{
-					Name:      "healthcare_fhir_tools",
+				"cloud_healthcare_fhir_tools": tools.ToolsetConfig{
+					Name:      "cloud_healthcare_fhir_tools",
 					ToolNames: []string{"get_fhir_store", "get_fhir_store_metrics", "get_fhir_resource", "fhir_patient_search", "fhir_patient_everything", "fhir_fetch_page"},
 				},
-				"healthcare_dicom_tools": tools.ToolsetConfig{
-					Name:      "healthcare_dicom_tools",
+				"cloud_healthcare_dicom_tools": tools.ToolsetConfig{
+					Name:      "cloud_healthcare_dicom_tools",
 					ToolNames: []string{"get_dicom_store", "get_dicom_store_metrics", "search_dicom_studies", "search_dicom_series", "search_dicom_instances", "retrieve_rendered_dicom_instance"},
 				},
 			},

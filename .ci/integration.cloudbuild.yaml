@@ -214,7 +214,7 @@ steps:
           dataform \
           dataform
 
-  - id: "healthcare"
+  - id: "cloud-healthcare"
     name: golang:1
     waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
@@ -233,9 +233,9 @@ steps:
       - -c
       - |
         .ci/test_with_coverage.sh \
-          "Healthcare" \
-          healthcare \
-          healthcare
+          "Cloud Healthcare API" \
+          cloudhealthcare \
+          cloudhealthcare
 
   - id: "postgres"
     name: golang:1

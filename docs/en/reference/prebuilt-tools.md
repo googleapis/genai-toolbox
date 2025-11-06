@@ -592,12 +592,12 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_schema`: Retrieves the schema of the Neo4j database.
 
 ## Google Cloud Healthcare API
-*   `--prebuilt` value: `healthcare`
+*   `--prebuilt` value: `cloud-healthcare`
 *   **Environment Variables:**
-    *   `HEALTHCARE_PROJECT`: The GCP project ID.
-    *   `HEALTHCARE_REGION`: The healthcare dataset region.
-    *   `HEALTHCARE_DATASET`: The healthcare dataset ID.
-    *   `HEALTHCARE_USE_CLIENT_OAUTH`: (Optional) If `true`, forwards the client's
+    *   `CLOUD_HEALTHCARE_PROJECT`: The GCP project ID.
+    *   `CLOUD_HEALTHCARE_REGION`: The Cloud Healthcare API dataset region.
+    *   `CLOUD_HEALTHCARE_DATASET`: The Cloud Healthcare API dataset ID.
+    *   `CLOUD_HEALTHCARE_USE_CLIENT_OAUTH`: (Optional) If `true`, forwards the client's
         OAuth access token for authentication. Defaults to `false`.
 *   **Permissions:**
     *   **Healthcare FHIR Resource Reader** (`roles/healthcare.fhirResourceReader`) to read an
@@ -605,9 +605,9 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   **Healthcare DICOM Viewer** (`roles/healthcare.dicomViewer`) to retrieve DICOM images from a
         DICOM store.
 *   **Tools:**
-    *   `get_dataset`: Gets information about a healthcare dataset.
-    *   `list_dicom_stores`: Lists DICOM stores in a healthcare dataset.
-    *   `list_fhir_stores`: Lists FHIR stores in a healthcare dataset.
+    *   `get_dataset`: Gets information about a Cloud Healthcare API dataset.
+    *   `list_dicom_stores`: Lists DICOM stores in a Cloud Healthcare API dataset.
+    *   `list_fhir_stores`: Lists FHIR stores in a Cloud Healthcare API dataset.
     *   `get_fhir_store`: Gets information about a FHIR store.
     *   `get_fhir_store_metrics`: Gets metrics for a FHIR store.
     *   `get_fhir_resource`: Gets a FHIR resource from a FHIR store.
