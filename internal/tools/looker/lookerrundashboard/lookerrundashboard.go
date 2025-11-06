@@ -180,52 +180,52 @@ func (t Tool) RequiresClientAuthorization() bool {
 func tileQueryWorker(ctx context.Context, sdk *v4.LookerSDK, options *rtl.ApiSettings, index int, element v4.DashboardElement) <-chan map[string]any {
 	out := make(chan map[string]any)
 
-	data := make(map[string]any)
-	data["index"] = index
-	if element.Title != nil {
-		data["title"] = *element.Title
-	}
-	if element.TitleText != nil {
-		data["title_text"] = *element.TitleText
-	}
-	if element.SubtitleText != nil {
-		data["subtitle_text"] = *element.SubtitleText
-	}
-	if element.BodyText != nil {
-		data["body_text"] = *element.BodyText
-	}
-
-	var q v4.Query
-	if element.Query != nil {
-		data["element_type"] = "query"
-		q = *element.Query
-	} else if element.Look != nil {
-		data["element_type"] = "look"
-		q = *element.Look.Query
-	} else {
-		// Just a text element
-		data["element_type"] = "text"
-		out <- data
-		close(out)
-		return out
-	}
-
-	wq := v4.WriteQuery{
-		Model:         q.Model,
-		View:          q.View,
-		Fields:        q.Fields,
-		Pivots:        q.Pivots,
-		Filters:       q.Filters,
-		Sorts:         q.Sorts,
-		QueryTimezone: q.QueryTimezone,
-		Limit:         q.Limit,
-	}
 	go func() {
+		defer close(out)
+
+		data := make(map[string]any)
+		data["index"] = index
+		if element.Title != nil {
+			data["title"] = *element.Title
+		}
+		if element.TitleText != nil {
+			data["title_text"] = *element.TitleText
+		}
+		if element.SubtitleText != nil {
+			data["subtitle_text"] = *element.SubtitleText
+		}
+		if element.BodyText != nil {
+			data["body_text"] = *element.BodyText
+		}
+
+		var q v4.Query
+		if element.Query != nil {
+			data["element_type"] = "query"
+			q = *element.Query
+		} else if element.Look != nil {
+			data["element_type"] = "look"
+			q = *element.Look.Query
+		} else {
+			// Just a text element
+			data["element_type"] = "text"
+			out <- data
+			return
+		}
+
+		wq := v4.WriteQuery{
+			Model:         q.Model,
+			View:          q.View,
+			Fields:        q.Fields,
+			Pivots:        q.Pivots,
+			Filters:       q.Filters,
+			Sorts:         q.Sorts,
+			QueryTimezone: q.QueryTimezone,
+			Limit:         q.Limit,
+		}
 		query_result, err := lookercommon.RunInlineQuery(ctx, sdk, &wq, "json", options)
 		if err != nil {
 			data["query_status"] = "error running query"
 			out <- data
-			close(out)
 			return
 		}
 		var resp []any
@@ -233,13 +233,11 @@ func tileQueryWorker(ctx context.Context, sdk *v4.LookerSDK, options *rtl.ApiSet
 		if e != nil {
 			data["query_status"] = "error parsing query result"
 			out <- data
-			close(out)
 			return
 		}
 		data["query_status"] = "success"
 		data["query_result"] = resp
 		out <- data
-		close(out)
 	}()
 	return out
 }
