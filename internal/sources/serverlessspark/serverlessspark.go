@@ -19,10 +19,10 @@ import (
 	"fmt"
 
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
+	longrunning "cloud.google.com/go/longrunning/autogen"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
-	"cloud.google.com/go/longrunning/autogen"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/api/option"
 )
