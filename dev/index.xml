@@ -5599,7 +5599,27 @@ support any input parameter.&lt;/p>
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>postgres-list-tables</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>postgres-list-schemas</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-schemas/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-schemas/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-schemas&lt;/code> tool retrieves information about schemas in a database excluding system
+and temporary schemas. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-list-schemas&lt;/code> lists detailed information as JSON for each schema. The tool takes the following
+input parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>schema_name&lt;/code> (optional): A pattern to filter schema names using SQL LIKE operator.
+If omitted, all user-defined schemas are returned.&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_schemas&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-list-schemas&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s2">&amp;#34;Lists all schemas in the database ordered by schema name and excluding system and temporary schemas. It returns the schema name, schema owner, grants, number of functions, number of tables and number of views within each schema.&amp;#34;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>postgres-list-tables</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>postgres-list-tables&lt;/code> tool retrieves schema information for all or
 specified tables in a Postgres database. It&amp;rsquo;s compatible with any of the
 following sources:&lt;/p>
@@ -5743,6 +5763,7 @@ database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
 limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
+&lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -5972,6 +5993,7 @@ database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
 limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
+&lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -6390,6 +6412,7 @@ database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
 limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
+&lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
