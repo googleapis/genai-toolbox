@@ -5976,6 +5976,9 @@ cluster][alloydb-free-trial].
 - [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
   List views in an AlloyDB for PostgreSQL database.
 
+- [`postgres-list-schemas`](../tools/postgres/postgres-list-schemas.md)
+  List schemas in an AlloyDB for PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
@@ -6653,6 +6656,9 @@ to a database by following these instructions][csql-pg-quickstart].
 - [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
   List views in a PostgreSQL database.
 
+- [`postgres-list-schemas`](../tools/postgres/postgres-list-schemas.md)
+  List schemas in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [Cloud SQL for Postgres using
@@ -6920,7 +6926,7 @@ sources:
 | useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
 
 
-# couchbase
+# Couchbase
 A "couchbase" source connects to a Couchbase database.
 
 
@@ -7356,6 +7362,70 @@ instead of hardcoding your secrets into the configuration file.
 | namespace   |  uint64  |     false    | Dgraph namespace (not required for Dgraph Cloud Shared Clusters).                                |
 
 
+# Elasticsearch
+Elasticsearch is a distributed, free and open search and analytics engine  for all types of data, including textual, numerical, geospatial, structured,  and unstructured.
+
+
+# Elasticsearch Source
+
+[Elasticsearch][elasticsearch-docs] is a distributed, free and open search and analytics engine
+for all types of data, including textual, numerical, geospatial, structured,
+and unstructured.
+
+If you are new to Elasticsearch, you can learn how to 
+[set up a cluster and start indexing data][elasticsearch-quickstart].
+
+Elasticsearch uses [ES|QL][elasticsearch-esql] for querying data. ES|QL
+is a powerful query language that allows you to search and aggregate data in
+Elasticsearch.
+
+See the [official documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html) for more information.
+
+[elasticsearch-docs]: https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html
+[elasticsearch-quickstart]: https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started.html
+[elasticsearch-esql]: https://www.elastic.co/guide/en/elasticsearch/reference/current/esql.html
+
+## Available Tools
+
+- [`elasticsearch-esql`](../tools/elasticsearch/elasticsearch-esql.md)
+  Execute ES|QL queries.
+
+## Requirements
+
+### API Key
+
+Toolbox uses an [API key][api-key] to authorize and authenticate when
+interacting with [Elasticsearch][elasticsearch-docs].
+
+In addition to [setting the API key for your server][set-api-key], you need to
+ensure the API key has the correct permissions for the queries you intend to
+run. See [API key management][api-key-management] for more information on
+applying permissions to an API key.
+
+[api-key]: https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-api-key.html
+[set-api-key]: https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-api-key.html
+[api-key-management]: https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-get-api-key.html
+
+## Example
+
+```yaml
+sources:
+  my-elasticsearch-source:
+    kind: "elasticsearch"
+    addresses:
+      - "http://localhost:9200"
+    apikey: "my-api-key"
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description**                                                               |
+|-----------|:--------:|:------------:|-------------------------------------------------------------------------------|
+| kind      |  string  |     true     | Must be "elasticsearch".                                                      |
+| addresses | []string |     true     | List of Elasticsearch hosts to connect to.                                    |
+| apikey    |  string  |     true     | The API key to use for authentication.                                        |
+
+
 # Firebird
 Firebird is a powerful, cross-platform, and open-source relational database.
 
@@ -7645,12 +7715,12 @@ instead of hardcoding your secrets into the configuration file.
 
 
 # MindsDB
-MindsDB is the most widely adopted AI federated database that enables SQL queries across hundreds of datasources and ML models.
+MindsDB is an AI federated database that enables SQL queries across hundreds of datasources and ML models.
 
 
 ## About
 
-[MindsDB][mindsdb-docs] is the most widely adopted AI federated database in the world. It allows you to combine information from hundreds of datasources as if they were SQL, supporting joins across datasources and enabling you to query all unstructured data as if it were structured.
+[MindsDB][mindsdb-docs] is an AI federated database in the world. It allows you to combine information from hundreds of datasources as if they were SQL, supporting joins across datasources and enabling you to query all unstructured data as if it were structured.
 
 MindsDB translates MySQL queries into whatever API is needed - whether it's REST APIs, GraphQL, or native database protocols. This means you can write standard SQL queries and MindsDB automatically handles the translation to APIs like Salesforce, Jira, GitHub, email systems, MongoDB, and hundreds of other datasources.
 
@@ -8174,6 +8244,9 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
   List views in a PostgreSQL database.
 
+- [`postgres-list-schemas`](../tools/postgres/postgres-list-views.md)
+  List schemas in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)
@@ -8334,6 +8407,8 @@ Apache Spark.
   List and filter Serverless Spark batches.
 - [`serverless-spark-get-batch`](../tools/serverless-spark/serverless-spark-get-batch.md)
   Get a Serverless Spark batch.
+- [`serverless-spark-cancel-batch`](../tools/serverless-spark/serverless-spark-cancel-batch.md)
+  Cancel a running Serverless Spark batch operation.
 
 ## Requirements
 
@@ -9229,6 +9304,11 @@ Tools that work with Dgraph Sources.
 
 
 
+# Elasticsearch
+Tools that work with Elasticsearch Sources.
+
+
+
 # Firebird
 Tools that work with Firebird Sources.
 
@@ -9403,6 +9483,7 @@ Tools that work with Google Cloud Serverless for Apache Spark Sources.
 
 - [serverless-spark-get-batch](./serverless-spark-get-batch.md)
 - [serverless-spark-list-batches](./serverless-spark-list-batches.md)
+- [serverless-spark-cancel-batch](./serverless-spark-cancel-batch.md)
 
 
 # Spanner
@@ -11388,6 +11469,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## AlloyDB Postgres Admin
 
@@ -11557,6 +11639,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -11732,6 +11815,18 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `health_pulse`: Test the health of a Looker instance.
     *   `health_analyze`: Analyze the LookML usage of a Looker instance.
     *   `health_vacuum`: Suggest LookML elements that can be removed.
+    *   `dev_mode`: Activate developer mode.
+    *   `get_projects`: Get the LookML projects in a Looker instance.
+    *   `get_project_files`: List the project files in a project.
+    *   `get_project_file`: Get the content of a LookML file.
+    *   `create_project_file`: Create a new LookML file.
+    *   `update_project_file`: Update an existing LookML file.
+    *   `delete_project_file`: Delete a LookML file.
+    *   `get_connections`: Get the available connections in a Looker instance.
+    *   `get_connection_schemas`: Get the available schemas in a connection.
+    *   `get_connection_databases`: Get the available databases in a connection.
+    *   `get_connection_tables`: Get the available tables in a connection.
+    *   `get_connection_table_columns`: Get the available columns for a table.
 
 ## Looker Conversational Analytics
 
@@ -11840,6 +11935,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## Google Cloud Serverless for Apache Spark
 

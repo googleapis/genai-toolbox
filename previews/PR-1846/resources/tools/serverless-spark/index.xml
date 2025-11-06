@@ -37,4 +37,17 @@ page.&lt;/li>
 &lt;li>&lt;strong>&lt;code>pageToken&lt;/code>&lt;/strong> (optional): A page token, received from a previous call, to
 retrieve the next page of results.&lt;/li>
 &lt;/ul>
-&lt;p>The tool gets the &lt;code>project&lt;/code> and &lt;code>location&lt;/code> from the source configuration.&lt;/p></description></item></channel></rss>
+&lt;p>The tool gets the &lt;code>project&lt;/code> and &lt;code>location&lt;/code> from the source configuration.&lt;/p></description></item><item><title>serverless-spark-cancel-batch</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1846/resources/tools/serverless-spark/serverless-spark-cancel-batch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1846/resources/tools/serverless-spark/serverless-spark-cancel-batch/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;code>serverless-spark-cancel-batch&lt;/code> tool cancels a running Spark batch operation in
+a Google Cloud Serverless for Apache Spark source. The cancellation request is
+asynchronous, so the batch state will not change immediately after the tool
+returns; it can take a minute or so for the cancellation to be reflected.&lt;/p>
+&lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1846/resources/sources/serverless-spark/">serverless-spark&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>serverless-spark-cancel-batch&lt;/code> accepts the following parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>&lt;code>operation&lt;/code>&lt;/strong> (required): The name of the operation to cancel. For example, for &lt;code>projects/my-project/locations/us-central1/operations/my-operation&lt;/code>, you would pass &lt;code>my-operation&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;p>The tool inherits the &lt;code>project&lt;/code> and &lt;code>location&lt;/code> from the source configuration.&lt;/p></description></item></channel></rss>
