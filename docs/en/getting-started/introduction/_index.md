@@ -286,6 +286,10 @@ let client = new ToolboxClient(URL);
 const toolboxTools = await client.loadToolset('toolsetName');
 {{< /highlight >}}
 
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's
+README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
+
 {{% /tab %}}
 {{% tab header="LangChain/Langraph" lang="en" %}}
 
@@ -309,6 +313,7 @@ const getTool = (toolboxTool) => tool(currTool, {
 // Use these tools in your Langchain/Langraph applications
 const tools = toolboxTools.map(getTool);
 {{< /highlight >}}
+
 For more detailed instructions on using the Toolbox Core SDK, see the
 [project's
 README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
@@ -347,6 +352,7 @@ const getTool = (toolboxTool) => ai.defineTool({
 // Use these tools in your Genkit applications
 const tools = toolboxTools.map(getTool);
 {{< /highlight >}}
+
 For more detailed instructions on using the Toolbox Core SDK, see the
 [project's
 README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
@@ -377,6 +383,7 @@ const getTool = (toolboxTool) => tool({
 const tools = toolboxTools.map(getTool);
 
 {{< /highlight >}}
+
 For more detailed instructions on using the Toolbox Core SDK, see the
 [project's
 README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
@@ -398,7 +405,7 @@ const tools = await client.loadToolset();
 {{< /highlight >}}
 
 For detailed samples on using the Toolbox JS SDK with ADK JS, see the [project's
-readme](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main/packages/toolbox-adk/README.md)
+README.](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main/packages/toolbox-adk/README.md)
 
 {{% /tab %}}
 {{< /tabpane >}}
