@@ -17,10 +17,10 @@ package singlestore
 import (
 	"context"
 	"database/sql"
-	"net/url"
 	"fmt"
-	"time"
+	"net/url"
 	"strings"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/goccy/go-yaml"

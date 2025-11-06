@@ -11,12 +11,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package lookerrunlook
+package lookerrundashboard
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -29,7 +30,7 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const kind string = "looker-run-look"
+const kind string = "looker-run-dashboard"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -73,12 +74,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
 	}
 
-	lookidParameter := tools.NewStringParameter("look_id", "The id of the look to run.")
-	limitParameter := tools.NewIntParameterWithDefault("limit", 500, "The row limit. Default 500")
+	dashboardidParameter := tools.NewStringParameter("dashboard_id", "The id of the dashboard to run.")
 
 	parameters := tools.Parameters{
-		lookidParameter,
-		limitParameter,
+		dashboardidParameter,
 	}
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
@@ -124,41 +123,33 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	logger.DebugContext(ctx, "params = ", params)
 	paramsMap := params.AsMap()
 
-	look_id := paramsMap["look_id"].(string)
-	limit := int64(paramsMap["limit"].(int))
-	limitStr := fmt.Sprintf("%d", limit)
+	dashboard_id := paramsMap["dashboard_id"].(string)
 
 	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
 	if err != nil {
 		return nil, fmt.Errorf("error getting sdk: %w", err)
 	}
-
-	look, err := sdk.Look(look_id, "", t.ApiSettings)
+	dashboard, err := sdk.Dashboard(dashboard_id, "", t.ApiSettings)
 	if err != nil {
-		return nil, fmt.Errorf("error getting look definition: %s", err)
+		return nil, fmt.Errorf("error getting dashboard: %w", err)
 	}
 
-	wq := v4.WriteQuery{
-		Model:         look.Query.Model,
-		View:          look.Query.View,
-		Fields:        look.Query.Fields,
-		Pivots:        look.Query.Pivots,
-		Filters:       look.Query.Filters,
-		Sorts:         look.Query.Sorts,
-		QueryTimezone: look.Query.QueryTimezone,
-		Limit:         &limitStr,
+	data := make(map[string]any)
+	data["tiles"] = make([]any, 0)
+	if dashboard.Title != nil {
+		data["title"] = *dashboard.Title
+	}
+	if dashboard.Description != nil {
+		data["description"] = *dashboard.Description
 	}
 
-	resp, err := lookercommon.RunInlineQuery(ctx, sdk, &wq, "json", t.ApiSettings)
-	if err != nil {
-		return nil, fmt.Errorf("error making run_look request: %s", err)
+	channels := make([]<-chan map[string]any, len(*dashboard.DashboardElements))
+	for i, element := range *dashboard.DashboardElements {
+		channels[i] = tileQueryWorker(ctx, sdk, t.ApiSettings, i, element)
 	}
-	logger.DebugContext(ctx, "resp = ", resp)
 
-	var data []any
-	e := json.Unmarshal([]byte(resp), &data)
-	if e != nil {
-		return nil, fmt.Errorf("error Unmarshaling run_look response: %s", e)
+	for resp := range merge(channels...) {
+		data["tiles"] = append(data["tiles"].([]any), resp)
 	}
 
 	logger.DebugContext(ctx, "data = ", data)
@@ -184,4 +175,93 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return t.UseClientOAuth
+}
+
+func tileQueryWorker(ctx context.Context, sdk *v4.LookerSDK, options *rtl.ApiSettings, index int, element v4.DashboardElement) <-chan map[string]any {
+	out := make(chan map[string]any)
+
+	go func() {
+		defer close(out)
+
+		data := make(map[string]any)
+		data["index"] = index
+		if element.Title != nil {
+			data["title"] = *element.Title
+		}
+		if element.TitleText != nil {
+			data["title_text"] = *element.TitleText
+		}
+		if element.SubtitleText != nil {
+			data["subtitle_text"] = *element.SubtitleText
+		}
+		if element.BodyText != nil {
+			data["body_text"] = *element.BodyText
+		}
+
+		var q v4.Query
+		if element.Query != nil {
+			data["element_type"] = "query"
+			q = *element.Query
+		} else if element.Look != nil {
+			data["element_type"] = "look"
+			q = *element.Look.Query
+		} else {
+			// Just a text element
+			data["element_type"] = "text"
+			out <- data
+			return
+		}
+
+		wq := v4.WriteQuery{
+			Model:         q.Model,
+			View:          q.View,
+			Fields:        q.Fields,
+			Pivots:        q.Pivots,
+			Filters:       q.Filters,
+			Sorts:         q.Sorts,
+			QueryTimezone: q.QueryTimezone,
+			Limit:         q.Limit,
+		}
+		query_result, err := lookercommon.RunInlineQuery(ctx, sdk, &wq, "json", options)
+		if err != nil {
+			data["query_status"] = "error running query"
+			out <- data
+			return
+		}
+		var resp []any
+		e := json.Unmarshal([]byte(query_result), &resp)
+		if e != nil {
+			data["query_status"] = "error parsing query result"
+			out <- data
+			return
+		}
+		data["query_status"] = "success"
+		data["query_result"] = resp
+		out <- data
+	}()
+	return out
+}
+
+func merge(channels ...<-chan map[string]any) <-chan map[string]any {
+	var wg sync.WaitGroup
+	out := make(chan map[string]any)
+
+	output := func(c <-chan map[string]any) {
+		for n := range c {
+			out <- n
+		}
+		wg.Done()
+	}
+	wg.Add(len(channels))
+	for _, c := range channels {
+		go output(c)
+	}
+
+	// Start a goroutine to close out once all the output goroutines are
+	// done.  This must start after the wg.Add call.
+	go func() {
+		wg.Wait()
+		close(out)
+	}()
+	return out
 }
