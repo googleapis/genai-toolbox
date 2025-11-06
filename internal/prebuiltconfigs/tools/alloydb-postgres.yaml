@@ -159,6 +159,11 @@ tools:
     list_views:
         kind: postgres-list-views
         source: alloydb-pg-source
+
+    list_schemas:
+        kind: postgres-list-schemas
+        source: alloydb-pg-source
+
 toolsets:
     alloydb_postgres_database_tools:
         - execute_sql
@@ -173,3 +178,4 @@ toolsets:
         - list_invalid_indexes
         - get_query_plan
         - list_views
+        - list_schemas
