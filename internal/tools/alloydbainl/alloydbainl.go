@@ -123,15 +123,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, cfg.NLConfigParameters)
 
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   cfg.NLConfigParameters,
-		Statement:    stmt,
-		NLConfig:     cfg.NLConfig,
-		AuthRequired: cfg.AuthRequired,
-		Pool:         s.PostgresPool(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.NLConfigParameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		Parameters:  cfg.NLConfigParameters,
+		Statement:   stmt,
+		Pool:        s.PostgresPool(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: cfg.NLConfigParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 
 	return t, nil
@@ -141,16 +138,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string                `yaml:"name"`
-	Kind         string                `yaml:"kind"`
-	AuthRequired []string              `yaml:"authRequired"`
-	Parameters   parameters.Parameters `yaml:"parameters"`
+	Config
+	Parameters parameters.Parameters `yaml:"parameters"`
 
 	Pool        *pgxpool.Pool
 	Statement   string
-	NLConfig    string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
