@@ -85,6 +85,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchaspecttypes"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchentries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/elasticsearch/elasticsearchesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firebird/firebirdexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firebird/firebirdsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoreadddocuments"
@@ -98,15 +99,15 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorevalidaterules"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookeradddashboardelement"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookercreateprojectfile"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerconversationalanalytics"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookercreateprojectfile"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerdeleteprojectfile"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerdevmode"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetconnectiondatabases"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetconnections"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetconnectionschemas"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetconnectiontables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetconnectiontablecolumns"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetconnectiontables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetdashboards"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetdimensions"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetexplores"
@@ -128,6 +129,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerqueryurl"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerrunlook"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerupdateprojectfile"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mindsdb/mindsdbexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/mindsdb/mindsdbsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbaggregate"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbdeletemany"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbdeleteone"
@@ -157,10 +160,12 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistactivequeries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistavailableextensions"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistinstalledextensions"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistschemas"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistviews"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparkcancelbatch"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparkgetbatch"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparklistbatches"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerexecutesql"
@@ -192,10 +197,12 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/dataplex"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/dgraph"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/elasticsearch"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/firebird"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/http"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/looker"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/mindsdb"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mysql"
@@ -311,7 +318,6 @@ func NewCommand(opts ...Option) *Command {
 	flags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
 	flags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
 	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
-
 	// Fetch prebuilt tools sources to customize the help description
 	prebuiltHelp := fmt.Sprintf(
 		"Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: '%s'.",

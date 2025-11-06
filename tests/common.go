@@ -33,6 +33,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+var (
+	PostgresListSchemasToolKind = "postgres-list-schemas"
+)
+
 // GetToolsConfig returns a mock tools config file
 func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
 	// Write config into a file and pass it to command
@@ -185,6 +189,19 @@ func AddExecuteSqlConfig(t *testing.T, config map[string]any, toolKind string) m
 		"authRequired": []string{
 			"my-google-auth",
 		},
+	}
+	config["tools"] = tools
+	return config
+}
+
+func AddPostgresPrebuiltConfig(t *testing.T, config map[string]any) map[string]any {
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["list_schemas"] = map[string]any{
+		"kind":   PostgresListSchemasToolKind,
+		"source": "my-instance",
 	}
 	config["tools"] = tools
 	return config

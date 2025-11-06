@@ -24,6 +24,7 @@ import (
 	spannerdb "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 	"google.golang.org/api/iterator"
 )
 
@@ -131,12 +132,12 @@ func processRows(iter *spanner.RowIterator) ([]any, error) {
 			return nil, fmt.Errorf("unable to parse row: %w", err)
 		}
 
-		vMap := make(map[string]any)
+		rowMap := orderedmap.Row{}
 		cols := row.ColumnNames()
 		for i, c := range cols {
-			vMap[c] = row.ColumnValue(i)
+			rowMap.Add(c, row.ColumnValue(i))
 		}
-		out = append(out, vMap)
+		out = append(out, rowMap)
 	}
 	return out, nil
 }

@@ -1248,6 +1248,7 @@ func TestPrebuiltTools(t *testing.T) {
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
+	mindsdb_config, _ := prebuiltconfigs.Get("mindsdb")
 	sqlite_config, _ := prebuiltconfigs.Get("sqlite")
 	neo4jconfig, _ := prebuiltconfigs.Get("neo4j")
 	alloydbobsvconfig, _ := prebuiltconfigs.Get("alloydb-postgres-observability")
@@ -1327,6 +1328,12 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("MSSQL_USER", "your_mssql_user")
 	t.Setenv("MSSQL_PASSWORD", "your_mssql_password")
 
+	t.Setenv("MINDSDB_HOST", "localhost")
+	t.Setenv("MINDSDB_PORT", "47334")
+	t.Setenv("MINDSDB_DATABASE", "your_mindsdb_db")
+	t.Setenv("MINDSDB_USER", "your_mindsdb_user")
+	t.Setenv("MINDSDB_PASS", "your_mindsdb_password")
+
 	t.Setenv("LOOKER_BASE_URL", "https://your_company.looker.com")
 	t.Setenv("LOOKER_CLIENT_ID", "your_looker_client_id")
 	t.Setenv("LOOKER_CLIENT_SECRET", "your_looker_client_secret")
@@ -1397,7 +1404,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"alloydb_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "alloydb_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas"},
 				},
 			},
 		},
@@ -1427,7 +1434,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas"},
 				},
 			},
 		},
@@ -1467,7 +1474,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"serverless_spark_tools": tools.ToolsetConfig{
 					Name:      "serverless_spark_tools",
-					ToolNames: []string{"list_batches", "get_batch"},
+					ToolNames: []string{"list_batches", "get_batch", "cancel_batch"},
 				},
 			},
 		},
@@ -1527,7 +1534,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"postgres_database_tools": tools.ToolsetConfig{
 					Name:      "postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas"},
 				},
 			},
 		},
@@ -1548,6 +1555,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"spanner_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "spanner_postgres_database_tools",
 					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "mindsdb prebuilt tools",
+			in:   mindsdb_config,
+			wantToolset: server.ToolsetConfigs{
+				"mindsdb-tools": tools.ToolsetConfig{
+					Name:      "mindsdb-tools",
+					ToolNames: []string{"mindsdb-execute-sql", "mindsdb-sql"},
 				},
 			},
 		},

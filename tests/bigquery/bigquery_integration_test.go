@@ -976,7 +976,7 @@ func runBigQueryExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamW
 			name:          "invoke my-exec-sql-tool with data present in table",
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"SELECT * FROM %s WHERE id = 3 OR name = 'Alice' ORDER BY id\"}", tableNameParam))),
+			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf("{\"sql\":\"SELECT id, name FROM %s WHERE id = 3 OR name = 'Alice' ORDER BY id\"}", tableNameParam))),
 			want:          invokeParamWant,
 			isErr:         false,
 		},
@@ -1164,7 +1164,7 @@ func runBigQueryWriteModeBlockedTest(t *testing.T, tableNameParam, datasetName s
 		wantInError    string
 		wantResult     string
 	}{
-		{"SELECT statement should succeed", fmt.Sprintf("SELECT * FROM %s WHERE id = 1", tableNameParam), http.StatusOK, "", `[{"id":1,"name":"Alice"}]`},
+		{"SELECT statement should succeed", fmt.Sprintf("SELECT id, name FROM %s WHERE id = 1", tableNameParam), http.StatusOK, "", `[{"id":1,"name":"Alice"}]`},
 		{"INSERT statement should fail", fmt.Sprintf("INSERT INTO %s (id, name) VALUES (10, 'test')", tableNameParam), http.StatusBadRequest, "write mode is 'blocked', only SELECT statements are allowed", ""},
 		{"CREATE TABLE statement should fail", fmt.Sprintf("CREATE TABLE %s.new_table (x INT64)", datasetName), http.StatusBadRequest, "write mode is 'blocked', only SELECT statements are allowed", ""},
 	}
