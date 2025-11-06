@@ -5931,6 +5931,9 @@ cluster][alloydb-free-trial].
 - [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
   List views in an AlloyDB for PostgreSQL database.
 
+- [`postgres-list-schemas`](../tools/postgres/postgres-list-schemas.md)
+  List schemas in an AlloyDB for PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
@@ -6607,6 +6610,9 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
   List views in a PostgreSQL database.
+
+- [`postgres-list-schemas`](../tools/postgres/postgres-list-schemas.md)
+  List schemas in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -8192,6 +8198,9 @@ reputation for reliability, feature robustness, and performance.
 
 - [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
   List views in a PostgreSQL database.
+
+- [`postgres-list-schemas`](../tools/postgres/postgres-list-views.md)
+  List schemas in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -11415,6 +11424,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## AlloyDB Postgres Admin
 
@@ -11584,6 +11594,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -11879,6 +11890,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## Google Cloud Serverless for Apache Spark
 
