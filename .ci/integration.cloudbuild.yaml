@@ -784,6 +784,28 @@ steps:
           "Serverless Spark" \
           serverlessspark
 
+  - id: "singlestore"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SINGLESTORE_PORT=$_SINGLESTORE_PORT"
+      - "SINGLESTORE_USER=$_SINGLESTORE_USER"
+      - "SINGLESTORE_DATABASE=$_SINGLESTORE_DATABASE"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["SINGLESTORE_PASSWORD", "SINGLESTORE_HOST", "CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "SingleStore" \
+          singlestore \
+          singlestore
+
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_user/versions/latest
@@ -892,6 +914,10 @@ availableSecrets:
       env: ORACLE_PASS
     - versionName: projects/$PROJECT_ID/secrets/oracle_host/versions/latest
       env: ORACLE_HOST
+    - versionName: projects/$PROJECT_ID/secrets/singlestore_pass/versions/latest
+      env: SINGLESTORE_PASSWORD
+    - versionName: projects/$PROJECT_ID/secrets/singlestore_host/versions/latest
+      env: SINGLESTORE_HOST
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -947,3 +973,7 @@ substitutions:
   _YUGABYTEDB_PORT: "5433"
   _YUGABYTEDB_LOADBALANCE: "false"
   _ORACLE_SERVER_NAME: "FREEPDB1"
+  _SINGLESTORE_HOST: 127.0.0.1
+  _SINGLESTORE_PORT: "3308"
+  _SINGLESTORE_DATABASE: "singlestore"
+  _SINGLESTORE_USER: "root"
