@@ -194,7 +194,17 @@ ClickHouse user&lt;/a> (or with &lt;a href="https://clickhouse.com/docs/getting-
 Cloud&lt;/a>) to connect to the database with. The user should have
 appropriate permissions for the operations you plan to perform.&lt;/p>
 &lt;h3 id="network-access">Network Access&lt;/h3>
-&lt;p>ClickHouse supports multiple protocols:&lt;/p></description></item><item><title>Cloud Monitoring</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/cloud-monitoring/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/cloud-monitoring/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>ClickHouse supports multiple protocols:&lt;/p></description></item><item><title>Cloud Healthcare API</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/cloud-healthcare/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/cloud-healthcare/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;a href="https://cloud.google.com/healthcare/docs">Cloud Healthcare API&lt;/a> provides a managed solution
+for storing and accessing healthcare data in Google Cloud, providing a
+critical bridge between existing care systems and applications hosted on
+Google Cloud. It supports healthcare data standards such as HL7® FHIR®,
+HL7® v2, and DICOM®. It provides a fully managed, highly scalable,
+enterprise-grade development environment for building clinical and analytics
+solutions securely on Google Cloud.&lt;/p>
+&lt;p>A dataset is a container in your Google Cloud project that holds modality-specific
+healthcare data. Datasets contain other data stores, such as FHIR stores and DICOM
+stores, which in turn hold their own types of healthcare data.&lt;/p></description></item><item><title>Cloud Monitoring</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/cloud-monitoring/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/cloud-monitoring/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>cloud-monitoring&lt;/code> source provides a client to interact with the &lt;a href="https://cloud.google.com/monitoring/api">Google
 Cloud Monitoring API&lt;/a>. This allows
 tools to access cloud monitoring metrics explorer and run promql queries.&lt;/p>
@@ -533,17 +543,7 @@ basics&lt;/a>.&lt;/p>
 &lt;p>Firestore uses &lt;a href="https://cloud.google.com/firestore/docs/security/iam">Identity and Access Management (IAM)&lt;/a> to control
 user and group access to Firestore resources. Toolbox will use your &lt;a href="https://cloud.google.com/docs/authentication#adc">Application
 Default Credentials (ADC)&lt;/a> to authorize and authenticate when interacting
-with &lt;a href="https://cloud.google.com/firestore/docs">Firestore&lt;/a>.&lt;/p></description></item><item><title>Cloud Healthcare API</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/healthcare/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/healthcare/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;a href="https://cloud.google.com/healthcare/docs">Cloud Healthcare API&lt;/a> provides a managed solution
-for storing and accessing healthcare data in Google Cloud, providing a
-critical bridge between existing care systems and applications hosted on
-Google Cloud. It supports healthcare data standards such as HL7® FHIR®,
-HL7® v2, and DICOM®. It provides a fully managed, highly scalable,
-enterprise-grade development environment for building clinical and analytics
-solutions securely on Google Cloud.&lt;/p>
-&lt;p>A dataset is a container in your Google Cloud project that holds modality-specific
-healthcare data. Datasets contain other data stores, such as FHIR stores and DICOM
-stores, which in turn hold their own types of healthcare data.&lt;/p></description></item><item><title>HTTP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/http/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/http/</guid><description>&lt;h2 id="about">About&lt;/h2>
+with &lt;a href="https://cloud.google.com/firestore/docs">Firestore&lt;/a>.&lt;/p></description></item><item><title>HTTP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/http/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/http/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The HTTP Source allows Toolbox to retrieve data from arbitrary HTTP
 endpoints. This enables Generative AI applications to access data from web APIs
 and other HTTP-accessible resources.&lt;/p>
@@ -969,7 +969,18 @@ Cancel a running Serverless Spark batch operation.&lt;/li>
 &lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
 &lt;p>Serverless for Apache Spark uses &lt;a href="https://cloud.google.com/bigquery/docs/access-control">Identity and Access Management
 (IAM)&lt;/a> to control user
-and group access to serverless Spark resources like batches and sessions.&lt;/p></description></item><item><title>Spanner</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/spanner/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/spanner/</guid><description>&lt;h1 id="spanner-source">Spanner Source&lt;/h1>
+and group access to serverless Spark resources like batches and sessions.&lt;/p></description></item><item><title>SingleStore</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/singlestore/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/singlestore/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://docs.singlestore.com/">SingleStore&lt;/a> is a distributed SQL database built to power intelligent applications. It is both relational and multi-model, enabling developers to easily build and scale applications and workloads.&lt;/p>
+&lt;p>SingleStore is built around Universal Storage which combines in-memory rowstore and on-disk columnstore data formats to deliver a single table type that is optimized to handle both transactional and analytical workloads.&lt;/p>
+&lt;h2 id="available-tools">Available Tools&lt;/h2>
+&lt;ul>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/singlestore/singlestore-sql/">&lt;code>singlestore-sql&lt;/code>&lt;/a>&lt;br>
+Execute pre-defined prepared SQL queries in SingleStore.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/tools/singlestore/singlestore-execute-sql/">&lt;code>singlestore-execute-sql&lt;/code>&lt;/a>&lt;br>
+Run parameterized SQL queries in SingleStore.&lt;/p></description></item><item><title>Spanner</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/spanner/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1853/resources/sources/spanner/</guid><description>&lt;h1 id="spanner-source">Spanner Source&lt;/h1>
 &lt;p>&lt;a href="https://cloud.google.com/spanner/docs">Spanner&lt;/a> is a fully managed, mission-critical database service
 that brings together relational, graph, key-value, and search. It offers
 transactional consistency at global scale, automatic, synchronous replication
