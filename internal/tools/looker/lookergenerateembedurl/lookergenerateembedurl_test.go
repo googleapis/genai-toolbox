@@ -51,7 +51,6 @@ func TestParseFromYamlLookerGenerateEmbedUrl(t *testing.T) {
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: nil,
-					SessionLength:  1600,
 				},
 			},
 		},
