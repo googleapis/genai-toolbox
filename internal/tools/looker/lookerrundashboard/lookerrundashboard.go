@@ -145,7 +145,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	channels := make([]<-chan map[string]any, len(*dashboard.DashboardElements))
 	for i, element := range *dashboard.DashboardElements {
-		channels[i] = TileQueryWorker(ctx, sdk, t.ApiSettings, i, element)
+		channels[i] = tileQueryWorker(ctx, sdk, t.ApiSettings, i, element)
 	}
 	
 	for resp := range merge(channels...) {
@@ -177,7 +177,7 @@ func (t Tool) RequiresClientAuthorization() bool {
 	return t.UseClientOAuth
 }
 
-func TileQueryWorker(ctx context.Context, sdk *v4.LookerSDK, options *rtl.ApiSettings, index int, element v4.DashboardElement) <-chan map[string]any {
+func tileQueryWorker(ctx context.Context, sdk *v4.LookerSDK, options *rtl.ApiSettings, index int, element v4.DashboardElement) <-chan map[string]any {
 	out := make(chan map[string]any)
 
 	data := make(map[string]any)
