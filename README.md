@@ -519,7 +519,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
   <br>
   <blockquote>
 
-  <details open>
+  <details>
     <summary>Core</summary>
 
 1. Install [Toolbox Go SDK][toolbox-go]:
@@ -528,7 +528,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     go get github.com/googleapis/mcp-toolbox-sdk-go
     ```
 
-1. Load tools:
+2. Load tools:
 
     ```go
     package main
