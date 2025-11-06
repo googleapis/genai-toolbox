@@ -639,26 +639,26 @@ samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples
 package main
 
 import (
-  "context"
-  "fmt"
-  "github.com/googleapis/mcp-toolbox-sdk-go/tbadk"
+  	"context"
+  	"fmt"
+  	"github.com/googleapis/mcp-toolbox-sdk-go/tbadk"
 )
 
 func main() {
-  // Make sure to add the error checks
+  	// Make sure to add the error checks
 	// Update the url to point to your server
 	URL := "http://127.0.0.1:5000"
 	ctx := context.Background()
-  client, err := tbadk.NewToolboxClient(URL)
-  if err != nil {
-    return fmt.Sprintln("Could not start Toolbox Client", err)
-  }
+  	client, err := tbadk.NewToolboxClient(URL)
+  	if err != nil {
+		return fmt.Sprintln("Could not start Toolbox Client", err)
+  	}
 
-  // Use this tool with ADK Go
-  tool, err := client.LoadTool("toolName", ctx)
-  if err != nil {
-    return fmt.Sprintln("Could not load Toolbox Tool", err)
-  }
+  	// Use this tool with ADK Go
+  	tool, err := client.LoadTool("toolName", ctx)
+  	if err != nil {
+		return fmt.Sprintln("Could not load Toolbox Tool", err)
+  	}
 }
 
 {{< /highlight >}}
