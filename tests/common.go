@@ -190,6 +190,55 @@ func AddExecuteSqlConfig(t *testing.T, config map[string]any, toolKind string) m
 	return config
 }
 
+func AddPostgresPrebuiltConfig(t *testing.T, config map[string]any) map[string]any {
+	var (
+		PostgresListSchemasToolKind             = "postgres-list-schemas"
+		PostgresListTablesToolKind              = "postgres-list-tables"
+		PostgresListActiveQueriesToolKind       = "postgres-list-active-queries"
+		PostgresListInstalledExtensionsToolKind = "postgres-list-installed-extensions"
+		PostgresListAvailableExtensionsToolKind = "postgres-list-available-extensions"
+		PostgresListViewsToolKind               = "postgres-list-views"
+	)
+
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["list_tables"] = map[string]any{
+		"kind":        PostgresListTablesToolKind,
+		"source":      "my-instance",
+		"description": "Lists tables in the database.",
+	}
+	tools["list_active_queries"] = map[string]any{
+		"kind":        PostgresListActiveQueriesToolKind,
+		"source":      "my-instance",
+		"description": "Lists active queries in the database.",
+	}
+
+	tools["list_installed_extensions"] = map[string]any{
+		"kind":        PostgresListInstalledExtensionsToolKind,
+		"source":      "my-instance",
+		"description": "Lists installed extensions in the database.",
+	}
+
+	tools["list_available_extensions"] = map[string]any{
+		"kind":        PostgresListAvailableExtensionsToolKind,
+		"source":      "my-instance",
+		"description": "Lists available extensions in the database.",
+	}
+
+	tools["list_views"] = map[string]any{
+		"kind":   PostgresListViewsToolKind,
+		"source": "my-instance",
+	}
+	tools["list_schemas"] = map[string]any{
+		"kind":   PostgresListSchemasToolKind,
+		"source": "my-instance",
+	}
+	config["tools"] = tools
+	return config
+}
+
 func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplSelectCombined, tmplSelectFilterCombined string, tmplSelectAll string) map[string]any {
 	toolsMap, ok := config["tools"].(map[string]any)
 	if !ok {
