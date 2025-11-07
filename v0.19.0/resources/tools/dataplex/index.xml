@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Dataplex on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/v0.19.0/resources/tools/dataplex/</link><description>Recent content in Dataplex on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/v0.19.0/resources/tools/dataplex/index.xml" rel="self" type="application/rss+xml"/><item><title>dataplex-lookup-entry</title><link>https://googleapis.github.io/genai-toolbox/v0.19.0/resources/tools/dataplex/dataplex-lookup-entry/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/v0.19.0/resources/tools/dataplex/dataplex-lookup-entry/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>dataplex-lookup-entry&lt;/code> tool returns details of a particular entry in Dataplex
+Catalog. It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/v0.19.0/resources/sources/dataplex/">dataplex&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>dataplex-lookup-entry&lt;/code> takes a required &lt;code>name&lt;/code> parameter which contains the
+project and location to which the request should be attributed in the following
+form: projects/{project}/locations/{location} and also a required &lt;code>entry&lt;/code>
+parameter which is the resource name of the entry in the following form:
+projects/{project}/locations/{location}/entryGroups/{entryGroup}/entries/{entry}.
+It also optionally accepts following parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>view&lt;/code> - View to control which parts of an entry the service should return.
+It takes integer values from 1-4 corresponding to type of view - BASIC,
+FULL, CUSTOM, ALL&lt;/li>
+&lt;li>&lt;code>aspectTypes&lt;/code> - Limits the aspects returned to the provided aspect types in
+the format
+&lt;code>projects/{project}/locations/{location}/aspectTypes/{aspectType}&lt;/code>. It only
+works for CUSTOM view.&lt;/li>
+&lt;li>&lt;code>paths&lt;/code> - Limits the aspects returned to those associated with the provided
+paths within the Entry. It only works for CUSTOM view.&lt;/li>
+&lt;/ul>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
+&lt;p>Dataplex uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control">Identity and Access Management (IAM)&lt;/a> to control
+user and group access to Dataplex resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials (ADC)&lt;/a> to authorize and authenticate when
+interacting with [Dataplex][dataplex-docs].&lt;/p></description></item><item><title>dataplex-search-aspect-types</title><link>https://googleapis.github.io/genai-toolbox/v0.19.0/resources/tools/dataplex/dataplex-search-aspect-types/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/v0.19.0/resources/tools/dataplex/dataplex-search-aspect-types/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>dataplex-search-aspect-types&lt;/code> tool allows to fetch the metadata template of
+aspect types based on search query.
+It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/v0.19.0/resources/sources/dataplex/">dataplex&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>dataplex-search-aspect-types&lt;/code> accepts following parameters optionally:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>query&lt;/code> - Narrows down the search of aspect types to value of this parameter.
+If not provided, it fetches all aspect types available to the user.&lt;/li>
+&lt;li>&lt;code>pageSize&lt;/code> - Number of returned aspect types in the search page. Defaults to &lt;code>5&lt;/code>.&lt;/li>
+&lt;li>&lt;code>orderBy&lt;/code> - Specifies the ordering of results. Supported values are: relevance
+(default), last_modified_timestamp, last_modified_timestamp asc.&lt;/li>
+&lt;/ul>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
+&lt;p>Dataplex uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control">Identity and Access Management (IAM)&lt;/a> to control
+user and group access to Dataplex resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials (ADC)&lt;/a> to authorize and authenticate when
+interacting with &lt;a href="https://cloud.google.com/dataplex">Dataplex&lt;/a>.&lt;/p></description></item><item><title>dataplex-search-entries</title><link>https://googleapis.github.io/genai-toolbox/v0.19.0/resources/tools/dataplex/dataplex-search-entries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/v0.19.0/resources/tools/dataplex/dataplex-search-entries/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>dataplex-search-entries&lt;/code> tool returns all entries in Dataplex Catalog (e.g.
+tables, views, models) that matches given user query.
+It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/v0.19.0/resources/sources/dataplex/">dataplex&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>dataplex-search-entries&lt;/code> takes a required &lt;code>query&lt;/code> parameter based on which
+entries are filtered and returned to the user. It also optionally accepts
+following parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>pageSize&lt;/code> - Number of results in the search page. Defaults to &lt;code>5&lt;/code>.&lt;/li>
+&lt;li>&lt;code>orderBy&lt;/code> - Specifies the ordering of results. Supported values are: relevance
+(default), last_modified_timestamp, last_modified_timestamp asc.&lt;/li>
+&lt;/ul>
+&lt;h2 id="requirements">Requirements&lt;/h2>
+&lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
+&lt;p>Dataplex uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control">Identity and Access Management (IAM)&lt;/a> to control
+user and group access to Dataplex resources. Toolbox will use your
+&lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials (ADC)&lt;/a> to authorize and authenticate when
+interacting with &lt;a href="https://cloud.google.com/dataplex">Dataplex&lt;/a>.&lt;/p></description></item></channel></rss>
