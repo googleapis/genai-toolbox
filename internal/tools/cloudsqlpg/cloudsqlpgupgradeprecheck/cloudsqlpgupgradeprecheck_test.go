@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsqlpgprecheckmajorversionupgrade_test
+package cloudsqlpgupgradeprecheck_test
 
 import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg/cloudsqlpgprecheckmajorversionupgrade"
+	"github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg/cloudsqlpgupgradeprecheck"
 	"testing"
 )
 
@@ -45,7 +45,7 @@ func TestParseFromYaml(t *testing.T) {
 						- https://www.googleapis.com/auth/cloud-platform
 			`,
 			want: server.ToolConfigs{
-				"precheck-upgrade-tool": cloudsqlpgprecheckmajorversionupgrade.Config{
+				"precheck-upgrade-tool": cloudsqlpgupgradeprecheck.Config{
 					Name:         "precheck-upgrade-tool",
 					Kind:         "postgres-upgrade-precheck",
 					Description:  "a precheck test description",
@@ -64,7 +64,7 @@ func TestParseFromYaml(t *testing.T) {
 					source: other-admin-source
 			`,
 			want: server.ToolConfigs{
-				"precheck-upgrade-tool-no-auth": cloudsqlpgprecheckmajorversionupgrade.Config{
+				"precheck-upgrade-tool-no-auth": cloudsqlpgupgradeprecheck.Config{
 					Name:         "precheck-upgrade-tool-no-auth",
 					Kind:         "postgres-upgrade-precheck",
 					Description:  "a precheck test description no auth",
