@@ -16,6 +16,7 @@ package spannerlisttables
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -146,7 +147,16 @@ func processRows(iter *spanner.RowIterator) ([]any, error) {
 		vMap := make(map[string]any)
 		cols := row.ColumnNames()
 		for i, c := range cols {
-			vMap[c] = row.ColumnValue(i)
+			if c == "object_details" {
+				jsonString := row.ColumnValue(i).AsInterface().(string)
+				var details map[string]interface{}
+				if err := json.Unmarshal([]byte(jsonString), &details); err != nil {
+					return nil, fmt.Errorf("unable to unmarshal JSON: %w", err)
+				}
+				vMap[c] = details
+			} else {
+				vMap[c] = row.ColumnValue(i)
+			}
 		}
 		out = append(out, vMap)
 	}
