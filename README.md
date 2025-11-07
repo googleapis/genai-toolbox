@@ -34,6 +34,7 @@ documentation](https://googleapis.github.io/genai-toolbox/).
   - [Installing the server](#installing-the-server)
   - [Running the server](#running-the-server)
   - [Integrating your application](#integrating-your-application)
+  - [Using Toolbox with Gemini CLI Extensions](#using-toolbox-with-gemini-cli-extensions)
 - [Configuration](#configuration)
   - [Sources](#sources)
   - [Tools](#tools)
@@ -97,7 +98,9 @@ centralized location to store and update tools, allowing you to share tools
 between agents and applications and update those tools without necessarily
 redeploying your application.
 
-![architecture](./docs/en/getting-started/introduction/architecture.png)
+<p align="center">
+<img src="./docs/en/getting-started/introduction/architecture.png" alt="architecture" width="50%"/>
+</p>
 
 ## Getting Started
 
@@ -518,7 +521,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
   <br>
   <blockquote>
 
-  <details open>
+  <details>
     <summary>Core</summary>
 
 1. Install [Toolbox Go SDK][toolbox-go]:
@@ -527,7 +530,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     go get github.com/googleapis/mcp-toolbox-sdk-go
     ```
 
-1. Load tools:
+2. Load tools:
 
     ```go
     package main
@@ -760,9 +763,98 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     ```
 
   </details>
+  <details open>
+    <summary>ADK Go</summary>
+
+1. Install [Toolbox Go SDK][toolbox-go]:
+
+    ```bash
+    go get github.com/googleapis/mcp-toolbox-sdk-go
+    ```
+
+1. Load tools:
+
+    ```go
+    package main
+
+    import (
+      "github.com/googleapis/mcp-toolbox-sdk-go/tbadk"
+      "context"
+    )
+
+    func main() {
+      // Make sure to add the error checks
+      // Update the url to point to your server
+      URL := "http://127.0.0.1:5000"
+      ctx := context.Background()
+      client, err := tbadk.NewToolboxClient(URL)
+      if err != nil {
+        return fmt.Sprintln("Could not start Toolbox Client", err)
+      }
+
+      // Use this tool with ADK Go
+      tool, err := client.LoadTool("toolName", ctx)
+      if err != nil {
+        return fmt.Sprintln("Could not load Toolbox Tool", err)
+      }
+    }
+    ```
+
+    For more detailed instructions on using the Toolbox Go SDK, see the
+    [project's README][toolbox-core-go-readme].
+
+    [toolbox-go]: https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/core
+    [toolbox-core-go-readme]: https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md
+
+  </details>
 </details>
 </blockquote>
 </details>
+
+### Using Toolbox with Gemini CLI Extensions
+
+[Gemini CLI extensions][gemini-cli-extensions] provide tools to interact
+directly with your data sources from command line. Below is a list of Gemini CLI
+extensions that are built on top of **Toolbox**. They allow you to interact with
+your data sources through pre-defined or custom tools with natural language.
+Click into the link to see detailed instructions on their usage.
+
+To use **custom** tools with Gemini CLI:
+
+- [MCP Toolbox](https://github.com/gemini-cli-extensions/mcp-toolbox)
+
+To use [prebuilt tools][prebuilt] with Gemini CLI:
+
+- [AlloyDB for PostgreSQL](https://github.com/gemini-cli-extensions/alloydb)
+- [AlloyDB for PostgreSQL
+  Observability](https://github.com/gemini-cli-extensions/alloydb-observability)
+- [BigQuery Data
+  Analytics](https://github.com/gemini-cli-extensions/bigquery-data-analytics)
+- [BigQuery Conversational
+  Analytics](https://github.com/gemini-cli-extensions/bigquery-conversational-analytics)
+- [Cloud SQL for
+  MySQL](https://github.com/gemini-cli-extensions/cloud-sql-mysql)
+- [Cloud SQL for MySQL
+  Observability](https://github.com/gemini-cli-extensions/cloud-sql-mysql-observability)
+- [Cloud SQL for
+  PostgreSQL](https://github.com/gemini-cli-extensions/cloud-sql-postgresql)
+- [Cloud SQL for PostgreSQL
+  Observability](https://github.com/gemini-cli-extensions/cloud-sql-postgresql-observability)
+- [Cloud SQL for SQL
+  Server](https://github.com/gemini-cli-extensions/cloud-sql-sqlserver)
+- [Cloud SQL for SQL Server
+  Observability](https://github.com/gemini-cli-extensions/cloud-sql-sqlserver-observability)
+- [Looker](https://github.com/gemini-cli-extensions/looker)
+- [Dataplex](https://github.com/gemini-cli-extensions/dataplex)
+- [MySQL](https://github.com/gemini-cli-extensions/mysql)
+- [PostgreSQL](https://github.com/gemini-cli-extensions/postgres)
+- [Spanner](https://github.com/gemini-cli-extensions/spanner)
+- [Firestore](https://github.com/gemini-cli-extensions/firestore-native)
+- [SQL Server](https://github.com/gemini-cli-extensions/sql-server)
+
+[prebuilt]: https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/
+[gemini-cli-extensions]:
+    https://github.com/google-gemini/gemini-cli/blob/main/docs/extensions/index.md
 
 ## Configuration
 

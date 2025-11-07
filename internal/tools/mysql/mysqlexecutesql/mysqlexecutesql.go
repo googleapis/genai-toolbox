@@ -22,10 +22,12 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
+	"github.com/googleapis/genai-toolbox/internal/sources/mindsdb"
 	"github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 )
 
 const kind string = "mysql-execute-sql"
@@ -51,8 +53,9 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &cloudsqlmysql.Source{}
 var _ compatibleSource = &mysql.Source{}
+var _ compatibleSource = &mindsdb.Source{}
 
-var compatibleSources = [...]string{cloudsqlmysql.SourceKind, mysql.SourceKind}
+var compatibleSources = [...]string{cloudsqlmysql.SourceKind, mysql.SourceKind, mindsdb.SourceKind}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
@@ -157,20 +160,21 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse row: %w", err)
 		}
-		vMap := make(map[string]any)
+		row := orderedmap.Row{}
 		for i, name := range cols {
 			val := rawValues[i]
 			if val == nil {
-				vMap[name] = nil
+				row.Add(name, nil)
 				continue
 			}
 
-			vMap[name], err = mysqlcommon.ConvertToType(colTypes[i], val)
+			convertedValue, err := mysqlcommon.ConvertToType(colTypes[i], val)
 			if err != nil {
 				return nil, fmt.Errorf("errors encountered when converting values: %w", err)
 			}
+			row.Add(name, convertedValue)
 		}
-		out = append(out, vMap)
+		out = append(out, row)
 	}
 
 	if err := results.Err(); err != nil {
