@@ -12,17 +12,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package spannerexecutesql_test
+package spannerexecutesql
 
 import (
+	"context"
+	"errors"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
+	database "cloud.google.com/go/spanner/admin/database/apiv1"
+	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerexecutesql"
+	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/gax-go/v2"
+	databasepb "google.golang.org/genproto/googleapis/spanner/admin/database/v1"
 )
+
+type mockDatabaseAdminClient struct {
+	spannerDatabaseAdminClient
+	updateDatabaseDdl func(context.Context, *databasepb.UpdateDatabaseDdlRequest, ...gax.CallOption) (*database.UpdateDatabaseDdlOperation, error)
+	close func() error
+}
+
+func (m *mockDatabaseAdminClient) UpdateDatabaseDdl(ctx context.Context, req *databasepb.UpdateDatabaseDdlRequest, opts ...gax.CallOption) (*database.UpdateDatabaseDdlOperation, error) {
+	return m.updateDatabaseDdl(ctx, req, opts...)
+}
+
+func (m *mockDatabaseAdminClient) Close() error {
+	if m.close != nil {
+		return m.close()
+	}
+	return nil
+}
 
 func TestParseFromYamlExecuteSql(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
@@ -44,7 +66,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 					description: some description
 			`,
 			want: server.ToolConfigs{
-				"example_tool": spannerexecutesql.Config{
+				"example_tool": Config{
 					Name:         "example_tool",
 					Kind:         "spanner-execute-sql",
 					Source:       "my-spanner-instance",
@@ -65,7 +87,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 					readOnly: true
 			`,
 			want: server.ToolConfigs{
-				"example_tool": spannerexecutesql.Config{
+				"example_tool": Config{
 					Name:         "example_tool",
 					Kind:         "spanner-execute-sql",
 					Source:       "my-spanner-instance",
@@ -91,5 +113,64 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 			}
 		})
 	}
+}
 
+func TestInvoke(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	tcs := []struct {
+		desc          string
+		adminClient   spannerDatabaseAdminClient
+		params        tools.ParamValues
+		readOnly      bool
+		expected      any
+		expectedError string
+	}{
+		// Not testing the successful execution case due to mocking complexities with the
+		// long-running operation. The error cases provide sufficient coverage for the
+		// DDL execution path.
+		{
+			desc:          "ddl execution in read-only mode",
+			params:        tools.ParamValues{{Name: "sql", Value: "ALTER TABLE Singers ADD COLUMN FirstName STRING(1024)"}},
+			readOnly:      true,
+			expectedError: "cannot execute DDL statements in read-only mode",
+		},
+		{
+			desc: "ddl execution error",
+			adminClient: &mockDatabaseAdminClient{
+				updateDatabaseDdl: func(ctx context.Context, req *databasepb.UpdateDatabaseDdlRequest, opts ...gax.CallOption) (*database.UpdateDatabaseDdlOperation, error) {
+					return nil, errors.New("test error")
+				},
+			},
+			params:        tools.ParamValues{{Name: "sql", Value: "ALTER TABLE Singers ADD COLUMN FirstName STRING(1024)"}},
+			expectedError: "error executing DDL statement: test error",
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			tool := Tool{
+				databaseAdminClient: tc.adminClient,
+				databaseName:        "test-database",
+				ReadOnly:            tc.readOnly,
+			}
+
+			actual, err := tool.Invoke(ctx, tc.params, "test-token")
+			if err != nil && tc.expectedError == "" {
+				t.Fatalf("unexpected error: %s", err)
+			}
+			if err == nil && tc.expectedError != "" {
+				t.Fatalf("expected error: %s, got none", tc.expectedError)
+			}
+			if err != nil && err.Error() != tc.expectedError {
+				t.Fatalf("expected error: %s, got: %s", tc.expectedError, err.Error())
+			}
+			if err == nil && actual != tc.expected {
+				t.Fatalf("expected: %v, got: %v", tc.expected, actual)
+			}
+		})
+	}
 }

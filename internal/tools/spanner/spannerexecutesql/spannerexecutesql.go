@@ -18,11 +18,16 @@ import (
 	"context"
 	"fmt"
 
+	"strings"
+
 	"cloud.google.com/go/spanner"
-	yaml "github.com/goccy/go-yaml"
+	database "cloud.google.com/go/spanner/admin/database/apiv1"
+	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	spannerdb "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/gax-go/v2"
+	databasepb "google.golang.org/genproto/googleapis/spanner/admin/database/v1"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"google.golang.org/api/iterator"
 )
@@ -46,6 +51,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	SpannerClient() *spanner.Client
 	DatabaseDialect() string
+	SpannerDatabaseAdminClient() *database.DatabaseAdminClient
+	SpannerDatabaseName() string
 }
 
 // validate compatible sources are still compatible
@@ -89,15 +96,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		ReadOnly:     cfg.ReadOnly,
-		Client:       s.SpannerClient(),
-		dialect:      s.DatabaseDialect(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Name:                cfg.Name,
+		Kind:                kind,
+		Parameters:          parameters,
+		AuthRequired:        cfg.AuthRequired,
+		ReadOnly:            cfg.ReadOnly,
+		Client:              s.SpannerClient(),
+		dialect:             s.DatabaseDialect(),
+		databaseAdminClient: s.SpannerDatabaseAdminClient(),
+		databaseName:        s.SpannerDatabaseName(),
+		manifest:            tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:         mcpManifest,
 	}
 	return t, nil
 }
@@ -105,16 +114,25 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 // validate interface
 var _ tools.Tool = Tool{}
 
+// spannerDatabaseAdminClient is an interface for the Spanner DatabaseAdminClient.
+// This is used to allow mocking of the client in tests.
+type spannerDatabaseAdminClient interface {
+	UpdateDatabaseDdl(ctx context.Context, req *databasepb.UpdateDatabaseDdlRequest, opts ...gax.CallOption) (*database.UpdateDatabaseDdlOperation, error)
+	Close() error
+}
+
 type Tool struct {
 	Name         string           `yaml:"name"`
 	Kind         string           `yaml:"kind"`
 	AuthRequired []string         `yaml:"authRequired"`
 	Parameters   tools.Parameters `yaml:"parameters"`
-	ReadOnly     bool             `yaml:"readOnly"`
-	Client       *spanner.Client
-	dialect      string
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	ReadOnly            bool `yaml:"readOnly"`
+	Client              *spanner.Client
+	dialect             string
+	databaseAdminClient spannerDatabaseAdminClient
+	databaseName        string
+	manifest            tools.Manifest
+	mcpManifest         tools.McpManifest
 }
 
 // processRows iterates over the spanner.RowIterator and converts each row to a map[string]any.
@@ -154,6 +172,28 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
 	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
+
+	isDDL := strings.HasPrefix(strings.ToUpper(sql), "CREATE") ||
+		strings.HasPrefix(strings.ToUpper(sql), "ALTER") ||
+		strings.HasPrefix(strings.ToUpper(sql), "DROP")
+
+	if isDDL {
+		if t.ReadOnly {
+			return nil, fmt.Errorf("cannot execute DDL statements in read-only mode")
+		}
+
+		op, err := t.databaseAdminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
+			Database:   t.databaseName,
+			Statements: []string{sql},
+		})
+		if err != nil {
+			return nil, fmt.Errorf("error executing DDL statement: %w", err)
+		}
+		if err := op.Wait(ctx); err != nil {
+			return nil, fmt.Errorf("error waiting for DDL operation to complete: %w", err)
+		}
+		return "DDL statement executed successfully", nil
+	}
 
 	var results []any
 	var opErr error
