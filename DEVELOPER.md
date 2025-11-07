@@ -153,17 +153,15 @@ go test -race -v ./cmd/... ./internal/...
    
 ### Link Checks
 
-We use **[lychee](https://github.com/lycheeverse/lychee-action)** to check all links in our repository.
-
-To run the link checker locally, see [this](https://github.com/lycheeverse/lychee?tab=readme-ov-file#commandline-usage)
+   We use **[lychee](https://github.com/lycheeverse/lychee-action)** to check all links in our repository. To run the link checker locally, see [this](https://github.com/lycheeverse/lychee?tab=readme-ov-file#commandline-usage).
 ### Fixing Links
 
-### Primary Fix: Update the Link
-* Fix the broken link or update the content where it is used.
+   #### Update the Link
+   * Fix the broken link or update the content where it is used.
 
-### Secondary Fix: Ignoring Links
-* If you cannot fix the link (e.g., due to an external service's rate-limit or if it's a local-only URL), you can tell `lychee` to ignore it.List regular expressions or direct links in  **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/link-checker-workflow/.lycheeignore)** , with one entry per line, that should be skipped . Always add a comment in `.lycheeignore` explaining why the link is being skipped. This prevents link rot and helps future maintainers.
-
+   #### If you cannot fix the link (e.g., due to an external service's rate-limit or if it's a local-only URL)
+   * Tell the `lychee` to ignore it.List regular expressions or direct links in  **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/main/.lycheeignore)**, with one entry per line.
+   * Always add a comment in `.lycheeignore` explaining why the link is being skipped. This prevents link rot and helps future maintainers.
 
 ### When to Ignore a Link
 * External Rate-Limits: You can skip checking links that frequently fail due to external service issues like rate-limiting.
