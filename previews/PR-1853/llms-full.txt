@@ -6486,7 +6486,7 @@ If you are new to the Cloud Healthcare API, you can try to
 
 ## Available Tools
 
-- [`cloud-healthcare-get-dataset`](../tools/cloudhealthcare/cloud-healthcare-get-healthcare-dataset.md)
+- [`cloud-healthcare-get-dataset`](../tools/cloudhealthcare/cloud-healthcare-get-dataset.md)
   Retrieves a dataset’s details.
 
 - [`cloud-healthcare-list-fhir-stores`](../tools/cloudhealthcare/cloud-healthcare-list-fhir-stores.md)
