@@ -6,6 +6,7 @@
 ### ⚠ BREAKING CHANGES
 
 * **tools/alloydbainl:** update AlloyDB AI NL statement order ([#1753](https://github.com/googleapis/genai-toolbox/issues/1753))
+* **tools/bigquery-analyze-contribution:** Add allowed dataset support ([#1675](https://github.com/googleapis/genai-toolbox/issues/1675)) ([ef28e39](https://github.com/googleapis/genai-toolbox/commit/ef28e39e90b21287ca8e69b99f4e792c78e9d31f))
 * **tools/bigquery-get-dataset-info:** add allowed dataset support ([#1654](https://github.com/googleapis/genai-toolbox/issues/1654))
 
 ### Features
