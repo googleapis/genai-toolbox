@@ -64,10 +64,13 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name:    r.Name,
-		Kind:    SourceKind,
-		Client:  client,
-		Dialect: r.Dialect.String(),
+		Name:       r.Name,
+		Kind:       SourceKind,
+		Client:     client,
+		Dialect:    r.Dialect.String(),
+		ProjectID:  r.Project,
+		InstanceID: r.Instance,
+		DatabaseID: r.Database,
 	}
 	return s, nil
 }
@@ -75,10 +78,13 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name    string `yaml:"name"`
-	Kind    string `yaml:"kind"`
-	Client  *spanner.Client
-	Dialect string
+	Name       string `yaml:"name"`
+	Kind       string `yaml:"kind"`
+	Client     *spanner.Client
+	Dialect    string
+	ProjectID  string
+	InstanceID string
+	DatabaseID string
 }
 
 func (s *Source) SourceKind() string {
@@ -91,6 +97,18 @@ func (s *Source) SpannerClient() *spanner.Client {
 
 func (s *Source) DatabaseDialect() string {
 	return s.Dialect
+}
+
+func (s *Source) SpannerProjectID() string {
+	return s.ProjectID
+}
+
+func (s *Source) SpannerInstanceID() string {
+	return s.InstanceID
+}
+
+func (s *Source) SpannerDatabaseID() string {
+	return s.DatabaseID
 }
 
 func initSpannerClient(ctx context.Context, tracer trace.Tracer, name, project, instance, dbname string) (*spanner.Client, error) {

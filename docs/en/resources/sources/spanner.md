@@ -31,6 +31,9 @@ the Google Cloud console][spanner-quickstart].
 - [`spanner-execute-sql`](../tools/spanner/spanner-execute-sql.md)  
   Run structured and parameterized queries on Spanner.
 
+- [`spanner-execute-ddl`](../tools/spanner/spanner-execute-ddl.md)
+  Execute DDL statements on Spanner.
+
 ### Pre-built Configurations
 
 - [Spanner using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/spanner_mcp/)  
