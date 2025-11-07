@@ -1,5 +1,53 @@
 # Changelog
 
+## [0.19.0](https://github.com/googleapis/genai-toolbox/compare/v0.18.0...v0.19.0) (2025-11-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* **tools/alloydbainl:** AlloyDB AI NL execute_sql statement order ([#1753](https://github.com/googleapis/genai-toolbox/issues/1753))
+* **tools/bigquery-get-dataset-info:** add allowed dataset support ([#1654](https://github.com/googleapis/genai-toolbox/issues/1654))
+
+### Features
+
+* Add MindsDB Source and Tools  ([#878](https://github.com/googleapis/genai-toolbox/issues/878)) ([1b2cca9](https://github.com/googleapis/genai-toolbox/commit/1b2cca9faa6f7bacbeb5d25634ce3bf61067de16))
+* Added ExcludeValues + Fixed issue with regex matching type. ([#1818](https://github.com/googleapis/genai-toolbox/issues/1818)) ([a8e98dc](https://github.com/googleapis/genai-toolbox/commit/a8e98dc99d208e8b37a3bc4d1ab4749b5154ed36))
+* **healthcare:** Add support for healthcare source, tool and prebuilt config ([#1853](https://github.com/googleapis/genai-toolbox/issues/1853)) ([1f833fb](https://github.com/googleapis/genai-toolbox/commit/1f833fb1a124e23819ddfec476f2e63ef31dd22f))
+* Make MongoDB filterParams optional ([#1614](https://github.com/googleapis/genai-toolbox/issues/1614)) ([208ab92](https://github.com/googleapis/genai-toolbox/commit/208ab92eb377b538a99330a415ecc18790b077b7))
+* **neo4j:** Add dry_run parameter to validate Cypher queries ([#1769](https://github.com/googleapis/genai-toolbox/issues/1769)) ([f475da6](https://github.com/googleapis/genai-toolbox/commit/f475da63ce1b65387b503ac497eca47635452723))
+* **server:** Expand init logs to list names of sources,toolsets,tools,authservices ([#1117](https://github.com/googleapis/genai-toolbox/issues/1117)) ([7a88161](https://github.com/googleapis/genai-toolbox/commit/7a88161f029161a5aae9d23c3f7a6ecab798a686))
+* **serverless-spark:** Add cancel-batch tool ([2881683](https://github.com/googleapis/genai-toolbox/commit/28816832265250de97d84e6ba38bf6c35e040796))
+* **serverless-spark:** Add get_batch tool ([7ad1072](https://github.com/googleapis/genai-toolbox/commit/7ad10720b4638324cd77d8aa410cbd1ccf0cc93f))
+* **serverless-spark:** Add serverless-spark source with list_batches tool ([816dbce](https://github.com/googleapis/genai-toolbox/commit/816dbce268392046e54767732bd31488c6e89bdb))
+* **singlestore:** Add SingleStore Source and Tools ([#1333](https://github.com/googleapis/genai-toolbox/issues/1333)) ([40b9dba](https://github.com/googleapis/genai-toolbox/commit/40b9dbab088add05a66995abb1c71a9345b8f7e5))
+* **source/bigquery:** Add client cache for user-passed credentials ([#1119](https://github.com/googleapis/genai-toolbox/issues/1119)) ([cf7012a](https://github.com/googleapis/genai-toolbox/commit/cf7012a82bb5c77309da3a26e563a5015786aa69))
+* **source/bigquery:** Add service account impersonation support for bigquery ([#1641](https://github.com/googleapis/genai-toolbox/issues/1641)) ([e09d182](https://github.com/googleapis/genai-toolbox/commit/e09d182f88bf697a169428f477aebc9f1741e35f))
+* **sources/elasticsearch:** Add Elasticsearch source and tools ([#1109](https://github.com/googleapis/genai-toolbox/issues/1109)) ([5367285](https://github.com/googleapis/genai-toolbox/commit/5367285e91ddda99ae7261d8ed4b025f975d1453))
+* **tools/bigquery-analyze-contribution:** Add allowed dataset support ([#1675](https://github.com/googleapis/genai-toolbox/issues/1675)) ([ef28e39](https://github.com/googleapis/genai-toolbox/commit/ef28e39e90b21287ca8e69b99f4e792c78e9d31f))
+* **tools/bigquery-get-dataset-info:** Add allowed dataset support ([#1654](https://github.com/googleapis/genai-toolbox/issues/1654)) ([a2006ad](https://github.com/googleapis/genai-toolbox/commit/a2006ad57718ebad3de5c6850e9c6a5a763808ec))
+* **tools/looker-run-dashboard:** New `run_dashboard` tool ([#1858](https://github.com/googleapis/genai-toolbox/issues/1858)) ([30857c2](https://github.com/googleapis/genai-toolbox/commit/30857c2294bb14961d3be49e2c368c69ecf844ec))
+* **tools/looker-run-look:** Modify run_look to show query origin ([#1860](https://github.com/googleapis/genai-toolbox/issues/1860)) ([991e539](https://github.com/googleapis/genai-toolbox/commit/991e539f9c7978fa618ada3179a0b656c33ff501))
+* **tools/looker:** Tools to retrieve the connections, schemas, databases, and column metadata from a looker system. ([#1804](https://github.com/googleapis/genai-toolbox/issues/1804)) ([d7d1b03](https://github.com/googleapis/genai-toolbox/commit/d7d1b03f3b746ed748d67f67e833457d55c846ab))
+* **tools/postgres-list-schemas:** Add new postgres-list-schemas tool ([#1741](https://github.com/googleapis/genai-toolbox/issues/1741)) ([1a19cac](https://github.com/googleapis/genai-toolbox/commit/1a19cac7cd89ed70291eb55e190370fe7b2c1aba))
+* **tools/postgres-list-views:** Add new postgres-list-views tool ([#1709](https://github.com/googleapis/genai-toolbox/issues/1709)) ([e8c7fe0](https://github.com/googleapis/genai-toolbox/commit/e8c7fe0994fedcb9be78d461fab3c98cc6bd86b2))
+
+
+### Bug Fixes
+
+* Bigquery result column order ([#1884](https://github.com/googleapis/genai-toolbox/issues/1884)) ([559e2a2](https://github.com/googleapis/genai-toolbox/commit/559e2a22e0db20bb947702e13140ce869b5865a7))
+* **cloudmonitoring:** Populate authRequired in tool manifest ([#1800](https://github.com/googleapis/genai-toolbox/issues/1800)) ([954152c](https://github.com/googleapis/genai-toolbox/commit/954152c7928bf0da9be221e011e32f74bc4cebbc))
+* Debug logging statements ([#1828](https://github.com/googleapis/genai-toolbox/issues/1828)) ([3cff915](https://github.com/googleapis/genai-toolbox/commit/3cff915e22c3a5e4e296607f83ae6409b896c9a9))
+* Instructions to quote filters that include commas ([#1794](https://github.com/googleapis/genai-toolbox/issues/1794)) ([4b01720](https://github.com/googleapis/genai-toolbox/commit/4b0172083c0dd4c71098d4e0ab5fa0b16ea0d830))
+* **source/cloud-sql-mssql:** Remove ip address field ([#1822](https://github.com/googleapis/genai-toolbox/issues/1822)) ([38d535d](https://github.com/googleapis/genai-toolbox/commit/38d535de34cfedd6828a01d9dcd25daf1bad7306))
+* **tools/alloydbainl:** AlloyDB AI NL execute_sql statement order ([#1753](https://github.com/googleapis/genai-toolbox/issues/1753)) ([9723cad](https://github.com/googleapis/genai-toolbox/commit/9723cadaa181a76d8fdda65a6254f6c887c3cf57))
+* **tools/looker:** Better description and docs for Looker health ([#1814](https://github.com/googleapis/genai-toolbox/issues/1814)) ([fae1339](https://github.com/googleapis/genai-toolbox/commit/fae133930fdd3bae4b2f55f3c3fb2de80b8947fc))
+* **tools/postgres-execute-sql:** Do not ignore SQL failure ([#1829](https://github.com/googleapis/genai-toolbox/issues/1829)) ([8984287](https://github.com/googleapis/genai-toolbox/commit/898428759c2a1a384bea8939605cf0914d129bec))
+
+
+### Miscellaneous Chores
+
+* Release 0.19.0 ([#1892](https://github.com/googleapis/genai-toolbox/issues/1892)) ([3c9efde](https://github.com/googleapis/genai-toolbox/commit/3c9efde848a9e29681387c4f5d8b1a6c44040543))
+
 ## [0.18.0](https://github.com/googleapis/genai-toolbox/compare/v0.17.0...v0.18.0) (2025-10-23)
 
 
