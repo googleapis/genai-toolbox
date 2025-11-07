@@ -153,6 +153,7 @@ database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
 limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
+&lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -382,6 +383,7 @@ database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
 limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
+&lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -630,11 +632,24 @@ explores, and data is required.&lt;/li>
 &lt;li>&lt;code>run_look&lt;/code>: Runs the query associated with a look.&lt;/li>
 &lt;li>&lt;code>make_look&lt;/code>: Creates a new look.&lt;/li>
 &lt;li>&lt;code>get_dashboards&lt;/code>: Searches for saved dashboards.&lt;/li>
+&lt;li>&lt;code>run_dashboard&lt;/code>: Runs the queries associated with a dashboard.&lt;/li>
 &lt;li>&lt;code>make_dashboard&lt;/code>: Creates a new dashboard.&lt;/li>
 &lt;li>&lt;code>add_dashboard_element&lt;/code>: Adds a tile to a dashboard.&lt;/li>
 &lt;li>&lt;code>health_pulse&lt;/code>: Test the health of a Looker instance.&lt;/li>
 &lt;li>&lt;code>health_analyze&lt;/code>: Analyze the LookML usage of a Looker instance.&lt;/li>
 &lt;li>&lt;code>health_vacuum&lt;/code>: Suggest LookML elements that can be removed.&lt;/li>
+&lt;li>&lt;code>dev_mode&lt;/code>: Activate developer mode.&lt;/li>
+&lt;li>&lt;code>get_projects&lt;/code>: Get the LookML projects in a Looker instance.&lt;/li>
+&lt;li>&lt;code>get_project_files&lt;/code>: List the project files in a project.&lt;/li>
+&lt;li>&lt;code>get_project_file&lt;/code>: Get the content of a LookML file.&lt;/li>
+&lt;li>&lt;code>create_project_file&lt;/code>: Create a new LookML file.&lt;/li>
+&lt;li>&lt;code>update_project_file&lt;/code>: Update an existing LookML file.&lt;/li>
+&lt;li>&lt;code>delete_project_file&lt;/code>: Delete a LookML file.&lt;/li>
+&lt;li>&lt;code>get_connections&lt;/code>: Get the available connections in a Looker instance.&lt;/li>
+&lt;li>&lt;code>get_connection_schemas&lt;/code>: Get the available schemas in a connection.&lt;/li>
+&lt;li>&lt;code>get_connection_databases&lt;/code>: Get the available databases in a connection.&lt;/li>
+&lt;li>&lt;code>get_connection_tables&lt;/code>: Get the available tables in a connection.&lt;/li>
+&lt;li>&lt;code>get_connection_table_columns&lt;/code>: Get the available columns for a table.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -788,6 +803,7 @@ database.&lt;/li>
 &lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
 &lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
 limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
+&lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -910,6 +926,46 @@ interface for Spanner.&lt;/li>
 &lt;ul>
 &lt;li>&lt;code>execute_cypher&lt;/code>: Executes a Cypher query.&lt;/li>
 &lt;li>&lt;code>get_schema&lt;/code>: Retrieves the schema of the Neo4j database.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;h2 id="google-cloud-healthcare-api">Google Cloud Healthcare API&lt;/h2>
+&lt;ul>
+&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-healthcare&lt;/code>&lt;/li>
+&lt;li>&lt;strong>Environment Variables:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>CLOUD_HEALTHCARE_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
+&lt;li>&lt;code>CLOUD_HEALTHCARE_REGION&lt;/code>: The Cloud Healthcare API dataset region.&lt;/li>
+&lt;li>&lt;code>CLOUD_HEALTHCARE_DATASET&lt;/code>: The Cloud Healthcare API dataset ID.&lt;/li>
+&lt;li>&lt;code>CLOUD_HEALTHCARE_USE_CLIENT_OAUTH&lt;/code>: (Optional) If &lt;code>true&lt;/code>, forwards the client&amp;rsquo;s
+OAuth access token for authentication. Defaults to &lt;code>false&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Permissions:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;strong>Healthcare FHIR Resource Reader&lt;/strong> (&lt;code>roles/healthcare.fhirResourceReader&lt;/code>) to read an
+search FHIR resources.&lt;/li>
+&lt;li>&lt;strong>Healthcare DICOM Viewer&lt;/strong> (&lt;code>roles/healthcare.dicomViewer&lt;/code>) to retrieve DICOM images from a
+DICOM store.&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>&lt;strong>Tools:&lt;/strong>
+&lt;ul>
+&lt;li>&lt;code>get_dataset&lt;/code>: Gets information about a Cloud Healthcare API dataset.&lt;/li>
+&lt;li>&lt;code>list_dicom_stores&lt;/code>: Lists DICOM stores in a Cloud Healthcare API dataset.&lt;/li>
+&lt;li>&lt;code>list_fhir_stores&lt;/code>: Lists FHIR stores in a Cloud Healthcare API dataset.&lt;/li>
+&lt;li>&lt;code>get_fhir_store&lt;/code>: Gets information about a FHIR store.&lt;/li>
+&lt;li>&lt;code>get_fhir_store_metrics&lt;/code>: Gets metrics for a FHIR store.&lt;/li>
+&lt;li>&lt;code>get_fhir_resource&lt;/code>: Gets a FHIR resource from a FHIR store.&lt;/li>
+&lt;li>&lt;code>fhir_patient_search&lt;/code>: Searches for patient resource(s) based on a set of criteria.&lt;/li>
+&lt;li>&lt;code>fhir_patient_everything&lt;/code>: Retrieves resources related to a given patient.&lt;/li>
+&lt;li>&lt;code>fhir_fetch_page&lt;/code>: Fetches a page of FHIR resources.&lt;/li>
+&lt;li>&lt;code>get_dicom_store&lt;/code>: Gets information about a DICOM store.&lt;/li>
+&lt;li>&lt;code>get_dicom_store_metrics&lt;/code>: Gets metrics for a DICOM store.&lt;/li>
+&lt;li>&lt;code>search_dicom_studies&lt;/code>: Searches for DICOM studies.&lt;/li>
+&lt;li>&lt;code>search_dicom_series&lt;/code>: Searches for DICOM series.&lt;/li>
+&lt;li>&lt;code>search_dicom_instances&lt;/code>: Searches for DICOM instances.&lt;/li>
+&lt;li>&lt;code>retrieve_rendered_dicom_instance&lt;/code>: Retrieves a rendered DICOM instance.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul></description></item></channel></rss>

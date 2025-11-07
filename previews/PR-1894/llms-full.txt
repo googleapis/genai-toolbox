@@ -471,6 +471,8 @@ func main() {
 	}
 }
 {{< /highlight >}}
+For end-to-end samples on using the Toolbox Go SDK with LangChain Go, see the [project's
+samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 {{% /tab %}}
 {{% tab header="Genkit Go" lang="en" %}}
@@ -515,6 +517,8 @@ func main() {
 	}
 }
 {{< /highlight >}}
+For end-to-end samples on using the Toolbox Go SDK with Genkit Go, see the [project's
+samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbgenkit/samples)
 
 {{% /tab %}}
 {{% tab header="Go GenAI" lang="en" %}}
@@ -569,6 +573,8 @@ func main() {
 	}
 }
 {{< /highlight >}}
+For end-to-end samples on using the Toolbox Go SDK with Go GenAI, see the [project's
+samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 {{% /tab %}}
 
@@ -622,6 +628,43 @@ func main() {
 	}
 }
 {{< /highlight >}}
+For end-to-end samples on using the Toolbox Go SDK with OpenAI Go, see the [project's
+samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
+
+{{% /tab %}}
+
+{{% tab header="ADK Go" lang="en" %}}
+
+{{< highlight go >}}
+package main
+
+import (
+  	"context"
+  	"fmt"
+  	"github.com/googleapis/mcp-toolbox-sdk-go/tbadk"
+)
+
+func main() {
+  	// Make sure to add the error checks
+	// Update the url to point to your server
+	URL := "http://127.0.0.1:5000"
+	ctx := context.Background()
+  	client, err := tbadk.NewToolboxClient(URL)
+  	if err != nil {
+		return fmt.Sprintln("Could not start Toolbox Client", err)
+  	}
+
+  	// Use this tool with ADK Go
+  	tool, err := client.LoadTool("toolName", ctx)
+  	if err != nil {
+		return fmt.Sprintln("Could not load Toolbox Tool", err)
+  	}
+}
+
+{{< /highlight >}}
+
+For end-to-end samples on using the Toolbox Go SDK with ADK Go, see the [project's
+samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbadk/samples)
 
 {{% /tab %}}
 {{< /tabpane >}}
@@ -629,10 +672,6 @@ func main() {
 For more detailed instructions on using the Toolbox Go SDK, see the
 [project's
 README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md).
-
-For end-to-end samples on using the Toolbox Go SDK with orchestration
-frameworks, see the [project's
-samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 
 # Python Quickstart (Local)
@@ -962,6 +1001,12 @@ from Toolbox.
 {{< include "quickstart/go/openAI/quickstart.go" >}}
 
 {{< /tab >}}
+
+{{< tab header="ADK Go" lang="go" >}}
+
+{{< include "quickstart/go/adkgo/quickstart.go" >}}
+
+{{< /tab >}}
 {{< /tabpane >}}
 
 1. Ensure all dependencies are installed:
@@ -970,7 +1015,7 @@ from Toolbox.
     go mod tidy
     ```
 
-1. Run your agent, and observe the results:
+2. Run your agent, and observe the results:
 
     ```sh
     go run hotelagent.go
@@ -1941,6 +1986,7 @@ instance and create new saved content.
 1. **run_look**: Run a saved Look and return the data
 1. **make_look**: Create a saved Look in Looker and return the URL
 1. **get_dashboards**: Return the saved dashboards that match a title or description
+1. **run_dashbaord**: Run the queries associated with a dashboard and return the data
 1. **make_dashboard**: Create a saved dashboard in Looker and return the URL
 1. **add_dashboard_element**: Add a tile to a dashboard
 
@@ -5931,6 +5977,9 @@ cluster][alloydb-free-trial].
 - [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
   List views in an AlloyDB for PostgreSQL database.
 
+- [`postgres-list-schemas`](../tools/postgres/postgres-list-schemas.md)
+  List schemas in an AlloyDB for PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
@@ -6406,6 +6455,165 @@ instead of hardcoding your secrets into the configuration file.
 | secure    | boolean  |    false     | Whether to use a secure connection (TLS). Default: false.                           |
 
 
+# Cloud Healthcare API
+The Cloud Healthcare API provides a managed solution for storing and accessing healthcare data in Google Cloud, providing a critical bridge  between existing care systems and applications hosted on Google Cloud.
+
+
+## About
+
+The [Cloud Healthcare API][healthcare-docs] provides a managed solution
+for storing and accessing healthcare data in Google Cloud, providing a
+critical bridge between existing care systems and applications hosted on
+Google Cloud. It supports healthcare data standards such as HL7® FHIR®,
+HL7® v2, and DICOM®. It provides a fully managed, highly scalable,
+enterprise-grade development environment for building clinical and analytics
+solutions securely on Google Cloud.
+
+A dataset is a container in your Google Cloud project that holds modality-specific
+healthcare data. Datasets contain other data stores, such as FHIR stores and DICOM
+stores, which in turn hold their own types of healthcare data.
+
+A single dataset can contain one or many data stores, and those stores can all service
+the same modality or different modalities as application needs dictate. Using multiple
+stores in the same dataset might be appropriate in various situations.
+
+If you are new to the Cloud Healthcare API, you can try to
+[create and view datasets and stores using curl][healthcare-quickstart-curl].
+
+[healthcare-docs]: https://cloud.google.com/healthcare/docs
+[healthcare-quickstart-curl]:
+    https://cloud.google.com/healthcare-api/docs/store-healthcare-data-rest
+
+## Available Tools
+
+- [`cloud-healthcare-get-dataset`](../tools/cloudhealthcare/cloud-healthcare-get-dataset.md)
+  Retrieves a dataset’s details.
+
+- [`cloud-healthcare-list-fhir-stores`](../tools/cloudhealthcare/cloud-healthcare-list-fhir-stores.md)
+  Lists the available FHIR stores in the healthcare dataset.
+
+- [`cloud-healthcare-list-dicom-stores`](../tools/cloudhealthcare/cloud-healthcare-list-dicom-stores.md)
+  Lists the available DICOM stores in the healthcare dataset.
+
+- [`cloud-healthcare-get-fhir-store`](../tools/cloudhealthcare/cloud-healthcare-get-fhir-store.md)
+  Retrieves information about a FHIR store.
+
+- [`cloud-healthcare-get-fhir-store-metrics`](../tools/cloudhealthcare/cloud-healthcare-get-fhir-store-metrics.md)
+  Retrieves metrics for a FHIR store.
+
+- [`cloud-healthcare-get-fhir-resource`](../tools/cloudhealthcare/cloud-healthcare-get-fhir-resource.md)
+  Retrieves a specific FHIR resource from a FHIR store.
+
+- [`cloud-healthcare-fhir-patient-search`](../tools/cloudhealthcare/cloud-healthcare-fhir-patient-search.md)
+  Searches for patients in a FHIR store based on a set of criteria.
+
+- [`cloud-healthcare-fhir-patient-everything`](../tools/cloudhealthcare/cloud-healthcare-fhir-patient-everything.md)
+  Retrieves all information for a given patient.
+
+- [`cloud-healthcare-fhir-fetch-page`](../tools/cloudhealthcare/cloud-healthcare-fhir-fetch-page.md)
+  Fetches a page of FHIR resources from a given URL.
+
+- [`cloud-healthcare-get-dicom-store`](../tools/cloudhealthcare/cloud-healthcare-get-dicom-store.md)
+  Retrieves information about a DICOM store.
+
+- [`cloud-healthcare-get-dicom-store-metrics`](../tools/cloudhealthcare/cloud-healthcare-get-dicom-store-metrics.md)
+  Retrieves metrics for a DICOM store.
+
+- [`cloud-healthcare-search-dicom-studies`](../tools/cloudhealthcare/cloud-healthcare-search-dicom-studies.md)
+  Searches for DICOM studies in a DICOM store.
+
+- [`cloud-healthcare-search-dicom-series`](../tools/cloudhealthcare/cloud-healthcare-search-dicom-series.md)
+  Searches for DICOM series in a DICOM store.
+
+- [`cloud-healthcare-search-dicom-instances`](../tools/cloudhealthcare/cloud-healthcare-search-dicom-instances.md)
+  Searches for DICOM instances in a DICOM store.
+
+- [`cloud-healthcare-retrieve-rendered-dicom-instance`](../tools/cloudhealthcare/cloud-healthcare-retrieve-rendered-dicom-instance.md)
+  Retrieves a rendered DICOM instance from a DICOM store.
+
+## Requirements
+
+### IAM Permissions
+
+The Cloud Healthcare API uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Cloud Healthcare resources like projects, datasets, and stores.
+
+### Authentication via Application Default Credentials (ADC)
+
+By **default**, Toolbox will use your [Application Default Credentials
+(ADC)][adc] to authorize and authenticate when interacting with the
+[Cloud Healthcare API][healthcare-docs].
+
+When using this method, you need to ensure the IAM identity associated with your
+ADC (such as a service account) has the correct permissions for the queries you
+intend to run. Common roles include `roles/healthcare.fhirResourceReader` (which includes
+permissions to read and search for FHIR resources) or `roles/healthcare.dicomViewer` (for
+retrieving DICOM images).
+Follow this [guide][set-adc] to set up your ADC.
+
+### Authentication via User's OAuth Access Token
+
+If the `useClientOAuth` parameter is set to `true`, Toolbox will instead use the
+OAuth access token for authentication. This token is parsed from the
+`Authorization` header passed in with the tool invocation request. This method
+allows Toolbox to make queries to the [Cloud Healthcare API][healthcare-docs] on behalf of the
+client or the end-user.
+
+When using this on-behalf-of authentication, you must ensure that the
+identity used has been granted the correct IAM permissions.
+
+[iam-overview]: <https://cloud.google.com/healthcare/docs/access-control>
+[adc]: <https://cloud.google.com/docs/authentication#adc>
+[set-adc]: <https://cloud.google.com/docs/authentication/provide-credentials-adc>
+
+## Example
+
+Initialize a Cloud Healthcare API source that uses ADC:
+
+```yaml
+sources:
+  my-healthcare-source:
+    kind: "cloud-healthcare"
+    project: "my-project-id"
+    region: "us-central1"
+    dataset: "my-healthcare-dataset-id"
+    # allowedFhirStores: # Optional: Restricts tool access to a specific list of FHIR store IDs.
+    #   - "my_fhir_store_1"
+    # allowedDicomStores: # Optional: Restricts tool access to a specific list of DICOM store IDs.
+    #   - "my_dicom_store_1"
+    #   - "my_dicom_store_2"
+```
+
+Initialize a Cloud Healthcare API source that uses the client's access token:
+
+```yaml
+sources:
+  my-healthcare-client-auth-source:
+    kind: "cloud-healthcare"
+    project: "my-project-id"
+    region: "us-central1"
+    dataset: "my-healthcare-dataset-id"
+    useClientOAuth: true
+    # allowedFhirStores: # Optional: Restricts tool access to a specific list of FHIR store IDs.
+    #   - "my_fhir_store_1"
+    # allowedDicomStores: # Optional: Restricts tool access to a specific list of DICOM store IDs.
+    #   - "my_dicom_store_1"
+    #   - "my_dicom_store_2"
+```
+
+## Reference
+
+| **field**          | **type** | **required** | **description**                                                                                                                                                                                                                                                              |
+|--------------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind               |  string  |     true     | Must be "cloud-healthcare".                                                                                                                                                                                                                                                  |
+| project            |  string  |     true     | ID of the GCP project that the dataset lives in.                                                                                                                                                                                                                             |
+| region             |  string  |     true     | Specifies the region (e.g., 'us', 'asia-northeast1') of the healthcare dataset. [Learn More](https://cloud.google.com/healthcare-api/docs/regions)                                                                                                                           |
+| dataset            |  string  |     true     | ID of the healthcare dataset.                                                                                                                                                                                                                                                |
+| allowedFhirStores  | []string |    false     | An optional list of FHIR store IDs that tools using this source are allowed to access. If provided, any tool operation attempting to access a store not in this list will be rejected. If a single store is provided, it will be treated as the default for prebuilt tools.  |
+| allowedDicomStores | []string |    false     | An optional list of DICOM store IDs that tools using this source are allowed to access. If provided, any tool operation attempting to access a store not in this list will be rejected. If a single store is provided, it will be treated as the default for prebuilt tools. |
+| useClientOAuth     |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries.                                                                                                                                                                     |
+
+
 # Cloud Monitoring
 A "cloud-monitoring" source provides a client for the Cloud Monitoring API.
 
@@ -6607,6 +6815,9 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
   List views in a PostgreSQL database.
+
+- [`postgres-list-schemas`](../tools/postgres/postgres-list-schemas.md)
+  List schemas in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -6875,7 +7086,7 @@ sources:
 | useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
 
 
-# couchbase
+# Couchbase
 A "couchbase" source connects to a Couchbase database.
 
 
@@ -7311,6 +7522,70 @@ instead of hardcoding your secrets into the configuration file.
 | namespace   |  uint64  |     false    | Dgraph namespace (not required for Dgraph Cloud Shared Clusters).                                |
 
 
+# Elasticsearch
+Elasticsearch is a distributed, free and open search and analytics engine  for all types of data, including textual, numerical, geospatial, structured,  and unstructured.
+
+
+# Elasticsearch Source
+
+[Elasticsearch][elasticsearch-docs] is a distributed, free and open search and analytics engine
+for all types of data, including textual, numerical, geospatial, structured,
+and unstructured.
+
+If you are new to Elasticsearch, you can learn how to 
+[set up a cluster and start indexing data][elasticsearch-quickstart].
+
+Elasticsearch uses [ES|QL][elasticsearch-esql] for querying data. ES|QL
+is a powerful query language that allows you to search and aggregate data in
+Elasticsearch.
+
+See the [official documentation](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html) for more information.
+
+[elasticsearch-docs]: https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html
+[elasticsearch-quickstart]: https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started.html
+[elasticsearch-esql]: https://www.elastic.co/guide/en/elasticsearch/reference/current/esql.html
+
+## Available Tools
+
+- [`elasticsearch-esql`](../tools/elasticsearch/elasticsearch-esql.md)
+  Execute ES|QL queries.
+
+## Requirements
+
+### API Key
+
+Toolbox uses an [API key][api-key] to authorize and authenticate when
+interacting with [Elasticsearch][elasticsearch-docs].
+
+In addition to [setting the API key for your server][set-api-key], you need to
+ensure the API key has the correct permissions for the queries you intend to
+run. See [API key management][api-key-management] for more information on
+applying permissions to an API key.
+
+[api-key]: https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-api-key.html
+[set-api-key]: https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-create-api-key.html
+[api-key-management]: https://www.elastic.co/guide/en/elasticsearch/reference/current/security-api-get-api-key.html
+
+## Example
+
+```yaml
+sources:
+  my-elasticsearch-source:
+    kind: "elasticsearch"
+    addresses:
+      - "http://localhost:9200"
+    apikey: "my-api-key"
+```
+
+## Reference
+
+| **field** | **type** | **required** | **description**                                                               |
+|-----------|:--------:|:------------:|-------------------------------------------------------------------------------|
+| kind      |  string  |     true     | Must be "elasticsearch".                                                      |
+| addresses | []string |     true     | List of Elasticsearch hosts to connect to.                                    |
+| apikey    |  string  |     true     | The API key to use for authentication.                                        |
+
+
 # Firebird
 Firebird is a powerful, cross-platform, and open-source relational database.
 
@@ -7598,6 +7873,164 @@ instead of hardcoding your secrets into the configuration file.
 | show_hidden_explores |  string  |    false     | Show or hide hidden explores. (default: true)                                             |
 | show_hidden_fields   |  string  |    false     | Show or hide hidden fields. (default: true)                                               |
 
+
+# MindsDB
+MindsDB is an AI federated database that enables SQL queries across hundreds of datasources and ML models.
+
+
+## About
+
+[MindsDB][mindsdb-docs] is an AI federated database in the world. It allows you to combine information from hundreds of datasources as if they were SQL, supporting joins across datasources and enabling you to query all unstructured data as if it were structured.
+
+MindsDB translates MySQL queries into whatever API is needed - whether it's REST APIs, GraphQL, or native database protocols. This means you can write standard SQL queries and MindsDB automatically handles the translation to APIs like Salesforce, Jira, GitHub, email systems, MongoDB, and hundreds of other datasources.
+
+MindsDB also enables you to use ML frameworks to train and use models as virtual tables from the data in those datasources. With MindsDB, the GenAI Toolbox can now expand to hundreds of datasources and leverage all of MindsDB's capabilities on ML and unstructured data.
+
+**Key Features:**
+- **Federated Database**: Connect and query hundreds of datasources through a single SQL interface
+- **Cross-Datasource Joins**: Perform joins across different datasources seamlessly
+- **API Translation**: Automatically translates MySQL queries into REST APIs, GraphQL, and native protocols
+- **Unstructured Data Support**: Query unstructured data as if it were structured
+- **ML as Virtual Tables**: Train and use ML models as virtual tables
+- **MySQL Wire Protocol**: Compatible with standard MySQL clients and tools
+
+[mindsdb-docs]: https://docs.mindsdb.com/
+[mindsdb-github]: https://github.com/mindsdb/mindsdb
+
+## Supported Datasources
+
+MindsDB supports hundreds of datasources, including:
+
+### **Business Applications**
+- **Salesforce**: Query leads, opportunities, accounts, and custom objects
+- **Jira**: Access issues, projects, workflows, and team data
+- **GitHub**: Query repositories, commits, pull requests, and issues
+- **Slack**: Access channels, messages, and team communications
+- **HubSpot**: Query contacts, companies, deals, and marketing data
+
+### **Databases & Storage**
+- **MongoDB**: Query NoSQL collections as structured tables
+- **Redis**: Key-value stores and caching layers
+- **Elasticsearch**: Search and analytics data
+- **S3/Google Cloud Storage**: File storage and data lakes
+
+### **Communication & Email**
+- **Gmail/Outlook**: Query emails, attachments, and metadata
+- **Slack**: Access workspace data and conversations
+- **Microsoft Teams**: Team communications and files
+- **Discord**: Server data and message history
+
+
+
+## Example Queries
+
+### Cross-Datasource Analytics
+```sql
+-- Join Salesforce opportunities with GitHub activity
+SELECT 
+    s.opportunity_name,
+    s.amount,
+    g.repository_name,
+    COUNT(g.commits) as commit_count
+FROM salesforce.opportunities s
+JOIN github.repositories g ON s.account_id = g.owner_id
+WHERE s.stage = 'Closed Won'
+GROUP BY s.opportunity_name, s.amount, g.repository_name;
+```
+
+### Email & Communication Analysis
+```sql
+-- Analyze email patterns with Slack activity
+SELECT 
+    e.sender,
+    e.subject,
+    s.channel_name,
+    COUNT(s.messages) as message_count
+FROM gmail.emails e
+JOIN slack.messages s ON e.sender = s.user_name
+WHERE e.date >= '2024-01-01'
+GROUP BY e.sender, e.subject, s.channel_name;
+```
+
+### ML Model Predictions
+```sql
+-- Use ML model to predict customer churn
+SELECT 
+    customer_id,
+    customer_name,
+    predicted_churn_probability,
+    recommended_action
+FROM customer_churn_model
+WHERE predicted_churn_probability > 0.8;
+```
+
+## Requirements
+
+### Database User
+
+This source uses standard MySQL authentication since MindsDB implements the MySQL wire protocol. You will need to [create a MindsDB user][mindsdb-users] to login to the database with. If MindsDB is configured without authentication, you can omit the password field.
+
+[mindsdb-users]: https://docs.mindsdb.com/
+## Example
+
+```yaml
+sources:
+    my-mindsdb-source:
+        kind: mindsdb
+        host: 127.0.0.1
+        port: 3306
+        database: my_db
+        user: ${USER_NAME}
+        password: ${PASSWORD} # Optional: omit if MindsDB is configured without authentication
+        queryTimeout: 30s # Optional: query timeout duration
+```
+
+### Working Configuration Example
+
+Here's a working configuration that has been tested:
+
+```yaml
+sources:
+  my-pg-source:
+    kind: mindsdb
+    host: 127.0.0.1
+    port: 47335
+    database: files
+    user: mindsdb
+```
+
+{{< notice tip >}}
+Use environment variable replacement with the format ${ENV_NAME}
+instead of hardcoding your secrets into the configuration file.
+{{< /notice >}}
+
+## Use Cases
+
+With MindsDB integration, you can:
+
+- **Query Multiple Datasources**: Connect to databases, APIs, file systems, and more through a single SQL interface
+- **Cross-Datasource Analytics**: Perform joins and analytics across different data sources
+- **ML Model Integration**: Use trained ML models as virtual tables for predictions and insights
+- **Unstructured Data Processing**: Query documents, images, and other unstructured data as structured tables
+- **Real-time Predictions**: Get real-time predictions from ML models through SQL queries
+- **API Abstraction**: Write SQL queries that automatically translate to REST APIs, GraphQL, and native protocols
+
+## Reference
+
+| **field**    | **type** | **required** | **description**                                                                                 |
+| ------------ | :------: | :----------: | ----------------------------------------------------------------------------------------------- |
+| kind         |  string  |     true     | Must be "mindsdb".                                                                              |
+| host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
+| port         |  string  |     true     | Port to connect to (e.g. "3306").                                                               |
+| database     |  string  |     true     | Name of the MindsDB database to connect to (e.g. "my_db").                                      |
+| user         |  string  |     true     | Name of the MindsDB user to connect as (e.g. "my-mindsdb-user").                                |
+| password     |  string  |    false     | Password of the MindsDB user (e.g. "my-password"). Optional if MindsDB is configured without authentication. |
+| queryTimeout |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied. |
+
+## Resources
+
+- [MindsDB Documentation][mindsdb-docs] - Official documentation and guides
+- [MindsDB GitHub][mindsdb-github] - Source code and community 
 
 # MongoDB
 MongoDB is a no-sql data platform that can not only serve general purpose data requirements also perform VectorSearch where both operational data and embeddings used of search can reside in same document.
@@ -7971,6 +8404,9 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
   List views in a PostgreSQL database.
 
+- [`postgres-list-schemas`](../tools/postgres/postgres-list-views.md)
+  List schemas in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)
@@ -8131,6 +8567,8 @@ Apache Spark.
   List and filter Serverless Spark batches.
 - [`serverless-spark-get-batch`](../tools/serverless-spark/serverless-spark-get-batch.md)
   Get a Serverless Spark batch.
+- [`serverless-spark-cancel-batch`](../tools/serverless-spark/serverless-spark-cancel-batch.md)
+  Cancel a running Serverless Spark batch operation.
 
 ## Requirements
 
@@ -8169,6 +8607,67 @@ sources:
 | kind      |  string  |     true     | Must be "serverless-spark".                                       |
 | project   |  string  |     true     | ID of the GCP project with Serverless for Apache Spark resources. |
 | location  |  string  |     true     | Location containing Serverless for Apache Spark resources.        |
+
+
+# SingleStore
+SingleStore is the cloud-native database built with speed and scale to power data-intensive applications.
+
+
+## About
+
+[SingleStore][singlestore-docs] is a distributed SQL database built to power intelligent applications. It is both relational and multi-model, enabling developers to easily build and scale applications and workloads.
+
+SingleStore is built around Universal Storage which combines in-memory rowstore and on-disk columnstore data formats to deliver a single table type that is optimized to handle both transactional and analytical workloads.
+
+[singlestore-docs]: https://docs.singlestore.com/
+
+## Available Tools
+
+- [`singlestore-sql`](../tools/singlestore/singlestore-sql.md)  
+  Execute pre-defined prepared SQL queries in SingleStore.
+
+- [`singlestore-execute-sql`](../tools/singlestore/singlestore-execute-sql.md)  
+  Run parameterized SQL queries in SingleStore.
+
+## Requirements
+
+### Database User
+
+This source only uses standard authentication. You will need to [create a
+database user][singlestore-user] to login to the database with.
+
+[singlestore-user]: https://docs.singlestore.com/cloud/reference/sql-reference/security-management-commands/create-user/
+
+## Example
+
+```yaml
+sources:
+    my-singlestore-source:
+        kind: singlestore
+        host: 127.0.0.1
+        port: 3306
+        database: my_db
+        user: ${USER_NAME}
+        password: ${PASSWORD}
+        queryTimeout: 30s # Optional: query timeout duration
+```
+
+{{< notice tip >}}
+Use environment variable replacement with the format ${ENV_NAME}
+instead of hardcoding your secrets into the configuration file.
+{{< /notice >}}
+
+## Reference
+
+| **field**    | **type** | **required** | **description**                                                                                 |
+| ------------ | :------: | :----------: | ----------------------------------------------------------------------------------------------- |
+| kind         |  string  |     true     | Must be "singlestore".                                                                          |
+| host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
+| port         |  string  |     true     | Port to connect to (e.g. "3306").                                                               |
+| database     |  string  |     true     | Name of the SingleStore database to connect to (e.g. "my_db").                                  |
+| user         |  string  |     true     | Name of the SingleStore database user to connect as (e.g. "admin").                             |
+| password     |  string  |     true     | Password of the SingleStore database user.                                                      |
+| queryTimeout |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied. |
 
 
 # Spanner
@@ -8996,6 +9495,11 @@ Tools for interacting with ClickHouse databases and tables.
 
 
 
+# Cloud Healthcare API
+Tools that work with Cloud Healthcare Sources.
+
+
+
 # Cloud Monitoring
 Tools that work with Cloud Monitoring source.
 
@@ -9026,6 +9530,11 @@ Tools that work with Dgraph Sources.
 
 
 
+# Elasticsearch
+Tools that work with Elasticsearch Sources.
+
+
+
 # Firebird
 Tools that work with Firebird Sources.
 
@@ -9045,6 +9554,119 @@ Tools that work with HTTP Sources.
 Tools that work with Looker Sources.
 
 
+
+# MindsDB Tools
+MindsDB tools that enable SQL queries across hundreds of datasources and ML models.
+
+
+## About
+
+MindsDB is the most widely adopted AI federated database that enables you to query hundreds of datasources and ML models through a single SQL interface. The following tools work with MindsDB databases:
+
+- [mindsdb-execute-sql](mindsdb-execute-sql.md) - Execute SQL queries directly on MindsDB
+- [mindsdb-sql](mindsdb-sql.md) - Execute parameterized SQL queries on MindsDB
+
+These tools leverage MindsDB's capabilities to:
+- **Connect to Multiple Datasources**: Query databases, APIs, file systems, and more through SQL
+- **Cross-Datasource Operations**: Perform joins and analytics across different data sources
+- **ML Model Integration**: Use trained ML models as virtual tables for predictions
+- **Unstructured Data Processing**: Query documents, images, and other unstructured data as structured tables
+- **Real-time Predictions**: Get real-time predictions from ML models through SQL
+- **API Translation**: Automatically translate SQL queries into REST APIs, GraphQL, and native protocols
+
+## Supported Datasources
+
+MindsDB automatically translates your SQL queries into the appropriate APIs for hundreds of datasources:
+
+### **Business Applications**
+- **Salesforce**: Query leads, opportunities, accounts, and custom objects
+- **Jira**: Access issues, projects, workflows, and team data  
+- **GitHub**: Query repositories, commits, pull requests, and issues
+- **Slack**: Access channels, messages, and team communications
+- **HubSpot**: Query contacts, companies, deals, and marketing data
+
+### **Databases & Storage**
+- **MongoDB**: Query NoSQL collections as structured tables
+- **PostgreSQL/MySQL**: Standard relational databases
+- **Redis**: Key-value stores and caching layers
+- **Elasticsearch**: Search and analytics data
+- **S3/Google Cloud Storage**: File storage and data lakes
+
+### **Communication & Email**
+- **Gmail/Outlook**: Query emails, attachments, and metadata
+- **Microsoft Teams**: Team communications and files
+- **Discord**: Server data and message history
+
+### **Analytics & Monitoring**
+- **Google Analytics**: Website traffic and user behavior
+- **Mixpanel**: Product analytics and user events
+- **Datadog**: Infrastructure monitoring and logs
+- **Grafana**: Time-series data and metrics
+
+## Example Use Cases
+
+### Cross-Datasource Analytics
+```sql
+-- Join Salesforce opportunities with GitHub activity
+SELECT 
+    s.opportunity_name,
+    s.amount,
+    g.repository_name,
+    COUNT(g.commits) as commit_count
+FROM salesforce.opportunities s
+JOIN github.repositories g ON s.account_id = g.owner_id
+WHERE s.stage = 'Closed Won';
+```
+
+### Email & Communication Analysis
+```sql
+-- Analyze email patterns with Slack activity
+SELECT 
+    e.sender,
+    e.subject,
+    s.channel_name,
+    COUNT(s.messages) as message_count
+FROM gmail.emails e
+JOIN slack.messages s ON e.sender = s.user_name
+WHERE e.date >= '2024-01-01';
+```
+
+### ML Model Predictions
+```sql
+-- Use ML model to predict customer churn
+SELECT 
+    customer_id,
+    customer_name,
+    predicted_churn_probability,
+    recommended_action
+FROM customer_churn_model
+WHERE predicted_churn_probability > 0.8;
+```
+
+Since MindsDB implements the MySQL wire protocol, these tools are functionally compatible with MySQL tools while providing access to MindsDB's advanced federated database capabilities.
+
+## Working Configuration Example
+
+Here's a complete working configuration that has been tested:
+
+```yaml
+sources:
+  my-pg-source:
+    kind: mindsdb
+    host: 127.0.0.1
+    port: 47335
+    database: files
+    user: mindsdb
+
+tools:
+  mindsdb-execute-sql:
+    kind: mindsdb-execute-sql
+    source: my-pg-source
+    description: |
+      Execute SQL queries directly on MindsDB database.
+      Use this tool to run any SQL statement against your MindsDB instance.
+      Example: SELECT * FROM my_table LIMIT 10
+``` 
 
 # MongoDB
 Tools that work with the MongoDB Source.
@@ -9087,6 +9709,12 @@ Tools that work with Google Cloud Serverless for Apache Spark Sources.
 
 - [serverless-spark-get-batch](./serverless-spark-get-batch.md)
 - [serverless-spark-list-batches](./serverless-spark-list-batches.md)
+- [serverless-spark-cancel-batch](./serverless-spark-cancel-batch.md)
+
+
+# SingleStore
+Tools that work with SingleStore Sources
+
 
 
 # Spanner
@@ -11072,6 +11700,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## AlloyDB Postgres Admin
 
@@ -11241,6 +11870,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -11411,11 +12041,24 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `run_look`: Runs the query associated with a look.
     *   `make_look`: Creates a new look.
     *   `get_dashboards`: Searches for saved dashboards.
+    *   `run_dashboard`: Runs the queries associated with a dashboard.
     *   `make_dashboard`: Creates a new dashboard.
     *   `add_dashboard_element`: Adds a tile to a dashboard.
     *   `health_pulse`: Test the health of a Looker instance.
     *   `health_analyze`: Analyze the LookML usage of a Looker instance.
     *   `health_vacuum`: Suggest LookML elements that can be removed.
+    *   `dev_mode`: Activate developer mode.
+    *   `get_projects`: Get the LookML projects in a Looker instance.
+    *   `get_project_files`: List the project files in a project.
+    *   `get_project_file`: Get the content of a LookML file.
+    *   `create_project_file`: Create a new LookML file.
+    *   `update_project_file`: Update an existing LookML file.
+    *   `delete_project_file`: Delete a LookML file.
+    *   `get_connections`: Get the available connections in a Looker instance.
+    *   `get_connection_schemas`: Get the available schemas in a connection.
+    *   `get_connection_databases`: Get the available databases in a connection.
+    *   `get_connection_tables`: Get the available tables in a connection.
+    *   `get_connection_table_columns`: Get the available columns for a table.
 
 ## Looker Conversational Analytics
 
@@ -11524,6 +12167,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database. 
 
 ## Google Cloud Serverless for Apache Spark
 
@@ -11601,5 +12245,35 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 *   **Tools:**
     *   `execute_cypher`: Executes a Cypher query.
     *   `get_schema`: Retrieves the schema of the Neo4j database.
+
+## Google Cloud Healthcare API
+*   `--prebuilt` value: `cloud-healthcare`
+*   **Environment Variables:**
+    *   `CLOUD_HEALTHCARE_PROJECT`: The GCP project ID.
+    *   `CLOUD_HEALTHCARE_REGION`: The Cloud Healthcare API dataset region.
+    *   `CLOUD_HEALTHCARE_DATASET`: The Cloud Healthcare API dataset ID.
+    *   `CLOUD_HEALTHCARE_USE_CLIENT_OAUTH`: (Optional) If `true`, forwards the client's
+        OAuth access token for authentication. Defaults to `false`.
+*   **Permissions:**
+    *   **Healthcare FHIR Resource Reader** (`roles/healthcare.fhirResourceReader`) to read an
+        search FHIR resources.
+    *   **Healthcare DICOM Viewer** (`roles/healthcare.dicomViewer`) to retrieve DICOM images from a
+        DICOM store.
+*   **Tools:**
+    *   `get_dataset`: Gets information about a Cloud Healthcare API dataset.
+    *   `list_dicom_stores`: Lists DICOM stores in a Cloud Healthcare API dataset.
+    *   `list_fhir_stores`: Lists FHIR stores in a Cloud Healthcare API dataset.
+    *   `get_fhir_store`: Gets information about a FHIR store.
+    *   `get_fhir_store_metrics`: Gets metrics for a FHIR store.
+    *   `get_fhir_resource`: Gets a FHIR resource from a FHIR store.
+    *   `fhir_patient_search`: Searches for patient resource(s) based on a set of criteria.
+    *   `fhir_patient_everything`: Retrieves resources related to a given patient.
+    *   `fhir_fetch_page`: Fetches a page of FHIR resources.
+    *   `get_dicom_store`: Gets information about a DICOM store.
+    *   `get_dicom_store_metrics`: Gets metrics for a DICOM store.
+    *   `search_dicom_studies`: Searches for DICOM studies.
+    *   `search_dicom_series`: Searches for DICOM series.
+    *   `search_dicom_instances`: Searches for DICOM instances.
+    *   `retrieve_rendered_dicom_instance`: Retrieves a rendered DICOM instance.
 
 
