@@ -101,10 +101,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:           cfg.Name,
-		Kind:           kind,
+		Config:         cfg,
 		Parameters:     params,
-		AuthRequired:   cfg.AuthRequired,
 		Project:        s.Project(),
 		Region:         s.Region(),
 		Dataset:        s.DatasetID(),
@@ -122,18 +120,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string                `yaml:"name"`
-	Kind           string                `yaml:"kind"`
-	AuthRequired   []string              `yaml:"authRequired"`
-	UseClientOAuth bool                  `yaml:"useClientOAuth"`
-	Parameters     parameters.Parameters `yaml:"parameters"`
-
+	Config
+	UseClientOAuth           bool                  `yaml:"useClientOAuth"`
+	Parameters               parameters.Parameters `yaml:"parameters"`
 	Project, Region, Dataset string
 	AllowedStores            map[string]struct{}
 	Service                  *healthcare.Service
 	ServiceCreator           healthcareds.HealthcareServiceCreator
 	manifest                 tools.Manifest
 	mcpManifest              tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
