@@ -25,6 +25,7 @@ import (
 	healthcareds "github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/common"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/healthcare/v1"
 )
 
@@ -93,22 +94,22 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	parameters := tools.Parameters{
-		tools.NewStringParameter(studyInstanceUIDKey, "The UID of the DICOM study"),
-		tools.NewStringParameter(seriesInstanceUIDKey, "The UID of the DICOM series"),
-		tools.NewStringParameter(sopInstanceUIDKey, "The UID of the SOP instance."),
-		tools.NewIntParameterWithDefault(frameNumberKey, 1, "The frame number to retrieve (1-based). Only applicable to multi-frame instances."),
+	params := parameters.Parameters{
+		parameters.NewStringParameter(studyInstanceUIDKey, "The UID of the DICOM study"),
+		parameters.NewStringParameter(seriesInstanceUIDKey, "The UID of the DICOM series"),
+		parameters.NewStringParameter(sopInstanceUIDKey, "The UID of the SOP instance."),
+		parameters.NewIntParameterWithDefault(frameNumberKey, 1, "The frame number to retrieve (1-based). Only applicable to multi-frame instances."),
 	}
 	if len(s.AllowedDICOMStores()) != 1 {
-		parameters = append(parameters, tools.NewStringParameter(common.StoreKey, "The DICOM store ID to get details for."))
+		params = append(params, parameters.NewStringParameter(common.StoreKey, "The DICOM store ID to get details for."))
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	t := Tool{
 		Name:           cfg.Name,
 		Kind:           kind,
-		Parameters:     parameters,
+		Parameters:     params,
 		AuthRequired:   cfg.AuthRequired,
 		Project:        s.Project(),
 		Region:         s.Region(),
@@ -117,7 +118,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		UseClientOAuth: s.UseClientAuthorization(),
 		ServiceCreator: s.ServiceCreator(),
 		Service:        s.Service(),
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		manifest:       tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:    mcpManifest,
 	}
 	return t, nil
@@ -127,11 +128,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string           `yaml:"name"`
-	Kind           string           `yaml:"kind"`
-	AuthRequired   []string         `yaml:"authRequired"`
-	UseClientOAuth bool             `yaml:"useClientOAuth"`
-	Parameters     tools.Parameters `yaml:"parameters"`
+	Name           string                `yaml:"name"`
+	Kind           string                `yaml:"kind"`
+	AuthRequired   []string              `yaml:"authRequired"`
+	UseClientOAuth bool                  `yaml:"useClientOAuth"`
+	Parameters     parameters.Parameters `yaml:"parameters"`
 
 	Project, Region, Dataset string
 	AllowedStores            map[string]struct{}
@@ -141,7 +142,7 @@ type Tool struct {
 	mcpManifest              tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	storeID, err := common.ValidateAndFetchStoreID(params, t.AllowedStores)
 	if err != nil {
 		return nil, err
@@ -197,8 +198,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return base64String, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

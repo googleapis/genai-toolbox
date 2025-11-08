@@ -22,6 +22,7 @@ import (
 	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
@@ -71,24 +72,24 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
 	}
 
-	connParameter := tools.NewStringParameter("conn", "The connection containing the schemas.")
-	dbParameter := tools.NewStringParameterWithRequired("db", "The optional database to search", false)
-	parameters := tools.Parameters{connParameter, dbParameter}
+	connParameter := parameters.NewStringParameter("conn", "The connection containing the schemas.")
+	dbParameter := parameters.NewStringParameterWithRequired("db", "The optional database to search", false)
+	params := parameters.Parameters{connParameter, dbParameter}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	return Tool{
 		Name:           cfg.Name,
 		Kind:           kind,
-		Parameters:     parameters,
+		Parameters:     params,
 		AuthRequired:   cfg.AuthRequired,
 		UseClientOAuth: s.UseClientOAuth,
 		Client:         s.Client,
 		ApiSettings:    s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
-			Parameters:   parameters.Manifest(),
+			Parameters:   params.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
 		mcpManifest: mcpManifest,
@@ -104,13 +105,13 @@ type Tool struct {
 	UseClientOAuth bool
 	Client         *v4.LookerSDK
 	ApiSettings    *rtl.ApiSettings
-	AuthRequired   []string         `yaml:"authRequired"`
-	Parameters     tools.Parameters `yaml:"parameters"`
+	AuthRequired   []string              `yaml:"authRequired"`
+	Parameters     parameters.Parameters `yaml:"parameters"`
 	manifest       tools.Manifest
 	mcpManifest    tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	mapParams := params.AsMap()
 	conn, ok := mapParams["conn"].(string)
 	if !ok {
@@ -135,8 +136,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return resp, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

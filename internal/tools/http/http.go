@@ -31,6 +31,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 const kind string = "http"
@@ -50,19 +51,19 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name         string            `yaml:"name" validate:"required"`
-	Kind         string            `yaml:"kind" validate:"required"`
-	Source       string            `yaml:"source" validate:"required"`
-	Description  string            `yaml:"description" validate:"required"`
-	AuthRequired []string          `yaml:"authRequired"`
-	Path         string            `yaml:"path" validate:"required"`
-	Method       tools.HTTPMethod  `yaml:"method" validate:"required"`
-	Headers      map[string]string `yaml:"headers"`
-	RequestBody  string            `yaml:"requestBody"`
-	PathParams   tools.Parameters  `yaml:"pathParams"`
-	QueryParams  tools.Parameters  `yaml:"queryParams"`
-	BodyParams   tools.Parameters  `yaml:"bodyParams"`
-	HeaderParams tools.Parameters  `yaml:"headerParams"`
+	Name         string                `yaml:"name" validate:"required"`
+	Kind         string                `yaml:"kind" validate:"required"`
+	Source       string                `yaml:"source" validate:"required"`
+	Description  string                `yaml:"description" validate:"required"`
+	AuthRequired []string              `yaml:"authRequired"`
+	Path         string                `yaml:"path" validate:"required"`
+	Method       tools.HTTPMethod      `yaml:"method" validate:"required"`
+	Headers      map[string]string     `yaml:"headers"`
+	RequestBody  string                `yaml:"requestBody"`
+	PathParams   parameters.Parameters `yaml:"pathParams"`
+	QueryParams  parameters.Parameters `yaml:"queryParams"`
+	BodyParams   parameters.Parameters `yaml:"bodyParams"`
+	HeaderParams parameters.Parameters `yaml:"headerParams"`
 }
 
 // validate interface
@@ -95,7 +96,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	allParameters := slices.Concat(cfg.PathParams, cfg.BodyParams, cfg.HeaderParams, cfg.QueryParams)
 
 	// Verify no duplicate parameter names
-	err := tools.CheckDuplicateParameters(allParameters)
+	err := parameters.CheckDuplicateParameters(allParameters)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +105,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	paramManifest := allParameters.Manifest()
 
 	if paramManifest == nil {
-		paramManifest = make([]tools.ParameterManifest, 0)
+		paramManifest = make([]parameters.ParameterManifest, 0)
 	}
 
 	// Create MCP manifest
@@ -147,12 +148,12 @@ type Tool struct {
 	Headers            map[string]string `yaml:"headers"`
 	DefaultQueryParams map[string]string `yaml:"defaultQueryParams"`
 
-	RequestBody  string           `yaml:"requestBody"`
-	PathParams   tools.Parameters `yaml:"pathParams"`
-	QueryParams  tools.Parameters `yaml:"queryParams"`
-	BodyParams   tools.Parameters `yaml:"bodyParams"`
-	HeaderParams tools.Parameters `yaml:"headerParams"`
-	AllParams    tools.Parameters `yaml:"allParams"`
+	RequestBody  string                `yaml:"requestBody"`
+	PathParams   parameters.Parameters `yaml:"pathParams"`
+	QueryParams  parameters.Parameters `yaml:"queryParams"`
+	BodyParams   parameters.Parameters `yaml:"bodyParams"`
+	HeaderParams parameters.Parameters `yaml:"headerParams"`
+	AllParams    parameters.Parameters `yaml:"allParams"`
 
 	Client      *http.Client
 	manifest    tools.Manifest
@@ -160,14 +161,14 @@ type Tool struct {
 }
 
 // Helper function to generate the HTTP request body upon Tool invocation.
-func getRequestBody(bodyParams tools.Parameters, requestBodyPayload string, paramsMap map[string]any) (string, error) {
-	bodyParamValues, err := tools.GetParams(bodyParams, paramsMap)
+func getRequestBody(bodyParams parameters.Parameters, requestBodyPayload string, paramsMap map[string]any) (string, error) {
+	bodyParamValues, err := parameters.GetParams(bodyParams, paramsMap)
 	if err != nil {
 		return "", err
 	}
 	bodyParamsMap := bodyParamValues.AsMap()
 
-	requestBodyStr, err := tools.PopulateTemplateWithJSON("HTTPToolRequestBody", requestBodyPayload, bodyParamsMap)
+	requestBodyStr, err := parameters.PopulateTemplateWithJSON("HTTPToolRequestBody", requestBodyPayload, bodyParamsMap)
 	if err != nil {
 		return "", err
 	}
@@ -175,9 +176,9 @@ func getRequestBody(bodyParams tools.Parameters, requestBodyPayload string, para
 }
 
 // Helper function to generate the HTTP request URL upon Tool invocation.
-func getURL(baseURL, path string, pathParams, queryParams tools.Parameters, defaultQueryParams map[string]string, paramsMap map[string]any) (string, error) {
+func getURL(baseURL, path string, pathParams, queryParams parameters.Parameters, defaultQueryParams map[string]string, paramsMap map[string]any) (string, error) {
 	// use Go template to replace path params
-	pathParamValues, err := tools.GetParams(pathParams, paramsMap)
+	pathParamValues, err := parameters.GetParams(pathParams, paramsMap)
 	if err != nil {
 		return "", err
 	}
@@ -227,7 +228,7 @@ func getURL(baseURL, path string, pathParams, queryParams tools.Parameters, defa
 }
 
 // Helper function to generate the HTTP headers upon Tool invocation.
-func getHeaders(headerParams tools.Parameters, defaultHeaders map[string]string, paramsMap map[string]any) (map[string]string, error) {
+func getHeaders(headerParams parameters.Parameters, defaultHeaders map[string]string, paramsMap map[string]any) (map[string]string, error) {
 	// Populate header params
 	allHeaders := make(map[string]string)
 	maps.Copy(allHeaders, defaultHeaders)
@@ -244,7 +245,7 @@ func getHeaders(headerParams tools.Parameters, defaultHeaders map[string]string,
 	return allHeaders, nil
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
 	// Calculate request body
@@ -295,8 +296,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return data, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.AllParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.AllParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

@@ -27,6 +27,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/cache"
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/helpers"
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/types"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
@@ -96,8 +97,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	parameters := tools.Parameters{}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	params := parameters.Parameters{}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// Set a default cache expiration if not provided in the configuration.
 	if cfg.CacheExpireMinutes == nil {
@@ -114,7 +115,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Database:           s.Neo4jDatabase(),
 		cache:              cache.NewCache(),
 		cacheExpireMinutes: cfg.CacheExpireMinutes,
-		manifest:           tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		manifest:           tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:        mcpManifest,
 	}
 	return t, nil
@@ -139,7 +140,7 @@ type Tool struct {
 
 // Invoke executes the tool's main logic: fetching the Neo4j schema.
 // It first checks the cache for a valid schema before extracting it from the database.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	// Check if a valid schema is already in the cache.
 	if cachedSchema, ok := t.cache.Get("schema"); ok {
 		if schema, ok := cachedSchema.(*types.SchemaInfo); ok {
@@ -161,8 +162,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 }
 
 // ParseParams is a placeholder as this tool does not require input parameters.
-func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParamValues{}, nil
+func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParamValues{}, nil
 }
 
 // Manifest returns the tool's manifest, which describes its purpose and parameters.

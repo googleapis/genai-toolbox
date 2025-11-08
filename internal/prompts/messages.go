@@ -17,7 +17,7 @@ package prompts
 import (
 	"fmt"
 
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 // Message represents a single message in a prompt, with a role and content.
@@ -52,17 +52,17 @@ func (m *Message) UnmarshalYAML(unmarshal func(interface{}) error) error {
 
 // SubstituteMessages takes a slice of Messages and a set of parameter values,
 // and returns a new slice with all template variables resolved.
-func SubstituteMessages(messages []Message, arguments Arguments, argValues tools.ParamValues) ([]Message, error) {
+func SubstituteMessages(messages []Message, arguments Arguments, argValues parameters.ParamValues) ([]Message, error) {
 	substitutedMessages := make([]Message, 0, len(messages))
 	argsMap := argValues.AsMap()
 
-	var parameters tools.Parameters
+	var params parameters.Parameters
 	for _, arg := range arguments {
-		parameters = append(parameters, arg.Parameter)
+		params = append(params, arg.Parameter)
 	}
 
 	for _, msg := range messages {
-		substitutedContent, err := tools.ResolveTemplateParams(parameters, msg.Content, argsMap)
+		substitutedContent, err := parameters.ResolveTemplateParams(params, msg.Content, argsMap)
 		if err != nil {
 			return nil, fmt.Errorf("error substituting params for message: %w", err)
 		}
