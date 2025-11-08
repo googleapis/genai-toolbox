@@ -34,12 +34,12 @@ jobs:
       - name: Wait for image in Artifact Registry
         shell: bash
         run: |
-          MAX_ATTEMPTS=3
+          MAX_ATTEMPTS=10
           VERSION=$(jq -r '.version' server.json)
           REGISTRY_URL="https://us-central1-docker.pkg.dev/v2/database-toolbox/toolbox/toolbox/manifests/${VERSION}"
 
           # initially sleep time to wait for the version release
-          sleep 10m
+          sleep 3m
 
           for i in $(seq 1 ${MAX_ATTEMPTS}); do
             echo "Attempt $i: Checking for image ${REGISTRY_URL}..."
@@ -54,7 +54,7 @@ jobs:
               echo "❌ Image not found (likely 404 error) on attempt $i."
               if [ $i -lt ${MAX_ATTEMPTS} ]; then
                 echo "Sleeping for 5 minutes before next attempt..."
-                sleep 5m
+                sleep 2m
               else
                 echo "Maximum attempts reached. Image not found."
                 exit 1

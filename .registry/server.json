@@ -2,22 +2,29 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
   "name": "io.github.googleapis/genai-toolbox",
   "description": "MCP Toolbox for Databases enables your agent to connect to your database.",
-  "status": "active",
+  "title": "MCP Toolbox",
+  "websiteUrl": "https://github.com/googleapis/genai-toolbox",
+  "icons": [
+    {
+      "src": "https://github.com/googleapis/genai-toolbox/blob/main/.hugo/assets/icons/logo.svg",
+      "mimeType": "image/svg+xml"
+    }
+  ],
   "repository": {
     "url": "https://github.com/googleapis/genai-toolbox",
     "source": "github"
   },
-  "version": "0.18.0",
+  "version": "0.19.1",
   "packages": [
     {
       "registryType": "oci",
       "registryBaseUrl": "https://artifactregistry.googleapis.com",
-      "identifier": "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.18.0",
+      "identifier": "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.19.1",
       "transport": {
         "type": "streamable-http",
-        "url": "http://{host}:{port}"
+        "url": "http://{host}:{port}/mcp"
       },
-      "packageArguments": [
+      "runtimeArguments": [
         {
             "type": "named",
             "name": "--tools-file",
@@ -32,7 +39,7 @@
             "value": "{host}",
             "variables": {
                 "host": {
-                    "description": "address",
+                    "description": "ip address",
                     "isRequired": true,
                     "default": "127.0.0.1"
                 }
@@ -44,7 +51,7 @@
             "description": "Port the server will listen on.",
             "value": "{port}",
             "variables": {
-                "host": {
+                "port": {
                     "description": "port",
                     "isRequired": true,
                     "default": "5000"
@@ -56,8 +63,7 @@
             "name": "--log-level",
             "description": "Specify the minimum level logged.",
             "default": "info",
-            "choices": ["debug", "info", "warn", "error"],
-            "isRequired": true
+            "choices": ["debug", "info", "warn", "error"]
         }
       ]
     }
