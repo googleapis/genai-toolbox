@@ -4,3 +4,29 @@
 # https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners#codeowners-syntax
 
 *   @googleapis/senseai-eco
+
+/internal/sources/alloydbadmin/ @googleapis/toolbox-alloydb
+/internal/sources/alloydbpg/ @googleapis/toolbox-alloydb
+/internal/tools/alloydb/ @googleapis/toolbox-alloydb
+/internal/tools/alloydbainl/ @googleapis/toolbox-alloydb
+/internal/sources/bigquery/ @googleapis/toolbox-bigquery
+/internal/tools/bigquery/ @googleapis/toolbox-bigquery
+/internal/sources/bigtable/ @googleapis/toolbox-bigtable
+/internal/tools/bigtable/ @googleapis/toolbox-bigtable
+/internal/sources/cloudsqlmssql/ @googleapis/toolbox-cloud-sql-mssql
+/internal/tools/cloudsqlmssql/ @googleapis/toolbox-cloud-sql-mssql
+/internal/sources/cloudsqlmysql/ @googleapis/toolbox-cloud-sql-mysql
+/internal/tools/cloudsqlmysql/ @googleapis/toolbox-cloud-sql-mysql
+/internal/sources/cloudsqlpg/ @googleapis/toolbox-cloud-sql-postgres
+/internal/tools/cloudsqlpg/ @googleapis/toolbox-cloud-sql-postgres
+/internal/sources/dataplex/ @googleapis/toolbox-dataplex
+/internal/tools/dataplex/ @googleapis/toolbox-dataplex
+/internal/sources/firestore/ @googleapis/toolbox-firestore
+/internal/tools/firestore/ @googleapis/toolbox-firestore
+/internal/sources/looker/ @googleapis/toolbox-looker
+/internal/tools/looker/ @googleapis/toolbox-looker
+
+/internal/sources/spanner/ @googleapis/toolbox-spanner
+/internal/tools/spanner/ @googleapis/toolbox-spanner
+
+
