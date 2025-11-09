@@ -162,6 +162,14 @@ tools:
         kind: postgres-list-schemas
         source: postgresql-source
 
+    database_overview:
+        kind: postgres-database-overview
+        source: postgresql-source
+
+    list_triggers:
+        kind: postgres-list-triggers
+        source: postgresql-source
+
 toolsets:
     postgres_database_tools:
         - execute_sql
@@ -177,3 +185,5 @@ toolsets:
         - get_query_plan
         - list_views
         - list_schemas
+        - database_overview
+        - list_triggers
