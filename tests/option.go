@@ -18,6 +18,7 @@ package tests
 
 // InvokeTestConfig represents the various configuration options for RunToolInvokeTest()
 type InvokeTestConfig struct {
+	myAuthToolWant           string
 	myToolId3NameAliceWant   string
 	myToolById4Want          string
 	nullWant                 string
@@ -30,6 +31,14 @@ type InvokeTestConfig struct {
 }
 
 type InvokeTestOption func(*InvokeTestConfig)
+
+// WithMyAuthToolWant represents the response value for my-auth-tool.
+// e.g. tests.RunToolInvokeTest(t, select1Want, tests.WithMyAuthToolWant("custom"))
+func WithMyAuthToolWant(s string) InvokeTestOption {
+	return func(c *InvokeTestConfig) {
+		c.myAuthToolWant = s
+	}
+}
 
 // WithMyToolId3NameAliceWant represents the response value for my-tool with id=3 and name=Alice.
 // e.g. tests.RunToolInvokeTest(t, select1Want, tests.WithMyToolId3NameAliceWant("custom"))
