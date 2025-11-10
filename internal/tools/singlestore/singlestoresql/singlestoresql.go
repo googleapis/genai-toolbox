@@ -76,11 +76,13 @@ func (cfg Config) ToolConfigKind() string {
 // the necessary manifests for tool operation. Returns an initialized Tool or an error if setup fails.
 //
 // Parameters:
-//   srcs - a map of available sources, keyed by source name.
+//
+//	srcs - a map of available sources, keyed by source name.
 //
 // Returns:
-//   tools.Tool - the initialized tool instance.
-//   error      - an error if the source is missing, incompatible, or setup fails.
+//
+//	tools.Tool - the initialized tool instance.
+//	error      - an error if the source is missing, incompatible, or setup fails.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	// verify source exists
 	rawS, ok := srcs[cfg.Source]
@@ -142,8 +144,9 @@ type Tool struct {
 // step fails.
 //
 // Parameters:
-//   ctx    - The context for controlling cancellation and timeouts.
-//   params - The parameter values to be used for the SQL statement.
+//
+//	ctx    - The context for controlling cancellation and timeouts.
+//	params - The parameter values to be used for the SQL statement.
 //
 // Returns:
 //   - A slice of maps, where each map represents a row with column names as keys.

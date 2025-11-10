@@ -26,6 +26,7 @@ var expectedToolSources = []string{
 	"alloydb-postgres",
 	"bigquery",
 	"clickhouse",
+	"cloud-healthcare",
 	"cloud-sql-mssql-admin",
 	"cloud-sql-mssql-observability",
 	"cloud-sql-mssql",
@@ -125,6 +126,7 @@ func TestGetPrebuiltTool(t *testing.T) {
 	mindsdb_config, _ := Get("mindsdb")
 	sqlite_config, _ := Get("sqlite")
 	neo4jconfig, _ := Get("neo4j")
+	healthcare_config, _ := Get("cloud-healthcare")
 
 	if len(alloydb_admin_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
@@ -212,6 +214,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 
 	if len(neo4jconfig) <= 0 {
 		t.Fatalf("unexpected error: could not fetch neo4j prebuilt tools yaml")
+	}
+	if len(healthcare_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch healthcare prebuilt tools yaml")
 	}
 }
 
