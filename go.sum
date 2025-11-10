@@ -236,8 +236,8 @@ cloud.google.com/go/dataplex v1.3.0/go.mod h1:hQuRtDg+fCiFgC8j0zV222HvzFQdRd+SVX
 cloud.google.com/go/dataplex v1.4.0/go.mod h1:X51GfLXEMVJ6UN47ESVqvlsRplbLhcsAt0kZCCKsU0A=
 cloud.google.com/go/dataplex v1.5.2/go.mod h1:cVMgQHsmfRoI5KFYq4JtIBEUbYwc3c7tXmIDhRmNNVQ=
 cloud.google.com/go/dataplex v1.6.0/go.mod h1:bMsomC/aEJOSpHXdFKFGQ1b0TDPIeL28nJObeO1ppRs=
-cloud.google.com/go/dataplex v1.27.1 h1:renSEYTQZMQ3ag7lM0BDmSj4FWqaTGW60YQ/lvAE5iA=
-cloud.google.com/go/dataplex v1.27.1/go.mod h1:VB+xlYJiJ5kreonXsa2cHPj0A3CfPh/mgiHG4JFhbUA=
+cloud.google.com/go/dataplex v1.28.0 h1:rROI3iqMVI9nXT701ULoFRETQVAOAPC3mPSWFDxXFl0=
+cloud.google.com/go/dataplex v1.28.0/go.mod h1:VB+xlYJiJ5kreonXsa2cHPj0A3CfPh/mgiHG4JFhbUA=
 cloud.google.com/go/dataproc v1.7.0/go.mod h1:CKAlMjII9H90RXaMpSxQ8EU6dQx6iAYNPcYPOkSbi8s=
 cloud.google.com/go/dataproc v1.8.0/go.mod h1:5OW+zNAH0pMpw14JVrPONsxMQYMBqJuzORhIBfBn9uI=
 cloud.google.com/go/dataproc v1.12.0/go.mod h1:zrF3aX0uV3ikkMz6z4uBbIKyhRITnxvr4i3IjKsKrw4=
