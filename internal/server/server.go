@@ -50,6 +50,14 @@ type Server struct {
 	ResourceMgr     *ResourceManager
 }
 
+// ResType identifies the resource type for label storage.
+type ResType string
+
+const (
+	ResSource ResType = "source" // labels for sources
+	ResTool   ResType = "tool"   // labels for tools
+)
+
 // ResourceManager contains available resources for the server. Should be initialized with NewResourceManager().
 type ResourceManager struct {
 	mu           sync.RWMutex
@@ -57,12 +65,14 @@ type ResourceManager struct {
 	authServices map[string]auth.AuthService
 	tools        map[string]tools.Tool
 	toolsets     map[string]tools.Toolset
+	labels       map[ResType]map[string]map[string]string
 }
 
 func NewResourceManager(
 	sourcesMap map[string]sources.Source,
 	authServicesMap map[string]auth.AuthService,
 	toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset,
+	labels map[ResType]map[string]map[string]string,
 ) *ResourceManager {
 	resourceMgr := &ResourceManager{
 		mu:           sync.RWMutex{},
@@ -70,6 +80,7 @@ func NewResourceManager(
 		authServices: authServicesMap,
 		tools:        toolsMap,
 		toolsets:     toolsetsMap,
+		labels:       labels,
 	}
 
 	return resourceMgr
@@ -103,13 +114,21 @@ func (r *ResourceManager) GetToolset(toolsetName string) (tools.Toolset, bool) {
 	return toolset, ok
 }
 
-func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset) {
+func (r *ResourceManager) SetResources(
+	sourcesMap map[string]sources.Source,
+	authServicesMap map[string]auth.AuthService,
+	toolsMap map[string]tools.Tool,
+	toolsetsMap map[string]tools.Toolset,
+	labels map[ResType]map[string]map[string]string,
+) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+
 	r.sources = sourcesMap
 	r.authServices = authServicesMap
 	r.tools = toolsMap
 	r.toolsets = toolsetsMap
+	r.labels = labels
 }
 
 func (r *ResourceManager) GetAuthServiceMap() map[string]auth.AuthService {
@@ -122,6 +141,12 @@ func (r *ResourceManager) GetToolsMap() map[string]tools.Tool {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	return r.tools
+}
+
+func (r *ResourceManager) GetLabels(rt ResType, name string) map[string]string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.labels[rt][name]
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -270,6 +295,53 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, nil
 }
 
+func InitializeLabels(
+	ctx context.Context,
+	cfg ServerConfig,
+	sourcesMap map[string]sources.Source,
+	toolsMap map[string]tools.Tool,
+) (map[ResType]map[string]map[string]string, error) {
+	ctx = util.WithUserAgent(ctx, cfg.Version)
+	l, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	labels := map[ResType]map[string]map[string]string{
+		ResSource: {},
+		ResTool:   {},
+	}
+
+	for section, resources := range cfg.Labels {
+		switch section {
+		case "sources":
+			for name, kv := range resources {
+				if _, exists := sourcesMap[name]; !exists {
+					return nil, fmt.Errorf("labels defined for unknown source %q", name)
+				}
+				labels[ResSource][name] = kv
+			}
+
+		case "tools":
+			for name, kv := range resources {
+				if _, exists := toolsMap[name]; !exists {
+					return nil, fmt.Errorf("labels defined for unknown tool %q", name)
+				}
+				labels[ResTool][name] = kv
+			}
+		}
+	}
+
+	srcCount := len(labels[ResSource])
+	toolCount := len(labels[ResTool])
+	total := srcCount + toolCount
+
+	l.InfoContext(ctx,
+		fmt.Sprintf("Initialized %d labels (%d sources, %d tools)", total, srcCount, toolCount),
+	)
+	return labels, nil
+}
+
 // NewServer returns a Server object based on provided Config.
 func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	instrumentation, err := util.InstrumentationFromContext(ctx)
@@ -329,7 +401,13 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := NewResourceManager(sourcesMap, authServicesMap, toolsMap, toolsetsMap)
+	// Initialise Labels
+	labels, err := InitializeLabels(ctx, cfg, sourcesMap, toolsMap)
+	if err != nil {
+		return nil, fmt.Errorf("unable to initialize labels: %w", err)
+	}
+
+	resourceManager := NewResourceManager(sourcesMap, authServicesMap, toolsMap, toolsetsMap, labels)
 
 	s := &Server{
 		version:         cfg.Version,

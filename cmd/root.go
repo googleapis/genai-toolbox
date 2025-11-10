@@ -360,6 +360,7 @@ type ToolsFile struct {
 	AuthServices server.AuthServiceConfigs `yaml:"authServices"`
 	Tools        server.ToolConfigs        `yaml:"tools"`
 	Toolsets     server.ToolsetConfigs     `yaml:"toolsets"`
+	Labels       server.Labels             `yaml:"labels"`
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
@@ -412,6 +413,7 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 		AuthServices: make(server.AuthServiceConfigs),
 		Tools:        make(server.ToolConfigs),
 		Toolsets:     make(server.ToolsetConfigs),
+		Labels:       make(server.Labels),
 	}
 
 	var conflicts []string
@@ -459,6 +461,20 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 				conflicts = append(conflicts, fmt.Sprintf("toolset '%s' (file #%d)", name, fileIndex+1))
 			} else {
 				merged.Toolsets[name] = toolset
+			}
+		}
+
+		// merge labels
+		for section, items := range file.Labels {
+			if merged.Labels[section] == nil {
+				merged.Labels[section] = make(map[string]map[string]string)
+			}
+			for name, kv := range items {
+				if _, exists := merged.Labels[section][name]; exists {
+					conflicts = append(conflicts, fmt.Sprintf("label '%s' in section '%s' (file #%d)", name, section, fileIndex+1))
+				} else {
+					merged.Labels[section][name] = kv
+				}
 			}
 		}
 	}
@@ -539,14 +555,14 @@ func handleDynamicReload(ctx context.Context, toolsFile ToolsFile, s *server.Ser
 		panic(err)
 	}
 
-	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := validateReloadEdits(ctx, toolsFile)
+	sourcesMap, authServicesMap, toolsMap, toolsetsMap, labels, err := validateReloadEdits(ctx, toolsFile)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
 		return err
 	}
 
-	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, toolsMap, toolsetsMap)
+	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, toolsMap, toolsetsMap, labels)
 
 	return nil
 }
@@ -554,7 +570,7 @@ func handleDynamicReload(ctx context.Context, toolsFile ToolsFile, s *server.Ser
 // validateReloadEdits checks that the reloaded tools file configs can initialized without failing
 func validateReloadEdits(
 	ctx context.Context, toolsFile ToolsFile,
-) (map[string]sources.Source, map[string]auth.AuthService, map[string]tools.Tool, map[string]tools.Toolset, error,
+) (map[string]sources.Source, map[string]auth.AuthService, map[string]tools.Tool, map[string]tools.Toolset, map[server.ResType]map[string]map[string]string, error,
 ) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -577,16 +593,24 @@ func validateReloadEdits(
 		AuthServiceConfigs: toolsFile.AuthServices,
 		ToolConfigs:        toolsFile.Tools,
 		ToolsetConfigs:     toolsFile.Toolsets,
+		Labels:             toolsFile.Labels,
 	}
 
 	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to initialize reloaded configs: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, err
 	}
 
-	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, nil
+	labels, err := server.InitializeLabels(ctx, reloadedConfig, sourcesMap, toolsMap)
+	if err != nil {
+		errMsg := fmt.Errorf("unable to initialize reloaded configs: %w", err)
+		logger.WarnContext(ctx, errMsg.Error())
+		return nil, nil, nil, nil, nil, err
+	}
+
+	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, labels, nil
 }
 
 // watchChanges checks for changes in the provided yaml tools file(s) or folder.
@@ -877,7 +901,7 @@ func run(cmd *Command) error {
 		}
 	}
 
-	cmd.cfg.SourceConfigs, cmd.cfg.AuthServiceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs = toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets
+	cmd.cfg.SourceConfigs, cmd.cfg.AuthServiceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs, cmd.cfg.Labels = toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets, toolsFile.Labels
 	authSourceConfigs := toolsFile.AuthSources
 	if authSourceConfigs != nil {
 		cmd.logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")

@@ -189,7 +189,7 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := NewResourceManager(nil, nil, tools, toolsets)
+	resourceManager := NewResourceManager(nil, nil, tools, toolsets, nil)
 
 	server := Server{
 		version:         fakeVersionString,

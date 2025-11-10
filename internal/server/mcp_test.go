@@ -955,7 +955,7 @@ func TestStdioSession(t *testing.T) {
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := NewResourceManager(nil, nil, toolsMap, toolsets)
+	resourceManager := NewResourceManager(nil, nil, toolsMap, toolsets, nil)
 
 	server := &Server{
 		version:         fakeVersionString,

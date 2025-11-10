@@ -147,7 +147,15 @@ func TestUpdateServer(t *testing.T) {
 			Name: "example-toolset", Tools: []*tools.Tool{},
 		},
 	}
-	s.ResourceMgr.SetResources(newSources, newAuth, newTools, newToolsets)
+	newLabels := map[server.ResType]map[string]map[string]string{
+		server.ResSource: {
+			"example-source": {"env": "prod"},
+		},
+		server.ResTool: {
+			"example-tool": {"category": "analysis"},
+		},
+	}
+	s.ResourceMgr.SetResources(newSources, newAuth, newTools, newToolsets, newLabels)
 	if err != nil {
 		t.Errorf("error updating server: %s", err)
 	}
@@ -170,5 +178,10 @@ func TestUpdateServer(t *testing.T) {
 	gotToolset, _ := s.ResourceMgr.GetToolset("example-toolset")
 	if diff := cmp.Diff(gotToolset, newToolsets["example-toolset"]); diff != "" {
 		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
+	}
+
+	gotlabels := s.ResourceMgr.GetLabels(server.ResSource, "example-source")
+	if diff := cmp.Diff(gotlabels, newLabels[server.ResSource]["example-source"]); diff != "" {
+		t.Errorf("labels not updated (-want +got):\n%s", diff)
 	}
 }

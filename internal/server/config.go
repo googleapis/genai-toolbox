@@ -57,6 +57,8 @@ type ServerConfig struct {
 	DisableReload bool
 	// UI indicates if Toolbox UI endpoints (/ui) are available
 	UI bool
+	// Optional label metadata for resources.
+	Labels Labels
 }
 
 type logFormat string
@@ -268,5 +270,40 @@ func (c *ToolsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(inter
 	for name, toolList := range raw {
 		(*c)[name] = tools.ToolsetConfig{Name: name, ToolNames: toolList}
 	}
+	return nil
+}
+
+// Labels is a type used to allow unmarshal of the Labels for resources
+type Labels map[string]map[string]map[string]string
+
+// validate interface
+var _ yaml.InterfaceUnmarshalerContext = &Labels{}
+
+func (l *Labels) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
+	var raw map[string]map[string]map[string]string
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	for section, resources := range raw {
+		if section != "sources" && section != "tools" {
+			return fmt.Errorf("invalid labels section %q. allowed: sources, tools", section)
+		}
+		if len(resources) == 0 {
+			return fmt.Errorf("labels.%s cannot be empty", section)
+		}
+		for name, kv := range resources {
+			if len(kv) == 0 {
+				return fmt.Errorf("labels.%s.%s cannot be empty", section, name)
+			}
+			for k, v := range kv {
+				if strings.TrimSpace(v) == "" {
+					return fmt.Errorf("labels.%s.%s.%s value cannot be empty", section, name, k)
+				}
+			}
+		}
+	}
+
+	*l = raw
 	return nil
 }
