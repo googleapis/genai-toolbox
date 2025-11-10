@@ -1256,6 +1256,7 @@ func TestPrebuiltTools(t *testing.T) {
 	cloudsqlmysqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mysql-observability")
 	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
 	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
+	cloudhealthcare_config, _ := prebuiltconfigs.Get("cloud-healthcare")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1348,6 +1349,10 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("NEO4J_DATABASE", "neo4j")
 	t.Setenv("NEO4J_USERNAME", "your_neo4j_user")
 	t.Setenv("NEO4J_PASSWORD", "your_neo4j_password")
+
+	t.Setenv("CLOUD_HEALTHCARE_PROJECT", "your_gcp_project_id")
+	t.Setenv("CLOUD_HEALTHCARE_REGION", "your_gcp_region")
+	t.Setenv("CLOUD_HEALTHCARE_DATASET", "your_healthcare_dataset")
 
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -1514,7 +1519,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"looker_tools": tools.ToolsetConfig{
 					Name:      "looker_tools",
-					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "make_dashboard", "add_dashboard_element", "health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns"},
+					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "run_dashboard", "make_dashboard", "add_dashboard_element", "health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns"},
 				},
 			},
 		},
@@ -1625,6 +1630,24 @@ func TestPrebuiltTools(t *testing.T) {
 				"cloud_sql_mssql_cloud_monitoring_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mssql_cloud_monitoring_tools",
 					ToolNames: []string{"get_system_metrics"},
+				},
+			},
+		},
+		{
+			name: "cloud healthcare prebuilt tools",
+			in:   cloudhealthcare_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_healthcare_dataset_tools": tools.ToolsetConfig{
+					Name:      "cloud_healthcare_dataset_tools",
+					ToolNames: []string{"get_dataset", "list_dicom_stores", "list_fhir_stores"},
+				},
+				"cloud_healthcare_fhir_tools": tools.ToolsetConfig{
+					Name:      "cloud_healthcare_fhir_tools",
+					ToolNames: []string{"get_fhir_store", "get_fhir_store_metrics", "get_fhir_resource", "fhir_patient_search", "fhir_patient_everything", "fhir_fetch_page"},
+				},
+				"cloud_healthcare_dicom_tools": tools.ToolsetConfig{
+					Name:      "cloud_healthcare_dicom_tools",
+					ToolNames: []string{"get_dicom_store", "get_dicom_store_metrics", "search_dicom_studies", "search_dicom_series", "search_dicom_instances", "retrieve_rendered_dicom_instance"},
 				},
 			},
 		},
