@@ -38,5 +38,5 @@ sources:
 | **field**      | **type** | **required** | **description**                                                                                                                                |
 | -------------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | kind           |  string  |     true     | Must be "cloud-sql-admin".                                                                                                                     |
-| defaultProject |  string  |     false    | For prebuilt tools, this is the environment variable containing the Google Cloud project ID.                                                   |
+| defaultProject |  string  |     false    | The Google Cloud project ID to use for Cloud SQL infrastructure tools.                                                                         |
 | useClientOAuth |  boolean |     false    | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
