@@ -77,6 +77,9 @@ cluster][alloydb-free-trial].
 - [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
   List cardinality of columns in a table in a PostgreSQL database.
 
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
