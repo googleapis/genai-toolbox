@@ -48,19 +48,19 @@ to expose your developer assistant tools to a Looker instance:
    <!-- {x-release-please-start-version} -->
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -315,6 +315,7 @@ instance and create new saved content.
 1. **run_look**: Run a saved Look and return the data
 1. **make_look**: Create a saved Look in Looker and return the URL
 1. **get_dashboards**: Return the saved dashboards that match a title or description
+1. **run_dashbaord**: Run the queries associated with a dashboard and return the data
 1. **make_dashboard**: Create a saved dashboard in Looker and return the URL
 1. **add_dashboard_element**: Add a tile to a dashboard
 

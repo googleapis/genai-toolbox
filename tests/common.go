@@ -33,10 +33,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var (
-	PostgresListSchemasToolKind = "postgres-list-schemas"
-)
-
 // GetToolsConfig returns a mock tools config file
 func GetToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
 	// Write config into a file and pass it to command
@@ -195,9 +191,45 @@ func AddExecuteSqlConfig(t *testing.T, config map[string]any, toolKind string) m
 }
 
 func AddPostgresPrebuiltConfig(t *testing.T, config map[string]any) map[string]any {
+	var (
+		PostgresListSchemasToolKind             = "postgres-list-schemas"
+		PostgresListTablesToolKind              = "postgres-list-tables"
+		PostgresListActiveQueriesToolKind       = "postgres-list-active-queries"
+		PostgresListInstalledExtensionsToolKind = "postgres-list-installed-extensions"
+		PostgresListAvailableExtensionsToolKind = "postgres-list-available-extensions"
+		PostgresListViewsToolKind               = "postgres-list-views"
+	)
+
 	tools, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
+	}
+	tools["list_tables"] = map[string]any{
+		"kind":        PostgresListTablesToolKind,
+		"source":      "my-instance",
+		"description": "Lists tables in the database.",
+	}
+	tools["list_active_queries"] = map[string]any{
+		"kind":        PostgresListActiveQueriesToolKind,
+		"source":      "my-instance",
+		"description": "Lists active queries in the database.",
+	}
+
+	tools["list_installed_extensions"] = map[string]any{
+		"kind":        PostgresListInstalledExtensionsToolKind,
+		"source":      "my-instance",
+		"description": "Lists installed extensions in the database.",
+	}
+
+	tools["list_available_extensions"] = map[string]any{
+		"kind":        PostgresListAvailableExtensionsToolKind,
+		"source":      "my-instance",
+		"description": "Lists available extensions in the database.",
+	}
+
+	tools["list_views"] = map[string]any{
+		"kind":   PostgresListViewsToolKind,
+		"source": "my-instance",
 	}
 	tools["list_schemas"] = map[string]any{
 		"kind":   PostgresListSchemasToolKind,

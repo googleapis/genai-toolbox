@@ -98,7 +98,9 @@ centralized location to store and update tools, allowing you to share tools
 between agents and applications and update those tools without necessarily
 redeploying your application.
 
-![architecture](./docs/en/getting-started/introduction/architecture.png)
+<p align="center">
+<img src="./docs/en/getting-started/introduction/architecture.png" alt="architecture" width="50%"/>
+</p>
 
 ## Getting Started
 
@@ -122,7 +124,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.18.0
+> export VERSION=0.19.1
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 > chmod +x toolbox
 > ```
@@ -135,7 +137,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.18.0
+> export VERSION=0.19.1
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
 > chmod +x toolbox
 > ```
@@ -148,7 +150,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.18.0
+> export VERSION=0.19.1
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
 > chmod +x toolbox
 > ```
@@ -161,7 +163,7 @@ To install Toolbox as a binary:
 >
 > ```powershell
 > # see releases page for other versions
-> $VERSION = "0.18.0"
+> $VERSION = "0.19.1"
 > Invoke-WebRequest -Uri "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe" -OutFile "toolbox.exe"
 > ```
 >
@@ -174,7 +176,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.18.0
+export VERSION=0.19.1
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -198,7 +200,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.18.0
+go install github.com/googleapis/genai-toolbox@v0.19.1
 ```
 <!-- {x-release-please-end} -->
 
