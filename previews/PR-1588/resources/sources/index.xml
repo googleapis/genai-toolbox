@@ -59,7 +59,7 @@ browser) for each request.&lt;/li>
  &lt;td>defaultProject&lt;/td>
  &lt;td style="text-align: center">string&lt;/td>
  &lt;td style="text-align: center">false&lt;/td>
- &lt;td>For prebuilt tools, this is the environment variable containing the Google Cloud project ID.&lt;/td>
+ &lt;td>The Google Cloud project ID to use for AlloyDB infrastructure tools.&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td>useClientOAuth&lt;/td>
@@ -377,7 +377,7 @@ browser) for each request.&lt;/li>
  &lt;td>defaultProject&lt;/td>
  &lt;td style="text-align: center">string&lt;/td>
  &lt;td style="text-align: center">false&lt;/td>
- &lt;td>For prebuilt tools, this is the environment variable containing the Google Cloud project ID.&lt;/td>
+ &lt;td>The Google Cloud project ID to use for Cloud SQL infrastructure tools.&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td>useClientOAuth&lt;/td>
