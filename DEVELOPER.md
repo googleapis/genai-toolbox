@@ -150,22 +150,22 @@ go test -race -v ./cmd/... ./internal/...
    ```
 
    Be sure to set the timeout to a reasonable value for your tests.
-   
+
 ### Link Checks
 
-   We use **[lychee](https://github.com/lycheeverse/lychee-action)** to check all links in our repository. To run the link checker locally, see [this](https://github.com/lycheeverse/lychee?tab=readme-ov-file#commandline-usage).
-### Fixing Links
+We use **[lychee](https://github.com/lycheeverse/lychee-action)** to check all links in our repository. To run the link checker locally, see [this](https://github.com/lycheeverse/lychee?tab=readme-ov-file#commandline-usage).
 
-   #### Update the Link
-   * Fix the broken link or update the content where it is used.
+## Fixing Broken Links
 
-   #### If you cannot fix the link (e.g., due to an external service's rate-limit or if it's a local-only URL)
-   * Tell the `lychee` to ignore it.List regular expressions or direct links in  **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/main/.lycheeignore)**, with one entry per line.
-   * Always add a comment in `.lycheeignore` explaining why the link is being skipped. This prevents link rot and helps future maintainers.
+* **Update the Link:** Fix the broken link or update the content where it is used.
+* **If you cannot fix the link (e.g., due to an external service's rate-limit or if it's a local-only URL):**
+    * Tell the `lychee` to **ignore** it. List **regular expressions** or **direct links** in **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/main/.lycheeignore)**, with one entry per line.
+    * Always add a **comment** in `.lycheeignore` explaining **why** the link is being skipped. This prevents link rot and helps future maintainers.
 
-### When to Ignore a Link
+#### When to Ignore a Link
 * External Rate-Limits: You can skip checking links that frequently fail due to external service issues like rate-limiting.
 * Local-Only URLs: Skip URLs that are only meant to work in a specific local environment.
+
 
 **Example** `.lycheeignore`
 
