@@ -96,8 +96,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			Parameters:   parameters.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
-		mcpManifest: mcpManifest,
-		SessionLength:  s.SessionLength,
+		mcpManifest:   mcpManifest,
+		SessionLength: s.SessionLength,
 	}, nil
 }
 
@@ -110,7 +110,7 @@ type Tool struct {
 	UseClientOAuth bool
 	Client         *v4.LookerSDK
 	ApiSettings    *rtl.ApiSettings
-	AuthRequired   []string         `yaml:"authRequired"`
+	AuthRequired   []string `yaml:"authRequired"`
 	Parameters     tools.Parameters
 	manifest       tools.Manifest
 	mcpManifest    tools.McpManifest
