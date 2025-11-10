@@ -2,4 +2,4 @@ langchain==0.3.27
 langchain-google-vertexai==2.1.2
 langgraph==1.0.1
 toolbox-langchain==0.5.2
-pytest==8.4.2
+pytest==9.0.0
