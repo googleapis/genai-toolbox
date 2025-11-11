@@ -760,7 +760,6 @@ func verifyGraphListResult(t *testing.T, body map[string]interface{}, expectedGr
 		t.Fatalf("unable to parse result as JSON array: %s", err)
 	}
 
-	
 	// If we expect specific graphs, verify they exist
 	if len(expectedGraphs) > 0 {
 		graphNames := make(map[string]bool)
@@ -768,13 +767,13 @@ func verifyGraphListResult(t *testing.T, body map[string]interface{}, expectedGr
 		if expectedSimpleFormat {
 			requiredKeys = []string{"name"}
 		}
-		
+
 		for _, graph := range graphs {
 			graphMap, ok := graph.(map[string]interface{})
 			if !ok {
 				continue
 			}
-			
+
 			objectDetails, ok := graphMap["object_details"].(map[string]interface{})
 			if !ok {
 				t.Fatalf("object_details is not of type map[string]interface{}, got: %T", graphMap["object_details"])
@@ -852,7 +851,6 @@ func runSpannerListGraphsTest(t *testing.T, graphName string) {
 		})
 	}
 }
-	
 
 func runSpannerSchemaToolInvokeTest(t *testing.T, accessSchemaWant string) {
 	invokeTcs := []struct {
