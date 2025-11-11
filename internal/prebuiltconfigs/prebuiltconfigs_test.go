@@ -26,6 +26,7 @@ var expectedToolSources = []string{
 	"alloydb-postgres",
 	"bigquery",
 	"clickhouse",
+	"cloud-healthcare",
 	"cloud-sql-mssql-admin",
 	"cloud-sql-mssql-observability",
 	"cloud-sql-mssql",
@@ -36,6 +37,7 @@ var expectedToolSources = []string{
 	"cloud-sql-postgres-observability",
 	"cloud-sql-postgres",
 	"dataplex",
+	"elasticsearch",
 	"firestore",
 	"looker-conversational-analytics",
 	"looker",
@@ -46,6 +48,7 @@ var expectedToolSources = []string{
 	"oceanbase",
 	"postgres",
 	"serverless-spark",
+	"singlestore",
 	"spanner-postgres",
 	"spanner",
 	"sqlite",
@@ -117,11 +120,13 @@ func TestGetPrebuiltTool(t *testing.T) {
 	mssql_config, _ := Get("mssql")
 	oceanbase_config, _ := Get("oceanbase")
 	postgresconfig, _ := Get("postgres")
+	singlestore_config, _ := Get("singlestore")
 	spanner_config, _ := Get("spanner")
 	spannerpg_config, _ := Get("spanner-postgres")
 	mindsdb_config, _ := Get("mindsdb")
 	sqlite_config, _ := Get("sqlite")
 	neo4jconfig, _ := Get("neo4j")
+	healthcare_config, _ := Get("cloud-healthcare")
 
 	if len(alloydb_admin_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
@@ -189,6 +194,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	if len(postgresconfig) <= 0 {
 		t.Fatalf("unexpected error: could not fetch postgres prebuilt tools yaml")
 	}
+	if len(singlestore_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch singlestore prebuilt tools yaml")
+	}
 	if len(spanner_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch spanner prebuilt tools yaml")
 	}
@@ -198,14 +206,17 @@ func TestGetPrebuiltTool(t *testing.T) {
 
 	if len(mindsdb_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch spanner pg prebuilt tools yaml")
-  }
-  
+	}
+
 	if len(sqlite_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch sqlite prebuilt tools yaml")
 	}
-  
+
 	if len(neo4jconfig) <= 0 {
 		t.Fatalf("unexpected error: could not fetch neo4j prebuilt tools yaml")
+	}
+	if len(healthcare_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch healthcare prebuilt tools yaml")
 	}
 }
 

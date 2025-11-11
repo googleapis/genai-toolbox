@@ -173,6 +173,10 @@ tools:
         kind: postgres-list-views
         source: postgresql-source
 
+    list_schemas:
+        kind: postgres-list-schemas
+        source: postgresql-source
+
 toolsets:
     postgres_database_tools:
         - execute_sql
@@ -190,3 +194,4 @@ toolsets:
         - list_locks
         - replication_stats
         - list_views
+        - list_schemas

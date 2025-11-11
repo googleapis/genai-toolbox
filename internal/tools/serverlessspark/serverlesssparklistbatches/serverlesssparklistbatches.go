@@ -127,6 +127,7 @@ type Batch struct {
 	State      string `json:"state"`
 	Creator    string `json:"creator"`
 	CreateTime string `json:"createTime"`
+	Operation  string `json:"operation"`
 }
 
 // Invoke executes the tool's operation.
@@ -177,6 +178,7 @@ func ToBatches(batchPbs []*dataprocpb.Batch) []Batch {
 			State:      batchPb.State.Enum().String(),
 			Creator:    batchPb.Creator,
 			CreateTime: batchPb.CreateTime.AsTime().Format(time.RFC3339),
+			Operation:  batchPb.Operation,
 		}
 		batches = append(batches, batch)
 	}

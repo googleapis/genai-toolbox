@@ -118,7 +118,7 @@ steps:
       - "ALLOYDB_AI_NL_PROJECT=$PROJECT_ID"
       - "ALLOYDB_AI_NL_CLUSTER=$_ALLOYDB_AI_NL_CLUSTER"
       - "ALLOYDB_AI_NL_INSTANCE=$_ALLOYDB_AI_NL_INSTANCE"
-      - "ALLOYDB_AI_NL_DATABASE=$_AI_NL_DATABASE_NAME"
+      - "ALLOYDB_AI_NL_DATABASE=$_DATABASE_NAME"
       - "ALLOYDB_AI_NL_REGION=$_REGION"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
     secretEnv: ["ALLOYDB_AI_NL_USER", "ALLOYDB_AI_NL_PASS", "CLIENT_ID"]
@@ -213,6 +213,29 @@ steps:
           "Dataform" \
           dataform \
           dataform
+
+  - id: "cloud-healthcare"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "HEALTHCARE_PROJECT=$PROJECT_ID"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+      - "HEALTHCARE_REGION=$_REGION"
+      - "HEALTHCARE_DATASET=$_HEALTHCARE_DATASET"
+      - "HEALTHCARE_PREPOPULATED_DICOM_STORE=$_HEALTHCARE_PREPOPULATED_DICOM_STORE"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Cloud Healthcare API" \
+          cloudhealthcare \
+          cloudhealthcare
 
   - id: "postgres"
     name: golang:1
@@ -705,7 +728,26 @@ steps:
       - |
         ./yugabytedb.test -test.v
 
- 
+  - id: "elasticsearch"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID", "ELASTICSEARCH_USER", "ELASTICSEARCH_PASS", "ELASTICSEARCH_HOST"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Elasticsearch" \
+          elasticsearch \
+          elasticsearch
+
+
   - id: "cassandra"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -751,8 +793,9 @@ steps:
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
-      - "SERVERLESS_SPARK_PROJECT=$PROJECT_ID"
       - "SERVERLESS_SPARK_LOCATION=$_REGION"
+      - "SERVERLESS_SPARK_PROJECT=$PROJECT_ID"
+      - "SERVERLESS_SPARK_SERVICE_ACCOUNT=$SERVICE_ACCOUNT_EMAIL"
     secretEnv: ["CLIENT_ID"]
     volumes:
       - name: "go"
@@ -763,7 +806,29 @@ steps:
         .ci/test_with_coverage.sh \
           "Serverless Spark" \
           serverlessspark
-            
+
+  - id: "singlestore"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SINGLESTORE_PORT=$_SINGLESTORE_PORT"
+      - "SINGLESTORE_USER=$_SINGLESTORE_USER"
+      - "SINGLESTORE_DATABASE=$_SINGLESTORE_DATABASE"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["SINGLESTORE_PASSWORD", "SINGLESTORE_HOST", "CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "SingleStore" \
+          singlestore \
+          singlestore
+
 availableSecrets:
   secretManager:
     - versionName: projects/$PROJECT_ID/secrets/cloud_sql_pg_user/versions/latest
@@ -854,6 +919,12 @@ availableSecrets:
       env: YUGABYTEDB_USER
     - versionName: projects/$PROJECT_ID/secrets/yugabytedb_pass/versions/latest
       env: YUGABYTEDB_PASS
+    - versionName: projects/$PROJECT_ID/secrets/elastic_search_host/versions/latest
+      env: ELASTICSEARCH_HOST
+    - versionName: projects/$PROJECT_ID/secrets/elastic_search_user/versions/latest
+      env: ELASTICSEARCH_USER
+    - versionName: projects/$PROJECT_ID/secrets/elastic_search_pass/versions/latest
+      env: ELASTICSEARCH_PASS
     - versionName: projects/$PROJECT_ID/secrets/cassandra_user/versions/latest
       env: CASSANDRA_USER
     - versionName: projects/$PROJECT_ID/secrets/cassandra_pass/versions/latest
@@ -866,6 +937,10 @@ availableSecrets:
       env: ORACLE_PASS
     - versionName: projects/$PROJECT_ID/secrets/oracle_host/versions/latest
       env: ORACLE_HOST
+    - versionName: projects/$PROJECT_ID/secrets/singlestore_pass/versions/latest
+      env: SINGLESTORE_PASSWORD
+    - versionName: projects/$PROJECT_ID/secrets/singlestore_host/versions/latest
+      env: SINGLESTORE_HOST
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -877,7 +952,6 @@ options:
 
 substitutions:
   _DATABASE_NAME: test_database
-  _AI_NL_DATABASE_NAME: ainl_update_testing
   _FIREBIRD_DATABASE_NAME: /firebird/test_database.fdb
   _REGION: "us-central1"
   _CLOUD_SQL_POSTGRES_INSTANCE: "cloud-sql-pg-testing"
@@ -886,6 +960,8 @@ substitutions:
   _ALLOYDB_AI_NL_CLUSTER: "alloydb-ai-nl-testing"
   _ALLOYDB_AI_NL_INSTANCE: "alloydb-ai-nl-testing-instance"
   _BIGTABLE_INSTANCE: "bigtable-testing-instance"
+  _HEALTHCARE_DATASET: "test-dataset"
+  _HEALTHCARE_PREPOPULATED_DICOM_STORE: "prepopulated-test-dicom-store"
   _POSTGRES_HOST: 127.0.0.1
   _POSTGRES_PORT: "5432"
   _SPANNER_INSTANCE: "spanner-testing"
@@ -921,3 +997,7 @@ substitutions:
   _YUGABYTEDB_PORT: "5433"
   _YUGABYTEDB_LOADBALANCE: "false"
   _ORACLE_SERVER_NAME: "FREEPDB1"
+  _SINGLESTORE_HOST: 127.0.0.1
+  _SINGLESTORE_PORT: "3308"
+  _SINGLESTORE_DATABASE: "singlestore"
+  _SINGLESTORE_USER: "root"

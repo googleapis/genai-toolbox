@@ -70,6 +70,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	Name           string `yaml:"name" validate:"required"`
 	Kind           string `yaml:"kind" validate:"required"`
+	DefaultProject string `yaml:"defaultProject"`
 	UseClientOAuth bool   `yaml:"useClientOAuth"`
 }
 
@@ -116,6 +117,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Kind:           SourceKind,
 		BaseURL:        "https://sqladmin.googleapis.com",
 		Service:        service,
+		DefaultProject: r.DefaultProject,
 		UseClientOAuth: r.UseClientOAuth,
 	}
 	return s, nil
@@ -128,6 +130,7 @@ type Source struct {
 	Kind           string `yaml:"kind"`
 	BaseURL        string
 	Service        *sqladmin.Service
+	DefaultProject string
 	UseClientOAuth bool
 }
 
