@@ -623,7 +623,7 @@ func NewStringParameterWithExcludedValues(name string, desc string, excludedValu
 	return &StringParameter{
 		CommonParameter: CommonParameter{
 			Name:           name,
-			Type:           typeString,
+			Type:           TypeString,
 			Desc:           desc,
 			ExcludedValues: excludedValues,
 			AuthServices:   nil,
@@ -780,7 +780,7 @@ func NewIntParameterWithExcludedValues(name string, desc string, excludedValues 
 	return &IntParameter{
 		CommonParameter: CommonParameter{
 			Name:           name,
-			Type:           typeString,
+			Type:           TypeString,
 			Desc:           desc,
 			ExcludedValues: excludedValues,
 			AuthServices:   nil,
@@ -938,7 +938,7 @@ func NewFloatParameterWithExcludedValues(name string, desc string, excludedValue
 	return &FloatParameter{
 		CommonParameter: CommonParameter{
 			Name:           name,
-			Type:           typeFloat,
+			Type:           TypeFloat,
 			Desc:           desc,
 			ExcludedValues: excludedValues,
 			AuthServices:   nil,
@@ -1090,7 +1090,7 @@ func NewBooleanParameterWithExcludedValues(name string, desc string, excludedVal
 	return &BooleanParameter{
 		CommonParameter: CommonParameter{
 			Name:           name,
-			Type:           typeBool,
+			Type:           TypeBool,
 			Desc:           desc,
 			ExcludedValues: excludedValues,
 			AuthServices:   nil,
@@ -1218,7 +1218,7 @@ func NewArrayParameterWithExcludedValues(name string, desc string, excludedValue
 	return &ArrayParameter{
 		CommonParameter: CommonParameter{
 			Name:           name,
-			Type:           typeArray,
+			Type:           TypeArray,
 			Desc:           desc,
 			ExcludedValues: excludedValues,
 			AuthServices:   nil,
