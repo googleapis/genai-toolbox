@@ -19,6 +19,8 @@ database. It's compatible with any of the following sources:
 `spanner-execute-sql` takes one input parameter `sql` and run the sql
 statement against the `source`.
 
+This tool can execute both DQL/DML statements (e.g., `SELECT`, `INSERT`, `UPDATE`, `DELETE`) and DDL statements (e.g., `CREATE`, `ALTER`, `DROP`).
+
 > **Note:** This tool is intended for developer assistant workflows with
 > human-in-the-loop and shouldn't be used for production agents.
 
@@ -39,5 +41,4 @@ tools:
 | kind        |  string  |     true     | Must be "spanner-execute-sql".                                                           |
 | source      |  string  |     true     | Name of the source the SQL should execute on.                                            |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.                                       |
-| readOnly    |   bool   |    false     | When set to `true`, the `statement` is run as a read-only transaction. Default: `false`. |
-
+| readOnly    |   bool   |    false     | When set to `true`, the `statement` is run as a read-only transaction. DDL statements are not allowed in read-only mode. Default: `false`. |
