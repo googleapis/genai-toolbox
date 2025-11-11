@@ -28,8 +28,8 @@ prompts:
 | --- | --- | --- | --- |
 | description | string | No | A brief explanation of what the prompt does. |
 | kind | string | No | The kind of prompt. Defaults to `"custom"`. |
-| messages | [][Message](#message_schema) | Yes | A list of one or more message objects that make up the prompt's content. |
-| arguments | []Argument | No | A list of arguments that can be interpolated into the prompt's content.|
+| messages | [][Message](#message-schema) | Yes | A list of one or more message objects that make up the prompt's content. |
+| arguments | [][Argument](#argument-schema) | No | A list of arguments that can be interpolated into the prompt's content.|
 
 ## Message Schema
 
