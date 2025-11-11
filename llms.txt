@@ -50,6 +50,7 @@ List of reference documentation for resources in Toolbox.
   - [Google Sign-In](https://googleapis.github.io/genai-toolbox/resources/authservices/google/): Use Google Sign-In for Oauth 2.0 flow and token lifecycle.
 - [Sources](https://googleapis.github.io/genai-toolbox/resources/sources/): Sources represent your different data sources that a tool can interact with.
   - [AlloyDB for PostgreSQL](https://googleapis.github.io/genai-toolbox/resources/sources/alloydb-pg/): AlloyDB for PostgreSQL is a fully-managed, PostgreSQL-compatible database for demanding transactional workloads.
+  - [AlloyDB Admin](https://googleapis.github.io/genai-toolbox/resources/sources/alloydb-admin/): The "alloydb-admin" source provides a client for the AlloyDB API.
   - [BigQuery](https://googleapis.github.io/genai-toolbox/resources/sources/bigquery/): BigQuery is Google Cloud's fully managed, petabyte-scale, and cost-effective analytics data warehouse that lets you run analytics over vast amounts of  data in near real time. With BigQuery, there's no infrastructure to set  up or manage, letting you focus on finding meaningful insights using  GoogleSQL and taking advantage of flexible pricing models across on-demand  and flat-rate options.
   - [Bigtable](https://googleapis.github.io/genai-toolbox/resources/sources/bigtable/): Bigtable is a low-latency NoSQL database service for machine learning, operational analytics, and user-facing operations. It's a wide-column, key-value store that can scale to billions of rows and thousands of columns. With Bigtable, you can replicate your data to regions across the world for high availability and data resiliency.
   - [Cassandra](https://googleapis.github.io/genai-toolbox/resources/sources/cassandra/): Apache Cassandra is a NoSQL distributed database known for its horizontal scalability, distributed architecture, and flexible schema definition.
@@ -85,7 +86,6 @@ List of reference documentation for resources in Toolbox.
   - [Trino](https://googleapis.github.io/genai-toolbox/resources/sources/trino/): Trino is a distributed SQL query engine for big data analytics.
   - [Valkey](https://googleapis.github.io/genai-toolbox/resources/sources/valkey/): Valkey is an open-source, in-memory data structure store, forked from Redis.
   - [YugabyteDB](https://googleapis.github.io/genai-toolbox/resources/sources/yugabytedb/): YugabyteDB is a high-performance, distributed SQL database. 
-  - [AlloyDB Admin](https://googleapis.github.io/genai-toolbox/resources/sources/alloydb-admin/): The "alloydb-admin" source provides a client for the AlloyDB API.
 - [Tools](https://googleapis.github.io/genai-toolbox/resources/tools/): Tools define actions an agent can take -- such as reading and writing to a source.
   - [AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/resources/tools/alloydbainl/): AlloyDB AI NL Tool.
   - [AlloyDB for PostgreSQL](https://googleapis.github.io/genai-toolbox/resources/tools/alloydb/): Tools for AlloyDB for PostgreSQL.
