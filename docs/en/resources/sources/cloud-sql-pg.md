@@ -41,6 +41,12 @@ to a database by following these instructions][csql-pg-quickstart].
 - [`postgres-list-installed-extensions`](../tools/postgres/postgres-list-installed-extensions.md)
   List installed extensions in a PostgreSQL database.
 
+- [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
+  List views in a PostgreSQL database.
+
+- [`postgres-list-schemas`](../tools/postgres/postgres-list-schemas.md)
+  List schemas in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [Cloud SQL for Postgres using

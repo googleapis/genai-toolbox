@@ -68,7 +68,7 @@ tools:
 | database       | string   | true         | The name of the MongoDB database to query.                                                                                  |
 | collection     | string   | true         | The name of the MongoDB collection to query.                                                                                |
 | filterPayload  | string   | true         | The MongoDB query filter document to select which documents to return. Uses `{{json .param_name}}` for templating.          |
-| filterParams   | list     | true         | A list of parameter objects that define the variables used in the `filterPayload`.                                          |
+| filterParams   | list     | false        | A list of parameter objects that define the variables used in the `filterPayload`.                                          |
 | projectPayload | string   | false        | An optional MongoDB projection document to specify which fields to include (1) or exclude (0) in the results.               |
 | projectParams  | list     | false        | A list of parameter objects for the `projectPayload`.                                                                       |
 | sortPayload    | string   | false        | An optional MongoDB sort document to define the order of the returned documents. Use 1 for ascending and -1 for descending. |
