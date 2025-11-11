@@ -117,9 +117,9 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestoreupdatedocument"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorevalidaterules"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/http"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookercreateprojectfile"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookeradddashboardelement"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerconversationalanalytics"
-	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookercreateprojectfile"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerdeleteprojectfile"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerdevmode"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetconnectiondatabases"
@@ -365,6 +365,7 @@ type ToolsFile struct {
 	Tools        server.ToolConfigs        `yaml:"tools"`
 	Toolsets     server.ToolsetConfigs     `yaml:"toolsets"`
 	Prompts      server.PromptConfigs      `yaml:"prompts"`
+	Promptsets   server.PromptsetConfigs   `yaml:"promptsets"`
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
@@ -418,6 +419,7 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 		Tools:        make(server.ToolConfigs),
 		Toolsets:     make(server.ToolsetConfigs),
 		Prompts:      make(server.PromptConfigs),
+		Promptsets:   make(server.PromptsetConfigs),
 	}
 
 	var conflicts []string
@@ -476,11 +478,20 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 				merged.Prompts[name] = prompt
 			}
 		}
+
+		// Check for conflicts and merge promptsets
+		for name, promptset := range file.Promptsets {
+			if _, exists := merged.Promptsets[name]; exists {
+				conflicts = append(conflicts, fmt.Sprintf("promptset '%s' (file #%d)", name, fileIndex+1))
+			} else {
+				merged.Promptsets[name] = promptset
+			}
+		}
 	}
 
 	// If conflicts were detected, return an error
 	if len(conflicts) > 0 {
-		return ToolsFile{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, toolset and prompt has a unique name across all files", strings.Join(conflicts, "\n  - "))
+		return ToolsFile{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, toolset, prompt and promptset has a unique name across all files", strings.Join(conflicts, "\n  - "))
 	}
 
 	return merged, nil
@@ -554,14 +565,14 @@ func handleDynamicReload(ctx context.Context, toolsFile ToolsFile, s *server.Ser
 		panic(err)
 	}
 
-	sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, _, err := validateReloadEdits(ctx, toolsFile)
+	sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := validateReloadEdits(ctx, toolsFile)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
 		return err
 	}
 
-	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, nil)
+	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	return nil
 }
@@ -593,6 +604,7 @@ func validateReloadEdits(
 		ToolConfigs:        toolsFile.Tools,
 		ToolsetConfigs:     toolsFile.Toolsets,
 		PromptConfigs:      toolsFile.Prompts,
+		PromptsetConfigs:   toolsFile.Promptsets,
 	}
 
 	sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
@@ -893,7 +905,7 @@ func run(cmd *Command) error {
 		}
 	}
 
-	cmd.cfg.SourceConfigs, cmd.cfg.AuthServiceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs, cmd.cfg.PromptConfigs = toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets, toolsFile.Prompts
+	cmd.cfg.SourceConfigs, cmd.cfg.AuthServiceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs, cmd.cfg.PromptConfigs, cmd.cfg.PromptsetConfigs = toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets, toolsFile.Prompts, toolsFile.Promptsets
 
 	authSourceConfigs := toolsFile.AuthSources
 	if authSourceConfigs != nil {
