@@ -32,15 +32,15 @@ assign_issues_by:
     to:
     - 'googleapis/toolbox-bigtable'
   - labels:
-    - 'product: cloud-sql-mssql'
+    - 'product: mssql'
     to:
     - 'googleapis/toolbox-cloud-sql-mssql'
   - labels:
-    - 'product: cloud-sql-mysql'
+    - 'product: mysql'
     to:
     - 'googleapis/toolbox-cloud-sql-mysql'
   - labels:
-    - 'product: cloud-sql-postgres'
+    - 'product: postgres'
     to:
     - 'googleapis/toolbox-cloud-sql-postgres'
   - labels:
@@ -77,15 +77,15 @@ assign_prs_by:
     to:
     - 'googleapis/toolbox-bigtable'
   - labels:
-    - 'product: cloud-sql-mssql'
+    - 'product: mssql'
     to:
     - 'googleapis/toolbox-cloud-sql-mssql'
   - labels:
-    - 'product: cloud-sql-mysql'
+    - 'product: mysql'
     to:
     - 'googleapis/toolbox-cloud-sql-mysql'
   - labels:
-    - 'product: cloud-sql-postgres'
+    - 'product: postgres'
     to:
     - 'googleapis/toolbox-cloud-sql-postgres'
   - labels:

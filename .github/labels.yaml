@@ -108,15 +108,15 @@
 - name: 'product: clickhouse'
   color: 5065c7
   description: 'ClickHouse'
-- name: 'product: cloud-sql-mssql'
+- name: 'product: mssql'
   color: 5065c7
-  description: 'Cloud SQL for SQL Server'
-- name: 'product: cloud-sql-mysql'
+  description: 'SQL Server'
+- name: 'product: mysql'
   color: 5065c7
-  description: 'Cloud SQL for MySQL'
-- name: 'product: cloud-sql-postgres'
+  description: 'MySQL'
+- name: 'product: postgres'
   color: 5065c7
-  description: 'Cloud SQL for PostgreSQL'
+  description: 'PostgreSQL'
 - name: 'product: couchbase'
   color: 5065c7
   description: 'Couchbase'
@@ -144,12 +144,6 @@
 - name: 'product: mongodb'
   color: 5065c7
   description: 'MongoDB'
-- name: 'product: mssql'
-  color: 5065c7
-  description: 'MSSQL'
-- name: 'product: mysql'
-  color: 5065c7
-  description: 'MySQL'
 - name: 'product: neo4j'
   color: 5065c7
   description: 'Neo4j'
@@ -159,9 +153,6 @@
 - name: 'product: oracle'
   color: 5065c7
   description: 'Oracle'
-- name: 'product: postgres'
-  color: 5065c7
-  description: 'PostgreSQL'
 - name: 'product: redis'
   color: 5065c7
   description: 'Redis'
