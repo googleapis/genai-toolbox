@@ -42,12 +42,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 // Configuration for the list-users tool.
 type Config struct {
-	Name           string   `yaml:"name" validate:"required"`
-	Kind           string   `yaml:"kind" validate:"required"`
-	Source         string   `yaml:"source" validate:"required"`
-	Description    string   `yaml:"description"`
-	AuthRequired   []string `yaml:"authRequired"`
-	BaseURL        string   `yaml:"baseURL"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description"`
+	AuthRequired []string `yaml:"authRequired"`
+	BaseURL      string   `yaml:"baseURL"`
 }
 
 // validate interface

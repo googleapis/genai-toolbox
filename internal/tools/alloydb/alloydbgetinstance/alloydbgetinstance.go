@@ -42,12 +42,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 // Configuration for the get-instance tool.
 type Config struct {
-	Name           string   `yaml:"name" validate:"required"`
-	Kind           string   `yaml:"kind" validate:"required"`
-	Source         string   `yaml:"source" validate:"required"`
-	Description    string   `yaml:"description"`
-	AuthRequired   []string `yaml:"authRequired"`
-	BaseURL        string   `yaml:"baseURL"`
+	Name         string   `yaml:"name" validate:"required"`
+	Kind         string   `yaml:"kind" validate:"required"`
+	Source       string   `yaml:"source" validate:"required"`
+	Description  string   `yaml:"description"`
+	AuthRequired []string `yaml:"authRequired"`
+	BaseURL      string   `yaml:"baseURL"`
 }
 
 // validate interface
@@ -91,7 +91,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		description = "Retrieves details about a specific AlloyDB instance."
 	}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters)
-	
+
 	return Tool{
 		Name:        cfg.Name,
 		Kind:        kind,
