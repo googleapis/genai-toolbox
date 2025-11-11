@@ -522,14 +522,14 @@ func handleDynamicReload(ctx context.Context, toolsFile ToolsFile, s *server.Ser
 		panic(err)
 	}
 
-	sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, _, err := validateReloadEdits(ctx, toolsFile)
+	sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := validateReloadEdits(ctx, toolsFile)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
 		return err
 	}
 
-	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, nil)
+	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	return nil
 }
