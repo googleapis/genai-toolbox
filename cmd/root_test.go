@@ -17,20 +17,8 @@ package cmd
 import (
 	"bytes"
 	"context"
-	_ "embed"
 	"fmt"
-	"io"
-	"os"
-	"path"
-	"path/filepath"
-	"regexp"
-	"runtime"
-	"strings"
-	"testing"
-	"time"
-
 	"github.com/google/go-cmp/cmp"
-
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
@@ -44,6 +32,17 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/spf13/cobra"
+	"io"
+	"os"
+	"path"
+	"path/filepath"
+	"regexp"
+	"runtime"
+	"strings"
+	"testing"
+	"time"
+
+	_ "embed"
 )
 
 func withDefaults(c server.ServerConfig) server.ServerConfig {
@@ -1379,7 +1378,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "postgres_upgrade_precheck"},
 				},
 			},
 		},
