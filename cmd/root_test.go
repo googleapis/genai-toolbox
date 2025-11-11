@@ -1837,6 +1837,7 @@ func TestMergeToolsFiles(t *testing.T) {
 				AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
 				Tools:        server.ToolConfigs{"tool1": http.Config{Name: "tool1"}, "tool2": http.Config{Name: "tool2"}},
 				Toolsets:     server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}, "set2": tools.ToolsetConfig{Name: "set2"}},
+				Prompts:      server.PromptConfigs{},
 			},
 			wantErr: false,
 		},
@@ -1853,6 +1854,7 @@ func TestMergeToolsFiles(t *testing.T) {
 				AuthServices: make(server.AuthServiceConfigs),
 				Tools:        file1.Tools,
 				Toolsets:     file1.Toolsets,
+				Prompts:      server.PromptConfigs{},
 			},
 		},
 		{
@@ -1863,6 +1865,7 @@ func TestMergeToolsFiles(t *testing.T) {
 				AuthServices: make(server.AuthServiceConfigs),
 				Tools:        make(server.ToolConfigs),
 				Toolsets:     make(server.ToolsetConfigs),
+				Prompts:      server.PromptConfigs{},
 			},
 		},
 	}
