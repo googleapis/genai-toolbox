@@ -232,14 +232,6 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/valkey"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/yugabytedbsql"
 
-	"github.com/spf13/cobra"
-
-	_ "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/bigtable"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/cassandra"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudmonitoring"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
@@ -266,11 +258,6 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/singlestore"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/tidb"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/trino"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/valkey"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/yugabytedb"
 )
 
 var (

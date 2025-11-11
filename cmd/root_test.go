@@ -1378,7 +1378,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "pre_check_major_version_upgrade"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "postgres_upgrade_precheck"},
 				},
 			},
 		},

@@ -169,10 +169,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("failed to start pre-check operation: %w", err)
 	}
 
-	const pollTimeout = 5 * time.Minute
-	timeout := time.After(pollTimeout)
+	const pollTimeout = 20 * time.Second
+	cutoffTime := time.Now().Add(pollTimeout)
 
-	for {
+	for time.Now().Before(cutoffTime) {
 		currentOp, err := service.Operations.Get(project, op.Name).Context(ctx).Do()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get operation status: %w", err)
@@ -198,11 +198,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
-		case <-timeout:
-			return nil, fmt.Errorf("timed out after %v waiting for operation %s to complete", pollTimeout, op.Name)
-		case <-time.After(10 * time.Second):
+		case <-time.After(5 * time.Second):
 		}
 	}
+	return op, nil
 }
 
 // ParseParams parses the parameters for the tool.
