@@ -15,9 +15,7 @@
 # Use the latest stable golang 1.x to compile to a binary
 FROM --platform=$BUILDPLATFORM golang:1 AS build
 
-
-
-# Install Zig
+# Install Zig for CGO cross-compilation
 RUN apt-get update && apt-get install -y xz-utils
 RUN curl -fL "https://ziglang.org/download/0.15.2/zig-x86_64-linux-0.15.2.tar.xz" -o zig.tar.xz && \
     mkdir -p /zig && \
@@ -44,7 +42,7 @@ RUN export ZIG_TARGET="" && \
     CC="/zig/zig cc -target ${ZIG_TARGET}" \
     CXX="/zig/zig c++ -target ${ZIG_TARGET}" \
     go build \
-    -ldflags "-linkmode external -extldflags '-static' -X github.com/googleapis/genai-toolbox/cmd.buildType=${BUILD_TYPE} -X github.com/googleapis/genai-toolbox/cmd.commitSha=${COMMIT_SHA}" \
+    -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=${BUILD_TYPE} -X github.com/googleapis/genai-toolbox/cmd.commitSha=${COMMIT_SHA}" \
     -o genai-toolbox .
 
 # Final Stage
