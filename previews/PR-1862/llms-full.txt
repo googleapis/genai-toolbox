@@ -89,7 +89,7 @@ following instructions for your OS and CPU architecture.
 To install Toolbox as a binary on Linux (AMD64):
 ```sh
 # see releases page for other versions
-export VERSION=0.18.0
+export VERSION=0.19.1
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -98,7 +98,7 @@ chmod +x toolbox
 To install Toolbox as a binary on macOS (Apple Silicon):
 ```sh
 # see releases page for other versions
-export VERSION=0.18.0
+export VERSION=0.19.1
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
 chmod +x toolbox
 ```
@@ -107,7 +107,7 @@ chmod +x toolbox
 To install Toolbox as a binary on macOS (Intel):
 ```sh
 # see releases page for other versions
-export VERSION=0.18.0
+export VERSION=0.19.1
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
 chmod +x toolbox
 ```
@@ -116,7 +116,7 @@ chmod +x toolbox
 To install Toolbox as a binary on Windows (AMD64):
 ```powershell
 # see releases page for other versions
-$VERSION = "0.18.0"
+$VERSION = "0.19.1"
 Invoke-WebRequest -Uri "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe" -OutFile "toolbox.exe"
 ```
 {{% /tab %}}
@@ -127,7 +127,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.18.0
+export VERSION=0.19.1
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -146,7 +146,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.18.0
+go install github.com/googleapis/genai-toolbox@v0.19.1
 ```
 
 {{% /tab %}}
@@ -503,6 +503,8 @@ func main() {
 	}
 }
 {{< /highlight >}}
+For end-to-end samples on using the Toolbox Go SDK with LangChain Go, see the [project's
+samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 {{% /tab %}}
 {{% tab header="Genkit Go" lang="en" %}}
@@ -547,6 +549,8 @@ func main() {
 	}
 }
 {{< /highlight >}}
+For end-to-end samples on using the Toolbox Go SDK with Genkit Go, see the [project's
+samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbgenkit/samples)
 
 {{% /tab %}}
 {{% tab header="Go GenAI" lang="en" %}}
@@ -601,6 +605,8 @@ func main() {
 	}
 }
 {{< /highlight >}}
+For end-to-end samples on using the Toolbox Go SDK with Go GenAI, see the [project's
+samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 {{% /tab %}}
 
@@ -654,6 +660,43 @@ func main() {
 	}
 }
 {{< /highlight >}}
+For end-to-end samples on using the Toolbox Go SDK with OpenAI Go, see the [project's
+samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
+
+{{% /tab %}}
+
+{{% tab header="ADK Go" lang="en" %}}
+
+{{< highlight go >}}
+package main
+
+import (
+  	"context"
+  	"fmt"
+  	"github.com/googleapis/mcp-toolbox-sdk-go/tbadk"
+)
+
+func main() {
+  	// Make sure to add the error checks
+	// Update the url to point to your server
+	URL := "http://127.0.0.1:5000"
+	ctx := context.Background()
+  	client, err := tbadk.NewToolboxClient(URL)
+  	if err != nil {
+		return fmt.Sprintln("Could not start Toolbox Client", err)
+  	}
+
+  	// Use this tool with ADK Go
+  	tool, err := client.LoadTool("toolName", ctx)
+  	if err != nil {
+		return fmt.Sprintln("Could not load Toolbox Tool", err)
+  	}
+}
+
+{{< /highlight >}}
+
+For end-to-end samples on using the Toolbox Go SDK with ADK Go, see the [project's
+samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbadk/samples)
 
 {{% /tab %}}
 {{< /tabpane >}}
@@ -661,10 +704,6 @@ func main() {
 For more detailed instructions on using the Toolbox Go SDK, see the
 [project's
 README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md).
-
-For end-to-end samples on using the Toolbox Go SDK with orchestration
-frameworks, see the [project's
-samples](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core/samples)
 
 
 # Python Quickstart (Local)
@@ -1016,6 +1055,12 @@ from Toolbox.
 {{< include "quickstart/go/openAI/quickstart.go" >}}
 
 {{< /tab >}}
+
+{{< tab header="ADK Go" lang="go" >}}
+
+{{< include "quickstart/go/adkgo/quickstart.go" >}}
+
+{{< /tab >}}
 {{< /tabpane >}}
 
 1. Ensure all dependencies are installed:
@@ -1024,7 +1069,7 @@ from Toolbox.
     go mod tidy
     ```
 
-1. Run your agent, and observe the results:
+2. Run your agent, and observe the results:
 
     ```sh
     go run hotelagent.go
@@ -1139,7 +1184,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -1379,6 +1424,24 @@ all_tools = client.load_toolset()
 # This will only load the tools listed in 'my_second_toolset'
 my_second_toolset = client.load_toolset("my_second_toolset")
 ```
+
+### Prompts
+
+The `prompts` section of your `tools.yaml` defines the templates containing structured messages and instructions for interacting with language models.
+
+```yaml
+prompts:
+  code_review:
+    description: "Asks the LLM to analyze code quality and suggest improvements."
+    messages:
+      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+    arguments:
+      - name: "code"
+        description: "The code to review"
+```
+
+For more details on configuring different types of prompts, see the
+[Prompts](../resources/prompts/).
 
 
 # Concepts
@@ -1728,19 +1791,19 @@ to expose your developer assistant tools to a Looker instance:
    <!-- {x-release-please-start-version} -->
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -1995,6 +2058,7 @@ instance and create new saved content.
 1. **run_look**: Run a saved Look and return the data
 1. **make_look**: Create a saved Look in Looker and return the URL
 1. **get_dashboards**: Return the saved dashboards that match a title or description
+1. **run_dashbaord**: Run the queries associated with a dashboard and return the data
 1. **make_dashboard**: Create a saved dashboard in Looker and return the URL
 1. **add_dashboard_element**: Add a tile to a dashboard
 
@@ -2072,19 +2136,19 @@ expose your developer assistant tools to a MySQL instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -2387,19 +2451,19 @@ expose your developer assistant tools to a Neo4j instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -2707,19 +2771,19 @@ Omni](https://cloud.google.com/alloydb/omni/current/docs/overview).
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3038,19 +3102,19 @@ instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3353,19 +3417,19 @@ to expose your developer assistant tools to a SQLite instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -6098,6 +6162,46 @@ instead of hardcoding your secrets into the configuration file.
 | ipType    |  string  |    false     | IP Type of the AlloyDB instance; must be one of `public` or `private`. Default: `public`.                                |
 
 
+# AlloyDB Admin
+The "alloydb-admin" source provides a client for the AlloyDB API.
+
+
+## About
+
+The `alloydb-admin` source provides a client to interact with the [Google
+AlloyDB API](https://cloud.google.com/alloydb/docs/reference/rest). This allows
+tools to perform administrative tasks on AlloyDB resources, such as managing
+clusters, instances, and users.
+
+Authentication can be handled in two ways:
+
+1.  **Application Default Credentials (ADC):** By default, the source uses ADC
+    to authenticate with the API.
+2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will
+    expect an OAuth 2.0 access token to be provided by the client (e.g., a web
+    browser) for each request.
+
+## Example
+
+```yaml
+sources:
+    my-alloydb-admin:
+        kind: alloy-admin
+
+    my-oauth-alloydb-admin:
+        kind: alloydb-admin
+        useClientOAuth: true
+```
+
+## Reference
+
+| **field**      | **type** | **required** | **description**                                                                                                                                |
+| -------------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| kind           |  string  |     true     | Must be "alloydb-admin".                                                                                                                       |
+| defaultProject |  string  |     false    | The Google Cloud project ID to use for AlloyDB infrastructure tools.                                                                           |
+| useClientOAuth |  boolean |     false    | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
+
+
 # BigQuery
 BigQuery is Google Cloud's fully managed, petabyte-scale, and cost-effective analytics data warehouse that lets you run analytics over vast amounts of  data in near real time. With BigQuery, there's no infrastructure to set  up or manage, letting you focus on finding meaningful insights using  GoogleSQL and taking advantage of flexible pricing models across on-demand  and flat-rate options.
 
@@ -6461,6 +6565,165 @@ instead of hardcoding your secrets into the configuration file.
 | password  |  string  |    false     | Password of the ClickHouse user (e.g. "my-password").                               |
 | protocol  |  string  |    false     | Connection protocol: "https" (default) or "http".                                   |
 | secure    | boolean  |    false     | Whether to use a secure connection (TLS). Default: false.                           |
+
+
+# Cloud Healthcare API
+The Cloud Healthcare API provides a managed solution for storing and accessing healthcare data in Google Cloud, providing a critical bridge  between existing care systems and applications hosted on Google Cloud.
+
+
+## About
+
+The [Cloud Healthcare API][healthcare-docs] provides a managed solution
+for storing and accessing healthcare data in Google Cloud, providing a
+critical bridge between existing care systems and applications hosted on
+Google Cloud. It supports healthcare data standards such as HL7® FHIR®,
+HL7® v2, and DICOM®. It provides a fully managed, highly scalable,
+enterprise-grade development environment for building clinical and analytics
+solutions securely on Google Cloud.
+
+A dataset is a container in your Google Cloud project that holds modality-specific
+healthcare data. Datasets contain other data stores, such as FHIR stores and DICOM
+stores, which in turn hold their own types of healthcare data.
+
+A single dataset can contain one or many data stores, and those stores can all service
+the same modality or different modalities as application needs dictate. Using multiple
+stores in the same dataset might be appropriate in various situations.
+
+If you are new to the Cloud Healthcare API, you can try to
+[create and view datasets and stores using curl][healthcare-quickstart-curl].
+
+[healthcare-docs]: https://cloud.google.com/healthcare/docs
+[healthcare-quickstart-curl]:
+    https://cloud.google.com/healthcare-api/docs/store-healthcare-data-rest
+
+## Available Tools
+
+- [`cloud-healthcare-get-dataset`](../tools/cloudhealthcare/cloud-healthcare-get-dataset.md)
+  Retrieves a dataset’s details.
+
+- [`cloud-healthcare-list-fhir-stores`](../tools/cloudhealthcare/cloud-healthcare-list-fhir-stores.md)
+  Lists the available FHIR stores in the healthcare dataset.
+
+- [`cloud-healthcare-list-dicom-stores`](../tools/cloudhealthcare/cloud-healthcare-list-dicom-stores.md)
+  Lists the available DICOM stores in the healthcare dataset.
+
+- [`cloud-healthcare-get-fhir-store`](../tools/cloudhealthcare/cloud-healthcare-get-fhir-store.md)
+  Retrieves information about a FHIR store.
+
+- [`cloud-healthcare-get-fhir-store-metrics`](../tools/cloudhealthcare/cloud-healthcare-get-fhir-store-metrics.md)
+  Retrieves metrics for a FHIR store.
+
+- [`cloud-healthcare-get-fhir-resource`](../tools/cloudhealthcare/cloud-healthcare-get-fhir-resource.md)
+  Retrieves a specific FHIR resource from a FHIR store.
+
+- [`cloud-healthcare-fhir-patient-search`](../tools/cloudhealthcare/cloud-healthcare-fhir-patient-search.md)
+  Searches for patients in a FHIR store based on a set of criteria.
+
+- [`cloud-healthcare-fhir-patient-everything`](../tools/cloudhealthcare/cloud-healthcare-fhir-patient-everything.md)
+  Retrieves all information for a given patient.
+
+- [`cloud-healthcare-fhir-fetch-page`](../tools/cloudhealthcare/cloud-healthcare-fhir-fetch-page.md)
+  Fetches a page of FHIR resources from a given URL.
+
+- [`cloud-healthcare-get-dicom-store`](../tools/cloudhealthcare/cloud-healthcare-get-dicom-store.md)
+  Retrieves information about a DICOM store.
+
+- [`cloud-healthcare-get-dicom-store-metrics`](../tools/cloudhealthcare/cloud-healthcare-get-dicom-store-metrics.md)
+  Retrieves metrics for a DICOM store.
+
+- [`cloud-healthcare-search-dicom-studies`](../tools/cloudhealthcare/cloud-healthcare-search-dicom-studies.md)
+  Searches for DICOM studies in a DICOM store.
+
+- [`cloud-healthcare-search-dicom-series`](../tools/cloudhealthcare/cloud-healthcare-search-dicom-series.md)
+  Searches for DICOM series in a DICOM store.
+
+- [`cloud-healthcare-search-dicom-instances`](../tools/cloudhealthcare/cloud-healthcare-search-dicom-instances.md)
+  Searches for DICOM instances in a DICOM store.
+
+- [`cloud-healthcare-retrieve-rendered-dicom-instance`](../tools/cloudhealthcare/cloud-healthcare-retrieve-rendered-dicom-instance.md)
+  Retrieves a rendered DICOM instance from a DICOM store.
+
+## Requirements
+
+### IAM Permissions
+
+The Cloud Healthcare API uses [Identity and Access Management (IAM)][iam-overview] to control
+user and group access to Cloud Healthcare resources like projects, datasets, and stores.
+
+### Authentication via Application Default Credentials (ADC)
+
+By **default**, Toolbox will use your [Application Default Credentials
+(ADC)][adc] to authorize and authenticate when interacting with the
+[Cloud Healthcare API][healthcare-docs].
+
+When using this method, you need to ensure the IAM identity associated with your
+ADC (such as a service account) has the correct permissions for the queries you
+intend to run. Common roles include `roles/healthcare.fhirResourceReader` (which includes
+permissions to read and search for FHIR resources) or `roles/healthcare.dicomViewer` (for
+retrieving DICOM images).
+Follow this [guide][set-adc] to set up your ADC.
+
+### Authentication via User's OAuth Access Token
+
+If the `useClientOAuth` parameter is set to `true`, Toolbox will instead use the
+OAuth access token for authentication. This token is parsed from the
+`Authorization` header passed in with the tool invocation request. This method
+allows Toolbox to make queries to the [Cloud Healthcare API][healthcare-docs] on behalf of the
+client or the end-user.
+
+When using this on-behalf-of authentication, you must ensure that the
+identity used has been granted the correct IAM permissions.
+
+[iam-overview]: <https://cloud.google.com/healthcare/docs/access-control>
+[adc]: <https://cloud.google.com/docs/authentication#adc>
+[set-adc]: <https://cloud.google.com/docs/authentication/provide-credentials-adc>
+
+## Example
+
+Initialize a Cloud Healthcare API source that uses ADC:
+
+```yaml
+sources:
+  my-healthcare-source:
+    kind: "cloud-healthcare"
+    project: "my-project-id"
+    region: "us-central1"
+    dataset: "my-healthcare-dataset-id"
+    # allowedFhirStores: # Optional: Restricts tool access to a specific list of FHIR store IDs.
+    #   - "my_fhir_store_1"
+    # allowedDicomStores: # Optional: Restricts tool access to a specific list of DICOM store IDs.
+    #   - "my_dicom_store_1"
+    #   - "my_dicom_store_2"
+```
+
+Initialize a Cloud Healthcare API source that uses the client's access token:
+
+```yaml
+sources:
+  my-healthcare-client-auth-source:
+    kind: "cloud-healthcare"
+    project: "my-project-id"
+    region: "us-central1"
+    dataset: "my-healthcare-dataset-id"
+    useClientOAuth: true
+    # allowedFhirStores: # Optional: Restricts tool access to a specific list of FHIR store IDs.
+    #   - "my_fhir_store_1"
+    # allowedDicomStores: # Optional: Restricts tool access to a specific list of DICOM store IDs.
+    #   - "my_dicom_store_1"
+    #   - "my_dicom_store_2"
+```
+
+## Reference
+
+| **field**          | **type** | **required** | **description**                                                                                                                                                                                                                                                              |
+|--------------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind               |  string  |     true     | Must be "cloud-healthcare".                                                                                                                                                                                                                                                  |
+| project            |  string  |     true     | ID of the GCP project that the dataset lives in.                                                                                                                                                                                                                             |
+| region             |  string  |     true     | Specifies the region (e.g., 'us', 'asia-northeast1') of the healthcare dataset. [Learn More](https://cloud.google.com/healthcare-api/docs/regions)                                                                                                                           |
+| dataset            |  string  |     true     | ID of the healthcare dataset.                                                                                                                                                                                                                                                |
+| allowedFhirStores  | []string |    false     | An optional list of FHIR store IDs that tools using this source are allowed to access. If provided, any tool operation attempting to access a store not in this list will be rejected. If a single store is provided, it will be treated as the default for prebuilt tools.  |
+| allowedDicomStores | []string |    false     | An optional list of DICOM store IDs that tools using this source are allowed to access. If provided, any tool operation attempting to access a store not in this list will be rejected. If a single store is provided, it will be treated as the default for prebuilt tools. |
+| useClientOAuth     |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries.                                                                                                                                                                     |
 
 
 # Cloud Monitoring
@@ -6909,6 +7172,7 @@ allows tools to perform administrative tasks on Cloud SQL instances, such as
 creating users and databases.
 
 Authentication can be handled in two ways:
+
 1.  **Application Default Credentials (ADC):** By default, the source uses ADC
     to authenticate with the API.
 2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will
@@ -6930,9 +7194,10 @@ sources:
 ## Reference
 
 | **field**      | **type** | **required** | **description**                                                                                                                                |
-|----------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------|
+| -------------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | kind           |  string  |     true     | Must be "cloud-sql-admin".                                                                                                                     |
-| useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
+| defaultProject |  string  |     false    | The Google Cloud project ID to use for Cloud SQL infrastructure tools.                                                                         |
+| useClientOAuth |  boolean |     false    | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
 
 
 # Couchbase
@@ -8458,6 +8723,67 @@ sources:
 | location  |  string  |     true     | Location containing Serverless for Apache Spark resources.        |
 
 
+# SingleStore
+SingleStore is the cloud-native database built with speed and scale to power data-intensive applications.
+
+
+## About
+
+[SingleStore][singlestore-docs] is a distributed SQL database built to power intelligent applications. It is both relational and multi-model, enabling developers to easily build and scale applications and workloads.
+
+SingleStore is built around Universal Storage which combines in-memory rowstore and on-disk columnstore data formats to deliver a single table type that is optimized to handle both transactional and analytical workloads.
+
+[singlestore-docs]: https://docs.singlestore.com/
+
+## Available Tools
+
+- [`singlestore-sql`](../tools/singlestore/singlestore-sql.md)  
+  Execute pre-defined prepared SQL queries in SingleStore.
+
+- [`singlestore-execute-sql`](../tools/singlestore/singlestore-execute-sql.md)  
+  Run parameterized SQL queries in SingleStore.
+
+## Requirements
+
+### Database User
+
+This source only uses standard authentication. You will need to [create a
+database user][singlestore-user] to login to the database with.
+
+[singlestore-user]: https://docs.singlestore.com/cloud/reference/sql-reference/security-management-commands/create-user/
+
+## Example
+
+```yaml
+sources:
+    my-singlestore-source:
+        kind: singlestore
+        host: 127.0.0.1
+        port: 3306
+        database: my_db
+        user: ${USER_NAME}
+        password: ${PASSWORD}
+        queryTimeout: 30s # Optional: query timeout duration
+```
+
+{{< notice tip >}}
+Use environment variable replacement with the format ${ENV_NAME}
+instead of hardcoding your secrets into the configuration file.
+{{< /notice >}}
+
+## Reference
+
+| **field**    | **type** | **required** | **description**                                                                                 |
+| ------------ | :------: | :----------: | ----------------------------------------------------------------------------------------------- |
+| kind         |  string  |     true     | Must be "singlestore".                                                                          |
+| host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
+| port         |  string  |     true     | Port to connect to (e.g. "3306").                                                               |
+| database     |  string  |     true     | Name of the SingleStore database to connect to (e.g. "my_db").                                  |
+| user         |  string  |     true     | Name of the SingleStore database user to connect as (e.g. "admin").                             |
+| password     |  string  |     true     | Password of the SingleStore database user.                                                      |
+| queryTimeout |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied. |
+
+
 # Spanner
 Spanner is a fully managed database service from Google Cloud that combines  relational, key-value, graph, and search capabilities.
 
@@ -8938,42 +9264,6 @@ sources:
 | failedHostReconnectDelaySecs | integer  |    false     | Time (in seconds) to wait before trying to connect to failed nodes. The default value of is 5.                                                                        |
 
 
-# AlloyDB Admin
-The "alloydb-admin" source provides a client for the AlloyDB API.
-
-
-## About
-
-The `alloydb-admin` source provides a client to interact with the [Google
-AlloyDB API](https://cloud.google.com/alloydb/docs/reference/rest). This allows
-tools to perform administrative tasks on AlloyDB resources, such as managing
-clusters, instances, and users.
-
-Authentication can be handled in two ways:
-1.  **Application Default Credentials (ADC):** By default, the source uses ADC
-    to authenticate with the API.
-2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will
-    expect an OAuth 2.0 access token to be provided by the client (e.g., a web
-    browser) for each request.
-
-## Example
-
-```yaml
-sources:
-    my-alloydb-admin:
-        kind: alloy-admin
-
-    my-oauth-alloydb-admin:
-        kind: alloydb-admin
-        useClientOAuth: true
-```
-
-## Reference
-| **field**      | **type** | **required** | **description**                                                                                                                                |
-|----------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind           |  string  |     true     | Must be "alloydb-admin".                                                                                                                       |
-| useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
-
 # Tools
 Tools define actions an agent can take -- such as reading and writing to a source.
 
@@ -9283,6 +9573,11 @@ Tools for interacting with ClickHouse databases and tables.
 
 
 
+# Cloud Healthcare API
+Tools that work with Cloud Healthcare Sources.
+
+
+
 # Cloud Monitoring
 Tools that work with Cloud Monitoring source.
 
@@ -9495,6 +9790,11 @@ Tools that work with Google Cloud Serverless for Apache Spark Sources.
 - [serverless-spark-cancel-batch](./serverless-spark-cancel-batch.md)
 
 
+# SingleStore
+Tools that work with SingleStore Sources
+
+
+
 # Spanner
 Tools that work with Spanner Sources.
 
@@ -9532,6 +9832,141 @@ Tools that work with Valkey Sources.
 
 # YugabyteDB
 Tools that work with Valkey Sources.
+
+
+
+# Prompts
+Prompts allow servers to provide structured messages and instructions for interacting with language models.
+
+
+A `prompt` represents a reusable prompt template that can be retrieved and used
+by MCP clients.
+
+A Prompt is essentially a template for a message or a series of messages that can be sent to a Large Language Model (LLM). The Toolbox server implements the `prompts/list` and `prompts/get` methods from the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/docs/getting-started/intro) specification, allowing clients to discover and retrieve these prompts.
+
+```yaml
+prompts:
+  code_review:
+    description: "Asks the LLM to analyze code quality and suggest improvements."
+    messages:
+      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+    arguments:
+      - name: "code"
+        description: "The code to review"
+```
+
+## Prompt Schema
+
+| **field**      | **type** | **required** | **description**  |
+| --- | --- | --- | --- |
+| description | string | No | A brief explanation of what the prompt does. |
+| kind | string | No | The kind of prompt. Defaults to `"custom"`. |
+| messages | [][Message](#message-schema) | Yes | A list of one or more message objects that make up the prompt's content. |
+| arguments | [][Argument](#argument-schema) | No | A list of arguments that can be interpolated into the prompt's content.|
+
+## Message Schema
+
+| **field** | **type** | **required** | **description** |
+| --- | --- | --- | --- |
+| role | string | No | The role of the sender. Can be `"user"` or `"assistant"`. Defaults to `"user"`. |
+| content | string | Yes | The text of the message. You can include placeholders for arguments using `{{.argument_name}}` syntax. |
+
+## Argument Schema
+
+An argument can be any [Parameter](../tools/_index.md#specifying-parameters)
+type. If the `type` field is not specified, it will default to `string`.
+
+## Usage with Gemini CLI
+
+Prompts defined in your `tools.yaml` can be seamlessly integrated with the Gemini CLI to create [custom slash commands](https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md#mcp-prompts-as-slash-commands).  The workflow is as follows:
+
+1. **Discovery:** When the Gemini CLI connects to your Toolbox server, it automatically calls `prompts/list` to discover all available prompts.
+
+2. **Conversion:** Each discovered prompt is converted into a corresponding slash command. For example, a prompt named `code_review` becomes the `/code_review` command in the CLI.
+
+3. **Execution:** You can execute the command as follows:
+
+    ```bash
+    /code_review --code="def hello():\n    print('world')"
+    ```
+
+4. **Interpolation:** Once all arguments are collected, the CLI calls prompts/get
+   with your provided values to retrieve the final, interpolated prompt.
+    Eg.
+
+    ```bash
+    Please review the following code for quality, correctness, and potential improvements: \ndef hello():\n    print('world')
+    ```
+
+5. **Response:** This completed prompt is then sent to the Gemini model, and the model's response is displayed back to you in the CLI.
+
+## Kinds of prompts
+
+
+# Custom
+Custom prompts defined by the user.
+
+
+Custom prompts are defined by the user to be exposed through their MCP server.
+They are the default type for prompts.
+
+## Examples
+
+### Basic Prompt
+
+Here is an example of a simple prompt that takes a single argument, code, and
+asks an LLM to review it.
+
+```yaml
+prompts:
+  code_review:
+    description: "Asks the LLM to analyze code quality and suggest improvements."
+    messages:
+      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+    arguments:
+      - name: "code"
+        description: "The code to review"
+```
+
+### Multi-message prompt
+
+You can define prompts with multiple messages to set up more complex
+conversational contexts, like a role-playing scenario.
+
+```yaml
+prompts:
+  roleplay_scenario:
+    description: "Sets up a roleplaying scenario with initial messages."
+    arguments:
+      - name: "character"
+        description: "The character the AI should embody."
+      - name: "situation"
+        description: "The initial situation for the roleplay."
+    messages:
+      - role: "user"
+        content: "Let's roleplay. You are {{.character}}. The situation is: {{.situation}}"
+      - role: "assistant"
+        content: "Okay, I understand. I am ready. What happens next?"
+```
+
+## Reference
+
+### Prompt Schema
+
+| **field** | **type** | **required** | **description** |
+| --- | --- | --- | --- |
+| kind | string | No | The kind of prompt. Must be `"custom"`. |
+| description | string | No | A brief explanation of what the prompt does. |
+| messages | [][Message](#message-schema) | Yes | A list of one or more message objects that make up the prompt's content. |
+| arguments | [][Argument](#argument-schema) | No | A list of arguments that can be interpolated into the prompt's content.|
+
+### Message Schema
+
+Refer to the default prompt [Message Schema](../_index.md#message-schema).
+
+### Argument Schema
+
+Refer to the default prompt [Argument Schema](../_index.md#argument-schema).
 
 
 
@@ -9665,7 +10100,7 @@ In this section, we will download and install the Toolbox binary.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    export VERSION="0.18.0"
+    export VERSION="0.19.1"
     curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -10094,7 +10529,7 @@ to use BigQuery, and then run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -10728,7 +11163,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -10922,7 +11357,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -11047,7 +11482,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -11157,7 +11592,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -11819,6 +12254,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `run_look`: Runs the query associated with a look.
     *   `make_look`: Creates a new look.
     *   `get_dashboards`: Searches for saved dashboards.
+    *   `run_dashboard`: Runs the queries associated with a dashboard.
     *   `make_dashboard`: Creates a new dashboard.
     *   `add_dashboard_element`: Adds a tile to a dashboard.
     *   `health_pulse`: Test the health of a Looker instance.
@@ -12022,5 +12458,35 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 *   **Tools:**
     *   `execute_cypher`: Executes a Cypher query.
     *   `get_schema`: Retrieves the schema of the Neo4j database.
+
+## Google Cloud Healthcare API
+*   `--prebuilt` value: `cloud-healthcare`
+*   **Environment Variables:**
+    *   `CLOUD_HEALTHCARE_PROJECT`: The GCP project ID.
+    *   `CLOUD_HEALTHCARE_REGION`: The Cloud Healthcare API dataset region.
+    *   `CLOUD_HEALTHCARE_DATASET`: The Cloud Healthcare API dataset ID.
+    *   `CLOUD_HEALTHCARE_USE_CLIENT_OAUTH`: (Optional) If `true`, forwards the client's
+        OAuth access token for authentication. Defaults to `false`.
+*   **Permissions:**
+    *   **Healthcare FHIR Resource Reader** (`roles/healthcare.fhirResourceReader`) to read an
+        search FHIR resources.
+    *   **Healthcare DICOM Viewer** (`roles/healthcare.dicomViewer`) to retrieve DICOM images from a
+        DICOM store.
+*   **Tools:**
+    *   `get_dataset`: Gets information about a Cloud Healthcare API dataset.
+    *   `list_dicom_stores`: Lists DICOM stores in a Cloud Healthcare API dataset.
+    *   `list_fhir_stores`: Lists FHIR stores in a Cloud Healthcare API dataset.
+    *   `get_fhir_store`: Gets information about a FHIR store.
+    *   `get_fhir_store_metrics`: Gets metrics for a FHIR store.
+    *   `get_fhir_resource`: Gets a FHIR resource from a FHIR store.
+    *   `fhir_patient_search`: Searches for patient resource(s) based on a set of criteria.
+    *   `fhir_patient_everything`: Retrieves resources related to a given patient.
+    *   `fhir_fetch_page`: Fetches a page of FHIR resources.
+    *   `get_dicom_store`: Gets information about a DICOM store.
+    *   `get_dicom_store_metrics`: Gets metrics for a DICOM store.
+    *   `search_dicom_studies`: Searches for DICOM studies.
+    *   `search_dicom_series`: Searches for DICOM series.
+    *   `search_dicom_instances`: Searches for DICOM instances.
+    *   `retrieve_rendered_dicom_instance`: Retrieves a rendered DICOM instance.
 
 
