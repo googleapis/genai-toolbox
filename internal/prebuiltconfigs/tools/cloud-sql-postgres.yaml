@@ -177,7 +177,7 @@ tools:
     list_schemas:
         kind: postgres-list-schemas
         source: cloudsql-pg-source
-
+    
     database_overview:
         kind: postgres-database-overview
         source: cloudsql-pg-source
@@ -206,6 +206,10 @@ tools:
         kind: postgres-list-publication-tables
         source: cloudsql-pg-source
 
+    list_tablespaces:
+        kind: postgres-list-tablespaces
+        source: cloudsql-pg-source
+
 toolsets:
     cloud_sql_postgres_database_tools:
         - execute_sql
@@ -231,3 +235,4 @@ toolsets:
         - list_query_stats
         - get_column_cardinality
         - list_publication_tables
+        - list_tablespaces

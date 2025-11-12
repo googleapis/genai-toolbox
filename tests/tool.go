@@ -2244,6 +2244,33 @@ func RunPostgresListSequencesTest(t *testing.T, ctx context.Context, pool *pgxpo
 	}
 }
 
+func RunPostgresListTableSpacesTest(t *testing.T) {
+	invokeTcs := []struct {
+		name           string
+		api            string
+		requestBody    io.Reader
+		wantStatusCode int
+	}{
+		{
+			name:           "invoke list_tablespaces output",
+			api:            "http://127.0.0.1:5000/api/tool/list_tablespaces/invoke",
+			wantStatusCode: http.StatusOK,
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, respBody := RunRequest(t, http.MethodPost, tc.api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
+			}
+
+			// Intentionally not adding the output check as output depends on the postgres instance used where the the functional test runs.
+			// Adding the check will make the test flaky.
+		})
+	}
+}
+
 // RunMySQLListTablesTest run tests against the mysql-list-tables tool
 func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNameAuth, expectedOwner string) {
 	var ownerWant any
