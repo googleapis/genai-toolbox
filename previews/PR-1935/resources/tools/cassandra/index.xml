@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Cassandra on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1935/resources/tools/cassandra/</link><description>Recent content in Cassandra on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1935/resources/tools/cassandra/index.xml" rel="self" type="application/rss+xml"/><item><title>cassandra-cql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1935/resources/tools/cassandra/cassandra-cql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1935/resources/tools/cassandra/cassandra-cql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cassandra-cql&lt;/code> tool executes a pre-defined CQL statement against a Cassandra
+database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1935/resources/sources/cassandra/">cassandra&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>The specified CQL statement is executed as a &lt;a href="https://docs.datastax.com/en/datastax-drivers/developing/prepared-statements.html">prepared statement&lt;/a>,
+and expects parameters in the CQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent CQL injections.
+Query parameters can be used as substitutes for arbitrary expressions.
+Parameters cannot be used as substitutes for keyspaces, table names, column names,
+or other parts of the query.&lt;/p></description></item></channel></rss>
