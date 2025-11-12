@@ -34,6 +34,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
+	"github.com/googleapis/genai-toolbox/internal/prompts"
+	"github.com/googleapis/genai-toolbox/internal/prompts/custom"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
@@ -525,6 +527,38 @@ func TestParseToolFile(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts: nil,
+			},
+		},
+		{
+			description: "with prompts example",
+			in: `
+            prompts:
+                my-prompt:
+                    description: A prompt template for data analysis.
+                    arguments:
+                        - name: country
+                          description: The country to analyze.
+                    messages:
+                        - content: Analyze the data for {{.country}}.
+            `,
+			wantToolsFile: ToolsFile{
+				Sources:      nil,
+				AuthServices: nil,
+				Tools:        nil,
+				Toolsets:     nil,
+				Prompts: server.PromptConfigs{
+					"my-prompt": &custom.Config{
+						Name:        "my-prompt",
+						Description: "A prompt template for data analysis.",
+						Arguments: prompts.Arguments{
+							{Parameter: tools.NewStringParameter("country", "The country to analyze.")},
+						},
+						Messages: []prompts.Message{
+							{Role: "user", Content: "Analyze the data for {{.country}}."},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -544,7 +578,10 @@ func TestParseToolFile(t *testing.T) {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
-				t.Fatalf("incorrect tools parse: diff %v", diff)
+				t.Fatalf("incorrect toolsets parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
+				t.Fatalf("incorrect prompts parse: diff %v", diff)
 			}
 		})
 	}
@@ -658,6 +695,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts: nil,
 			},
 		},
 		{
@@ -757,6 +795,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts: nil,
 			},
 		},
 		{
@@ -858,6 +897,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts: nil,
 			},
 		},
 	}
@@ -877,7 +917,10 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
-				t.Fatalf("incorrect tools parse: diff %v", diff)
+				t.Fatalf("incorrect toolsets parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
+				t.Fatalf("incorrect prompts parse: diff %v", diff)
 			}
 		})
 	}
@@ -894,6 +937,8 @@ func TestEnvVarReplacement(t *testing.T) {
 	t.Setenv("cat_string", "cat")
 	t.Setenv("food_string", "food")
 	t.Setenv("TestHeader", "ACTUAL_HEADER")
+	t.Setenv("prompt_name", "ACTUAL_PROMPT_NAME")
+	t.Setenv("prompt_content", "ACTUAL_CONTENT")
 
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -967,6 +1012,14 @@ func TestEnvVarReplacement(t *testing.T) {
 			toolsets:
 				${toolset_name}:
 					- example_tool
+
+						
+			prompts:
+				${prompt_name}:
+					description: A test prompt for {{.name}}.
+					messages:
+						- role: user
+						  content: ${prompt_content}
 			`,
 			wantToolsFile: ToolsFile{
 				Sources: server.SourceConfigs{
@@ -1023,6 +1076,19 @@ func TestEnvVarReplacement(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts: server.PromptConfigs{
+					"ACTUAL_PROMPT_NAME": &custom.Config{
+						Name:        "ACTUAL_PROMPT_NAME",
+						Description: "A test prompt for {{.name}}.",
+						Messages: []prompts.Message{
+							{
+								Role:    "user",
+								Content: "ACTUAL_CONTENT",
+							},
+						},
+						Arguments: nil,
+					},
+				},
 			},
 		},
 	}
@@ -1042,11 +1108,13 @@ func TestEnvVarReplacement(t *testing.T) {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
-				t.Fatalf("incorrect tools parse: diff %v", diff)
+				t.Fatalf("incorrect toolsets parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
+				t.Fatalf("incorrect prompts parse: diff %v", diff)
 			}
 		})
 	}
-
 }
 
 // normalizeFilepaths is a helper function to allow same filepath formats for Mac and Windows.
@@ -1256,6 +1324,7 @@ func TestPrebuiltTools(t *testing.T) {
 	cloudsqlmysqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mysql-observability")
 	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
 	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
+	cloudhealthcare_config, _ := prebuiltconfigs.Get("cloud-healthcare")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1348,6 +1417,10 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("NEO4J_DATABASE", "neo4j")
 	t.Setenv("NEO4J_USERNAME", "your_neo4j_user")
 	t.Setenv("NEO4J_PASSWORD", "your_neo4j_password")
+
+	t.Setenv("CLOUD_HEALTHCARE_PROJECT", "your_gcp_project_id")
+	t.Setenv("CLOUD_HEALTHCARE_REGION", "your_gcp_region")
+	t.Setenv("CLOUD_HEALTHCARE_DATASET", "your_healthcare_dataset")
 
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -1514,7 +1587,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"looker_tools": tools.ToolsetConfig{
 					Name:      "looker_tools",
-					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "make_dashboard", "add_dashboard_element", "health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns"},
+					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "run_dashboard", "make_dashboard", "add_dashboard_element", "health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns"},
 				},
 			},
 		},
@@ -1628,6 +1701,24 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "cloud healthcare prebuilt tools",
+			in:   cloudhealthcare_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_healthcare_dataset_tools": tools.ToolsetConfig{
+					Name:      "cloud_healthcare_dataset_tools",
+					ToolNames: []string{"get_dataset", "list_dicom_stores", "list_fhir_stores"},
+				},
+				"cloud_healthcare_fhir_tools": tools.ToolsetConfig{
+					Name:      "cloud_healthcare_fhir_tools",
+					ToolNames: []string{"get_fhir_store", "get_fhir_store_metrics", "get_fhir_resource", "fhir_patient_search", "fhir_patient_everything", "fhir_fetch_page"},
+				},
+				"cloud_healthcare_dicom_tools": tools.ToolsetConfig{
+					Name:      "cloud_healthcare_dicom_tools",
+					ToolNames: []string{"get_dicom_store", "get_dicom_store_metrics", "search_dicom_studies", "search_dicom_series", "search_dicom_instances", "retrieve_rendered_dicom_instance"},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tcs {
@@ -1638,6 +1729,10 @@ func TestPrebuiltTools(t *testing.T) {
 			}
 			if diff := cmp.Diff(tc.wantToolset, toolsFile.Toolsets); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
+			}
+			// Prebuilt configs do not have prompts, so assert empty maps.
+			if len(toolsFile.Prompts) != 0 {
+				t.Fatalf("expected empty prompts map for prebuilt config, got: %v", toolsFile.Prompts)
 			}
 		})
 	}

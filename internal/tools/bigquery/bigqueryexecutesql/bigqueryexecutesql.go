@@ -325,7 +325,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("unable to read query results: %w", err)
 	}
 	for {
-		var val map[string]bigqueryapi.Value
+		var val []bigqueryapi.Value
 		err = it.Next(&val)
 		if err == iterator.Done {
 			break
@@ -333,9 +333,10 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		if err != nil {
 			return nil, fmt.Errorf("unable to iterate through query results: %w", err)
 		}
+		schema := it.Schema
 		row := orderedmap.Row{}
-		for key, value := range val {
-			row.Add(key, value)
+		for i, field := range schema {
+			row.Add(field.Name, val[i])
 		}
 		out = append(out, row)
 	}

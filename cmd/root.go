@@ -35,11 +35,15 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
+	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+
+	// Import prompt packages for side effect of registration
+	_ "github.com/googleapis/genai-toolbox/internal/prompts/custom"
 
 	// Import tool packages for side effect of registration
 	_ "github.com/googleapis/genai-toolbox/internal/tools/alloydb/alloydbcreatecluster"
@@ -69,6 +73,21 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouselistdatabases"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouselisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhousesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcarefhirfetchpage"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcarefhirpatienteverything"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcarefhirpatientsearch"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaregetdataset"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaregetdicomstore"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaregetdicomstoremetrics"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaregetfhirresource"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaregetfhirstore"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaregetfhirstoremetrics"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcarelistdicomstores"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcarelistfhirstores"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcareretrieverendereddicominstance"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaresearchdicominstances"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaresearchdicomseries"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaresearchdicomstudies"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlcreatedatabase"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlcreateusers"
@@ -127,6 +146,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerquery"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerquerysql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerqueryurl"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerrundashboard"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerrunlook"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerupdateprojectfile"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mindsdb/mindsdbexecutesql"
@@ -168,6 +188,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparkcancelbatch"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparkgetbatch"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparklistbatches"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/singlestore/singlestoreexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/singlestore/singlestoresql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerlisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannersql"
@@ -189,6 +211,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/bigtable"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cassandra"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudmonitoring"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
@@ -212,6 +235,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/singlestore"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/tidb"
@@ -340,12 +364,13 @@ type ToolsFile struct {
 	AuthServices server.AuthServiceConfigs `yaml:"authServices"`
 	Tools        server.ToolConfigs        `yaml:"tools"`
 	Toolsets     server.ToolsetConfigs     `yaml:"toolsets"`
+	Prompts      server.PromptConfigs      `yaml:"prompts"`
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
 // also support ${ENV_NAME:default_value}.
 func parseEnv(input string) (string, error) {
-	re := regexp.MustCompile(`\$\{(\w+)(:(\w*))?\}`)
+	re := regexp.MustCompile(`\$\{(\w+)(:([^}]*))?\}`)
 
 	var err error
 	output := re.ReplaceAllStringFunc(input, func(match string) string {
@@ -356,7 +381,7 @@ func parseEnv(input string) (string, error) {
 		if value, found := os.LookupEnv(variableName); found {
 			return value
 		}
-		if parts[2] != "" {
+		if len(parts) >= 4 && parts[2] != "" {
 			return parts[3]
 		}
 		err = fmt.Errorf("environment variable not found: %q", variableName)
@@ -392,6 +417,7 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 		AuthServices: make(server.AuthServiceConfigs),
 		Tools:        make(server.ToolConfigs),
 		Toolsets:     make(server.ToolsetConfigs),
+		Prompts:      make(server.PromptConfigs),
 	}
 
 	var conflicts []string
@@ -441,11 +467,20 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 				merged.Toolsets[name] = toolset
 			}
 		}
+
+		// Check for conflicts and merge prompts
+		for name, prompt := range file.Prompts {
+			if _, exists := merged.Prompts[name]; exists {
+				conflicts = append(conflicts, fmt.Sprintf("prompt '%s' (file #%d)", name, fileIndex+1))
+			} else {
+				merged.Prompts[name] = prompt
+			}
+		}
 	}
 
 	// If conflicts were detected, return an error
 	if len(conflicts) > 0 {
-		return ToolsFile{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, and toolset has a unique name across all files", strings.Join(conflicts, "\n  - "))
+		return ToolsFile{}, fmt.Errorf("resource conflicts detected:\n  - %s\n\nPlease ensure each source, authService, tool, toolset and prompt has a unique name across all files", strings.Join(conflicts, "\n  - "))
 	}
 
 	return merged, nil
@@ -519,14 +554,14 @@ func handleDynamicReload(ctx context.Context, toolsFile ToolsFile, s *server.Ser
 		panic(err)
 	}
 
-	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := validateReloadEdits(ctx, toolsFile)
+	sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := validateReloadEdits(ctx, toolsFile)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
 		return err
 	}
 
-	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, toolsMap, toolsetsMap)
+	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	return nil
 }
@@ -534,7 +569,7 @@ func handleDynamicReload(ctx context.Context, toolsFile ToolsFile, s *server.Ser
 // validateReloadEdits checks that the reloaded tools file configs can initialized without failing
 func validateReloadEdits(
 	ctx context.Context, toolsFile ToolsFile,
-) (map[string]sources.Source, map[string]auth.AuthService, map[string]tools.Tool, map[string]tools.Toolset, error,
+) (map[string]sources.Source, map[string]auth.AuthService, map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset, error,
 ) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -557,16 +592,17 @@ func validateReloadEdits(
 		AuthServiceConfigs: toolsFile.AuthServices,
 		ToolConfigs:        toolsFile.Tools,
 		ToolsetConfigs:     toolsFile.Toolsets,
+		PromptConfigs:      toolsFile.Prompts,
 	}
 
-	sourcesMap, authServicesMap, toolsMap, toolsetsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
+	sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to initialize reloaded configs: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
-		return nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, err
 	}
 
-	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, nil
+	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
 }
 
 // watchChanges checks for changes in the provided yaml tools file(s) or folder.
@@ -857,7 +893,8 @@ func run(cmd *Command) error {
 		}
 	}
 
-	cmd.cfg.SourceConfigs, cmd.cfg.AuthServiceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs = toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets
+	cmd.cfg.SourceConfigs, cmd.cfg.AuthServiceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs, cmd.cfg.PromptConfigs = toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets, toolsFile.Prompts
+
 	authSourceConfigs := toolsFile.AuthSources
 	if authSourceConfigs != nil {
 		cmd.logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")
