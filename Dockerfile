@@ -28,13 +28,6 @@ ARG TARGETARCH
 ARG BUILD_TYPE="container.dev"
 ARG COMMIT_SHA=""
 
-# Install Cross-Compilers (required for CGO on multi-arch)
-RUN apt-get update && apt-get install -y \
-    gcc-aarch64-linux-gnu \
-    libc6-dev-arm64-cross \
-    gcc-x86-64-linux-gnu \
-    libc6-dev-amd64-cross
-
 RUN go get ./...
 
 RUN export ZIG_TARGET="" && \
@@ -51,10 +44,10 @@ RUN export ZIG_TARGET="" && \
     -o genai-toolbox .
 
 # Final Stage
-FROM gcr.io/distroless/cc-debian12:nonroot
+FROM gcr.io/distroless/static:nonroot
 
 WORKDIR /app
-COPY --from=build --chown=nonroot /go/bin/genai-toolbox /toolbox
+COPY --from=build --chown=nonroot /go/src/genai-toolbox/genai-toolbox /toolbox
 USER nonroot
 
 LABEL io.modelcontextprotocol.server.name="io.github.googleapis/genai-toolbox"
