@@ -15,9 +15,10 @@
 # Use the latest stable golang 1.x to compile to a binary
 FROM --platform=$BUILDPLATFORM golang:1 AS build
 
-RUN apt-get update && apt-get install -y xz-utils
+
 
 # Install Zig
+RUN apt-get update && apt-get install -y xz-utils
 RUN curl -fL "https://ziglang.org/download/0.15.2/zig-x86_64-linux-0.15.2.tar.xz" -o zig.tar.xz && \
     mkdir -p /zig && \
     tar -xf zig.tar.xz -C /zig --strip-components=1 && \
@@ -31,31 +32,26 @@ ARG TARGETARCH
 ARG BUILD_TYPE="container.dev"
 ARG COMMIT_SHA=""
 
-# Install Cross-Compilers (required for CGO on multi-arch)
-RUN apt-get update && apt-get install -y \
-    gcc-aarch64-linux-gnu \
-    libc6-dev-arm64-cross \
-    gcc-x86-64-linux-gnu \
-    libc6-dev-amd64-cross
-
 RUN go get ./...
 
-# Dynamic CGO Build
-RUN if [ "$TARGETARCH" = "arm64" ]; then \
-      CC=aarch64-linux-gnu-gcc; \
-    else \
-      CC=x86_64-linux-gnu-gcc; \
-    fi && \
-    CGO_ENABLED=1 GOOS=${TARGETOS} GOARCH=${TARGETARCH} CC=$CC \
+RUN export ZIG_TARGET="" && \
+    case "${TARGETARCH}" in \
+      ("amd64") ZIG_TARGET="x86_64-linux-gnu" ;; \
+      ("arm64") ZIG_TARGET="aarch64-linux-gnu" ;; \
+      (*) echo "Unsupported architecture: ${TARGETARCH}" && exit 1 ;; \
+    esac && \
+    CGO_ENABLED=1 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
+    CC="/zig/zig cc -target ${ZIG_TARGET}" \
+    CXX="/zig/zig c++ -target ${ZIG_TARGET}" \
     go build \
-    -ldflags "-s -w -X github.com/googleapis/genai-toolbox/cmd.buildType=${BUILD_TYPE} -X github.com/googleapis/genai-toolbox/cmd.commitSha=${COMMIT_SHA}" \
-    -o /go/bin/genai-toolbox .
+    -ldflags "-linkmode external -extldflags '-static' -X github.com/googleapis/genai-toolbox/cmd.buildType=${BUILD_TYPE} -X github.com/googleapis/genai-toolbox/cmd.commitSha=${COMMIT_SHA}" \
+    -o genai-toolbox .
 
 # Final Stage
-FROM gcr.io/distroless/cc-debian12:nonroot
+FROM gcr.io/distroless/static:nonroot
 
 WORKDIR /app
-COPY --from=build --chown=nonroot /go/bin/genai-toolbox /toolbox
+COPY --from=build --chown=nonroot /go/src/genai-toolbox/genai-toolbox /toolbox
 USER nonroot
 
 LABEL io.modelcontextprotocol.server.name="io.github.googleapis/genai-toolbox"
