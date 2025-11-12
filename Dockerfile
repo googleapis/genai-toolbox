@@ -11,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# Use the latest stable golang 1.x to compile to a binary
 FROM --platform=$BUILDPLATFORM golang:1 AS build
 
 # Install Zig for CGO cross-compilation
@@ -46,7 +44,7 @@ RUN export ZIG_TARGET="" && \
     -o genai-toolbox .
 
 # Final Stage
-FROM gcr.io/distroless/static:nonroot
+FROM gcr.io/distroless/cc-debian12:nonroot
 
 WORKDIR /app
 COPY --from=build --chown=nonroot /go/src/genai-toolbox/genai-toolbox /toolbox
