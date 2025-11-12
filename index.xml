@@ -7732,8 +7732,8 @@ execute queries.&lt;/li>
 &lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>postgres&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Environment Variables:&lt;/strong>
 &lt;ul>
-&lt;li>&lt;code>POSTGRES_HOST&lt;/code>: The hostname or IP address of the PostgreSQL server.&lt;/li>
-&lt;li>&lt;code>POSTGRES_PORT&lt;/code>: The port number for the PostgreSQL server.&lt;/li>
+&lt;li>&lt;code>POSTGRES_HOST&lt;/code>: (Optional) The hostname or IP address of the PostgreSQL server.&lt;/li>
+&lt;li>&lt;code>POSTGRES_PORT&lt;/code>: (Optional) The port number for the PostgreSQL server.&lt;/li>
 &lt;li>&lt;code>POSTGRES_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
 &lt;li>&lt;code>POSTGRES_USER&lt;/code>: The database username.&lt;/li>
 &lt;li>&lt;code>POSTGRES_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
