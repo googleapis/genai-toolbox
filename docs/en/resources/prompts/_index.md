@@ -62,7 +62,7 @@ Prompts defined in your `tools.yaml` can be seamlessly integrated with the Gemin
     Eg.
 
     ```bash
-    Please review this Python code:\ndef hello():\n    print('world')
+    Please review the following code for quality, correctness, and potential improvements: \ndef hello():\n    print('world')
     ```
 
 5. **Response:** This completed prompt is then sent to the Gemini model, and the model's response is displayed back to you in the CLI.
