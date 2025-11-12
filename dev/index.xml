@@ -6774,7 +6774,22 @@ to be in the native Oracle format (e.g., &lt;code>:1&lt;/code>, &lt;code>:2&lt;/
 &lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
-names, or other parts of the query.&lt;/p></description></item><item><title>postgres-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+names, or other parts of the query.&lt;/p></description></item><item><title>postgres-database-overview</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-database-overview/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-database-overview/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-database-overview&lt;/code> fetches the current state of the PostgreSQL server. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-database-overview&lt;/code> fetches the current state of the PostgreSQL server This tool does not take any input parameters.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">database_overview&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-database-overview&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloudsql-pg-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> fetches the current state of the PostgreSQL server. It returns the postgres version, whether it&amp;#39;s a replica, uptime duration, maximum connection limit, number of current connections, number of active connections and the percentage of connections in use.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a JSON object with the following elements:&lt;/p></description></item><item><title>postgres-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>postgres-execute-sql&lt;/code> tool executes a SQL statement against a Postgres
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
@@ -6983,7 +6998,29 @@ constraints, indexes, triggers, owner, comment) as JSON for user-created tables
 default, it lists all tables in user schemas.* &lt;code>output_format&lt;/code> (optional):
 Indicate the output format of table schema. &lt;code>simple&lt;/code> will return only the
 table names, &lt;code>detailed&lt;/code> will return the full table information. Default:
-&lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-list-views</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-views/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-views/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-list-triggers</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-triggers/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-triggers/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-triggers&lt;/code> tool lists available non-internal triggers in the database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-list-triggers&lt;/code> lists detailed information as JSON for triggers. The tool takes the following input parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>trigger_name&lt;/code> (optional): A text to filter results by trigger name. The input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>schema_name&lt;/code> (optional): A text to filter results by schema name. The input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>table_name&lt;/code> (optional): A text to filter results by table name. The input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>limit&lt;/code> (optional): The maximum number of triggers to return. Default: &lt;code>50&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="l">```yaml&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_triggers&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-list-triggers&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Lists all non-internal triggers in a database. Returns trigger name, schema name, table name, wether its enabled or disabled, timing (e.g BEFORE/AFTER of the event), the events that cause the trigger to fire such as INSERT, UPDATE, or DELETE, whether the trigger activates per ROW or per STATEMENT, the handler function executed by the trigger and full definition.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>postgres-list-views</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-views/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-views/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>postgres-list-views&lt;/code> tool retrieves a list of top N (default 50) views from a Postgres database, excluding those in system schemas (&lt;code>pg_catalog&lt;/code>, &lt;code>information_schema&lt;/code>). It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
@@ -7112,6 +7149,8 @@ database.&lt;/li>
 &lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
 limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
 &lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
+&lt;li>&lt;code>database_overview&lt;/code>: Fetches the current state of the PostgreSQL server.&lt;/li>
+&lt;li>&lt;code>list_triggers&lt;/code>: Lists triggers in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -7342,6 +7381,8 @@ database.&lt;/li>
 &lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
 limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
 &lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
+&lt;li>&lt;code>database_overview&lt;/code>: Fetches the current state of the PostgreSQL server.&lt;/li>
+&lt;li>&lt;code>list_triggers&lt;/code>: Lists triggers in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -7762,6 +7803,8 @@ database.&lt;/li>
 &lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
 limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
 &lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
+&lt;li>&lt;code>database_overview&lt;/code>: Fetches the current state of the PostgreSQL server.&lt;/li>
+&lt;li>&lt;code>list_triggers&lt;/code>: Lists triggers in the database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
