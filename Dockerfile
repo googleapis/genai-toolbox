@@ -44,7 +44,7 @@ RUN export ZIG_TARGET="" && \
     -o genai-toolbox .
 
 # Final Stage
-FROM gcr.io/distroless/static:nonroot
+FROM gcr.io/distroless/cc-debian12:nonroot
 
 WORKDIR /app
 COPY --from=build --chown=nonroot /go/src/genai-toolbox/genai-toolbox /toolbox
