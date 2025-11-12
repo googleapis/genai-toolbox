@@ -1398,6 +1398,249 @@ func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool
 	}
 }
 
+func RunPostgresDatabaseOverviewTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	const api = "http://127.0.0.1:5000/api/tool/database_overview/invoke"
+	requestBody := bytes.NewBuffer([]byte(`{}`))
+
+	resp, respBody := RunRequest(t, http.MethodPost, api, requestBody, nil)
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, http.StatusOK, string(respBody))
+	}
+
+	var bodyWrapper struct {
+		Result json.RawMessage `json:"result"`
+	}
+	if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+		t.Fatalf("error decoding response wrapper: %v, body: %s", err, string(respBody))
+	}
+
+	var resultString string
+	if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+		resultString = string(bodyWrapper.Result)
+	}
+
+	var got []map[string]any
+	if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+		t.Fatalf("failed to unmarshal nested result string: %v, result string: %s", err, resultString)
+	}
+
+	if len(got) != 1 {
+		t.Fatalf("Expected exactly one row in the result, got %d", len(got))
+	}
+
+	resultRow := got[0]
+
+	// Define expected keys based on the SELECT statement
+	expectedKeys := []string{
+		"pg_version",
+		"is_replica",
+		"uptime",
+		"max_connections",
+		"current_connections",
+		"active_connections",
+		"pct_connections_used",
+	}
+
+	for _, key := range expectedKeys {
+		if _, ok := resultRow[key]; !ok {
+			t.Errorf("Missing expected key in result: %s", key)
+		}
+	}
+
+	// Check types of the fields. JSON numbers are unmarshalled into float64.
+	if _, ok := resultRow["pg_version"].(string); !ok {
+		t.Errorf("Expected 'pg_version' to be a string, got %T", resultRow["pg_version"])
+	}
+	if _, ok := resultRow["is_replica"].(bool); !ok {
+		t.Errorf("Expected 'is_replica' to be a bool, got %T", resultRow["is_replica"])
+	}
+	if _, ok := resultRow["uptime"].(string); !ok {
+		t.Errorf("Expected 'uptime' to be a string, got %T", resultRow["uptime"])
+	}
+	if _, ok := resultRow["max_connections"].(float64); !ok {
+		t.Errorf("Expected 'max_connections' to be a number (float64), got %T", resultRow["max_connections"])
+	}
+	if _, ok := resultRow["current_connections"].(float64); !ok {
+		t.Errorf("Expected 'current_connections' to be a number (float64), got %T", resultRow["current_connections"])
+	}
+	if _, ok := resultRow["active_connections"].(float64); !ok {
+		t.Errorf("Expected 'active_connections' to be a number (float64), got %T", resultRow["active_connections"])
+	}
+	if _, ok := resultRow["pct_connections_used"].(float64); !ok {
+		t.Errorf("Expected 'pct_connections_used' to be a number (float64), got %T", resultRow["pct_connections_used"])
+	}
+
+	// Basic sanity checks on values
+	if maxConn, ok := resultRow["max_connections"].(float64); ok {
+		if maxConn <= 0 {
+			t.Errorf("Expected 'max_connections' to be positive, got %f", maxConn)
+		}
+	}
+
+	if pctUsed, ok := resultRow["pct_connections_used"].(float64); ok {
+		if pctUsed < 0 || pctUsed > 100 {
+			t.Errorf("Expected 'pct_connections_used' to be between 0 and 100, got %f", pctUsed)
+		}
+	}
+}
+
+func setupPostgresTrigger(t *testing.T, ctx context.Context, pool *pgxpool.Pool, schemaName, tableName, functionName, triggerName string) func() {
+	t.Helper()
+
+	createSchemaStmt := fmt.Sprintf("CREATE SCHEMA %s", schemaName)
+	if _, err := pool.Exec(ctx, createSchemaStmt); err != nil {
+		t.Fatalf("failed to create schema %s: %v", schemaName, err)
+	}
+
+	createTableStmt := fmt.Sprintf("CREATE TABLE %s.%s (id SERIAL PRIMARY KEY, name TEXT)", schemaName, tableName)
+	if _, err := pool.Exec(ctx, createTableStmt); err != nil {
+		t.Fatalf("failed to create table %s.%s: %v", schemaName, tableName, err)
+	}
+
+	createFunctionStmt := fmt.Sprintf(`
+	CREATE OR REPLACE FUNCTION %s.%s() RETURNS TRIGGER AS $$
+	BEGIN
+		RETURN NEW;
+	END;
+	$$ LANGUAGE plpgsql;
+`, schemaName, functionName)
+	if _, err := pool.Exec(ctx, createFunctionStmt); err != nil {
+		t.Fatalf("failed to create function %s.%s: %v", schemaName, functionName, err)
+	}
+
+	createTriggerStmt := fmt.Sprintf(`
+	CREATE TRIGGER %s
+	AFTER INSERT ON %s.%s
+	FOR EACH ROW
+	EXECUTE FUNCTION %s.%s();
+`, triggerName, schemaName, tableName, schemaName, functionName)
+	if _, err := pool.Exec(ctx, createTriggerStmt); err != nil {
+		t.Fatalf("failed to create trigger %s: %v", triggerName, err)
+	}
+
+	return func() {
+		dropSchemaStmt := fmt.Sprintf("DROP SCHEMA %s CASCADE", schemaName)
+		if _, err := pool.Exec(ctx, dropSchemaStmt); err != nil {
+			t.Fatalf("failed to drop schema %s: %v", schemaName, err)
+		}
+	}
+}
+
+func RunPostgresListTriggersTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
+	schemaName := "test_schema_" + uniqueID
+	tableName := "test_table_" + uniqueID
+	functionName := "test_func_" + uniqueID
+	triggerName := "test_trigger_" + uniqueID
+
+	cleanup := setupPostgresTrigger(t, ctx, pool, schemaName, tableName, functionName, triggerName)
+	defer cleanup()
+
+	// Definition can vary slightly based on server version/settings, so we fetch it to compare.
+	var expectedDef string
+	getDefQuery := fmt.Sprintf("SELECT pg_get_triggerdef(oid) FROM pg_trigger WHERE tgname = '%s'", triggerName)
+	err := pool.QueryRow(ctx, getDefQuery).Scan(&expectedDef)
+	if err != nil {
+		t.Fatalf("failed to fetch trigger definition: %v", err)
+	}
+
+	wantTrigger := map[string]any{
+		"trigger_name":     triggerName,
+		"schema_name":      schemaName,
+		"table_name":       tableName,
+		"status":           "ENABLED",
+		"timing":           "AFTER",
+		"events":           "INSERT",
+		"activation_level": "ROW",
+		"function_name":    functionName,
+		"definition":       expectedDef,
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           []map[string]any
+	}{
+		{
+			name:           "list all triggers (expecting the one we created)",
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantTrigger},
+		},
+		{
+			name:           "filter by trigger_name",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"trigger_name": "%s"}`, triggerName))),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantTrigger},
+		},
+		{
+			name:           "filter by schema_name",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"schema_name": "%s"}`, schemaName))),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantTrigger},
+		},
+		{
+			name:           "filter by table_name",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_name": "%s"}`, tableName))),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantTrigger},
+		},
+		{
+			name:           "filter by non-existent trigger_name",
+			requestBody:    bytes.NewBuffer([]byte(`{"trigger_name": "non_existent_trigger"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+		{
+			name:           "filter by non-existent schema_name",
+			requestBody:    bytes.NewBuffer([]byte(`{"schema_name": "non_existent_schema"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+		{
+			name:           "filter by non-existent table_name",
+			requestBody:    bytes.NewBuffer([]byte(`{"table_name": "non_existent_table"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_triggers/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []map[string]any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v, content: %s", err, resultString)
+			}
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("Unexpected result (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 func RunPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
 	type queryListDetails struct {
 		ProcessId        any    `json:"pid"`

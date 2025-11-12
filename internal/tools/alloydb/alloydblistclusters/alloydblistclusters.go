@@ -70,8 +70,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `%s`", kind, alloydbadmin.SourceKind)
 	}
 
+	project := s.DefaultProject
+	var projectParam tools.Parameter
+	if project != "" {
+		projectParam = tools.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+	} else {
+		projectParam = tools.NewStringParameter("project", "The GCP project ID to list clusters for.")
+	}
+
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("project", "The GCP project ID to list clusters for."),
+		projectParam,
 		tools.NewStringParameterWithDefault("location", "-", "Optional: The location to list clusters in (e.g., 'us-central1'). Use '-' to list clusters across all locations.(Default: '-')"),
 	}
 	paramManifest := allParameters.Manifest()

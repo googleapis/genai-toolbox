@@ -163,6 +163,14 @@ tools:
         kind: postgres-list-schemas
         source: cloudsql-pg-source
 
+    database_overview:
+        kind: postgres-database-overview
+        source: cloudsql-pg-source
+
+    list_triggers:
+        kind: postgres-list-triggers
+        source: cloudsql-pg-source
+
 toolsets:
     cloud_sql_postgres_database_tools:
         - execute_sql
@@ -178,3 +186,5 @@ toolsets:
         - get_query_plan
         - list_views
         - list_schemas
+        - database_overview
+        - list_triggers

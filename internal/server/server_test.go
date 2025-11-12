@@ -26,6 +26,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
+	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
@@ -150,7 +151,13 @@ func TestUpdateServer(t *testing.T) {
 			Tools: []*tools.Tool{},
 		},
 	}
-	s.ResourceMgr.SetResources(newSources, newAuth, newTools, newToolsets)
+	newPrompts := map[string]prompts.Prompt{"example-prompt": nil}
+	newPromptsets := map[string]prompts.Promptset{
+		"example-promptset": {
+			Name: "example-promptset", Prompts: []*prompts.Prompt{},
+		},
+	}
+	s.ResourceMgr.SetResources(newSources, newAuth, newTools, newToolsets, newPrompts, newPromptsets)
 	if err != nil {
 		t.Errorf("error updating server: %s", err)
 	}
@@ -173,5 +180,15 @@ func TestUpdateServer(t *testing.T) {
 	gotToolset, _ := s.ResourceMgr.GetToolset("example-toolset")
 	if diff := cmp.Diff(gotToolset, newToolsets["example-toolset"]); diff != "" {
 		t.Errorf("error updating server, toolset (-want +got):\n%s", diff)
+	}
+
+	gotPrompt, _ := s.ResourceMgr.GetPrompt("example-prompt")
+	if diff := cmp.Diff(gotPrompt, newPrompts["example-prompt"]); diff != "" {
+		t.Errorf("error updating server, prompts (-want +got):\n%s", diff)
+	}
+
+	gotPromptset, _ := s.ResourceMgr.GetPromptset("example-promptset")
+	if diff := cmp.Diff(gotPromptset, newPromptsets["example-promptset"]); diff != "" {
+		t.Errorf("error updating server, promptset (-want +got):\n%s", diff)
 	}
 }

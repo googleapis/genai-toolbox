@@ -34,6 +34,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
+	"github.com/googleapis/genai-toolbox/internal/prompts"
+	"github.com/googleapis/genai-toolbox/internal/prompts/custom"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
@@ -525,6 +527,38 @@ func TestParseToolFile(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts: nil,
+			},
+		},
+		{
+			description: "with prompts example",
+			in: `
+            prompts:
+                my-prompt:
+                    description: A prompt template for data analysis.
+                    arguments:
+                        - name: country
+                          description: The country to analyze.
+                    messages:
+                        - content: Analyze the data for {{.country}}.
+            `,
+			wantToolsFile: ToolsFile{
+				Sources:      nil,
+				AuthServices: nil,
+				Tools:        nil,
+				Toolsets:     nil,
+				Prompts: server.PromptConfigs{
+					"my-prompt": &custom.Config{
+						Name:        "my-prompt",
+						Description: "A prompt template for data analysis.",
+						Arguments: prompts.Arguments{
+							{Parameter: tools.NewStringParameter("country", "The country to analyze.")},
+						},
+						Messages: []prompts.Message{
+							{Role: "user", Content: "Analyze the data for {{.country}}."},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -544,7 +578,10 @@ func TestParseToolFile(t *testing.T) {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
-				t.Fatalf("incorrect tools parse: diff %v", diff)
+				t.Fatalf("incorrect toolsets parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
+				t.Fatalf("incorrect prompts parse: diff %v", diff)
 			}
 		})
 	}
@@ -658,6 +695,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts: nil,
 			},
 		},
 		{
@@ -757,6 +795,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts: nil,
 			},
 		},
 		{
@@ -858,6 +897,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts: nil,
 			},
 		},
 	}
@@ -877,7 +917,10 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
-				t.Fatalf("incorrect tools parse: diff %v", diff)
+				t.Fatalf("incorrect toolsets parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
+				t.Fatalf("incorrect prompts parse: diff %v", diff)
 			}
 		})
 	}
@@ -894,6 +937,8 @@ func TestEnvVarReplacement(t *testing.T) {
 	t.Setenv("cat_string", "cat")
 	t.Setenv("food_string", "food")
 	t.Setenv("TestHeader", "ACTUAL_HEADER")
+	t.Setenv("prompt_name", "ACTUAL_PROMPT_NAME")
+	t.Setenv("prompt_content", "ACTUAL_CONTENT")
 
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -967,6 +1012,14 @@ func TestEnvVarReplacement(t *testing.T) {
 			toolsets:
 				${toolset_name}:
 					- example_tool
+
+						
+			prompts:
+				${prompt_name}:
+					description: A test prompt for {{.name}}.
+					messages:
+						- role: user
+						  content: ${prompt_content}
 			`,
 			wantToolsFile: ToolsFile{
 				Sources: server.SourceConfigs{
@@ -1023,6 +1076,19 @@ func TestEnvVarReplacement(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts: server.PromptConfigs{
+					"ACTUAL_PROMPT_NAME": &custom.Config{
+						Name:        "ACTUAL_PROMPT_NAME",
+						Description: "A test prompt for {{.name}}.",
+						Messages: []prompts.Message{
+							{
+								Role:    "user",
+								Content: "ACTUAL_CONTENT",
+							},
+						},
+						Arguments: nil,
+					},
+				},
 			},
 		},
 	}
@@ -1042,11 +1108,13 @@ func TestEnvVarReplacement(t *testing.T) {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
-				t.Fatalf("incorrect tools parse: diff %v", diff)
+				t.Fatalf("incorrect toolsets parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
+				t.Fatalf("incorrect prompts parse: diff %v", diff)
 			}
 		})
 	}
-
 }
 
 // normalizeFilepaths is a helper function to allow same filepath formats for Mac and Windows.
@@ -1409,7 +1477,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"alloydb_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "alloydb_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers"},
 				},
 			},
 		},
@@ -1439,7 +1507,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers"},
 				},
 			},
 		},
@@ -1539,7 +1607,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"postgres_database_tools": tools.ToolsetConfig{
 					Name:      "postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers"},
 				},
 			},
 		},
@@ -1661,6 +1729,10 @@ func TestPrebuiltTools(t *testing.T) {
 			}
 			if diff := cmp.Diff(tc.wantToolset, toolsFile.Toolsets); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
+			}
+			// Prebuilt configs do not have prompts, so assert empty maps.
+			if len(toolsFile.Prompts) != 0 {
+				t.Fatalf("expected empty prompts map for prebuilt config, got: %v", toolsFile.Prompts)
 			}
 		})
 	}

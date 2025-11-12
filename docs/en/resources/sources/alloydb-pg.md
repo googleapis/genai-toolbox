@@ -51,6 +51,12 @@ cluster][alloydb-free-trial].
 - [`postgres-list-schemas`](../tools/postgres/postgres-list-schemas.md)
   List schemas in an AlloyDB for PostgreSQL database.
 
+- [`postgres-database-overview`](../tools/postgres/postgres-database-overview.md)
+  Fetches the current state of the PostgreSQL server. 
+
+- [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
+  List triggers in an AlloyDB for PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
