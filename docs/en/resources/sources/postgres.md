@@ -41,6 +41,9 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-list-schemas`](../tools/postgres/postgres-list-views.md)
   List schemas in a PostgreSQL database.
 
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publications-tables.md)
+  List publication tables in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)

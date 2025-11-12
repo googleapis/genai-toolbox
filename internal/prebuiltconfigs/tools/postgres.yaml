@@ -162,6 +162,10 @@ tools:
         kind: postgres-list-schemas
         source: postgresql-source
 
+    list_publication_tables:
+        kind: postgres-list-publication-tables
+        source: postgresql-source
+
 toolsets:
     postgres_database_tools:
         - execute_sql
@@ -177,3 +181,4 @@ toolsets:
         - get_query_plan
         - list_views
         - list_schemas
+        - list_publication_tables

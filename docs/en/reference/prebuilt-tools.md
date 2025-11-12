@@ -46,6 +46,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
     *   `list_schemas`: Lists schemas in the database. 
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
 
 ## AlloyDB Postgres Admin
 
@@ -216,6 +217,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
     *   `list_schemas`: Lists schemas in the database. 
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -513,6 +515,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
     *   `list_schemas`: Lists schemas in the database. 
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
 
 ## Google Cloud Serverless for Apache Spark
 

@@ -47,6 +47,9 @@ to a database by following these instructions][csql-pg-quickstart].
 - [`postgres-list-schemas`](../tools/postgres/postgres-list-schemas.md)
   List schemas in a PostgreSQL database.
 
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publications-tables.md)
+  List publication tables in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [Cloud SQL for Postgres using
