@@ -22,6 +22,7 @@ import (
 	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
@@ -71,25 +72,25 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
 	}
 
-	projectIdParameter := tools.NewStringParameter("project_id", "The id of the project containing the files")
-	filePathParameter := tools.NewStringParameter("file_path", "The path of the file within the project")
-	fileContentParameter := tools.NewStringParameter("file_content", "The content of the file")
-	parameters := tools.Parameters{projectIdParameter, filePathParameter, fileContentParameter}
+	projectIdParameter := parameters.NewStringParameter("project_id", "The id of the project containing the files")
+	filePathParameter := parameters.NewStringParameter("file_path", "The path of the file within the project")
+	fileContentParameter := parameters.NewStringParameter("file_content", "The content of the file")
+	params := parameters.Parameters{projectIdParameter, filePathParameter, fileContentParameter}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	return Tool{
 		Name:           cfg.Name,
 		Kind:           kind,
-		Parameters:     parameters,
+		Parameters:     params,
 		AuthRequired:   cfg.AuthRequired,
 		UseClientOAuth: s.UseClientOAuth,
 		Client:         s.Client,
 		ApiSettings:    s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
-			Parameters:   parameters.Manifest(),
+			Parameters:   params.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
 		mcpManifest: mcpManifest,
@@ -105,13 +106,13 @@ type Tool struct {
 	UseClientOAuth bool
 	Client         *v4.LookerSDK
 	ApiSettings    *rtl.ApiSettings
-	AuthRequired   []string         `yaml:"authRequired"`
-	Parameters     tools.Parameters `yaml:"parameters"`
+	AuthRequired   []string              `yaml:"authRequired"`
+	Parameters     parameters.Parameters `yaml:"parameters"`
 	manifest       tools.Manifest
 	mcpManifest    tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
 	if err != nil {
 		return nil, fmt.Errorf("error getting sdk: %w", err)
@@ -148,8 +149,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return data, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

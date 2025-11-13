@@ -66,6 +66,12 @@ cluster][alloydb-free-trial].
 - [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
   List triggers in an AlloyDB for PostgreSQL database.
 
+- [`postgres-list-indexes`](../tools/postgres/postgres-list-indexes.md)
+  List available user indexes in a PostgreSQL database.
+
+- [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
+  List sequences in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)

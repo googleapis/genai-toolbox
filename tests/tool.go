@@ -1826,6 +1826,257 @@ func RunPostgresListInstalledExtensionsTest(t *testing.T) {
 	}
 }
 
+func setupPostgresIndex(t *testing.T, ctx context.Context, pool *pgxpool.Pool, schemaName string, tableName string) func(t *testing.T) {
+	t.Helper()
+	createSchemaStmt := fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s;", schemaName)
+	if _, err := pool.Exec(ctx, createSchemaStmt); err != nil {
+		t.Fatalf("unable to create schema %s: %v", schemaName, err)
+	}
+
+	fullTableName := fmt.Sprintf("%s.%s", schemaName, tableName)
+	createTableStmt := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT, email TEXT);", fullTableName)
+	if _, err := pool.Exec(ctx, createTableStmt); err != nil {
+		t.Fatalf("unable to create table %s: %v", fullTableName, err)
+	}
+
+	// Create a unique index on email
+	index1Stmt := fmt.Sprintf("CREATE UNIQUE INDEX %s_email_idx ON %s (email);", tableName, fullTableName)
+	if _, err := pool.Exec(ctx, index1Stmt); err != nil {
+		t.Fatalf("unable to create index %s_email_idx: %v", tableName, err)
+	}
+
+	// Create a non-unique index on name
+	index2Stmt := fmt.Sprintf("CREATE INDEX %s_name_idx ON %s (name);", tableName, fullTableName)
+	if _, err := pool.Exec(ctx, index2Stmt); err != nil {
+		t.Fatalf("unable to create index %s_name_idx: %v", tableName, err)
+	}
+
+	return func(t *testing.T) {
+		t.Helper()
+		if _, err := pool.Exec(ctx, fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE;", schemaName)); err != nil {
+			t.Errorf("unable to drop schema: %v", err)
+		}
+	}
+}
+
+func RunPostgresListIndexesTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	schemaName := "testschema_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableName := "table1_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	cleanup := setupPostgresIndex(t, ctx, pool, schemaName, tableName)
+	defer cleanup(t)
+
+	// Primary key index
+	wantIndexPK := map[string]any{
+		"schema_name":      schemaName,
+		"table_name":       tableName,
+		"index_name":       tableName + "_pkey",
+		"index_type":       "btree",
+		"is_unique":        true,
+		"is_primary":       true,
+		"is_used":          false,
+		"index_definition": fmt.Sprintf("CREATE UNIQUE INDEX %s_pkey ON %s.%s USING btree (id)", tableName, schemaName, tableName),
+		// Size and scan counts can vary, so omitting them from strict checks or using ranges might be better in real tests.
+	}
+	// Email unique index
+	wantIndexEmail := map[string]any{
+		"schema_name":      schemaName,
+		"table_name":       tableName,
+		"index_name":       tableName + "_email_idx",
+		"index_type":       "btree",
+		"is_unique":        true,
+		"is_primary":       false,
+		"is_used":          false,
+		"index_definition": fmt.Sprintf("CREATE UNIQUE INDEX %s_email_idx ON %s.%s USING btree (email)", tableName, schemaName, tableName),
+	}
+	// Name non-unique index
+	wantIndexName := map[string]any{
+		"schema_name":      schemaName,
+		"table_name":       tableName,
+		"index_name":       tableName + "_name_idx",
+		"index_type":       "btree",
+		"is_unique":        false,
+		"is_primary":       false,
+		"is_used":          false,
+		"index_definition": fmt.Sprintf("CREATE INDEX %s_name_idx ON %s.%s USING btree (name)", tableName, schemaName, tableName),
+	}
+
+	allWantIndexes := []map[string]any{wantIndexEmail, wantIndexName, wantIndexPK}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           []map[string]any
+	}{
+		// List all indexes is skipped because the output might include indexes for other database tables
+		// defined outside of this test, which could make the test flaky.
+		{
+			name:           "list_indexes for a specific schema and table",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s", "table_name": "%s"}`, schemaName, tableName)),
+			wantStatusCode: http.StatusOK,
+			want:           allWantIndexes,
+		},
+		{
+			name:           "list_indexes for a specific schema",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s"}`, schemaName)),
+			wantStatusCode: http.StatusOK,
+			want:           allWantIndexes,
+		},
+		{
+			name:           "list_indexes with non-existent schema",
+			requestBody:    bytes.NewBufferString(`{"schema_name": "non_existent_schema"}`),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+		{
+			name:           "list_indexes with non-existent table in existing schema",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s", "table_name": "non_existent_table"}`, schemaName)),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+		{
+			name:           "list_indexes filter by index name",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s", "table_name": "%s", "index_name": "%s"}`, schemaName, tableName, tableName+"_email_idx")),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantIndexEmail},
+		},
+		{
+			name:           "list_indexes filter by non-existent index name",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s", "table_name": "%s", "index_name": "non_existent_idx"}`, schemaName, tableName)),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_indexes/invoke"
+
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []map[string]any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v, resultString: %s", err, resultString)
+			}
+			// Normalize got by removing fields that are hard to predict (like size)
+			for _, index := range got {
+				delete(index, "index_size_bytes")
+				delete(index, "index_scans")
+				delete(index, "tuples_read")
+				delete(index, "tuples_fetched")
+			}
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("Unexpected result (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func setupListSequencesTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) (string, func(t *testing.T)) {
+	sequenceName := "list_sequences_seq1_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	createSequence1Stmt := fmt.Sprintf("CREATE SEQUENCE %s INCREMENT 1 START 1;", sequenceName)
+
+	_, err := pool.Exec(ctx, createSequence1Stmt)
+	if err != nil {
+		t.Fatalf("unable to create sequence %s: %s", sequenceName, err)
+	}
+	return sequenceName, func(t *testing.T) {
+		_, err := pool.Exec(ctx, fmt.Sprintf("DROP SEQUENCE IF EXISTS %s;", sequenceName))
+		if err != nil {
+			t.Errorf("unable to drop sequences: %v", err)
+		}
+	}
+}
+
+func RunPostgresListSequencesTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	sequenceName, teardown := setupListSequencesTest(t, ctx, pool)
+	defer teardown(t)
+
+	wantSequence := map[string]any{
+		"sequencename":  sequenceName,
+		"schemaname":    "public",
+		"sequenceowner": "postgres",
+		"data_type":     "bigint",
+		"start_value":   float64(1),
+		"min_value":     float64(1),
+		"max_value":     float64(9223372036854775807),
+		"increment_by":  float64(1),
+		"last_value":    nil,
+	}
+
+	invokeTcs := []struct {
+		name           string
+		api            string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           []map[string]any
+	}{
+		{
+			name:           "invoke list_sequences",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"sequencename": "%s"}`, sequenceName)),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantSequence},
+		},
+		{
+			name:           "invoke list_sequences with non-existent sequence",
+			requestBody:    bytes.NewBufferString(`{"sequencename": "non_existent_sequence"}`),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_sequences/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []map[string]any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v", err)
+			}
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("Unexpected result (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 // RunMySQLListTablesTest run tests against the mysql-list-tables tool
 func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string) {
 	type tableInfo struct {

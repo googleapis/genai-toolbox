@@ -181,9 +181,17 @@ tools:
     database_overview:
         kind: postgres-database-overview
         source: cloudsql-pg-source
-
+    
     list_triggers:
         kind: postgres-list-triggers
+        source: cloudsql-pg-source
+    
+    list_indexes:
+        kind: postgres-list-indexes
+        source: cloudsql-pg-source
+
+    list_sequences:
+        kind: postgres-list-sequences
         source: cloudsql-pg-source
 
 toolsets:
@@ -206,3 +214,5 @@ toolsets:
         - list_schemas
         - database_overview
         - list_triggers
+        - list_indexes
+        - list_sequences

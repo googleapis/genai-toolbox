@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestConfigToolConfigKind(t *testing.T) {
@@ -85,8 +86,8 @@ func TestParseFromYamlClickHouseSQL(t *testing.T) {
 					Source:      "test-source",
 					Description: "Test ClickHouse tool",
 					Statement:   "SELECT * FROM test_table WHERE id = $1",
-					Parameters: tools.Parameters{
-						tools.NewStringParameter("id", "Test ID"),
+					Parameters: parameters.Parameters{
+						parameters.NewStringParameter("id", "Test ID"),
 					},
 					AuthRequired: []string{},
 				},
@@ -116,7 +117,7 @@ func TestSQLConfigInitializeValidSource(t *testing.T) {
 		Source:      "test-clickhouse",
 		Description: "Test tool",
 		Statement:   "SELECT 1",
-		Parameters:  tools.Parameters{},
+		Parameters:  parameters.Parameters{},
 	}
 
 	// Create a mock ClickHouse source
@@ -148,7 +149,7 @@ func TestSQLConfigInitializeMissingSource(t *testing.T) {
 		Source:      "missing-source",
 		Description: "Test tool",
 		Statement:   "SELECT 1",
-		Parameters:  tools.Parameters{},
+		Parameters:  parameters.Parameters{},
 	}
 
 	sources := map[string]sources.Source{}
@@ -171,6 +172,10 @@ func (m *mockIncompatibleSource) SourceKind() string {
 	return "mock"
 }
 
+func (m *mockIncompatibleSource) ToConfig() sources.SourceConfig {
+	return nil
+}
+
 func TestSQLConfigInitializeIncompatibleSource(t *testing.T) {
 	config := Config{
 		Name:        "test-tool",
@@ -178,7 +183,7 @@ func TestSQLConfigInitializeIncompatibleSource(t *testing.T) {
 		Source:      "incompatible-source",
 		Description: "Test tool",
 		Statement:   "SELECT 1",
-		Parameters:  tools.Parameters{},
+		Parameters:  parameters.Parameters{},
 	}
 
 	mockSource := &mockIncompatibleSource{}
@@ -201,7 +206,7 @@ func TestToolManifest(t *testing.T) {
 	tool := Tool{
 		manifest: tools.Manifest{
 			Description: "Test description",
-			Parameters:  []tools.ParameterManifest{},
+			Parameters:  []parameters.ParameterManifest{},
 		},
 	}
 

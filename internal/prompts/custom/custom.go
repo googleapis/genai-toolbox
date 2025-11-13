@@ -20,7 +20,7 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 type Message = prompts.Message
@@ -72,10 +72,10 @@ func (c *Config) McpManifest() prompts.McpManifest {
 	return prompts.GetMcpManifest(c.Name, c.Description, c.Arguments)
 }
 
-func (c *Config) SubstituteParams(argValues tools.ParamValues) (any, error) {
+func (c *Config) SubstituteParams(argValues parameters.ParamValues) (any, error) {
 	return prompts.SubstituteMessages(c.Messages, c.Arguments, argValues)
 }
 
-func (c *Config) ParseArgs(args map[string]any, data map[string]map[string]any) (tools.ParamValues, error) {
+func (c *Config) ParseArgs(args map[string]any, data map[string]map[string]any) (parameters.ParamValues, error) {
 	return prompts.ParseArguments(c.Arguments, args, data)
 }

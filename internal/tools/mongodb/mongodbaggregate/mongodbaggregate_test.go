@@ -19,12 +19,12 @@ import (
 	"testing"
 
 	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbaggregate"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
 func TestParseFromYamlMongoQuery(t *testing.T) {
@@ -65,9 +65,9 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 					Collection:      "test_coll",
 					Description:     "some description",
 					PipelinePayload: "[{ $match: { name: {{json .name}} }}]\n",
-					PipelineParams: tools.Parameters{
-						&tools.StringParameter{
-							CommonParameter: tools.CommonParameter{
+					PipelineParams: parameters.Parameters{
+						&parameters.StringParameter{
+							CommonParameter: parameters.CommonParameter{
 								Name: "name",
 								Type: "string",
 								Desc: "small description",

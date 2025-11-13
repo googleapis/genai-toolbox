@@ -27,6 +27,7 @@ import (
 	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 // Constants for tool configuration
@@ -100,7 +101,7 @@ type Config struct {
 	AnalyzeQuery   bool           `yaml:"analyzeQuery"` // Analyze query (boolean, not parameterizable)
 
 	// Parameters for template substitution
-	Parameters tools.Parameters `yaml:"parameters"`
+	Parameters parameters.Parameters `yaml:"parameters"`
 }
 
 // validate interface
@@ -168,7 +169,7 @@ type Tool struct {
 	OrderByTemplate        map[string]any
 	LimitTemplate          string
 	AnalyzeQuery           bool
-	Parameters             tools.Parameters
+	Parameters             parameters.Parameters
 
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
@@ -214,11 +215,11 @@ type QueryResponse struct {
 }
 
 // Invoke executes the Firestore query based on the provided parameters
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
 	// Process collection path with template substitution
-	collectionPath, err := tools.PopulateTemplate("collectionPath", t.CollectionPathTemplate, paramsMap)
+	collectionPath, err := parameters.PopulateTemplate("collectionPath", t.CollectionPathTemplate, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("failed to process collection path: %w", err)
 	}
@@ -241,7 +242,7 @@ func (t Tool) buildQuery(collectionPath string, params map[string]any) (*firesto
 	// Process and apply filters if template is provided
 	if t.FiltersTemplate != "" {
 		// Apply template substitution to filters
-		filtersJSON, err := tools.PopulateTemplateWithJSON("filters", t.FiltersTemplate, params)
+		filtersJSON, err := parameters.PopulateTemplateWithJSON("filters", t.FiltersTemplate, params)
 		if err != nil {
 			return nil, fmt.Errorf("failed to process filters template: %w", err)
 		}
@@ -352,7 +353,7 @@ func (t Tool) processSelectFields(params map[string]any) ([]string, error) {
 	for _, field := range t.SelectTemplate {
 		// Check if it's a template
 		if strings.Contains(field, "{{") {
-			processed, err := tools.PopulateTemplate("selectField", field, params)
+			processed, err := parameters.PopulateTemplate("selectField", field, params)
 			if err != nil {
 				return nil, err
 			}
@@ -418,7 +419,7 @@ func (t Tool) getOrderByForKey(key string, params map[string]any) (string, error
 		return "", nil
 	}
 
-	processedValue, err := tools.PopulateTemplate(fmt.Sprintf("orderBy%s", key), value, params)
+	processedValue, err := parameters.PopulateTemplate(fmt.Sprintf("orderBy%s", key), value, params)
 	if err != nil {
 		return "", err
 	}
@@ -430,7 +431,7 @@ func (t Tool) getOrderByForKey(key string, params map[string]any) (string, error
 func (t Tool) getLimit(params map[string]any) (int, error) {
 	limit := defaultLimit
 	if t.LimitTemplate != "" {
-		processedValue, err := tools.PopulateTemplate("limit", t.LimitTemplate, params)
+		processedValue, err := parameters.PopulateTemplate("limit", t.LimitTemplate, params)
 		if err != nil {
 			return 0, err
 		}
@@ -520,8 +521,8 @@ func (t Tool) getExplainMetrics(docIterator *firestoreapi.DocumentIterator) (map
 }
 
 // ParseParams parses and validates input parameters
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 // Manifest returns the tool manifest

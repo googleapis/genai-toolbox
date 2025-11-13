@@ -24,6 +24,7 @@ import (
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/iterator"
 )
 
@@ -90,8 +91,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	defaultProjectID := s.BigQueryProject()
 	projectDescription := "The Google Cloud project ID containing the dataset."
 	datasetDescription := "The dataset to list table ids."
-	var datasetParameter tools.Parameter
-	var projectParameter tools.Parameter
+	var datasetParameter parameters.Parameter
+	var projectParameter parameters.Parameter
 
 	projectParameter, datasetParameter = bqutil.InitializeDatasetParameters(
 		s.BigQueryAllowedDatasets(),
@@ -100,21 +101,21 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		projectDescription, datasetDescription,
 	)
 
-	parameters := tools.Parameters{projectParameter, datasetParameter}
+	params := parameters.Parameters{projectParameter, datasetParameter}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	t := Tool{
 		Name:             cfg.Name,
 		Kind:             kind,
-		Parameters:       parameters,
+		Parameters:       params,
 		AuthRequired:     cfg.AuthRequired,
 		UseClientOAuth:   s.UseClientAuthorization(),
 		ClientCreator:    s.BigQueryClientCreator(),
 		Client:           s.BigQueryClient(),
 		IsDatasetAllowed: s.IsDatasetAllowed,
-		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		manifest:         tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:      mcpManifest,
 	}
 	return t, nil
@@ -124,11 +125,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string           `yaml:"name"`
-	Kind           string           `yaml:"kind"`
-	AuthRequired   []string         `yaml:"authRequired"`
-	UseClientOAuth bool             `yaml:"useClientOAuth"`
-	Parameters     tools.Parameters `yaml:"parameters"`
+	Name           string                `yaml:"name"`
+	Kind           string                `yaml:"kind"`
+	AuthRequired   []string              `yaml:"authRequired"`
+	UseClientOAuth bool                  `yaml:"useClientOAuth"`
+	Parameters     parameters.Parameters `yaml:"parameters"`
 
 	Client           *bigqueryapi.Client
 	ClientCreator    bigqueryds.BigqueryClientCreator
@@ -138,7 +139,7 @@ type Tool struct {
 	mcpManifest      tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	mapParams := params.AsMap()
 	projectId, ok := mapParams[projectKey].(string)
 	if !ok {
@@ -191,8 +192,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return tableIds, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

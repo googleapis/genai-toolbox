@@ -26,6 +26,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/sqlite/sqlitesql"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	_ "modernc.org/sqlite"
 )
 
@@ -70,9 +71,9 @@ func TestParseFromYamlSQLite(t *testing.T) {
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-					Parameters: []tools.Parameter{
-						tools.NewStringParameterWithAuth("country", "some description",
-							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameterWithAuth("country", "some description",
+							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
 								{Name: "other-auth-service", Field: "user_id"}}),
 					},
 				},
@@ -149,14 +150,14 @@ func TestParseFromYamlWithTemplateSqlite(t *testing.T) {
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-					Parameters: []tools.Parameter{
-						tools.NewStringParameterWithAuth("country", "some description",
-							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameterWithAuth("country", "some description",
+							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
 								{Name: "other-auth-service", Field: "user_id"}}),
 					},
-					TemplateParameters: []tools.Parameter{
-						tools.NewStringParameter("tableName", "The table to select hotels from."),
-						tools.NewArrayParameter("fieldArray", "The columns to return for the query.", tools.NewStringParameter("column", "A column name that will be returned from the query.")),
+					TemplateParameters: []parameters.Parameter{
+						parameters.NewStringParameter("tableName", "The table to select hotels from."),
+						parameters.NewArrayParameter("fieldArray", "The columns to return for the query.", parameters.NewStringParameter("column", "A column name that will be returned from the query.")),
 					},
 				},
 			},
@@ -211,15 +212,15 @@ func TestTool_Invoke(t *testing.T) {
 		Name               string
 		Kind               string
 		AuthRequired       []string
-		Parameters         tools.Parameters
-		TemplateParameters tools.Parameters
-		AllParams          tools.Parameters
+		Parameters         parameters.Parameters
+		TemplateParameters parameters.Parameters
+		AllParams          parameters.Parameters
 		Db                 *sql.DB
 		Statement          string
 	}
 	type args struct {
 		ctx         context.Context
-		params      tools.ParamValues
+		params      parameters.ParamValues
 		accessToken tools.AccessToken
 	}
 	tests := []struct {
@@ -249,13 +250,13 @@ func TestTool_Invoke(t *testing.T) {
 			fields: fields{
 				Db:        setupTestDB(t),
 				Statement: "SELECT * FROM users WHERE name = ?",
-				Parameters: []tools.Parameter{
-					tools.NewStringParameter("name", "user name"),
+				Parameters: []parameters.Parameter{
+					parameters.NewStringParameter("name", "user name"),
 				},
 			},
 			args: args{
 				ctx: context.Background(),
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "name", Value: "Alice"},
 				},
 			},
@@ -269,13 +270,13 @@ func TestTool_Invoke(t *testing.T) {
 			fields: fields{
 				Db:        setupTestDB(t),
 				Statement: "SELECT * FROM {{.tableName}}",
-				TemplateParameters: []tools.Parameter{
-					tools.NewStringParameter("tableName", "table name"),
+				TemplateParameters: []parameters.Parameter{
+					parameters.NewStringParameter("tableName", "table name"),
 				},
 			},
 			args: args{
 				ctx: context.Background(),
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "tableName", Value: "users"},
 				},
 			},

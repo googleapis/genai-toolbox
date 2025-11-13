@@ -21,6 +21,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	mongosrc "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -45,17 +46,17 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name            string           `yaml:"name" validate:"required"`
-	Kind            string           `yaml:"kind" validate:"required"`
-	Source          string           `yaml:"source" validate:"required"`
-	AuthRequired    []string         `yaml:"authRequired" validate:"required"`
-	Description     string           `yaml:"description" validate:"required"`
-	Database        string           `yaml:"database" validate:"required"`
-	Collection      string           `yaml:"collection" validate:"required"`
-	PipelinePayload string           `yaml:"pipelinePayload" validate:"required"`
-	PipelineParams  tools.Parameters `yaml:"pipelineParams" validate:"required"`
-	Canonical       bool             `yaml:"canonical"`
-	ReadOnly        bool             `yaml:"readOnly"`
+	Name            string                `yaml:"name" validate:"required"`
+	Kind            string                `yaml:"kind" validate:"required"`
+	Source          string                `yaml:"source" validate:"required"`
+	AuthRequired    []string              `yaml:"authRequired" validate:"required"`
+	Description     string                `yaml:"description" validate:"required"`
+	Database        string                `yaml:"database" validate:"required"`
+	Collection      string                `yaml:"collection" validate:"required"`
+	PipelinePayload string                `yaml:"pipelinePayload" validate:"required"`
+	PipelineParams  parameters.Parameters `yaml:"pipelineParams" validate:"required"`
+	Canonical       bool                  `yaml:"canonical"`
+	ReadOnly        bool                  `yaml:"readOnly"`
 }
 
 // validate interface
@@ -85,7 +86,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	paramManifest := allParameters.Manifest()
 
 	if paramManifest == nil {
-		paramManifest = make([]tools.ParameterManifest, 0)
+		paramManifest = make([]parameters.ParameterManifest, 0)
 	}
 
 	// Create MCP manifest
@@ -112,26 +113,26 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name            string           `yaml:"name"`
-	Kind            string           `yaml:"kind"`
-	Description     string           `yaml:"description"`
-	AuthRequired    []string         `yaml:"authRequired"`
-	Collection      string           `yaml:"collection"`
-	PipelinePayload string           `yaml:"pipelinePayload"`
-	PipelineParams  tools.Parameters `yaml:"pipelineParams"`
-	Canonical       bool             `yaml:"canonical"`
-	ReadOnly        bool             `yaml:"readOnly"`
-	AllParams       tools.Parameters `yaml:"allParams"`
+	Name            string                `yaml:"name"`
+	Kind            string                `yaml:"kind"`
+	Description     string                `yaml:"description"`
+	AuthRequired    []string              `yaml:"authRequired"`
+	Collection      string                `yaml:"collection"`
+	PipelinePayload string                `yaml:"pipelinePayload"`
+	PipelineParams  parameters.Parameters `yaml:"pipelineParams"`
+	Canonical       bool                  `yaml:"canonical"`
+	ReadOnly        bool                  `yaml:"readOnly"`
+	AllParams       parameters.Parameters `yaml:"allParams"`
 
 	database    *mongo.Database
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	pipelineString, err := tools.PopulateTemplateWithJSON("MongoDBAggregatePipeline", t.PipelinePayload, paramsMap)
+	pipelineString, err := parameters.PopulateTemplateWithJSON("MongoDBAggregatePipeline", t.PipelinePayload, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error populating pipeline: %s", err)
 	}
@@ -183,8 +184,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return final, err
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.AllParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.AllParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

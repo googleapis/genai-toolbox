@@ -22,8 +22,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestTool_Invoke(t *testing.T) {
@@ -50,13 +50,13 @@ func TestTool_Invoke(t *testing.T) {
 		Name:        "test-cloudmonitoring",
 		Kind:        "cloud-monitoring-query-prometheus",
 		Description: "Test Cloudmonitoring Tool",
-		AllParams:   tools.Parameters{},
+		AllParams:   parameters.Parameters{},
 		BaseURL:     server.URL,
 		Client:      &http.Client{},
 	}
 
 	// Define the test parameters
-	params := tools.ParamValues{
+	params := parameters.ParamValues{
 		{Name: "projectId", Value: "test-project"},
 		{Name: "query", Value: "up"},
 	}
@@ -94,13 +94,13 @@ func TestTool_Invoke_Error(t *testing.T) {
 		Name:        "test-cloudmonitoring",
 		Kind:        "clou-monitoring-query-prometheus",
 		Description: "Test Cloudmonitoring Tool",
-		AllParams:   tools.Parameters{},
+		AllParams:   parameters.Parameters{},
 		BaseURL:     server.URL,
 		Client:      &http.Client{},
 	}
 
 	// Define the test parameters
-	params := tools.ParamValues{
+	params := parameters.ParamValues{
 		{Name: "projectId", Value: "test-project"},
 		{Name: "query", Value: "up"},
 	}

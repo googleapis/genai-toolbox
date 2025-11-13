@@ -175,6 +175,14 @@ tools:
     list_schemas:
         kind: postgres-list-schemas
         source: alloydb-pg-source
+    
+    list_indexes:
+        kind: postgres-list-indexes
+        source: alloydb-pg-source
+
+    list_sequences:
+        kind: postgres-list-sequences
+        source: alloydb-pg-source
 
     database_overview:
         kind: postgres-database-overview
@@ -208,3 +216,5 @@ toolsets:
         - list_schemas
         - database_overview
         - list_triggers
+        - list_indexes
+        - list_sequences
