@@ -1,3 +1,16 @@
+// Copyright 2025 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 // Copyright © 2025, Oracle and/or its affiliates.
 
 package oracleexecutesql
@@ -7,9 +20,11 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/godror/godror"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/oracle"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -100,7 +115,7 @@ type Tool struct {
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
-	sqlParam, ok := paramsMap["sql"].(string)
+	sql, ok := paramsMap["sql"].(string)
 	if !ok {
 		return nil, fmt.Errorf("unable to get cast %s", paramsMap["sql"])
 	}
@@ -110,103 +125,73 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sqlParam))
+	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
 
-	results, err := t.Pool.QueryContext(ctx, sqlParam)
+	results, err := t.Pool.QueryContext(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
 	defer results.Close()
 
+	cols, _ := results.Columns()
 	// If Columns() errors, it might be a DDL/DML without an OUTPUT clause.
 	// We proceed, and results.Err() will catch actual query execution errors.
 	// 'out' will remain nil if cols is empty or err is not nil here.
-	cols, _ := results.Columns()
 
 	// Get Column types
 	colTypes, err := results.ColumnTypes()
 	if err != nil {
-		if err := results.Err(); err != nil {
-			return nil, fmt.Errorf("query execution error: %w", err)
-		}
-		return []any{}, nil
+		return nil, fmt.Errorf("unable to get column types: %w", err)
 	}
 
 	var out []any
 	for results.Next() {
 		// Create slice to hold values
 		values := make([]any, len(cols))
-		for i, colType := range colTypes {
-			// Based on the database type, we prepare a pointer to a Go type.
-			switch strings.ToUpper(colType.DatabaseTypeName()) {
-			case "NUMBER", "FLOAT", "BINARY_FLOAT", "BINARY_DOUBLE":
-				if _, scale, ok := colType.DecimalSize(); ok && scale == 0 {
-					// Scale is 0, treat as an integer.
-					values[i] = new(sql.NullInt64)
-				} else {
-					// Scale is non-zero or unknown, treat as a float.
-					values[i] = new(sql.NullFloat64)
-				}
-			case "DATE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
-				values[i] = new(sql.NullTime)
-			case "JSON":
-				values[i] = new(sql.RawBytes)
-			default:
-				values[i] = new(sql.NullString)
-			}
+		valuePtrs := make([]any, len(cols))
+		for i := range values {
+			valuePtrs[i] = &values[i]
 		}
 
-		if err := results.Scan(values...); err != nil {
+		// Scan the values
+		if err := results.Scan(valuePtrs...); err != nil {
 			return nil, fmt.Errorf("unable to scan row: %w", err)
 		}
 
+		// Create result map
 		vMap := make(map[string]any)
 		for i, col := range cols {
-			receiver := values[i]
-
-			// Dereference the pointer and check for validity (not NULL).
-			switch v := receiver.(type) {
-			case *sql.NullInt64:
-				if v.Valid {
-					vMap[col] = v.Int64
-				} else {
-					vMap[col] = nil
+			val := values[i]
+			switch colTypes[i].DatabaseTypeName() {
+			case "JSON":
+				// unmarshal JSON data before storing to prevent double marshaling
+				var unmarshaledData any
+				err := json.Unmarshal(val.([]byte), &unmarshaledData)
+				if err != nil {
+					return nil, fmt.Errorf("unable to unmarshal json data %s", val)
 				}
-			case *sql.NullFloat64:
-				if v.Valid {
-					vMap[col] = v.Float64
+				vMap[col] = unmarshaledData
+			case "TEXT", "VARCHAR", "NVARCHAR":
+				vMap[col] = string(val.([]byte))
+			case "NUMBER":
+				s := string(val.(godror.Number))
+				if strings.Contains(s, ".") {
+					vMap[col], err = strconv.ParseFloat(s, 64)
 				} else {
-					vMap[col] = nil
+					vMap[col], err = strconv.ParseInt(s, 10, 64)
 				}
-			case *sql.NullString:
-				if v.Valid {
-					vMap[col] = v.String
-				} else {
-					vMap[col] = nil
-				}
-			case *sql.NullTime:
-				if v.Valid {
-					vMap[col] = v.Time
-				} else {
-					vMap[col] = nil
-				}
-			case *sql.RawBytes:
-				if *v != nil {
-					var unmarshaledData any
-					if err := json.Unmarshal(*v, &unmarshaledData); err != nil {
-						return nil, fmt.Errorf("unable to unmarshal json data for column %s", col)
-					}
-					vMap[col] = unmarshaledData
-				} else {
-					vMap[col] = nil
+				if err != nil {
+					return nil, fmt.Errorf("unable to convert NUMBER data '%s' for column %s: %w", s, col, err)
 				}
 			default:
-				return nil, fmt.Errorf("unexpected receiver type: %T", v)
+				vMap[col] = val
 			}
 		}
 		out = append(out, vMap)
 	}
 
+	// Check for errors from iterating over rows or from the query execution itself.
+	// results.Close() is handled by defer.
 	if err := results.Err(); err != nil {
 		return nil, fmt.Errorf("errors encountered during query execution or row processing: %w", err)
 	}
