@@ -55,6 +55,5 @@ jobs:
           echo "## Link Resolution Note" >> $GITHUB_STEP_SUMMARY
           echo "Local links and directory changes work differently on GitHub than on the docsite." >> $GITHUB_STEP_SUMMARY
           echo "You must ensure fixes pass the **GitHub check** and also work with **\`hugo server\`**." >> $GITHUB_STEP_SUMMARY
-          echo "If a link works locally but fails the GitHub check (e.g., a docsite-only relative path), you **must ignore it** in \`.lycheeignore\` and document the reason." >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
 
