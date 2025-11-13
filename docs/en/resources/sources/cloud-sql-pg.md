@@ -47,6 +47,12 @@ to a database by following these instructions][csql-pg-quickstart].
 - [`postgres-list-schemas`](../tools/postgres/postgres-list-schemas.md)
   List schemas in a PostgreSQL database.
 
+- [`postgres-database-overview`](../tools/postgres/postgres-database-overview.md)
+  Fetches the current state of the PostgreSQL server. 
+
+- [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
+  List triggers in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [Cloud SQL for Postgres using
