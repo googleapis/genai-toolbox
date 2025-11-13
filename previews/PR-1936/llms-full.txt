@@ -1371,6 +1371,24 @@ all_tools = client.load_toolset()
 my_second_toolset = client.load_toolset("my_second_toolset")
 ```
 
+### Prompts
+
+The `prompts` section of your `tools.yaml` defines the templates containing structured messages and instructions for interacting with language models.
+
+```yaml
+prompts:
+  code_review:
+    description: "Asks the LLM to analyze code quality and suggest improvements."
+    messages:
+      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+    arguments:
+      - name: "code"
+        description: "The code to review"
+```
+
+For more details on configuring different types of prompts, see the
+[Prompts](../resources/prompts/).
+
 
 # Concepts
 Some core concepts in Toolbox
@@ -5980,6 +5998,18 @@ cluster][alloydb-free-trial].
 - [`postgres-list-schemas`](../tools/postgres/postgres-list-schemas.md)
   List schemas in an AlloyDB for PostgreSQL database.
 
+- [`postgres-database-overview`](../tools/postgres/postgres-database-overview.md)
+  Fetches the current state of the PostgreSQL server. 
+
+- [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
+  List triggers in an AlloyDB for PostgreSQL database.
+
+- [`postgres-list-indexes`](../tools/postgres/postgres-list-indexes.md)
+  List available user indexes in a PostgreSQL database.
+
+- [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
+  List sequences in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
@@ -6858,6 +6888,18 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-list-schemas`](../tools/postgres/postgres-list-schemas.md)
   List schemas in a PostgreSQL database.
+
+- [`postgres-database-overview`](../tools/postgres/postgres-database-overview.md)
+  Fetches the current state of the PostgreSQL server. 
+
+- [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
+  List triggers in a PostgreSQL database.
+
+- [`postgres-list-indexes`](../tools/postgres/postgres-list-indexes.md)
+  List available user indexes in a PostgreSQL database.
+
+- [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
+  List sequences in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -8449,6 +8491,18 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-list-schemas`](../tools/postgres/postgres-list-views.md)
   List schemas in a PostgreSQL database.
 
+- [`postgres-database-overview`](../tools/postgres/postgres-database-overview.md)
+  Fetches the current state of the PostgreSQL server. 
+
+- [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
+  List triggers in a PostgreSQL database.
+
+- [`postgres-list-indexes`](../tools/postgres/postgres-list-indexes.md)
+  List available user indexes in a PostgreSQL database.
+
+- [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
+  List sequences in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)
@@ -9760,6 +9814,141 @@ Tools that work with Valkey Sources.
 
 # YugabyteDB
 Tools that work with Valkey Sources.
+
+
+
+# Prompts
+Prompts allow servers to provide structured messages and instructions for interacting with language models.
+
+
+A `prompt` represents a reusable prompt template that can be retrieved and used
+by MCP clients.
+
+A Prompt is essentially a template for a message or a series of messages that can be sent to a Large Language Model (LLM). The Toolbox server implements the `prompts/list` and `prompts/get` methods from the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/docs/getting-started/intro) specification, allowing clients to discover and retrieve these prompts.
+
+```yaml
+prompts:
+  code_review:
+    description: "Asks the LLM to analyze code quality and suggest improvements."
+    messages:
+      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+    arguments:
+      - name: "code"
+        description: "The code to review"
+```
+
+## Prompt Schema
+
+| **field**      | **type** | **required** | **description**  |
+| --- | --- | --- | --- |
+| description | string | No | A brief explanation of what the prompt does. |
+| kind | string | No | The kind of prompt. Defaults to `"custom"`. |
+| messages | [][Message](#message-schema) | Yes | A list of one or more message objects that make up the prompt's content. |
+| arguments | [][Argument](#argument-schema) | No | A list of arguments that can be interpolated into the prompt's content.|
+
+## Message Schema
+
+| **field** | **type** | **required** | **description** |
+| --- | --- | --- | --- |
+| role | string | No | The role of the sender. Can be `"user"` or `"assistant"`. Defaults to `"user"`. |
+| content | string | Yes | The text of the message. You can include placeholders for arguments using `{{.argument_name}}` syntax. |
+
+## Argument Schema
+
+An argument can be any [Parameter](../tools/_index.md#specifying-parameters)
+type. If the `type` field is not specified, it will default to `string`.
+
+## Usage with Gemini CLI
+
+Prompts defined in your `tools.yaml` can be seamlessly integrated with the Gemini CLI to create [custom slash commands](https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md#mcp-prompts-as-slash-commands).  The workflow is as follows:
+
+1. **Discovery:** When the Gemini CLI connects to your Toolbox server, it automatically calls `prompts/list` to discover all available prompts.
+
+2. **Conversion:** Each discovered prompt is converted into a corresponding slash command. For example, a prompt named `code_review` becomes the `/code_review` command in the CLI.
+
+3. **Execution:** You can execute the command as follows:
+
+    ```bash
+    /code_review --code="def hello():\n    print('world')"
+    ```
+
+4. **Interpolation:** Once all arguments are collected, the CLI calls prompts/get
+   with your provided values to retrieve the final, interpolated prompt.
+    Eg.
+
+    ```bash
+    Please review the following code for quality, correctness, and potential improvements: \ndef hello():\n    print('world')
+    ```
+
+5. **Response:** This completed prompt is then sent to the Gemini model, and the model's response is displayed back to you in the CLI.
+
+## Kinds of prompts
+
+
+# Custom
+Custom prompts defined by the user.
+
+
+Custom prompts are defined by the user to be exposed through their MCP server.
+They are the default type for prompts.
+
+## Examples
+
+### Basic Prompt
+
+Here is an example of a simple prompt that takes a single argument, code, and
+asks an LLM to review it.
+
+```yaml
+prompts:
+  code_review:
+    description: "Asks the LLM to analyze code quality and suggest improvements."
+    messages:
+      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+    arguments:
+      - name: "code"
+        description: "The code to review"
+```
+
+### Multi-message prompt
+
+You can define prompts with multiple messages to set up more complex
+conversational contexts, like a role-playing scenario.
+
+```yaml
+prompts:
+  roleplay_scenario:
+    description: "Sets up a roleplaying scenario with initial messages."
+    arguments:
+      - name: "character"
+        description: "The character the AI should embody."
+      - name: "situation"
+        description: "The initial situation for the roleplay."
+    messages:
+      - role: "user"
+        content: "Let's roleplay. You are {{.character}}. The situation is: {{.situation}}"
+      - role: "assistant"
+        content: "Okay, I understand. I am ready. What happens next?"
+```
+
+## Reference
+
+### Prompt Schema
+
+| **field** | **type** | **required** | **description** |
+| --- | --- | --- | --- |
+| kind | string | No | The kind of prompt. Must be `"custom"`. |
+| description | string | No | A brief explanation of what the prompt does. |
+| messages | [][Message](#message-schema) | Yes | A list of one or more message objects that make up the prompt's content. |
+| arguments | [][Argument](#argument-schema) | No | A list of arguments that can be interpolated into the prompt's content.|
+
+### Message Schema
+
+Refer to the default prompt [Message Schema](../_index.md#message-schema).
+
+### Argument Schema
+
+Refer to the default prompt [Argument Schema](../_index.md#argument-schema).
 
 
 
@@ -11707,6 +11896,10 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
     *   `list_schemas`: Lists schemas in the database. 
+    *   `database_overview`: Fetches the current state of the PostgreSQL server. 
+    *   `list_triggers`: Lists triggers in the database. 
+    *   `list_indexes`: List available user indexes in a PostgreSQL database.
+    *   `list_sequences`: List sequences in a PostgreSQL database.
 
 ## AlloyDB Postgres Admin
 
@@ -11877,6 +12070,10 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
     *   `list_schemas`: Lists schemas in the database. 
+    *   `database_overview`: Fetches the current state of the PostgreSQL server. 
+    *   `list_triggers`: Lists triggers in the database. 
+    *   `list_indexes`: List available user indexes in a PostgreSQL database.
+    *   `list_sequences`: List sequences in a PostgreSQL database.
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -12150,8 +12347,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 
 *   `--prebuilt` value: `postgres`
 *   **Environment Variables:**
-    *   `POSTGRES_HOST`: The hostname or IP address of the PostgreSQL server.
-    *   `POSTGRES_PORT`: The port number for the PostgreSQL server.
+    *   `POSTGRES_HOST`: (Optional) The hostname or IP address of the PostgreSQL server.
+    *   `POSTGRES_PORT`: (Optional) The port number for the PostgreSQL server.
     *   `POSTGRES_DATABASE`: The name of the database to connect to.
     *   `POSTGRES_USER`: The database username.
     *   `POSTGRES_PASSWORD`: The password for the database user.
@@ -12174,6 +12371,10 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
     *   `list_schemas`: Lists schemas in the database. 
+    *   `database_overview`: Fetches the current state of the PostgreSQL server. 
+    *   `list_triggers`: Lists triggers in the database. 
+    *   `list_indexes`: List available user indexes in a PostgreSQL database.
+    *   `list_sequences`: List sequences in a PostgreSQL database.
 
 ## Google Cloud Serverless for Apache Spark
 
