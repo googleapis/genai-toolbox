@@ -26,6 +26,7 @@ import (
 	healthcareds "github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/common"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/healthcare/v1"
 )
@@ -94,20 +95,20 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	idParameter := tools.NewStringParameter(patientIDKey, "The ID of the patient FHIR resource for which the information is required")
-	typeFilterParameter := tools.NewArrayParameterWithDefault(typeFilterKey, []any{}, "List of FHIR resource types. If provided, only resources of the specified resource type(s) are returned.", tools.NewStringParameter("resourceType", "A FHIR resource type"))
-	sinceFilterParameter := tools.NewStringParameterWithDefault(sinceFilterKey, "", "If provided, only resources updated after this time are returned. The time uses the format YYYY-MM-DDThh:mm:ss.sss+zz:zz. The time must be specified to the second and include a time zone. For example, 2015-02-07T13:28:17.239+02:00 or 2017-01-01T00:00:00Z")
-	parameters := tools.Parameters{idParameter, typeFilterParameter, sinceFilterParameter}
+	idParameter := parameters.NewStringParameter(patientIDKey, "The ID of the patient FHIR resource for which the information is required")
+	typeFilterParameter := parameters.NewArrayParameterWithDefault(typeFilterKey, []any{}, "List of FHIR resource types. If provided, only resources of the specified resource type(s) are returned.", parameters.NewStringParameter("resourceType", "A FHIR resource type"))
+	sinceFilterParameter := parameters.NewStringParameterWithDefault(sinceFilterKey, "", "If provided, only resources updated after this time are returned. The time uses the format YYYY-MM-DDThh:mm:ss.sss+zz:zz. The time must be specified to the second and include a time zone. For example, 2015-02-07T13:28:17.239+02:00 or 2017-01-01T00:00:00Z")
+	params := parameters.Parameters{idParameter, typeFilterParameter, sinceFilterParameter}
 	if len(s.AllowedFHIRStores()) != 1 {
-		parameters = append(parameters, tools.NewStringParameter(common.StoreKey, "The FHIR store ID to retrieve the resource from."))
+		params = append(params, parameters.NewStringParameter(common.StoreKey, "The FHIR store ID to retrieve the resource from."))
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	t := Tool{
 		Name:           cfg.Name,
 		Kind:           kind,
-		Parameters:     parameters,
+		Parameters:     params,
 		AuthRequired:   cfg.AuthRequired,
 		Project:        s.Project(),
 		Region:         s.Region(),
@@ -116,7 +117,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		UseClientOAuth: s.UseClientAuthorization(),
 		ServiceCreator: s.ServiceCreator(),
 		Service:        s.Service(),
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		manifest:       tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:    mcpManifest,
 	}
 	return t, nil
@@ -126,11 +127,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string           `yaml:"name"`
-	Kind           string           `yaml:"kind"`
-	AuthRequired   []string         `yaml:"authRequired"`
-	UseClientOAuth bool             `yaml:"useClientOAuth"`
-	Parameters     tools.Parameters `yaml:"parameters"`
+	Name           string                `yaml:"name"`
+	Kind           string                `yaml:"kind"`
+	AuthRequired   []string              `yaml:"authRequired"`
+	UseClientOAuth bool                  `yaml:"useClientOAuth"`
+	Parameters     parameters.Parameters `yaml:"parameters"`
 
 	Project, Region, Dataset string
 	AllowedStores            map[string]struct{}
@@ -140,7 +141,7 @@ type Tool struct {
 	mcpManifest              tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	storeID, err := common.ValidateAndFetchStoreID(params, t.AllowedStores)
 	if err != nil {
 		return nil, err
@@ -170,7 +171,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		if !ok {
 			return nil, fmt.Errorf("invalid '%s' parameter; expected a string array", typeFilterKey)
 		}
-		typeFilterSlice, err := tools.ConvertAnySliceToTyped(types, "string")
+		typeFilterSlice, err := parameters.ConvertAnySliceToTyped(types, "string")
 		if err != nil {
 			return nil, fmt.Errorf("can't convert '%s' to array of strings: %s", typeFilterKey, err)
 		}
@@ -208,8 +209,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return jsonMap, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

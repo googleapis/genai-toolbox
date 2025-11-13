@@ -22,6 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	alloydbadmin "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/alloydb/v1"
 )
 
@@ -71,21 +72,22 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	project := s.DefaultProject
-	var projectParam tools.Parameter
+	var projectParam parameters.Parameter
 	if project != "" {
-		projectParam = tools.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
 	} else {
-		projectParam = tools.NewStringParameter("project", "The GCP project ID.")
+		projectParam = parameters.NewStringParameter("project", "The GCP project ID.")
 	}
 
-	allParameters := tools.Parameters{
+	allParameters := parameters.Parameters{
 		projectParam,
-		tools.NewStringParameter("location", "The location of the cluster (e.g., 'us-central1')."),
-		tools.NewStringParameter("cluster", "The ID of the cluster where the user will be created."),
-		tools.NewStringParameter("user", "The name for the new user. Must be unique within the cluster."),
-		tools.NewStringParameterWithRequired("password", "A secure password for the new user. Required only for ALLOYDB_BUILT_IN userType.", false),
-		tools.NewArrayParameterWithDefault("databaseRoles", []any{}, "Optional. A list of database roles to grant to the new user (e.g., ['pg_read_all_data']).", tools.NewStringParameter("role", "A single database role to grant to the user (e.g., 'pg_read_all_data').")),
-		tools.NewStringParameter("userType", "The type of user to create. Valid values are: ALLOYDB_BUILT_IN and ALLOYDB_IAM_USER. ALLOYDB_IAM_USER is recommended."),
+		parameters.NewStringParameter("project", "The GCP project ID."),
+		parameters.NewStringParameter("location", "The location of the cluster (e.g., 'us-central1')."),
+		parameters.NewStringParameter("cluster", "The ID of the cluster where the user will be created."),
+		parameters.NewStringParameter("user", "The name for the new user. Must be unique within the cluster."),
+		parameters.NewStringParameterWithRequired("password", "A secure password for the new user. Required only for ALLOYDB_BUILT_IN userType.", false),
+		parameters.NewArrayParameterWithDefault("databaseRoles", []any{}, "Optional. A list of database roles to grant to the new user (e.g., ['pg_read_all_data']).", parameters.NewStringParameter("role", "A single database role to grant to the user (e.g., 'pg_read_all_data').")),
+		parameters.NewStringParameter("userType", "The type of user to create. Valid values are: ALLOYDB_BUILT_IN and ALLOYDB_IAM_USER. ALLOYDB_IAM_USER is recommended."),
 	}
 	paramManifest := allParameters.Manifest()
 
@@ -112,14 +114,14 @@ type Tool struct {
 	Description string `yaml:"description"`
 
 	Source    *alloydbadmin.Source
-	AllParams tools.Parameters `yaml:"allParams"`
+	AllParams parameters.Parameters `yaml:"allParams"`
 
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
 // Invoke executes the tool's logic.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	project, ok := paramsMap["project"].(string)
 	if !ok || project == "" {
@@ -188,8 +190,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 }
 
 // ParseParams parses the parameters for the tool.
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.AllParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.AllParams, data, claims)
 }
 
 // Manifest returns the tool's manifest.

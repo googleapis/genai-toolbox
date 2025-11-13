@@ -21,6 +21,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	mongosrc "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -46,19 +47,19 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name           string           `yaml:"name" validate:"required"`
-	Kind           string           `yaml:"kind" validate:"required"`
-	Source         string           `yaml:"source" validate:"required"`
-	AuthRequired   []string         `yaml:"authRequired" validate:"required"`
-	Description    string           `yaml:"description" validate:"required"`
-	Database       string           `yaml:"database" validate:"required"`
-	Collection     string           `yaml:"collection" validate:"required"`
-	FilterPayload  string           `yaml:"filterPayload" validate:"required"`
-	FilterParams   tools.Parameters `yaml:"filterParams"`
-	ProjectPayload string           `yaml:"projectPayload"`
-	ProjectParams  tools.Parameters `yaml:"projectParams"`
-	SortPayload    string           `yaml:"sortPayload"`
-	SortParams     tools.Parameters `yaml:"sortParams"`
+	Name           string                `yaml:"name" validate:"required"`
+	Kind           string                `yaml:"kind" validate:"required"`
+	Source         string                `yaml:"source" validate:"required"`
+	AuthRequired   []string              `yaml:"authRequired" validate:"required"`
+	Description    string                `yaml:"description" validate:"required"`
+	Database       string                `yaml:"database" validate:"required"`
+	Collection     string                `yaml:"collection" validate:"required"`
+	FilterPayload  string                `yaml:"filterPayload" validate:"required"`
+	FilterParams   parameters.Parameters `yaml:"filterParams"`
+	ProjectPayload string                `yaml:"projectPayload"`
+	ProjectParams  parameters.Parameters `yaml:"projectParams"`
+	SortPayload    string                `yaml:"sortPayload"`
+	SortParams     parameters.Parameters `yaml:"sortParams"`
 }
 
 // validate interface
@@ -85,7 +86,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	allParameters := slices.Concat(cfg.FilterParams, cfg.ProjectParams, cfg.SortParams)
 
 	// Verify no duplicate parameter names
-	err := tools.CheckDuplicateParameters(allParameters)
+	err := parameters.CheckDuplicateParameters(allParameters)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +95,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	paramManifest := allParameters.Manifest()
 
 	if paramManifest == nil {
-		paramManifest = make([]tools.ParameterManifest, 0)
+		paramManifest = make([]parameters.ParameterManifest, 0)
 	}
 
 	// Create MCP manifest
@@ -123,25 +124,25 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string           `yaml:"name"`
-	Kind           string           `yaml:"kind"`
-	AuthRequired   []string         `yaml:"authRequired"`
-	Description    string           `yaml:"description"`
-	Collection     string           `yaml:"collection"`
-	FilterPayload  string           `yaml:"filterPayload"`
-	FilterParams   tools.Parameters `yaml:"filterParams"`
-	ProjectPayload string           `yaml:"projectPayload"`
-	ProjectParams  tools.Parameters `yaml:"projectParams"`
-	SortPayload    string           `yaml:"sortPayload"`
-	SortParams     tools.Parameters `yaml:"sortParams"`
-	AllParams      tools.Parameters `yaml:"allParams"`
+	Name           string                `yaml:"name"`
+	Kind           string                `yaml:"kind"`
+	AuthRequired   []string              `yaml:"authRequired"`
+	Description    string                `yaml:"description"`
+	Collection     string                `yaml:"collection"`
+	FilterPayload  string                `yaml:"filterPayload"`
+	FilterParams   parameters.Parameters `yaml:"filterParams"`
+	ProjectPayload string                `yaml:"projectPayload"`
+	ProjectParams  parameters.Parameters `yaml:"projectParams"`
+	SortPayload    string                `yaml:"sortPayload"`
+	SortParams     parameters.Parameters `yaml:"sortParams"`
+	AllParams      parameters.Parameters `yaml:"allParams"`
 
 	database    *mongo.Database
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func getOptions(sortParameters tools.Parameters, projectPayload string, paramsMap map[string]any) (*options.FindOneOptions, error) {
+func getOptions(sortParameters parameters.Parameters, projectPayload string, paramsMap map[string]any) (*options.FindOneOptions, error) {
 	opts := options.FindOne()
 
 	sort := bson.M{}
@@ -154,7 +155,7 @@ func getOptions(sortParameters tools.Parameters, projectPayload string, paramsMa
 		return opts, nil
 	}
 
-	result, err := tools.PopulateTemplateWithJSON("MongoDBFindOneProjectString", projectPayload, paramsMap)
+	result, err := parameters.PopulateTemplateWithJSON("MongoDBFindOneProjectString", projectPayload, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error populating project payload: %s", err)
 	}
@@ -169,10 +170,10 @@ func getOptions(sortParameters tools.Parameters, projectPayload string, paramsMa
 	return opts, nil
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	filterString, err := tools.PopulateTemplateWithJSON("MongoDBFindOneFilterString", t.FilterPayload, paramsMap)
+	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBFindOneFilterString", t.FilterPayload, paramsMap)
 
 	if err != nil {
 		return nil, fmt.Errorf("error populating filter: %s", err)
@@ -212,8 +213,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return final, err
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.AllParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.AllParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

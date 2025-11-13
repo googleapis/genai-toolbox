@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/iterator"
 )
 
@@ -76,10 +77,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		desc = "Lists available Serverless Spark (aka Dataproc Serverless) batches"
 	}
 
-	allParameters := tools.Parameters{
-		tools.NewStringParameterWithRequired("filter", `Filter expression to limit the batches. Filters are case sensitive, and may contain multiple clauses combined with logical operators (AND/OR, case sensitive). Supported fields are batch_id, batch_uuid, state, create_time, and labels. e.g. state = RUNNING AND create_time < "2023-01-01T00:00:00Z" filters for batches in state RUNNING that were created before 2023-01-01. state = RUNNING AND labels.environment=production filters for batches in state in a RUNNING state that have a production environment label. Valid states are STATE_UNSPECIFIED, PENDING, RUNNING, CANCELLING, CANCELLED, SUCCEEDED, FAILED. Valid operators are < > <= >= = !=, and : as "has" for labels, meaning any non-empty value)`, false),
-		tools.NewIntParameterWithDefault("pageSize", 20, "The maximum number of batches to return in a single page (default 20)"),
-		tools.NewStringParameterWithRequired("pageToken", "A page token, received from a previous `ListBatches` call", false),
+	allParameters := parameters.Parameters{
+		parameters.NewStringParameterWithRequired("filter", `Filter expression to limit the batches. Filters are case sensitive, and may contain multiple clauses combined with logical operators (AND/OR, case sensitive). Supported fields are batch_id, batch_uuid, state, create_time, and labels. e.g. state = RUNNING AND create_time < "2023-01-01T00:00:00Z" filters for batches in state RUNNING that were created before 2023-01-01. state = RUNNING AND labels.environment=production filters for batches in state in a RUNNING state that have a production environment label. Valid states are STATE_UNSPECIFIED, PENDING, RUNNING, CANCELLING, CANCELLED, SUCCEEDED, FAILED. Valid operators are < > <= >= = !=, and : as "has" for labels, meaning any non-empty value)`, false),
+		parameters.NewIntParameterWithDefault("pageSize", 20, "The maximum number of batches to return in a single page (default 20)"),
+		parameters.NewStringParameterWithRequired("pageToken", "A page token, received from a previous `ListBatches` call", false),
 	}
 	inputSchema, _ := allParameters.McpManifest()
 
@@ -111,7 +112,7 @@ type Tool struct {
 
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
-	Parameters  tools.Parameters
+	Parameters  parameters.Parameters
 }
 
 // ListBatchesResponse is the response from the list batches API.
@@ -131,7 +132,7 @@ type Batch struct {
 }
 
 // Invoke executes the tool's operation.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	client := t.Source.GetBatchControllerClient()
 
 	parent := fmt.Sprintf("projects/%s/locations/%s", t.Source.Project, t.Source.Location)
@@ -185,8 +186,8 @@ func ToBatches(batchPbs []*dataprocpb.Batch) []Batch {
 	return batches
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

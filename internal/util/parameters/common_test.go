@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tools_test
+package parameters_test
 
 import (
 	"strings"
@@ -20,7 +20,7 @@ import (
 	"text/template"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestPopulateTemplate(t *testing.T) {
@@ -92,7 +92,7 @@ func TestPopulateTemplate(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := tools.PopulateTemplate(tc.templateName, tc.templateString, tc.data)
+			got, err := parameters.PopulateTemplate(tc.templateName, tc.templateString, tc.data)
 			if tc.wantErr {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
@@ -185,7 +185,7 @@ func TestPopulateTemplateWithFunc(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := tools.PopulateTemplateWithFunc(tc.templateName, tc.templateString, tc.data, tc.funcMap)
+			got, err := parameters.PopulateTemplateWithFunc(tc.templateName, tc.templateString, tc.data, tc.funcMap)
 			if tc.wantErr {
 				if err == nil {
 					t.Fatalf("expected error, got nil")
@@ -279,7 +279,7 @@ func TestPopulateTemplateWithJSON(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := tools.PopulateTemplateWithJSON(tc.templateName, tc.templateString, tc.data)
+			got, err := parameters.PopulateTemplateWithJSON(tc.templateName, tc.templateString, tc.data)
 			if tc.wantErr {
 				if err == nil {
 					t.Fatalf("expected error, got nil")

@@ -25,6 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -77,8 +78,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		desc = "Gets a Serverless Spark (aka Dataproc Serverless) batch"
 	}
 
-	allParameters := tools.Parameters{
-		tools.NewStringParameter("name", "The short name of the batch, e.g. for \"projects/my-project/locations/us-central1/batches/my-batch\", pass \"my-batch\" (the project and location are inherited from the source)"),
+	allParameters := parameters.Parameters{
+		parameters.NewStringParameter("name", "The short name of the batch, e.g. for \"projects/my-project/locations/us-central1/batches/my-batch\", pass \"my-batch\" (the project and location are inherited from the source)"),
 	}
 	inputSchema, _ := allParameters.McpManifest()
 
@@ -110,11 +111,11 @@ type Tool struct {
 
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
-	Parameters  tools.Parameters
+	Parameters  parameters.Parameters
 }
 
 // Invoke executes the tool's operation.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	client := t.Source.GetBatchControllerClient()
 
 	paramMap := params.AsMap()
@@ -149,8 +150,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return result, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

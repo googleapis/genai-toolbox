@@ -26,6 +26,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 // mockIncompatibleSource is a source of a different kind to test error paths.
@@ -39,9 +40,9 @@ func TestInitialize(t *testing.T) {
 		"incompatible-source":  &mockIncompatibleSource{},
 	}
 
-	wantParams := tools.Parameters{
-		tools.NewStringParameterWithRequired("projectId", "The Id of the Google Cloud project.", true),
-		tools.NewStringParameterWithRequired("query", "The promql query to execute.", true),
+	wantParams := parameters.Parameters{
+		parameters.NewStringParameterWithRequired("projectId", "The Id of the Google Cloud project.", true),
+		parameters.NewStringParameterWithRequired("query", "The promql query to execute.", true),
 	}
 
 	testCases := []struct {

@@ -28,6 +28,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 // fakeVersionString is used as a temporary version string in tests
@@ -42,24 +43,24 @@ var (
 type MockTool struct {
 	Name                         string
 	Description                  string
-	Params                       []tools.Parameter
+	Params                       []parameters.Parameter
 	manifest                     tools.Manifest
 	unauthorized                 bool
 	requiresClientAuthrorization bool
 }
 
-func (t MockTool) Invoke(context.Context, tools.ParamValues, tools.AccessToken) (any, error) {
+func (t MockTool) Invoke(context.Context, parameters.ParamValues, tools.AccessToken) (any, error) {
 	mock := []any{t.Name}
 	return mock, nil
 }
 
 // claims is a map of user info decoded from an auth token
-func (t MockTool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Params, data, claimsMap)
+func (t MockTool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Params, data, claimsMap)
 }
 
 func (t MockTool) Manifest() tools.Manifest {
-	pMs := make([]tools.ParameterManifest, 0, len(t.Params))
+	pMs := make([]parameters.ParameterManifest, 0, len(t.Params))
 	for _, p := range t.Params {
 		pMs = append(pMs, p.Manifest())
 	}
@@ -77,7 +78,7 @@ func (t MockTool) RequiresClientAuthorization() bool {
 }
 
 func (t MockTool) McpManifest() tools.McpManifest {
-	properties := make(map[string]tools.ParameterMcpManifest)
+	properties := make(map[string]parameters.ParameterMcpManifest)
 	required := make([]string, 0)
 	authParams := make(map[string][]string)
 
@@ -92,7 +93,7 @@ func (t MockTool) McpManifest() tools.McpManifest {
 		}
 	}
 
-	toolsSchema := tools.McpToolsSchema{
+	toolsSchema := parameters.McpToolsSchema{
 		Type:       "object",
 		Properties: properties,
 		Required:   required,
@@ -120,7 +121,7 @@ type MockPrompt struct {
 	Args        prompts.Arguments
 }
 
-func (p MockPrompt) SubstituteParams(vals tools.ParamValues) (any, error) {
+func (p MockPrompt) SubstituteParams(vals parameters.ParamValues) (any, error) {
 	return []prompts.Message{
 		{
 			Role:    "user",
@@ -129,16 +130,16 @@ func (p MockPrompt) SubstituteParams(vals tools.ParamValues) (any, error) {
 	}, nil
 }
 
-func (p MockPrompt) ParseArgs(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
-	var parameters tools.Parameters
+func (p MockPrompt) ParseArgs(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
+	var params parameters.Parameters
 	for _, arg := range p.Args {
-		parameters = append(parameters, arg.Parameter)
+		params = append(params, arg.Parameter)
 	}
-	return tools.ParseParams(parameters, data, claimsMap)
+	return parameters.ParseParams(params, data, claimsMap)
 }
 
 func (p MockPrompt) Manifest() prompts.Manifest {
-	var argManifests []tools.ParameterManifest
+	var argManifests []parameters.ParameterManifest
 	for _, arg := range p.Args {
 		argManifests = append(argManifests, arg.Manifest())
 	}
@@ -154,34 +155,34 @@ func (p MockPrompt) McpManifest() prompts.McpManifest {
 
 var tool1 = MockTool{
 	Name:   "no_params",
-	Params: []tools.Parameter{},
+	Params: []parameters.Parameter{},
 }
 
 var tool2 = MockTool{
 	Name: "some_params",
-	Params: tools.Parameters{
-		tools.NewIntParameter("param1", "This is the first parameter."),
-		tools.NewIntParameter("param2", "This is the second parameter."),
+	Params: parameters.Parameters{
+		parameters.NewIntParameter("param1", "This is the first parameter."),
+		parameters.NewIntParameter("param2", "This is the second parameter."),
 	},
 }
 
 var tool3 = MockTool{
 	Name:        "array_param",
 	Description: "some description",
-	Params: tools.Parameters{
-		tools.NewArrayParameter("my_array", "this param is an array of strings", tools.NewStringParameter("my_string", "string item")),
+	Params: parameters.Parameters{
+		parameters.NewArrayParameter("my_array", "this param is an array of strings", parameters.NewStringParameter("my_string", "string item")),
 	},
 }
 
 var tool4 = MockTool{
 	Name:         "unauthorized_tool",
-	Params:       []tools.Parameter{},
+	Params:       []parameters.Parameter{},
 	unauthorized: true,
 }
 
 var tool5 = MockTool{
 	Name:                         "require_client_auth_tool",
-	Params:                       []tools.Parameter{},
+	Params:                       []parameters.Parameter{},
 	requiresClientAuthrorization: true,
 }
 
@@ -193,7 +194,7 @@ var prompt1 = MockPrompt{
 var prompt2 = MockPrompt{
 	Name: "prompt2",
 	Args: prompts.Arguments{
-		{Parameter: tools.NewStringParameter("arg1", "This is the first argument.")},
+		{Parameter: parameters.NewStringParameter("arg1", "This is the first argument.")},
 	},
 }
 

@@ -22,6 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 const kind string = "cloud-sql-get-instance"
@@ -70,16 +71,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	project := s.DefaultProject
-	var projectParam tools.Parameter
+	var projectParam parameters.Parameter
 	if project != "" {
-		projectParam = tools.NewStringParameterWithDefault("projectId", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+		projectParam = parameters.NewStringParameterWithDefault("projectId", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
 	} else {
-		projectParam = tools.NewStringParameter("projectId", "The project ID")
+		projectParam = parameters.NewStringParameter("projectId", "The project ID")
 	}
 
-	allParameters := tools.Parameters{
+	allParameters := parameters.Parameters{
 		projectParam,
-		tools.NewStringParameter("instanceId", "The instance ID"),
+		parameters.NewStringParameter("instanceId", "The instance ID"),
 	}
 	paramManifest := allParameters.Manifest()
 
@@ -108,13 +109,13 @@ type Tool struct {
 	AuthRequired []string `yaml:"authRequired"`
 
 	Source      *cloudsqladmin.Source
-	AllParams   tools.Parameters `yaml:"allParams"`
+	AllParams   parameters.Parameters `yaml:"allParams"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
 // Invoke executes the tool's logic.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
 	projectId, ok := paramsMap["projectId"].(string)
@@ -140,8 +141,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 }
 
 // ParseParams parses the parameters for the tool.
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.AllParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.AllParams, data, claims)
 }
 
 // Manifest returns the tool's manifest.

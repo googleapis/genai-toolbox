@@ -28,6 +28,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"golang.org/x/oauth2"
 )
 
@@ -145,11 +147,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		}
 		tableRefsDescription += fmt.Sprintf(" The tables must only be from datasets in the following list: %s.", strings.Join(datasetIDs, ", "))
 	}
-	userQueryParameter := tools.NewStringParameter("user_query_with_context", "The user's question, potentially including conversation history and system instructions for context.")
-	tableRefsParameter := tools.NewStringParameter("table_references", tableRefsDescription)
+	userQueryParameter := parameters.NewStringParameter("user_query_with_context", "The user's question, potentially including conversation history and system instructions for context.")
+	tableRefsParameter := parameters.NewStringParameter("table_references", tableRefsDescription)
 
-	parameters := tools.Parameters{userQueryParameter, tableRefsParameter}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	params := parameters.Parameters{userQueryParameter, tableRefsParameter}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// Get cloud-platform token source for Gemini Data Analytics API during initialization
 	var bigQueryTokenSourceWithScope oauth2.TokenSource
@@ -168,12 +170,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Kind:               kind,
 		Project:            s.BigQueryProject(),
 		Location:           s.BigQueryLocation(),
-		Parameters:         parameters,
+		Parameters:         params,
 		AuthRequired:       cfg.AuthRequired,
 		Client:             s.BigQueryClient(),
 		UseClientOAuth:     s.UseClientAuthorization(),
 		TokenSource:        bigQueryTokenSourceWithScope,
-		manifest:           tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		manifest:           tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:        mcpManifest,
 		MaxQueryResultRows: s.GetMaxQueryResultRows(),
 		IsDatasetAllowed:   s.IsDatasetAllowed,
@@ -186,11 +188,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string           `yaml:"name"`
-	Kind           string           `yaml:"kind"`
-	AuthRequired   []string         `yaml:"authRequired"`
-	UseClientOAuth bool             `yaml:"useClientOAuth"`
-	Parameters     tools.Parameters `yaml:"parameters"`
+	Name           string                `yaml:"name"`
+	Kind           string                `yaml:"kind"`
+	AuthRequired   []string              `yaml:"authRequired"`
+	UseClientOAuth bool                  `yaml:"useClientOAuth"`
+	Parameters     parameters.Parameters `yaml:"parameters"`
 
 	Project            string
 	Location           string
@@ -203,7 +205,7 @@ type Tool struct {
 	AllowedDatasets    []string
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	var tokenStr string
 	var err error
 
@@ -211,7 +213,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if t.UseClientOAuth {
 		// Use client-side access token
 		if accessToken == "" {
-			return nil, fmt.Errorf("tool is configured for client OAuth but no token was provided in the request header: %w", tools.ErrUnauthorized)
+			return nil, fmt.Errorf("tool is configured for client OAuth but no token was provided in the request header: %w", util.ErrUnauthorized)
 		}
 		tokenStr, err = accessToken.ParseBearerToken()
 		if err != nil {
@@ -285,8 +287,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return response, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

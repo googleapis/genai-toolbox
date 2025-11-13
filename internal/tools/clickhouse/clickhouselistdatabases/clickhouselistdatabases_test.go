@@ -22,7 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestListDatabasesConfigToolConfigKind(t *testing.T) {
@@ -95,7 +95,7 @@ func TestParseFromYamlClickHouseListDatabases(t *testing.T) {
 
 func TestListDatabasesToolParseParams(t *testing.T) {
 	tool := Tool{
-		Parameters: tools.Parameters{},
+		Parameters: parameters.Parameters{},
 	}
 
 	params, err := tool.ParseParams(map[string]any{}, map[string]map[string]any{})

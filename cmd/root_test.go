@@ -45,6 +45,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/http"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/spf13/cobra"
 )
 
@@ -515,8 +516,8 @@ func TestParseToolFile(t *testing.T) {
 						Source:      "my-pg-instance",
 						Description: "some description",
 						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
-						Parameters: []tools.Parameter{
-							tools.NewStringParameter("country", "some description"),
+						Parameters: []parameters.Parameter{
+							parameters.NewStringParameter("country", "some description"),
 						},
 						AuthRequired: []string{},
 					},
@@ -552,7 +553,7 @@ func TestParseToolFile(t *testing.T) {
 						Name:        "my-prompt",
 						Description: "A prompt template for data analysis.",
 						Arguments: prompts.Arguments{
-							{Parameter: tools.NewStringParameter("country", "The country to analyze.")},
+							{Parameter: parameters.NewStringParameter("country", "The country to analyze.")},
 						},
 						Messages: []prompts.Message{
 							{Role: "user", Content: "Analyze the data for {{.country}}."},
@@ -682,10 +683,10 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 						AuthRequired: []string{},
-						Parameters: []tools.Parameter{
-							tools.NewStringParameter("country", "some description"),
-							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							tools.NewStringParameterWithAuth("email", "user email", []tools.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+						Parameters: []parameters.Parameter{
+							parameters.NewStringParameter("country", "some description"),
+							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
+							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
 						},
 					},
 				},
@@ -782,10 +783,10 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 						AuthRequired: []string{},
-						Parameters: []tools.Parameter{
-							tools.NewStringParameter("country", "some description"),
-							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							tools.NewStringParameterWithAuth("email", "user email", []tools.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+						Parameters: []parameters.Parameter{
+							parameters.NewStringParameter("country", "some description"),
+							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
+							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
 						},
 					},
 				},
@@ -884,10 +885,10 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 						AuthRequired: []string{"my-google-service"},
-						Parameters: []tools.Parameter{
-							tools.NewStringParameter("country", "some description"),
-							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							tools.NewStringParameterWithAuth("email", "user email", []tools.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+						Parameters: []parameters.Parameter{
+							parameters.NewStringParameter("country", "some description"),
+							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
+							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
 						},
 					},
 				},
@@ -1053,9 +1054,9 @@ func TestEnvVarReplacement(t *testing.T) {
 						Path:         "search?name=alice&pet=cat",
 						Description:  "some description",
 						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-						QueryParams: []tools.Parameter{
-							tools.NewStringParameterWithAuth("country", "some description",
-								[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
+						QueryParams: []parameters.Parameter{
+							parameters.NewStringParameterWithAuth("country", "some description",
+								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
 									{Name: "other-auth-service", Field: "user_id"}}),
 						},
 						RequestBody: `{
@@ -1065,9 +1066,9 @@ func TestEnvVarReplacement(t *testing.T) {
   "other": "$OTHER"
 }
 `,
-						BodyParams:   []tools.Parameter{tools.NewIntParameter("age", "age num"), tools.NewStringParameter("city", "city string")},
+						BodyParams:   []parameters.Parameter{parameters.NewIntParameter("age", "age num"), parameters.NewStringParameter("city", "city string")},
 						Headers:      map[string]string{"Authorization": "API_KEY", "Content-Type": "application/json"},
-						HeaderParams: []tools.Parameter{tools.NewStringParameter("Language", "language string")},
+						HeaderParams: []parameters.Parameter{parameters.NewStringParameter("Language", "language string")},
 					},
 				},
 				Toolsets: server.ToolsetConfigs{

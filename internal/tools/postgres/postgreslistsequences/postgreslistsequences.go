@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -102,10 +103,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	allParameters := tools.Parameters{
-		tools.NewStringParameterWithDefault("schemaname", "", "Optional: A specific schema name pattern to search for."),
-		tools.NewStringParameterWithDefault("sequencename", "", "Optional: A specific sequence name pattern to search for."),
-		tools.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return. Default is 50"),
+	allParameters := parameters.Parameters{
+		parameters.NewStringParameterWithDefault("schemaname", "", "Optional: A specific schema name pattern to search for."),
+		parameters.NewStringParameterWithDefault("sequencename", "", "Optional: A specific sequence name pattern to search for."),
+		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return. Default is 50"),
 	}
 	description := cfg.Description
 	if description == "" {
@@ -133,16 +134,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	name         string           `yaml:"name"`
-	kind         string           `yaml:"kind"`
-	authRequired []string         `yaml:"authRequired"`
-	allParams    tools.Parameters `yaml:"allParams"`
+	name         string                `yaml:"name"`
+	kind         string                `yaml:"kind"`
+	authRequired []string              `yaml:"authRequired"`
+	allParams    parameters.Parameters `yaml:"allParams"`
 	pool         *pgxpool.Pool
 	manifest     tools.Manifest
 	mcpManifest  tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	sliceParams := params.AsSlice()
 
 	results, err := t.pool.Query(ctx, listSequencesStatement, sliceParams...)
@@ -169,8 +170,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return out, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.allParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.allParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

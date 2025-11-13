@@ -26,7 +26,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/googleapis/genai-toolbox/tests"
 	_ "github.com/nakagami/firebirdsql"
 )
@@ -362,9 +362,9 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolKin
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "CREATE TABLE {{.tableName}} ({{array .columns}})",
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
-			tools.NewArrayParameter("columns", "The columns to create", tools.NewStringParameter("column", "A column name that will be created")),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
+			parameters.NewArrayParameter("columns", "The columns to create", parameters.NewStringParameter("column", "A column name that will be created")),
 		},
 	}
 	toolsMap["insert-table-templateParams-tool"] = map[string]any{
@@ -372,10 +372,10 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolKin
 		"source":      "my-instance",
 		"description": "Insert table tool with template parameters",
 		"statement":   "INSERT INTO {{.tableName}} ({{array .columns}}) VALUES ({{.values}})",
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
-			tools.NewArrayParameter("columns", "The columns to insert into", tools.NewStringParameter("column", "A column name that will be returned from the query.")),
-			tools.NewStringParameter("values", "The values to insert as a comma separated string"),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
+			parameters.NewArrayParameter("columns", "The columns to insert into", parameters.NewStringParameter("column", "A column name that will be returned from the query.")),
+			parameters.NewStringParameter("values", "The values to insert as a comma separated string"),
 		},
 	}
 	toolsMap["select-templateParams-tool"] = map[string]any{
@@ -383,8 +383,8 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolKin
 		"source":      "my-instance",
 		"description": "Select table tool with template parameters",
 		"statement":   "SELECT id AS \"id\", name AS \"name\", age AS \"age\" FROM {{.tableName}}",
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
 		},
 	}
 	toolsMap["select-templateParams-combined-tool"] = map[string]any{
@@ -392,11 +392,11 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolKin
 		"source":      "my-instance",
 		"description": "Select table tool with combined template parameters",
 		"statement":   tmplSelectCombined,
-		"parameters": []tools.Parameter{
-			tools.NewIntParameter("id", "the id of the user"),
+		"parameters": []parameters.Parameter{
+			parameters.NewIntParameter("id", "the id of the user"),
 		},
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
 		},
 	}
 	toolsMap["select-fields-templateParams-tool"] = map[string]any{
@@ -404,8 +404,8 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolKin
 		"source":      "my-instance",
 		"description": "Select specific fields tool with template parameters",
 		"statement":   "SELECT name AS \"name\" FROM {{.tableName}}",
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
 		},
 	}
 	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
@@ -413,12 +413,12 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolKin
 		"source":      "my-instance",
 		"description": "Select table tool with filter template parameters",
 		"statement":   tmplSelectFilterCombined,
-		"parameters": []tools.Parameter{
-			tools.NewStringParameter("name", "the name to filter by"),
+		"parameters": []parameters.Parameter{
+			parameters.NewStringParameter("name", "the name to filter by"),
 		},
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
-			tools.NewStringParameter("columnFilter", "some description"),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
+			parameters.NewStringParameter("columnFilter", "some description"),
 		},
 	}
 	// Firebird uses simple DROP TABLE syntax without IF EXISTS
@@ -427,8 +427,8 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolKin
 		"source":      "my-instance",
 		"description": "Drop table tool with template parameters",
 		"statement":   "DROP TABLE {{.tableName}}",
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
 		},
 	}
 	config["tools"] = toolsMap
