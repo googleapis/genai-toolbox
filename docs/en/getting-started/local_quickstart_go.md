@@ -73,6 +73,12 @@ from Toolbox.
 {{< include "quickstart/go/openAI/quickstart.go" >}}
 
 {{< /tab >}}
+
+{{< tab header="ADK Go" lang="go" >}}
+
+{{< include "quickstart/go/adkgo/quickstart.go" >}}
+
+{{< /tab >}}
 {{< /tabpane >}}
 
 1. Ensure all dependencies are installed:
@@ -81,7 +87,7 @@ from Toolbox.
     go mod tidy
     ```
 
-1. Run your agent, and observe the results:
+2. Run your agent, and observe the results:
 
     ```sh
     go run hotelagent.go

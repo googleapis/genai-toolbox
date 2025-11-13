@@ -70,8 +70,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `alloydb-admin`", kind)
 	}
 
+	project := s.DefaultProject
+	var projectParam tools.Parameter
+	if project != "" {
+		projectParam = tools.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+	} else {
+		projectParam = tools.NewStringParameter("project", "The GCP project ID.")
+	}
+
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("project", "The GCP project ID."),
+		projectParam,
 		tools.NewStringParameter("location", "The location of the cluster (e.g., 'us-central1')."),
 		tools.NewStringParameter("cluster", "The ID of the cluster where the user will be created."),
 		tools.NewStringParameter("user", "The name for the new user. Must be unique within the cluster."),

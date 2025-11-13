@@ -663,6 +663,16 @@ tools:
 
           The result of the get_dashboards tool is a list of json objects.
 
+    run_dashboard:
+        kind: looker-run-dashboard
+        source: looker-source
+        description: |
+          run_dashboard Tool
+
+          This tools runs the query associated with each tile in a dashboard
+          and returns the data in a JSON structure. It accepts the dashboard_id
+          as the parameter.
+
     make_dashboard:
         kind: looker-make-dashboard
         source: looker-source
@@ -886,6 +896,7 @@ toolsets:
         - run_look
         - make_look
         - get_dashboards
+        - run_dashboard
         - make_dashboard
         - add_dashboard_element
         - health_pulse

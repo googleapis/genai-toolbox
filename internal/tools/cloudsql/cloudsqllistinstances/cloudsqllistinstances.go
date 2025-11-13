@@ -68,8 +68,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-sql-admin`", kind)
 	}
 
+	project := s.DefaultProject
+	var projectParam tools.Parameter
+	if project != "" {
+		projectParam = tools.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+	} else {
+		projectParam = tools.NewStringParameter("project", "The project ID")
+	}
+
 	allParameters := tools.Parameters{
-		tools.NewStringParameter("project", "The project ID"),
+		projectParam,
 	}
 	paramManifest := allParameters.Manifest()
 
@@ -83,7 +91,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Name:         cfg.Name,
 		Kind:         kind,
 		AuthRequired: cfg.AuthRequired,
-		source:       s,
+		Source:       s,
 		AllParams:    allParameters,
 		manifest:     tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
@@ -98,7 +106,7 @@ type Tool struct {
 	AuthRequired []string `yaml:"authRequired"`
 
 	AllParams   tools.Parameters `yaml:"allParams"`
-	source      *cloudsqladminsrc.Source
+	Source      *cloudsqladminsrc.Source
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -112,7 +120,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("missing 'project' parameter")
 	}
 
-	service, err := t.source.GetService(ctx, string(accessToken))
+	service, err := t.Source.GetService(ctx, string(accessToken))
 	if err != nil {
 		return nil, err
 	}
@@ -163,5 +171,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return t.source.UseClientAuthorization()
+	return t.Source.UseClientAuthorization()
 }

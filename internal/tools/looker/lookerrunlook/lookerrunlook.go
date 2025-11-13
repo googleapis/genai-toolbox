@@ -126,17 +126,30 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 
 	look_id := paramsMap["look_id"].(string)
 	limit := int64(paramsMap["limit"].(int))
+	limitStr := fmt.Sprintf("%d", limit)
 
 	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
 	if err != nil {
 		return nil, fmt.Errorf("error getting sdk: %w", err)
 	}
-	req := v4.RequestRunLook{
-		LookId:       look_id,
-		ResultFormat: "json",
-		Limit:        &limit,
+
+	look, err := sdk.Look(look_id, "", t.ApiSettings)
+	if err != nil {
+		return nil, fmt.Errorf("error getting look definition: %s", err)
 	}
-	resp, err := sdk.RunLook(req, t.ApiSettings)
+
+	wq := v4.WriteQuery{
+		Model:         look.Query.Model,
+		View:          look.Query.View,
+		Fields:        look.Query.Fields,
+		Pivots:        look.Query.Pivots,
+		Filters:       look.Query.Filters,
+		Sorts:         look.Query.Sorts,
+		QueryTimezone: look.Query.QueryTimezone,
+		Limit:         &limitStr,
+	}
+
+	resp, err := lookercommon.RunInlineQuery(ctx, sdk, &wq, "json", t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making run_look request: %s", err)
 	}

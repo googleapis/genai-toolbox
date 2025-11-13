@@ -1,12 +1,10 @@
 ---
-title: "AlloyDB Admin"
-linkTitle: "AlloyDB Admin"
+title: AlloyDB Admin
+linkTitle: AlloyDB Admin
 type: docs
-weight: 2
-description: >
-  The "alloydb-admin" source provides a client for the AlloyDB API.
-aliases:
-- /resources/sources/alloydb-admin
+weight: 1
+description: "The \"alloydb-admin\" source provides a client for the AlloyDB API.\n"
+aliases: [/resources/sources/alloydb-admin]
 ---
 
 ## About
@@ -17,6 +15,7 @@ tools to perform administrative tasks on AlloyDB resources, such as managing
 clusters, instances, and users.
 
 Authentication can be handled in two ways:
+
 1.  **Application Default Credentials (ADC):** By default, the source uses ADC
     to authenticate with the API.
 2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will
@@ -36,7 +35,9 @@ sources:
 ```
 
 ## Reference
+
 | **field**      | **type** | **required** | **description**                                                                                                                                |
-|----------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------|
+| -------------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | kind           |  string  |     true     | Must be "alloydb-admin".                                                                                                                       |
-| useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
+| defaultProject |  string  |     false    | The Google Cloud project ID to use for AlloyDB infrastructure tools.                                                                           |
+| useClientOAuth |  boolean |     false    | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |

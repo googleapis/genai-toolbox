@@ -26,6 +26,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/sqlite/sqliteexecutesql"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 	_ "modernc.org/sqlite"
 )
 
@@ -159,8 +160,20 @@ func TestTool_Invoke(t *testing.T) {
 				},
 			},
 			want: []any{
-				map[string]any{"id": int64(1), "name": "Alice", "age": int64(30)},
-				map[string]any{"id": int64(2), "name": "Bob", "age": int64(25)},
+				orderedmap.Row{
+					Columns: []orderedmap.Column{
+						{Name: "id", Value: int64(1)},
+						{Name: "name", Value: "Alice"},
+						{Name: "age", Value: int64(30)},
+					},
+				},
+				orderedmap.Row{
+					Columns: []orderedmap.Column{
+						{Name: "id", Value: int64(2)},
+						{Name: "name", Value: "Bob"},
+						{Name: "age", Value: int64(25)},
+					},
+				},
 			},
 			wantErr: false,
 		},
@@ -233,7 +246,13 @@ func TestTool_Invoke(t *testing.T) {
 				},
 			},
 			want: []any{
-				map[string]any{"id": int64(1), "null_col": nil, "blob_col": []byte{1, 2, 3}},
+				orderedmap.Row{
+					Columns: []orderedmap.Column{
+						{Name: "id", Value: int64(1)},
+						{Name: "null_col", Value: nil},
+						{Name: "blob_col", Value: []byte{1, 2, 3}},
+					},
+				},
 			},
 			wantErr: false,
 		},
@@ -264,8 +283,18 @@ func TestTool_Invoke(t *testing.T) {
 				},
 			},
 			want: []any{
-				map[string]any{"name": "Alice", "item": "Laptop"},
-				map[string]any{"name": "Bob", "item": "Keyboard"},
+				orderedmap.Row{
+					Columns: []orderedmap.Column{
+						{Name: "name", Value: "Alice"},
+						{Name: "item", Value: "Laptop"},
+					},
+				},
+				orderedmap.Row{
+					Columns: []orderedmap.Column{
+						{Name: "name", Value: "Bob"},
+						{Name: "item", Value: "Keyboard"},
+					},
+				},
 			},
 			wantErr: false,
 		},
@@ -292,7 +321,7 @@ func TestTool_Invoke(t *testing.T) {
 			}
 
 			if !isEqual {
-				t.Errorf("Tool.Invoke() = %v, want %v", got, tt.want)
+				t.Errorf("Tool.Invoke() = %+v, want %v", got, tt.want)
 			}
 		})
 	}
