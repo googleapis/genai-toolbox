@@ -337,7 +337,7 @@ for instructions on developing Toolbox SDKs.
 
 Team `@googleapis/senseai-eco` has been set as
 [CODEOWNERS](.github/CODEOWNERS). The GitHub TeamSync tool is used to create
-this team from MDB Group, `senseai-eco`.
+this team from MDB Group, `senseai-eco`. Additionally, database-specific GitHub teams (e.g., `@googleapis/toolbox-alloydb`) have been created from MDB groups to manage code ownership and review for individual database products.
 
 Team `@googleapis/toolbox-contributors` has write access to this repo. They
 can create branches and approve test runs. But they do not have the ability
@@ -441,7 +441,7 @@ Trigger pull request tests for external contributors by:
 
 ## Repo Setup & Automation
 
-* .github/blunderbuss.yml - Auto-assign issues and PRs from GitHub teams
+* .github/blunderbuss.yml - Auto-assign issues and PRs from GitHub teams. Use a product label to assign to a product-specific team member.
 * .github/renovate.json5 - Tooling for dependency updates. Dependabot is built
   into the GitHub repo for GitHub security warnings
 * go/github-issue-mirror - GitHub issues are automatically mirrored into buganizer
