@@ -164,6 +164,14 @@ tools:
         kind: postgres-list-schemas
         source: alloydb-pg-source
 
+    database_overview:
+        kind: postgres-database-overview
+        source: alloydb-pg-source
+    
+    list_triggers:
+        kind: postgres-list-triggers
+        source: alloydb-pg-source
+
 toolsets:
     alloydb_postgres_database_tools:
         - execute_sql
@@ -179,3 +187,5 @@ toolsets:
         - get_query_plan
         - list_views
         - list_schemas
+        - database_overview
+        - list_triggers
