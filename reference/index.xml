@@ -156,6 +156,8 @@ limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
 &lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
 &lt;li>&lt;code>database_overview&lt;/code>: Fetches the current state of the PostgreSQL server.&lt;/li>
 &lt;li>&lt;code>list_triggers&lt;/code>: Lists triggers in the database.&lt;/li>
+&lt;li>&lt;code>list_indexes&lt;/code>: List available user indexes in a PostgreSQL database.&lt;/li>
+&lt;li>&lt;code>list_sequences&lt;/code>: List sequences in a PostgreSQL database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -388,6 +390,8 @@ limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
 &lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
 &lt;li>&lt;code>database_overview&lt;/code>: Fetches the current state of the PostgreSQL server.&lt;/li>
 &lt;li>&lt;code>list_triggers&lt;/code>: Lists triggers in the database.&lt;/li>
+&lt;li>&lt;code>list_indexes&lt;/code>: List available user indexes in a PostgreSQL database.&lt;/li>
+&lt;li>&lt;code>list_sequences&lt;/code>: List sequences in a PostgreSQL database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -810,6 +814,8 @@ limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
 &lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
 &lt;li>&lt;code>database_overview&lt;/code>: Fetches the current state of the PostgreSQL server.&lt;/li>
 &lt;li>&lt;code>list_triggers&lt;/code>: Lists triggers in the database.&lt;/li>
+&lt;li>&lt;code>list_indexes&lt;/code>: List available user indexes in a PostgreSQL database.&lt;/li>
+&lt;li>&lt;code>list_sequences&lt;/code>: List sequences in a PostgreSQL database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
