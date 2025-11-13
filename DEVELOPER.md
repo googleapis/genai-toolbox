@@ -151,34 +151,33 @@ go test -race -v ./cmd/... ./internal/...
 
    Be sure to set the timeout to a reasonable value for your tests.
 
-### Link Checks
+## Link Checking and Fixing with Lychee
 
-We use **[lychee](https://github.com/lycheeverse/lychee-action)** to check all links in our repository. To run the link checker locally, see [this](https://github.com/lycheeverse/lychee?tab=readme-ov-file#commandline-usage).
+We use **[lychee](https://github.com/lycheeverse/lychee-action)** for repository link checks.
 
-## Fixing Broken Links
-
-* **Update the Link:** Fix the broken link or update the content where it is used.
-* **If you cannot fix the link (e.g., due to an external service's rate-limit or if it's a local-only URL):**
-    * Tell the `lychee` to **ignore** it. List **regular expressions** or **direct links** in **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/main/.lycheeignore)**, with one entry per line.
-    * Always add a **comment** in `.lycheeignore` explaining **why** the link is being skipped. This prevents link rot and helps future maintainers.
-
-#### When to Ignore a Link
-* External Rate-Limits: You can skip checking links that frequently fail due to external service issues like rate-limiting.
-* Local-Only URLs: Skip URLs that are only meant to work in a specific local environment.
+* To run the checker **locally**, see the [command-line usage guide](https://github.com/lycheeverse/lychee?tab=readme-ov-file#commandline-usage).
 
 
-**Example** `.lycheeignore`
 
-```text
-# These are email addresses, not standard web URLs, and usually cause check failures . 
-^mailto:.*
-```
+###  Fixing Broken Links
+
+1.  **Update the Link:** Correct the broken URL or update the content where it is used.
+2.  **Ignore the Link:** If you can't fix the link (e.g., due to **external rate-limits** or if it's a **local-only URL**), tell Lychee to **ignore** it.
+
+    * List **regular expressions** or **direct links** in the **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/main/.lycheeignore)** file, one entry per line.
+    * **Always add a comment** explaining **why** the link is being skipped to prevent link rot.
+
+* **Example `.lycheeignore`:**
+    ```text
+    # These are email addresses, not standard web URLs, and usually cause check failures.
+    ^mailto:.*
+    ```
 
 ###  Best Practice for Ignoring
 
-* To permanently skip certain links from checking,include that links in  **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/link-checker-workflow/.lycheeignore)** .
+* To **permanently skip** specific links from checking, add them to the **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/link-checker-workflow/.lycheeignore)** file.
 
-
+> **Note:** Local links and directory changes work differently on GitHub than on the docsite, you must ensure fixes pass the **GitHub check** and also work with **`hugo server`**. If a link works locally but fails the GitHub check (e.g., a docsite-only relative path), you **must ignore it** in `.lycheeignore` and document the reason.
 
 #### Running on Pull Requests
 
