@@ -15,8 +15,8 @@
 sources:
     postgresql-source:
         kind: postgres
-        host: ${POSTGRES_HOST}
-        port: ${POSTGRES_PORT}
+        host: ${POSTGRES_HOST:localhost}
+        port: ${POSTGRES_PORT:5432}
         database: ${POSTGRES_DATABASE}
         user: ${POSTGRES_USER}
         password: ${POSTGRES_PASSWORD}
@@ -177,6 +177,14 @@ tools:
         kind: postgres-list-schemas
         source: postgresql-source
 
+    database_overview:
+        kind: postgres-database-overview
+        source: postgresql-source
+
+    list_triggers:
+        kind: postgres-list-triggers
+        source: postgresql-source
+
 toolsets:
     postgres_database_tools:
         - execute_sql
@@ -195,3 +203,5 @@ toolsets:
         - replication_stats
         - list_views
         - list_schemas
+        - database_overview
+        - list_triggers
