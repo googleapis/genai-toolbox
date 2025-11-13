@@ -50,7 +50,7 @@ func TestParseFromYamlLookerGenerateEmbedUrl(t *testing.T) {
 					Kind:         "looker-generate-embed-url",
 					Source:       "my-instance",
 					Description:  "some description",
-					AuthRequired: nil,
+					AuthRequired: []string{},
 				},
 			},
 		},
