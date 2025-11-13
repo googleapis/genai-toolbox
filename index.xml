@@ -4300,7 +4300,18 @@ as well as the file content.&lt;/p>
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>looker-get-connection-databases</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/looker/looker-get-connection-databases/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/looker/looker-get-connection-databases/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>looker-generate-embed-url</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/looker/looker-generate-embed-url/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/looker/looker-generate-embed-url/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>looker-generate-embed-url&lt;/code> tool generates an embeddable URL for a given piece of Looker content. The url generated is created for the user authenticated to the Looker source. When opened in the browser it will create a Looker Embed session.&lt;/p>
+&lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/looker/">looker&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>looker-generate-embed-url&lt;/code> takes two parameters:&lt;/p>
+&lt;ol>
+&lt;li>the &lt;code>type&lt;/code> of content (e.g., &amp;ldquo;dashboards&amp;rdquo;, &amp;ldquo;looks&amp;rdquo;, &amp;ldquo;query-visualization&amp;rdquo;)&lt;/li>
+&lt;li>the &lt;code>id&lt;/code> of the content&lt;/li>
+&lt;/ol>
+&lt;p>It&amp;rsquo;s recommended to use other tools from the Looker MCP toolbox with this tool to do things like fetch dashboard id&amp;rsquo;s, generate a query, etc that can be supplied to this tool.&lt;/p></description></item><item><title>looker-get-connection-databases</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/looker/looker-get-connection-databases/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/looker/looker-get-connection-databases/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>looker-get-connection-databases&lt;/code> tool returns all the databases in a connection.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
