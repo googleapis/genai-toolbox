@@ -1,11 +1,12 @@
 # Changelog
 
-## [0.19.0](https://github.com/googleapis/genai-toolbox/compare/v0.18.0...v0.19.0) (2025-11-07)
+## [0.19.1](https://github.com/googleapis/genai-toolbox/compare/v0.18.0...v0.19.1) (2025-11-07)
 
 
 ### ⚠ BREAKING CHANGES
 
 * **tools/alloydbainl:** update AlloyDB AI NL statement order ([#1753](https://github.com/googleapis/genai-toolbox/issues/1753))
+* **tools/bigquery-analyze-contribution:** Add allowed dataset support ([#1675](https://github.com/googleapis/genai-toolbox/issues/1675)) ([ef28e39](https://github.com/googleapis/genai-toolbox/commit/ef28e39e90b21287ca8e69b99f4e792c78e9d31f))
 * **tools/bigquery-get-dataset-info:** add allowed dataset support ([#1654](https://github.com/googleapis/genai-toolbox/issues/1654))
 
 ### Features
@@ -26,9 +27,9 @@
 * **tools/neo4j-execute-cypher:** Add dry_run parameter to validate Cypher queries ([#1769](https://github.com/googleapis/genai-toolbox/issues/1769)) ([f475da6](https://github.com/googleapis/genai-toolbox/commit/f475da63ce1b65387b503ac497eca47635452723))
 * **tools/postgres-list-schemas:** Add new postgres-list-schemas tool ([#1741](https://github.com/googleapis/genai-toolbox/issues/1741)) ([1a19cac](https://github.com/googleapis/genai-toolbox/commit/1a19cac7cd89ed70291eb55e190370fe7b2c1aba))
 * **tools/postgres-list-views:** Add new postgres-list-views tool ([#1709](https://github.com/googleapis/genai-toolbox/issues/1709)) ([e8c7fe0](https://github.com/googleapis/genai-toolbox/commit/e8c7fe0994fedcb9be78d461fab3c98cc6bd86b2))
-* **tools/serverless-spark:** Add cancel-batch tool ([2881683](https://github.com/googleapis/genai-toolbox/commit/28816832265250de97d84e6ba38bf6c35e040796))
-* **tools/serverless-spark:** Add get_batch tool ([7ad1072](https://github.com/googleapis/genai-toolbox/commit/7ad10720b4638324cd77d8aa410cbd1ccf0cc93f))
-* **tools/serverless-spark:** Add serverless-spark source with list_batches tool ([816dbce](https://github.com/googleapis/genai-toolbox/commit/816dbce268392046e54767732bd31488c6e89bdb))
+* **tools/serverless-spark:** Add cancel-batch tool ([#1827](https://github.com/googleapis/genai-toolbox/pull/1827))([2881683](https://github.com/googleapis/genai-toolbox/commit/28816832265250de97d84e6ba38bf6c35e040796))
+* **tools/serverless-spark:** Add get_batch tool ([#1783](https://github.com/googleapis/genai-toolbox/pull/1783))([7ad1072](https://github.com/googleapis/genai-toolbox/commit/7ad10720b4638324cd77d8aa410cbd1ccf0cc93f))
+* **tools/serverless-spark:** Add serverless-spark source with list_batches tool ([#1690](https://github.com/googleapis/genai-toolbox/pull/1690))([816dbce](https://github.com/googleapis/genai-toolbox/commit/816dbce268392046e54767732bd31488c6e89bdb))
 
 
 ### Bug Fixes
