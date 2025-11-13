@@ -167,15 +167,12 @@ We use **[lychee](https://github.com/lycheeverse/lychee-action)** for repository
     * List **regular expressions** or **direct links** in the **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/main/.lycheeignore)** file, one entry per line.
     * **Always add a comment** explaining **why** the link is being skipped to prevent link rot.
 
-* **Example `.lycheeignore`:**
-    ```text
-    # These are email addresses, not standard web URLs, and usually cause check failures.
-    ^mailto:.*
-    ```
-
-###  Best Practice for Ignoring
-
-* To **permanently skip** specific links from checking, add them to the **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/link-checker-workflow/.lycheeignore)** file.
+    * **Example `.lycheeignore`:**
+       ```text
+       # These are email addresses, not standard web URLs, and usually cause check failures.
+       ^mailto:.*
+       ```
+    * Best practice for ignoring is to **permanently skip** specific links from checking, add them to the **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/link-checker-workflow/.lycheeignore)** file.
 
 > **Note:** Local links and directory changes work differently on GitHub than on the docsite, you must ensure fixes pass the **GitHub check** and also work with **`hugo server`**. If a link works locally but fails the GitHub check (e.g., a docsite-only relative path), you **must ignore it** in `.lycheeignore` and document the reason.
 
