@@ -51,6 +51,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 		ShowHiddenExplores: true,
 		ShowHiddenFields:   true,
 		Location:           "us",
+		SessionLength:      1200,
 	} // Default Ssl,timeout, ShowHidden
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
@@ -72,6 +73,7 @@ type Config struct {
 	ShowHiddenFields   bool   `yaml:"show_hidden_fields"`
 	Project            string `yaml:"project"`
 	Location           string `yaml:"location"`
+	SessionLength      int64  `yaml:"sessionLength"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -123,6 +125,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Project:            r.Project,
 		Location:           r.Location,
 		TokenSource:        tokenSource,
+		SessionLength:      r.SessionLength,
 	}
 
 	if !r.UseClientOAuth {
@@ -156,6 +159,7 @@ type Source struct {
 	Project            string `yaml:"project"`
 	Location           string `yaml:"location"`
 	TokenSource        oauth2.TokenSource
+	SessionLength      int64
 }
 
 func (s *Source) SourceKind() string {

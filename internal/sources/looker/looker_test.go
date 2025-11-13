@@ -55,6 +55,7 @@ func TestParseFromYamlLooker(t *testing.T) {
 					ShowHiddenExplores: true,
 					ShowHiddenFields:   true,
 					Location:           "us",
+					SessionLength:      1200,
 				},
 			},
 		},
