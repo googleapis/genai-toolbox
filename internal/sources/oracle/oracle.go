@@ -1,4 +1,3 @@
-// Copyright © 2025, Oracle and/or its affiliates.
 package oracle
 
 import (
@@ -8,10 +7,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/goccy/go-yaml"
+	"github.com/goccy/go-yaml"     // For UseOCI = true
+	_ "github.com/sijms/go-ora/v2" // For UseOCI = false
+
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
-	_ "github.com/sijms/go-ora/v2"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -45,56 +45,58 @@ type Config struct {
 	Kind             string `yaml:"kind" validate:"required"`
 	ConnectionString string `yaml:"connectionString,omitempty"` // Direct connection string (hostname[:port]/servicename)
 	TnsAlias         string `yaml:"tnsAlias,omitempty"`         // TNS alias from tnsnames.ora
+	TnsAdmin         string `yaml:"tnsAdmin,omitempty"` // Optional: override TNS_ADMIN environment variable
 	Host             string `yaml:"host,omitempty"`             // Optional when using connectionString/tnsAlias
 	Port             int    `yaml:"port,omitempty"`             // Explicit port support
 	ServiceName      string `yaml:"serviceName,omitempty"`      // Optional when using connectionString/tnsAlias
 	User             string `yaml:"user" validate:"required"`
 	Password         string `yaml:"password" validate:"required"`
-	TnsAdmin         string `yaml:"tnsAdmin,omitempty"` // Optional: override TNS_ADMIN environment variable
+	UseOCI           bool   `yaml:"useOCI,omitempty"`
 }
 
 // validate ensures we have one of: tns_alias, connection_string, or host+service_name
 func (c Config) validate() error {
-	hasTnsAlias := strings.TrimSpace(c.TnsAlias) != ""
-	hasConnStr := strings.TrimSpace(c.ConnectionString) != ""
-	hasHostService := strings.TrimSpace(c.Host) != "" && strings.TrimSpace(c.ServiceName) != ""
+    // Validation logic remains the same
+    hasTnsAlias := strings.TrimSpace(c.TnsAlias) != ""
+    hasConnStr := strings.TrimSpace(c.ConnectionString) != ""
+    hasHostService := strings.TrimSpace(c.Host) != "" && strings.TrimSpace(c.ServiceName) != ""
 
-	connectionMethods := 0
-	if hasTnsAlias {
-		connectionMethods++
-	}
-	if hasConnStr {
-		connectionMethods++
-	}
-	if hasHostService {
-		connectionMethods++
-	}
+    connectionMethods := 0
+    if hasTnsAlias {
+        connectionMethods++
+    }
+    if hasConnStr {
+        connectionMethods++
+    }
+    if hasHostService {
+        connectionMethods++
+    }
 
-	if connectionMethods == 0 {
-		return fmt.Errorf("must provide one of: 'tns_alias', 'connection_string', or both 'host' and 'service_name'")
-	}
+    if connectionMethods == 0 {
+        return fmt.Errorf("must provide one of: 'tns_alias', 'connection_string', or both 'host' and 'service_name'")
+    }
 
-	if connectionMethods > 1 {
-		return fmt.Errorf("provide only one connection method: 'tns_alias', 'connection_string', or 'host'+'service_name'")
-	}
+    if connectionMethods > 1 {
+        return fmt.Errorf("provide only one connection method: 'tns_alias', 'connection_string', or 'host'+'service_name'")
+    }
 
-	return nil
+    return nil
 }
 
 func (r Config) SourceConfigKind() string {
-	return SourceKind
+    return SourceKind
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	db, err := initOracleConnection(ctx, tracer, r)
-	if err != nil {
-		return nil, fmt.Errorf("unable to create Oracle connection: %w", err)
-	}
+    db, err := initOracleConnection(ctx, tracer, r)
+    if err != nil {
+        return nil, fmt.Errorf("unable to create Oracle connection: %w", err)
+    }
 
-	err = db.PingContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("unable to connect to Oracle successfully: %w", err)
-	}
+    err = db.PingContext(ctx)
+    if err != nil {
+        return nil, fmt.Errorf("unable to connect to Oracle successfully: %w", err)
+    }
 
 	s := &Source{
 		Config: r,
@@ -111,7 +113,7 @@ type Source struct {
 }
 
 func (s *Source) SourceKind() string {
-	return SourceKind
+    return SourceKind
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -119,7 +121,7 @@ func (s *Source) ToConfig() sources.SourceConfig {
 }
 
 func (s *Source) OracleDB() *sql.DB {
-	return s.DB
+    return s.DB
 }
 
 func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Config) (*sql.DB, error) {
@@ -147,28 +149,39 @@ func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Confi
 		}()
 	}
 
-	var serverString string
+	var connectStringBase string
 	if config.TnsAlias != "" {
-		// Use TNS alias
-		serverString = strings.TrimSpace(config.TnsAlias)
+		connectStringBase = strings.TrimSpace(config.TnsAlias)
 	} else if config.ConnectionString != "" {
-		// Use provided connection string directly (hostname[:port]/servicename format)
-		serverString = strings.TrimSpace(config.ConnectionString)
+		connectStringBase = strings.TrimSpace(config.ConnectionString)
 	} else {
-		// Build connection string from host and service_name
 		if config.Port > 0 {
-			serverString = fmt.Sprintf("%s:%d/%s", config.Host, config.Port, config.ServiceName)
+			connectStringBase = fmt.Sprintf("%s:%d/%s", config.Host, config.Port, config.ServiceName)
 		} else {
-			serverString = fmt.Sprintf("%s/%s", config.Host, config.ServiceName)
+			connectStringBase = fmt.Sprintf("%s/%s", config.Host, config.ServiceName)
 		}
 	}
 
-	connStr := fmt.Sprintf("oracle://%s:%s@%s",
-		config.User, config.Password, serverString)
+	var driverName string
+	var finalConnStr string
 
-	db, err := sql.Open("oracle", connStr)
+	if config.UseOCI {
+		// Use godror driver (requires OCI/instant client)
+		driverName = "godror"
+		finalConnStr = fmt.Sprintf(`user="%s" password="%s" connectString="%s"`,
+			config.User, config.Password, connectStringBase)
+		logger.DebugContext(ctx, fmt.Sprintf("Using godror driver (OCI-based) with connectString: %s\n", connectStringBase))
+	} else {
+		// Use go-ora driver (pure Go)
+		driverName = "oracle"
+		finalConnStr = fmt.Sprintf("oracle://%s:%s@%s",
+			config.User, config.Password, connectStringBase)
+		logger.DebugContext(ctx, fmt.Sprintf("Using go-ora driver (pure-Go) with serverString: %s\n", connectStringBase))
+	}
+
+	db, err := sql.Open(driverName, finalConnStr)
 	if err != nil {
-		return nil, fmt.Errorf("unable to open Oracle connection: %w", err)
+		return nil, fmt.Errorf("unable to open Oracle connection with driver %s: %w", driverName, err)
 	}
 
 	return db, nil
