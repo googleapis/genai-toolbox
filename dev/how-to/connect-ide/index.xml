@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Connect from your IDE on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/dev/how-to/connect-ide/</link><description>Recent content in Connect from your IDE on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/dev/how-to/connect-ide/index.xml" rel="self" type="application/rss+xml"/><item><title>AlloyDB Admin API using MCP</title><link>https://googleapis.github.io/genai-toolbox/dev/how-to/connect-ide/alloydb_pg_admin_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/how-to/connect-ide/alloydb_pg_admin_mcp/</guid><description>&lt;html>
  &lt;head>
- &lt;link rel="canonical" href="https://cloud.google.com/alloydb/docs/quickstart/create-and-connect"/>
- &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/quickstart/create-and-connect"/>
+ &lt;link rel="canonical" href="https://cloud.google.com/alloydb/docs/connect-ide-using-mcp-toolbox"/>
+ &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/connect-ide-using-mcp-toolbox"/>
  &lt;/head>
 &lt;/html></description></item><item><title>AlloyDB using MCP</title><link>https://googleapis.github.io/genai-toolbox/dev/how-to/connect-ide/alloydb_pg_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/how-to/connect-ide/alloydb_pg_mcp/</guid><description>&lt;html>
  &lt;head>
