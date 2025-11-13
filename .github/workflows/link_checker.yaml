@@ -47,4 +47,14 @@ jobs:
           debug: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+# This step only runs if the 'lychee_check' step fails, ensuring the 
+      # context note only appears when the developer needs to troubleshoot.
+      - name: Display Link Context Note on Failure
+        if: ${{ failure() }}
+        run: |
+          echo "## Link Resolution Note" >> $GITHUB_STEP_SUMMARY
+          echo "Local links and directory changes work differently on GitHub than on the docsite." >> $GITHUB_STEP_SUMMARY
+          echo "You must ensure fixes pass the **GitHub check** and also work with **\`hugo server\`**." >> $GITHUB_STEP_SUMMARY
+          echo "If a link works locally but fails the GitHub check (e.g., a docsite-only relative path), you **must ignore it** in \`.lycheeignore\` and document the reason." >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
 
