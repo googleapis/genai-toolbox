@@ -9711,45 +9711,129 @@ node tables, edge tables, labels and property declarations. It&amp;rsquo;s compa
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/spanner/">spanner&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>This tool is read-only and executes pre-defined SQL queries against the
-&lt;code>INFORMATION_SCHEMA&lt;/code> tables to gather metadata. The tool only works for the GoogleSQL
-source dialect, as Spanner Graph isn&amp;rsquo;t available in the PostgreSQL dialect.&lt;/p>
-&lt;h2 id="features">Features&lt;/h2>
-&lt;ul>
-&lt;li>&lt;strong>Comprehensive Schema Information&lt;/strong>: Returns node tables, edge tables, labels
-and property declarations&lt;/li>
-&lt;li>&lt;strong>Flexible Filtering&lt;/strong>: Can list all graphs or filter by specific graph names&lt;/li>
-&lt;li>&lt;strong>Output Format Options&lt;/strong>: Choose between simple (graph names only) or detailed
-(full schema information) output&lt;/li>
-&lt;/ul>
-&lt;h2 id="example">Example&lt;/h2>
-&lt;h3 id="basic-usage---list-all-graphs">Basic Usage - List All Graphs&lt;/h3>
-&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-spanner-db&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">spanner&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">project&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${SPANNER_PROJECT}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">instance&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${SPANNER_INSTANCE}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">database&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">${SPANNER_DATABASE}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">dialect&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">googlesql &lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="c"># wont work for postgresql&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_all_graphs&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">spanner-list-graphs&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-spanner-db&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Lists all graphs with their complete schema information&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="list-specific-graphs">List Specific Graphs&lt;/h3>
-&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_specific_graphs&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">spanner-list-graphs&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-spanner-db&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Lists schema information for specific graphs.
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Example usage:
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> {
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> &amp;#34;graph_names&amp;#34;: &amp;#34;FinGraph,SocialGraph&amp;#34;,
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> &amp;#34;output_format&amp;#34;: &amp;#34;detailed&amp;#34;
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> }&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="parameters">Parameters&lt;/h2>
-&lt;p>The tool accepts two optional parameters:&lt;/p></description></item><item><title>spanner-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/tools/spanner/spanner-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/tools/spanner/spanner-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;code>INFORMATION_SCHEMA&lt;/code> tables to gather metadata.
+&lt;style type="text/css">
+ 
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #6be;
+ --content-color: #444;
+ --content-background-color: #e7f2fa;
+ }
+
+ .notice.info {
+ --title-background-color: #fb7;
+ --content-background-color: #fec;
+ }
+
+ .notice.tip {
+ --title-background-color: #5a5;
+ --content-background-color: #efe;
+ }
+
+ .notice.warning {
+ --title-background-color: #c33;
+ --content-background-color: #fee;
+ }
+
+ 
+ @media (prefers-color-scheme:dark) {
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+ }
+
+ body.dark .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ body.dark .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ body.dark .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ body.dark .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+
+ 
+ .notice {
+ padding: 18px;
+ line-height: 24px;
+ margin-bottom: 24px;
+ border-radius: 4px;
+ color: var(--content-color);
+ background: var(--content-background-color);
+ }
+
+ .notice p:last-child {
+ margin-bottom: 0
+ }
+
+ 
+ .notice-title {
+ margin: -18px -18px 12px;
+ padding: 4px 18px;
+ border-radius: 4px 4px 0 0;
+ font-weight: 700;
+ color: var(--title-color);
+ background: var(--title-background-color);
+ }
+
+ 
+ .icon-notice {
+ display: inline-flex;
+ align-self: center;
+ margin-right: 8px;
+ }
+
+ .icon-notice img,
+ .icon-notice svg {
+ height: 1em;
+ width: 1em;
+ fill: currentColor;
+ }
+
+ .icon-notice img,
+ .icon-notice.baseline svg {
+ top: .125em;
+ position: relative;
+ }
+&lt;/style>&lt;div class="notice warning" >
+ &lt;p class="notice-title">
+ &lt;span class="icon-notice baseline">
+ &lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="126 76.5 300 300">
+ &lt;path d="M297.431 324.397v-34.255c0-3.245-2.344-5.95-5.358-5.95h-32.146c-3.014 0-5.358 2.705-5.358 5.95v34.255c0 3.245 2.344 5.95 5.358 5.95h32.146c3.014 0 5.358-2.705 5.358-5.95Zm-.335-67.428 3.014-82.753c0-1.081-.502-2.524-1.674-3.425-1.005-.902-2.512-1.983-4.019-1.983h-36.834c-1.507 0-3.014 1.081-4.019 1.983-1.172.901-1.674 2.704-1.674 3.786l2.846 82.392c0 2.344 2.512 4.146 5.693 4.146h30.975c3.013 0 5.525-1.803 5.692-4.146Zm-2.344-168.39L423.34 342.425c3.683 7.032 3.516 15.686-.335 22.717-3.85 7.031-10.883 11.358-18.417 11.358H147.413c-7.534 0-14.566-4.327-18.417-11.358-3.85-7.031-4.018-15.685-.335-22.716L257.248 88.578C260.93 81.188 268.13 76.5 276 76.5c7.87 0 15.069 4.688 18.752 12.08Z"/>
+&lt;/svg>
+
+ &lt;/span>Warning&lt;/p></description></item><item><title>spanner-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/tools/spanner/spanner-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/tools/spanner/spanner-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>spanner-list-tables&lt;/code> tool retrieves comprehensive schema information about
 tables in a Cloud Spanner database. It automatically adapts to the database
 dialect (GoogleSQL or PostgreSQL) and returns detailed metadata including
