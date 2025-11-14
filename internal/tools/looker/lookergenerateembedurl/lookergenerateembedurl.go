@@ -76,19 +76,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	typeParameter := parameters.NewStringParameterWithDefault("type", "", "Type of Looker content to embed (ie. dashboards, looks, query-visualization)")
 	idParameter := parameters.NewStringParameterWithDefault("id", "", "The ID of the content to embed.")
-	parameters := parameters.Parameters{
+	params := parameters.Parameters{
 		typeParameter,
 		idParameter,
 	}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	return Tool{
-		Name:           cfg.Name,
-		Kind:           kind,
+		Config:         cfg,
 		Parameters:     params,
-		AuthRequired:   cfg.AuthRequired,
 		UseClientOAuth: s.UseClientOAuth,
 		Client:         s.Client,
 		ApiSettings:    s.ApiSettings,
@@ -106,8 +104,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string `yaml:"name"`
-	Kind           string `yaml:"kind"`
+	Config
 	UseClientOAuth bool
 	Client         *v4.LookerSDK
 	ApiSettings    *rtl.ApiSettings
@@ -116,6 +113,10 @@ type Tool struct {
 	manifest       tools.Manifest
 	mcpManifest    tools.McpManifest
 	SessionLength  int64
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {

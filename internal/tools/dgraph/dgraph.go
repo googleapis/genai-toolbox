@@ -89,7 +89,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	t := Tool{
 		Config:       cfg,
 		DgraphClient: s.DgraphClient(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.params.Manifest(), AuthRequired: cfg.AuthRequired},
+		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:  mcpManifest,
 	}
 	return t, nil
