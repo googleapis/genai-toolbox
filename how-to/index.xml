@@ -14,9 +14,15 @@ test out configured resources such as tools and toolsets.&lt;/p>
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Toolbox UI will be served from the same host and port as the Toolbox Server,
 with the &lt;code>/ui&lt;/code> suffix. Once Toolbox is launched, the following INFO log with
 Toolbox UI&amp;rsquo;s url will be shown:&lt;/p></description></item><item><title>Connect via Gemini CLI Extensions</title><link>https://googleapis.github.io/genai-toolbox/how-to/connect_via_geminicli/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/how-to/connect_via_geminicli/</guid><description>&lt;h2 id="gemini-cli-extensions">Gemini CLI Extensions&lt;/h2>
-&lt;p>&lt;a href="https://google-gemini.github.io/gemini-cli/">Gemini CLI&lt;/a> is an open-source AI agent designed to assist with development workflows by assisting with coding, debugging, data exploration, and content creation. Its mission is to provide an agentic interface for interacting with database and analytics services and popular open-source databases.&lt;/p>
+&lt;p>&lt;a href="https://google-gemini.github.io/gemini-cli/">Gemini CLI&lt;/a> is an open-source AI agent designed to assist with
+development workflows by assisting with coding, debugging, data exploration, and
+content creation. Its mission is to provide an agentic interface for interacting
+with database and analytics services and popular open-source databases.&lt;/p>
 &lt;h3 id="how-extensions-work">How extensions work&lt;/h3>
-&lt;p>Gemini CLI is highly extensible, allowing for the addition of new tools and capabilities through extensions. You can load the extensions from a GitHub URL, a local directory, or a configurable registry. They provide new tools, slash commands, and prompts to assist with your workflow.&lt;/p></description></item><item><title>Deploy to Cloud Run</title><link>https://googleapis.github.io/genai-toolbox/how-to/deploy_toolbox/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/how-to/deploy_toolbox/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+&lt;p>Gemini CLI is highly extensible, allowing for the addition of new tools and
+capabilities through extensions. You can load the extensions from a GitHub URL,
+a local directory, or a configurable registry. They provide new tools, slash
+commands, and prompts to assist with your workflow.&lt;/p></description></item><item><title>Deploy to Cloud Run</title><link>https://googleapis.github.io/genai-toolbox/how-to/deploy_toolbox/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/how-to/deploy_toolbox/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
 &lt;ol>
 &lt;li>
 &lt;p>&lt;a href="https://cloud.google.com/sdk/docs/install">Install&lt;/a> the Google Cloud CLI.&lt;/p>
