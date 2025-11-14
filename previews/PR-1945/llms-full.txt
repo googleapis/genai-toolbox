@@ -8421,10 +8421,19 @@ This example demonstrates the optional `useOCI` field.
 sources:
     my-oracle-source:
         kind: oracle
-        # --- Choose one connection method (Host/Port/Service Name used here) ---
+        
+        # --- Choose one connection method ---
+        # 1. Host, Port, and Service Name
         host: 127.0.0.1
         port: 1521
         serviceName: XEPDB1
+
+        # 2. Direct Connection String
+        connectionString: "127.0.0.1:1521/XEPDB1"
+
+        # 3. TNS Alias (requires tnsnames.ora)
+        tnsAlias: "MY_DB_ALIAS"
+        tnsAdmin: "/opt/oracle/network/admin" # Optional: overrides TNS_ADMIN env var
 
         user: ${USER_NAME}
         password: ${PASSWORD}
