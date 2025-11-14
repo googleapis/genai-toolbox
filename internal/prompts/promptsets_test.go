@@ -20,7 +20,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 // mockPrompt is a simple mock implementation of prompts.Prompt for testing.
@@ -32,8 +32,8 @@ type mockPrompt struct {
 	mcpManifest prompts.McpManifest
 }
 
-func (m *mockPrompt) SubstituteParams(tools.ParamValues) (any, error) { return nil, nil }
-func (m *mockPrompt) ParseArgs(map[string]any, map[string]map[string]any) (tools.ParamValues, error) {
+func (m *mockPrompt) SubstituteParams(parameters.ParamValues) (any, error) { return nil, nil }
+func (m *mockPrompt) ParseArgs(map[string]any, map[string]map[string]any) (parameters.ParamValues, error) {
 	return nil, nil
 }
 func (m *mockPrompt) Manifest() prompts.Manifest       { return m.manifest }
@@ -42,7 +42,7 @@ func (m *mockPrompt) McpManifest() prompts.McpManifest { return m.mcpManifest }
 // newMockPrompt creates a new mock prompt for testing.
 func newMockPrompt(name, desc string) prompts.Prompt {
 	args := prompts.Arguments{
-		{Parameter: tools.NewStringParameter("arg1", "Test argument")},
+		{Parameter: parameters.NewStringParameter("arg1", "Test argument")},
 	}
 	return &mockPrompt{
 		name: name,
@@ -50,7 +50,7 @@ func newMockPrompt(name, desc string) prompts.Prompt {
 		args: args,
 		manifest: prompts.Manifest{
 			Description: desc,
-			Arguments: []tools.ParameterManifest{
+			Arguments: []parameters.ParameterManifest{
 				{Name: "arg1", Type: "string", Required: true, Description: "Test argument", AuthServices: []string{}},
 			},
 		},

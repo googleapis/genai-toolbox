@@ -14,7 +14,7 @@ aliases:
 A `mindsdb-execute-sql` tool executes a SQL statement against a MindsDB
 federated database. It's compatible with any of the following sources:
 
-- [mindsdb](../sources/mindsdb.md)
+- [mindsdb](../../sources/mindsdb.md)
 
 `mindsdb-execute-sql` takes one input parameter `sql` and runs the SQL
 statement against the `source`. This tool enables you to:

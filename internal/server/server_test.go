@@ -137,15 +137,20 @@ func TestUpdateServer(t *testing.T) {
 
 	newSources := map[string]sources.Source{
 		"example-source": &alloydbpg.Source{
-			Name: "example-alloydb-source",
-			Kind: "alloydb-postgres",
+			Config: alloydbpg.Config{
+				Name: "example-alloydb-source",
+				Kind: "alloydb-postgres",
+			},
 		},
 	}
 	newAuth := map[string]auth.AuthService{"example-auth": nil}
 	newTools := map[string]tools.Tool{"example-tool": nil}
 	newToolsets := map[string]tools.Toolset{
 		"example-toolset": {
-			Name: "example-toolset", Tools: []*tools.Tool{},
+			ToolsetConfig: tools.ToolsetConfig{
+				Name: "example-toolset",
+			},
+			Tools: []*tools.Tool{},
 		},
 	}
 	newPrompts := map[string]prompts.Prompt{"example-prompt": nil}

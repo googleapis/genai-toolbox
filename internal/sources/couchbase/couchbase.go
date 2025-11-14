@@ -81,10 +81,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	scope := cluster.Bucket(r.Bucket).Scope(r.Scope)
 	s := &Source{
-		Name:                 r.Name,
-		Kind:                 SourceKind,
-		QueryScanConsistency: r.QueryScanConsistency,
-		Scope:                scope,
+		Config: r,
+		Scope:  scope,
 	}
 	return s, nil
 }
@@ -92,14 +90,16 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name                 string `yaml:"name"`
-	Kind                 string `yaml:"kind"`
-	QueryScanConsistency uint   `yaml:"queryScanConsistency"`
-	Scope                *gocb.Scope
+	Config
+	Scope *gocb.Scope
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 func (s *Source) CouchbaseScope() *gocb.Scope {

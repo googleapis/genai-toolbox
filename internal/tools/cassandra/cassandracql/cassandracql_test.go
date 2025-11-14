@@ -21,8 +21,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/cassandra/cassandracql"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlCassandra(t *testing.T) {
@@ -66,9 +66,9 @@ func TestParseFromYamlCassandra(t *testing.T) {
 					Description:  "some description",
 					Statement:    "SELECT * FROM CQL_STATEMENT;\n",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-					Parameters: []tools.Parameter{
-						tools.NewStringParameterWithAuth("country", "some description",
-							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameterWithAuth("country", "some description",
+							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
 								{Name: "other-auth-service", Field: "user_id"}}),
 					},
 				},
@@ -116,14 +116,14 @@ func TestParseFromYamlCassandra(t *testing.T) {
 					Description:  "some description",
 					Statement:    "SELECT * FROM CQL_STATEMENT;\n",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-					Parameters: []tools.Parameter{
-						tools.NewStringParameterWithAuth("country", "some description",
-							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameterWithAuth("country", "some description",
+							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
 								{Name: "other-auth-service", Field: "user_id"}}),
 					},
-					TemplateParameters: []tools.Parameter{
-						tools.NewStringParameter("tableName", "some description."),
-						tools.NewArrayParameter("fieldArray", "The columns to return for the query.", tools.NewStringParameter("column", "A column name that will be returned from the query.")),
+					TemplateParameters: []parameters.Parameter{
+						parameters.NewStringParameter("tableName", "some description."),
+						parameters.NewArrayParameter("fieldArray", "The columns to return for the query.", parameters.NewStringParameter("column", "A column name that will be returned from the query.")),
 					},
 				},
 			},

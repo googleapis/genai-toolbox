@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tools_test
+package parameters_test
 
 import (
 	"bytes"
@@ -26,7 +26,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestParametersMarshal(t *testing.T) {
@@ -37,7 +37,7 @@ func TestParametersMarshal(t *testing.T) {
 	tcs := []struct {
 		name string
 		in   []map[string]any
-		want tools.Parameters
+		want parameters.Parameters
 	}{
 		{
 			name: "string",
@@ -48,8 +48,8 @@ func TestParametersMarshal(t *testing.T) {
 					"description": "this param is a string",
 				},
 			},
-			want: tools.Parameters{
-				tools.NewStringParameter("my_string", "this param is a string"),
+			want: parameters.Parameters{
+				parameters.NewStringParameter("my_string", "this param is a string"),
 			},
 		},
 		{
@@ -62,8 +62,8 @@ func TestParametersMarshal(t *testing.T) {
 					"required":    false,
 				},
 			},
-			want: tools.Parameters{
-				tools.NewStringParameterWithRequired("my_string", "this param is a string", false),
+			want: parameters.Parameters{
+				parameters.NewStringParameterWithRequired("my_string", "this param is a string", false),
 			},
 		},
 		{
@@ -75,8 +75,8 @@ func TestParametersMarshal(t *testing.T) {
 					"description": "this param is an int",
 				},
 			},
-			want: tools.Parameters{
-				tools.NewIntParameter("my_integer", "this param is an int"),
+			want: parameters.Parameters{
+				parameters.NewIntParameter("my_integer", "this param is an int"),
 			},
 		},
 		{
@@ -89,8 +89,8 @@ func TestParametersMarshal(t *testing.T) {
 					"required":    false,
 				},
 			},
-			want: tools.Parameters{
-				tools.NewIntParameterWithRequired("my_integer", "this param is an int", false),
+			want: parameters.Parameters{
+				parameters.NewIntParameterWithRequired("my_integer", "this param is an int", false),
 			},
 		},
 		{
@@ -102,8 +102,8 @@ func TestParametersMarshal(t *testing.T) {
 					"description": "my param is a float",
 				},
 			},
-			want: tools.Parameters{
-				tools.NewFloatParameter("my_float", "my param is a float"),
+			want: parameters.Parameters{
+				parameters.NewFloatParameter("my_float", "my param is a float"),
 			},
 		},
 		{
@@ -116,8 +116,8 @@ func TestParametersMarshal(t *testing.T) {
 					"required":    false,
 				},
 			},
-			want: tools.Parameters{
-				tools.NewFloatParameterWithRequired("my_float", "my param is a float", false),
+			want: parameters.Parameters{
+				parameters.NewFloatParameterWithRequired("my_float", "my param is a float", false),
 			},
 		},
 		{
@@ -129,8 +129,8 @@ func TestParametersMarshal(t *testing.T) {
 					"description": "this param is a boolean",
 				},
 			},
-			want: tools.Parameters{
-				tools.NewBooleanParameter("my_bool", "this param is a boolean"),
+			want: parameters.Parameters{
+				parameters.NewBooleanParameter("my_bool", "this param is a boolean"),
 			},
 		},
 		{
@@ -143,8 +143,8 @@ func TestParametersMarshal(t *testing.T) {
 					"required":    false,
 				},
 			},
-			want: tools.Parameters{
-				tools.NewBooleanParameterWithRequired("my_bool", "this param is a boolean", false),
+			want: parameters.Parameters{
+				parameters.NewBooleanParameterWithRequired("my_bool", "this param is a boolean", false),
 			},
 		},
 		{
@@ -161,8 +161,8 @@ func TestParametersMarshal(t *testing.T) {
 					},
 				},
 			},
-			want: tools.Parameters{
-				tools.NewArrayParameter("my_array", "this param is an array of strings", tools.NewStringParameter("my_string", "string item")),
+			want: parameters.Parameters{
+				parameters.NewArrayParameter("my_array", "this param is an array of strings", parameters.NewStringParameter("my_string", "string item")),
 			},
 		},
 		{
@@ -180,8 +180,8 @@ func TestParametersMarshal(t *testing.T) {
 					},
 				},
 			},
-			want: tools.Parameters{
-				tools.NewArrayParameterWithRequired("my_array", "this param is an array of strings", false, tools.NewStringParameter("my_string", "string item")),
+			want: parameters.Parameters{
+				parameters.NewArrayParameterWithRequired("my_array", "this param is an array of strings", false, parameters.NewStringParameter("my_string", "string item")),
 			},
 		},
 		{
@@ -198,8 +198,8 @@ func TestParametersMarshal(t *testing.T) {
 					},
 				},
 			},
-			want: tools.Parameters{
-				tools.NewArrayParameter("my_array", "this param is an array of floats", tools.NewFloatParameter("my_float", "float item")),
+			want: parameters.Parameters{
+				parameters.NewArrayParameter("my_array", "this param is an array of floats", parameters.NewFloatParameter("my_float", "float item")),
 			},
 		},
 		{
@@ -212,8 +212,8 @@ func TestParametersMarshal(t *testing.T) {
 					"description": "this param is a string",
 				},
 			},
-			want: tools.Parameters{
-				tools.NewStringParameterWithDefault("my_string", "foo", "this param is a string"),
+			want: parameters.Parameters{
+				parameters.NewStringParameterWithDefault("my_string", "foo", "this param is a string"),
 			},
 		},
 		{
@@ -226,8 +226,8 @@ func TestParametersMarshal(t *testing.T) {
 					"description": "this param is an int",
 				},
 			},
-			want: tools.Parameters{
-				tools.NewIntParameterWithDefault("my_integer", 5, "this param is an int"),
+			want: parameters.Parameters{
+				parameters.NewIntParameterWithDefault("my_integer", 5, "this param is an int"),
 			},
 		},
 		{
@@ -240,8 +240,8 @@ func TestParametersMarshal(t *testing.T) {
 					"description": "my param is a float",
 				},
 			},
-			want: tools.Parameters{
-				tools.NewFloatParameterWithDefault("my_float", 1.1, "my param is a float"),
+			want: parameters.Parameters{
+				parameters.NewFloatParameterWithDefault("my_float", 1.1, "my param is a float"),
 			},
 		},
 		{
@@ -254,8 +254,8 @@ func TestParametersMarshal(t *testing.T) {
 					"description": "this param is a boolean",
 				},
 			},
-			want: tools.Parameters{
-				tools.NewBooleanParameterWithDefault("my_bool", true, "this param is a boolean"),
+			want: parameters.Parameters{
+				parameters.NewBooleanParameterWithDefault("my_bool", true, "this param is a boolean"),
 			},
 		},
 		{
@@ -273,8 +273,8 @@ func TestParametersMarshal(t *testing.T) {
 					},
 				},
 			},
-			want: tools.Parameters{
-				tools.NewArrayParameterWithDefault("my_array", []any{"foo", "bar"}, "this param is an array of strings", tools.NewStringParameter("my_string", "string item")),
+			want: parameters.Parameters{
+				parameters.NewArrayParameterWithDefault("my_array", []any{"foo", "bar"}, "this param is an array of strings", parameters.NewStringParameter("my_string", "string item")),
 			},
 		},
 		{
@@ -292,8 +292,8 @@ func TestParametersMarshal(t *testing.T) {
 					},
 				},
 			},
-			want: tools.Parameters{
-				tools.NewArrayParameterWithDefault("my_array", []any{1.0, 1.1}, "this param is an array of floats", tools.NewFloatParameter("my_float", "float item")),
+			want: parameters.Parameters{
+				parameters.NewArrayParameterWithDefault("my_array", []any{1.0, 1.1}, "this param is an array of floats", parameters.NewFloatParameter("my_float", "float item")),
 			},
 		},
 		{
@@ -306,8 +306,8 @@ func TestParametersMarshal(t *testing.T) {
 					"valueType":   "string",
 				},
 			},
-			want: tools.Parameters{
-				tools.NewMapParameter("my_map", "this param is a map of strings", "string"),
+			want: parameters.Parameters{
+				parameters.NewMapParameter("my_map", "this param is a map of strings", "string"),
 			},
 		},
 		{
@@ -321,8 +321,8 @@ func TestParametersMarshal(t *testing.T) {
 					"valueType":   "string",
 				},
 			},
-			want: tools.Parameters{
-				tools.NewMapParameterWithRequired("my_map", "this param is a map of strings", false, "string"),
+			want: parameters.Parameters{
+				parameters.NewMapParameterWithRequired("my_map", "this param is a map of strings", false, "string"),
 			},
 		},
 		{
@@ -336,8 +336,8 @@ func TestParametersMarshal(t *testing.T) {
 					"valueType":   "string",
 				},
 			},
-			want: tools.Parameters{
-				tools.NewMapParameterWithDefault("my_map", map[string]any{"key1": "val1"}, "this param is a map of strings", "string"),
+			want: parameters.Parameters{
+				parameters.NewMapParameterWithDefault("my_map", map[string]any{"key1": "val1"}, "this param is a map of strings", "string"),
 			},
 		},
 		{
@@ -349,14 +349,14 @@ func TestParametersMarshal(t *testing.T) {
 					"description": "this param is a generic map",
 				},
 			},
-			want: tools.Parameters{
-				tools.NewMapParameter("my_generic_map", "this param is a generic map", ""),
+			want: parameters.Parameters{
+				parameters.NewMapParameter("my_generic_map", "this param is a generic map", ""),
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			var got tools.Parameters
+			var got parameters.Parameters
 			// parse map to bytes
 			data, err := yaml.Marshal(tc.in)
 			if err != nil {
@@ -379,11 +379,11 @@ func TestAuthParametersMarshal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
-	authServices := []tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"}, {Name: "other-auth-service", Field: "user_id"}}
+	authServices := []parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"}, {Name: "other-auth-service", Field: "user_id"}}
 	tcs := []struct {
 		name string
 		in   []map[string]any
-		want tools.Parameters
+		want parameters.Parameters
 	}{
 		{
 			name: "string",
@@ -404,8 +404,8 @@ func TestAuthParametersMarshal(t *testing.T) {
 					},
 				},
 			},
-			want: tools.Parameters{
-				tools.NewStringParameterWithAuth("my_string", "this param is a string", authServices),
+			want: parameters.Parameters{
+				parameters.NewStringParameterWithAuth("my_string", "this param is a string", authServices),
 			},
 		},
 		{
@@ -427,8 +427,8 @@ func TestAuthParametersMarshal(t *testing.T) {
 					},
 				},
 			},
-			want: tools.Parameters{
-				tools.NewStringParameterWithAuth("my_string", "this param is a string", authServices),
+			want: parameters.Parameters{
+				parameters.NewStringParameterWithAuth("my_string", "this param is a string", authServices),
 			},
 		},
 		{
@@ -450,8 +450,8 @@ func TestAuthParametersMarshal(t *testing.T) {
 					},
 				},
 			},
-			want: tools.Parameters{
-				tools.NewIntParameterWithAuth("my_integer", "this param is an int", authServices),
+			want: parameters.Parameters{
+				parameters.NewIntParameterWithAuth("my_integer", "this param is an int", authServices),
 			},
 		},
 		{
@@ -473,8 +473,8 @@ func TestAuthParametersMarshal(t *testing.T) {
 					},
 				},
 			},
-			want: tools.Parameters{
-				tools.NewIntParameterWithAuth("my_integer", "this param is an int", authServices),
+			want: parameters.Parameters{
+				parameters.NewIntParameterWithAuth("my_integer", "this param is an int", authServices),
 			},
 		},
 		{
@@ -496,8 +496,8 @@ func TestAuthParametersMarshal(t *testing.T) {
 					},
 				},
 			},
-			want: tools.Parameters{
-				tools.NewFloatParameterWithAuth("my_float", "my param is a float", authServices),
+			want: parameters.Parameters{
+				parameters.NewFloatParameterWithAuth("my_float", "my param is a float", authServices),
 			},
 		},
 		{
@@ -519,8 +519,8 @@ func TestAuthParametersMarshal(t *testing.T) {
 					},
 				},
 			},
-			want: tools.Parameters{
-				tools.NewFloatParameterWithAuth("my_float", "my param is a float", authServices),
+			want: parameters.Parameters{
+				parameters.NewFloatParameterWithAuth("my_float", "my param is a float", authServices),
 			},
 		},
 		{
@@ -542,8 +542,8 @@ func TestAuthParametersMarshal(t *testing.T) {
 					},
 				},
 			},
-			want: tools.Parameters{
-				tools.NewBooleanParameterWithAuth("my_bool", "this param is a boolean", authServices),
+			want: parameters.Parameters{
+				parameters.NewBooleanParameterWithAuth("my_bool", "this param is a boolean", authServices),
 			},
 		},
 		{
@@ -565,8 +565,8 @@ func TestAuthParametersMarshal(t *testing.T) {
 					},
 				},
 			},
-			want: tools.Parameters{
-				tools.NewBooleanParameterWithAuth("my_bool", "this param is a boolean", authServices),
+			want: parameters.Parameters{
+				parameters.NewBooleanParameterWithAuth("my_bool", "this param is a boolean", authServices),
 			},
 		},
 		{
@@ -593,8 +593,8 @@ func TestAuthParametersMarshal(t *testing.T) {
 					},
 				},
 			},
-			want: tools.Parameters{
-				tools.NewArrayParameterWithAuth("my_array", "this param is an array of strings", tools.NewStringParameter("my_string", "string item"), authServices),
+			want: parameters.Parameters{
+				parameters.NewArrayParameterWithAuth("my_array", "this param is an array of strings", parameters.NewStringParameter("my_string", "string item"), authServices),
 			},
 		},
 		{
@@ -621,8 +621,8 @@ func TestAuthParametersMarshal(t *testing.T) {
 					},
 				},
 			},
-			want: tools.Parameters{
-				tools.NewArrayParameterWithAuth("my_array", "this param is an array of strings", tools.NewStringParameter("my_string", "string item"), authServices),
+			want: parameters.Parameters{
+				parameters.NewArrayParameterWithAuth("my_array", "this param is an array of strings", parameters.NewStringParameter("my_string", "string item"), authServices),
 			},
 		},
 		{
@@ -649,8 +649,8 @@ func TestAuthParametersMarshal(t *testing.T) {
 					},
 				},
 			},
-			want: tools.Parameters{
-				tools.NewArrayParameterWithAuth("my_array", "this param is an array of floats", tools.NewFloatParameter("my_float", "float item"), authServices),
+			want: parameters.Parameters{
+				parameters.NewArrayParameterWithAuth("my_array", "this param is an array of floats", parameters.NewFloatParameter("my_float", "float item"), authServices),
 			},
 		},
 		{
@@ -667,14 +667,14 @@ func TestAuthParametersMarshal(t *testing.T) {
 					},
 				},
 			},
-			want: tools.Parameters{
-				tools.NewMapParameterWithAuth("my_map", "this param is a map of strings", "string", authServices),
+			want: parameters.Parameters{
+				parameters.NewMapParameterWithAuth("my_map", "this param is a map of strings", "string", authServices),
 			},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			var got tools.Parameters
+			var got parameters.Parameters
 			// parse map to bytes
 			data, err := yaml.Marshal(tc.in)
 			if err != nil {
@@ -697,25 +697,25 @@ func TestParametersParse(t *testing.T) {
 	floatValue := 1.5
 	tcs := []struct {
 		name   string
-		params tools.Parameters
+		params parameters.Parameters
 		in     map[string]any
-		want   tools.ParamValues
+		want   parameters.ParamValues
 	}{
 		// ... (primitive type tests are unchanged)
 		{
 			name: "string",
-			params: tools.Parameters{
-				tools.NewStringParameter("my_string", "this param is a string"),
+			params: parameters.Parameters{
+				parameters.NewStringParameter("my_string", "this param is a string"),
 			},
 			in: map[string]any{
 				"my_string": "hello world",
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "hello world"}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "hello world"}},
 		},
 		{
 			name: "not string",
-			params: tools.Parameters{
-				tools.NewStringParameter("my_string", "this param is a string"),
+			params: parameters.Parameters{
+				parameters.NewStringParameter("my_string", "this param is a string"),
 			},
 			in: map[string]any{
 				"my_string": 4,
@@ -723,28 +723,28 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "string allowed",
-			params: tools.Parameters{
-				tools.NewStringParameterWithAllowedValues("my_string", "this param is a string", []any{"foo"}),
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithAllowedValues("my_string", "this param is a string", []any{"foo"}),
 			},
 			in: map[string]any{
 				"my_string": "foo",
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "foo"}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "foo"}},
 		},
 		{
 			name: "string allowed regex",
-			params: tools.Parameters{
-				tools.NewStringParameterWithAllowedValues("my_string", "this param is a string", []any{"^f.*"}),
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithAllowedValues("my_string", "this param is a string", []any{"^f.*"}),
 			},
 			in: map[string]any{
 				"my_string": "foo",
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "foo"}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "foo"}},
 		},
 		{
 			name: "string not allowed",
-			params: tools.Parameters{
-				tools.NewStringParameterWithAllowedValues("my_string", "this param is a string", []any{"foo"}),
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithAllowedValues("my_string", "this param is a string", []any{"foo"}),
 			},
 			in: map[string]any{
 				"my_string": "bar",
@@ -752,8 +752,8 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "string not allowed regex",
-			params: tools.Parameters{
-				tools.NewStringParameterWithAllowedValues("my_string", "this param is a string", []any{"^f.*"}),
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithAllowedValues("my_string", "this param is a string", []any{"^f.*"}),
 			},
 			in: map[string]any{
 				"my_string": "bar",
@@ -761,8 +761,8 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "string excluded",
-			params: tools.Parameters{
-				tools.NewStringParameterWithExcludedValues("my_string", "this param is a string", []any{"foo"}),
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithExcludedValues("my_string", "this param is a string", []any{"foo"}),
 			},
 			in: map[string]any{
 				"my_string": "foo",
@@ -770,8 +770,8 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "string excluded regex",
-			params: tools.Parameters{
-				tools.NewStringParameterWithExcludedValues("my_string", "this param is a string", []any{"^f.*"}),
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithExcludedValues("my_string", "this param is a string", []any{"^f.*"}),
 			},
 			in: map[string]any{
 				"my_string": "foo",
@@ -779,68 +779,68 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "string not excluded",
-			params: tools.Parameters{
-				tools.NewStringParameterWithExcludedValues("my_string", "this param is a string", []any{"foo"}),
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithExcludedValues("my_string", "this param is a string", []any{"foo"}),
 			},
 			in: map[string]any{
 				"my_string": "bar",
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "bar"}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "bar"}},
 		},
 		{
 			name: "string with escape backticks",
-			params: tools.Parameters{
-				tools.NewStringParameterWithEscape("my_string", "this param is a string", "backticks"),
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithEscape("my_string", "this param is a string", "backticks"),
 			},
 			in: map[string]any{
 				"my_string": "foo",
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "`foo`"}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "`foo`"}},
 		},
 		{
 			name: "string with escape double quotes",
-			params: tools.Parameters{
-				tools.NewStringParameterWithEscape("my_string", "this param is a string", "double-quotes"),
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithEscape("my_string", "this param is a string", "double-quotes"),
 			},
 			in: map[string]any{
 				"my_string": "foo",
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: `"foo"`}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: `"foo"`}},
 		},
 		{
 			name: "string with escape single quotes",
-			params: tools.Parameters{
-				tools.NewStringParameterWithEscape("my_string", "this param is a string", "single-quotes"),
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithEscape("my_string", "this param is a string", "single-quotes"),
 			},
 			in: map[string]any{
 				"my_string": "foo",
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: `'foo'`}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: `'foo'`}},
 		},
 		{
 			name: "string with escape square brackets",
-			params: tools.Parameters{
-				tools.NewStringParameterWithEscape("my_string", "this param is a string", "square-brackets"),
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithEscape("my_string", "this param is a string", "square-brackets"),
 			},
 			in: map[string]any{
 				"my_string": "foo",
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "[foo]"}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "[foo]"}},
 		},
 		{
 			name: "int",
-			params: tools.Parameters{
-				tools.NewIntParameter("my_int", "this param is an int"),
+			params: parameters.Parameters{
+				parameters.NewIntParameter("my_int", "this param is an int"),
 			},
 			in: map[string]any{
 				"my_int": 100,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 100}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_int", Value: 100}},
 		},
 		{
 			name: "not int",
-			params: tools.Parameters{
-				tools.NewIntParameter("my_int", "this param is an int"),
+			params: parameters.Parameters{
+				parameters.NewIntParameter("my_int", "this param is an int"),
 			},
 			in: map[string]any{
 				"my_int": 14.5,
@@ -848,38 +848,38 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "not int (big)",
-			params: tools.Parameters{
-				tools.NewIntParameter("my_int", "this param is an int"),
+			params: parameters.Parameters{
+				parameters.NewIntParameter("my_int", "this param is an int"),
 			},
 			in: map[string]any{
 				"my_int": math.MaxInt64,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: math.MaxInt64}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_int", Value: math.MaxInt64}},
 		},
 		{
 			name: "int allowed",
-			params: tools.Parameters{
-				tools.NewIntParameterWithAllowedValues("my_int", "this param is an int", []any{1}),
+			params: parameters.Parameters{
+				parameters.NewIntParameterWithAllowedValues("my_int", "this param is an int", []any{1}),
 			},
 			in: map[string]any{
 				"my_int": 1,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 1}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_int", Value: 1}},
 		},
 		{
 			name: "int allowed regex",
-			params: tools.Parameters{
-				tools.NewIntParameterWithAllowedValues("my_int", "this param is an int", []any{"^\\d{2}$"}),
+			params: parameters.Parameters{
+				parameters.NewIntParameterWithAllowedValues("my_int", "this param is an int", []any{"^\\d{2}$"}),
 			},
 			in: map[string]any{
 				"my_int": 10,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 10}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_int", Value: 10}},
 		},
 		{
 			name: "int not allowed",
-			params: tools.Parameters{
-				tools.NewIntParameterWithAllowedValues("my_int", "this param is an int", []any{1}),
+			params: parameters.Parameters{
+				parameters.NewIntParameterWithAllowedValues("my_int", "this param is an int", []any{1}),
 			},
 			in: map[string]any{
 				"my_int": 2,
@@ -887,8 +887,8 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "int not allowed regex",
-			params: tools.Parameters{
-				tools.NewIntParameterWithAllowedValues("my_int", "this param is an int", []any{"^\\d{2}$"}),
+			params: parameters.Parameters{
+				parameters.NewIntParameterWithAllowedValues("my_int", "this param is an int", []any{"^\\d{2}$"}),
 			},
 			in: map[string]any{
 				"my_int": 100,
@@ -896,8 +896,8 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "int excluded",
-			params: tools.Parameters{
-				tools.NewIntParameterWithExcludedValues("my_int", "this param is an int", []any{1}),
+			params: parameters.Parameters{
+				parameters.NewIntParameterWithExcludedValues("my_int", "this param is an int", []any{1}),
 			},
 			in: map[string]any{
 				"my_int": 1,
@@ -905,8 +905,8 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "int excluded regex",
-			params: tools.Parameters{
-				tools.NewIntParameterWithExcludedValues("my_int", "this param is an int", []any{"^\\d{2}$"}),
+			params: parameters.Parameters{
+				parameters.NewIntParameterWithExcludedValues("my_int", "this param is an int", []any{"^\\d{2}$"}),
 			},
 			in: map[string]any{
 				"my_int": 10,
@@ -914,38 +914,38 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "int not excluded",
-			params: tools.Parameters{
-				tools.NewIntParameterWithExcludedValues("my_int", "this param is an int", []any{1}),
+			params: parameters.Parameters{
+				parameters.NewIntParameterWithExcludedValues("my_int", "this param is an int", []any{1}),
 			},
 			in: map[string]any{
 				"my_int": 2,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 2}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_int", Value: 2}},
 		},
 		{
 			name: "int not excluded regex",
-			params: tools.Parameters{
-				tools.NewIntParameterWithExcludedValues("my_int", "this param is an int", []any{"^\\d{2}$"}),
+			params: parameters.Parameters{
+				parameters.NewIntParameterWithExcludedValues("my_int", "this param is an int", []any{"^\\d{2}$"}),
 			},
 			in: map[string]any{
 				"my_int": 2,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 2}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_int", Value: 2}},
 		},
 		{
 			name: "int minValue",
-			params: tools.Parameters{
-				tools.NewIntParameterWithRange("my_int", "this param is an int", &intValue, nil),
+			params: parameters.Parameters{
+				parameters.NewIntParameterWithRange("my_int", "this param is an int", &intValue, nil),
 			},
 			in: map[string]any{
 				"my_int": 3,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 3}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_int", Value: 3}},
 		},
 		{
 			name: "int minValue disallow",
-			params: tools.Parameters{
-				tools.NewIntParameterWithRange("my_int", "this param is an int", &intValue, nil),
+			params: parameters.Parameters{
+				parameters.NewIntParameterWithRange("my_int", "this param is an int", &intValue, nil),
 			},
 			in: map[string]any{
 				"my_int": 1,
@@ -953,18 +953,18 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "int maxValue",
-			params: tools.Parameters{
-				tools.NewIntParameterWithRange("my_int", "this param is an int", nil, &intValue),
+			params: parameters.Parameters{
+				parameters.NewIntParameterWithRange("my_int", "this param is an int", nil, &intValue),
 			},
 			in: map[string]any{
 				"my_int": 1,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 1}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_int", Value: 1}},
 		},
 		{
 			name: "int maxValue disallow",
-			params: tools.Parameters{
-				tools.NewIntParameterWithRange("my_int", "this param is an int", nil, &intValue),
+			params: parameters.Parameters{
+				parameters.NewIntParameterWithRange("my_int", "this param is an int", nil, &intValue),
 			},
 			in: map[string]any{
 				"my_int": 3,
@@ -972,18 +972,18 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "float",
-			params: tools.Parameters{
-				tools.NewFloatParameter("my_float", "this param is a float"),
+			params: parameters.Parameters{
+				parameters.NewFloatParameter("my_float", "this param is a float"),
 			},
 			in: map[string]any{
 				"my_float": 1.5,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.5}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_float", Value: 1.5}},
 		},
 		{
 			name: "not float",
-			params: tools.Parameters{
-				tools.NewFloatParameter("my_float", "this param is a float"),
+			params: parameters.Parameters{
+				parameters.NewFloatParameter("my_float", "this param is a float"),
 			},
 			in: map[string]any{
 				"my_float": true,
@@ -991,28 +991,28 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "float allowed",
-			params: tools.Parameters{
-				tools.NewFloatParameterWithAllowedValues("my_float", "this param is a float", []any{1.1}),
+			params: parameters.Parameters{
+				parameters.NewFloatParameterWithAllowedValues("my_float", "this param is a float", []any{1.1}),
 			},
 			in: map[string]any{
 				"my_float": 1.1,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.1}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_float", Value: 1.1}},
 		},
 		{
 			name: "float allowed regex",
-			params: tools.Parameters{
-				tools.NewFloatParameterWithAllowedValues("my_float", "this param is a float", []any{"^0\\.\\d+$"}),
+			params: parameters.Parameters{
+				parameters.NewFloatParameterWithAllowedValues("my_float", "this param is a float", []any{"^0\\.\\d+$"}),
 			},
 			in: map[string]any{
 				"my_float": 0.99,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 0.99}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_float", Value: 0.99}},
 		},
 		{
 			name: "float not allowed",
-			params: tools.Parameters{
-				tools.NewFloatParameterWithAllowedValues("my_float", "this param is a float", []any{1.1}),
+			params: parameters.Parameters{
+				parameters.NewFloatParameterWithAllowedValues("my_float", "this param is a float", []any{1.1}),
 			},
 			in: map[string]any{
 				"my_float": 1.2,
@@ -1020,8 +1020,8 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "float not allowed regex",
-			params: tools.Parameters{
-				tools.NewFloatParameterWithAllowedValues("my_float", "this param is a float", []any{"^0\\.\\d+$"}),
+			params: parameters.Parameters{
+				parameters.NewFloatParameterWithAllowedValues("my_float", "this param is a float", []any{"^0\\.\\d+$"}),
 			},
 			in: map[string]any{
 				"my_float": 1.99,
@@ -1029,8 +1029,8 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "float excluded",
-			params: tools.Parameters{
-				tools.NewFloatParameterWithExcludedValues("my_float", "this param is a float", []any{1.1}),
+			params: parameters.Parameters{
+				parameters.NewFloatParameterWithExcludedValues("my_float", "this param is a float", []any{1.1}),
 			},
 			in: map[string]any{
 				"my_float": 1.1,
@@ -1038,8 +1038,8 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "float excluded regex",
-			params: tools.Parameters{
-				tools.NewFloatParameterWithExcludedValues("my_float", "this param is a float", []any{"^0\\.\\d+$"}),
+			params: parameters.Parameters{
+				parameters.NewFloatParameterWithExcludedValues("my_float", "this param is a float", []any{"^0\\.\\d+$"}),
 			},
 			in: map[string]any{
 				"my_float": 0.99,
@@ -1047,39 +1047,39 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "float not excluded",
-			params: tools.Parameters{
-				tools.NewFloatParameterWithExcludedValues("my_float", "this param is a float", []any{1.1}),
+			params: parameters.Parameters{
+				parameters.NewFloatParameterWithExcludedValues("my_float", "this param is a float", []any{1.1}),
 			},
 			in: map[string]any{
 				"my_float": 1.2,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.2}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_float", Value: 1.2}},
 		},
 		{
 			name: "float not excluded regex",
-			params: tools.Parameters{
-				tools.NewFloatParameterWithExcludedValues("my_float", "this param is a float", []any{"^0\\.\\d+$"}),
+			params: parameters.Parameters{
+				parameters.NewFloatParameterWithExcludedValues("my_float", "this param is a float", []any{"^0\\.\\d+$"}),
 			},
 			in: map[string]any{
 				"my_float": 1.99,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.99}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_float", Value: 1.99}},
 		},
 
 		{
 			name: "float minValue",
-			params: tools.Parameters{
-				tools.NewFloatParameterWithRange("my_float", "this param is a float", &floatValue, nil),
+			params: parameters.Parameters{
+				parameters.NewFloatParameterWithRange("my_float", "this param is a float", &floatValue, nil),
 			},
 			in: map[string]any{
 				"my_float": 1.8,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.8}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_float", Value: 1.8}},
 		},
 		{
 			name: "float minValue disallow",
-			params: tools.Parameters{
-				tools.NewFloatParameterWithRange("my_float", "this param is a float", &floatValue, nil),
+			params: parameters.Parameters{
+				parameters.NewFloatParameterWithRange("my_float", "this param is a float", &floatValue, nil),
 			},
 			in: map[string]any{
 				"my_float": 1.2,
@@ -1087,18 +1087,18 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "float maxValue",
-			params: tools.Parameters{
-				tools.NewFloatParameterWithRange("my_float", "this param is a float", nil, &floatValue),
+			params: parameters.Parameters{
+				parameters.NewFloatParameterWithRange("my_float", "this param is a float", nil, &floatValue),
 			},
 			in: map[string]any{
 				"my_float": 1.2,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.2}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_float", Value: 1.2}},
 		},
 		{
 			name: "float maxValue disallow",
-			params: tools.Parameters{
-				tools.NewFloatParameterWithRange("my_float", "this param is a float", nil, &floatValue),
+			params: parameters.Parameters{
+				parameters.NewFloatParameterWithRange("my_float", "this param is a float", nil, &floatValue),
 			},
 			in: map[string]any{
 				"my_float": 1.8,
@@ -1106,18 +1106,18 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "bool",
-			params: tools.Parameters{
-				tools.NewBooleanParameter("my_bool", "this param is a bool"),
+			params: parameters.Parameters{
+				parameters.NewBooleanParameter("my_bool", "this param is a bool"),
 			},
 			in: map[string]any{
 				"my_bool": true,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_bool", Value: true}},
 		},
 		{
 			name: "not bool",
-			params: tools.Parameters{
-				tools.NewBooleanParameter("my_bool", "this param is a bool"),
+			params: parameters.Parameters{
+				parameters.NewBooleanParameter("my_bool", "this param is a bool"),
 			},
 			in: map[string]any{
 				"my_bool": 1.5,
@@ -1125,18 +1125,18 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "bool allowed",
-			params: tools.Parameters{
-				tools.NewBooleanParameterWithAllowedValues("my_bool", "this param is a bool", []any{false}),
+			params: parameters.Parameters{
+				parameters.NewBooleanParameterWithAllowedValues("my_bool", "this param is a bool", []any{false}),
 			},
 			in: map[string]any{
 				"my_bool": false,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: false}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_bool", Value: false}},
 		},
 		{
 			name: "bool not allowed",
-			params: tools.Parameters{
-				tools.NewBooleanParameterWithAllowedValues("my_bool", "this param is a bool", []any{false}),
+			params: parameters.Parameters{
+				parameters.NewBooleanParameterWithAllowedValues("my_bool", "this param is a bool", []any{false}),
 			},
 			in: map[string]any{
 				"my_bool": true,
@@ -1144,8 +1144,8 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "bool excluded",
-			params: tools.Parameters{
-				tools.NewBooleanParameterWithExcludedValues("my_bool", "this param is a bool", []any{true}),
+			params: parameters.Parameters{
+				parameters.NewBooleanParameterWithExcludedValues("my_bool", "this param is a bool", []any{true}),
 			},
 			in: map[string]any{
 				"my_bool": true,
@@ -1153,120 +1153,120 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "bool not excluded",
-			params: tools.Parameters{
-				tools.NewBooleanParameterWithExcludedValues("my_bool", "this param is a bool", []any{false}),
+			params: parameters.Parameters{
+				parameters.NewBooleanParameterWithExcludedValues("my_bool", "this param is a bool", []any{false}),
 			},
 			in: map[string]any{
 				"my_bool": true,
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_bool", Value: true}},
 		},
 		{
 			name: "string default",
-			params: tools.Parameters{
-				tools.NewStringParameterWithDefault("my_string", "foo", "this param is a string"),
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithDefault("my_string", "foo", "this param is a string"),
 			},
 			in:   map[string]any{},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "foo"}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "foo"}},
 		},
 		{
 			name: "int default",
-			params: tools.Parameters{
-				tools.NewIntParameterWithDefault("my_int", 100, "this param is an int"),
+			params: parameters.Parameters{
+				parameters.NewIntParameterWithDefault("my_int", 100, "this param is an int"),
 			},
 			in:   map[string]any{},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 100}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_int", Value: 100}},
 		},
 		{
 			name: "int (big)",
-			params: tools.Parameters{
-				tools.NewIntParameterWithDefault("my_big_int", math.MaxInt64, "this param is an int"),
+			params: parameters.Parameters{
+				parameters.NewIntParameterWithDefault("my_big_int", math.MaxInt64, "this param is an int"),
 			},
 			in:   map[string]any{},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_big_int", Value: math.MaxInt64}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_big_int", Value: math.MaxInt64}},
 		},
 		{
 			name: "float default",
-			params: tools.Parameters{
-				tools.NewFloatParameterWithDefault("my_float", 1.1, "this param is a float"),
+			params: parameters.Parameters{
+				parameters.NewFloatParameterWithDefault("my_float", 1.1, "this param is a float"),
 			},
 			in:   map[string]any{},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 1.1}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_float", Value: 1.1}},
 		},
 		{
 			name: "bool default",
-			params: tools.Parameters{
-				tools.NewBooleanParameterWithDefault("my_bool", true, "this param is a bool"),
+			params: parameters.Parameters{
+				parameters.NewBooleanParameterWithDefault("my_bool", true, "this param is a bool"),
 			},
 			in:   map[string]any{},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_bool", Value: true}},
 		},
 		{
 			name: "string not required",
-			params: tools.Parameters{
-				tools.NewStringParameterWithRequired("my_string", "this param is a string", false),
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithRequired("my_string", "this param is a string", false),
 			},
 			in:   map[string]any{},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_string", Value: nil}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: nil}},
 		},
 		{
 			name: "int not required",
-			params: tools.Parameters{
-				tools.NewIntParameterWithRequired("my_int", "this param is an int", false),
+			params: parameters.Parameters{
+				parameters.NewIntParameterWithRequired("my_int", "this param is an int", false),
 			},
 			in:   map[string]any{},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_int", Value: nil}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_int", Value: nil}},
 		},
 		{
 			name: "float not required",
-			params: tools.Parameters{
-				tools.NewFloatParameterWithRequired("my_float", "this param is a float", false),
+			params: parameters.Parameters{
+				parameters.NewFloatParameterWithRequired("my_float", "this param is a float", false),
 			},
 			in:   map[string]any{},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_float", Value: nil}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_float", Value: nil}},
 		},
 		{
 			name: "bool not required",
-			params: tools.Parameters{
-				tools.NewBooleanParameterWithRequired("my_bool", "this param is a bool", false),
+			params: parameters.Parameters{
+				parameters.NewBooleanParameterWithRequired("my_bool", "this param is a bool", false),
 			},
 			in:   map[string]any{},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: nil}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_bool", Value: nil}},
 		},
 		{
 			name: "array with string escape",
-			params: tools.Parameters{
-				tools.NewArrayParameter("my_array", "an array", tools.NewStringParameterWithEscape("my_string", "string item", "backticks")),
+			params: parameters.Parameters{
+				parameters.NewArrayParameter("my_array", "an array", parameters.NewStringParameterWithEscape("my_string", "string item", "backticks")),
 			},
 			in: map[string]any{
 				"my_array": []string{"val1", "val2"},
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_array", Value: []any{string("`val1`"), string("`val2`")}}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_array", Value: []any{string("`val1`"), string("`val2`")}}},
 		},
 		{
 			name: "map",
-			params: tools.Parameters{
-				tools.NewMapParameter("my_map", "a map", "string"),
+			params: parameters.Parameters{
+				parameters.NewMapParameter("my_map", "a map", "string"),
 			},
 			in: map[string]any{
 				"my_map": map[string]any{"key1": "val1", "key2": "val2"},
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_map", Value: map[string]any{"key1": "val1", "key2": "val2"}}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_map", Value: map[string]any{"key1": "val1", "key2": "val2"}}},
 		},
 		{
 			name: "generic map",
-			params: tools.Parameters{
-				tools.NewMapParameter("my_map_generic_type", "a generic map", ""),
+			params: parameters.Parameters{
+				parameters.NewMapParameter("my_map_generic_type", "a generic map", ""),
 			},
 			in: map[string]any{
 				"my_map_generic_type": map[string]any{"key1": "val1", "key2": 123, "key3": true},
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_map_generic_type", Value: map[string]any{"key1": "val1", "key2": int64(123), "key3": true}}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_map_generic_type", Value: map[string]any{"key1": "val1", "key2": int64(123), "key3": true}}},
 		},
 		{
 			name: "not map (value type mismatch)",
-			params: tools.Parameters{
-				tools.NewMapParameter("my_map", "a map", "string"),
+			params: parameters.Parameters{
+				parameters.NewMapParameter("my_map", "a map", "string"),
 			},
 			in: map[string]any{
 				"my_map": map[string]any{"key1": 123},
@@ -1274,34 +1274,34 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "map default",
-			params: tools.Parameters{
-				tools.NewMapParameterWithDefault("my_map_default", map[string]any{"default_key": "default_val"}, "a map", "string"),
+			params: parameters.Parameters{
+				parameters.NewMapParameterWithDefault("my_map_default", map[string]any{"default_key": "default_val"}, "a map", "string"),
 			},
 			in:   map[string]any{},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_map_default", Value: map[string]any{"default_key": "default_val"}}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_map_default", Value: map[string]any{"default_key": "default_val"}}},
 		},
 		{
 			name: "map not required",
-			params: tools.Parameters{
-				tools.NewMapParameterWithRequired("my_map_not_required", "a map", false, "string"),
+			params: parameters.Parameters{
+				parameters.NewMapParameterWithRequired("my_map_not_required", "a map", false, "string"),
 			},
 			in:   map[string]any{},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_map_not_required", Value: nil}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_map_not_required", Value: nil}},
 		},
 		{
 			name: "map allowed",
-			params: tools.Parameters{
-				tools.NewMapParameterWithAllowedValues("my_map", "a map", []any{map[string]any{"key1": "val1"}}, "string"),
+			params: parameters.Parameters{
+				parameters.NewMapParameterWithAllowedValues("my_map", "a map", []any{map[string]any{"key1": "val1"}}, "string"),
 			},
 			in: map[string]any{
 				"my_map": map[string]any{"key1": "val1"},
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_map", Value: map[string]any{"key1": "val1"}}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_map", Value: map[string]any{"key1": "val1"}}},
 		},
 		{
 			name: "map not allowed",
-			params: tools.Parameters{
-				tools.NewMapParameterWithAllowedValues("my_map", "a map", []any{map[string]any{"key1": "val1"}}, "string"),
+			params: parameters.Parameters{
+				parameters.NewMapParameterWithAllowedValues("my_map", "a map", []any{map[string]any{"key1": "val1"}}, "string"),
 			},
 			in: map[string]any{
 				"my_map": map[string]any{"key1": "val2"},
@@ -1309,8 +1309,8 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "map excluded",
-			params: tools.Parameters{
-				tools.NewMapParameterWithExcludedValues("my_map", "a map", []any{map[string]any{"key1": "val1"}}, "string"),
+			params: parameters.Parameters{
+				parameters.NewMapParameterWithExcludedValues("my_map", "a map", []any{map[string]any{"key1": "val1"}}, "string"),
 			},
 			in: map[string]any{
 				"my_map": map[string]any{"key1": "val1"},
@@ -1318,13 +1318,13 @@ func TestParametersParse(t *testing.T) {
 		},
 		{
 			name: "map not excluded",
-			params: tools.Parameters{
-				tools.NewMapParameterWithExcludedValues("my_map", "a map", []any{map[string]any{"key1": "val1"}}, "string"),
+			params: parameters.Parameters{
+				parameters.NewMapParameterWithExcludedValues("my_map", "a map", []any{map[string]any{"key1": "val1"}}, "string"),
 			},
 			in: map[string]any{
 				"my_map": map[string]any{"key1": "val2"},
 			},
-			want: tools.ParamValues{tools.ParamValue{Name: "my_map", Value: map[string]any{"key1": "val2"}}},
+			want: parameters.ParamValues{parameters.ParamValue{Name: "my_map", Value: map[string]any{"key1": "val2"}}},
 		},
 	}
 	for _, tc := range tcs {
@@ -1345,7 +1345,7 @@ func TestParametersParse(t *testing.T) {
 			}
 
 			wantErr := len(tc.want) == 0 // error is expected if no items in want
-			gotAll, err := tools.ParseParams(tc.params, m, make(map[string]map[string]any))
+			gotAll, err := parameters.ParseParams(tc.params, m, make(map[string]map[string]any))
 			if err != nil {
 				if wantErr {
 					return
@@ -1365,7 +1365,7 @@ func TestParametersParse(t *testing.T) {
 }
 
 func TestAuthParametersParse(t *testing.T) {
-	authServices := []tools.ParamAuthService{
+	authServices := []parameters.ParamAuthService{
 		{
 			Name:  "my-google-auth-service",
 			Field: "auth_field",
@@ -1376,26 +1376,26 @@ func TestAuthParametersParse(t *testing.T) {
 		}}
 	tcs := []struct {
 		name      string
-		params    tools.Parameters
+		params    parameters.Parameters
 		in        map[string]any
 		claimsMap map[string]map[string]any
-		want      tools.ParamValues
+		want      parameters.ParamValues
 	}{
 		{
 			name: "string",
-			params: tools.Parameters{
-				tools.NewStringParameterWithAuth("my_string", "this param is a string", authServices),
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithAuth("my_string", "this param is a string", authServices),
 			},
 			in: map[string]any{
 				"my_string": "hello world",
 			},
 			claimsMap: map[string]map[string]any{"my-google-auth-service": {"auth_field": "hello"}},
-			want:      tools.ParamValues{tools.ParamValue{Name: "my_string", Value: "hello"}},
+			want:      parameters.ParamValues{parameters.ParamValue{Name: "my_string", Value: "hello"}},
 		},
 		{
 			name: "not string",
-			params: tools.Parameters{
-				tools.NewStringParameterWithAuth("my_string", "this param is a string", authServices),
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithAuth("my_string", "this param is a string", authServices),
 			},
 			in: map[string]any{
 				"my_string": 4,
@@ -1404,19 +1404,19 @@ func TestAuthParametersParse(t *testing.T) {
 		},
 		{
 			name: "int",
-			params: tools.Parameters{
-				tools.NewIntParameterWithAuth("my_int", "this param is an int", authServices),
+			params: parameters.Parameters{
+				parameters.NewIntParameterWithAuth("my_int", "this param is an int", authServices),
 			},
 			in: map[string]any{
 				"my_int": 100,
 			},
 			claimsMap: map[string]map[string]any{"other-auth-service": {"other_auth_field": 120}},
-			want:      tools.ParamValues{tools.ParamValue{Name: "my_int", Value: 120}},
+			want:      parameters.ParamValues{parameters.ParamValue{Name: "my_int", Value: 120}},
 		},
 		{
 			name: "not int",
-			params: tools.Parameters{
-				tools.NewIntParameterWithAuth("my_int", "this param is an int", authServices),
+			params: parameters.Parameters{
+				parameters.NewIntParameterWithAuth("my_int", "this param is an int", authServices),
 			},
 			in: map[string]any{
 				"my_int": 14.5,
@@ -1425,19 +1425,19 @@ func TestAuthParametersParse(t *testing.T) {
 		},
 		{
 			name: "float",
-			params: tools.Parameters{
-				tools.NewFloatParameterWithAuth("my_float", "this param is a float", authServices),
+			params: parameters.Parameters{
+				parameters.NewFloatParameterWithAuth("my_float", "this param is a float", authServices),
 			},
 			in: map[string]any{
 				"my_float": 1.5,
 			},
 			claimsMap: map[string]map[string]any{"my-google-auth-service": {"auth_field": 2.1}},
-			want:      tools.ParamValues{tools.ParamValue{Name: "my_float", Value: 2.1}},
+			want:      parameters.ParamValues{parameters.ParamValue{Name: "my_float", Value: 2.1}},
 		},
 		{
 			name: "not float",
-			params: tools.Parameters{
-				tools.NewFloatParameterWithAuth("my_float", "this param is a float", authServices),
+			params: parameters.Parameters{
+				parameters.NewFloatParameterWithAuth("my_float", "this param is a float", authServices),
 			},
 			in: map[string]any{
 				"my_float": true,
@@ -1446,19 +1446,19 @@ func TestAuthParametersParse(t *testing.T) {
 		},
 		{
 			name: "bool",
-			params: tools.Parameters{
-				tools.NewBooleanParameterWithAuth("my_bool", "this param is a bool", authServices),
+			params: parameters.Parameters{
+				parameters.NewBooleanParameterWithAuth("my_bool", "this param is a bool", authServices),
 			},
 			in: map[string]any{
 				"my_bool": true,
 			},
 			claimsMap: map[string]map[string]any{"my-google-auth-service": {"auth_field": false}},
-			want:      tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: false}},
+			want:      parameters.ParamValues{parameters.ParamValue{Name: "my_bool", Value: false}},
 		},
 		{
 			name: "not bool",
-			params: tools.Parameters{
-				tools.NewBooleanParameterWithAuth("my_bool", "this param is a bool", authServices),
+			params: parameters.Parameters{
+				parameters.NewBooleanParameterWithAuth("my_bool", "this param is a bool", authServices),
 			},
 			in: map[string]any{
 				"my_bool": 1.5,
@@ -1467,19 +1467,19 @@ func TestAuthParametersParse(t *testing.T) {
 		},
 		{
 			name: "username",
-			params: tools.Parameters{
-				tools.NewStringParameterWithAuth("username", "username string", authServices),
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithAuth("username", "username string", authServices),
 			},
 			in: map[string]any{
 				"username": "Violet",
 			},
 			claimsMap: map[string]map[string]any{"my-google-auth-service": {"auth_field": "Alice"}},
-			want:      tools.ParamValues{tools.ParamValue{Name: "username", Value: "Alice"}},
+			want:      parameters.ParamValues{parameters.ParamValue{Name: "username", Value: "Alice"}},
 		},
 		{
 			name: "expect claim error",
-			params: tools.Parameters{
-				tools.NewStringParameterWithAuth("username", "username string", authServices),
+			params: parameters.Parameters{
+				parameters.NewStringParameterWithAuth("username", "username string", authServices),
 			},
 			in: map[string]any{
 				"username": "Violet",
@@ -1488,12 +1488,12 @@ func TestAuthParametersParse(t *testing.T) {
 		},
 		{
 			name: "map",
-			params: tools.Parameters{
-				tools.NewMapParameterWithAuth("my_map", "a map", "string", authServices),
+			params: parameters.Parameters{
+				parameters.NewMapParameterWithAuth("my_map", "a map", "string", authServices),
 			},
 			in:        map[string]any{"my_map": map[string]any{"key1": "val1"}},
 			claimsMap: map[string]map[string]any{"my-google-auth-service": {"auth_field": map[string]any{"authed_key": "authed_val"}}},
-			want:      tools.ParamValues{tools.ParamValue{Name: "my_map", Value: map[string]any{"authed_key": "authed_val"}}},
+			want:      parameters.ParamValues{parameters.ParamValue{Name: "my_map", Value: map[string]any{"authed_key": "authed_val"}}},
 		},
 	}
 	for _, tc := range tcs {
@@ -1512,7 +1512,7 @@ func TestAuthParametersParse(t *testing.T) {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
 
-			gotAll, err := tools.ParseParams(tc.params, m, tc.claimsMap)
+			gotAll, err := parameters.ParseParams(tc.params, m, tc.claimsMap)
 			if err != nil {
 				if len(tc.want) == 0 {
 					// error is expected if no items in want
@@ -1531,7 +1531,7 @@ func TestAuthParametersParse(t *testing.T) {
 func TestParamValues(t *testing.T) {
 	tcs := []struct {
 		name              string
-		in                tools.ParamValues
+		in                parameters.ParamValues
 		wantSlice         []any
 		wantMap           map[string]interface{}
 		wantMapOrdered    map[string]interface{}
@@ -1539,7 +1539,7 @@ func TestParamValues(t *testing.T) {
 	}{
 		{
 			name:           "string",
-			in:             tools.ParamValues{tools.ParamValue{Name: "my_bool", Value: true}, tools.ParamValue{Name: "my_string", Value: "hello world"}},
+			in:             parameters.ParamValues{parameters.ParamValue{Name: "my_bool", Value: true}, parameters.ParamValue{Name: "my_string", Value: "hello world"}},
 			wantSlice:      []any{true, "hello world"},
 			wantMap:        map[string]interface{}{"my_bool": true, "my_string": "hello world"},
 			wantMapOrdered: map[string]interface{}{"p1": true, "p2": "hello world"},
@@ -1587,109 +1587,109 @@ func TestParamValues(t *testing.T) {
 func TestParamManifest(t *testing.T) {
 	tcs := []struct {
 		name string
-		in   tools.Parameter
-		want tools.ParameterManifest
+		in   parameters.Parameter
+		want parameters.ParameterManifest
 	}{
 		{
 			name: "string",
-			in:   tools.NewStringParameter("foo-string", "bar"),
-			want: tools.ParameterManifest{Name: "foo-string", Type: "string", Required: true, Description: "bar", AuthServices: []string{}},
+			in:   parameters.NewStringParameter("foo-string", "bar"),
+			want: parameters.ParameterManifest{Name: "foo-string", Type: "string", Required: true, Description: "bar", AuthServices: []string{}},
 		},
 		{
 			name: "int",
-			in:   tools.NewIntParameter("foo-int", "bar"),
-			want: tools.ParameterManifest{Name: "foo-int", Type: "integer", Required: true, Description: "bar", AuthServices: []string{}},
+			in:   parameters.NewIntParameter("foo-int", "bar"),
+			want: parameters.ParameterManifest{Name: "foo-int", Type: "integer", Required: true, Description: "bar", AuthServices: []string{}},
 		},
 		{
 			name: "float",
-			in:   tools.NewFloatParameter("foo-float", "bar"),
-			want: tools.ParameterManifest{Name: "foo-float", Type: "float", Required: true, Description: "bar", AuthServices: []string{}},
+			in:   parameters.NewFloatParameter("foo-float", "bar"),
+			want: parameters.ParameterManifest{Name: "foo-float", Type: "float", Required: true, Description: "bar", AuthServices: []string{}},
 		},
 		{
 			name: "boolean",
-			in:   tools.NewBooleanParameter("foo-bool", "bar"),
-			want: tools.ParameterManifest{Name: "foo-bool", Type: "boolean", Required: true, Description: "bar", AuthServices: []string{}},
+			in:   parameters.NewBooleanParameter("foo-bool", "bar"),
+			want: parameters.ParameterManifest{Name: "foo-bool", Type: "boolean", Required: true, Description: "bar", AuthServices: []string{}},
 		},
 		{
 			name: "array",
-			in:   tools.NewArrayParameter("foo-array", "bar", tools.NewStringParameter("foo-string", "bar")),
-			want: tools.ParameterManifest{
+			in:   parameters.NewArrayParameter("foo-array", "bar", parameters.NewStringParameter("foo-string", "bar")),
+			want: parameters.ParameterManifest{
 				Name:         "foo-array",
 				Type:         "array",
 				Required:     true,
 				Description:  "bar",
 				AuthServices: []string{},
-				Items:        &tools.ParameterManifest{Name: "foo-string", Type: "string", Required: true, Description: "bar", AuthServices: []string{}},
+				Items:        &parameters.ParameterManifest{Name: "foo-string", Type: "string", Required: true, Description: "bar", AuthServices: []string{}},
 			},
 		},
 		{
 			name: "string default",
-			in:   tools.NewStringParameterWithDefault("foo-string", "foo", "bar"),
-			want: tools.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
+			in:   parameters.NewStringParameterWithDefault("foo-string", "foo", "bar"),
+			want: parameters.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
 		},
 		{
 			name: "int default",
-			in:   tools.NewIntParameterWithDefault("foo-int", 1, "bar"),
-			want: tools.ParameterManifest{Name: "foo-int", Type: "integer", Required: false, Description: "bar", AuthServices: []string{}},
+			in:   parameters.NewIntParameterWithDefault("foo-int", 1, "bar"),
+			want: parameters.ParameterManifest{Name: "foo-int", Type: "integer", Required: false, Description: "bar", AuthServices: []string{}},
 		},
 		{
 			name: "float default",
-			in:   tools.NewFloatParameterWithDefault("foo-float", 1.1, "bar"),
-			want: tools.ParameterManifest{Name: "foo-float", Type: "float", Required: false, Description: "bar", AuthServices: []string{}},
+			in:   parameters.NewFloatParameterWithDefault("foo-float", 1.1, "bar"),
+			want: parameters.ParameterManifest{Name: "foo-float", Type: "float", Required: false, Description: "bar", AuthServices: []string{}},
 		},
 		{
 			name: "boolean default",
-			in:   tools.NewBooleanParameterWithDefault("foo-bool", true, "bar"),
-			want: tools.ParameterManifest{Name: "foo-bool", Type: "boolean", Required: false, Description: "bar", AuthServices: []string{}},
+			in:   parameters.NewBooleanParameterWithDefault("foo-bool", true, "bar"),
+			want: parameters.ParameterManifest{Name: "foo-bool", Type: "boolean", Required: false, Description: "bar", AuthServices: []string{}},
 		},
 		{
 			name: "array default",
-			in:   tools.NewArrayParameterWithDefault("foo-array", []any{"foo", "bar"}, "bar", tools.NewStringParameter("foo-string", "bar")),
-			want: tools.ParameterManifest{
+			in:   parameters.NewArrayParameterWithDefault("foo-array", []any{"foo", "bar"}, "bar", parameters.NewStringParameter("foo-string", "bar")),
+			want: parameters.ParameterManifest{
 				Name:         "foo-array",
 				Type:         "array",
 				Required:     false,
 				Description:  "bar",
 				AuthServices: []string{},
-				Items:        &tools.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
+				Items:        &parameters.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
 			},
 		},
 		{
 			name: "string not required",
-			in:   tools.NewStringParameterWithRequired("foo-string", "bar", false),
-			want: tools.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
+			in:   parameters.NewStringParameterWithRequired("foo-string", "bar", false),
+			want: parameters.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
 		},
 		{
 			name: "int not required",
-			in:   tools.NewIntParameterWithRequired("foo-int", "bar", false),
-			want: tools.ParameterManifest{Name: "foo-int", Type: "integer", Required: false, Description: "bar", AuthServices: []string{}},
+			in:   parameters.NewIntParameterWithRequired("foo-int", "bar", false),
+			want: parameters.ParameterManifest{Name: "foo-int", Type: "integer", Required: false, Description: "bar", AuthServices: []string{}},
 		},
 		{
 			name: "float not required",
-			in:   tools.NewFloatParameterWithRequired("foo-float", "bar", false),
-			want: tools.ParameterManifest{Name: "foo-float", Type: "float", Required: false, Description: "bar", AuthServices: []string{}},
+			in:   parameters.NewFloatParameterWithRequired("foo-float", "bar", false),
+			want: parameters.ParameterManifest{Name: "foo-float", Type: "float", Required: false, Description: "bar", AuthServices: []string{}},
 		},
 		{
 			name: "boolean not required",
-			in:   tools.NewBooleanParameterWithRequired("foo-bool", "bar", false),
-			want: tools.ParameterManifest{Name: "foo-bool", Type: "boolean", Required: false, Description: "bar", AuthServices: []string{}},
+			in:   parameters.NewBooleanParameterWithRequired("foo-bool", "bar", false),
+			want: parameters.ParameterManifest{Name: "foo-bool", Type: "boolean", Required: false, Description: "bar", AuthServices: []string{}},
 		},
 		{
 			name: "array not required",
-			in:   tools.NewArrayParameterWithRequired("foo-array", "bar", false, tools.NewStringParameter("foo-string", "bar")),
-			want: tools.ParameterManifest{
+			in:   parameters.NewArrayParameterWithRequired("foo-array", "bar", false, parameters.NewStringParameter("foo-string", "bar")),
+			want: parameters.ParameterManifest{
 				Name:         "foo-array",
 				Type:         "array",
 				Required:     false,
 				Description:  "bar",
 				AuthServices: []string{},
-				Items:        &tools.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
+				Items:        &parameters.ParameterManifest{Name: "foo-string", Type: "string", Required: false, Description: "bar", AuthServices: []string{}},
 			},
 		},
 		{
 			name: "map with string values",
-			in:   tools.NewMapParameter("foo-map", "bar", "string"),
-			want: tools.ParameterManifest{
+			in:   parameters.NewMapParameter("foo-map", "bar", "string"),
+			want: parameters.ParameterManifest{
 				Name:                 "foo-map",
 				Type:                 "object",
 				Required:             true,
@@ -1700,8 +1700,8 @@ func TestParamManifest(t *testing.T) {
 		},
 		{
 			name: "map not required",
-			in:   tools.NewMapParameterWithRequired("foo-map", "bar", false, "string"),
-			want: tools.ParameterManifest{
+			in:   parameters.NewMapParameterWithRequired("foo-map", "bar", false, "string"),
+			want: parameters.ParameterManifest{
 				Name:                 "foo-map",
 				Type:                 "object",
 				Required:             false,
@@ -1712,8 +1712,8 @@ func TestParamManifest(t *testing.T) {
 		},
 		{
 			name: "generic map (additionalProperties true)",
-			in:   tools.NewMapParameter("foo-map", "bar", ""),
-			want: tools.ParameterManifest{
+			in:   parameters.NewMapParameter("foo-map", "bar", ""),
+			want: parameters.ParameterManifest{
 				Name:                 "foo-map",
 				Type:                 "object",
 				Required:             true,
@@ -1736,49 +1736,49 @@ func TestParamManifest(t *testing.T) {
 func TestParamMcpManifest(t *testing.T) {
 	tcs := []struct {
 		name          string
-		in            tools.Parameter
-		want          tools.ParameterMcpManifest
+		in            parameters.Parameter
+		want          parameters.ParameterMcpManifest
 		wantAuthParam []string
 	}{
 		{
 			name:          "string",
-			in:            tools.NewStringParameter("foo-string", "bar"),
-			want:          tools.ParameterMcpManifest{Type: "string", Description: "bar"},
+			in:            parameters.NewStringParameter("foo-string", "bar"),
+			want:          parameters.ParameterMcpManifest{Type: "string", Description: "bar"},
 			wantAuthParam: []string{},
 		},
 		{
 			name:          "int",
-			in:            tools.NewIntParameter("foo-int", "bar"),
-			want:          tools.ParameterMcpManifest{Type: "integer", Description: "bar"},
+			in:            parameters.NewIntParameter("foo-int", "bar"),
+			want:          parameters.ParameterMcpManifest{Type: "integer", Description: "bar"},
 			wantAuthParam: []string{},
 		},
 		{
 			name:          "float",
-			in:            tools.NewFloatParameter("foo-float", "bar"),
-			want:          tools.ParameterMcpManifest{Type: "number", Description: "bar"},
+			in:            parameters.NewFloatParameter("foo-float", "bar"),
+			want:          parameters.ParameterMcpManifest{Type: "number", Description: "bar"},
 			wantAuthParam: []string{},
 		},
 		{
 			name:          "boolean",
-			in:            tools.NewBooleanParameter("foo-bool", "bar"),
-			want:          tools.ParameterMcpManifest{Type: "boolean", Description: "bar"},
+			in:            parameters.NewBooleanParameter("foo-bool", "bar"),
+			want:          parameters.ParameterMcpManifest{Type: "boolean", Description: "bar"},
 			wantAuthParam: []string{},
 		},
 		{
 			name: "array",
-			in:   tools.NewArrayParameter("foo-array", "bar", tools.NewStringParameter("foo-string", "bar")),
-			want: tools.ParameterMcpManifest{
+			in:   parameters.NewArrayParameter("foo-array", "bar", parameters.NewStringParameter("foo-string", "bar")),
+			want: parameters.ParameterMcpManifest{
 				Type:        "array",
 				Description: "bar",
-				Items:       &tools.ParameterMcpManifest{Type: "string", Description: "bar"},
+				Items:       &parameters.ParameterMcpManifest{Type: "string", Description: "bar"},
 			},
 			wantAuthParam: []string{},
 		},
 
 		{
 			name: "map with string values",
-			in:   tools.NewMapParameter("foo-map", "bar", "string"),
-			want: tools.ParameterMcpManifest{
+			in:   parameters.NewMapParameter("foo-map", "bar", "string"),
+			want: parameters.ParameterMcpManifest{
 				Type:                 "object",
 				Description:          "bar",
 				AdditionalProperties: map[string]any{"type": "string"},
@@ -1787,8 +1787,8 @@ func TestParamMcpManifest(t *testing.T) {
 		},
 		{
 			name: "generic map (additionalProperties true)",
-			in:   tools.NewMapParameter("foo-map", "bar", ""),
-			want: tools.ParameterMcpManifest{
+			in:   parameters.NewMapParameter("foo-map", "bar", ""),
+			want: parameters.ParameterMcpManifest{
 				Type:                 "object",
 				Description:          "bar",
 				AdditionalProperties: true,
@@ -1811,7 +1811,7 @@ func TestParamMcpManifest(t *testing.T) {
 }
 
 func TestMcpManifest(t *testing.T) {
-	authServices := []tools.ParamAuthService{
+	authServices := []parameters.ParamAuthService{
 		{
 			Name:  "my-google-auth-service",
 			Field: "auth_field",
@@ -1822,25 +1822,25 @@ func TestMcpManifest(t *testing.T) {
 		}}
 	tcs := []struct {
 		name          string
-		in            tools.Parameters
-		wantSchema    tools.McpToolsSchema
+		in            parameters.Parameters
+		wantSchema    parameters.McpToolsSchema
 		wantAuthParam map[string][]string
 	}{
 		{
 			name: "all types",
-			in: tools.Parameters{
-				tools.NewStringParameterWithDefault("foo-string", "foo", "bar"),
-				tools.NewStringParameter("foo-string2", "bar"),
-				tools.NewStringParameterWithAuth("foo-string3-auth", "bar", authServices),
-				tools.NewIntParameter("foo-int2", "bar"),
-				tools.NewFloatParameter("foo-float", "bar"),
-				tools.NewArrayParameter("foo-array2", "bar", tools.NewStringParameter("foo-string", "bar")),
-				tools.NewMapParameter("foo-map-int", "a map of ints", "integer"),
-				tools.NewMapParameter("foo-map-any", "a map of any", ""),
+			in: parameters.Parameters{
+				parameters.NewStringParameterWithDefault("foo-string", "foo", "bar"),
+				parameters.NewStringParameter("foo-string2", "bar"),
+				parameters.NewStringParameterWithAuth("foo-string3-auth", "bar", authServices),
+				parameters.NewIntParameter("foo-int2", "bar"),
+				parameters.NewFloatParameter("foo-float", "bar"),
+				parameters.NewArrayParameter("foo-array2", "bar", parameters.NewStringParameter("foo-string", "bar")),
+				parameters.NewMapParameter("foo-map-int", "a map of ints", "integer"),
+				parameters.NewMapParameter("foo-map-any", "a map of any", ""),
 			},
-			wantSchema: tools.McpToolsSchema{
+			wantSchema: parameters.McpToolsSchema{
 				Type: "object",
-				Properties: map[string]tools.ParameterMcpManifest{
+				Properties: map[string]parameters.ParameterMcpManifest{
 					"foo-string":       {Type: "string", Description: "bar"},
 					"foo-string2":      {Type: "string", Description: "bar"},
 					"foo-string3-auth": {Type: "string", Description: "bar"},
@@ -1849,7 +1849,7 @@ func TestMcpManifest(t *testing.T) {
 					"foo-array2": {
 						Type:        "array",
 						Description: "bar",
-						Items:       &tools.ParameterMcpManifest{Type: "string", Description: "bar"},
+						Items:       &parameters.ParameterMcpManifest{Type: "string", Description: "bar"},
 					},
 					"foo-map-int": {
 						Type:                 "object",
@@ -1974,7 +1974,7 @@ func TestFailParametersUnmarshal(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			var got tools.Parameters
+			var got parameters.Parameters
 			// parse map to bytes
 			data, err := yaml.Marshal(tc.in)
 			if err != nil {
@@ -2036,7 +2036,7 @@ func TestConvertArrayParamToString(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got, _ := tools.ConvertArrayParamToString(tc.in)
+			got, _ := parameters.ConvertArrayParamToString(tc.in)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect array param conversion: diff %v", diff)
 			}
@@ -2069,7 +2069,7 @@ func TestFailConvertArrayParamToString(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := tools.ConvertArrayParamToString(tc.in)
+			_, err := parameters.ConvertArrayParamToString(tc.in)
 			errStr := err.Error()
 			if errStr != tc.err {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
@@ -2082,56 +2082,56 @@ func TestGetParams(t *testing.T) {
 	tcs := []struct {
 		name   string
 		in     map[string]any
-		params tools.Parameters
-		want   tools.ParamValues
+		params parameters.Parameters
+		want   parameters.ParamValues
 	}{
 		{
 			name: "parameters to include and exclude",
-			params: tools.Parameters{
-				tools.NewStringParameter("my_string_inc", "this should be included"),
-				tools.NewStringParameter("my_string_inc2", "this should be included"),
+			params: parameters.Parameters{
+				parameters.NewStringParameter("my_string_inc", "this should be included"),
+				parameters.NewStringParameter("my_string_inc2", "this should be included"),
 			},
 			in: map[string]any{
 				"my_string_inc":  "hello world A",
 				"my_string_inc2": "hello world B",
 				"my_string_exc":  "hello world C",
 			},
-			want: tools.ParamValues{
-				tools.ParamValue{Name: "my_string_inc", Value: "hello world A"},
-				tools.ParamValue{Name: "my_string_inc2", Value: "hello world B"},
+			want: parameters.ParamValues{
+				parameters.ParamValue{Name: "my_string_inc", Value: "hello world A"},
+				parameters.ParamValue{Name: "my_string_inc2", Value: "hello world B"},
 			},
 		},
 		{
 			name: "include all",
-			params: tools.Parameters{
-				tools.NewStringParameter("my_string_inc", "this should be included"),
+			params: parameters.Parameters{
+				parameters.NewStringParameter("my_string_inc", "this should be included"),
 			},
 			in: map[string]any{
 				"my_string_inc": "hello world A",
 			},
-			want: tools.ParamValues{
-				tools.ParamValue{Name: "my_string_inc", Value: "hello world A"},
+			want: parameters.ParamValues{
+				parameters.ParamValue{Name: "my_string_inc", Value: "hello world A"},
 			},
 		},
 		{
 			name:   "exclude all",
-			params: tools.Parameters{},
+			params: parameters.Parameters{},
 			in: map[string]any{
 				"my_string_exc":  "hello world A",
 				"my_string_exc2": "hello world B",
 			},
-			want: tools.ParamValues{},
+			want: parameters.ParamValues{},
 		},
 		{
 			name:   "empty",
-			params: tools.Parameters{},
+			params: parameters.Parameters{},
 			in:     map[string]any{},
-			want:   tools.ParamValues{},
+			want:   parameters.ParamValues{},
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got, _ := tools.GetParams(tc.params, tc.in)
+			got, _ := parameters.GetParams(tc.params, tc.in)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect get params: diff %v", diff)
 			}
@@ -2143,21 +2143,21 @@ func TestFailGetParams(t *testing.T) {
 
 	tcs := []struct {
 		name   string
-		params tools.Parameters
+		params parameters.Parameters
 		in     map[string]any
 		err    string
 	}{
 		{
 			name:   "missing the only parameter",
-			params: tools.Parameters{tools.NewStringParameter("my_string", "this was missing")},
+			params: parameters.Parameters{parameters.NewStringParameter("my_string", "this was missing")},
 			in:     map[string]any{},
 			err:    "missing parameter my_string",
 		},
 		{
 			name: "missing one parameter of multiple",
-			params: tools.Parameters{
-				tools.NewStringParameter("my_string_inc", "this should be included"),
-				tools.NewStringParameter("my_string_exc", "this was missing"),
+			params: parameters.Parameters{
+				parameters.NewStringParameter("my_string_inc", "this should be included"),
+				parameters.NewStringParameter("my_string_exc", "this was missing"),
 			},
 			in: map[string]any{
 				"my_string_inc": "hello world A",
@@ -2167,7 +2167,7 @@ func TestFailGetParams(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := tools.GetParams(tc.params, tc.in)
+			_, err := parameters.GetParams(tc.params, tc.in)
 			errStr := err.Error()
 			if errStr != tc.err {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
@@ -2179,15 +2179,15 @@ func TestFailGetParams(t *testing.T) {
 func TestResolveTemplateParameters(t *testing.T) {
 	tcs := []struct {
 		name           string
-		templateParams tools.Parameters
+		templateParams parameters.Parameters
 		statement      string
 		in             map[string]any
 		want           string
 	}{
 		{
 			name: "single template parameter",
-			templateParams: tools.Parameters{
-				tools.NewStringParameter("tableName", "this is a string template parameter"),
+			templateParams: parameters.Parameters{
+				parameters.NewStringParameter("tableName", "this is a string template parameter"),
 			},
 			statement: "SELECT * FROM {{.tableName}}",
 			in: map[string]any{
@@ -2197,9 +2197,9 @@ func TestResolveTemplateParameters(t *testing.T) {
 		},
 		{
 			name: "multiple template parameters",
-			templateParams: tools.Parameters{
-				tools.NewStringParameter("tableName", "this is a string template parameter"),
-				tools.NewStringParameter("columnName", "this is a string template parameter"),
+			templateParams: parameters.Parameters{
+				parameters.NewStringParameter("tableName", "this is a string template parameter"),
+				parameters.NewStringParameter("columnName", "this is a string template parameter"),
 			},
 			statement: "SELECT * FROM {{.tableName}} WHERE {{.columnName}} = 'Hilton'",
 			in: map[string]any{
@@ -2210,9 +2210,9 @@ func TestResolveTemplateParameters(t *testing.T) {
 		},
 		{
 			name: "standard and template parameter",
-			templateParams: tools.Parameters{
-				tools.NewStringParameter("tableName", "this is a string template parameter"),
-				tools.NewStringParameter("hotelName", "this is a string parameter"),
+			templateParams: parameters.Parameters{
+				parameters.NewStringParameter("tableName", "this is a string template parameter"),
+				parameters.NewStringParameter("hotelName", "this is a string parameter"),
 			},
 			statement: "SELECT * FROM {{.tableName}} WHERE name = $1",
 			in: map[string]any{
@@ -2223,8 +2223,8 @@ func TestResolveTemplateParameters(t *testing.T) {
 		},
 		{
 			name: "standard parameter",
-			templateParams: tools.Parameters{
-				tools.NewStringParameter("hotelName", "this is a string parameter"),
+			templateParams: parameters.Parameters{
+				parameters.NewStringParameter("hotelName", "this is a string parameter"),
 			},
 			statement: "SELECT * FROM hotels WHERE name = $1",
 			in: map[string]any{
@@ -2235,7 +2235,7 @@ func TestResolveTemplateParameters(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got, _ := tools.ResolveTemplateParams(tc.templateParams, tc.statement, tc.in)
+			got, _ := parameters.ResolveTemplateParams(tc.templateParams, tc.statement, tc.in)
 			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect resolved template params: diff %v", diff)
 			}
@@ -2246,15 +2246,15 @@ func TestResolveTemplateParameters(t *testing.T) {
 func TestFailResolveTemplateParameters(t *testing.T) {
 	tcs := []struct {
 		name           string
-		templateParams tools.Parameters
+		templateParams parameters.Parameters
 		statement      string
 		in             map[string]any
 		err            string
 	}{
 		{
 			name: "wrong param name",
-			templateParams: tools.Parameters{
-				tools.NewStringParameter("tableName", "this is a string template parameter"),
+			templateParams: parameters.Parameters{
+				parameters.NewStringParameter("tableName", "this is a string template parameter"),
 			},
 			statement: "SELECT * FROM {{.missingParam}}",
 			in:        map[string]any{},
@@ -2262,8 +2262,8 @@ func TestFailResolveTemplateParameters(t *testing.T) {
 		},
 		{
 			name: "incomplete param template",
-			templateParams: tools.Parameters{
-				tools.NewStringParameter("tableName", "this is a string template parameter"),
+			templateParams: parameters.Parameters{
+				parameters.NewStringParameter("tableName", "this is a string template parameter"),
 			},
 			statement: "SELECT * FROM {{.tableName",
 			in: map[string]any{
@@ -2273,8 +2273,8 @@ func TestFailResolveTemplateParameters(t *testing.T) {
 		},
 		{
 			name: "undefined function",
-			templateParams: tools.Parameters{
-				tools.NewStringParameter("tableName", "this is a string template parameter"),
+			templateParams: parameters.Parameters{
+				parameters.NewStringParameter("tableName", "this is a string template parameter"),
 			},
 			statement: "SELECT * FROM {{json .tableName}}",
 			in: map[string]any{
@@ -2284,8 +2284,8 @@ func TestFailResolveTemplateParameters(t *testing.T) {
 		},
 		{
 			name: "undefined method",
-			templateParams: tools.Parameters{
-				tools.NewStringParameter("tableName", "this is a string template parameter"),
+			templateParams: parameters.Parameters{
+				parameters.NewStringParameter("tableName", "this is a string template parameter"),
 			},
 			statement: "SELECT * FROM {{.tableName .wrong}}",
 			in: map[string]any{
@@ -2296,7 +2296,7 @@ func TestFailResolveTemplateParameters(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := tools.ResolveTemplateParams(tc.templateParams, tc.statement, tc.in)
+			_, err := parameters.ResolveTemplateParams(tc.templateParams, tc.statement, tc.in)
 			errStr := err.Error()
 			if errStr != tc.err {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
@@ -2339,7 +2339,7 @@ func TestCheckParamRequired(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got := tools.CheckParamRequired(tc.required, tc.defaultV)
+			got := parameters.CheckParamRequired(tc.required, tc.defaultV)
 			if got != tc.want {
 				t.Fatalf("got %v, want %v", got, tc.want)
 			}

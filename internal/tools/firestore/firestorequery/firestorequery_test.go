@@ -21,8 +21,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/firestore/firestorequery"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlFirestoreQuery(t *testing.T) {
@@ -58,8 +58,8 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 					Description:    "Query users collection with parameterized path",
 					CollectionPath: "users/{{.userId}}/documents",
 					AuthRequired:   []string{},
-					Parameters: tools.Parameters{
-						tools.NewStringParameterWithRequired("userId", "The user ID to query documents for", true),
+					Parameters: parameters.Parameters{
+						parameters.NewStringParameterWithRequired("userId", "The user ID to query documents for", true),
 					},
 				},
 			},
@@ -105,9 +105,9 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 }
 `,
 					AuthRequired: []string{},
-					Parameters: tools.Parameters{
-						tools.NewStringParameterWithRequired("category", "Product category to filter by", true),
-						tools.NewFloatParameterWithRequired("maxPrice", "Maximum price for products", true),
+					Parameters: parameters.Parameters{
+						parameters.NewStringParameterWithRequired("category", "Product category to filter by", true),
+						parameters.NewFloatParameterWithRequired("maxPrice", "Maximum price for products", true),
 					},
 				},
 			},
@@ -149,8 +149,8 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 					},
 					Limit:        "50",
 					AuthRequired: []string{},
-					Parameters: tools.Parameters{
-						tools.NewStringParameterWithRequired("sortField", "Field to sort by", true),
+					Parameters: parameters.Parameters{
+						parameters.NewStringParameterWithRequired("sortField", "Field to sort by", true),
 					},
 				},
 			},
@@ -215,10 +215,10 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 `,
 					AnalyzeQuery: true,
 					AuthRequired: []string{"google-auth-service", "api-key-service"},
-					Parameters: tools.Parameters{
-						tools.NewStringParameterWithRequired("collection", "Collection name to query", true),
-						tools.NewStringParameterWithRequired("status", "Status to filter by", true),
-						tools.NewIntParameterWithDefault("minPriority", 1, "Minimum priority level"),
+					Parameters: parameters.Parameters{
+						parameters.NewStringParameterWithRequired("collection", "Collection name to query", true),
+						parameters.NewStringParameterWithRequired("status", "Status to filter by", true),
+						parameters.NewIntParameterWithDefault("minPriority", 1, "Minimum priority level"),
 					},
 				},
 			},
@@ -294,12 +294,12 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 }
 `,
 					AuthRequired: []string{},
-					Parameters: tools.Parameters{
-						tools.NewStringParameterWithRequired("continent", "Continent to filter by", true),
-						tools.NewStringParameterWithRequired("minPopulation", "Minimum population as string", true),
-						tools.NewFloatParameterWithRequired("minGdp", "Minimum GDP value", true),
-						tools.NewBooleanParameterWithRequired("isActive", "Filter by active status", true),
-						tools.NewStringParameterWithRequired("startDate", "Start date in RFC3339 format", true),
+					Parameters: parameters.Parameters{
+						parameters.NewStringParameterWithRequired("continent", "Continent to filter by", true),
+						parameters.NewStringParameterWithRequired("minPopulation", "Minimum population as string", true),
+						parameters.NewFloatParameterWithRequired("minGdp", "Minimum GDP value", true),
+						parameters.NewBooleanParameterWithRequired("isActive", "Filter by active status", true),
+						parameters.NewStringParameterWithRequired("startDate", "Start date in RFC3339 format", true),
 					},
 				},
 			},
@@ -433,11 +433,11 @@ func TestParseFromYamlMultipleQueryTools(t *testing.T) {
 			},
 			Limit:        "20",
 			AuthRequired: []string{},
-			Parameters: tools.Parameters{
-				tools.NewStringParameterWithRequired("userId", "User ID whose posts to query", true),
-				tools.NewStringParameterWithRequired("visibility", "Post visibility (public, private, friends)", true),
-				tools.NewStringParameterWithRequired("startDate", "Start date for posts", true),
-				tools.NewStringParameterWithDefault("sortOrder", "DESCENDING", "Sort order (ASCENDING or DESCENDING)"),
+			Parameters: parameters.Parameters{
+				parameters.NewStringParameterWithRequired("userId", "User ID whose posts to query", true),
+				parameters.NewStringParameterWithRequired("visibility", "Post visibility (public, private, friends)", true),
+				parameters.NewStringParameterWithRequired("startDate", "Start date for posts", true),
+				parameters.NewStringParameterWithDefault("sortOrder", "DESCENDING", "Sort order (ASCENDING or DESCENDING)"),
 			},
 		},
 		"query_inventory": firestorequery.Config{
@@ -450,9 +450,9 @@ func TestParseFromYamlMultipleQueryTools(t *testing.T) {
   "field": "quantity", "op": "<", "value": {"integerValue": "{{.threshold}}"}}
 `,
 			AuthRequired: []string{},
-			Parameters: tools.Parameters{
-				tools.NewStringParameterWithRequired("warehouseId", "Warehouse ID to check inventory", true),
-				tools.NewIntParameterWithRequired("threshold", "Quantity threshold for low stock", true),
+			Parameters: parameters.Parameters{
+				parameters.NewStringParameterWithRequired("warehouseId", "Warehouse ID to check inventory", true),
+				parameters.NewIntParameterWithRequired("threshold", "Quantity threshold for low stock", true),
 			},
 		},
 		"query_transactions": firestorequery.Config{
@@ -470,10 +470,10 @@ func TestParseFromYamlMultipleQueryTools(t *testing.T) {
 `,
 			AnalyzeQuery: true,
 			AuthRequired: []string{"finance-auth"},
-			Parameters: tools.Parameters{
-				tools.NewStringParameterWithRequired("accountId", "Account ID for transactions", true),
-				tools.NewStringParameterWithDefault("transactionType", "all", "Type of transaction"),
-				tools.NewFloatParameterWithDefault("minAmount", 0, "Minimum transaction amount"),
+			Parameters: parameters.Parameters{
+				parameters.NewStringParameterWithRequired("accountId", "Account ID for transactions", true),
+				parameters.NewStringParameterWithDefault("transactionType", "all", "Type of transaction"),
+				parameters.NewFloatParameterWithDefault("minAmount", 0, "Minimum transaction amount"),
 			},
 		},
 	}

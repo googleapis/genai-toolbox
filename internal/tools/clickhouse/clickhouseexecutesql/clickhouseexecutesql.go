@@ -22,6 +22,7 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 type compatibleSource interface {
@@ -71,37 +72,37 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", executeSQLKind, compatibleSources)
 	}
 
-	sqlParameter := tools.NewStringParameter("sql", "The SQL statement to execute.")
-	parameters := tools.Parameters{sqlParameter}
+	sqlParameter := parameters.NewStringParameter("sql", "The SQL statement to execute.")
+	params := parameters.Parameters{sqlParameter}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
-	t := ExecuteSQLTool{
-		Name:         cfg.Name,
-		Kind:         executeSQLKind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Pool:         s.ClickHousePool(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+	t := Tool{
+		Config:      cfg,
+		Parameters:  params,
+		Pool:        s.ClickHousePool(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
 
-var _ tools.Tool = ExecuteSQLTool{}
+var _ tools.Tool = Tool{}
 
-type ExecuteSQLTool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+type Tool struct {
+	Config
+	Parameters parameters.Parameters `yaml:"parameters"`
 
 	Pool        *sql.DB
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t ExecuteSQLTool) Invoke(ctx context.Context, params tools.ParamValues, token tools.AccessToken) (any, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, token tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	sql, ok := paramsMap["sql"].(string)
 	if !ok {
@@ -166,22 +167,22 @@ func (t ExecuteSQLTool) Invoke(ctx context.Context, params tools.ParamValues, to
 	return out, nil
 }
 
-func (t ExecuteSQLTool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
-func (t ExecuteSQLTool) Manifest() tools.Manifest {
+func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-func (t ExecuteSQLTool) McpManifest() tools.McpManifest {
+func (t Tool) McpManifest() tools.McpManifest {
 	return t.mcpManifest
 }
 
-func (t ExecuteSQLTool) Authorized(verifiedAuthServices []string) bool {
+func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t ExecuteSQLTool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization() bool {
 	return false
 }

@@ -168,6 +168,14 @@ tools:
 
     list_triggers:
         kind: postgres-list-triggers
+        source: postgresql-source 
+
+    list_indexes:
+        kind: postgres-list-indexes
+        source: postgresql-source
+
+    list_sequences:
+        kind: postgres-list-sequences
         source: postgresql-source
 
 toolsets:
@@ -187,3 +195,5 @@ toolsets:
         - list_schemas
         - database_overview
         - list_triggers
+        - list_indexes
+        - list_sequences
