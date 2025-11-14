@@ -2,7 +2,7 @@
 &lt;p>A &lt;code>mindsdb-execute-sql&lt;/code> tool executes a SQL statement against a MindsDB
 federated database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/mindsdb.md">mindsdb&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/mindsdb/">mindsdb&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>mindsdb-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the SQL
 statement against the &lt;code>source&lt;/code>. This tool enables you to:&lt;/p>
@@ -62,7 +62,7 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p><
 &lt;p>A &lt;code>mindsdb-sql&lt;/code> tool executes a pre-defined SQL statement against a MindsDB
 federated database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/mindsdb.md">mindsdb&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/mindsdb/">mindsdb&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>The specified SQL statement is executed as a &lt;a href="https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html">prepared statement&lt;/a>,
 and expects parameters in the SQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
