@@ -7,11 +7,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
-	"github.com/godror/godror"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/oracle"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -138,45 +136,72 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	var out []any
 	for rows.Next() {
-		// Create slice to hold values
 		values := make([]any, len(cols))
-		valuePtrs := make([]any, len(cols))
-		for i := range values {
-			valuePtrs[i] = &values[i]
+		for i, colType := range colTypes {
+			switch strings.ToUpper(colType.DatabaseTypeName()) {
+			case "NUMBER", "FLOAT", "BINARY_FLOAT", "BINARY_DOUBLE":
+				if _, scale, ok := colType.DecimalSize(); ok && scale == 0 {
+					// Scale is 0, treat it as an integer.
+					values[i] = new(sql.NullInt64)
+				} else {
+					// Scale is non-zero or unknown, treat
+					// it as a float.
+					values[i] = new(sql.NullFloat64)
+				}
+			case "DATE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
+				values[i] = new(sql.NullTime)
+			case "JSON":
+				values[i] = new(sql.RawBytes)
+			default:
+				values[i] = new(sql.NullString)
+			}
 		}
 
-		// Scan the values
-		if err := rows.Scan(valuePtrs...); err != nil {
+		if err := rows.Scan(values...); err != nil {
 			return nil, fmt.Errorf("unable to scan row: %w", err)
 		}
 
-		// Create result map
 		vMap := make(map[string]any)
 		for i, col := range cols {
-			val := values[i]
-			switch colTypes[i].DatabaseTypeName() {
-			case "JSON":
-				// unmarshal JSON data before storing to prevent double marshaling
-				var unmarshaledData any
-				err := json.Unmarshal(val.([]byte), &unmarshaledData)
-				if err != nil {
-					return nil, fmt.Errorf("unable to unmarshal json data %s", val)
-				}
-				vMap[col] = unmarshaledData
-			case "TEXT", "VARCHAR", "NVARCHAR":
-				vMap[col] = string(val.([]byte))
-			case "NUMBER":
-				s := string(val.(godror.Number))
-				if strings.Contains(s, ".") {
-					vMap[col], err = strconv.ParseFloat(s, 64)
+			receiver := values[i]
+
+			switch v := receiver.(type) {
+			case *sql.NullInt64:
+				if v.Valid {
+					vMap[col] = v.Int64
 				} else {
-					vMap[col], err = strconv.ParseInt(s, 10, 64)
+					vMap[col] = nil
 				}
-				if err != nil {
-					return nil, fmt.Errorf("unable to convert NUMBER data '%s' for column %s: %w", s, col, err)
+			case *sql.NullFloat64:
+				if v.Valid {
+					vMap[col] = v.Float64
+				} else {
+					vMap[col] = nil
+				}
+			case *sql.NullString:
+				if v.Valid {
+					vMap[col] = v.String
+				} else {
+					vMap[col] = nil
+				}
+			case *sql.NullTime:
+				if v.Valid {
+					vMap[col] = v.Time
+				} else {
+					vMap[col] = nil
+				}
+			case *sql.RawBytes:
+				if *v != nil {
+					var unmarshaledData any
+					if err := json.Unmarshal(*v, &unmarshaledData); err != nil {
+						return nil, fmt.Errorf("unable to unmarshal json data for column %s", col)
+					}
+					vMap[col] = unmarshaledData
+				} else {
+					vMap[col] = nil
 				}
 			default:
-				vMap[col] = val
+				return nil, fmt.Errorf("unexpected receiver type: %T", v)
 			}
 		}
 		out = append(out, vMap)
