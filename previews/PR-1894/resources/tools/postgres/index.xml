@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Postgres on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/tools/postgres/</link><description>Recent content in Postgres on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/tools/postgres/index.xml" rel="self" type="application/rss+xml"/><item><title>postgres-database-overview</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/tools/postgres/postgres-database-overview/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/tools/postgres/postgres-database-overview/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>postgres-database-overview&lt;/code> fetches the current state of the PostgreSQL server. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;p>The &lt;code>postgres-database-overview&lt;/code> fetches the current state of the PostgreSQL
+server. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>postgres-database-overview&lt;/code> fetches the current state of the PostgreSQL server This tool does not take any input parameters.&lt;/p>
+&lt;p>&lt;code>postgres-database-overview&lt;/code> fetches the current state of the PostgreSQL server
+This tool does not take any input parameters.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">database_overview&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -139,17 +141,23 @@ not support any input parameter.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>postgres-list-indexes</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/tools/postgres/postgres-list-indexes/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/tools/postgres/postgres-list-indexes/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>postgres-list-indexes&lt;/code> tool lists available user indexes in the database excluding those in &lt;code>pg_catalog&lt;/code> and &lt;code>information_schema&lt;/code>. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;p>The &lt;code>postgres-list-indexes&lt;/code> tool lists available user indexes in the database
+excluding those in &lt;code>pg_catalog&lt;/code> and &lt;code>information_schema&lt;/code>. It&amp;rsquo;s compatible with
+any of the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>postgres-list-indexes&lt;/code> lists detailed information as JSON for indexes. The tool takes the following input parameters:&lt;/p>
+&lt;p>&lt;code>postgres-list-indexes&lt;/code> lists detailed information as JSON for indexes. The tool
+takes the following input parameters:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>table_name&lt;/code> (optional): A text to filter results by table name. The input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
-&lt;li>&lt;code>index_name&lt;/code> (optional): A text to filter results by index name. The input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
-&lt;li>&lt;code>schema_name&lt;/code> (optional): A text to filter results by schema name. The input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>table_name&lt;/code> (optional): A text to filter results by table name. The input is
+used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>index_name&lt;/code> (optional): A text to filter results by index name. The input is
+used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>schema_name&lt;/code> (optional): A text to filter results by schema name. The input
+is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
 &lt;li>&lt;code>limit&lt;/code> (optional): The maximum number of rows to return. Default: &lt;code>50&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
@@ -214,17 +222,19 @@ support any input parameter.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>postgres-list-schemas</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/tools/postgres/postgres-list-schemas/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/tools/postgres/postgres-list-schemas/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>postgres-list-schemas&lt;/code> tool retrieves information about schemas in a database excluding system
-and temporary schemas. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;p>The &lt;code>postgres-list-schemas&lt;/code> tool retrieves information about schemas in a
+database excluding system and temporary schemas. It&amp;rsquo;s compatible with any of
+the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>postgres-list-schemas&lt;/code> lists detailed information as JSON for each schema. The tool takes the following
-input parameters:&lt;/p>
+&lt;p>&lt;code>postgres-list-schemas&lt;/code> lists detailed information as JSON for each schema. The
+tool takes the following input parameters:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>schema_name&lt;/code> (optional): A pattern to filter schema names using SQL LIKE operator.
+&lt;li>&lt;code>schema_name&lt;/code> (optional): A pattern to filter schema names using SQL LIKE
+operator.
 If omitted, all user-defined schemas are returned.&lt;/li>
 &lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
@@ -234,16 +244,20 @@ If omitted, all user-defined schemas are returned.&lt;/li>
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s2">&amp;#34;Lists all schemas in the database ordered by schema name and excluding system and temporary schemas. It returns the schema name, schema owner, grants, number of functions, number of tables and number of views within each schema.&amp;#34;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>postgres-list-sequences</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/tools/postgres/postgres-list-sequences/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/tools/postgres/postgres-list-sequences/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>postgres-list-sequences&lt;/code> tool retrieves information about sequences in a Postgres database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;p>The &lt;code>postgres-list-sequences&lt;/code> tool retrieves information about sequences in a
+Postgres database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>postgres-list-sequences&lt;/code> lists detailed information as JSON for all sequences. The tool takes the following input parameters:&lt;/p>
+&lt;p>&lt;code>postgres-list-sequences&lt;/code> lists detailed information as JSON for all sequences.
+The tool takes the following input parameters:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>sequencename&lt;/code> (optional): A text to filter results by sequence name. The input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
-&lt;li>&lt;code>schemaname&lt;/code> (optional): A text to filter results by schema name. The input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>sequencename&lt;/code> (optional): A text to filter results by sequence name. The
+input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>schemaname&lt;/code> (optional): A text to filter results by schema name. The input is
+used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
 &lt;li>&lt;code>limit&lt;/code> (optional): The maximum number of rows to return. Default: &lt;code>50&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
@@ -274,17 +288,22 @@ default, it lists all tables in user schemas.* &lt;code>output_format&lt;/code> 
 Indicate the output format of table schema. &lt;code>simple&lt;/code> will return only the
 table names, &lt;code>detailed&lt;/code> will return the full table information. Default:
 &lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-list-triggers</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/tools/postgres/postgres-list-triggers/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/tools/postgres/postgres-list-triggers/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>postgres-list-triggers&lt;/code> tool lists available non-internal triggers in the database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;p>The &lt;code>postgres-list-triggers&lt;/code> tool lists available non-internal triggers in the
+database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>postgres-list-triggers&lt;/code> lists detailed information as JSON for triggers. The tool takes the following input parameters:&lt;/p>
+&lt;p>&lt;code>postgres-list-triggers&lt;/code> lists detailed information as JSON for triggers. The
+tool takes the following input parameters:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>trigger_name&lt;/code> (optional): A text to filter results by trigger name. The input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
-&lt;li>&lt;code>schema_name&lt;/code> (optional): A text to filter results by schema name. The input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
-&lt;li>&lt;code>table_name&lt;/code> (optional): A text to filter results by table name. The input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>trigger_name&lt;/code> (optional): A text to filter results by trigger name. The input
+is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>schema_name&lt;/code> (optional): A text to filter results by schema name. The input
+is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>table_name&lt;/code> (optional): A text to filter results by table name. The input is
+used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
 &lt;li>&lt;code>limit&lt;/code> (optional): The maximum number of triggers to return. Default: &lt;code>50&lt;/code>&lt;/li>
 &lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
@@ -296,16 +315,20 @@ table names, &lt;code>detailed&lt;/code> will return the full table information.
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Lists all non-internal triggers in a database. Returns trigger name, schema name, table name, wether its enabled or disabled, timing (e.g BEFORE/AFTER of the event), the events that cause the trigger to fire such as INSERT, UPDATE, or DELETE, whether the trigger activates per ROW or per STATEMENT, the handler function executed by the trigger and full definition.&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>postgres-list-views</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/tools/postgres/postgres-list-views/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/tools/postgres/postgres-list-views/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>postgres-list-views&lt;/code> tool retrieves a list of top N (default 50) views from a Postgres database, excluding those in system schemas (&lt;code>pg_catalog&lt;/code>, &lt;code>information_schema&lt;/code>). It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;p>The &lt;code>postgres-list-views&lt;/code> tool retrieves a list of top N (default 50) views from
+a Postgres database, excluding those in system schemas (&lt;code>pg_catalog&lt;/code>,
+&lt;code>information_schema&lt;/code>). It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>postgres-list-views&lt;/code> lists detailed view information (schemaname, viewname, ownername) as JSON for views in a database. The tool takes the following input parameters:&lt;/p>
+&lt;p>&lt;code>postgres-list-views&lt;/code> lists detailed view information (schemaname, viewname,
+ownername) as JSON for views in a database. The tool takes the following input
+parameters:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>viewname&lt;/code> (optional): A string pattern to filter view names. The search uses SQL
-LIKE operator to filter the views. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>viewname&lt;/code> (optional): A string pattern to filter view names. The search uses
+SQL LIKE operator to filter the views. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
 &lt;li>&lt;code>limit&lt;/code> (optional): The maximum number of rows to return. Default: &lt;code>50&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>

@@ -51,7 +51,8 @@ database. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1894/resources/sources/singlestore/">singlestore&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>The specified SQL statement expects parameters in the SQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
+&lt;p>The specified SQL statement expects parameters in the SQL query to be in the
+form of placeholders &lt;code>?&lt;/code>.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;blockquote>
 &lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
