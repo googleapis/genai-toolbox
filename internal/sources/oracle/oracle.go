@@ -1,3 +1,4 @@
+// Copyright © 2025, Oracle and/or its affiliates.
 package oracle
 
 import (
@@ -103,7 +104,6 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Name: r.Name,
 		Kind: SourceKind,
 		DB:   db,
-		UseOCI: r.UseOCI,
 	}
 	return s, nil
 }
@@ -114,7 +114,6 @@ type Source struct {
 	Name string `yaml:"name"`
 	Kind string `yaml:"kind"`
 	DB   *sql.DB
-	UseOCI bool
 }
 
 func (s *Source) SourceKind() string {
@@ -123,10 +122,6 @@ func (s *Source) SourceKind() string {
 
 func (s *Source) OracleDB() *sql.DB {
 	return s.DB
-}
-
-func (s *Source) OracleUseOCI() bool {
-	return s.UseOCI
 }
 
 func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Config) (*sql.DB, error) {
