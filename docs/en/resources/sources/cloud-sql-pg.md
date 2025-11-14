@@ -53,6 +53,12 @@ to a database by following these instructions][csql-pg-quickstart].
 - [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
   List triggers in a PostgreSQL database.
 
+- [`postgres-list-indexes`](../tools/postgres/postgres-list-indexes.md)
+  List available user indexes in a PostgreSQL database.
+
+- [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
+  List sequences in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [Cloud SQL for Postgres using

@@ -18,8 +18,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 // ArgMcpManifest is the simplified manifest structure for an argument required for prompts.
@@ -29,10 +29,10 @@ type ArgMcpManifest struct {
 	Required    bool   `json:"required"`
 }
 
-// Argument is a wrapper around a tools.Parameter that provides prompt-specific functionality.
+// Argument is a wrapper around a parameters.Parameter that provides prompt-specific functionality.
 // If the 'type' field is not specified in a YAML definition, it defaults to 'string'.
 type Argument struct {
-	tools.Parameter
+	parameters.Parameter
 }
 
 // McpManifest returns the simplified manifest structure required for prompts.
@@ -40,7 +40,7 @@ func (a Argument) McpManifest() ArgMcpManifest {
 	return ArgMcpManifest{
 		Name:        a.GetName(),
 		Description: a.Manifest().Description,
-		Required:    tools.CheckParamRequired(a.GetRequired(), a.GetDefault()),
+		Required:    parameters.CheckParamRequired(a.GetRequired(), a.GetDefault()),
 	}
 }
 
@@ -64,12 +64,12 @@ func (args *Arguments) UnmarshalYAML(ctx context.Context, unmarshal func(interfa
 		// If 'type' is missing, default it to string.
 		paramType, ok := p["type"]
 		if !ok {
-			p["type"] = tools.TypeString
-			paramType = tools.TypeString
+			p["type"] = parameters.TypeString
+			paramType = parameters.TypeString
 		}
 
 		// Call the clean, exported parser from the tools package. No more duplicated logic!
-		param, err := tools.ParseParameter(ctx, p, paramType.(string))
+		param, err := parameters.ParseParameter(ctx, p, paramType.(string))
 		if err != nil {
 			return err
 		}
@@ -80,10 +80,10 @@ func (args *Arguments) UnmarshalYAML(ctx context.Context, unmarshal func(interfa
 }
 
 // ParseArguments validates and processes the user-provided arguments against the prompt's requirements.
-func ParseArguments(arguments Arguments, args map[string]any, data map[string]map[string]any) (tools.ParamValues, error) {
-	var parameters tools.Parameters
+func ParseArguments(arguments Arguments, args map[string]any, data map[string]map[string]any) (parameters.ParamValues, error) {
+	var params parameters.Parameters
 	for _, arg := range arguments {
-		parameters = append(parameters, arg.Parameter)
+		params = append(params, arg.Parameter)
 	}
-	return tools.ParseParams(parameters, args, data)
+	return parameters.ParseParams(params, args, data)
 }
