@@ -82,6 +82,13 @@ func (c Config) validate() error {
 		return fmt.Errorf("provide only one connection method: 'tns_alias', 'connection_string', or 'host'+'service_name'")
 	}
 
+	if !c.UseOCI {
+		// TnsAdmin is set specifically to enable OCI features like wallets
+		if strings.TrimSpace(c.TnsAdmin) != "" {
+			return fmt.Errorf("tnsAdmin can only be used when `UseOCI` is true,as it is used by OCI-specific features, such as Wallets")
+		}
+	}
+
 	return nil
 }
 
