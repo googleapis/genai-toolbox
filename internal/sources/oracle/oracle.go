@@ -7,8 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/goccy/go-yaml"     // For UseOCI = true
-	_ "github.com/sijms/go-ora/v2" // For UseOCI = false
+	"github.com/goccy/go-yaml"
+	_ "github.com/godror/godror"   // OCI driver
+	_ "github.com/sijms/go-ora/v2" // Pure Go driver
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
@@ -102,6 +103,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Name: r.Name,
 		Kind: SourceKind,
 		DB:   db,
+		UseOCI: r.UseOCI,
 	}
 	return s, nil
 }
@@ -112,6 +114,7 @@ type Source struct {
 	Name string `yaml:"name"`
 	Kind string `yaml:"kind"`
 	DB   *sql.DB
+	UseOCI bool
 }
 
 func (s *Source) SourceKind() string {
@@ -120,6 +123,10 @@ func (s *Source) SourceKind() string {
 
 func (s *Source) OracleDB() *sql.DB {
 	return s.DB
+}
+
+func (s *Source) OracleUseOCI() bool {
+	return s.UseOCI
 }
 
 func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Config) (*sql.DB, error) {
