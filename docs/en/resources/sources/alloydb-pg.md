@@ -61,7 +61,7 @@ cluster][alloydb-free-trial].
   List schemas in an AlloyDB for PostgreSQL database.
 
 - [`postgres-database-overview`](../tools/postgres/postgres-database-overview.md)
-  Fetches the current state of the PostgreSQL server. 
+  Fetches the current state of the PostgreSQL server.
 
 - [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
   List triggers in an AlloyDB for PostgreSQL database.

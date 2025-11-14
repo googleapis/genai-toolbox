@@ -57,7 +57,7 @@ to a database by following these instructions][csql-pg-quickstart].
   List schemas in a PostgreSQL database.
 
 - [`postgres-database-overview`](../tools/postgres/postgres-database-overview.md)
-  Fetches the current state of the PostgreSQL server. 
+  Fetches the current state of the PostgreSQL server.
 
 - [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
   List triggers in a PostgreSQL database.
@@ -73,7 +73,6 @@ to a database by following these instructions][csql-pg-quickstart].
 - [Cloud SQL for Postgres using
   MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/)
 Connect your IDE to Cloud SQL for Postgres using Toolbox.
-
 
 ## Requirements
 
