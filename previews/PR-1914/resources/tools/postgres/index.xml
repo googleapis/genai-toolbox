@@ -138,7 +138,34 @@ not support any input parameter.&lt;/p>
  &lt;td>functions for autoincrementing fields&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>postgres-list-installed-extensions</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1914/resources/tools/postgres/postgres-list-installed-extensions/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1914/resources/tools/postgres/postgres-list-installed-extensions/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>postgres-list-indexes</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1914/resources/tools/postgres/postgres-list-indexes/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1914/resources/tools/postgres/postgres-list-indexes/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-indexes&lt;/code> tool lists available user indexes in the database excluding those in &lt;code>pg_catalog&lt;/code> and &lt;code>information_schema&lt;/code>. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1914/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1914/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1914/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-list-indexes&lt;/code> lists detailed information as JSON for indexes. The tool takes the following input parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>table_name&lt;/code> (optional): A text to filter results by table name. The input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>index_name&lt;/code> (optional): A text to filter results by index name. The input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>schema_name&lt;/code> (optional): A text to filter results by schema name. The input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>limit&lt;/code> (optional): The maximum number of rows to return. Default: &lt;code>50&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_indexes&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-list-indexes&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Lists available user indexes in the database, excluding system schemas (pg_catalog, 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> information_schema). For each index, the following properties are returned: 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> schema name, table name, index name, index type (access method), a boolean 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> indicating if it&amp;#39;s a unique index, a boolean indicating if it&amp;#39;s for a primary key,
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> the index definition, index size in bytes, the number of index scans, the number of 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> index tuples read, the number of table tuples fetched via index scans, and a boolean 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> indicating if the index has been used at least once. &lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>postgres-list-installed-extensions</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1914/resources/tools/postgres/postgres-list-installed-extensions/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1914/resources/tools/postgres/postgres-list-installed-extensions/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>postgres-list-installed-extensions&lt;/code> tool retrieves all PostgreSQL
 extensions installed on a Postgres database. It&amp;rsquo;s compatible with any of the
 following sources:&lt;/p>
@@ -206,6 +233,30 @@ If omitted, all user-defined schemas are returned.&lt;/li>
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-list-schemas&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s2">&amp;#34;Lists all schemas in the database ordered by schema name and excluding system and temporary schemas. It returns the schema name, schema owner, grants, number of functions, number of tables and number of views within each schema.&amp;#34;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>postgres-list-sequences</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1914/resources/tools/postgres/postgres-list-sequences/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1914/resources/tools/postgres/postgres-list-sequences/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-sequences&lt;/code> tool retrieves information about sequences in a Postgres database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1914/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1914/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1914/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-list-sequences&lt;/code> lists detailed information as JSON for all sequences. The tool takes the following input parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>sequencename&lt;/code> (optional): A text to filter results by sequence name. The input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>schemaname&lt;/code> (optional): A text to filter results by schema name. The input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>limit&lt;/code> (optional): The maximum number of rows to return. Default: &lt;code>50&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_indexes&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-list-sequences&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Lists all the sequences in the database ordered by sequence name.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Returns sequence name, schema name, sequence owner, data type of the
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> sequence, starting value, minimum value, maximum value of the sequence,
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> the value by which the sequence is incremented, and the last value
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> generated by generated by the sequence in the current session.&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>postgres-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1914/resources/tools/postgres/postgres-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1914/resources/tools/postgres/postgres-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>postgres-list-tables&lt;/code> tool retrieves schema information for all or
 specified tables in a Postgres database. It&amp;rsquo;s compatible with any of the
