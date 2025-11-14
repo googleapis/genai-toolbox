@@ -7,8 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/goccy/go-yaml"     // For UseOCI = true
-	_ "github.com/sijms/go-ora/v2" // For UseOCI = false
+	"github.com/goccy/go-yaml"
+	_ "github.com/godror/godror"   // OCI driver
+	_ "github.com/sijms/go-ora/v2" // Pure Go driver
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
@@ -122,6 +123,10 @@ func (s *Source) ToConfig() sources.SourceConfig {
 
 func (s *Source) OracleDB() *sql.DB {
 	return s.DB
+}
+
+func (s *Source) OracleUseOCI() bool {
+	return s.UseOCI
 }
 
 func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Config) (*sql.DB, error) {
