@@ -2947,6 +2947,222 @@ func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 	}
 }
 
+// RunPostgresListLocksTest runs tests for the postgres list-locks tool
+func RunPostgresListLocksTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	type lockDetails struct {
+		Pid           any    `json:"pid"`
+		Usename       string `json:"usename"`
+		Database      string `json:"database"`
+		RelName       string `json:"relname"`
+		LockType      string `json:"locktype"`
+		Mode          string `json:"mode"`
+		Granted       bool   `json:"granted"`
+		FastPath      bool   `json:"fastpath"`
+		VirtualXid    any    `json:"virtualxid"`
+		TransactionId any    `json:"transactionid"`
+		ClassId       any    `json:"classid"`
+		ObjId         any    `json:"objid"`
+		ObjSubId      any    `json:"objsubid"`
+		PageNumber    any    `json:"page"`
+		TupleNumber   any    `json:"tuple"`
+		VirtualBlock  any    `json:"virtualblock"`
+		BlockNumber   any    `json:"blockno"`
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		expectResults  bool
+	}{
+		{
+			name:           "invoke list_locks with no arguments",
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusOK,
+			expectResults:  false, // locks may or may not exist
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_locks/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []lockDetails
+			if resultString != "null" {
+				if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+					t.Fatalf("failed to unmarshal result: %v, result string: %s", err, resultString)
+				}
+			}
+
+			// Verify that if results exist, they have the expected structure
+			for _, lock := range got {
+				if lock.LockType == "" {
+					t.Errorf("lock type should not be empty")
+				}
+			}
+		})
+	}
+}
+
+// RunPostgresLongRunningTransactionsTest runs tests for the postgres long-running-transactions tool
+func RunPostgresLongRunningTransactionsTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	type transactionDetails struct {
+		Pid               any    `json:"pid"`
+		Usename           string `json:"usename"`
+		Database          string `json:"database"`
+		ApplicationName   string `json:"application_name"`
+		XactStart         any    `json:"xact_start"`
+		XactDurationSecs  any    `json:"xact_duration_secs"`
+		IdleInTransaction string `json:"idle_in_transaction"`
+		Query             string `json:"query"`
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+	}{
+		{
+			name:           "invoke long_running_transactions with default threshold",
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "invoke long_running_transactions with custom threshold",
+			requestBody:    bytes.NewBuffer([]byte(`{"min_transaction_duration_secs": 3600}`)),
+			wantStatusCode: http.StatusOK,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/long_running_transactions/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []transactionDetails
+			if resultString != "null" {
+				if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+					t.Fatalf("failed to unmarshal result: %v, result string: %s", err, resultString)
+				}
+			}
+
+			// Verify that if results exist, they have the expected structure
+			for _, tx := range got {
+				if tx.XactDurationSecs == nil {
+					t.Errorf("transaction duration should not be null for long-running transactions")
+				}
+			}
+		})
+	}
+}
+
+// RunPostgresReplicationStatsTest runs tests for the postgres replication-stats tool
+func RunPostgresReplicationStatsTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	type replicationStats struct {
+		ClientAddr          string `json:"client_addr"`
+		Username            string `json:"usename"`
+		ApplicationName     string `json:"application_name"`
+		ClientHostname      string `json:"client_hostname"`
+		BackendStart        any    `json:"backend_start"`
+		State               string `json:"state"`
+		SyncState           string `json:"sync_state"`
+		ReplyTime           any    `json:"reply_time"`
+		FlushLsn            string `json:"flush_lsn"`
+		ReplayLsn           string `json:"replay_lsn"`
+		WriteLag            any    `json:"write_lag"`
+		FlushLag            any    `json:"flush_lag"`
+		ReplayLag           any    `json:"replay_lag"`
+		SyncPriority        any    `json:"sync_priority"`
+		ReplicationSlotName any    `json:"slot_name"`
+		IsStreaming         bool   `json:"is_streaming"`
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+	}{
+		{
+			name:           "invoke replication_stats with no arguments",
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusOK,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/replication_stats/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []replicationStats
+			if resultString != "null" {
+				if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+					t.Fatalf("failed to unmarshal result: %v, result string: %s", err, resultString)
+				}
+			}
+
+			// Verify that if results exist, they have the expected structure
+			for _, stat := range got {
+				if stat.State == "" {
+					t.Errorf("replication state should not be empty")
+				}
+			}
+		})
+	}
+}
+
 // RunRequest is a helper function to send HTTP requests and return the response
 func RunRequest(t *testing.T, method, url string, body io.Reader, headers map[string]string) (*http.Response, []byte) {
 	// Send request

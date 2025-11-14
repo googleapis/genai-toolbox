@@ -50,6 +50,18 @@ tools:
         source: alloydb-pg-source
         description: "List all installed PostgreSQL extensions with their name, version, schema, owner, and description."
 
+    long_running_transactions:
+        kind: postgres-long-running-transactions
+        source: alloydb-pg-source
+
+    list_locks:
+        kind: postgres-list-locks
+        source: alloydb-pg-source
+
+    replication_stats:
+        kind: postgres-replication-stats
+        source: alloydb-pg-source
+
     list_autovacuum_configurations:
         kind: postgres-sql
         source: alloydb-pg-source
@@ -193,6 +205,13 @@ toolsets:
         - list_replication_slots
         - list_invalid_indexes
         - get_query_plan
+        - long_running_transactions
+        - list_locks
+        - replication_stats
+        
+        - long_running_transactions
+        - list_locks
+        - replication_stats
         - list_views
         - list_schemas
         - database_overview
