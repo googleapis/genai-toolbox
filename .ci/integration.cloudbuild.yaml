@@ -826,8 +826,8 @@ steps:
           cassandra
 
   - id: "oracle"
-    name: golang:1
-    waitFor: ["compile-test-binary"]
+    name: ghcr.io/oracle/oraclelinux8-instantclient:21
+    waitFor: ["install-dependencies"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
@@ -840,10 +840,13 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "Oracle" \
-          oracle \
-          oracle
+          # Install the C compiler and Oracle SDK headers needed for cgo
+          dnf install -y gcc oracle-instantclient-devel
+          # Install Go
+          curl -L -o go.tar.gz "https://go.dev/dl/go1.25.1.linux-amd64.tar.gz"
+          tar -C /usr/local -xzf go.tar.gz
+          export PATH="/usr/local/go/bin:$$PATH"
+          go test ./tests/oracle
 
   - id: "serverless-spark"
     name: golang:1
