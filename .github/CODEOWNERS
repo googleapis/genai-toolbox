@@ -4,3 +4,14 @@
 # https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners#codeowners-syntax
 
 *   @googleapis/senseai-eco
+# Code & Tests
+**/alloydb*/ @googleapis/toolbox-alloydb
+**/bigquery/ @googleapis/toolbox-bigquery
+**/bigtable/ @googleapis/toolbox-bigtable
+**/cloudsqlmssql/ @googleapis/toolbox-cloud-sql-mssql
+**/cloudsqlmysql/ @googleapis/toolbox-cloud-sql-mysql
+**/cloudsqlpg/ @googleapis/toolbox-cloud-sql-postgres
+**/dataplex/ @googleapis/toolbox-dataplex
+**/firestore/ @googleapis/toolbox-firestore
+**/looker/ @googleapis/toolbox-looker
+**/spanner/ @googleapis/toolbox-spanner

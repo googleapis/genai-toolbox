@@ -48,19 +48,19 @@ to expose your developer assistant tools to a Looker instance:
    <!-- {x-release-please-start-version} -->
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.20.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.20.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.20.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.19.1/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.20.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -287,7 +287,7 @@ Your AI tool is now connected to Looker using MCP. Try asking your AI
 assistant to list models, explores, dimensions, and measures. Run a
 query, retrieve the SQL for a query, and run a saved Look.
 
-The full tool list is available in the [Prebuilt Tools Reference](../../reference/prebuilt-tools/#looker).
+The full tool list is available in the [Prebuilt Tools Reference](../../reference/prebuilt-tools.md/#looker).
 
 The following tools are available to the LLM:
 

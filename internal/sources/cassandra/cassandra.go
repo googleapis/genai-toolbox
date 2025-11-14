@@ -61,8 +61,7 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("unable to create session: %v", err)
 	}
 	s := &Source{
-		Name:    c.Name,
-		Kind:    SourceKind,
+		Config:  c,
 		Session: session,
 	}
 	return s, nil
@@ -76,14 +75,17 @@ func (c Config) SourceConfigKind() string {
 var _ sources.SourceConfig = Config{}
 
 type Source struct {
-	Name    string `yaml:"name"`
-	Kind    string `yaml:"kind"`
+	Config
 	Session *gocql.Session
 }
 
 // CassandraSession implements cassandra.compatibleSource.
 func (s *Source) CassandraSession() *gocql.Session {
 	return s.Session
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 // SourceKind implements sources.Source.

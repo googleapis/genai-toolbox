@@ -16,6 +16,7 @@ package tools
 
 import (
 	"fmt"
+	"regexp"
 )
 
 type ToolsetConfig struct {
@@ -24,10 +25,14 @@ type ToolsetConfig struct {
 }
 
 type Toolset struct {
-	Name        string          `yaml:"name"`
+	ToolsetConfig
 	Tools       []*Tool         `yaml:",inline"`
 	Manifest    ToolsetManifest `yaml:",inline"`
 	McpManifest []McpManifest   `yaml:",inline"`
+}
+
+func (t Toolset) ToConfig() ToolsetConfig {
+	return t.ToolsetConfig
 }
 
 type ToolsetManifest struct {
@@ -59,4 +64,10 @@ func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool
 	}
 
 	return toolset, nil
+}
+
+var validName = regexp.MustCompile(`^[a-zA-Z0-9_-]*$`)
+
+func IsValidName(s string) bool {
+	return validName.MatchString(s)
 }
