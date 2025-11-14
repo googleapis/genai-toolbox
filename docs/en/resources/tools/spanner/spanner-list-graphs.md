@@ -16,8 +16,11 @@ node tables, edge tables, labels and property declarations. It's compatible with
 - [spanner](../../sources/spanner.md)
 
 This tool is read-only and executes pre-defined SQL queries against the
-`INFORMATION_SCHEMA` tables to gather metadata. The tool only works for the GoogleSQL 
+`INFORMATION_SCHEMA` tables to gather metadata. 
+{{< notice warning >}}
+The tool only works for the GoogleSQL 
 source dialect, as Spanner Graph isn't available in the PostgreSQL dialect.
+{{< /notice >}}
 
 ## Features
 
