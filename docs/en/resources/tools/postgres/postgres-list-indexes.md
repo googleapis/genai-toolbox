@@ -10,17 +10,23 @@ aliases:
 
 ## About
 
-The `postgres-list-indexes` tool lists available user indexes in the database excluding those in `pg_catalog` and `information_schema`. It's compatible with any of the following sources:
+The `postgres-list-indexes` tool lists available user indexes in the database
+excluding those in `pg_catalog` and `information_schema`. It's compatible with
+any of the following sources:
 
 - [alloydb-postgres](../../sources/alloydb-pg.md)
 - [cloud-sql-postgres](../../sources/cloud-sql-pg.md)
 - [postgres](../../sources/postgres.md)
 
-`postgres-list-indexes` lists detailed information as JSON for indexes. The tool takes the following input parameters:
+`postgres-list-indexes` lists detailed information as JSON for indexes. The tool
+takes the following input parameters:
 
-- `table_name` (optional): A text to filter results by table name. The input is used within a LIKE clause. Default: `""`
-- `index_name` (optional): A text to filter results by index name. The input is used within a LIKE clause. Default: `""`
-- `schema_name` (optional): A text to filter results by schema name. The input is used within a LIKE clause. Default: `""`
+- `table_name` (optional): A text to filter results by table name. The input is
+  used within a LIKE clause. Default: `""`
+- `index_name` (optional): A text to filter results by index name. The input is
+  used within a LIKE clause. Default: `""`
+- `schema_name` (optional): A text to filter results by schema name. The input
+  is used within a LIKE clause. Default: `""`
 - `limit` (optional): The maximum number of rows to return. Default: `50`.
 
 ## Example
@@ -41,6 +47,7 @@ tools:
 ```
 
 The response is a json array with the following elements:
+
 ```json
 {
  "schema_name": "schema name", 
@@ -60,8 +67,8 @@ The response is a json array with the following elements:
 
 ## Reference
 
-| **field**   | **type** | **required**  | **description**                                      |
-|-------------|:--------:|:-------------:|------------------------------------------------------|
-| kind        |  string  |     true      | Must be "postgres-list-indexes".                      |
-| source      |  string  |     true      | Name of the source the SQL should execute on.        |
-| description |  string  |     false     | Description of the tool that is passed to the agent. |
+| **field**   | **type** | **required** | **description**                                      |
+|-------------|:--------:|:------------:|------------------------------------------------------|
+| kind        |  string  |     true     | Must be "postgres-list-indexes".                     |
+| source      |  string  |     true     | Name of the source the SQL should execute on.        |
+| description |  string  |    false     | Description of the tool that is passed to the agent. |

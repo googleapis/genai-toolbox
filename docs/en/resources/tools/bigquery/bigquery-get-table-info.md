@@ -16,6 +16,7 @@ It's compatible with the following sources:
 - [bigquery](../../sources/bigquery.md)
 
 `bigquery-get-table-info` accepts the following parameters:
+
 - **`table`** (required): The name of the table for which to retrieve metadata.
 - **`dataset`** (required): The dataset containing the specified table.
 - **`project`** (optional): The Google Cloud project ID. If not provided, the
@@ -23,6 +24,7 @@ It's compatible with the following sources:
 
 The tool's behavior regarding these parameters is influenced by the
 `allowedDatasets` restriction on the `bigquery` source:
+
 - **Without `allowedDatasets` restriction:** The tool can retrieve metadata for
   any table specified by the `table`, `dataset`, and `project` parameters.
 - **With `allowedDatasets` restriction:** Before retrieving metadata, the tool

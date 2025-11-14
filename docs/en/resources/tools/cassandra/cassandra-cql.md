@@ -16,17 +16,19 @@ database. It's compatible with any of the following sources:
 
 - [cassandra](../../sources/cassandra.md)
 
-The specified CQL statement is executed as a [prepared statement][cassandra-prepare],
-and expects parameters in the CQL query to be in the form of placeholders `?`.
+The specified CQL statement is executed as a [prepared
+statement][cassandra-prepare], and expects parameters in the CQL query to be in
+the form of placeholders `?`.
 
-[cassandra-prepare]: https://docs.datastax.com/en/datastax-drivers/developing/prepared-statements.html
+[cassandra-prepare]:
+    https://docs.datastax.com/en/datastax-drivers/developing/prepared-statements.html
 
 ## Example
 
 > **Note:** This tool uses parameterized queries to prevent CQL injections.
 > Query parameters can be used as substitutes for arbitrary expressions.
-> Parameters cannot be used as substitutes for keyspaces, table names, column names,
-> or other parts of the query.
+> Parameters cannot be used as substitutes for keyspaces, table names, column
+> names, or other parts of the query.
 
 ```yaml
 tools:
@@ -85,12 +87,12 @@ tools:
 
 ## Reference
 
-| **field**          |                  **type**                        | **required** | **description**                                                                                                                            |
-|--------------------|:------------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
-| kind               |                   string                         |     true     | Must be "cassandra-cql".                                                                                                                   |
-| source             |                   string                         |     true     | Name of the source the CQL should execute on.                                                                                              |
-| description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
-| statement          |                   string                         |     true     | CQL statement to execute.                                                                                                                  |
-| authRequired       |                []string                         |    false     | List of authentication requirements for the source.                                                                                        |
-| parameters         | [parameters](../#specifying-parameters)       |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the CQL statement.                                           |
+| **field**          |                   **type**                    | **required** | **description**                                                                                                                         |
+|--------------------|:---------------------------------------------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------|
+| kind               |                    string                     |     true     | Must be "cassandra-cql".                                                                                                                |
+| source             |                    string                     |     true     | Name of the source the CQL should execute on.                                                                                           |
+| description        |                    string                     |     true     | Description of the tool that is passed to the LLM.                                                                                      |
+| statement          |                    string                     |     true     | CQL statement to execute.                                                                                                               |
+| authRequired       |                   []string                    |    false     | List of authentication requirements for the source.                                                                                     |
+| parameters         |    [parameters](../#specifying-parameters)    |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the CQL statement.                                           |
 | templateParameters | [templateParameters](../#template-parameters) |    false     | List of [templateParameters](../#template-parameters) that will be inserted into the CQL statement before executing prepared statement. |

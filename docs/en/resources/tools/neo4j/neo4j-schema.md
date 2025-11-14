@@ -42,6 +42,7 @@ tools:
 ```
 
 ## Reference
+
 | **field**          | **type** | **required** | **description**                                         |
 |--------------------|:--------:|:------------:|---------------------------------------------------------|
 | kind               |  string  |     true     | Must be `neo4j-schema`.                                 |
