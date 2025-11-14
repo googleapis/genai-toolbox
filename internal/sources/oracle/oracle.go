@@ -45,7 +45,7 @@ type Config struct {
 	Kind             string `yaml:"kind" validate:"required"`
 	ConnectionString string `yaml:"connectionString,omitempty"` // Direct connection string (hostname[:port]/servicename)
 	TnsAlias         string `yaml:"tnsAlias,omitempty"`         // TNS alias from tnsnames.ora
-	TnsAdmin         string `yaml:"tnsAdmin,omitempty"` // Optional: override TNS_ADMIN environment variable
+	TnsAdmin         string `yaml:"tnsAdmin,omitempty"`         // Optional: override TNS_ADMIN environment variable
 	Host             string `yaml:"host,omitempty"`             // Optional when using connectionString/tnsAlias
 	Port             int    `yaml:"port,omitempty"`             // Explicit port support
 	ServiceName      string `yaml:"serviceName,omitempty"`      // Optional when using connectionString/tnsAlias
@@ -56,47 +56,47 @@ type Config struct {
 
 // validate ensures we have one of: tns_alias, connection_string, or host+service_name
 func (c Config) validate() error {
-    // Validation logic remains the same
-    hasTnsAlias := strings.TrimSpace(c.TnsAlias) != ""
-    hasConnStr := strings.TrimSpace(c.ConnectionString) != ""
-    hasHostService := strings.TrimSpace(c.Host) != "" && strings.TrimSpace(c.ServiceName) != ""
+	// Validation logic remains the same
+	hasTnsAlias := strings.TrimSpace(c.TnsAlias) != ""
+	hasConnStr := strings.TrimSpace(c.ConnectionString) != ""
+	hasHostService := strings.TrimSpace(c.Host) != "" && strings.TrimSpace(c.ServiceName) != ""
 
-    connectionMethods := 0
-    if hasTnsAlias {
-        connectionMethods++
-    }
-    if hasConnStr {
-        connectionMethods++
-    }
-    if hasHostService {
-        connectionMethods++
-    }
+	connectionMethods := 0
+	if hasTnsAlias {
+		connectionMethods++
+	}
+	if hasConnStr {
+		connectionMethods++
+	}
+	if hasHostService {
+		connectionMethods++
+	}
 
-    if connectionMethods == 0 {
-        return fmt.Errorf("must provide one of: 'tns_alias', 'connection_string', or both 'host' and 'service_name'")
-    }
+	if connectionMethods == 0 {
+		return fmt.Errorf("must provide one of: 'tns_alias', 'connection_string', or both 'host' and 'service_name'")
+	}
 
-    if connectionMethods > 1 {
-        return fmt.Errorf("provide only one connection method: 'tns_alias', 'connection_string', or 'host'+'service_name'")
-    }
+	if connectionMethods > 1 {
+		return fmt.Errorf("provide only one connection method: 'tns_alias', 'connection_string', or 'host'+'service_name'")
+	}
 
-    return nil
+	return nil
 }
 
 func (r Config) SourceConfigKind() string {
-    return SourceKind
+	return SourceKind
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-    db, err := initOracleConnection(ctx, tracer, r)
-    if err != nil {
-        return nil, fmt.Errorf("unable to create Oracle connection: %w", err)
-    }
+	db, err := initOracleConnection(ctx, tracer, r)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create Oracle connection: %w", err)
+	}
 
-    err = db.PingContext(ctx)
-    if err != nil {
-        return nil, fmt.Errorf("unable to connect to Oracle successfully: %w", err)
-    }
+	err = db.PingContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to connect to Oracle successfully: %w", err)
+	}
 
 	s := &Source{
 		Config: r,
@@ -113,7 +113,7 @@ type Source struct {
 }
 
 func (s *Source) SourceKind() string {
-    return SourceKind
+	return SourceKind
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -121,7 +121,7 @@ func (s *Source) ToConfig() sources.SourceConfig {
 }
 
 func (s *Source) OracleDB() *sql.DB {
-    return s.DB
+	return s.DB
 }
 
 func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Config) (*sql.DB, error) {
