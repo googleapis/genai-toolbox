@@ -122,9 +122,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 	fmt.Printf("\n")
 
-	// NO PARAMETER CONVERSION - godror supports :1, :2, :3 natively
-	// Execute Oracle query with original statement
-
 	rows, err := t.DB.QueryContext(ctx, newStatement, sliceParams...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
