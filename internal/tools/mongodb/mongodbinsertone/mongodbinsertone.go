@@ -93,11 +93,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		Name:          cfg.Name,
-		Kind:          kind,
-		AuthRequired:  cfg.AuthRequired,
-		Collection:    cfg.Collection,
-		Canonical:     cfg.Canonical,
+		Config:        cfg,
 		PayloadParams: allParameters,
 		database:      s.Client.Database(cfg.Database),
 		manifest:      tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
@@ -109,12 +105,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name          string                `yaml:"name"`
-	Kind          string                `yaml:"kind"`
-	AuthRequired  []string              `yaml:"authRequired"`
-	Description   string                `yaml:"description"`
-	Collection    string                `yaml:"collection"`
-	Canonical     bool                  `yaml:"canonical" validation:"required"`
+	Config
 	PayloadParams parameters.Parameters `yaml:"payloadParams" validate:"required"`
 
 	database    *mongo.Database
@@ -164,4 +155,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }

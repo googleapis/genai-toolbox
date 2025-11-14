@@ -98,16 +98,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		Name:          cfg.Name,
-		Kind:          kind,
-		AuthRequired:  cfg.AuthRequired,
-		Collection:    cfg.Collection,
-		FilterPayload: cfg.FilterPayload,
-		FilterParams:  cfg.FilterParams,
-		AllParams:     allParameters,
-		database:      s.Client.Database(cfg.Database),
-		manifest:      tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:   mcpManifest,
+		Config:      cfg,
+		AllParams:   allParameters,
+		database:    s.Client.Database(cfg.Database),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}, nil
 }
 
@@ -115,14 +110,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name          string                `yaml:"name"`
-	Kind          string                `yaml:"kind"`
-	AuthRequired  []string              `yaml:"authRequired"`
-	Description   string                `yaml:"description"`
-	Collection    string                `yaml:"collection"`
-	FilterPayload string                `yaml:"filterPayload"`
-	FilterParams  parameters.Parameters `yaml:"filterParams"`
-	AllParams     parameters.Parameters `yaml:"allParams"`
+	Config
+	AllParams parameters.Parameters `yaml:"allParams"`
 
 	database    *mongo.Database
 	manifest    tools.Manifest
@@ -172,4 +161,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }

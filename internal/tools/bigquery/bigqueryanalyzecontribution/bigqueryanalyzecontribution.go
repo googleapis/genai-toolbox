@@ -136,10 +136,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:             cfg.Name,
-		Kind:             kind,
+		Config:           cfg,
 		Parameters:       params,
-		AuthRequired:     cfg.AuthRequired,
 		UseClientOAuth:   s.UseClientAuthorization(),
 		ClientCreator:    s.BigQueryClientCreator(),
 		Client:           s.BigQueryClient(),
@@ -157,9 +155,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string                `yaml:"name"`
-	Kind           string                `yaml:"kind"`
-	AuthRequired   []string              `yaml:"authRequired"`
+	Config
 	UseClientOAuth bool                  `yaml:"useClientOAuth"`
 	Parameters     parameters.Parameters `yaml:"parameters"`
 
@@ -171,6 +167,10 @@ type Tool struct {
 	SessionProvider  bigqueryds.BigQuerySessionProvider
 	manifest         tools.Manifest
 	mcpManifest      tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 // Invoke runs the contribution analysis.

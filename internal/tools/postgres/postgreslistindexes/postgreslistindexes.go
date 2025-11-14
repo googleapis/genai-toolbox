@@ -141,11 +141,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		name:         cfg.Name,
-		kind:         kind,
-		authRequired: cfg.AuthRequired,
-		allParams:    allParameters,
-		pool:         s.PostgresPool(),
+		Config:    cfg,
+		allParams: allParameters,
+		pool:      s.PostgresPool(),
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   allParameters.Manifest(),
@@ -159,13 +157,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	name         string                `yaml:"name"`
-	kind         string                `yaml:"kind"`
-	authRequired []string              `yaml:"authRequired"`
-	allParams    parameters.Parameters `yaml:"allParams"`
-	pool         *pgxpool.Pool
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Config
+	allParams   parameters.Parameters `yaml:"allParams"`
+	pool        *pgxpool.Pool
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
@@ -208,7 +208,7 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.authRequired, verifiedAuthServices)
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
 func (t Tool) RequiresClientAuthorization() bool {

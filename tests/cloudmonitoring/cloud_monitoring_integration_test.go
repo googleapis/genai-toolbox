@@ -46,13 +46,15 @@ func TestTool_Invoke(t *testing.T) {
 	defer server.Close()
 
 	// Create a new observability tool
-	tool := &cloudmonitoring.Tool{
-		Name:        "test-cloudmonitoring",
-		Kind:        "cloud-monitoring-query-prometheus",
-		Description: "Test Cloudmonitoring Tool",
-		AllParams:   parameters.Parameters{},
-		BaseURL:     server.URL,
-		Client:      &http.Client{},
+	tool := cloudmonitoring.Tool{
+		Config: cloudmonitoring.Config{
+			Name:        "test-cloudmonitoring",
+			Kind:        "cloud-monitoring-query-prometheus",
+			Description: "Test Cloudmonitoring Tool",
+		},
+		AllParams: parameters.Parameters{},
+		BaseURL:   server.URL,
+		Client:    &http.Client{},
 	}
 
 	// Define the test parameters
@@ -90,13 +92,15 @@ func TestTool_Invoke_Error(t *testing.T) {
 	defer server.Close()
 
 	// Create a new observability tool
-	tool := &cloudmonitoring.Tool{
-		Name:        "test-cloudmonitoring",
-		Kind:        "clou-monitoring-query-prometheus",
-		Description: "Test Cloudmonitoring Tool",
-		AllParams:   parameters.Parameters{},
-		BaseURL:     server.URL,
-		Client:      &http.Client{},
+	tool := cloudmonitoring.Tool{
+		Config: cloudmonitoring.Config{
+			Name:        "test-cloudmonitoring",
+			Kind:        "clou-monitoring-query-prometheus",
+			Description: "Test Cloudmonitoring Tool",
+		},
+		AllParams: parameters.Parameters{},
+		BaseURL:   server.URL,
+		Client:    &http.Client{},
 	}
 
 	// Define the test parameters

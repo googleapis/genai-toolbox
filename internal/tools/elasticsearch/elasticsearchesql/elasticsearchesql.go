@@ -74,14 +74,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Tool struct {
-	Name         string                `yaml:"name"`
-	Kind         string                `yaml:"kind"`
-	AuthRequired []string              `yaml:"authRequired"`
-	Parameters   parameters.Parameters `yaml:"parameters"`
-	Query        string                `yaml:"query"`
-	Format       string                `yaml:"format" default:"json"`
-	Timeout      int                   `yaml:"timeout"`
-
+	Config
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 	EsClient    es.EsClient
@@ -105,17 +98,15 @@ func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, c.Parameters)
 
 	return Tool{
-		Name:         c.Name,
-		Kind:         kind,
-		Parameters:   c.Parameters,
-		Query:        c.Query,
-		Format:       c.Format,
-		Timeout:      c.Timeout,
-		AuthRequired: c.AuthRequired,
-		EsClient:     s.ElasticsearchClient(),
-		manifest:     tools.Manifest{Description: c.Description, Parameters: c.Parameters.Manifest(), AuthRequired: c.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      c,
+		EsClient:    s.ElasticsearchClient(),
+		manifest:    tools.Manifest{Description: c.Description, Parameters: c.Parameters.Manifest(), AuthRequired: c.AuthRequired},
+		mcpManifest: mcpManifest,
 	}, nil
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 type esqlColumn struct {

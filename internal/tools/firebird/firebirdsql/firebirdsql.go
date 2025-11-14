@@ -91,39 +91,33 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	// finish tool setup
-	t := &Tool{
-		Name:               cfg.Name,
-		Kind:               kind,
-		Parameters:         cfg.Parameters,
-		TemplateParameters: cfg.TemplateParameters,
-		AllParams:          allParameters,
-		Statement:          cfg.Statement,
-		AuthRequired:       cfg.AuthRequired,
-		Db:                 s.FirebirdDB(),
-		manifest:           tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:        mcpManifest,
+	t := Tool{
+		Config:      cfg,
+		AllParams:   allParameters,
+		Db:          s.FirebirdDB(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
 
 // validate interface
-var _ tools.Tool = &Tool{}
+var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name               string                `yaml:"name"`
-	Kind               string                `yaml:"kind"`
-	AuthRequired       []string              `yaml:"authRequired"`
-	Parameters         parameters.Parameters `yaml:"parameters"`
-	TemplateParameters parameters.Parameters `yaml:"templateParameters"`
-	AllParams          parameters.Parameters `yaml:"allParams"`
+	Config
+	AllParams parameters.Parameters `yaml:"allParams"`
 
 	Db          *sql.DB
-	Statement   string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t *Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	statement, err := parameters.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
@@ -194,19 +188,19 @@ func (t *Tool) Invoke(ctx context.Context, params parameters.ParamValues, access
 	return out, nil
 }
 
-func (t *Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.AllParams, data, claims)
 }
 
-func (t *Tool) Manifest() tools.Manifest {
+func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
 
-func (t *Tool) McpManifest() tools.McpManifest {
+func (t Tool) McpManifest() tools.McpManifest {
 	return t.mcpManifest
 }
 
-func (t *Tool) Authorized(verifiedAuthServices []string) bool {
+func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 

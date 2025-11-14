@@ -88,15 +88,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   cfg.Parameters,
-		Statement:    cfg.Statement,
-		AuthRequired: cfg.AuthRequired,
-		Driver:       s.Neo4jDriver(),
-		Database:     s.Neo4jDatabase(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		Driver:      s.Neo4jDriver(),
+		Database:    s.Neo4jDatabase(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -105,14 +101,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string                `yaml:"name"`
-	Kind         string                `yaml:"kind"`
-	Parameters   parameters.Parameters `yaml:"parameters"`
-	AuthRequired []string              `yaml:"authRequired"`
+	Config
 
 	Driver      neo4j.DriverWithContext
 	Database    string
-	Statement   string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -159,4 +151,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }

@@ -97,8 +97,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters)
 
 	return Tool{
-		Name:        cfg.Name,
-		Kind:        kind,
+		Config:      cfg,
 		Source:      s,
 		AllParams:   allParameters,
 		manifest:    tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
@@ -108,14 +107,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 // Tool represents the get-instance tool.
 type Tool struct {
-	Name string `yaml:"name"`
-	Kind string `yaml:"kind"`
-
+	Config
 	Source    *alloydbadmin.Source
 	AllParams parameters.Parameters
 
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 // Invoke executes the tool's logic.

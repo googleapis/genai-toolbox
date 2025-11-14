@@ -97,16 +97,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   params,
-		AuthRequired: cfg.AuthRequired,
-		ReadOnly:     cfg.ReadOnly,
-		Driver:       s.Neo4jDriver(),
-		Database:     s.Neo4jDatabase(),
-		classifier:   classifier.NewQueryClassifier(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		Parameters:  params,
+		Driver:      s.Neo4jDriver(),
+		Database:    s.Neo4jDatabase(),
+		classifier:  classifier.NewQueryClassifier(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -115,16 +112,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string                `yaml:"name"`
-	Kind         string                `yaml:"kind"`
-	Parameters   parameters.Parameters `yaml:"parameters"`
-	AuthRequired []string              `yaml:"authRequired"`
-	ReadOnly     bool                  `yaml:"readOnly"`
-	Database     string
-	Driver       neo4j.DriverWithContext
-	classifier   *classifier.QueryClassifier
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Config
+	Parameters  parameters.Parameters `yaml:"parameters"`
+	Database    string
+	Driver      neo4j.DriverWithContext
+	classifier  *classifier.QueryClassifier
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
@@ -234,4 +228,8 @@ func addPlanChildren(p neo4j.Plan) []map[string]any {
 		children = append(children, childMap)
 	}
 	return children
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }

@@ -95,18 +95,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:               cfg.Name,
-		Kind:               kind,
-		Parameters:         cfg.Parameters,
-		TemplateParameters: cfg.TemplateParameters,
-		AllParams:          allParameters,
-		Statement:          cfg.Statement,
-		AuthRequired:       cfg.AuthRequired,
-		ReadOnly:           cfg.ReadOnly,
-		Client:             s.SpannerClient(),
-		dialect:            s.DatabaseDialect(),
-		manifest:           tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:        mcpManifest,
+		Config:      cfg,
+		AllParams:   allParameters,
+		Client:      s.SpannerClient(),
+		dialect:     s.DatabaseDialect(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -115,18 +109,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name               string                `yaml:"name"`
-	Kind               string                `yaml:"kind"`
-	AuthRequired       []string              `yaml:"authRequired"`
-	Parameters         parameters.Parameters `yaml:"parameters"`
-	TemplateParameters parameters.Parameters `yaml:"templateParameters"`
-	AllParams          parameters.Parameters `yaml:"allParams"`
-	ReadOnly           bool                  `yaml:"readOnly"`
-	Client             *spanner.Client
-	dialect            string
-	Statement          string
-	manifest           tools.Manifest
-	mcpManifest        tools.McpManifest
+	Config
+	AllParams   parameters.Parameters `yaml:"allParams"`
+	Client      *spanner.Client
+	dialect     string
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func getMapParams(params parameters.ParamValues, dialect string) (map[string]interface{}, error) {
@@ -250,4 +238,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }

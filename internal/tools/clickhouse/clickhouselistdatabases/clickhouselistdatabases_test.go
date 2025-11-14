@@ -95,7 +95,9 @@ func TestParseFromYamlClickHouseListDatabases(t *testing.T) {
 
 func TestListDatabasesToolParseParams(t *testing.T) {
 	tool := Tool{
-		Parameters: parameters.Parameters{},
+		Config: Config{
+			Parameters: parameters.Parameters{},
+		},
 	}
 
 	params, err := tool.ParseParams(map[string]any{}, map[string]map[string]any{})

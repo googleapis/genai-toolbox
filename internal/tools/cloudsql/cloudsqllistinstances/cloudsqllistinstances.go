@@ -89,27 +89,25 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters)
 
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		AuthRequired: cfg.AuthRequired,
-		Source:       s,
-		AllParams:    allParameters,
-		manifest:     tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		source:      s,
+		AllParams:   allParameters,
+		manifest:    tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}, nil
 }
 
 // Tool represents the list-instance tool.
 type Tool struct {
-	Name         string   `yaml:"name"`
-	Kind         string   `yaml:"kind"`
-	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
-
+	Config
 	AllParams   parameters.Parameters `yaml:"allParams"`
-	Source      *cloudsqladminsrc.Source
+	source      *cloudsqladminsrc.Source
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 // Invoke executes the tool's logic.
@@ -121,7 +119,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		return nil, fmt.Errorf("missing 'project' parameter")
 	}
 
-	service, err := t.Source.GetService(ctx, string(accessToken))
+	service, err := t.source.GetService(ctx, string(accessToken))
 	if err != nil {
 		return nil, err
 	}
@@ -172,5 +170,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return t.Source.UseClientAuthorization()
+	return t.source.UseClientAuthorization()
 }

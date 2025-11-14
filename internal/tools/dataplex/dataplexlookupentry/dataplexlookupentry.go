@@ -104,10 +104,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	t := Tool{
-		Name:          cfg.Name,
-		Kind:          kind,
+		Config:        cfg,
 		Parameters:    params,
-		AuthRequired:  cfg.AuthRequired,
 		CatalogClient: s.CatalogClient(),
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
@@ -120,13 +118,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 }
 
 type Tool struct {
-	Name          string
-	Kind          string
+	Config
 	Parameters    parameters.Parameters
-	AuthRequired  []string
 	CatalogClient *dataplexapi.CatalogClient
 	manifest      tools.Manifest
 	mcpManifest   tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {

@@ -91,22 +91,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Source:       ds,
-		AuthRequired: cfg.AuthRequired,
-		manifest:     tools.Manifest{Description: desc, Parameters: allParameters.Manifest()},
-		mcpManifest:  mcpManifest,
-		Parameters:   allParameters,
+		Config:      cfg,
+		Source:      ds,
+		manifest:    tools.Manifest{Description: desc, Parameters: allParameters.Manifest()},
+		mcpManifest: mcpManifest,
+		Parameters:  allParameters,
 	}, nil
 }
 
 // Tool is the implementation of the tool.
 type Tool struct {
-	Name         string   `yaml:"name"`
-	Kind         string   `yaml:"kind"`
-	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
+	Config
 
 	Source *serverlessspark.Source
 
@@ -205,4 +200,8 @@ func (t Tool) Authorized(services []string) bool {
 func (t Tool) RequiresClientAuthorization() bool {
 	// Client OAuth not supported, rely on ADCs.
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }

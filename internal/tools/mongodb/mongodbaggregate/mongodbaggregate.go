@@ -94,18 +94,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		Name:            cfg.Name,
-		Kind:            kind,
-		AuthRequired:    cfg.AuthRequired,
-		Collection:      cfg.Collection,
-		PipelinePayload: cfg.PipelinePayload,
-		PipelineParams:  cfg.PipelineParams,
-		Canonical:       cfg.Canonical,
-		ReadOnly:        cfg.ReadOnly,
-		AllParams:       allParameters,
-		database:        s.Client.Database(cfg.Database),
-		manifest:        tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:     mcpManifest,
+		Config:      cfg,
+		AllParams:   allParameters,
+		database:    s.Client.Database(cfg.Database),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}, nil
 }
 
@@ -113,16 +106,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name            string                `yaml:"name"`
-	Kind            string                `yaml:"kind"`
-	Description     string                `yaml:"description"`
-	AuthRequired    []string              `yaml:"authRequired"`
-	Collection      string                `yaml:"collection"`
-	PipelinePayload string                `yaml:"pipelinePayload"`
-	PipelineParams  parameters.Parameters `yaml:"pipelineParams"`
-	Canonical       bool                  `yaml:"canonical"`
-	ReadOnly        bool                  `yaml:"readOnly"`
-	AllParams       parameters.Parameters `yaml:"allParams"`
+	Config
+	AllParams parameters.Parameters `yaml:"allParams"`
 
 	database    *mongo.Database
 	manifest    tools.Manifest
@@ -202,4 +187,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
