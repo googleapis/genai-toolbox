@@ -1,3 +1,4 @@
+// Copyright © 2025, Oracle and/or its affiliates.
 package oracle
 
 import (
@@ -123,10 +124,6 @@ func (s *Source) ToConfig() sources.SourceConfig {
 
 func (s *Source) OracleDB() *sql.DB {
 	return s.DB
-}
-
-func (s *Source) OracleUseOCI() bool {
-	return s.UseOCI
 }
 
 func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Config) (*sql.DB, error) {
