@@ -2,7 +2,9 @@
 &lt;p>Execute ES|QL queries.&lt;/p>
 &lt;p>This tool allows you to execute ES|QL queries against your Elasticsearch
 cluster. You can use this to perform complex searches and aggregations.&lt;/p>
-&lt;p>See the &lt;a href="https://www.elastic.co/docs/reference/query-languages/esql/esql-getting-started">official documentation&lt;/a> for more information.&lt;/p>
+&lt;p>See the &lt;a href="https://www.elastic.co/docs/reference/query-languages/esql/esql-getting-started">official
+documentation&lt;/a>
+for more information.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">query_my_index&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">

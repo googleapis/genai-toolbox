@@ -7,12 +7,18 @@ federated database. It&amp;rsquo;s compatible with any of the following sources:
 &lt;p>&lt;code>mindsdb-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the SQL
 statement against the &lt;code>source&lt;/code>. This tool enables you to:&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>Query Multiple Datasources&lt;/strong>: Execute SQL across hundreds of connected datasources&lt;/li>
-&lt;li>&lt;strong>Cross-Datasource Joins&lt;/strong>: Perform joins between different databases, APIs, and file systems&lt;/li>
-&lt;li>&lt;strong>ML Model Predictions&lt;/strong>: Query ML models as virtual tables for real-time predictions&lt;/li>
-&lt;li>&lt;strong>Unstructured Data&lt;/strong>: Query documents, images, and other unstructured data as structured tables&lt;/li>
-&lt;li>&lt;strong>Federated Analytics&lt;/strong>: Perform analytics across multiple datasources simultaneously&lt;/li>
-&lt;li>&lt;strong>API Translation&lt;/strong>: Automatically translate SQL queries into REST APIs, GraphQL, and native protocols&lt;/li>
+&lt;li>&lt;strong>Query Multiple Datasources&lt;/strong>: Execute SQL across hundreds of connected
+datasources&lt;/li>
+&lt;li>&lt;strong>Cross-Datasource Joins&lt;/strong>: Perform joins between different databases, APIs,
+and file systems&lt;/li>
+&lt;li>&lt;strong>ML Model Predictions&lt;/strong>: Query ML models as virtual tables for real-time
+predictions&lt;/li>
+&lt;li>&lt;strong>Unstructured Data&lt;/strong>: Query documents, images, and other unstructured data as
+structured tables&lt;/li>
+&lt;li>&lt;strong>Federated Analytics&lt;/strong>: Perform analytics across multiple datasources
+simultaneously&lt;/li>
+&lt;li>&lt;strong>API Translation&lt;/strong>: Automatically translate SQL queries into REST APIs,
+GraphQL, and native protocols&lt;/li>
 &lt;/ul>
 &lt;h2 id="example-queries">Example Queries&lt;/h2>
 &lt;h3 id="cross-datasource-analytics">Cross-Datasource Analytics&lt;/h3>
