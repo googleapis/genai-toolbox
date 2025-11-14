@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -105,21 +106,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	allParameters := tools.Parameters{
-		tools.NewStringParameterWithDefault("min_duration", "1 minute", "Optional: Only show queries running at least this long (e.g., '1 minute', '1 second', '2 seconds')."),
-		tools.NewStringParameterWithDefault("exclude_application_names", "", "Optional: A comma-separated list of application names to exclude from the query results. This is useful for filtering out queries from specific applications (e.g., 'psql', 'pgAdmin', 'DBeaver'). The match is case-sensitive. Whitespace around commas and names is automatically handled. If this parameter is omitted, no applications are excluded."),
-		tools.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return."),
+	allParameters := parameters.Parameters{
+		parameters.NewStringParameterWithDefault("min_duration", "1 minute", "Optional: Only show queries running at least this long (e.g., '1 minute', '1 second', '2 seconds')."),
+		parameters.NewStringParameterWithDefault("exclude_application_names", "", "Optional: A comma-separated list of application names to exclude from the query results. This is useful for filtering out queries from specific applications (e.g., 'psql', 'pgAdmin', 'DBeaver'). The match is case-sensitive. Whitespace around commas and names is automatically handled. If this parameter is omitted, no applications are excluded."),
+		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return."),
 	}
 	paramManifest := allParameters.Manifest()
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	// finish tool setup
 	t := Tool{
-		name:         cfg.Name,
-		kind:         cfg.Kind,
-		authRequired: cfg.AuthRequired,
-		allParams:    allParameters,
-		pool:         s.PostgresPool(),
+		Config:    cfg,
+		allParams: allParameters,
+		pool:      s.PostgresPool(),
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   paramManifest,
@@ -134,19 +133,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	name         string           `yaml:"name"`
-	kind         string           `yaml:"kind"`
-	authRequired []string         `yaml:"authRequired"`
-	allParams    tools.Parameters `yaml:"allParams"`
-	pool         *pgxpool.Pool
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Config
+	allParams   parameters.Parameters `yaml:"allParams"`
+	pool        *pgxpool.Pool
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	newParams, err := tools.GetParams(t.allParams, paramsMap)
+	newParams, err := parameters.GetParams(t.allParams, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
@@ -176,8 +173,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return out, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.allParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.allParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -189,9 +186,13 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.authRequired, verifiedAuthServices)
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }

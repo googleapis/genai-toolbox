@@ -172,6 +172,8 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	tests.RunPostgresListInstalledExtensionsTest(t)
 	tests.RunPostgresDatabaseOverviewTest(t, ctx, pool)
 	tests.RunPostgresListTriggersTest(t, ctx, pool)
+	tests.RunPostgresListIndexesTest(t, ctx, pool)
+	tests.RunPostgresListSequencesTest(t, ctx, pool)
 }
 
 // Test connection with different IP type

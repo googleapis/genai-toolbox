@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -96,7 +97,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	allParameters := tools.Parameters{}
+	allParameters := parameters.Parameters{}
 	description := cfg.Description
 	if description == "" {
 		description = "Fetches the current state of the PostgreSQL server, returning the version, whether it's a replica, uptime duration, maximum connection limit, number of current connections, number of active connections, and the percentage of connections in use."
@@ -105,11 +106,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		name:         cfg.Name,
-		kind:         kind,
-		authRequired: cfg.AuthRequired,
-		allParams:    allParameters,
-		pool:         s.PostgresPool(),
+		Config:    cfg,
+		allParams: allParameters,
+		pool:      s.PostgresPool(),
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   allParameters.Manifest(),
@@ -123,16 +122,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	name         string           `yaml:"name"`
-	kind         string           `yaml:"kind"`
-	authRequired []string         `yaml:"authRequired"`
-	allParams    tools.Parameters `yaml:"allParams"`
-	pool         *pgxpool.Pool
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Config
+	allParams   parameters.Parameters `yaml:"allParams"`
+	pool        *pgxpool.Pool
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	sliceParams := params.AsSlice()
 
 	results, err := t.pool.Query(ctx, databaseOverviewStatement, sliceParams...)
@@ -159,8 +160,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return out, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.allParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.allParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -172,7 +173,7 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.authRequired, verifiedAuthServices)
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
 func (t Tool) RequiresClientAuthorization() bool {

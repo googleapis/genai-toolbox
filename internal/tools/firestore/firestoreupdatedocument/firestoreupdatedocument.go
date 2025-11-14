@@ -25,6 +25,7 @@ import (
 	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 const kind string = "firestore-update-document"
@@ -85,12 +86,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Create parameters
-	documentPathParameter := tools.NewStringParameter(
+	documentPathParameter := parameters.NewStringParameter(
 		documentPathKey,
 		"The relative path of the document which needs to be updated (e.g., 'users/userId' or 'users/userId/posts/postId'). Note: This is a relative path, NOT an absolute path like 'projects/{project_id}/databases/{database_id}/documents/...'",
 	)
 
-	documentDataParameter := tools.NewMapParameter(
+	documentDataParameter := parameters.NewMapParameter(
 		documentDataKey,
 		`The document data in Firestore's native JSON format. Each field must be wrapped with a type indicator:
 - Strings: {"stringValue": "text"}
@@ -107,37 +108,35 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		"", // Empty string for generic map that accepts any value type
 	)
 
-	updateMaskParameter := tools.NewArrayParameterWithRequired(
+	updateMaskParameter := parameters.NewArrayParameterWithRequired(
 		updateMaskKey,
 		"The selective fields to update. If not provided, all fields in documentData will be updated. When provided, only the specified fields will be updated. Fields referenced in the mask but not present in documentData will be deleted from the document",
 		false, // not required
-		tools.NewStringParameter("field", "Field path to update or delete. Use dot notation to access nested fields within maps (e.g., 'address.city' to update the city field within an address map, or 'user.profile.name' for deeply nested fields). To delete a field, include it in the mask but omit it from documentData. Note: You cannot update individual array elements; you must update the entire array field"),
+		parameters.NewStringParameter("field", "Field path to update or delete. Use dot notation to access nested fields within maps (e.g., 'address.city' to update the city field within an address map, or 'user.profile.name' for deeply nested fields). To delete a field, include it in the mask but omit it from documentData. Note: You cannot update individual array elements; you must update the entire array field"),
 	)
 
-	returnDataParameter := tools.NewBooleanParameterWithDefault(
+	returnDataParameter := parameters.NewBooleanParameterWithDefault(
 		returnDocumentDataKey,
 		false,
 		"If set to true the output will have the data of the updated document. This flag if set to false will help avoid overloading the context of the agent.",
 	)
 
-	parameters := tools.Parameters{
+	params := parameters.Parameters{
 		documentPathParameter,
 		documentDataParameter,
 		updateMaskParameter,
 		returnDataParameter,
 	}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.FirestoreClient(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		Parameters:  params,
+		Client:      s.FirestoreClient(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -146,17 +145,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Config
+	Parameters parameters.Parameters `yaml:"parameters"`
 
 	Client      *firestoreapi.Client
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	mapParams := params.AsMap()
 
 	// Get document path
@@ -181,7 +182,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if updateMaskRaw, ok := mapParams[updateMaskKey]; ok && updateMaskRaw != nil {
 		if updateMaskArray, ok := updateMaskRaw.([]any); ok {
 			// Use ConvertAnySliceToTyped to convert the slice
-			typedSlice, err := tools.ConvertAnySliceToTyped(updateMaskArray, "string")
+			typedSlice, err := parameters.ConvertAnySliceToTyped(updateMaskArray, "string")
 			if err != nil {
 				return nil, fmt.Errorf("failed to convert update mask: %w", err)
 			}
@@ -297,8 +298,8 @@ func getFieldValue(data map[string]interface{}, path string) (interface{}, bool)
 	return nil, false
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

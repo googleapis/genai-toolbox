@@ -21,7 +21,7 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestMessageUnmarshalYAML(t *testing.T) {
@@ -87,14 +87,14 @@ func TestSubstituteMessages(t *testing.T) {
 	t.Parallel()
 	t.Run("Success", func(t *testing.T) {
 		arguments := prompts.Arguments{
-			{Parameter: tools.NewStringParameter("name", "The name to use.")},
-			{Parameter: tools.NewStringParameterWithRequired("location", "The location.", false)},
+			{Parameter: parameters.NewStringParameter("name", "The name to use.")},
+			{Parameter: parameters.NewStringParameterWithRequired("location", "The location.", false)},
 		}
 		messages := []prompts.Message{
 			{Role: "user", Content: "Hello, my name is {{.name}} and I am in {{.location}}."},
 			{Role: "assistant", Content: "Nice to meet you, {{.name}}!"},
 		}
-		argValues := tools.ParamValues{
+		argValues := parameters.ParamValues{
 			{Name: "name", Value: "Alice"},
 			{Name: "location", Value: "Wonderland"},
 		}
@@ -119,7 +119,7 @@ func TestSubstituteMessages(t *testing.T) {
 		messages := []prompts.Message{
 			{Content: "This has an {{.unclosed template"},
 		}
-		argValues := tools.ParamValues{}
+		argValues := parameters.ParamValues{}
 
 		_, err := prompts.SubstituteMessages(messages, arguments, argValues)
 		if err == nil {

@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -162,3 +163,5 @@ func InstrumentationFromContext(ctx context.Context) (*telemetry.Instrumentation
 	}
 	return nil, fmt.Errorf("unable to retrieve instrumentation")
 }
+
+var ErrUnauthorized = errors.New("unauthorized")

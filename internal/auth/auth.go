@@ -30,4 +30,5 @@ type AuthService interface {
 	AuthServiceKind() string
 	GetName() string
 	GetClaimsFromHeader(context.Context, http.Header) (map[string]any, error)
+	ToConfig() AuthServiceConfig
 }

@@ -66,8 +66,7 @@ type EsClient interface {
 }
 
 type Source struct {
-	Name   string
-	Kind   string
+	Config
 	Client EsClient
 }
 
@@ -132,8 +131,7 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name:   c.Name,
-		Kind:   SourceKind,
+		Config: c,
 		Client: client,
 	}
 	return s, nil
@@ -142,6 +140,10 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 // SourceKind returns the kind string for this source.
 func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 func (s *Source) ElasticsearchClient() EsClient {
