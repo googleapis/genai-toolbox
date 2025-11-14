@@ -21,8 +21,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/valkey"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlvalkey(t *testing.T) {
@@ -59,8 +59,8 @@ func TestParseFromYamlvalkey(t *testing.T) {
 					Description:  "some description",
 					AuthRequired: []string{},
 					Commands:     [][]string{{"SET", "greeting", "hello, {{.name}}"}, {"GET", "id"}},
-					Parameters: []tools.Parameter{
-						tools.NewStringParameter("name", "user name"),
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameter("name", "user name"),
 					},
 				},
 			},
