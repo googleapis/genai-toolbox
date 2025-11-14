@@ -20,6 +20,7 @@ The specified SQL statement is executed as a [prepared statement][mysql-prepare]
 and expects parameters in the SQL query to be in the form of placeholders `?`.
 
 This tool enables you to:
+
 - **Query Multiple Datasources**: Execute parameterized SQL across hundreds of connected datasources
 - **Cross-Datasource Joins**: Perform joins between different databases, APIs, and file systems
 - **ML Model Predictions**: Query ML models as virtual tables for real-time predictions
@@ -32,6 +33,7 @@ This tool enables you to:
 ## Example Queries
 
 ### Cross-Datasource Analytics
+
 ```sql
 -- Join Salesforce opportunities with GitHub activity
 SELECT 
@@ -46,6 +48,7 @@ GROUP BY s.opportunity_name, s.amount, g.repository_name;
 ```
 
 ### Email & Communication Analysis
+
 ```sql
 -- Analyze email patterns with Slack activity
 SELECT 
@@ -60,6 +63,7 @@ GROUP BY e.sender, e.subject, s.channel_name;
 ```
 
 ### ML Model Predictions
+
 ```sql
 -- Use ML model to predict customer churn
 SELECT 
@@ -72,6 +76,7 @@ WHERE predicted_churn_probability > ?;
 ```
 
 ### MongoDB Query
+
 ```sql
 -- Query MongoDB collections as structured tables
 SELECT 
@@ -165,4 +170,4 @@ tools:
 | description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
 | statement          |                   string                         |     true     | SQL statement to execute on.                                                                                                               |
 | parameters         | [parameters](_index#specifying-parameters)       |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
-| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. | 
+| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |

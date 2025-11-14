@@ -287,6 +287,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.20.0/windows/amd64/toolb
       }
     }
     ```
+
 {{% /tab %}}
 
 {{% tab header="Gemini Code Assist" lang="en" %}}
@@ -313,6 +314,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.20.0/windows/amd64/toolb
       }
     }
     ```
+
 {{% /tab %}}
 {{< /tabpane >}}
 

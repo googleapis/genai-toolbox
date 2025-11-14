@@ -69,7 +69,7 @@ response field (e.g. empty string).
 
 To edit headers, press the "Edit Headers" button to display the header modal.
 Within this modal, users can make direct edits by typing into the header's text
-area. 
+area.
 
 Toolbox UI validates that the headers are in correct JSON format. Other
 header-related errors (e.g., incorrect header names or values required by the

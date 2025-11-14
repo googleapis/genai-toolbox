@@ -10,19 +10,23 @@ aliases:
 
 ## About
 
-The `postgres-list-triggers` tool lists available non-internal triggers in the database. It's compatible with any of the following sources:
+The `postgres-list-triggers` tool lists available non-internal triggers in the
+database. It's compatible with any of the following sources:
 
 - [alloydb-postgres](../../sources/alloydb-pg.md)
 - [cloud-sql-postgres](../../sources/cloud-sql-pg.md)
 - [postgres](../../sources/postgres.md)
 
-`postgres-list-triggers` lists detailed information as JSON for triggers. The tool takes the following input parameters:
+`postgres-list-triggers` lists detailed information as JSON for triggers. The
+tool takes the following input parameters:
 
-- `trigger_name` (optional): A text to filter results by trigger name. The input is used within a LIKE clause. Default: `""`
-- `schema_name` (optional): A text to filter results by schema name. The input is used within a LIKE clause. Default: `""`
-- `table_name` (optional): A text to filter results by table name. The input is used within a LIKE clause. Default: `""`
+- `trigger_name` (optional): A text to filter results by trigger name. The input
+  is used within a LIKE clause. Default: `""`
+- `schema_name` (optional): A text to filter results by schema name. The input
+  is used within a LIKE clause. Default: `""`
+- `table_name` (optional): A text to filter results by table name. The input is
+  used within a LIKE clause. Default: `""`
 - `limit` (optional): The maximum number of triggers to return. Default: `50`
-
 
 ## Example
 
@@ -37,6 +41,7 @@ tools:
 ```
 
 The response is a json array with the following elements:
+
 ```json
 {
  "trigger_name": "trigger name",
@@ -53,8 +58,8 @@ The response is a json array with the following elements:
 
 ## Reference
 
-| **field**   | **type** | **required**  | **description**                                      |
-|-------------|:--------:|:-------------:|------------------------------------------------------|
-| kind        |  string  |     true      | Must be "postgres-list-triggers".                      |
-| source      |  string  |     true      | Name of the source the SQL should execute on.        |
-| description |  string  |     false     | Description of the tool that is passed to the agent. |
+| **field**   | **type** | **required** | **description**                                      |
+|-------------|:--------:|:------------:|------------------------------------------------------|
+| kind        |  string  |     true     | Must be "postgres-list-triggers".                    |
+| source      |  string  |     true     | Name of the source the SQL should execute on.        |
+| description |  string  |    false     | Description of the tool that is passed to the agent. |

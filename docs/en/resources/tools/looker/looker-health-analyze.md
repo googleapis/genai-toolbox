@@ -10,11 +10,18 @@ aliases:
 
 ## About
 
-The `looker-health-analyze` tool performs various analysis tasks on a Looker instance. The `action` parameter selects the type of analysis to perform:
+The `looker-health-analyze` tool performs various analysis tasks on a Looker
+instance. The `action` parameter selects the type of analysis to perform:
 
-- `projects`: Analyzes all projects or a specified project, reporting on the number of models and view files, as well as Git connection and validation status.
-- `models`: Analyzes all models or a specified model, providing a count of explores, unused explores, and total query counts.
-- `explores`: Analyzes all explores or a specified explore, reporting on the number of joins, unused joins, fields, unused fields, and query counts. Being classified as **Unused** is determined by whether a field has been used as a field or filter within the past 90 days in production.
+- `projects`: Analyzes all projects or a specified project, reporting on the
+  number of models and view files, as well as Git connection and validation
+  status.
+- `models`: Analyzes all models or a specified model, providing a count of
+  explores, unused explores, and total query counts.
+- `explores`: Analyzes all explores or a specified explore, reporting on the
+  number of joins, unused joins, fields, unused fields, and query counts. Being
+  classified as **Unused** is determined by whether a field has been used as a
+  field or filter within the past 90 days in production.
 
 ## Parameters
 
