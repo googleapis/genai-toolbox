@@ -18,8 +18,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbupdatemany"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
@@ -70,9 +70,9 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 					Database:      "test_db",
 					Collection:    "test_coll",
 					FilterPayload: "{ name: {{json .name}} }\n",
-					FilterParams: tools.Parameters{
-						&tools.StringParameter{
-							CommonParameter: tools.CommonParameter{
+					FilterParams: parameters.Parameters{
+						&parameters.StringParameter{
+							CommonParameter: parameters.CommonParameter{
 								Name: "name",
 								Type: "string",
 								Desc: "small description",
@@ -80,9 +80,9 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 						},
 					},
 					UpdatePayload: "{ $set: { name: {{json .name}} } }\n",
-					UpdateParams: tools.Parameters{
-						&tools.StringParameter{
-							CommonParameter: tools.CommonParameter{
+					UpdateParams: parameters.Parameters{
+						&parameters.StringParameter{
+							CommonParameter: parameters.CommonParameter{
 								Name: "name",
 								Type: "string",
 								Desc: "small description",

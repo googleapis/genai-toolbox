@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tools
+package parameters
 
 import (
 	"bytes"
@@ -117,7 +117,7 @@ func parseFromAuthService(paramAuthServices []ParamAuthService, claimsMap map[st
 		}
 		return v, nil
 	}
-	return nil, fmt.Errorf("missing or invalid authentication header: %w", ErrUnauthorized)
+	return nil, fmt.Errorf("missing or invalid authentication header: %w", util.ErrUnauthorized)
 }
 
 // CheckParamRequired checks if a parameter is required based on the required and default field.

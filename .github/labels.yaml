@@ -93,10 +93,90 @@
   description: 'Use label to signal PR should be included in the next release.'
 
 # Product Labels
+- name: 'product: alloydb'
+  color: 5065c7
+  description: 'AlloyDB'
 - name: 'product: bigquery'
   color: 5065c7
-  description: 'Product: Assigned to the BigQuery team.'
-# Product Labels
+  description: 'BigQuery'
+- name: 'product: bigtable'
+  color: 5065c7
+  description: 'Bigtable'
+- name: 'product: cassandra'
+  color: 5065c7
+  description: 'Cassandra'
+- name: 'product: clickhouse'
+  color: 5065c7
+  description: 'ClickHouse'
+- name: 'product: mssql'
+  color: 5065c7
+  description: 'SQL Server'
+- name: 'product: mysql'
+  color: 5065c7
+  description: 'MySQL'
+- name: 'product: postgres'
+  color: 5065c7
+  description: 'PostgreSQL'
+- name: 'product: couchbase'
+  color: 5065c7
+  description: 'Couchbase'
+- name: 'product: dataplex'
+  color: 5065c7
+  description: 'Dataplex'
+- name: 'product: dgraph'
+  color: 5065c7
+  description: 'Dgraph'
+- name: 'product: elasticsearch'
+  color: 5065c7
+  description: 'Elasticsearch'
+- name: 'product: firebird'
+  color: 5065c7
+  description: 'Firebird'
+- name: 'product: firestore'
+  color: 5065c7
+  description: 'Firestore'
 - name: 'product: looker'
   color: 5065c7
-  description: 'Product: Assigned to the Looker team.'
+  description: 'Looker'
+- name: 'product: mindsdb'
+  color: 5065c7
+  description: 'MindsDB'
+- name: 'product: mongodb'
+  color: 5065c7
+  description: 'MongoDB'
+- name: 'product: neo4j'
+  color: 5065c7
+  description: 'Neo4j'
+- name: 'product: oceanbase'
+  color: 5065c7
+  description: 'OceanBase'
+- name: 'product: oracle'
+  color: 5065c7
+  description: 'Oracle'
+- name: 'product: redis'
+  color: 5065c7
+  description: 'Redis'
+- name: 'product: serverlessspark'
+  color: 5065c7
+  description: 'Serverless Spark'
+- name: 'product: singlestore'
+  color: 5065c7
+  description: 'SingleStore'
+- name: 'product: spanner'
+  color: 5065c7
+  description: 'Spanner'
+- name: 'product: sqlite'
+  color: 5065c7
+  description: 'SQLite'
+- name: 'product: tidb'
+  color: 5065c7
+  description: 'TiDB'
+- name: 'product: trino'
+  color: 5065c7
+  description: 'Trino'
+- name: 'product: valkey'
+  color: 5065c7
+  description: 'Valkey'
+- name: 'product: yugabytedb'
+  color: 5065c7
+  description: 'YugabyteDB'
