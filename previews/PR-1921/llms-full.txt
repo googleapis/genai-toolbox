@@ -1618,8 +1618,8 @@ Create your AlloyDB database with MCP Toolbox.
 
 <html>
   <head>
-   <link rel="canonical" href="https://cloud.google.com/alloydb/docs/quickstart/create-and-connect"/>
-    <meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/quickstart/create-and-connect"/>
+   <link rel="canonical" href="https://cloud.google.com/alloydb/docs/connect-ide-using-mcp-toolbox"/>
+    <meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/connect-ide-using-mcp-toolbox"/>
   </head>
 </html>
 
@@ -6004,6 +6004,12 @@ cluster][alloydb-free-trial].
 - [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
   List triggers in an AlloyDB for PostgreSQL database.
 
+- [`postgres-list-indexes`](../tools/postgres/postgres-list-indexes.md)
+  List available user indexes in a PostgreSQL database.
+
+- [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
+  List sequences in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
@@ -6888,6 +6894,12 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
   List triggers in a PostgreSQL database.
+
+- [`postgres-list-indexes`](../tools/postgres/postgres-list-indexes.md)
+  List available user indexes in a PostgreSQL database.
+
+- [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
+  List sequences in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -8484,6 +8496,12 @@ reputation for reliability, feature robustness, and performance.
 
 - [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
   List triggers in a PostgreSQL database.
+
+- [`postgres-list-indexes`](../tools/postgres/postgres-list-indexes.md)
+  List available user indexes in a PostgreSQL database.
+
+- [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
+  List sequences in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -11880,6 +11898,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_schemas`: Lists schemas in the database. 
     *   `database_overview`: Fetches the current state of the PostgreSQL server. 
     *   `list_triggers`: Lists triggers in the database. 
+    *   `list_indexes`: List available user indexes in a PostgreSQL database.
+    *   `list_sequences`: List sequences in a PostgreSQL database.
 
 ## AlloyDB Postgres Admin
 
@@ -12052,6 +12072,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_schemas`: Lists schemas in the database. 
     *   `database_overview`: Fetches the current state of the PostgreSQL server. 
     *   `list_triggers`: Lists triggers in the database. 
+    *   `list_indexes`: List available user indexes in a PostgreSQL database.
+    *   `list_sequences`: List sequences in a PostgreSQL database.
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -12351,6 +12373,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_schemas`: Lists schemas in the database. 
     *   `database_overview`: Fetches the current state of the PostgreSQL server. 
     *   `list_triggers`: Lists triggers in the database. 
+    *   `list_indexes`: List available user indexes in a PostgreSQL database.
+    *   `list_sequences`: List sequences in a PostgreSQL database.
 
 ## Google Cloud Serverless for Apache Spark
 
