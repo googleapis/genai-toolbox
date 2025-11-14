@@ -14,7 +14,7 @@ aliases:
 A `mindsdb-sql` tool executes a pre-defined SQL statement against a MindsDB
 federated database. It's compatible with any of the following sources:
 
-- [mindsdb](../sources/mindsdb.md)
+- [mindsdb](../../sources/mindsdb.md)
 
 The specified SQL statement is executed as a [prepared statement][mysql-prepare],
 and expects parameters in the SQL query to be in the form of placeholders `?`.
@@ -140,7 +140,7 @@ tools:
 > including identifiers, column names, and table names. **This makes it more
 > vulnerable to SQL injections**. Using basic parameters only (see above) is
 > recommended for performance and safety reasons. For more details, please check
-> [templateParameters](_index#template-parameters).
+> [templateParameters](../#template-parameters).
 
 ```yaml
 tools:
