@@ -21,8 +21,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/oceanbase/oceanbasesql"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 // Test parsing OceanBase SQL tool config from YAML.
@@ -58,8 +58,8 @@ func TestParseFromYamlOceanBaseSql(t *testing.T) {
 					Description:  "some description",
 					Statement:    "select * from t where id = ?",
 					AuthRequired: []string{},
-					Parameters: []tools.Parameter{
-						tools.NewStringParameter("id", "id param"),
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameter("id", "id param"),
 					},
 				},
 			},

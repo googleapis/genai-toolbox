@@ -25,6 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	cloudmonitoringsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudmonitoring"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 const kind string = "cloud-monitoring-query-prometheus"
@@ -72,17 +73,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Define the parameters internally instead of from the config file.
-	allParameters := tools.Parameters{
-		tools.NewStringParameterWithRequired("projectId", "The Id of the Google Cloud project.", true),
-		tools.NewStringParameterWithRequired("query", "The promql query to execute.", true),
+	allParameters := parameters.Parameters{
+		parameters.NewStringParameterWithRequired("projectId", "The Id of the Google Cloud project.", true),
+		parameters.NewStringParameterWithRequired("query", "The promql query to execute.", true),
 	}
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	return Tool{
-		Name:        cfg.Name,
-		Kind:        kind,
-		Description: cfg.Description,
+		Config:      cfg,
 		AllParams:   allParameters,
 		BaseURL:     s.BaseURL,
 		UserAgent:   s.UserAgent,
@@ -96,18 +95,20 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name        string           `yaml:"name"`
-	Kind        string           `yaml:"kind"`
-	Description string           `yaml:"description"`
-	AllParams   tools.Parameters `yaml:"allParams"`
-	BaseURL     string           `yaml:"baseURL"`
+	Config
+	AllParams   parameters.Parameters `yaml:"allParams"`
+	BaseURL     string                `yaml:"baseURL"`
 	UserAgent   string
 	Client      *http.Client
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	projectID, ok := paramsMap["projectId"].(string)
 	if !ok {
@@ -158,8 +159,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return result, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.AllParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.AllParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

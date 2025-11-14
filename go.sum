@@ -1266,8 +1266,8 @@ github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD
 github.com/thlib/go-timezone-local v0.0.7 h1:fX8zd3aJydqLlTs/TrROrIIdztzsdFV23OzOQx31jII=
 github.com/thlib/go-timezone-local v0.0.7/go.mod h1:/Tnicc6m/lsJE0irFMA0LfIwTBo4QP7A8IfyIv4zZKI=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
-github.com/trinodb/trino-go-client v0.329.0 h1:tAQR5oXsW81C+lA0xiZsyoOcD7qYLv6Rtdw7SqH5Cy0=
-github.com/trinodb/trino-go-client v0.329.0/go.mod h1:BXj9QNy6pA4Gn8eIu9dVdRhetABCjFAOZ6xxsVsOZJE=
+github.com/trinodb/trino-go-client v0.330.0 h1:TBbHjFBuRjYbGtkNyRAJfzLOcwvz8ECihtMtxSzXqOc=
+github.com/trinodb/trino-go-client v0.330.0/go.mod h1:BXj9QNy6pA4Gn8eIu9dVdRhetABCjFAOZ6xxsVsOZJE=
 github.com/valkey-io/valkey-go v1.0.68 h1:bTbfonp49b41DqrF30q+y2JL3gcbjd2IiacFAtO4JBA=
 github.com/valkey-io/valkey-go v1.0.68/go.mod h1:bHmwjIEOrGq/ubOJfh5uMRs7Xj6mV3mQ/ZXUbmqpjqY=
 github.com/xdg-go/pbkdf2 v1.0.0 h1:Su7DPu48wXMwC3bs7MCNG+z4FhcyEuz5dlvchbq0B0c=

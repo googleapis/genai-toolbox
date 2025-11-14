@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestNewConfig(t *testing.T) {
@@ -204,11 +205,11 @@ func TestConfig_Initialize(t *testing.T) {
 
 func TestTool_ParseParams(t *testing.T) {
 	tool := Tool{
-		Parameters: tools.Parameters{
-			tools.NewStringParameter("documentPath", "Document path"),
-			tools.NewMapParameter("documentData", "Document data", ""),
-			tools.NewArrayParameterWithRequired("updateMask", "Update mask", false, tools.NewStringParameter("field", "Field")),
-			tools.NewBooleanParameterWithDefault("returnData", false, "Return data"),
+		Parameters: parameters.Parameters{
+			parameters.NewStringParameter("documentPath", "Document path"),
+			parameters.NewMapParameter("documentData", "Document data", ""),
+			parameters.NewArrayParameterWithRequired("updateMask", "Update mask", false, parameters.NewStringParameter("field", "Field")),
+			parameters.NewBooleanParameterWithDefault("returnData", false, "Return data"),
 		},
 	}
 
@@ -284,7 +285,7 @@ func TestTool_Manifest(t *testing.T) {
 	tool := Tool{
 		manifest: tools.Manifest{
 			Description: "Test description",
-			Parameters: []tools.ParameterManifest{
+			Parameters: []parameters.ParameterManifest{
 				{
 					Name:        "documentPath",
 					Type:        "string",
@@ -313,9 +314,9 @@ func TestTool_McpManifest(t *testing.T) {
 		mcpManifest: tools.McpManifest{
 			Name:        "test-update-document",
 			Description: "Test description",
-			InputSchema: tools.McpToolsSchema{
+			InputSchema: parameters.McpToolsSchema{
 				Type: "object",
-				Properties: map[string]tools.ParameterMcpManifest{
+				Properties: map[string]parameters.ParameterMcpManifest{
 					"documentPath": {
 						Type:        "string",
 						Description: "Document path",
@@ -374,7 +375,9 @@ func TestTool_Authorized(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tool := Tool{
-				AuthRequired: tt.authRequired,
+				Config: Config{
+					AuthRequired: tt.authRequired,
+				},
 			}
 			got := tool.Authorized(tt.verifiedAuthServices)
 			if got != tt.want {
@@ -467,4 +470,8 @@ type mockIncompatibleSource struct{}
 
 func (m *mockIncompatibleSource) SourceKind() string {
 	return "mock"
+}
+
+func (m *mockIncompatibleSource) ToConfig() sources.SourceConfig {
+	return nil
 }

@@ -21,7 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/prompts/custom"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestConfig(t *testing.T) {
@@ -29,8 +29,8 @@ func TestConfig(t *testing.T) {
 
 	// Setup a shared config for testing its methods
 	testArgs := prompts.Arguments{
-		{Parameter: tools.NewStringParameter("name", "The name to use.")},
-		{Parameter: tools.NewStringParameterWithRequired("location", "The location.", false)},
+		{Parameter: parameters.NewStringParameter("name", "The name to use.")},
+		{Parameter: parameters.NewStringParameterWithRequired("location", "The location.", false)},
 	}
 
 	cfg := &custom.Config{
@@ -58,7 +58,7 @@ func TestConfig(t *testing.T) {
 	t.Run("Manifest", func(t *testing.T) {
 		want := prompts.Manifest{
 			Description: "A test config.",
-			Arguments: []tools.ParameterManifest{
+			Arguments: []parameters.ParameterManifest{
 				{Name: "name", Type: "string", Required: true, Description: "The name to use.", AuthServices: []string{}},
 				{Name: "location", Type: "string", Required: false, Description: "The location.", AuthServices: []string{}},
 			},
@@ -85,7 +85,7 @@ func TestConfig(t *testing.T) {
 	})
 
 	t.Run("SubstituteParams", func(t *testing.T) {
-		argValues := tools.ParamValues{
+		argValues := parameters.ParamValues{
 			{Name: "name", Value: "Alice"},
 			{Name: "location", Value: "Wonderland"},
 		}
@@ -114,7 +114,7 @@ func TestConfig(t *testing.T) {
 				"name":     "Bob",
 				"location": "the Builder",
 			}
-			want := tools.ParamValues{
+			want := parameters.ParamValues{
 				{Name: "name", Value: "Bob"},
 				{Name: "location", Value: "the Builder"},
 			}
