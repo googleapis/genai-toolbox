@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.20.1](https://github.com/googleapis/genai-toolbox/compare/v0.20.0...v0.20.1) (2025-11-14)
+
+
+### Bug Fixes
+
+* **tools/spanner-list-tables:** Unmarshal object_details json string into map to make response have nested json ([#1894](https://github.com/googleapis/genai-toolbox/issues/1894)) ([446d62a](https://github.com/googleapis/genai-toolbox/commit/446d62acd995d5128f52e9db254dd1c7138227c6))
+
 ## [0.20.0](https://github.com/googleapis/genai-toolbox/compare/v0.19.1...v0.20.0) (2025-11-14)
 
 
