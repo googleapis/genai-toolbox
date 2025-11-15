@@ -50,7 +50,7 @@ const (
 // validate interface
 var _ sources.SourceConfig = Config{}
 
-type BigqueryClientCreator func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
+type BigqueryClientCreator func(tokenString string, wantRestService bool, s *Source) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 
 type BigQuerySessionProvider func(ctx context.Context) (*Session, error)
 
@@ -128,7 +128,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	} else {
 		// Initializes a BigQuery Google SQL source
-		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.ImpersonateServiceAccount)
+		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.ImpersonateServiceAccount, s)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from ADC: %w", err)
 		}
@@ -200,7 +200,7 @@ func setupClientCaching(s *Source, baseCreator BigqueryClientCreator) {
 	s.dataplexCache = NewCache(onDataplexEvict)
 
 	// Create the caching wrapper for the client creator
-	s.ClientCreator = func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+	s.ClientCreator = func(tokenString string, wantRestService bool, s *Source) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
 		// Check cache
 		bqClientVal, bqFound := s.bqClientCache.Get(tokenString)
 
@@ -217,7 +217,7 @@ func setupClientCaching(s *Source, baseCreator BigqueryClientCreator) {
 		}
 
 		// Cache miss - call the client creator
-		client, restService, err := baseCreator(tokenString, wantRestService)
+		client, restService, err := baseCreator(tokenString, wantRestService, s)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -239,6 +239,7 @@ type Source struct {
 	Client                    *bigqueryapi.Client
 	RestService               *bigqueryrestapi.Service
 	TokenSource               oauth2.TokenSource
+	toolUserAgent             string
 	MaxQueryResultRows        int
 	ClientCreator             BigqueryClientCreator
 	AllowedDatasets           map[string]struct{}
@@ -251,6 +252,10 @@ type Source struct {
 	bqClientCache *Cache
 	bqRestCache   *Cache
 	dataplexCache *Cache
+}
+
+func (s *Source) SetToolUserAgent(toolUserAgent string) {
+	s.toolUserAgent = toolUserAgent
 }
 
 type Session struct {
@@ -490,6 +495,7 @@ func initBigQueryConnection(
 	project string,
 	location string,
 	impersonateServiceAccount string,
+	s *Source,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
@@ -497,6 +503,11 @@ func initBigQueryConnection(
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, nil, nil, err
+	}
+
+	fullUserAgent := userAgent
+	if s.toolUserAgent != "" {
+		fullUserAgent = fmt.Sprintf("%s %s", userAgent, s.toolUserAgent)
 	}
 
 	var tokenSource oauth2.TokenSource
@@ -514,7 +525,7 @@ func initBigQueryConnection(
 		}
 		tokenSource = cloudPlatformTokenSource
 		opts = []option.ClientOption{
-			option.WithUserAgent(userAgent),
+			option.WithUserAgent(fullUserAgent),
 			option.WithTokenSource(cloudPlatformTokenSource),
 		}
 	} else {
@@ -525,7 +536,7 @@ func initBigQueryConnection(
 		}
 		tokenSource = cred.TokenSource
 		opts = []option.ClientOption{
-			option.WithUserAgent(userAgent),
+			option.WithUserAgent(fullUserAgent),
 			option.WithCredentials(cred),
 		}
 	}
@@ -557,6 +568,7 @@ func initBigQueryConnectionWithOAuthToken(
 	userAgent string,
 	tokenString string,
 	wantRestService bool,
+	s *Source,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
@@ -566,8 +578,13 @@ func initBigQueryConnectionWithOAuthToken(
 	}
 	ts := oauth2.StaticTokenSource(token)
 
+	fullUserAgent := userAgent
+	if s.toolUserAgent != "" {
+		fullUserAgent = fmt.Sprintf("%s %s", userAgent, s.toolUserAgent)
+	}
+
 	// Initialize the BigQuery client with tokenSource
-	client, err := bigqueryapi.NewClient(ctx, project, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
+	client, err := bigqueryapi.NewClient(ctx, project, option.WithUserAgent(fullUserAgent), option.WithTokenSource(ts))
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
 	}
@@ -575,7 +592,7 @@ func initBigQueryConnectionWithOAuthToken(
 
 	if wantRestService {
 		// Initialize the low-level BigQuery REST service using the same credentials
-		restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithTokenSource(ts))
+		restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(fullUserAgent), option.WithTokenSource(ts))
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
 		}
@@ -594,14 +611,14 @@ func newBigQueryClientCreator(
 	project string,
 	location string,
 	name string,
-) (func(string, bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error), error) {
+) (func(string, bool, *Source) (*bigqueryapi.Client, *bigqueryrestapi.Service, error), error) {
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
-		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, name, userAgent, tokenString, wantRestService)
+	return func(tokenString string, wantRestService bool, s *Source) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+		return initBigQueryConnectionWithOAuthToken(ctx, tracer, project, location, name, userAgent, tokenString, wantRestService, s)
 	}, nil
 }
 

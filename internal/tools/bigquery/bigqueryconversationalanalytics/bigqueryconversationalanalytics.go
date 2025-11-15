@@ -137,6 +137,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if !ok {
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
+	if v, ok := rawS.(interface {
+		SetToolUserAgent(string)
+	}); ok {
+		v.SetToolUserAgent(kind)
+	}
 
 	allowedDatasets := s.BigQueryAllowedDatasets()
 	tableRefsDescription := `A JSON string of a list of BigQuery tables to use as context. Each object in the list must contain 'projectId', 'datasetId', and 'tableId'. Example: '[{"projectId": "my-gcp-project", "datasetId": "my_dataset", "tableId": "my_table"}]'.`
@@ -170,6 +175,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Project:            s.BigQueryProject(),
 		Location:           s.BigQueryLocation(),
 		Parameters:         params,
+		bqSource:           s.(*bigqueryds.Source),
 		Client:             s.BigQueryClient(),
 		UseClientOAuth:     s.UseClientAuthorization(),
 		TokenSource:        bigQueryTokenSourceWithScope,
@@ -190,6 +196,7 @@ type Tool struct {
 	UseClientOAuth bool                  `yaml:"useClientOAuth"`
 	Parameters     parameters.Parameters `yaml:"parameters"`
 
+	bqSource           *bigqueryds.Source
 	Project            string
 	Location           string
 	Client             *bigqueryapi.Client

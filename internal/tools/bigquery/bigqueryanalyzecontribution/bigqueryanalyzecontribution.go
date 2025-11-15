@@ -89,6 +89,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if !ok {
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
+	if v, ok := rawS.(interface {
+		SetToolUserAgent(string)
+	}); ok {
+		v.SetToolUserAgent(kind)
+	}
 
 	allowedDatasets := s.BigQueryAllowedDatasets()
 	inputDataDescription := "The data that contain the test and control data to analyze. Can be a fully qualified BigQuery table ID or a SQL query."
@@ -139,6 +144,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Config:           cfg,
 		Parameters:       params,
 		UseClientOAuth:   s.UseClientAuthorization(),
+		bqSource:         s.(*bigqueryds.Source),
 		ClientCreator:    s.BigQueryClientCreator(),
 		Client:           s.BigQueryClient(),
 		RestService:      s.BigQueryRestService(),
@@ -159,6 +165,7 @@ type Tool struct {
 	UseClientOAuth bool                  `yaml:"useClientOAuth"`
 	Parameters     parameters.Parameters `yaml:"parameters"`
 
+	bqSource         *bigqueryds.Source
 	Client           *bigqueryapi.Client
 	RestService      *bigqueryrestapi.Service
 	ClientCreator    bigqueryds.BigqueryClientCreator
@@ -191,7 +198,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		if err != nil {
 			return nil, fmt.Errorf("error parsing access token: %w", err)
 		}
-		bqClient, restService, err = t.ClientCreator(tokenStr, true)
+		bqClient, restService, err = t.ClientCreator(tokenStr, true, t.bqSource)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
 		}

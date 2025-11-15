@@ -82,6 +82,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if !ok {
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
+	if v, ok := rawS.(interface {
+		SetToolUserAgent(string)
+	}); ok {
+		v.SetToolUserAgent(kind)
+	}
 
 	// Get the Dataplex client using the method from the source
 	makeCatalogClient := s.MakeDataplexCatalogClient()
@@ -103,6 +108,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Config:            cfg,
 		Parameters:        params,
 		UseClientOAuth:    s.UseClientAuthorization(),
+		bqSource:          s.(*bigqueryds.Source),
 		MakeCatalogClient: makeCatalogClient,
 		ProjectID:         s.BigQueryProject(),
 		manifest: tools.Manifest{
@@ -119,6 +125,7 @@ type Tool struct {
 	Config
 	Parameters        parameters.Parameters
 	UseClientOAuth    bool
+	bqSource          *bigqueryds.Source
 	MakeCatalogClient func() (*dataplexapi.CatalogClient, bigqueryds.DataplexClientCreator, error)
 	ProjectID         string
 	manifest          tools.Manifest
