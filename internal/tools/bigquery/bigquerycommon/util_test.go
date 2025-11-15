@@ -12,10 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bigquery
+package bigquerycommon
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -23,21 +22,24 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/log"
 	"google.golang.org/api/option"
-	"github.com/googleapis/genai-toolbox/internal/util"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 )
 
-func TestNewBigQuerySessionProvider(t *testing.T) {
-	var buf bytes.Buffer
-	logger, err := log.NewStdLogger(&buf, &buf, "DEBUG")
-	if err != nil {
-		t.Fatalf("failed to create logger: %v", err)
+func TestGetLabels(t *testing.T) {
+	toolName := "test-tool"
+	expected := map[string]string{"genai-toolbox-tool": toolName}
+	actual := getLabels(toolName)
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("getLabels() = %v, want %v", actual, expected)
 	}
-	ctx := util.WithLogger(context.Background(), logger)
+}
+
+func TestDryRunQuery(t *testing.T) {
+	ctx := context.Background()
 	projectID := "test-project"
 	location := "us"
+	sql := "SELECT 1"
 	toolName := "test-tool"
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -54,8 +56,8 @@ func TestNewBigQuerySessionProvider(t *testing.T) {
 			t.Errorf("expected labels %v, got %v", expectedLabels, job.Configuration.Labels)
 		}
 
-		if !job.Configuration.Query.CreateSession {
-			t.Errorf("expected CreateSession to be true")
+		if !job.Configuration.DryRun {
+			t.Errorf("expected DryRun to be true")
 		}
 
 		// Send back a dummy response
@@ -66,20 +68,10 @@ func TestNewBigQuerySessionProvider(t *testing.T) {
 				JobId:     "job_123",
 				Location:  location,
 			},
-			Status: &bigqueryrestapi.JobStatus{
-				State: "DONE",
-			},
-			Statistics: &bigqueryrestapi.JobStatistics{
-				SessionInfo: &bigqueryrestapi.SessionInfo{
-					SessionId: "session_123",
-				},
-			},
 			Configuration: &bigqueryrestapi.JobConfiguration{
+				DryRun: true,
 				Query: &bigqueryrestapi.JobConfigurationQuery{
-					DestinationTable: &bigqueryrestapi.TableReference{
-						ProjectId: projectID,
-						DatasetId: "dataset_123",
-					},
+					Query: sql,
 				},
 			},
 		})
@@ -91,18 +83,8 @@ func TestNewBigQuerySessionProvider(t *testing.T) {
 		t.Fatalf("failed to create test service: %v", err)
 	}
 
-	s := &Source{
-		Config: Config{
-			Project:   projectID,
-			Location:  location,
-			WriteMode: WriteModeProtected,
-		},
-		RestService: restService,
-	}
-
-	sessionProvider := s.newBigQuerySessionProvider()
-	_, err = sessionProvider(ctx, toolName)
+	_, err = DryRunQuery(ctx, restService, projectID, location, sql, nil, nil, toolName)
 	if err != nil {
-		t.Fatalf("sessionProvider failed: %v", err)
+		t.Fatalf("DryRunQuery failed: %v", err)
 	}
 }

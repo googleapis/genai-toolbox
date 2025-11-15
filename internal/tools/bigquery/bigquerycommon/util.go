@@ -26,7 +26,7 @@ import (
 )
 
 // DryRunQuery performs a dry run of the SQL query to validate it and get metadata.
-func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, projectID string, location string, sql string, params []*bigqueryrestapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty) (*bigqueryrestapi.Job, error) {
+func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, projectID string, location string, sql string, params []*bigqueryrestapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty, toolName string) (*bigqueryrestapi.Job, error) {
 	useLegacySql := false
 
 	restConnProps := make([]*bigqueryrestapi.ConnectionProperty, len(connProps))
@@ -40,6 +40,7 @@ func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, proj
 			Location:  location,
 		},
 		Configuration: &bigqueryrestapi.JobConfiguration{
+			Labels: getLabels(toolName),
 			DryRun: true,
 			Query: &bigqueryrestapi.JobConfigurationQuery{
 				Query:                sql,
@@ -55,6 +56,10 @@ func DryRunQuery(ctx context.Context, restService *bigqueryrestapi.Service, proj
 		return nil, fmt.Errorf("failed to insert dry run job: %w", err)
 	}
 	return insertResponse, nil
+}
+
+func getLabels(toolName string) map[string]string {
+	return map[string]string{"genai-toolbox-tool": toolName}
 }
 
 // BQTypeStringFromToolType converts a tool parameter type string to a BigQuery standard SQL type string.

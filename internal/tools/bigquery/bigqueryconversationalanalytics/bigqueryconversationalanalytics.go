@@ -99,10 +99,11 @@ type InlineContext struct {
 }
 
 type CAPayload struct {
-	Project       string        `json:"project"`
-	Messages      []Message     `json:"messages"`
-	InlineContext InlineContext `json:"inlineContext"`
-	ClientIdEnum  string        `json:"clientIdEnum"`
+	Project       string            `json:"project"`
+	Messages      []Message         `json:"messages"`
+	InlineContext InlineContext     `json:"inlineContext"`
+	ClientIdEnum  string            `json:"clientIdEnum"`
+	JobLabels     map[string]string `json:"jobLabels,omitempty"`
 }
 
 // validate compatible sources are still compatible
@@ -276,6 +277,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 			Options: Options{Chart: ChartOptions{Image: ImageOptions{NoImage: map[string]any{}}}},
 		},
 		ClientIdEnum: "GENAI_TOOLBOX",
+		JobLabels:    map[string]string{"genai-toolbox-tool": kind},
 	}
 
 	// Call the streaming API
