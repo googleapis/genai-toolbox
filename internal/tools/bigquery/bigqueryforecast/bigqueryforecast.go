@@ -209,7 +209,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	if strings.HasPrefix(trimmedUpperHistoryData, "SELECT") || strings.HasPrefix(trimmedUpperHistoryData, "WITH") {
 		if len(t.AllowedDatasets) > 0 {
 			var connProps []*bigqueryapi.ConnectionProperty
-			session, err := t.SessionProvider(ctx)
+			session, err := t.SessionProvider(ctx, kind)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
 			}
@@ -218,7 +218,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 					{Key: "session_id", Value: session.ID},
 				}
 			}
-			dryRunJob, err := bqutil.DryRunQuery(ctx, restService, t.Client.Project(), t.Client.Location, historyData, nil, connProps)
+			dryRunJob, err := bqutil.DryRunQuery(ctx, restService, t.Client.Project(), t.Client.Location, historyData, nil, connProps, kind)
 			if err != nil {
 				return nil, fmt.Errorf("query validation failed: %w", err)
 			}
@@ -279,7 +279,8 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	// JobStatistics.QueryStatistics.StatementType
 	query := bqClient.Query(sql)
 	query.Location = bqClient.Location
-	session, err := t.SessionProvider(ctx)
+	query.Labels = map[string]string{"genai-toolbox-tool": kind}
+	session, err := t.SessionProvider(ctx, kind)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
 	}
