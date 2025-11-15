@@ -15,23 +15,45 @@ description: >
 ## Available Tools
 
 - [`oracle-sql`](../tools/oracle/oracle-sql.md)
-  Execute pre-defined prepared SQL queries in Oracle.
+    Execute pre-defined prepared SQL queries in Oracle.
 
 - [`oracle-execute-sql`](../tools/oracle/oracle-execute-sql.md)
-  Run parameterized SQL queries in Oracle.
+    Run parameterized SQL queries in Oracle.
 
 ## Requirements
 
 ### Database User
 
-This source uses standard authentication. You will need to [create an Oracle user][oracle-users] to log in to the database with the necessary permissions.
+This source uses standard authentication. You will need to [create an Oracle
+user][oracle-users] to log in to the database with the necessary permissions.
 
 [oracle-users]:
     https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/CREATE-USER.html
 
+### Oracle Driver Requirement (Conditional)
+
+The Oracle source offers two connection drivers:
+
+1. **Pure Go Driver (`useOCI: false`, default):** Uses the `go-ora` library.
+   This driver is simpler and does not require any local Oracle software
+   installation, but it **lacks support for advanced features** like Oracle
+   Wallets or Kerberos authentication.
+
+2. **OCI-Based Driver (`useOCI: true`):** Uses the `godror` library, which
+   provides access to **advanced Oracle features** like Digital Wallet support.
+
+If you set `useOCI: true`, you **must** install the **Oracle Instant Client**
+libraries on the machine where this tool runs.
+
+You can download the Instant Client from the official Oracle website: [Oracle
+Instant Client
+Downloads](https://www.oracle.com/database/technologies/instant-client/downloads.html)
+
 ## Connection Methods
 
-You can configure the connection to your Oracle database using one of the following three methods. **You should only use one method** in your source configuration.
+You can configure the connection to your Oracle database using one of the
+following three methods. **You should only use one method** in your source
+configuration.
 
 ### Basic Connection (Host/Port/Service Name)
 
@@ -43,21 +65,30 @@ This is the most straightforward method, where you provide the connection detail
 
 ### Connection String
 
-As an alternative, you can provide all the connection details in a single `connectionString`. This is a convenient way to consolidate the connection information. The typical format is `hostname:port/servicename`.
+As an alternative, you can provide all the connection details in a single
+`connectionString`. This is a convenient way to consolidate the connection
+information. The typical format is `hostname:port/servicename`.
 
 ### TNS Alias
 
-For environments that use a `tnsnames.ora` configuration file, you can connect using a TNS (Transparent Network Substrate) alias.
+For environments that use a `tnsnames.ora` configuration file, you can connect
+using a TNS (Transparent Network Substrate) alias.
 
 - `tnsAlias`: Specify the alias name defined in your `tnsnames.ora` file.
-- `tnsAdmin` (Optional): If your configuration file is not in a standard location, you can use this field to provide the path to the directory containing it. This setting will override the `TNS_ADMIN` environment variable.
+- `tnsAdmin` (Optional): If your configuration file is not in a standard
+  location, you can use this field to provide the path to the directory
+  containing it. This setting will override the `TNS_ADMIN` environment
+  variable.
 
 ## Example
+
+This example demonstrates the optional `useOCI` field.
 
 ```yaml
 sources:
     my-oracle-source:
         kind: oracle
+        
         # --- Choose one connection method ---
         # 1. Host, Port, and Service Name
         host: 127.0.0.1
@@ -74,6 +105,8 @@ sources:
         user: ${USER_NAME}
         password: ${PASSWORD}
 
+        # Optional: Set to true to use the OCI-based driver for advanced features (Requires Oracle Instant Client)
+        useOCI: true
 ```
 
 {{< notice tip >}}
@@ -83,14 +116,15 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field**        | **type** | **required** | **description**                                                                                                             |
-|------------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------|
-| kind             |  string  |     true     | Must be "oracle".                                                                                                           |
-| user             |  string  |     true     | Name of the Oracle user to connect as (e.g. "my-oracle-user").                                                              |
-| password         |  string  |     true     | Password of the Oracle user (e.g. "my-password").                                                                           |
-| host             |  string  |    false     | IP address or hostname to connect to (e.g. "127.0.0.1"). Required if not using `connectionString` or `tnsAlias`.            |
-| port             | integer  |    false     | Port to connect to (e.g. "1521"). Required if not using `connectionString` or `tnsAlias`.                                   |
-| serviceName      |  string  |    false     | The Oracle service name of the database to connect to. Required if not using `connectionString` or `tnsAlias`.              |
-| connectionString |  string  |    false     | A direct connection string (e.g. "hostname:port/servicename"). Use as an alternative to `host`, `port`, and `serviceName`.  |
-| tnsAlias         |  string  |    false     | A TNS alias from a `tnsnames.ora` file. Use as an alternative to `host`/`port` or `connectionString`.                       |
-| tnsAdmin         |  string  |    false     | Path to the directory containing the `tnsnames.ora` file. This overrides the `TNS_ADMIN` environment variable if it is set. |
+| **field**        | **type** | **required** | **description**                                                                                                                                                                         |
+|------------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind             |  string  |     true     | Must be "oracle".                                                                                                                                                                       |
+| user             |  string  |     true     | Name of the Oracle user to connect as (e.g. "my-oracle-user").                                                                                                                          |
+| password         |  string  |     true     | Password of the Oracle user (e.g. "my-password").                                                                                                                                       |
+| host             |  string  |    false     | IP address or hostname to connect to (e.g. "127.0.0.1"). Required if not using `connectionString` or `tnsAlias`.                                                                        |
+| port             | integer  |    false     | Port to connect to (e.g. "1521"). Required if not using `connectionString` or `tnsAlias`.                                                                                               |
+| serviceName      |  string  |    false     | The Oracle service name of the database to connect to. Required if not using `connectionString` or `tnsAlias`.                                                                          |
+| connectionString |  string  |    false     | A direct connection string (e.g. "hostname:port/servicename"). Use as an alternative to `host`, `port`, and `serviceName`.                                                              |
+| tnsAlias         |  string  |    false     | A TNS alias from a `tnsnames.ora` file. Use as an alternative to `host`/`port` or `connectionString`.                                                                                   |
+| tnsAdmin         |  string  |    false     | Path to the directory containing the `tnsnames.ora` file. This overrides the `TNS_ADMIN` environment variable if it is set.                                                             |
+| useOCI           |   bool   |    false     | If true, uses the OCI-based driver (godror) which supports Oracle Wallet/Kerberos but requires the Oracle Instant Client libraries to be installed. Defaults to false (pure Go driver). |
