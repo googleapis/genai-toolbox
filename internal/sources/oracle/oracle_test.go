@@ -1,4 +1,5 @@
 // Copyright © 2025, Oracle and/or its affiliates.
+
 package oracle_test
 
 import (
@@ -66,25 +67,26 @@ func TestParseFromYamlOracle(t *testing.T) {
 			},
 		},
 		{
-			desc: "tnsAlias and TnsAdmin specified",
+			desc: "tnsAlias and TnsAdmin specified with explicit useOCI=true",
 			in: `
             sources:
-                my-oracle-tns:
+                my-oracle-tns-oci:
                     kind: oracle
                     tnsAlias: FINANCE_DB
                     tnsAdmin: /opt/oracle/network/admin
                     user: my_user
                     password: my_pass
+                    useOCI: true 
             `,
 			want: server.SourceConfigs{
-				"my-oracle-tns": oracle.Config{
-					Name:     "my-oracle-tns",
+				"my-oracle-tns-oci": oracle.Config{
+					Name:     "my-oracle-tns-oci",
 					Kind:     oracle.SourceKind,
 					TnsAlias: "FINANCE_DB",
 					TnsAdmin: "/opt/oracle/network/admin",
 					User:     "my_user",
 					Password: "my_pass",
-					UseOCI:   false,
+					UseOCI:   true,
 				},
 			},
 		},
@@ -94,7 +96,7 @@ func TestParseFromYamlOracle(t *testing.T) {
 			got := struct {
 				Sources server.SourceConfigs `yaml:"sources"`
 			}{}
-			// Parse contents
+			
 			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
@@ -105,6 +107,8 @@ func TestParseFromYamlOracle(t *testing.T) {
 		})
 	}
 }
+
+
 func TestFailParseFromYamlOracle(t *testing.T) {
 	tcs := []struct {
 		desc string
@@ -162,6 +166,20 @@ func TestFailParseFromYamlOracle(t *testing.T) {
             `,
 			err: "unable to parse source \"my-oracle-instance\" as \"oracle\": invalid Oracle configuration: provide only one connection method: 'tns_alias', 'connection_string', or 'host'+'service_name'",
 		},
+		{
+			desc: "fail on tnsAdmin with useOCI=false",
+			in: `
+			sources:
+				my-oracle-fail:
+					kind: oracle
+					tnsAlias: FINANCE_DB
+					tnsAdmin: /opt/oracle/network/admin
+					user: my_user
+					password: my_pass
+					useOCI: false
+			`,
+			err: "unable to parse source \"my-oracle-fail\" as \"oracle\": invalid Oracle configuration: tnsAdmin can only be used when `UseOCI` is true,as it is used by OCI-specific features, such as Wallets",
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -169,7 +187,6 @@ func TestFailParseFromYamlOracle(t *testing.T) {
 				Sources server.SourceConfigs `yaml:"sources"`
 			}{}
 
-			// Parse contents
 			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
