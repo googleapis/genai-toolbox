@@ -162,7 +162,7 @@ tools:
     list_schemas:
         kind: postgres-list-schemas
         source: cloudsql-pg-source
-
+    
     database_overview:
         kind: postgres-database-overview
         source: cloudsql-pg-source
@@ -177,6 +177,10 @@ tools:
 
     list_sequences:
         kind: postgres-list-sequences
+        source: cloudsql-pg-source
+
+    list_tablespaces:
+        kind: postgres-list-tablespaces
         source: cloudsql-pg-source
 
 toolsets:
@@ -198,3 +202,4 @@ toolsets:
         - list_triggers
         - list_indexes
         - list_sequences
+        - list_tablespaces

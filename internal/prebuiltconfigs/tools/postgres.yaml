@@ -161,7 +161,7 @@ tools:
     list_schemas:
         kind: postgres-list-schemas
         source: postgresql-source
-
+    
     database_overview:
         kind: postgres-database-overview
         source: postgresql-source
@@ -176,6 +176,10 @@ tools:
 
     list_sequences:
         kind: postgres-list-sequences
+        source: postgresql-source
+
+    list_tablespaces:
+        kind: postgres-list-tablespaces
         source: postgresql-source
 
 toolsets:
@@ -197,3 +201,4 @@ toolsets:
         - list_triggers
         - list_indexes
         - list_sequences
+        - list_tablespaces

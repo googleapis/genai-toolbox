@@ -59,6 +59,9 @@ to a database by following these instructions][csql-pg-quickstart].
 - [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
   List sequences in a PostgreSQL database.
 
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-schemas.md)
+  List tablespaces in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [Cloud SQL for Postgres using

@@ -153,4 +153,5 @@ func TestPostgres(t *testing.T) {
 	tests.RunPostgresListTriggersTest(t, ctx, pool)
 	tests.RunPostgresListIndexesTest(t, ctx, pool)
 	tests.RunPostgresListSequencesTest(t, ctx, pool)
+	tests.RunPostgresListTableSpacesTest(t)
 }

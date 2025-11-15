@@ -53,6 +53,9 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
   List sequences in a PostgreSQL database.
 
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-schemas.md)
+  List tablespaces in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)
