@@ -205,7 +205,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	var connProps []*bigqueryapi.ConnectionProperty
 	var session *bigqueryds.Session
 	if t.WriteMode == bigqueryds.WriteModeProtected {
-		session, err = t.SessionProvider(ctx)
+		session, err = t.SessionProvider(ctx, kind)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get BigQuery session for protected mode: %w", err)
 		}
@@ -214,7 +214,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		}
 	}
 
-	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, sql, nil, connProps)
+	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), bqClient.Location, sql, nil, connProps, kind)
 	if err != nil {
 		return nil, fmt.Errorf("query validation failed: %w", err)
 	}
@@ -303,6 +303,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 
 	query := bqClient.Query(sql)
 	query.Location = bqClient.Location
+	query.Labels = map[string]string{"genai-toolbox-tool": kind}
 
 	query.ConnectionProperties = connProps
 

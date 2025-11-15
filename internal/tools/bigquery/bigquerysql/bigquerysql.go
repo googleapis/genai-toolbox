@@ -230,10 +230,11 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	query := bqClient.Query(newStatement)
 	query.Parameters = highLevelParams
 	query.Location = bqClient.Location
+	query.Labels = map[string]string{"genai-toolbox-tool": kind}
 
 	connProps := []*bigqueryapi.ConnectionProperty{}
 	if t.SessionProvider != nil {
-		session, err := t.SessionProvider(ctx)
+		session, err := t.SessionProvider(ctx, kind)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
 		}
@@ -243,7 +244,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		}
 	}
 	query.ConnectionProperties = connProps
-	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), query.Location, newStatement, lowLevelParams, connProps)
+	dryRunJob, err := bqutil.DryRunQuery(ctx, restService, bqClient.Project(), query.Location, newStatement, lowLevelParams, connProps, kind)
 	if err != nil {
 		return nil, fmt.Errorf("query validation failed: %w", err)
 	}
