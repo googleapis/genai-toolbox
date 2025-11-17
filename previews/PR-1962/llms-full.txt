@@ -730,7 +730,8 @@ runtime](https://research.google.com/colaboratory/local-runtimes.html).
 
     {{< tabpane persist=header >}}
 {{< tab header="ADK" lang="bash" >}}
-pip install toolbox-core google-adk
+
+pip install toolbox-core
 {{< /tab >}}
 {{< tab header="Langchain" lang="bash" >}}
 
@@ -780,7 +781,7 @@ pip install google-genai
 {{< /tabpane >}}
 
 3. Create and configure your agent. For frameworks other than ADK, create a new file named `hotel_agent.py`.
-    {{< tabpane persist=header >}}
+{{< tabpane persist=header >}}
 {{< tab header="ADK" >}}
 First, create a new agent project:
 ```bash
@@ -838,7 +839,7 @@ Documentation](https://github.com/googleapis/python-genai?tab=readme-ov-file#man
 
 4. Run your agent, and observe the results:
 
-    {{< tabpane persist=header >}}
+{{< tabpane persist=header >}}
 {{< tab header="ADK" lang="bash" >}}
 You can run your agent locally for testing:
 ```sh
