@@ -7,12 +7,20 @@ description: "Connect to Toolbox via Gemini CLI Extensions."
 
 ## Gemini CLI Extensions
 
-[Gemini CLI][gemini-cli] is an open-source AI agent designed to assist with development workflows by assisting with coding, debugging, data exploration, and content creation. Its mission is to provide an agentic interface for interacting with database and analytics services and popular open-source databases.
+[Gemini CLI][gemini-cli] is an open-source AI agent designed to assist with
+development workflows by assisting with coding, debugging, data exploration, and
+content creation. Its mission is to provide an agentic interface for interacting
+with database and analytics services and popular open-source databases.
 
 ### How extensions work
-Gemini CLI is highly extensible, allowing for the addition of new tools and capabilities through extensions. You can load the extensions from a GitHub URL, a local directory, or a configurable registry. They provide new tools, slash commands, and prompts to assist with your workflow.
 
-Use the Gemini CLI Extensions to load prebuilt or custom tools to interact with your databases. 
+Gemini CLI is highly extensible, allowing for the addition of new tools and
+capabilities through extensions. You can load the extensions from a GitHub URL,
+a local directory, or a configurable registry. They provide new tools, slash
+commands, and prompts to assist with your workflow.
+
+Use the Gemini CLI Extensions to load prebuilt or custom tools to interact with
+your databases.
 
 [gemini-cli]: https://google-gemini.github.io/gemini-cli/
 

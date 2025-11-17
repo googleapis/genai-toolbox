@@ -52,6 +52,14 @@ ignoreFiles = ["quickstart/shared", "quickstart/python", "quickstart/js", "quick
 # The order of versions in this file is mirrored into the dropdown
 
 [[params.versions]]
+  version = "v0.20.0"
+  url = "https://googleapis.github.io/genai-toolbox/v0.20.0/"
+  
+[[params.versions]]
+  version = "v0.19.1"
+  url = "https://googleapis.github.io/genai-toolbox/v0.19.1/"
+  
+[[params.versions]]
   version = "v0.18.0"
   url = "https://googleapis.github.io/genai-toolbox/v0.18.0/"
   

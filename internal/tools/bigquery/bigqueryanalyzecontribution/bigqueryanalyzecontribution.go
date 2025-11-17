@@ -26,6 +26,7 @@ import (
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
@@ -99,8 +100,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		inputDataDescription += fmt.Sprintf(" The query or table must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", "))
 	}
 
-	inputDataParameter := tools.NewStringParameter("input_data", inputDataDescription)
-	contributionMetricParameter := tools.NewStringParameter("contribution_metric",
+	inputDataParameter := parameters.NewStringParameter("input_data", inputDataDescription)
+	contributionMetricParameter := parameters.NewStringParameter("contribution_metric",
 		`The name of the column that contains the metric to analyze.
 		Provides the expression to use to calculate the metric you are analyzing.
 		To calculate a summable metric, the expression must be in the form SUM(metric_column_name),
@@ -113,16 +114,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		To calculate a summable by category metric, the expression must be in the form
 		SUM(metric_sum_column_name)/COUNT(DISTINCT categorical_column_name). The summed column must be a numeric data type.
 		The categorical column must have type BOOL, DATE, DATETIME, TIME, TIMESTAMP, STRING, or INT64.`)
-	isTestColParameter := tools.NewStringParameter("is_test_col",
+	isTestColParameter := parameters.NewStringParameter("is_test_col",
 		"The name of the column that identifies whether a row is in the test or control group.")
-	dimensionIDColsParameter := tools.NewArrayParameterWithRequired("dimension_id_cols",
-		"An array of column names that uniquely identify each dimension.", false, tools.NewStringParameter("dimension_id_col", "A dimension column name."))
-	topKInsightsParameter := tools.NewIntParameterWithDefault("top_k_insights_by_apriori_support", 30,
+	dimensionIDColsParameter := parameters.NewArrayParameterWithRequired("dimension_id_cols",
+		"An array of column names that uniquely identify each dimension.", false, parameters.NewStringParameter("dimension_id_col", "A dimension column name."))
+	topKInsightsParameter := parameters.NewIntParameterWithDefault("top_k_insights_by_apriori_support", 30,
 		"The number of top insights to return, ranked by apriori support.")
-	pruningMethodParameter := tools.NewStringParameterWithDefault("pruning_method", "PRUNE_REDUNDANT_INSIGHTS",
+	pruningMethodParameter := parameters.NewStringParameterWithDefault("pruning_method", "PRUNE_REDUNDANT_INSIGHTS",
 		"The method to use for pruning redundant insights. Can be 'NO_PRUNING' or 'PRUNE_REDUNDANT_INSIGHTS'.")
 
-	parameters := tools.Parameters{
+	params := parameters.Parameters{
 		inputDataParameter,
 		contributionMetricParameter,
 		isTestColParameter,
@@ -131,14 +132,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		pruningMethodParameter,
 	}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	t := Tool{
-		Name:             cfg.Name,
-		Kind:             kind,
-		Parameters:       parameters,
-		AuthRequired:     cfg.AuthRequired,
+		Config:           cfg,
+		Parameters:       params,
 		UseClientOAuth:   s.UseClientAuthorization(),
 		ClientCreator:    s.BigQueryClientCreator(),
 		Client:           s.BigQueryClient(),
@@ -146,7 +145,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		IsDatasetAllowed: s.IsDatasetAllowed,
 		AllowedDatasets:  allowedDatasets,
 		SessionProvider:  s.BigQuerySession(),
-		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		manifest:         tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:      mcpManifest,
 	}
 	return t, nil
@@ -156,11 +155,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string           `yaml:"name"`
-	Kind           string           `yaml:"kind"`
-	AuthRequired   []string         `yaml:"authRequired"`
-	UseClientOAuth bool             `yaml:"useClientOAuth"`
-	Parameters     tools.Parameters `yaml:"parameters"`
+	Config
+	UseClientOAuth bool                  `yaml:"useClientOAuth"`
+	Parameters     parameters.Parameters `yaml:"parameters"`
 
 	Client           *bigqueryapi.Client
 	RestService      *bigqueryrestapi.Service
@@ -172,8 +169,12 @@ type Tool struct {
 	mcpManifest      tools.McpManifest
 }
 
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
 // Invoke runs the contribution analysis.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	inputData, ok := paramsMap["input_data"].(string)
 	if !ok {
@@ -368,8 +369,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return "The query returned 0 rows.", nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

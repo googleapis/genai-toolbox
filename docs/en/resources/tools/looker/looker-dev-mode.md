@@ -16,8 +16,8 @@ It's compatible with the following sources:
 
 - [looker](../../sources/looker.md)
 
-`looker-dev-mode` accepts a boolean parameter, true to enter dev mode and false to exit dev mode.
-
+`looker-dev-mode` accepts a boolean parameter, true to enter dev mode and false
+to exit dev mode.
 
 ## Example
 

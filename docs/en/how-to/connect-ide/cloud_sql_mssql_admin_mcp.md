@@ -254,6 +254,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
       }
     }
     ```
+
 {{% /tab %}}
 
 {{% tab header="Gemini Code Assist" lang="en" %}}
@@ -278,6 +279,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
       }
     }
     ```
+
 {{% /tab %}}
 {{< /tabpane >}}
 
@@ -287,6 +289,7 @@ Your AI tool is now connected to Cloud SQL for SQL Server using MCP.
 
 The `cloud-sql-mssql-admin` server provides tools for managing your Cloud SQL
 instances and interacting with your database:
+
 * **create_instance**: Creates a new Cloud SQL for SQL Server instance.
 * **get_instance**: Gets information about a Cloud SQL instance.
 * **list_instances**: Lists Cloud SQL instances in a project.

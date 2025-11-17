@@ -16,13 +16,14 @@ package tools
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"slices"
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 // ToolConfigFactory defines the signature for a function that creates and
@@ -70,25 +71,26 @@ type AccessToken string
 func (token AccessToken) ParseBearerToken() (string, error) {
 	headerParts := strings.Split(string(token), " ")
 	if len(headerParts) != 2 || strings.ToLower(headerParts[0]) != "bearer" {
-		return "", fmt.Errorf("authorization header must be in the format 'Bearer <token>': %w", ErrUnauthorized)
+		return "", fmt.Errorf("authorization header must be in the format 'Bearer <token>': %w", util.ErrUnauthorized)
 	}
 	return headerParts[1], nil
 }
 
 type Tool interface {
-	Invoke(context.Context, ParamValues, AccessToken) (any, error)
-	ParseParams(map[string]any, map[string]map[string]any) (ParamValues, error)
+	Invoke(context.Context, parameters.ParamValues, AccessToken) (any, error)
+	ParseParams(map[string]any, map[string]map[string]any) (parameters.ParamValues, error)
 	Manifest() Manifest
 	McpManifest() McpManifest
 	Authorized([]string) bool
 	RequiresClientAuthorization() bool
+	ToConfig() ToolConfig
 }
 
 // Manifest is the representation of tools sent to Client SDKs.
 type Manifest struct {
-	Description  string              `json:"description"`
-	Parameters   []ParameterManifest `json:"parameters"`
-	AuthRequired []string            `json:"authRequired"`
+	Description  string                         `json:"description"`
+	Parameters   []parameters.ParameterManifest `json:"parameters"`
+	AuthRequired []string                       `json:"authRequired"`
 }
 
 // Definition for a tool the MCP client can call.
@@ -98,11 +100,11 @@ type McpManifest struct {
 	// A human-readable description of the tool.
 	Description string `json:"description,omitempty"`
 	// A JSON Schema object defining the expected parameters for the tool.
-	InputSchema McpToolsSchema `json:"inputSchema,omitempty"`
-	Metadata    map[string]any `json:"_meta,omitempty"`
+	InputSchema parameters.McpToolsSchema `json:"inputSchema,omitempty"`
+	Metadata    map[string]any            `json:"_meta,omitempty"`
 }
 
-func GetMcpManifest(name, desc string, authInvoke []string, params Parameters) McpManifest {
+func GetMcpManifest(name, desc string, authInvoke []string, params parameters.Parameters) McpManifest {
 	inputSchema, authParams := params.McpManifest()
 	mcpManifest := McpManifest{
 		Name:        name,
@@ -123,8 +125,6 @@ func GetMcpManifest(name, desc string, authInvoke []string, params Parameters) M
 	}
 	return mcpManifest
 }
-
-var ErrUnauthorized = errors.New("unauthorized")
 
 // Helper function that returns if a tool invocation request is authorized
 func IsAuthorized(authRequiredSources []string, verifiedAuthServices []string) bool {

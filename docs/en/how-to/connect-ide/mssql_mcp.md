@@ -45,19 +45,19 @@ instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.20.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.20.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.20.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.20.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -217,6 +217,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolb
       }
     }
     ```
+
 {{% /tab %}}
 {{% tab header="Windsurf" lang="en" %}}
 
@@ -243,6 +244,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolb
       }
     }
     ```
+
 {{% /tab %}}
 {{% tab header="Gemini CLI" lang="en" %}}
 
@@ -270,6 +272,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolb
       }
     }
     ```
+
 {{% /tab %}}
 {{% tab header="Gemini Code Assist" lang="en" %}}
 
@@ -299,6 +302,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolb
       }
     }
     ```
+
 {{% /tab %}}
 {{< /tabpane >}}
 
