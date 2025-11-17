@@ -84,7 +84,10 @@ With Bigtable, you can replicate your data to regions across the world for high
 availability and data resiliency.&lt;/p>
 &lt;p>If you are new to Bigtable, you can try to &lt;a href="https://cloud.google.com/bigtable/docs/create-instance-write-data-cbt-cli">create an instance and write data
 with the cbt CLI&lt;/a>.&lt;/p></description></item><item><title>Cassandra</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/cassandra/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/cassandra/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://cassandra.apache.org/">Apache Cassandra&lt;/a> is a NoSQL distributed database. By design, NoSQL databases are lightweight, open-source, non-relational, and largely distributed. Counted among their strengths are horizontal scalability, distributed architectures, and a flexible approach to schema definition.&lt;/p>
+&lt;p>&lt;a href="https://cassandra.apache.org/">Apache Cassandra&lt;/a> is a NoSQL distributed database. By design,
+NoSQL databases are lightweight, open-source, non-relational, and largely
+distributed. Counted among their strengths are horizontal scalability,
+distributed architectures, and a flexible approach to schema definition.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/tools/cassandra/cassandra-cql/">&lt;code>cassandra-cql&lt;/code>&lt;/a>&lt;br>
@@ -560,15 +563,17 @@ Run DQL (Dgraph Query Language) queries.&lt;/li>
 &lt;p>When &lt;strong>connecting to a hosted Dgraph database&lt;/strong>, this source uses the API key
 for access. If you are using a dedicated environment, you will additionally need
 the namespace and user credentials for that namespace.&lt;/p></description></item><item><title>Elasticsearch</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/elasticsearch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/elasticsearch/</guid><description>&lt;h1 id="elasticsearch-source">Elasticsearch Source&lt;/h1>
-&lt;p>&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">Elasticsearch&lt;/a> is a distributed, free and open search and analytics engine
-for all types of data, including textual, numerical, geospatial, structured,
-and unstructured.&lt;/p>
+&lt;p>&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">Elasticsearch&lt;/a> is a distributed, free and open search and
+analytics engine for all types of data, including textual, numerical,
+geospatial, structured, and unstructured.&lt;/p>
 &lt;p>If you are new to Elasticsearch, you can learn how to
 &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started.html">set up a cluster and start indexing data&lt;/a>.&lt;/p>
 &lt;p>Elasticsearch uses &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/esql.html">ES|QL&lt;/a> for querying data. ES|QL
 is a powerful query language that allows you to search and aggregate data in
 Elasticsearch.&lt;/p>
-&lt;p>See the &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">official documentation&lt;/a> for more information.&lt;/p></description></item><item><title>Firebird</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/firebird/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/firebird/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>See the &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">official
+documentation&lt;/a>
+for more information.&lt;/p></description></item><item><title>Firebird</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/firebird/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/firebird/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://firebirdsql.org/">Firebird&lt;/a> is a relational database management system offering many
 ANSI SQL standard features that runs on Linux, Windows, and a variety of Unix
 platforms. It is known for its small footprint, powerful features, and easy
@@ -873,8 +878,15 @@ in the cloud, on GCP, or on premises.&lt;/p>
 &lt;/svg>
 
  &lt;/span>Note&lt;/p></description></item><item><title>MindsDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/mindsdb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/mindsdb/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://docs.mindsdb.com/">MindsDB&lt;/a> is an AI federated database in the world. It allows you to combine information from hundreds of datasources as if they were SQL, supporting joins across datasources and enabling you to query all unstructured data as if it were structured.&lt;/p>
-&lt;p>MindsDB translates MySQL queries into whatever API is needed - whether it&amp;rsquo;s REST APIs, GraphQL, or native database protocols. This means you can write standard SQL queries and MindsDB automatically handles the translation to APIs like Salesforce, Jira, GitHub, email systems, MongoDB, and hundreds of other datasources.&lt;/p></description></item><item><title>MongoDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/mongodb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/mongodb/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://docs.mindsdb.com/">MindsDB&lt;/a> is an AI federated database in the world. It allows you
+to combine information from hundreds of datasources as if they were SQL,
+supporting joins across datasources and enabling you to query all unstructured
+data as if it were structured.&lt;/p>
+&lt;p>MindsDB translates MySQL queries into whatever API is needed - whether it&amp;rsquo;s REST
+APIs, GraphQL, or native database protocols. This means you can write standard
+SQL queries and MindsDB automatically handles the translation to APIs like
+Salesforce, Jira, GitHub, email systems, MongoDB, and hundreds of other
+datasources.&lt;/p></description></item><item><title>MongoDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/mongodb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/mongodb/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://www.mongodb.com/docs/atlas/getting-started/">MongoDB&lt;/a> is a popular NoSQL database that stores data in
 flexible, JSON-like documents, making it easy to develop and scale applications.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
@@ -954,7 +966,10 @@ OceanBase.&lt;/p>
 &lt;p>This source only uses standard authentication. You will need to create an
 OceanBase user to login to the database with. OceanBase supports
 MySQL-compatible user management syntax.&lt;/p></description></item><item><title>Oracle</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/oracle/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/oracle/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://www.oracle.com/database/">Oracle Database&lt;/a> is a multi-model database management system produced and marketed by Oracle Corporation. It is commonly used for running online transaction processing (OLTP), data warehousing (DW), and mixed (OLTP &amp;amp; DW) database workloads.&lt;/p>
+&lt;p>&lt;a href="https://www.oracle.com/database/">Oracle Database&lt;/a> is a multi-model database management system
+produced and marketed by Oracle Corporation. It is commonly used for running
+online transaction processing (OLTP), data warehousing (DW), and mixed (OLTP &amp;amp;
+DW) database workloads.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
@@ -968,7 +983,8 @@ Run parameterized SQL queries in Oracle.&lt;/p>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-user">Database User&lt;/h3>
-&lt;p>This source uses standard authentication. You will need to &lt;a href="https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/CREATE-USER.html">create an Oracle user&lt;/a> to log in to the database with the necessary permissions.&lt;/p></description></item><item><title>PostgreSQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/postgres/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/postgres/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>This source uses standard authentication. You will need to &lt;a href="https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/CREATE-USER.html">create an Oracle
+user&lt;/a> to log in to the database with the necessary permissions.&lt;/p></description></item><item><title>PostgreSQL</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/postgres/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/postgres/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://www.postgresql.org/">PostgreSQL&lt;/a> is a powerful, open source object-relational database
 system with over 35 years of active development that has earned it a strong
 reputation for reliability, feature robustness, and performance.&lt;/p>
@@ -1027,16 +1043,20 @@ Cancel a running Serverless Spark batch operation.&lt;/li>
 &lt;p>Serverless for Apache Spark uses &lt;a href="https://cloud.google.com/bigquery/docs/access-control">Identity and Access Management
 (IAM)&lt;/a> to control user
 and group access to serverless Spark resources like batches and sessions.&lt;/p></description></item><item><title>SingleStore</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/singlestore/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/singlestore/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://docs.singlestore.com/">SingleStore&lt;/a> is a distributed SQL database built to power intelligent applications. It is both relational and multi-model, enabling developers to easily build and scale applications and workloads.&lt;/p>
-&lt;p>SingleStore is built around Universal Storage which combines in-memory rowstore and on-disk columnstore data formats to deliver a single table type that is optimized to handle both transactional and analytical workloads.&lt;/p>
+&lt;p>&lt;a href="https://docs.singlestore.com/">SingleStore&lt;/a> is a distributed SQL database built to power
+intelligent applications. It is both relational and multi-model, enabling
+developers to easily build and scale applications and workloads.&lt;/p>
+&lt;p>SingleStore is built around Universal Storage which combines in-memory rowstore
+and on-disk columnstore data formats to deliver a single table type that is
+optimized to handle both transactional and analytical workloads.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/tools/singlestore/singlestore-sql/">&lt;code>singlestore-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/tools/singlestore/singlestore-sql/">&lt;code>singlestore-sql&lt;/code>&lt;/a>
 Execute pre-defined prepared SQL queries in SingleStore.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/tools/singlestore/singlestore-execute-sql/">&lt;code>singlestore-execute-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/tools/singlestore/singlestore-execute-sql/">&lt;code>singlestore-execute-sql&lt;/code>&lt;/a>
 Run parameterized SQL queries in SingleStore.&lt;/p></description></item><item><title>Spanner</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/spanner/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1923/resources/sources/spanner/</guid><description>&lt;h1 id="spanner-source">Spanner Source&lt;/h1>
 &lt;p>&lt;a href="https://cloud.google.com/spanner/docs">Spanner&lt;/a> is a fully managed, mission-critical database service
 that brings together relational, graph, key-value, and search. It offers

@@ -48,6 +48,8 @@ returns; it can take a minute or so for the cancellation to be reflected.&lt;/p>
 &lt;/ul>
 &lt;p>&lt;code>serverless-spark-cancel-batch&lt;/code> accepts the following parameters:&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>&lt;code>operation&lt;/code>&lt;/strong> (required): The name of the operation to cancel. For example, for &lt;code>projects/my-project/locations/us-central1/operations/my-operation&lt;/code>, you would pass &lt;code>my-operation&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>&lt;code>operation&lt;/code>&lt;/strong> (required): The name of the operation to cancel. For example,
+for &lt;code>projects/my-project/locations/us-central1/operations/my-operation&lt;/code>, you
+would pass &lt;code>my-operation&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;p>The tool inherits the &lt;code>project&lt;/code> and &lt;code>location&lt;/code> from the source configuration.&lt;/p></description></item></channel></rss>
