@@ -44,12 +44,26 @@ to a database by following these instructions][csql-pg-quickstart].
 - [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
   List views in a PostgreSQL database.
 
+- [`postgres-list-schemas`](../tools/postgres/postgres-list-schemas.md)
+  List schemas in a PostgreSQL database.
+
+- [`postgres-database-overview`](../tools/postgres/postgres-database-overview.md)
+  Fetches the current state of the PostgreSQL server.
+
+- [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
+  List triggers in a PostgreSQL database.
+
+- [`postgres-list-indexes`](../tools/postgres/postgres-list-indexes.md)
+  List available user indexes in a PostgreSQL database.
+
+- [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
+  List sequences in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [Cloud SQL for Postgres using
   MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/)
 Connect your IDE to Cloud SQL for Postgres using Toolbox.
-
 
 ## Requirements
 

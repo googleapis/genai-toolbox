@@ -74,11 +74,11 @@ deleted. To delete a field, include it in the `updateMask` but omit it from
 
 ## Reference
 
-| **field**   |     **type**   | **required** | **description**                                          |
-|-------------|:--------------:|:------------:|----------------------------------------------------------|
-| kind        |     string     |     true     | Must be "firestore-update-document".                     |
-| source      |     string     |     true     | Name of the Firestore source to update documents in.     |
-| description |     string     |     true     | Description of the tool that is passed to the LLM.       |
+| **field**   | **type** | **required** | **description**                                      |
+|-------------|:--------:|:------------:|------------------------------------------------------|
+| kind        |  string  |     true     | Must be "firestore-update-document".                 |
+| source      |  string  |     true     | Name of the Firestore source to update documents in. |
+| description |  string  |     true     | Description of the tool that is passed to the LLM.   |
 
 ## Examples
 
@@ -91,7 +91,9 @@ tools:
     source: my-firestore
     description: Update a user document
 ```
+
 Usage:
+
 ```json
 {
   "documentPath": "users/user123",
@@ -140,7 +142,8 @@ Usage:
 
 ### Update with Field Deletion
 
-To delete fields, include them in the `updateMask` but omit them from `documentData`:
+To delete fields, include them in the `updateMask` but omit them from
+`documentData`:
 
 ```json
 {
@@ -158,7 +161,8 @@ To delete fields, include them in the `updateMask` but omit them from `documentD
 In this example:
 
 - `name` will be updated to "John Smith"
-- `temporaryField` and `obsoleteData` will be deleted from the document (they are in the mask but not in the data)
+- `temporaryField` and `obsoleteData` will be deleted from the document (they
+  are in the mask but not in the data)
 
 ### Complex Update with Nested Data
 
@@ -317,28 +321,43 @@ Common errors include:
 
 ## Best Practices
 
-1. **Use update masks for precision**: When you only need to update specific fields, use the `updateMask` parameter to avoid unintended changes
-2. **Always use typed values**: Every field must be wrapped with its appropriate type indicator (e.g., `{"stringValue": "text"}`)
-3. **Integer values can be strings**: The tool accepts integer values as strings (e.g., `{"integerValue": "1500"}`)
-4. **Use returnData sparingly**: Only set to true when you need to verify the exact data after the update
-5. **Validate data before sending**: Ensure your data matches Firestore's native JSON format
+1. **Use update masks for precision**: When you only need to update specific
+   fields, use the `updateMask` parameter to avoid unintended changes
+2. **Always use typed values**: Every field must be wrapped with its appropriate
+   type indicator (e.g., `{"stringValue": "text"}`)
+3. **Integer values can be strings**: The tool accepts integer values as strings
+   (e.g., `{"integerValue": "1500"}`)
+4. **Use returnData sparingly**: Only set to true when you need to verify the
+   exact data after the update
+5. **Validate data before sending**: Ensure your data matches Firestore's native
+   JSON format
 6. **Handle timestamps properly**: Use RFC3339 format for timestamp strings
-7. **Base64 encode binary data**: Binary data must be base64 encoded in the `bytesValue` field
-8. **Consider security rules**: Ensure your Firestore security rules allow document updates
-9. **Delete fields using update mask**: To delete fields, include them in the `updateMask` but omit them from `documentData`
-10. **Test with non-production data first**: Always test your updates on non-critical documents first
+7. **Base64 encode binary data**: Binary data must be base64 encoded in the
+   `bytesValue` field
+8. **Consider security rules**: Ensure your Firestore security rules allow
+   document updates
+9. **Delete fields using update mask**: To delete fields, include them in the
+   `updateMask` but omit them from `documentData`
+10. **Test with non-production data first**: Always test your updates on
+    non-critical documents first
 
 ## Differences from Add Documents
 
 - **Purpose**: Updates existing documents vs. creating new ones
-- **Document must exist**: For standard updates (though not using updateMask will create if missing with given document id)
+- **Document must exist**: For standard updates (though not using updateMask
+  will create if missing with given document id)
 - **Update mask support**: Allows selective field updates
-- **Field deletion**: Supports removing specific fields by including them in the mask but not in the data
+- **Field deletion**: Supports removing specific fields by including them in the
+  mask but not in the data
 - **Returns updateTime**: Instead of createTime
 
 ## Related Tools
 
-- [`firestore-add-documents`](firestore-add-documents.md) - Add new documents to Firestore
-- [`firestore-get-documents`](firestore-get-documents.md) - Retrieve documents by their paths
-- [`firestore-query-collection`](firestore-query-collection.md) - Query documents in a collection
-- [`firestore-delete-documents`](firestore-delete-documents.md) - Delete documents from Firestore
+- [`firestore-add-documents`](firestore-add-documents.md) - Add new documents to
+  Firestore
+- [`firestore-get-documents`](firestore-get-documents.md) - Retrieve documents
+  by their paths
+- [`firestore-query-collection`](firestore-query-collection.md) - Query
+  documents in a collection
+- [`firestore-delete-documents`](firestore-delete-documents.md) - Delete
+  documents from Firestore

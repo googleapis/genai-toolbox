@@ -129,6 +129,9 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 		t.Fatalf("unable to create AlloyDB connection pool: %s", err)
 	}
 
+	// cleanup test environment
+	tests.CleanupPostgresTables(t, ctx, pool)
+
 	// create table name with UUID
 	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
@@ -149,6 +152,8 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "postgres-execute-sql")
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, AlloyDBPostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+
+	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -173,6 +178,18 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	tests.RunMCPToolCallMethod(t, failInvocationWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+
+	// Run Postgres prebuilt tool tests
+	tests.RunPostgresListTablesTest(t, tableNameParam, tableNameAuth, AlloyDBPostgresUser)
+	tests.RunPostgresListViewsTest(t, ctx, pool, tableNameParam)
+	tests.RunPostgresListSchemasTest(t, ctx, pool)
+	tests.RunPostgresListActiveQueriesTest(t, ctx, pool)
+	tests.RunPostgresListAvailableExtensionsTest(t)
+	tests.RunPostgresListInstalledExtensionsTest(t)
+	tests.RunPostgresDatabaseOverviewTest(t, ctx, pool)
+	tests.RunPostgresListTriggersTest(t, ctx, pool)
+	tests.RunPostgresListIndexesTest(t, ctx, pool)
+	tests.RunPostgresListSequencesTest(t, ctx, pool)
 }
 
 // Test connection with different IP type

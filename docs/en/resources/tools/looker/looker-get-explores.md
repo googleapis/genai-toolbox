@@ -31,6 +31,7 @@ The return type is an array of maps, each map is formatted like:
     "group_label": "group label"
 }
 ```
+
 ## Example
 
 ```yaml

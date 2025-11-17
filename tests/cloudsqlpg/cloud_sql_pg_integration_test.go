@@ -114,6 +114,9 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
 	}
 
+	// cleanup test environment
+	tests.CleanupPostgresTables(t, ctx, pool)
+
 	// create table name with UUID
 	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
@@ -135,6 +138,7 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CloudSQLPostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
+	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -158,6 +162,18 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+
+	// Run Postgres prebuilt tool tests
+	tests.RunPostgresListTablesTest(t, tableNameParam, tableNameAuth, CloudSQLPostgresUser)
+	tests.RunPostgresListViewsTest(t, ctx, pool, tableNameParam)
+	tests.RunPostgresListSchemasTest(t, ctx, pool)
+	tests.RunPostgresListActiveQueriesTest(t, ctx, pool)
+	tests.RunPostgresListAvailableExtensionsTest(t)
+	tests.RunPostgresListInstalledExtensionsTest(t)
+	tests.RunPostgresDatabaseOverviewTest(t, ctx, pool)
+	tests.RunPostgresListTriggersTest(t, ctx, pool)
+	tests.RunPostgresListIndexesTest(t, ctx, pool)
+	tests.RunPostgresListSequencesTest(t, ctx, pool)
 }
 
 // Test connection with different IP type

@@ -23,6 +23,7 @@ import (
 
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	rtl "github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 	"github.com/thlib/go-timezone-local/tzlocal"
@@ -149,38 +150,38 @@ func CheckLookerExploreFields(resp *v4.LookmlModelExplore) error {
 	return nil
 }
 
-func GetFieldParameters() tools.Parameters {
-	modelParameter := tools.NewStringParameter("model", "The model containing the explore.")
-	exploreParameter := tools.NewStringParameter("explore", "The explore containing the fields.")
-	return tools.Parameters{modelParameter, exploreParameter}
+func GetFieldParameters() parameters.Parameters {
+	modelParameter := parameters.NewStringParameter("model", "The model containing the explore.")
+	exploreParameter := parameters.NewStringParameter("explore", "The explore containing the fields.")
+	return parameters.Parameters{modelParameter, exploreParameter}
 }
 
-func GetQueryParameters() tools.Parameters {
-	modelParameter := tools.NewStringParameter("model", "The model containing the explore.")
-	exploreParameter := tools.NewStringParameter("explore", "The explore to be queried.")
-	fieldsParameter := tools.NewArrayParameter("fields",
+func GetQueryParameters() parameters.Parameters {
+	modelParameter := parameters.NewStringParameter("model", "The model containing the explore.")
+	exploreParameter := parameters.NewStringParameter("explore", "The explore to be queried.")
+	fieldsParameter := parameters.NewArrayParameter("fields",
 		"The fields to be retrieved.",
-		tools.NewStringParameter("field", "A field to be returned in the query"),
+		parameters.NewStringParameter("field", "A field to be returned in the query"),
 	)
-	filtersParameter := tools.NewMapParameterWithDefault("filters",
+	filtersParameter := parameters.NewMapParameterWithDefault("filters",
 		map[string]any{},
 		"The filters for the query",
 		"",
 	)
-	pivotsParameter := tools.NewArrayParameterWithDefault("pivots",
+	pivotsParameter := parameters.NewArrayParameterWithDefault("pivots",
 		[]any{},
 		"The query pivots (must be included in fields as well).",
-		tools.NewStringParameter("pivot_field", "A field to be used as a pivot in the query"),
+		parameters.NewStringParameter("pivot_field", "A field to be used as a pivot in the query"),
 	)
-	sortsParameter := tools.NewArrayParameterWithDefault("sorts",
+	sortsParameter := parameters.NewArrayParameterWithDefault("sorts",
 		[]any{},
 		"The sorts like \"field.id desc 0\".",
-		tools.NewStringParameter("sort_field", "A field to be used as a sort in the query"),
+		parameters.NewStringParameter("sort_field", "A field to be used as a sort in the query"),
 	)
-	limitParameter := tools.NewIntParameterWithDefault("limit", 500, "The row limit.")
-	tzParameter := tools.NewStringParameterWithRequired("tz", "The query timezone.", false)
+	limitParameter := parameters.NewIntParameterWithDefault("limit", 500, "The row limit.")
+	tzParameter := parameters.NewStringParameterWithRequired("tz", "The query timezone.", false)
 
-	return tools.Parameters{
+	return parameters.Parameters{
 		modelParameter,
 		exploreParameter,
 		fieldsParameter,
@@ -192,7 +193,7 @@ func GetQueryParameters() tools.Parameters {
 	}
 }
 
-func ProcessFieldArgs(ctx context.Context, params tools.ParamValues) (*string, *string, error) {
+func ProcessFieldArgs(ctx context.Context, params parameters.ParamValues) (*string, *string, error) {
 	mapParams := params.AsMap()
 	model, ok := mapParams["model"].(string)
 	if !ok {
@@ -205,7 +206,7 @@ func ProcessFieldArgs(ctx context.Context, params tools.ParamValues) (*string, *
 	return &model, &explore, nil
 }
 
-func ProcessQueryArgs(ctx context.Context, params tools.ParamValues) (*v4.WriteQuery, error) {
+func ProcessQueryArgs(ctx context.Context, params parameters.ParamValues) (*v4.WriteQuery, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
@@ -214,7 +215,7 @@ func ProcessQueryArgs(ctx context.Context, params tools.ParamValues) (*v4.WriteQ
 	logger.DebugContext(ctx, "params = ", params)
 	paramsMap := params.AsMap()
 
-	f, err := tools.ConvertAnySliceToTyped(paramsMap["fields"].([]any), "string")
+	f, err := parameters.ConvertAnySliceToTyped(paramsMap["fields"].([]any), "string")
 	if err != nil {
 		return nil, fmt.Errorf("can't convert fields to array of strings: %s", err)
 	}
@@ -227,12 +228,12 @@ func ProcessQueryArgs(ctx context.Context, params tools.ParamValues) (*v4.WriteQ
 			filters[k[1:len(k)-1]] = v
 		}
 	}
-	p, err := tools.ConvertAnySliceToTyped(paramsMap["pivots"].([]any), "string")
+	p, err := parameters.ConvertAnySliceToTyped(paramsMap["pivots"].([]any), "string")
 	if err != nil {
 		return nil, fmt.Errorf("can't convert pivots to array of strings: %s", err)
 	}
 	pivots := p.([]string)
-	s, err := tools.ConvertAnySliceToTyped(paramsMap["sorts"].([]any), "string")
+	s, err := parameters.ConvertAnySliceToTyped(paramsMap["sorts"].([]any), "string")
 	if err != nil {
 		return nil, fmt.Errorf("can't convert sorts to array of strings: %s", err)
 	}

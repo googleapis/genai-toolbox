@@ -10,7 +10,9 @@ aliases:
 
 ## About
 
-The `looker-health-vacuum` tool helps you identify unused LookML objects such as models, explores, joins, and fields. The `action` parameter selects the type of vacuum to perform:
+The `looker-health-vacuum` tool helps you identify unused LookML objects such as
+models, explores, joins, and fields. The `action` parameter selects the type of
+vacuum to perform:
 
 - `models`: Identifies unused explores within a model.
 - `explores`: Identifies unused joins and fields within an explore.
@@ -28,7 +30,8 @@ The `looker-health-vacuum` tool helps you identify unused LookML objects such as
 
 ## Example
 
-Identify unnused fields (*in this case, less than 1 query in the last 20 days*) and joins in the `order_items` explore and `thelook` model
+Identify unnused fields (*in this case, less than 1 query in the last 20 days*)
+and joins in the `order_items` explore and `thelook` model
 
 ```yaml
 tools:
@@ -51,7 +54,6 @@ tools:
 
       The result is a list of objects that are candidates for deletion.
 ```
-
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|

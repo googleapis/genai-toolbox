@@ -233,7 +233,9 @@ options:
   automapSubstitutions: true
   dynamicSubstitutions: true
   logging: CLOUD_LOGGING_ONLY # Necessary for custom service account
-  machineType: 'E2_HIGHCPU_32'
+  pool:
+    name: projects/$PROJECT_ID/locations/us-central1/workerPools/run-release # to increase resource for running releases
+
 
 substitutions:
   _REGION: us-central1

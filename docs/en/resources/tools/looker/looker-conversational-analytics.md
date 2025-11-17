@@ -11,7 +11,8 @@ aliases:
 
 ## About
 
-A `looker-conversational-analytics` tool allows you to ask questions about your Looker data.
+A `looker-conversational-analytics` tool allows you to ask questions about your
+Looker data.
 
 It's compatible with the following sources:
 
@@ -19,9 +20,11 @@ It's compatible with the following sources:
 
 `looker-conversational-analytics` accepts two parameters:
 
-1. `user_query_with_context`: The question asked of the Conversational Analytics system.
-2. `explore_references`: A list of one to five explores that can be queried to answer the
-   question. The form of the entry is `[{"model": "model name", "explore": "explore name"}, ...]`
+1. `user_query_with_context`: The question asked of the Conversational Analytics
+   system.
+2. `explore_references`: A list of one to five explores that can be queried to
+   answer the question. The form of the entry is `[{"model": "model name",
+   "explore": "explore name"}, ...]`
 
 ## Example
 
