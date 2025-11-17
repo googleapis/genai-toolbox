@@ -4,6 +4,8 @@ go 1.24.7
 
 toolchain go1.25.2
 
+replace github.com/gocql/gocql/v2 => github.com/apache/cassandra-gocql-driver/v2 v2.0.0
+
 require (
 	cloud.google.com/go/alloydbconn v1.15.5
 	cloud.google.com/go/bigquery v1.72.0
