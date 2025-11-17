@@ -23,6 +23,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 const kind string = "firestore-delete-documents"
@@ -79,24 +81,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	documentPathsParameter := tools.NewArrayParameter(documentPathsKey, "Array of document paths to delete from Firestore.", tools.NewStringParameter("item", "Document path"))
-	parameters := tools.Parameters{documentPathsParameter}
+	documentPathsParameter := parameters.NewArrayParameter(documentPathsKey, "Array of relative document paths to delete from Firestore (e.g., 'users/userId' or 'users/userId/posts/postId'). Note: These are relative paths, NOT absolute paths like 'projects/{project_id}/databases/{database_id}/documents/...'", parameters.NewStringParameter("item", "Relative document path"))
+	params := parameters.Parameters{documentPathsParameter}
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.FirestoreClient(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		Parameters:  params,
+		Client:      s.FirestoreClient(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -105,17 +101,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Config
+	Parameters parameters.Parameters `yaml:"parameters"`
 
 	Client      *firestoreapi.Client
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	mapParams := params.AsMap()
 	documentPathsRaw, ok := mapParams[documentPathsKey].([]any)
 	if !ok {
@@ -127,7 +125,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	// Use ConvertAnySliceToTyped to convert the slice
-	typedSlice, err := tools.ConvertAnySliceToTyped(documentPathsRaw, "string")
+	typedSlice, err := parameters.ConvertAnySliceToTyped(documentPathsRaw, "string")
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert document paths: %w", err)
 	}
@@ -135,6 +133,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	documentPaths, ok := typedSlice.([]string)
 	if !ok {
 		return nil, fmt.Errorf("unexpected type conversion error for document paths")
+	}
+
+	// Validate each document path
+	for i, path := range documentPaths {
+		if err := util.ValidateDocumentPath(path); err != nil {
+			return nil, fmt.Errorf("invalid document path at index %d: %w", i, err)
+		}
 	}
 
 	// Create a BulkWriter to handle multiple deletions efficiently
@@ -177,8 +182,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return results, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

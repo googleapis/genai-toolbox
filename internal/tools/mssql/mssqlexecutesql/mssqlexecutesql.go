@@ -25,6 +25,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources/mssql"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 const kind string = "mssql-execute-sql"
@@ -81,24 +83,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
-	parameters := tools.Parameters{sqlParameter}
+	sqlParameter := parameters.NewStringParameter("sql", "The sql to execute.")
+	params := parameters.Parameters{sqlParameter}
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Pool:         s.MSSQLDB(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		Parameters:  params,
+		Pool:        s.MSSQLDB(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -107,17 +103,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Config
+	Parameters parameters.Parameters `yaml:"parameters"`
 
 	Pool        *sql.DB
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	sql, ok := paramsMap["sql"].(string)
 	if !ok {
@@ -129,7 +123,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
 
 	results, err := t.Pool.QueryContext(ctx, sql)
 	if err != nil {
@@ -156,11 +150,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			if scanErr != nil {
 				return nil, fmt.Errorf("unable to parse row: %w", scanErr)
 			}
-			vMap := make(map[string]any)
+			row := orderedmap.Row{}
 			for i, name := range cols {
-				vMap[name] = rawValues[i]
+				row.Add(name, rawValues[i])
 			}
-			out = append(out, vMap)
+			out = append(out, row)
 		}
 	}
 
@@ -173,8 +167,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return out, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -191,4 +185,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }

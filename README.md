@@ -33,12 +33,13 @@ documentation](https://googleapis.github.io/genai-toolbox/).
 - [Getting Started](#getting-started)
   - [Installing the server](#installing-the-server)
   - [Running the server](#running-the-server)
-    - [Homebrew Users](#homebrew-users)
   - [Integrating your application](#integrating-your-application)
+  - [Using Toolbox with Gemini CLI Extensions](#using-toolbox-with-gemini-cli-extensions)
 - [Configuration](#configuration)
   - [Sources](#sources)
   - [Tools](#tools)
   - [Toolsets](#toolsets)
+  - [Prompts](#prompts)
 - [Versioning](#versioning)
   - [Pre-1.0.0 Versioning](#pre-100-versioning)
   - [Post-1.0.0 Versioning](#post-100-versioning)
@@ -98,7 +99,9 @@ centralized location to store and update tools, allowing you to share tools
 between agents and applications and update those tools without necessarily
 redeploying your application.
 
-![architecture](./docs/en/getting-started/introduction/architecture.png)
+<p align="center">
+<img src="./docs/en/getting-started/introduction/architecture.png" alt="architecture" width="50%"/>
+</p>
 
 ## Getting Started
 
@@ -115,13 +118,57 @@ following instructions for your OS and CPU architecture.
 To install Toolbox as a binary:
 
 <!-- {x-release-please-start-version} -->
-```sh
-# see releases page for other versions
-export VERSION=0.12.0
-curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
-chmod +x toolbox
-```
-
+> <details>
+> <summary>Linux (AMD64)</summary>
+>
+> To install Toolbox as a binary on Linux (AMD64):
+>
+> ```sh
+> # see releases page for other versions
+> export VERSION=0.20.0
+> curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
+> chmod +x toolbox
+> ```
+>
+> </details>
+> <details>
+> <summary>macOS (Apple Silicon)</summary>
+>
+> To install Toolbox as a binary on macOS (Apple Silicon):
+>
+> ```sh
+> # see releases page for other versions
+> export VERSION=0.20.0
+> curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
+> chmod +x toolbox
+> ```
+>
+> </details>
+> <details>
+> <summary>macOS (Intel)</summary>
+>
+> To install Toolbox as a binary on macOS (Intel):
+>
+> ```sh
+> # see releases page for other versions
+> export VERSION=0.20.0
+> curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
+> chmod +x toolbox
+> ```
+>
+> </details>
+> <details>
+> <summary>Windows (AMD64)</summary>
+>
+> To install Toolbox as a binary on Windows (AMD64):
+>
+> ```powershell
+> # see releases page for other versions
+> $VERSION = "0.20.0"
+> Invoke-WebRequest -Uri "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe" -OutFile "toolbox.exe"
+> ```
+>
+> </details>
 </details>
 
 <details>
@@ -130,7 +177,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.12.0
+export VERSION=0.20.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -154,9 +201,20 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.12.0
+go install github.com/googleapis/genai-toolbox@v0.20.0
 ```
 <!-- {x-release-please-end} -->
+
+</details>
+
+<details>
+<summary>Gemini CLI Extensions</summary>
+
+To install Gemini CLI Extensions for MCP Toolbox, run the following command:
+
+```sh
+gemini extensions install https://github.com/gemini-cli-extensions/mcp-toolbox
+```
 
 </details>
 
@@ -165,21 +223,83 @@ go install github.com/googleapis/genai-toolbox@v0.12.0
 [Configure](#configuration) a `tools.yaml` to define your tools, and then
 execute `toolbox` to start the server:
 
+<details open>
+<summary>Binary</summary>
+
+To run Toolbox from binary:
+
 ```sh
 ./toolbox --tools-file "tools.yaml"
 ```
 
-> [!NOTE]
+> ⓘ Note  
 > Toolbox enables dynamic reloading by default. To disable, use the
 > `--disable-reload` flag.
 
-#### Homebrew Users
+</details>
 
-If you installed Toolbox using Homebrew, the `toolbox` binary is available in your system path. You can start the server with the same command:
+<details>
+
+<summary>Container image</summary>
+
+To run the server after pulling the [container image](#installing-the-server):
+
+```sh
+export VERSION=0.11.0 # Use the version you pulled
+docker run -p 5000:5000 \
+-v $(pwd)/tools.yaml:/app/tools.yaml \
+us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION \
+--tools-file "/app/tools.yaml"
+```
+
+> ⓘ Note  
+> The `-v` flag mounts your local `tools.yaml` into the container, and `-p` maps
+> the container's port `5000` to your host's port `5000`.
+
+</details>
+
+<details>
+
+<summary>Source</summary>
+
+To run the server directly from source, navigate to the project root directory
+and run:
+
+```sh
+go run .
+```
+
+> ⓘ Note  
+> This command runs the project from source, and is more suitable for development
+> and testing. It does **not** compile a binary into your `$GOPATH`. If you want
+> to compile a binary instead, refer the [Developer
+> Documentation](./DEVELOPER.md#building-the-binary).
+
+</details>
+
+<details>
+
+<summary>Homebrew</summary>
+
+If you installed Toolbox using [Homebrew](https://brew.sh/), the `toolbox`
+binary is available in your system path. You can start the server with the same
+command:
 
 ```sh
 toolbox --tools-file "tools.yaml"
 ```
+
+</details>
+
+<details>
+
+<summary>Gemini CLI</summary>
+
+Interact with your custom tools using natural language. Check
+[gemini-cli-extensions/mcp-toolbox](https://github.com/gemini-cli-extensions/mcp-toolbox)
+for more information.
+
+</details>
 
 You can use `toolbox help` for a full list of flags! To stop the server, send a
 terminate signal (`ctrl+c` on most platforms).
@@ -402,7 +522,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
   <br>
   <blockquote>
 
-  <details open>
+  <details>
     <summary>Core</summary>
 
 1. Install [Toolbox Go SDK][toolbox-go]:
@@ -411,7 +531,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     go get github.com/googleapis/mcp-toolbox-sdk-go
     ```
 
-1. Load tools:
+2. Load tools:
 
     ```go
     package main
@@ -509,13 +629,11 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     package main
     import (
       "context"
-      "encoding/json"
+      "log"
 
-      "github.com/firebase/genkit/go/ai"
       "github.com/firebase/genkit/go/genkit"
       "github.com/googleapis/mcp-toolbox-sdk-go/core"
       "github.com/googleapis/mcp-toolbox-sdk-go/tbgenkit"
-      "github.com/invopop/jsonschema"
     )
 
     func main() {
@@ -523,7 +641,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
       // Update the url to point to your server
       URL := "http://127.0.0.1:5000"
       ctx := context.Background()
-      g, err := genkit.Init(ctx)
+      g := genkit.Init(ctx)
 
       client, err := core.NewToolboxClient(URL)
 
@@ -536,6 +654,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
       if err != nil {
         log.Fatalf("Failed to convert tool: %v\n", err)
       }
+      log.Printf("Successfully converted tool: %s", genkitTool.Name())
     }
     ```
 
@@ -645,9 +764,96 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     ```
 
   </details>
+  <details open>
+    <summary>ADK Go</summary>
+
+1. Install [Toolbox Go SDK][toolbox-go]:
+
+    ```bash
+    go get github.com/googleapis/mcp-toolbox-sdk-go
+    ```
+
+1. Load tools:
+
+    ```go
+    package main
+
+    import (
+      "github.com/googleapis/mcp-toolbox-sdk-go/tbadk"
+      "context"
+    )
+
+    func main() {
+      // Make sure to add the error checks
+      // Update the url to point to your server
+      URL := "http://127.0.0.1:5000"
+      ctx := context.Background()
+      client, err := tbadk.NewToolboxClient(URL)
+      if err != nil {
+        return fmt.Sprintln("Could not start Toolbox Client", err)
+      }
+
+      // Use this tool with ADK Go
+      tool, err := client.LoadTool("toolName", ctx)
+      if err != nil {
+        return fmt.Sprintln("Could not load Toolbox Tool", err)
+      }
+    }
+    ```
+
+    For more detailed instructions on using the Toolbox Go SDK, see the
+    [project's README][toolbox-core-go-readme].
+
+
+  </details>
 </details>
 </blockquote>
 </details>
+
+### Using Toolbox with Gemini CLI Extensions
+
+[Gemini CLI extensions][gemini-cli-extensions] provide tools to interact
+directly with your data sources from command line. Below is a list of Gemini CLI
+extensions that are built on top of **Toolbox**. They allow you to interact with
+your data sources through pre-defined or custom tools with natural language.
+Click into the link to see detailed instructions on their usage.
+
+To use **custom** tools with Gemini CLI:
+
+- [MCP Toolbox](https://github.com/gemini-cli-extensions/mcp-toolbox)
+
+To use [prebuilt tools][prebuilt] with Gemini CLI:
+
+- [AlloyDB for PostgreSQL](https://github.com/gemini-cli-extensions/alloydb)
+- [AlloyDB for PostgreSQL
+  Observability](https://github.com/gemini-cli-extensions/alloydb-observability)
+- [BigQuery Data
+  Analytics](https://github.com/gemini-cli-extensions/bigquery-data-analytics)
+- [BigQuery Conversational
+  Analytics](https://github.com/gemini-cli-extensions/bigquery-conversational-analytics)
+- [Cloud SQL for
+  MySQL](https://github.com/gemini-cli-extensions/cloud-sql-mysql)
+- [Cloud SQL for MySQL
+  Observability](https://github.com/gemini-cli-extensions/cloud-sql-mysql-observability)
+- [Cloud SQL for
+  PostgreSQL](https://github.com/gemini-cli-extensions/cloud-sql-postgresql)
+- [Cloud SQL for PostgreSQL
+  Observability](https://github.com/gemini-cli-extensions/cloud-sql-postgresql-observability)
+- [Cloud SQL for SQL
+  Server](https://github.com/gemini-cli-extensions/cloud-sql-sqlserver)
+- [Cloud SQL for SQL Server
+  Observability](https://github.com/gemini-cli-extensions/cloud-sql-sqlserver-observability)
+- [Looker](https://github.com/gemini-cli-extensions/looker)
+- [Dataplex](https://github.com/gemini-cli-extensions/dataplex)
+- [MySQL](https://github.com/gemini-cli-extensions/mysql)
+- [PostgreSQL](https://github.com/gemini-cli-extensions/postgres)
+- [Spanner](https://github.com/gemini-cli-extensions/spanner)
+- [Firestore](https://github.com/gemini-cli-extensions/firestore-native)
+- [SQL Server](https://github.com/gemini-cli-extensions/sql-server)
+
+[prebuilt]: https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/
+[gemini-cli-extensions]:
+    https://github.com/google-gemini/gemini-cli/blob/main/docs/extensions/index.md
 
 ## Configuration
 
@@ -725,6 +931,25 @@ all_tools = client.load_toolset()
 my_second_toolset = client.load_toolset("my_second_toolset")
 ```
 
+### Prompts
+
+The `prompts` section of a `tools.yaml` defines prompts that can be used for
+interactions with LLMs.
+
+```yaml
+prompts:
+  code_review:
+    description: "Asks the LLM to analyze code quality and suggest improvements."
+    messages:
+      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+    arguments:
+      - name: "code"
+        description: "The code to review"
+```
+
+For more details on configuring prompts, see the
+[Prompts](https://googleapis.github.io/genai-toolbox/resources/prompts).
+
 ## Versioning
 
 This project uses [semantic versioning](https://semver.org/) (`MAJOR.MINOR.PATCH`).
@@ -732,6 +957,7 @@ Since the project is in a pre-release stage (version `0.x.y`), we follow the
 standard conventions for initial  development:
 
 ### Pre-1.0.0 Versioning
+
 While the major version is `0`, the public API should be considered unstable.
 The version will be incremented  as follows:
 
@@ -741,6 +967,7 @@ The version will be incremented  as follows:
   backward-compatible bug fixes.
 
 ### Post-1.0.0 Versioning
+
 Once the project reaches a stable `1.0.0` release, the versioning will follow
 the more common convention:
 

@@ -27,6 +27,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/cache"
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/helpers"
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/types"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
@@ -96,12 +97,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	parameters := tools.Parameters{}
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	params := parameters.Parameters{}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// Set a default cache expiration if not provided in the configuration.
 	if cfg.CacheExpireMinutes == nil {
@@ -111,15 +108,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// Finish tool setup by creating the Tool instance.
 	t := Tool{
-		Name:               cfg.Name,
-		Kind:               kind,
-		AuthRequired:       cfg.AuthRequired,
-		Driver:             s.Neo4jDriver(),
-		Database:           s.Neo4jDatabase(),
-		cache:              cache.NewCache(),
-		cacheExpireMinutes: cfg.CacheExpireMinutes,
-		manifest:           tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:        mcpManifest,
+		Config:      cfg,
+		Driver:      s.Neo4jDriver(),
+		Database:    s.Neo4jDatabase(),
+		cache:       cache.NewCache(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -130,20 +124,18 @@ var _ tools.Tool = Tool{}
 // Tool represents the Neo4j schema extraction tool.
 // It holds the Neo4j driver, database information, and a cache for the schema.
 type Tool struct {
-	Name               string   `yaml:"name"`
-	Kind               string   `yaml:"kind"`
-	AuthRequired       []string `yaml:"authRequired"`
-	Driver             neo4j.DriverWithContext
-	Database           string
-	cache              *cache.Cache
-	cacheExpireMinutes *int
-	manifest           tools.Manifest
-	mcpManifest        tools.McpManifest
+	Config
+	Driver   neo4j.DriverWithContext
+	Database string
+	cache    *cache.Cache
+
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 // Invoke executes the tool's main logic: fetching the Neo4j schema.
 // It first checks the cache for a valid schema before extracting it from the database.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	// Check if a valid schema is already in the cache.
 	if cachedSchema, ok := t.cache.Get("schema"); ok {
 		if schema, ok := cachedSchema.(*types.SchemaInfo); ok {
@@ -158,15 +150,15 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	// Cache the newly extracted schema for future use.
-	expiration := time.Duration(*t.cacheExpireMinutes) * time.Minute
+	expiration := time.Duration(*t.CacheExpireMinutes) * time.Minute
 	t.cache.Set("schema", schema, expiration)
 
 	return schema, nil
 }
 
 // ParseParams is a placeholder as this tool does not require input parameters.
-func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParamValues{}, nil
+func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParamValues{}, nil
 }
 
 // Manifest returns the tool's manifest, which describes its purpose and parameters.
@@ -713,4 +705,8 @@ func (t Tool) extractIndexes(ctx context.Context) ([]types.Index, error) {
 		indexes = append(indexes, index)
 	}
 	return indexes, result.Err()
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }

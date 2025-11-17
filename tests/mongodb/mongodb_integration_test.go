@@ -110,30 +110,31 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	tests.RunToolGetTest(t)
 	tests.RunToolInvokeTest(t, select1Want,
 		tests.WithMyToolId3NameAliceWant(myToolId3NameAliceWant),
+		tests.WithMyArrayToolWant(myToolId3NameAliceWant),
 		tests.WithMyToolById4Want(myToolById4Want),
 	)
-	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant,
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, select1Want,
 		tests.WithMcpMyToolId3NameAliceWant(mcpMyToolId3NameAliceWant),
 	)
 
 	delete1Want := "1"
 	deleteManyWant := "2"
-	RunToolDeleteInvokeTest(t, delete1Want, deleteManyWant)
+	runToolDeleteInvokeTest(t, delete1Want, deleteManyWant)
 
 	insert1Want := `["68666e1035bb36bf1b4d47fb"]`
 	insertManyWant := `["68667a6436ec7d0363668db7","68667a6436ec7d0363668db8","68667a6436ec7d0363668db9"]`
-	RunToolInsertInvokeTest(t, insert1Want, insertManyWant)
+	runToolInsertInvokeTest(t, insert1Want, insertManyWant)
 
 	update1Want := "1"
 	updateManyWant := "[2,0,2]"
-	RunToolUpdateInvokeTest(t, update1Want, updateManyWant)
+	runToolUpdateInvokeTest(t, update1Want, updateManyWant)
 
 	aggregate1Want := `[{"id":2}]`
 	aggregateManyWant := `[{"id":500},{"id":501}]`
-	RunToolAggregateInvokeTest(t, aggregate1Want, aggregateManyWant)
+	runToolAggregateInvokeTest(t, aggregate1Want, aggregateManyWant)
 }
 
-func RunToolDeleteInvokeTest(t *testing.T, delete1Want, deleteManyWant string) {
+func runToolDeleteInvokeTest(t *testing.T, delete1Want, deleteManyWant string) {
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
@@ -206,7 +207,7 @@ func RunToolDeleteInvokeTest(t *testing.T, delete1Want, deleteManyWant string) {
 	}
 }
 
-func RunToolInsertInvokeTest(t *testing.T, insert1Want, insertManyWant string) {
+func runToolInsertInvokeTest(t *testing.T, insert1Want, insertManyWant string) {
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
@@ -279,7 +280,7 @@ func RunToolInsertInvokeTest(t *testing.T, insert1Want, insertManyWant string) {
 	}
 }
 
-func RunToolUpdateInvokeTest(t *testing.T, update1Want, updateManyWant string) {
+func runToolUpdateInvokeTest(t *testing.T, update1Want, updateManyWant string) {
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
@@ -351,7 +352,7 @@ func RunToolUpdateInvokeTest(t *testing.T, update1Want, updateManyWant string) {
 		})
 	}
 }
-func RunToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateManyWant string) {
+func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateManyWant string) {
 	// Test tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
@@ -445,6 +446,7 @@ func setupMongoDB(t *testing.T, ctx context.Context, database *mongo.Database) f
 
 	documents := []map[string]any{
 		{"_id": 1, "id": 1, "name": "Alice", "email": ServiceAccountEmail},
+		{"_id": 1, "id": 2, "name": "FakeAlice", "email": "fakeAlice@gmail.com"},
 		{"_id": 2, "id": 2, "name": "Jane"},
 		{"_id": 3, "id": 3, "name": "Sid"},
 		{"_id": 4, "id": 4, "name": nil},
@@ -496,6 +498,8 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"filterParams":   []any{},
 				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
 				"database":       MongoDbDatabase,
+				"limit":          1,
+				"sort":           `{ "id": 1 }`,
 			},
 			"my-tool": map[string]any{
 				"kind":          toolKind,
@@ -665,8 +669,14 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"authRequired":  []string{},
 				"collection":    "test_collection",
 				"canonical":     true,
-				"filterPayload": `{ "id" : 300 }`,
-				"filterParams":  []any{},
+				"filterPayload": `{ "id" : {{ .id }} }`,
+				"filterParams": []map[string]any{
+					{
+						"name":        "id",
+						"type":        "integer",
+						"description": "id",
+					},
+				},
 				"updatePayload": `{ "$set" : { "name": {{json .name}} } }`,
 				"updateParams": []map[string]any{
 					{

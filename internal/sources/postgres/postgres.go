@@ -22,6 +22,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -72,9 +73,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name: r.Name,
-		Kind: SourceKind,
-		Pool: pool,
+		Config: r,
+		Pool:   pool,
 	}
 	return s, nil
 }
@@ -82,13 +82,16 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name string `yaml:"name"`
-	Kind string `yaml:"kind"`
+	Config
 	Pool *pgxpool.Pool
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 func (s *Source) PostgresPool() *pgxpool.Pool {
@@ -99,6 +102,17 @@ func initPostgresConnectionPool(ctx context.Context, tracer trace.Tracer, name, 
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
+	userAgent, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		userAgent = "genai-toolbox"
+	}
+	if queryParams == nil {
+		// Initialize the map before using it
+		queryParams = make(map[string]string)
+	}
+	if _, ok := queryParams["application_name"]; !ok {
+		queryParams["application_name"] = userAgent
+	}
 
 	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
 	url := &url.URL{

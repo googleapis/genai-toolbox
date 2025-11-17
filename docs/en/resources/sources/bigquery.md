@@ -31,16 +31,24 @@ apply when creating SQL queries to run against your BigQuery data, such as
 avoiding full table scans or complex filters.
 
 [bigquery-docs]: https://cloud.google.com/bigquery/docs
-[bigquery-quickstart-cli]: https://cloud.google.com/bigquery/docs/quickstarts/quickstart-command-line
-[bigquery-googlesql]: https://cloud.google.com/bigquery/docs/reference/standard-sql/
+[bigquery-quickstart-cli]:
+    https://cloud.google.com/bigquery/docs/quickstarts/quickstart-command-line
+[bigquery-googlesql]:
+    https://cloud.google.com/bigquery/docs/reference/standard-sql/
 
 ## Available Tools
 
-- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
-  Run SQL queries directly against BigQuery datasets.
+- [`bigquery-analyze-contribution`](../tools/bigquery/bigquery-analyze-contribution.md)
+  Performs contribution analysis, also called key driver analysis in BigQuery.
+
+- [`bigquery-conversational-analytics`](../tools/bigquery/bigquery-conversational-analytics.md)
+  Allows conversational interaction with a BigQuery source.
 
 - [`bigquery-execute-sql`](../tools/bigquery/bigquery-execute-sql.md)  
   Execute structured queries using parameters.
+
+- [`bigquery-forecast`](../tools/bigquery/bigquery-forecast.md)
+  Forecasts time series data in BigQuery.
 
 - [`bigquery-get-dataset-info`](../tools/bigquery/bigquery-get-dataset-info.md)  
   Retrieve metadata for a specific dataset.
@@ -54,10 +62,18 @@ avoiding full table scans or complex filters.
 - [`bigquery-list-table-ids`](../tools/bigquery/bigquery-list-table-ids.md)  
   List tables in a given dataset.
 
+- [`bigquery-sql`](../tools/bigquery/bigquery-sql.md)  
+  Run SQL queries directly against BigQuery datasets.
+
+- [`bigquery-search-catalog`](../tools/bigquery/bigquery-search-catalog.md)
+  List all entries in Dataplex Catalog (e.g. tables, views, models) that matches
+  given user query.
+
 ### Pre-built Configurations
 
-- [BigQuery using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/bigquery_mcp/)  
-Connect your IDE to BigQuery using Toolbox.
+- [BigQuery using
+  MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/bigquery_mcp/)
+  Connect your IDE to BigQuery using Toolbox.
 
 ## Requirements
 
@@ -65,34 +81,75 @@ Connect your IDE to BigQuery using Toolbox.
 
 BigQuery uses [Identity and Access Management (IAM)][iam-overview] to control
 user and group access to BigQuery resources like projects, datasets, and tables.
-Toolbox will use your [Application Default Credentials (ADC)][adc] to authorize
-and authenticate when interacting with [BigQuery][bigquery-docs].
 
-In addition to [setting the ADC for your server][set-adc], you need to ensure
-the IAM identity has been given the correct IAM permissions for the queries
-you intend to run. Common roles include `roles/bigquery.user` (which includes
-permissions to run jobs and read data) or `roles/bigquery.dataViewer`. See
-[Introduction to BigQuery IAM][grant-permissions] for more information on
-applying IAM permissions and roles to an identity.
+### Authentication via Application Default Credentials (ADC)
 
-[iam-overview]: https://cloud.google.com/bigquery/docs/access-control
-[adc]: https://cloud.google.com/docs/authentication#adc
-[set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
-[grant-permissions]: https://cloud.google.com/bigquery/docs/access-control
+By **default**, Toolbox will use your [Application Default Credentials
+(ADC)][adc] to authorize and authenticate when interacting with
+[BigQuery][bigquery-docs].
+
+When using this method, you need to ensure the IAM identity associated with your
+ADC (such as a service account) has the correct permissions for the queries you
+intend to run. Common roles include `roles/bigquery.user` (which includes
+permissions to run jobs and read data) or `roles/bigbigquery.dataViewer`.
+Follow this [guide][set-adc] to set up your ADC.
+
+### Authentication via User's OAuth Access Token
+
+If the `useClientOAuth` parameter is set to `true`, Toolbox will instead use the
+OAuth access token for authentication. This token is parsed from the
+`Authorization` header passed in with the tool invocation request. This method
+allows Toolbox to make queries to [BigQuery][bigquery-docs] on behalf of the
+client or the end-user.
+
+When using this on-behalf-of authentication, you must ensure that the
+identity used has been granted the correct IAM permissions.
+
+[iam-overview]: <https://cloud.google.com/bigquery/docs/access-control>
+[adc]: <https://cloud.google.com/docs/authentication#adc>
+[set-adc]: <https://cloud.google.com/docs/authentication/provide-credentials-adc>
 
 ## Example
+
+Initialize a BigQuery source that uses ADC:
 
 ```yaml
 sources:
   my-bigquery-source:
     kind: "bigquery"
     project: "my-project-id"
+    # location: "US" # Optional: Specifies the location for query jobs.
+    # writeMode: "allowed" # One of: allowed, blocked, protected. Defaults to "allowed".
+    # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
+    #   - "my_dataset_1"
+    #   - "other_project.my_dataset_2"
+    # impersonateServiceAccount: "service-account@project-id.iam.gserviceaccount.com" # Optional: Service account to impersonate
+```
+
+Initialize a BigQuery source that uses the client's access token:
+
+```yaml
+sources:
+  my-bigquery-client-auth-source:
+    kind: "bigquery"
+    project: "my-project-id"
+    useClientOAuth: true
+    # location: "US" # Optional: Specifies the location for query jobs.
+    # writeMode: "allowed" # One of: allowed, blocked, protected. Defaults to "allowed".
+    # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
+    #   - "my_dataset_1"
+    #   - "other_project.my_dataset_2"
+    # impersonateServiceAccount: "service-account@project-id.iam.gserviceaccount.com" # Optional: Service account to impersonate
 ```
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                               |
-|-----------|:--------:|:------------:|-------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "bigquery".                                                           |
-| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id"). |
-| location  |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. The default behavior is for it to be executed in the US multi-region |
+| **field**                 | **type** | **required** | **description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|---------------------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind                      |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| project                   |  string  |     true     | Id of the Google Cloud project to use for billing and as the default project for BigQuery resources.                                                                                                                                                                                                                                                                                                                                                                                                                |
+| location                  |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. Defaults to the table's location or 'US' if the location cannot be determined. [Learn More](https://cloud.google.com/bigquery/docs/locations)                                                                                                                                                                                                    |
+| writeMode                 |  string  |    false     | Controls the write behavior for tools. `allowed` (default): All queries are permitted. `blocked`: Only `SELECT` statements are allowed for the `bigquery-execute-sql` tool. `protected`: Enables session-based execution where all tools associated with this source instance share the same [BigQuery session](https://cloud.google.com/bigquery/docs/sessions-intro). This allows for stateful operations using temporary tables (e.g., `CREATE TEMP TABLE`). For `bigquery-execute-sql`, `SELECT` statements can be used on all tables, but write operations are restricted to the session's temporary dataset. For tools like `bigquery-sql`, `bigquery-forecast`, and `bigquery-analyze-contribution`, the `writeMode` restrictions do not apply, but they will operate within the shared session. **Note:** The `protected` mode cannot be used with `useClientOAuth: true`. It is also not recommended for multi-user server environments, as all users would share the same session. A session is terminated automatically after 24 hours of inactivity or after 7 days, whichever comes first. A new session is created on the next request, and any temporary data from the previous session will be lost. |
+| allowedDatasets           | []string |    false     | An optional list of dataset IDs that tools using this source are allowed to access. If provided, any tool operation attempting to access a dataset not in this list will be rejected. To enforce this, two types of operations are also disallowed: 1) Dataset-level operations (e.g., `CREATE SCHEMA`), and 2) operations where table access cannot be statically analyzed (e.g., `EXECUTE IMMEDIATE`, `CREATE PROCEDURE`). If a single dataset is provided, it will be treated as the default for prebuilt tools. |
+| useClientOAuth            |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries. **Note:** This cannot be used with `writeMode: protected`.                                                                                                                                                                                                                                                                                                                                                |
+| impersonateServiceAccount |  string  |    false     | Service account email to impersonate when making BigQuery and Dataplex API calls. The authenticated principal must have the `roles/iam.serviceAccountTokenCreator` role on the target service account. [Learn More](https://cloud.google.com/iam/docs/service-account-impersonation)                                                                                                                                                                                                                                |

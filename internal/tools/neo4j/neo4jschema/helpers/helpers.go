@@ -23,6 +23,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/types"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 // ConvertToStringSlice converts a slice of any type to a slice of strings.
@@ -288,4 +289,74 @@ func sortAndClean(nodeLabels []types.NodeLabel, relationships []types.Relationsh
 	if len(stats.PropertiesByRelType) == 0 {
 		stats.PropertiesByRelType = nil
 	}
+}
+
+// ConvertValue converts Neo4j value to JSON-compatible value.
+func ConvertValue(value any) any {
+	switch v := value.(type) {
+	case nil, neo4j.InvalidValue:
+		return nil
+	case bool, string, int, int8, int16, int32, int64, float32, float64:
+		return v
+	case neo4j.Date, neo4j.LocalTime, neo4j.Time,
+		neo4j.LocalDateTime, neo4j.Duration:
+		if iv, ok := v.(types.ValueType); ok {
+			return iv.String()
+		}
+	case neo4j.Node:
+		return map[string]any{
+			"elementId":  v.GetElementId(),
+			"labels":     v.Labels,
+			"properties": ConvertValue(v.GetProperties()),
+		}
+	case neo4j.Relationship:
+		return map[string]any{
+			"elementId":      v.GetElementId(),
+			"type":           v.Type,
+			"startElementId": v.StartElementId,
+			"endElementId":   v.EndElementId,
+			"properties":     ConvertValue(v.GetProperties()),
+		}
+	case neo4j.Entity:
+		return map[string]any{
+			"elementId":  v.GetElementId(),
+			"properties": ConvertValue(v.GetProperties()),
+		}
+	case neo4j.Path:
+		var nodes []any
+		var relationships []any
+		for _, r := range v.Relationships {
+			relationships = append(relationships, ConvertValue(r))
+		}
+		for _, n := range v.Nodes {
+			nodes = append(nodes, ConvertValue(n))
+		}
+		return map[string]any{
+			"nodes":         nodes,
+			"relationships": relationships,
+		}
+	case neo4j.Record:
+		m := make(map[string]any)
+		for i, key := range v.Keys {
+			m[key] = ConvertValue(v.Values[i])
+		}
+		return m
+	case neo4j.Point2D:
+		return map[string]any{"x": v.X, "y": v.Y, "srid": v.SpatialRefId}
+	case neo4j.Point3D:
+		return map[string]any{"x": v.X, "y": v.Y, "z": v.Z, "srid": v.SpatialRefId}
+	case []any:
+		arr := make([]any, len(v))
+		for i, elem := range v {
+			arr[i] = ConvertValue(elem)
+		}
+		return arr
+	case map[string]any:
+		m := make(map[string]any)
+		for key, val := range v {
+			m[key] = ConvertValue(val)
+		}
+		return m
+	}
+	return fmt.Sprintf("%v", value)
 }

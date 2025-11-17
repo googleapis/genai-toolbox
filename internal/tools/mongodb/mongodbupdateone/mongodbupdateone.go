@@ -22,6 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	mongosrc "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -44,17 +45,17 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name          string           `yaml:"name" validate:"required"`
-	Kind          string           `yaml:"kind" validate:"required"`
-	Source        string           `yaml:"source" validate:"required"`
-	AuthRequired  []string         `yaml:"authRequired" validate:"required"`
-	Description   string           `yaml:"description" validate:"required"`
-	Database      string           `yaml:"database" validate:"required"`
-	Collection    string           `yaml:"collection" validate:"required"`
-	FilterPayload string           `yaml:"filterPayload" validate:"required"`
-	FilterParams  tools.Parameters `yaml:"filterParams" validate:"required"`
-	UpdatePayload string           `yaml:"updatePayload" validate:"required"`
-	UpdateParams  tools.Parameters `yaml:"updateParams" validate:"required"`
+	Name          string                `yaml:"name" validate:"required"`
+	Kind          string                `yaml:"kind" validate:"required"`
+	Source        string                `yaml:"source" validate:"required"`
+	AuthRequired  []string              `yaml:"authRequired" validate:"required"`
+	Description   string                `yaml:"description" validate:"required"`
+	Database      string                `yaml:"database" validate:"required"`
+	Collection    string                `yaml:"collection" validate:"required"`
+	FilterPayload string                `yaml:"filterPayload" validate:"required"`
+	FilterParams  parameters.Parameters `yaml:"filterParams"`
+	UpdatePayload string                `yaml:"updatePayload" validate:"required"`
+	UpdateParams  parameters.Parameters `yaml:"updateParams" validate:"required"`
 
 	Canonical bool `yaml:"canonical" validate:"required"`
 	Upsert    bool `yaml:"upsert"`
@@ -81,10 +82,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Create a slice for all parameters
-	allParameters := slices.Concat(cfg.FilterParams, cfg.FilterParams, cfg.UpdateParams)
+	allParameters := slices.Concat(cfg.FilterParams, cfg.UpdateParams)
 
 	// Verify no duplicate parameter names
-	err := tools.CheckDuplicateParameters(allParameters)
+	err := parameters.CheckDuplicateParameters(allParameters)
 	if err != nil {
 		return nil, err
 	}
@@ -93,32 +94,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	paramManifest := allParameters.Manifest()
 
 	if paramManifest == nil {
-		paramManifest = make([]tools.ParameterManifest, 0)
+		paramManifest = make([]parameters.ParameterManifest, 0)
 	}
 
 	// Create MCP manifest
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: allParameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	// finish tool setup
 	return Tool{
-		Name:          cfg.Name,
-		Kind:          kind,
-		AuthRequired:  cfg.AuthRequired,
-		Collection:    cfg.Collection,
-		FilterPayload: cfg.FilterPayload,
-		FilterParams:  cfg.FilterParams,
-		UpdatePayload: cfg.UpdatePayload,
-		UpdateParams:  cfg.UpdateParams,
-		Canonical:     cfg.Canonical,
-		Upsert:        cfg.Upsert,
-		AllParams:     allParameters,
-		database:      s.Client.Database(cfg.Database),
-		manifest:      tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:   mcpManifest,
+		Config:      cfg,
+		AllParams:   allParameters,
+		database:    s.Client.Database(cfg.Database),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}, nil
 }
 
@@ -126,28 +114,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name          string   `yaml:"name"`
-	Kind          string   `yaml:"kind"`
-	AuthRequired  []string `yaml:"authRequired"`
-	Description   string   `yaml:"description"`
-	Collection    string   `yaml:"collection"`
-	FilterPayload string   `yaml:"filterPayload" validate:"required"`
-	FilterParams  tools.Parameters
-	UpdatePayload string `yaml:"updatePayload" validate:"required"`
-	UpdateParams  tools.Parameters
-	AllParams     tools.Parameters
-	Canonical     bool `yaml:"canonical" validation:"required"`
-	Upsert        bool `yaml:"upsert"`
+	Config
+	AllParams parameters.Parameters
 
 	database    *mongo.Database
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	filterString, err := tools.PopulateTemplateWithJSON("MongoDBUpdateOneFilter", t.FilterPayload, paramsMap)
+	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBUpdateOneFilter", t.FilterPayload, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error populating filter: %s", err)
 	}
@@ -158,7 +136,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("unable to unmarshal filter string: %w", err)
 	}
 
-	updateString, err := tools.PopulateTemplateWithJSON("MongoDBUpdateOne", t.UpdatePayload, paramsMap)
+	updateString, err := parameters.PopulateTemplateWithJSON("MongoDBUpdateOne", t.UpdatePayload, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get update: %w", err)
 	}
@@ -177,8 +155,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return res.ModifiedCount, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.AllParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.AllParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -195,4 +173,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }

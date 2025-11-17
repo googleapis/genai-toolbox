@@ -76,9 +76,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name: r.Name,
-		Kind: SourceKind,
-		Pool: pool,
+		Config: r,
+		Pool:   pool,
 	}
 	return s, nil
 }
@@ -86,13 +85,16 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name string `yaml:"name"`
-	Kind string `yaml:"kind"`
+	Config
 	Pool *pgxpool.Pool
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 func (s *Source) PostgresPool() *pgxpool.Pool {
@@ -106,6 +108,8 @@ func getOpts(ipType, userAgent string, useIAM bool) ([]alloydbconn.Option, error
 		opts = append(opts, alloydbconn.WithDefaultDialOptions(alloydbconn.WithPrivateIP()))
 	case "public":
 		opts = append(opts, alloydbconn.WithDefaultDialOptions(alloydbconn.WithPublicIP()))
+	case "psc":
+		opts = append(opts, alloydbconn.WithDefaultDialOptions(alloydbconn.WithPSC()))
 	default:
 		return nil, fmt.Errorf("invalid ipType %s", ipType)
 	}
@@ -117,11 +121,15 @@ func getOpts(ipType, userAgent string, useIAM bool) ([]alloydbconn.Option, error
 }
 
 func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string, bool, error) {
+	userAgent, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		userAgent = "genai-toolbox"
+	}
 	useIAM := true
 
 	// If username and password both provided, use password authentication
 	if user != "" && pass != "" {
-		dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable", user, pass, dbname)
+		dsn := fmt.Sprintf("user=%s password=%s dbname=%s sslmode=disable application_name=%s", user, pass, dbname, userAgent)
 		useIAM = false
 		return dsn, useIAM, nil
 	}
@@ -141,7 +149,7 @@ func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string
 	}
 
 	// Construct IAM connection string with username
-	dsn := fmt.Sprintf("user=%s dbname=%s sslmode=disable", user, dbname)
+	dsn := fmt.Sprintf("user=%s dbname=%s sslmode=disable application_name=%s", user, dbname, userAgent)
 	return dsn, useIAM, nil
 }
 

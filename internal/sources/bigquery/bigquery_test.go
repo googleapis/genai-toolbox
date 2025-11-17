@@ -37,14 +37,96 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 				my-instance:
 					kind: bigquery
 					project: my-project
-					location: us
 			`,
 			want: server.SourceConfigs{
 				"my-instance": bigquery.Config{
-					Name:     "my-instance",
-					Kind:     bigquery.SourceKind,
-					Project:  "my-project",
-					Location: "us",
+					Name:      "my-instance",
+					Kind:      bigquery.SourceKind,
+					Project:   "my-project",
+					Location:  "",
+					WriteMode: "",
+				},
+			},
+		},
+		{
+			desc: "all fields specified",
+			in: `
+			sources:
+				my-instance:
+					kind: bigquery
+					project: my-project
+					location: asia
+					writeMode: blocked
+			`,
+			want: server.SourceConfigs{
+				"my-instance": bigquery.Config{
+					Name:           "my-instance",
+					Kind:           bigquery.SourceKind,
+					Project:        "my-project",
+					Location:       "asia",
+					WriteMode:      "blocked",
+					UseClientOAuth: false,
+				},
+			},
+		},
+		{
+			desc: "use client auth example",
+			in: `
+			sources:
+				my-instance:
+					kind: bigquery
+					project: my-project
+					location: us
+					useClientOAuth: true
+			`,
+			want: server.SourceConfigs{
+				"my-instance": bigquery.Config{
+					Name:           "my-instance",
+					Kind:           bigquery.SourceKind,
+					Project:        "my-project",
+					Location:       "us",
+					UseClientOAuth: true,
+				},
+			},
+		},
+		{
+			desc: "with allowed datasets example",
+			in: `
+			sources:
+				my-instance:
+					kind: bigquery
+					project: my-project
+					location: us
+					allowedDatasets:
+						- my_dataset
+			`,
+			want: server.SourceConfigs{
+				"my-instance": bigquery.Config{
+					Name:            "my-instance",
+					Kind:            bigquery.SourceKind,
+					Project:         "my-project",
+					Location:        "us",
+					AllowedDatasets: []string{"my_dataset"},
+				},
+			},
+		},
+		{
+			desc: "with service account impersonation example",
+			in: `
+			sources:
+				my-instance:
+					kind: bigquery
+					project: my-project
+					location: us
+					impersonateServiceAccount: service-account@my-project.iam.gserviceaccount.com
+			`,
+			want: server.SourceConfigs{
+				"my-instance": bigquery.Config{
+					Name:                      "my-instance",
+					Kind:                      bigquery.SourceKind,
+					Project:                   "my-project",
+					Location:                  "us",
+					ImpersonateServiceAccount: "service-account@my-project.iam.gserviceaccount.com",
 				},
 			},
 		},

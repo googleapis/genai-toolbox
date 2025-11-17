@@ -1,19 +1,108 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 assign_issues:
   - Yuan325
   - duwenxin99
   - averikitsch
+  - anubhav756
+  - twishabansal
+  - dishaprakash
 assign_issues_by:
+  - labels:
+    - 'product: alloydb'
+    to:
+    - 'googleapis/toolbox-alloydb'
   - labels:
     - 'product: bigquery'
     to:
-    - Genesis929
-    - shobsi
-    - jiaxunwu
+    - 'googleapis/toolbox-bigquery'
+  - labels:
+    - 'product: bigtable'
+    to:
+    - 'googleapis/toolbox-bigtable'
+  - labels:
+    - 'product: mssql'
+    to:
+    - 'googleapis/toolbox-cloud-sql-mssql'
+  - labels:
+    - 'product: mysql'
+    to:
+    - 'googleapis/toolbox-cloud-sql-mysql'
+  - labels:
+    - 'product: postgres'
+    to:
+    - 'googleapis/toolbox-cloud-sql-postgres'
+  - labels:
+    - 'product: dataplex'
+    to:
+    - 'googleapis/toolbox-dataplex'
+  - labels:
+    - 'product: firestore'
+    to:
+    - 'googleapis/toolbox-firestore'
   - labels:
     - 'product: looker'
     to:
-    - drstrangelooker
+    - 'googleapis/toolbox-looker'
+  - labels:
+    - 'product: spanner'
+    to:
+    - 'googleapis/toolbox-spanner'
 assign_prs:
   - Yuan325
-  - duwenxin99
-  - averikitsch
+  - duwenxin99     
+  - averikitsch 
+assign_prs_by:
+  - labels:
+    - 'product: alloydb'
+    to:
+    - 'googleapis/toolbox-alloydb'
+  - labels:
+    - 'product: bigquery'
+    to:
+    - 'googleapis/toolbox-bigquery'
+  - labels:
+    - 'product: bigtable'
+    to:
+    - 'googleapis/toolbox-bigtable'
+  - labels:
+    - 'product: mssql'
+    to:
+    - 'googleapis/toolbox-cloud-sql-mssql'
+  - labels:
+    - 'product: mysql'
+    to:
+    - 'googleapis/toolbox-cloud-sql-mysql'
+  - labels:
+    - 'product: postgres'
+    to:
+    - 'googleapis/toolbox-cloud-sql-postgres'
+  - labels:
+    - 'product: dataplex'
+    to:
+    - 'googleapis/toolbox-dataplex'
+  - labels:
+    - 'product: firestore'
+    to:
+    - 'googleapis/toolbox-firestore'
+  - labels:
+    - 'product: looker'
+    to:
+    - 'googleapis/toolbox-looker'
+  - labels:
+    - 'product: spanner'
+    to:
+    - 'googleapis/toolbox-spanner'
+

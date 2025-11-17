@@ -18,20 +18,41 @@ package tests
 
 // InvokeTestConfig represents the various configuration options for RunToolInvokeTest()
 type InvokeTestConfig struct {
+	myAuthToolWant           string
 	myToolId3NameAliceWant   string
 	myToolById4Want          string
 	nullWant                 string
+	myArrayToolWant          string
+	supportSelect1Want       bool
 	supportOptionalNullParam bool
 	supportArrayParam        bool
+	supportClientAuth        bool
+	supportSelect1Auth       bool
 }
 
 type InvokeTestOption func(*InvokeTestConfig)
+
+// WithMyAuthToolWant represents the response value for my-auth-tool.
+// e.g. tests.RunToolInvokeTest(t, select1Want, tests.WithMyAuthToolWant("custom"))
+func WithMyAuthToolWant(s string) InvokeTestOption {
+	return func(c *InvokeTestConfig) {
+		c.myAuthToolWant = s
+	}
+}
 
 // WithMyToolId3NameAliceWant represents the response value for my-tool with id=3 and name=Alice.
 // e.g. tests.RunToolInvokeTest(t, select1Want, tests.WithMyToolId3NameAliceWant("custom"))
 func WithMyToolId3NameAliceWant(s string) InvokeTestOption {
 	return func(c *InvokeTestConfig) {
 		c.myToolId3NameAliceWant = s
+	}
+}
+
+// WithMyArrayToolWant represents the response value for my-array-tool.
+// e.g. tests.RunToolInvokeTest(t, select1Want, tests.WithMyArrayToolWant("custom"))
+func WithMyArrayToolWant(s string) InvokeTestOption {
+	return func(c *InvokeTestConfig) {
+		c.myArrayToolWant = s
 	}
 }
 
@@ -68,11 +89,38 @@ func DisableArrayTest() InvokeTestOption {
 	}
 }
 
+// DisableSelect1Test disables tests for sources that do not support SELECT 1 query.
+// e.g. tests.RunToolInvokeTest(t, "", tests.DisableSelect1Test())
+func DisableSelect1Test() InvokeTestOption {
+	return func(c *InvokeTestConfig) {
+		c.supportSelect1Want = false
+	}
+}
+
+// DisableSelect1AuthTest disables auth tests for sources that do not support SELECT 1 query.
+// e.g. tests.RunToolInvokeTest(t, "", tests.DisableSelect1AuthTest())
+func DisableSelect1AuthTest() InvokeTestOption {
+	return func(c *InvokeTestConfig) {
+		c.supportSelect1Auth = false
+	}
+}
+
+// EnableClientAuthTest runs the client authorization tests.
+// Only enable it if your source supports the `useClientOAuth` configuration.
+// Currently, this should only be used with the BigQuery tests.
+func EnableClientAuthTest() InvokeTestOption {
+	return func(c *InvokeTestConfig) {
+		c.supportClientAuth = true
+	}
+}
+
 /* Configurations for RunMCPToolCallMethod()  */
 
 // MCPTestConfig represents the various configuration options for mcp tool call tests.
 type MCPTestConfig struct {
 	myToolId3NameAliceWant string
+	supportClientAuth      bool
+	supportSelect1Auth     bool
 }
 
 type McpTestOption func(*MCPTestConfig)
@@ -82,6 +130,22 @@ type McpTestOption func(*MCPTestConfig)
 func WithMcpMyToolId3NameAliceWant(s string) McpTestOption {
 	return func(c *MCPTestConfig) {
 		c.myToolId3NameAliceWant = s
+	}
+}
+
+// EnableMcpClientAuthTest runs the client authorization tests.
+// Only enable it if your source supports the `useClientOAuth` configuration.
+// Currently, this should only be used with the BigQuery tests.
+func EnableMcpClientAuthTest() McpTestOption {
+	return func(c *MCPTestConfig) {
+		c.supportClientAuth = true
+	}
+}
+
+// DisableMcpSelect1AuthTest disables the auth tool tests which use select 1.
+func DisableMcpSelect1AuthTest() McpTestOption {
+	return func(c *MCPTestConfig) {
+		c.supportSelect1Auth = false
 	}
 }
 
@@ -109,6 +173,7 @@ type TemplateParameterTestConfig struct {
 	ddlWant         string
 	selectAllWant   string
 	selectId1Want   string
+	selectNameWant  string
 	selectEmptyWant string
 	insert1Want     string
 
@@ -116,8 +181,9 @@ type TemplateParameterTestConfig struct {
 	nameColFilter  string
 	createColArray string
 
-	supportDdl    bool
-	supportInsert bool
+	supportDdl          bool
+	supportInsert       bool
+	supportSelectFields bool
 }
 
 type TemplateParamOption func(*TemplateParameterTestConfig)
@@ -143,6 +209,14 @@ func WithSelectAllWant(s string) TemplateParamOption {
 func WithTmplSelectId1Want(s string) TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.selectId1Want = s
+	}
+}
+
+// WithTmplSelectNameWant represents the response value of select-filter-templateParams-combined-tool with name.
+// e.g. tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.WithTmplSelectNameWant("custom"))
+func WithTmplSelectNameWant(s string) TemplateParamOption {
+	return func(c *TemplateParameterTestConfig) {
+		c.selectNameWant = s
 	}
 }
 
@@ -199,5 +273,13 @@ func DisableDdlTest() TemplateParamOption {
 func DisableInsertTest() TemplateParamOption {
 	return func(c *TemplateParameterTestConfig) {
 		c.supportInsert = false
+	}
+}
+
+// DisableInsertTest disables tests of select-fields-templateParams-tool test.
+// e.g. tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.DisableSelectFilterTest())
+func DisableSelectFilterTest() TemplateParamOption {
+	return func(c *TemplateParameterTestConfig) {
+		c.supportSelectFields = false
 	}
 }

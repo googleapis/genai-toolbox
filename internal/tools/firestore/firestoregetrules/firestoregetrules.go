@@ -22,6 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/firebaserules/v1"
 )
 
@@ -44,6 +45,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	FirebaseRulesClient() *firebaserules.Service
 	GetProjectId() string
+	GetDatabaseId() string
 }
 
 // validate compatible sources are still compatible
@@ -80,24 +82,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// No parameters needed for this tool
-	parameters := tools.Parameters{}
+	params := parameters.Parameters{}
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		RulesClient:  s.FirebaseRulesClient(),
-		ProjectId:    s.GetProjectId(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		Parameters:  params,
+		RulesClient: s.FirebaseRulesClient(),
+		ProjectId:   s.GetProjectId(),
+		DatabaseId:  s.GetDatabaseId(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -106,27 +103,30 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Config
+	Parameters parameters.Parameters `yaml:"parameters"`
 
 	RulesClient *firebaserules.Service
 	ProjectId   string
+	DatabaseId  string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	// Get the latest release for Firestore
-	releaseName := fmt.Sprintf("projects/%s/releases/cloud.firestore", t.ProjectId)
+	releaseName := fmt.Sprintf("projects/%s/releases/cloud.firestore/%s", t.ProjectId, t.DatabaseId)
 	release, err := t.RulesClient.Projects.Releases.Get(releaseName).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get latest Firestore release: %w", err)
 	}
 
 	if release.RulesetName == "" {
-		return nil, fmt.Errorf("no active Firestore rules were found in project '%s'", t.ProjectId)
+		return nil, fmt.Errorf("no active Firestore rules were found in project '%s' and database '%s'", t.ProjectId, t.DatabaseId)
 	}
 
 	// Get the ruleset content
@@ -142,8 +142,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return ruleset, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

@@ -36,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
         with:
-          ref: gh-pages
+          ref: versioned-gh-pages
 
       - name: Remove Preview
         run: |
@@ -48,7 +48,7 @@ jobs:
           git push
 
       - name: Comment
-        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           script: |
             github.rest.issues.createComment({

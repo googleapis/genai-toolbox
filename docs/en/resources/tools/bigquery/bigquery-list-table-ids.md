@@ -15,10 +15,21 @@ It's compatible with the following sources:
 
 - [bigquery](../../sources/bigquery.md)
 
-`bigquery-list-table-ids` takes a required `dataset` parameter to specify the dataset
-from which to list table IDs. It also optionally accepts a `project` parameter to
-define the Google Cloud project ID. If the `project` parameter is not provided, the
-tool defaults to using the project defined in the source configuration.
+`bigquery-list-table-ids` accepts the following parameters:
+
+- **`dataset`** (required): Specifies the dataset from which to list table IDs.
+- **`project`** (optional): Defines the Google Cloud project ID. If not provided,
+the tool defaults to the project from the source configuration.
+
+The tool's behavior regarding these parameters is influenced by the
+`allowedDatasets` restriction on the `bigquery` source:
+
+- **Without `allowedDatasets` restriction:** The tool can list tables from any
+dataset specified by the `dataset` and `project` parameters.
+- **With `allowedDatasets` restriction:** Before listing tables, the tool verifies
+that the requested dataset is in the allowed list. If it is not, the request is
+denied. If only one dataset is specified in the `allowedDatasets` list, it
+will be used as the default value for the `dataset` parameter.
 
 ## Example
 

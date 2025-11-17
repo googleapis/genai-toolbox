@@ -3,8 +3,7 @@ title: "looker-get-dashboards"
 type: docs
 weight: 1
 description: >
-  "looker-get-dashboards" searches for saved Looks in a Looker
-  source.
+  "looker-get-dashboards" tool searches for a saved Dashboard by name or description.
 aliases:
 - /resources/tools/looker-get-dashboards
 ---
@@ -53,8 +52,8 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker-get-dashboards"                                                                  |
-| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "looker-get-dashboards"                    |
+| source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

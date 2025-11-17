@@ -27,8 +27,9 @@ Cypher](https://neo4j.com/docs/cypher-manual/current/queries/) syntax and
 supports all Cypher features, including pattern matching, filtering, and
 aggregation.
 
-`neo4j-execute-cypher` takes one input parameter `cypher` and run the cypher
-query against the `source`.
+`neo4j-execute-cypher` takes a required input parameter `cypher` and run the
+cypher query against the `source`. It also supports an optional `dry_run`
+parameter to validate a query without executing it.
 
 > **Note:** This tool is intended for developer assistant workflows with
 > human-in-the-loop and shouldn't be used for production agents.
@@ -53,9 +54,9 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                 |
-|-------------|:------------------------------------------:|:------------:|-------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "neo4j-cypher".                                                                         |
-| source      |                   string                   |     true     | Name of the source the Cypher query should execute on.                                          |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                              |
-| readOnly    |                   boolean                  |     false    | If set to `true`, the tool will reject any write operations in the Cypher query. Default is `false`. |
+| **field**   | **type** | **required** | **description**                                                                                      |
+|-------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------|
+| kind        |  string  |     true     | Must be "neo4j-cypher".                                                                              |
+| source      |  string  |     true     | Name of the source the Cypher query should execute on.                                               |
+| description |  string  |     true     | Description of the tool that is passed to the LLM.                                                   |
+| readOnly    | boolean  |    false     | If set to `true`, the tool will reject any write operations in the Cypher query. Default is `false`. |

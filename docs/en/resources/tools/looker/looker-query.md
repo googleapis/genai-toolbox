@@ -29,6 +29,10 @@ It's compatible with the following sources:
 7. an optional `limit`
 8. an optional `tz`
 
+Starting in Looker v25.18, these queries can be identified in Looker's
+System Activity. In the History explore, use the field API Client Name
+to find MCP Toolbox queries.
+
 ## Example
 
 ```yaml
@@ -57,6 +61,8 @@ tools:
           "field.id2": "condition2", ...}. Do not put the field.id in
           quotes. Filter expressions can be found at
           https://cloud.google.com/looker/docs/filter-expressions.
+          If the condition is a string that contains a comma, use a second
+          set of quotes. For example, {"user.city": "'New York, NY'"}.
 
           Sorts can be specified like [ "field.id desc 0" ].
 
@@ -73,8 +79,8 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker-query"                                                                           |
-| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "looker-query"                             |
+| source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

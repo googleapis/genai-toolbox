@@ -23,6 +23,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 const kind string = "firestore-list-collections"
@@ -80,24 +82,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	emptyString := ""
-	parentPathParameter := tools.NewStringParameterWithDefault(parentPathKey, emptyString, "Parent document path to list subcollections from. If not provided, lists root collections.")
-	parameters := tools.Parameters{parentPathParameter}
+	parentPathParameter := parameters.NewStringParameterWithDefault(parentPathKey, emptyString, "Relative parent document path to list subcollections from (e.g., 'users/userId'). If not provided, lists root collections. Note: This is a relative path, NOT an absolute path like 'projects/{project_id}/databases/{database_id}/documents/...'")
+	params := parameters.Parameters{parentPathParameter}
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.FirestoreClient(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		Parameters:  params,
+		Client:      s.FirestoreClient(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -106,17 +102,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Config
+	Parameters parameters.Parameters `yaml:"parameters"`
 
 	Client      *firestoreapi.Client
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	mapParams := params.AsMap()
 
 	var collectionRefs []*firestoreapi.CollectionRef
@@ -126,6 +124,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	parentPath, hasParent := mapParams[parentPathKey].(string)
 
 	if hasParent && parentPath != "" {
+		// Validate parent document path
+		if err := util.ValidateDocumentPath(parentPath); err != nil {
+			return nil, fmt.Errorf("invalid parent document path: %w", err)
+		}
+
 		// List subcollections of the specified document
 		docRef := t.Client.Doc(parentPath)
 		collectionRefs, err = docRef.Collections(ctx).GetAll()
@@ -158,8 +161,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return results, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

@@ -22,6 +22,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	_ "github.com/microsoft/go-mssqldb"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -76,9 +77,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name: r.Name,
-		Kind: SourceKind,
-		Db:   db,
+		Config: r,
+		Db:     db,
 	}
 	return s, nil
 }
@@ -86,15 +86,17 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	// Cloud SQL MSSQL struct with connection pool
-	Name string `yaml:"name"`
-	Kind string `yaml:"kind"`
-	Db   *sql.DB
+	Config
+	Db *sql.DB
 }
 
 func (s *Source) SourceKind() string {
 	// Returns Cloud SQL MSSQL source kind
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 func (s *Source) MSSQLDB() *sql.DB {
@@ -114,8 +116,13 @@ func initMssqlConnection(
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
+	userAgent, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		userAgent = "genai-toolbox"
+	}
 	// Create dsn
 	query := url.Values{}
+	query.Add("app name", userAgent)
 	query.Add("database", dbname)
 	if encrypt != "" {
 		query.Add("encrypt", encrypt)

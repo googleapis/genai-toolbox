@@ -3,8 +3,7 @@ title: "looker-add-dashboard-element"
 type: docs
 weight: 1
 description: >
-  "looker-add-dashboard-element" generates a Looker look in the users personal folder in
-  Looker
+  "looker-add-dashboard-element" creates a dashboard element in the given dashboard.
 aliases:
 - /resources/tools/looker-add-dashboard-element
 ---
@@ -56,8 +55,8 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker-add-dashboard-element"                                                           |
-| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "looker-add-dashboard-element"             |
+| source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

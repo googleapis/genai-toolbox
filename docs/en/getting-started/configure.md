@@ -23,6 +23,12 @@ etc., you could use environment variables instead with the format `${ENV_NAME}`.
   password: ${PASSWORD}
 ```
 
+A default value can be specified like `${ENV_NAME:default}`.
+
+```yaml
+  port: ${DB_PORT:3306}
+```
+
 ### Sources
 
 The `sources` section of your `tools.yaml` defines what data sources your
@@ -90,3 +96,22 @@ all_tools = client.load_toolset()
 # This will only load the tools listed in 'my_second_toolset'
 my_second_toolset = client.load_toolset("my_second_toolset")
 ```
+
+### Prompts
+
+The `prompts` section of your `tools.yaml` defines the templates containing
+structured messages and instructions for interacting with language models.
+
+```yaml
+prompts:
+  code_review:
+    description: "Asks the LLM to analyze code quality and suggest improvements."
+    messages:
+      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+    arguments:
+      - name: "code"
+        description: "The code to review"
+```
+
+For more details on configuring different types of prompts, see the
+[Prompts](../resources/prompts/).

@@ -22,16 +22,29 @@ to a database by following these instructions][csql-mysql-quickstart].
 
 ## Available Tools
 
-- [`mysql-sql`](../tools/mysql/mysql-sql.md)  
-  Execute pre-defined prepared SQL queries in MySQL.
+- [`mysql-sql`](../tools/mysql/mysql-sql.md)
+  Execute pre-defined prepared SQL queries in Cloud SQL for MySQL.
 
-- [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
+- [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)
   Run parameterized SQL queries in Cloud SQL for MySQL.
+
+- [`mysql-list-active-queries`](../tools/mysql/mysql-list-active-queries.md)
+  List active queries in Cloud SQL for MySQL.
+
+- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)
+  List tables in a Cloud SQL for MySQL database.
+
+- [`mysql-list-tables-missing-unique-indexes`](../tools/mysql/mysql-list-tables-missing-unique-indexes.md)
+  List tables in a Cloud SQL for MySQL database that do not have primary or unique indices.
+
+- [`mysql-list-table-fragmentation`](../tools/mysql/mysql-list-table-fragmentation.md)
+  List table fragmentation in Cloud SQL for MySQL tables.
 
 ### Pre-built Configurations
 
-- [Cloud SQL for MySQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mysql_mcp/)  
-Connect your IDE to Cloud SQL for MySQL using Toolbox.
+- [Cloud SQL for MySQL using
+  MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mysql_mcp/)
+  Connect your IDE to Cloud SQL for MySQL using Toolbox.
 
 ## Requirements
 
@@ -104,13 +117,13 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                                             |
-|-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "cloud-sql-mysql".                                                                  |
-| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").               |
-| region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                |
-| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                     |
-| database  |  string  |     true     | Name of the MySQL database to connect to (e.g. "my_db").                                    |
-| user      |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-pg-user").                                   |
-| password  |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                            |
-| ipType    |  string  |    false     | IP Type of the Cloud SQL instance; must be one of `public` or `private`. Default: `public`. |
+| **field** | **type** | **required** | **description**                                                                                      |
+|-----------|:--------:|:------------:|------------------------------------------------------------------------------------------------------|
+| kind      |  string  |     true     | Must be "cloud-sql-mysql".                                                                           |
+| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                        |
+| region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                         |
+| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                              |
+| database  |  string  |     true     | Name of the MySQL database to connect to (e.g. "my_db").                                             |
+| user      |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-pg-user").                                            |
+| password  |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                                     |
+| ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public`,  `private`, or `psc`. Default: `public`. |

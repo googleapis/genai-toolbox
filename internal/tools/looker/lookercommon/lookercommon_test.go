@@ -15,6 +15,7 @@
 package lookercommon_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -31,6 +32,8 @@ func TestExtractLookerFieldProperties(t *testing.T) {
 
 	// Helper function to create string pointers
 	stringPtr := func(s string) *string { return &s }
+	stringArrayPtr := func(s []string) *[]string { return &s }
+	boolPtr := func(b bool) *bool { return &b }
 
 	tcs := []struct {
 		desc   string
@@ -41,20 +44,27 @@ func TestExtractLookerFieldProperties(t *testing.T) {
 			desc: "field with all properties including description",
 			fields: []v4.LookmlModelExploreField{
 				{
-					Name:        stringPtr("dimension_name"),
-					Type:        stringPtr("string"),
-					Label:       stringPtr("Dimension Label"),
-					LabelShort:  stringPtr("Dim Label"),
-					Description: stringPtr("This is a dimension description"),
+					Name:             stringPtr("dimension_name"),
+					Type:             stringPtr("string"),
+					Label:            stringPtr("Dimension Label"),
+					LabelShort:       stringPtr("Dim Label"),
+					Description:      stringPtr("This is a dimension description"),
+					Suggestable:      boolPtr(true),
+					SuggestExplore:   stringPtr("explore"),
+					SuggestDimension: stringPtr("dimension"),
+					Suggestions:      stringArrayPtr([]string{"foo", "bar", "baz"}),
 				},
 			},
 			want: []any{
 				map[string]any{
-					"name":        "dimension_name",
-					"type":        "string",
-					"label":       "Dimension Label",
-					"label_short": "Dim Label",
-					"description": "This is a dimension description",
+					"name":              "dimension_name",
+					"type":              "string",
+					"label":             "Dimension Label",
+					"label_short":       "Dim Label",
+					"description":       "This is a dimension description",
+					"suggest_explore":   "explore",
+					"suggest_dimension": "dimension",
+					"suggestions":       []string{"foo", "bar", "baz"},
 				},
 			},
 		},
@@ -132,7 +142,7 @@ func TestExtractLookerFieldProperties(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got, err := lookercommon.ExtractLookerFieldProperties(ctx, &tc.fields)
+			got, err := lookercommon.ExtractLookerFieldProperties(ctx, &tc.fields, true)
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -150,7 +160,7 @@ func TestExtractLookerFieldPropertiesWithNilFields(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 
-	got, err := lookercommon.ExtractLookerFieldProperties(ctx, nil)
+	got, err := lookercommon.ExtractLookerFieldProperties(ctx, nil, true)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -159,4 +169,33 @@ func TestExtractLookerFieldPropertiesWithNilFields(t *testing.T) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("incorrect result: diff %v", diff)
 	}
+}
+
+func TestRequestRunInlineQuery2(t *testing.T) {
+	fields := make([]string, 1)
+	fields[0] = "foo.bar"
+	wq := v4.WriteQuery{
+		Model:  "model",
+		View:   "explore",
+		Fields: &fields,
+	}
+	req2 := lookercommon.RequestRunInlineQuery2{
+		Query: wq,
+		RenderOpts: lookercommon.RenderOptions{
+			Format: "json",
+		},
+		QueryApiClientCtx: lookercommon.QueryApiClientContext{
+			Name: "MCP Toolbox",
+		},
+	}
+	json, err := json.Marshal(req2)
+	if err != nil {
+		t.Fatalf("Could not marshall req2 as json")
+	}
+	got := string(json)
+	want := `{"query":{"model":"model","view":"explore","fields":["foo.bar"]},"render_options":{"format":"json"},"query_api_client_context":{"name":"MCP Toolbox"}}`
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Fatalf("incorrect result: diff %v", diff)
+	}
+
 }

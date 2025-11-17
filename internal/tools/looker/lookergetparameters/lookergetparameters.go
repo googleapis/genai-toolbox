@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
@@ -72,28 +73,24 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
 	}
 
-	parameters := lookercommon.GetFieldParameters()
+	params := lookercommon.GetFieldParameters()
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
-		ApiSettings:  s.ApiSettings,
+		Config:         cfg,
+		Parameters:     params,
+		UseClientOAuth: s.UseClientOAuth,
+		Client:         s.Client,
+		ApiSettings:    s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
-			Parameters:   parameters.Manifest(),
+			Parameters:   params.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
-		mcpManifest: mcpManifest,
+		mcpManifest:      mcpManifest,
+		ShowHiddenFields: s.ShowHiddenFields,
 	}, nil
 }
 
@@ -101,17 +98,21 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string `yaml:"name"`
-	Kind         string `yaml:"kind"`
-	Client       *v4.LookerSDK
-	ApiSettings  *rtl.ApiSettings
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Config
+	UseClientOAuth   bool
+	Client           *v4.LookerSDK
+	ApiSettings      *rtl.ApiSettings
+	Parameters       parameters.Parameters `yaml:"parameters"`
+	manifest         tools.Manifest
+	mcpManifest      tools.McpManifest
+	ShowHiddenFields bool
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
@@ -122,12 +123,16 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	}
 
 	fields := lookercommon.ParametersFields
+	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
+	if err != nil {
+		return nil, fmt.Errorf("error getting sdk: %w", err)
+	}
 	req := v4.RequestLookmlModelExplore{
 		LookmlModelName: *model,
 		ExploreName:     *explore,
 		Fields:          &fields,
 	}
-	resp, err := t.Client.LookmlModelExplore(req, t.ApiSettings)
+	resp, err := sdk.LookmlModelExplore(req, t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making get_parameters request: %w", err)
 	}
@@ -136,7 +141,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("error processing get_parameters response: %w", err)
 	}
 
-	data, err := lookercommon.ExtractLookerFieldProperties(ctx, resp.Fields.Parameters)
+	data, err := lookercommon.ExtractLookerFieldProperties(ctx, resp.Fields.Parameters, t.ShowHiddenFields)
 	if err != nil {
 		return nil, fmt.Errorf("error extracting get_parameters response: %w", err)
 	}
@@ -145,8 +150,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return data, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -162,5 +167,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.UseClientOAuth
 }

@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"net/url"
 	"slices"
 
 	"cloud.google.com/go/cloudsqlconn/mysql/mysql"
@@ -52,7 +53,7 @@ type Config struct {
 	Project  string         `yaml:"project" validate:"required"`
 	Region   string         `yaml:"region" validate:"required"`
 	Instance string         `yaml:"instance" validate:"required"`
-	IPType   sources.IPType `yaml:"ipType" validate:"required"`
+	IPType   sources.IPType `yaml:"ipType"`
 	User     string         `yaml:"user" validate:"required"`
 	Password string         `yaml:"password" validate:"required"`
 	Database string         `yaml:"database" validate:"required"`
@@ -74,9 +75,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name: r.Name,
-		Kind: SourceKind,
-		Pool: pool,
+		Config: r,
+		Pool:   pool,
 	}
 	return s, nil
 }
@@ -84,13 +84,16 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name string `yaml:"name"`
-	Kind string `yaml:"kind"`
+	Config
 	Pool *sql.DB
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 func (s *Source) MySQLPool() *sql.DB {
@@ -118,9 +121,8 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 			return nil, fmt.Errorf("unable to register driver: %w", err)
 		}
 	}
-
 	// Tell the driver to use the Cloud SQL Go Connector to create connections
-	dsn := fmt.Sprintf("%s:%s@cloudsql-mysql(%s:%s:%s)/%s", user, pass, project, region, instance, dbname)
+	dsn := fmt.Sprintf("%s:%s@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s", user, pass, project, region, instance, dbname, url.QueryEscape(userAgent))
 	db, err := sql.Open(
 		"cloudsql-mysql",
 		dsn,

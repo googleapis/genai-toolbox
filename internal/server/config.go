@@ -21,6 +21,7 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
+	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
@@ -41,6 +42,10 @@ type ServerConfig struct {
 	ToolConfigs ToolConfigs
 	// ToolsetConfigs defines what tools are available.
 	ToolsetConfigs ToolsetConfigs
+	// PromptConfigs defines what prompts are available
+	PromptConfigs PromptConfigs
+	// PromptsetConfigs defines what prompts are available
+	PromptsetConfigs PromptsetConfigs
 	// LoggingFormat defines whether structured loggings are used.
 	LoggingFormat logFormat
 	// LogLevel defines the levels to log.
@@ -218,6 +223,11 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
 		}
 
+		// `authRequired` and `useClientOAuth` cannot be specified together
+		if v["authRequired"] != nil && v["useClientOAuth"] == true {
+			return fmt.Errorf("`authRequired` and `useClientOAuth` are mutually exclusive. Choose only one authentication method")
+		}
+
 		// Make `authRequired` an empty list instead of nil for Tool manifest
 		if v["authRequired"] == nil {
 			v["authRequired"] = []string{}
@@ -246,7 +256,7 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 	return nil
 }
 
-// ToolConfigs is a type used to allow unmarshal of the toolset configs
+// ToolsetConfigs is a type used to allow unmarshal of the toolset configs
 type ToolsetConfigs map[string]tools.ToolsetConfig
 
 // validate interface
@@ -262,6 +272,72 @@ func (c *ToolsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(inter
 
 	for name, toolList := range raw {
 		(*c)[name] = tools.ToolsetConfig{Name: name, ToolNames: toolList}
+	}
+	return nil
+}
+
+// PromptConfigs is a type used to allow unmarshal of the prompt configs
+type PromptConfigs map[string]prompts.PromptConfig
+
+// validate interface
+var _ yaml.InterfaceUnmarshalerContext = &PromptConfigs{}
+
+func (c *PromptConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
+	*c = make(PromptConfigs)
+	var raw map[string]util.DelayedUnmarshaler
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	for name, u := range raw {
+		var v map[string]any
+		if err := u.Unmarshal(&v); err != nil {
+			return fmt.Errorf("unable to unmarshal prompt %q: %w", name, err)
+		}
+
+		// Look for the 'kind' field. If it's not present, kindStr will be an
+		// empty string, which prompts.DecodeConfig will correctly default to "custom".
+		var kindStr string
+		if kindVal, ok := v["kind"]; ok {
+			var isString bool
+			kindStr, isString = kindVal.(string)
+			if !isString {
+				return fmt.Errorf("invalid 'kind' field for prompt %q (must be a string)", name)
+			}
+		}
+
+		// Create a new, strict decoder for this specific prompt's data.
+		yamlDecoder, err := util.NewStrictDecoder(v)
+		if err != nil {
+			return fmt.Errorf("error creating YAML decoder for prompt %q: %w", name, err)
+		}
+
+		// Use the central registry to decode the prompt based on its kind.
+		promptCfg, err := prompts.DecodeConfig(ctx, kindStr, name, yamlDecoder)
+		if err != nil {
+			return err
+		}
+		(*c)[name] = promptCfg
+	}
+	return nil
+}
+
+// PromptsetConfigs is a type used to allow unmarshal of the PromptsetConfigs configs
+type PromptsetConfigs map[string]prompts.PromptsetConfig
+
+// validate interface
+var _ yaml.InterfaceUnmarshalerContext = &PromptsetConfigs{}
+
+func (c *PromptsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
+	*c = make(PromptsetConfigs)
+
+	var raw map[string][]string
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	for name, promptList := range raw {
+		(*c)[name] = prompts.PromptsetConfig{Name: name, PromptNames: promptList}
 	}
 	return nil
 }

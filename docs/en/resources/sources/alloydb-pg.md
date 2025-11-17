@@ -4,7 +4,7 @@ linkTitle: "AlloyDB"
 type: docs
 weight: 1
 description: >
-  AlloyDB for PostgreSQL is a fully-managed, PostgreSQL-compatible database for 
+  AlloyDB for PostgreSQL is a fully-managed, PostgreSQL-compatible database for
   demanding transactional workloads.
 
 ---
@@ -24,21 +24,51 @@ cluster][alloydb-free-trial].
 
 ## Available Tools
 
-- [`alloydb-ai-nl`](../tools/alloydbainl/alloydb-ai-nl.md)  
+- [`alloydb-ai-nl`](../tools/alloydbainl/alloydb-ai-nl.md)
   Use natural language queries on AlloyDB, powered by AlloyDB AI.
 
-- [`postgres-sql`](../tools/postgres/postgres-sql.md)  
+- [`postgres-sql`](../tools/postgres/postgres-sql.md)
   Execute SQL queries as prepared statements in AlloyDB Postgres.
 
-- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)  
+- [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)
   Run parameterized SQL statements in AlloyDB Postgres.
+
+- [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)
+  List tables in an AlloyDB for PostgreSQL database.
+
+- [`postgres-list-active-queries`](../tools/postgres/postgres-list-active-queries.md)
+  List active queries in an AlloyDB for PostgreSQL database.
+
+- [`postgres-list-available-extensions`](../tools/postgres/postgres-list-available-extensions.md)
+  List available extensions for installation in a PostgreSQL database.
+
+- [`postgres-list-installed-extensions`](../tools/postgres/postgres-list-installed-extensions.md)
+  List installed extensions in a PostgreSQL database.
+
+- [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
+  List views in an AlloyDB for PostgreSQL database.
+
+- [`postgres-list-schemas`](../tools/postgres/postgres-list-schemas.md)
+  List schemas in an AlloyDB for PostgreSQL database.
+
+- [`postgres-database-overview`](../tools/postgres/postgres-database-overview.md)
+  Fetches the current state of the PostgreSQL server.
+
+- [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
+  List triggers in an AlloyDB for PostgreSQL database.
+
+- [`postgres-list-indexes`](../tools/postgres/postgres-list-indexes.md)
+  List available user indexes in a PostgreSQL database.
+
+- [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
+  List sequences in a PostgreSQL database.
 
 ### Pre-built Configurations
 
-- [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)  
+- [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
 Connect your IDE to AlloyDB using Toolbox.
 
-- [AlloyDB Admin API using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/)  
+- [AlloyDB Admin API using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_admin_mcp/)
 Create your AlloyDB database with MCP Toolbox.
 
 ## Requirements

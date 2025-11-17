@@ -27,6 +27,9 @@ to a database by following these instructions][csql-mssql-connect].
 - [`mssql-execute-sql`](../tools/mssql/mssql-execute-sql.md)  
   Run parameterized SQL Server queries in Cloud SQL for SQL Server.
 
+- [`mssql-list-tables`](../tools/mssql/mssql-list-tables.md)  
+  List tables in a Cloud SQL for SQL Server database.
+
 ### Pre-built Configurations
 
 - [Cloud SQL for SQL Server using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mssql_mcp/)  
@@ -91,7 +94,6 @@ sources:
      region: my-region
      instance: my-instance
      database: my_db
-     ipAddress: localhost
      user: ${USER_NAME}
      password: ${PASSWORD}
      # ipType: private
@@ -104,14 +106,13 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                                             |
-|-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "cloud-sql-mssql".                                                                  |
-| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").               |
-| region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                |
-| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                     |
-| database  |  string  |     true     | Name of the Cloud SQL database to connect to (e.g. "my_db").                                |
-| ipAddress |  string  |     true     | IP address of the Cloud SQL instance to connect to.                                         |
-| user      |  string  |     true     | Name of the SQL Server user to connect as (e.g. "my-pg-user").                              |
-| password  |  string  |     true     | Password of the SQL Server user (e.g. "my-password").                                       |
-| ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public` or `private`. Default: `public`. |
+| **field** | **type** | **required** | **description**                                                                                      |
+|-----------|:--------:|:------------:|------------------------------------------------------------------------------------------------------|
+| kind      |  string  |     true     | Must be "cloud-sql-mssql".                                                                           |
+| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                        |
+| region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                         |
+| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                              |
+| database  |  string  |     true     | Name of the Cloud SQL database to connect to (e.g. "my_db").                                         |
+| user      |  string  |     true     | Name of the SQL Server user to connect as (e.g. "my-pg-user").                                       |
+| password  |  string  |     true     | Password of the SQL Server user (e.g. "my-password").                                                |
+| ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public`,  `private`, or `psc`. Default: `public`. |

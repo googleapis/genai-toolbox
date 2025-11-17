@@ -21,6 +21,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	redissrc "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/redis/go-redis/v9"
 )
@@ -51,13 +52,13 @@ var _ compatibleSource = &redissrc.Source{}
 var compatibleSources = [...]string{redissrc.SourceKind}
 
 type Config struct {
-	Name         string           `yaml:"name" validate:"required"`
-	Kind         string           `yaml:"kind" validate:"required"`
-	Source       string           `yaml:"source" validate:"required"`
-	Description  string           `yaml:"description" validate:"required"`
-	Commands     [][]string       `yaml:"commands" validate:"required"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Name         string                `yaml:"name" validate:"required"`
+	Kind         string                `yaml:"kind" validate:"required"`
+	Source       string                `yaml:"source" validate:"required"`
+	Description  string                `yaml:"description" validate:"required"`
+	Commands     [][]string            `yaml:"commands" validate:"required"`
+	AuthRequired []string              `yaml:"authRequired"`
+	Parameters   parameters.Parameters `yaml:"parameters"`
 }
 
 // validate interface
@@ -80,22 +81,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: cfg.Parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, cfg.Parameters)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   cfg.Parameters,
-		Commands:     cfg.Commands,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.RedisClient(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		Client:      s.RedisClient(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -104,18 +97,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Config
 
 	Client      redissrc.RedisClient
-	Commands    [][]string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	cmds, err := replaceCommandsParams(t.Commands, t.Parameters, params)
 	if err != nil {
 		return nil, fmt.Errorf("error replacing commands' parameters: %s", err)
@@ -160,8 +149,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return out, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -182,7 +171,7 @@ func (t Tool) RequiresClientAuthorization() bool {
 
 // replaceCommandsParams is a helper function to replace parameters in the commands
 
-func replaceCommandsParams(commands [][]string, params tools.Parameters, paramValues tools.ParamValues) ([][]any, error) {
+func replaceCommandsParams(commands [][]string, params parameters.Parameters, paramValues parameters.ParamValues) ([][]any, error) {
 	paramMap := paramValues.AsMapWithDollarPrefix()
 	typeMap := make(map[string]string, len(params))
 	for _, p := range params {
@@ -212,4 +201,8 @@ func replaceCommandsParams(commands [][]string, params tools.Parameters, paramVa
 		newCommands[i] = newCmd
 	}
 	return newCommands, nil
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }

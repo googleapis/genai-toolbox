@@ -98,16 +98,17 @@ func TestRedisToolEndpoints(t *testing.T) {
 	}
 
 	// Get configs for tests
-	select1Want, mcpMyFailToolWant, invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetRedisValkeyWants()
+	select1Want, mcpMyFailToolWant, invokeParamWant, invokeIdNullWant, nullWant, mcpSelect1Want, mcpInvokeParamWant := tests.GetRedisValkeyWants()
 
 	// Run tests
 	tests.RunToolGetTest(t)
 	tests.RunToolInvokeTest(t, select1Want,
 		tests.WithMyToolId3NameAliceWant(invokeParamWant),
+		tests.WithMyArrayToolWant(invokeParamWant),
 		tests.WithMyToolById4Want(invokeIdNullWant),
 		tests.WithNullWant(nullWant),
 	)
-	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant,
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want,
 		tests.WithMcpMyToolId3NameAliceWant(mcpInvokeParamWant),
 	)
 }

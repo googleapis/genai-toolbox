@@ -25,6 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
@@ -74,36 +75,31 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
 	}
 
-	parameters := lookercommon.GetQueryParameters()
+	params := lookercommon.GetQueryParameters()
 
-	titleParameter := tools.NewStringParameter("title", "The title of the Look")
-	parameters = append(parameters, titleParameter)
-	descParameter := tools.NewStringParameterWithDefault("description", "", "The description of the Look")
-	parameters = append(parameters, descParameter)
-	vizParameter := tools.NewMapParameterWithDefault("vis_config",
+	titleParameter := parameters.NewStringParameter("title", "The title of the Look")
+	params = append(params, titleParameter)
+	descParameter := parameters.NewStringParameterWithDefault("description", "", "The description of the Look")
+	params = append(params, descParameter)
+	vizParameter := parameters.NewMapParameterWithDefault("vis_config",
 		map[string]any{},
 		"The visualization config for the query",
 		"",
 	)
-	parameters = append(parameters, vizParameter)
+	params = append(params, vizParameter)
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
-		ApiSettings:  s.ApiSettings,
+		Config:         cfg,
+		Parameters:     params,
+		UseClientOAuth: s.UseClientOAuth,
+		Client:         s.Client,
+		ApiSettings:    s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
-			Parameters:   parameters.Manifest(),
+			Parameters:   params.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
 		mcpManifest: mcpManifest,
@@ -114,17 +110,20 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string `yaml:"name"`
-	Kind         string `yaml:"kind"`
-	Client       *v4.LookerSDK
-	ApiSettings  *rtl.ApiSettings
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Config
+	UseClientOAuth bool
+	Client         *v4.LookerSDK
+	ApiSettings    *rtl.ApiSettings
+	Parameters     parameters.Parameters `yaml:"parameters"`
+	manifest       tools.Manifest
+	mcpManifest    tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
@@ -135,8 +134,12 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("error building query request: %w", err)
 	}
 
+	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
+	if err != nil {
+		return nil, fmt.Errorf("error getting sdk: %w", err)
+	}
 	mrespFields := "id,personal_folder_id"
-	mresp, err := t.Client.Me(mrespFields, t.ApiSettings)
+	mresp, err := sdk.Me(mrespFields, t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making me request: %s", err)
 	}
@@ -145,7 +148,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	title := paramsMap["title"].(string)
 	description := paramsMap["description"].(string)
 
-	looks, err := t.Client.FolderLooks(*mresp.PersonalFolderId, "title", t.ApiSettings)
+	looks, err := sdk.FolderLooks(*mresp.PersonalFolderId, "title", t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error getting existing looks in folder: %s", err)
 	}
@@ -163,7 +166,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	wq.VisConfig = &visConfig
 
 	qrespFields := "id"
-	qresp, err := t.Client.CreateQuery(*wq, qrespFields, t.ApiSettings)
+	qresp, err := sdk.CreateQuery(*wq, qrespFields, t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making create query request: %s", err)
 	}
@@ -175,13 +178,13 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		QueryId:     qresp.Id,
 		FolderId:    mresp.PersonalFolderId,
 	}
-	resp, err := t.Client.CreateLook(wlwq, "", t.ApiSettings)
+	resp, err := sdk.CreateLook(wlwq, "", t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making create look request: %s", err)
 	}
 	logger.DebugContext(ctx, "resp = %v", resp)
 
-	setting, err := t.Client.GetSetting("host_url", t.ApiSettings)
+	setting, err := sdk.GetSetting("host_url", t.ApiSettings)
 	if err != nil {
 		logger.ErrorContext(ctx, "error getting settings: %s", err)
 	}
@@ -202,8 +205,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return data, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -219,5 +222,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.UseClientOAuth
 }

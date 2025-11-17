@@ -24,7 +24,9 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
@@ -48,6 +50,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
 	BigQueryRestService() *bigqueryrestapi.Service
+	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
+	UseClientAuthorization() bool
+	IsDatasetAllowed(projectID, datasetID string) bool
+	BigQueryAllowedDatasets() []string
+	BigQuerySession() bigqueryds.BigQuerySessionProvider
 }
 
 // validate compatible sources are still compatible
@@ -83,35 +90,43 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	historyDataParameter := tools.NewStringParameter("history_data",
-		"The table id or the query of the history time series data.")
-	timestampColumnNameParameter := tools.NewStringParameter("timestamp_col",
+	allowedDatasets := s.BigQueryAllowedDatasets()
+	historyDataDescription := "The table id or the query of the history time series data."
+	if len(allowedDatasets) > 0 {
+		datasetIDs := []string{}
+		for _, ds := range allowedDatasets {
+			datasetIDs = append(datasetIDs, fmt.Sprintf("`%s`", ds))
+		}
+		historyDataDescription += fmt.Sprintf(" The query or table must only access datasets from the following list: %s.", strings.Join(datasetIDs, ", "))
+	}
+
+	historyDataParameter := parameters.NewStringParameter("history_data", historyDataDescription)
+	timestampColumnNameParameter := parameters.NewStringParameter("timestamp_col",
 		"The name of the time series timestamp column.")
-	dataColumnNameParameter := tools.NewStringParameter("data_col",
+	dataColumnNameParameter := parameters.NewStringParameter("data_col",
 		"The name of the time series data column.")
-	idColumnNameParameter := tools.NewArrayParameterWithDefault("id_cols", []any{},
+	idColumnNameParameter := parameters.NewArrayParameterWithDefault("id_cols", []any{},
 		"An array of the time series id column names.",
-		tools.NewStringParameter("id_col", "The name of time series id column."))
-	horizonParameter := tools.NewIntParameterWithDefault("horizon", 10, "The number of forecasting steps.")
-	parameters := tools.Parameters{historyDataParameter,
+		parameters.NewStringParameter("id_col", "The name of time series id column."))
+	horizonParameter := parameters.NewIntParameterWithDefault("horizon", 10, "The number of forecasting steps.")
+	params := parameters.Parameters{historyDataParameter,
 		timestampColumnNameParameter, dataColumnNameParameter, idColumnNameParameter, horizonParameter}
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.BigQueryClient(),
-		RestService:  s.BigQueryRestService(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:           cfg,
+		Parameters:       params,
+		UseClientOAuth:   s.UseClientAuthorization(),
+		ClientCreator:    s.BigQueryClientCreator(),
+		Client:           s.BigQueryClient(),
+		RestService:      s.BigQueryRestService(),
+		IsDatasetAllowed: s.IsDatasetAllowed,
+		SessionProvider:  s.BigQuerySession(),
+		AllowedDatasets:  allowedDatasets,
+		manifest:         tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:      mcpManifest,
 	}
 	return t, nil
 }
@@ -120,17 +135,25 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	Client       *bigqueryapi.Client
-	RestService  *bigqueryrestapi.Service
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Config
+	UseClientOAuth bool                  `yaml:"useClientOAuth"`
+	Parameters     parameters.Parameters `yaml:"parameters"`
+
+	Client           *bigqueryapi.Client
+	RestService      *bigqueryrestapi.Service
+	ClientCreator    bigqueryds.BigqueryClientCreator
+	IsDatasetAllowed func(projectID, datasetID string) bool
+	AllowedDatasets  []string
+	SessionProvider  bigqueryds.BigQuerySessionProvider
+	manifest         tools.Manifest
+	mcpManifest      tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	historyData, ok := paramsMap["history_data"].(string)
 	if !ok {
@@ -165,11 +188,77 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		}
 	}
 
+	bqClient := t.Client
+	restService := t.RestService
+	var err error
+
+	// Initialize new client if using user OAuth token
+	if t.UseClientOAuth {
+		tokenStr, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
+		bqClient, restService, err = t.ClientCreator(tokenStr, false)
+		if err != nil {
+			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
+		}
+	}
+
 	var historyDataSource string
 	trimmedUpperHistoryData := strings.TrimSpace(strings.ToUpper(historyData))
 	if strings.HasPrefix(trimmedUpperHistoryData, "SELECT") || strings.HasPrefix(trimmedUpperHistoryData, "WITH") {
+		if len(t.AllowedDatasets) > 0 {
+			var connProps []*bigqueryapi.ConnectionProperty
+			session, err := t.SessionProvider(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
+			}
+			if session != nil {
+				connProps = []*bigqueryapi.ConnectionProperty{
+					{Key: "session_id", Value: session.ID},
+				}
+			}
+			dryRunJob, err := bqutil.DryRunQuery(ctx, restService, t.Client.Project(), t.Client.Location, historyData, nil, connProps)
+			if err != nil {
+				return nil, fmt.Errorf("query validation failed: %w", err)
+			}
+			statementType := dryRunJob.Statistics.Query.StatementType
+			if statementType != "SELECT" {
+				return nil, fmt.Errorf("the 'history_data' parameter only supports a table ID or a SELECT query. The provided query has statement type '%s'", statementType)
+			}
+
+			queryStats := dryRunJob.Statistics.Query
+			if queryStats != nil {
+				for _, tableRef := range queryStats.ReferencedTables {
+					if !t.IsDatasetAllowed(tableRef.ProjectId, tableRef.DatasetId) {
+						return nil, fmt.Errorf("query in history_data accesses dataset '%s.%s', which is not in the allowed list", tableRef.ProjectId, tableRef.DatasetId)
+					}
+				}
+			} else {
+				return nil, fmt.Errorf("could not analyze query in history_data to validate against allowed datasets")
+			}
+		}
 		historyDataSource = fmt.Sprintf("(%s)", historyData)
 	} else {
+		if len(t.AllowedDatasets) > 0 {
+			parts := strings.Split(historyData, ".")
+			var projectID, datasetID string
+
+			switch len(parts) {
+			case 3: // project.dataset.table
+				projectID = parts[0]
+				datasetID = parts[1]
+			case 2: // dataset.table
+				projectID = t.Client.Project()
+				datasetID = parts[0]
+			default:
+				return nil, fmt.Errorf("invalid table ID format for 'history_data': %q. Expected 'dataset.table' or 'project.dataset.table'", historyData)
+			}
+
+			if !t.IsDatasetAllowed(projectID, datasetID) {
+				return nil, fmt.Errorf("access to dataset '%s.%s' (from table '%s') is not allowed", projectID, datasetID, historyData)
+			}
+		}
 		historyDataSource = fmt.Sprintf("TABLE `%s`", historyData)
 	}
 
@@ -188,23 +277,37 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		historyDataSource, dataCol, timestampCol, horizon, idColsArg)
 
 	// JobStatistics.QueryStatistics.StatementType
-	query := t.Client.Query(sql)
-	query.Location = t.Client.Location
+	query := bqClient.Query(sql)
+	query.Location = bqClient.Location
+	session, err := t.SessionProvider(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
+	}
+	if session != nil {
+		// Add session ID to the connection properties for subsequent calls.
+		query.ConnectionProperties = []*bigqueryapi.ConnectionProperty{
+			{Key: "session_id", Value: session.ID},
+		}
+	}
 
 	// Log the query executed for debugging.
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
 
 	// This block handles SELECT statements, which return a row set.
 	// We iterate through the results, convert each row into a map of
 	// column names to values, and return the collection of rows.
 	var out []any
-	it, err := query.Read(ctx)
+	job, err := query.Run(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	it, err := job.Read(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read query results: %w", err)
 	}
 	for {
 		var row map[string]bigqueryapi.Value
@@ -230,8 +333,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return "The query returned 0 rows.", nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -247,5 +350,5 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
-	return false
+	return t.UseClientOAuth
 }

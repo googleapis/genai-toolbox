@@ -35,10 +35,27 @@ tools:
           explore_name looked up from get_explores.
 ```
 
+The response is a json array with the following elements:
+
+```json
+{
+  "name": "field name",
+  "description": "field description",
+  "type": "field type",
+  "label": "field label",
+  "label_short": "field short label",
+  "tags": ["tags", ...],
+  "synonyms": ["synonyms", ...],
+  "suggestions": ["suggestion", ...],
+  "suggest_explore": "explore",
+  "suggest_dimension": "dimension"
+}
+```
+
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker-get-parameters".                                                                   |
-| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "looker-get-parameters".                   |
+| source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

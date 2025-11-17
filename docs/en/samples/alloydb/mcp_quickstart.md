@@ -16,10 +16,18 @@ on how to [connect to Toolbox via MCP](../../how-to/connect_via_mcp.md).
 
 This guide assumes you have already done the following:
 
-1.  [Create a AlloyDB cluster and instance](https://cloud.google.com/alloydb/docs/cluster-create) with a database and user.
-1. Connect to the instance using [AlloyDB Studio](https://cloud.google.com/alloydb/docs/manage-data-using-studio), [`psql` command-line tool](https://www.postgresql.org/download/), or any other PostgreSQL client.
+1.  [Create a AlloyDB cluster and
+    instance](https://cloud.google.com/alloydb/docs/cluster-create) with a
+    database and user.
+1. Connect to the instance using [AlloyDB
+   Studio](https://cloud.google.com/alloydb/docs/manage-data-using-studio),
+   [`psql` command-line tool](https://www.postgresql.org/download/), or any
+   other PostgreSQL client.
 
-2.  Enable the `pgvector` and `google_ml_integration` [extensions](https://cloud.google.com/alloydb/docs/ai). These are required for Semantic Search and Natural Language to SQL tools. Run the following SQL commands:
+1.  Enable the `pgvector` and `google_ml_integration`
+    [extensions](https://cloud.google.com/alloydb/docs/ai). These are required
+    for Semantic Search and Natural Language to SQL tools. Run the following SQL
+    commands:
 
     ```sql
     CREATE EXTENSION IF NOT EXISTS "vector";
@@ -30,7 +38,8 @@ This guide assumes you have already done the following:
 
 ## Step 1: Set up your AlloyDB database
 
-In this section, we will create the necessary tables and functions in your AlloyDB instance.
+In this section, we will create the necessary tables and functions in your
+AlloyDB instance.
 
 1.  Create tables using the following commands:
 
@@ -114,7 +123,7 @@ In this section, we will download and install the Toolbox binary.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    export VERSION="0.11.0"
+    export VERSION="0.20.0"
     curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -127,9 +136,11 @@ In this section, we will download and install the Toolbox binary.
 
 ## Step 3: Configure the tools
 
-Create a `tools.yaml` file and add the following content. You must replace the placeholders with your actual AlloyDB configuration.
+Create a `tools.yaml` file and add the following content. You must replace the
+placeholders with your actual AlloyDB configuration.
 
-First, define the data source for your tools. This tells Toolbox how to connect to your AlloyDB instance.
+First, define the data source for your tools. This tells Toolbox how to connect
+to your AlloyDB instance.
 
 ```yaml
 sources:
@@ -144,11 +155,14 @@ sources:
     password: YOUR_PASSWORD
 ```
 
-Next, define the tools the agent can use. We will categorize them into three types:
+Next, define the tools the agent can use. We will categorize them into three
+types:
 
 ### 1. Structured Queries Tools
 
-These tools execute predefined SQL statements. They are ideal for common, structured queries like managing a shopping cart. Add the following to your `tools.yaml` file:
+These tools execute predefined SQL statements. They are ideal for common,
+structured queries like managing a shopping cart. Add the following to your
+`tools.yaml` file:
 
 ```yaml
 tools:
@@ -225,7 +239,9 @@ tools:
 
 ### 2. Semantic Search Tools
 
-These tools use vector embeddings to find the most relevant results based on the meaning of a user's query, rather than just keywords. Append the following tools to the `tools` section in your `tools.yaml`:
+These tools use vector embeddings to find the most relevant results based on the
+meaning of a user's query, rather than just keywords. Append the following tools
+to the `tools` section in your `tools.yaml`:
 
 ```yaml
   search-product-recommendations:
@@ -253,14 +269,21 @@ These tools use vector embeddings to find the most relevant results based on the
 
 ### 3. Natural Language to SQL (NL2SQL) Tools
 
-1. Create a [natural language configuration](https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#create-config) for your AlloyDB cluster.
+1. Create a [natural language
+   configuration](https://cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#create-config)
+   for your AlloyDB cluster.
 
     {{< notice tip >}}Before using NL2SQL tools,
     you must first install the `alloydb_ai_nl` extension and
-    create the [semantic layer](https://cloud.google.com/alloydb/docs/ai/natural-language-overview) under a configuration named `flower_shop`.
+    create the [semantic
+    layer](https://cloud.google.com/alloydb/docs/ai/natural-language-overview)
+    under a configuration named `flower_shop`.
     {{< /notice >}}
 
-2. Configure your NL2SQL tool to use your configuration. These tools translate natural language questions into SQL queries, allowing users to interact with the database conversationally. Append the following tool to the `tools` section:
+2. Configure your NL2SQL tool to use your configuration. These tools translate
+   natural language questions into SQL queries, allowing users to interact with
+   the database conversationally. Append the following tool to the `tools`
+   section:
 
 ```yaml
   ask-questions-about-products:
@@ -273,7 +296,8 @@ These tools use vector embeddings to find the most relevant results based on the
       Always SELECT the IDs of objects when generating queries.
 ```
 
-Finally, group the tools into a `toolset` to make them available to the model. Add the following to the end of your `tools.yaml` file:
+Finally, group the tools into a `toolset` to make them available to the model.
+Add the following to the end of your `tools.yaml` file:
 
 ```yaml
 toolsets:
@@ -306,7 +330,8 @@ Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
 1. Type `y` when it asks to install the inspector package.
 
-1. It should show the following when the MCP Inspector is up and running (please take note of `<YOUR_SESSION_TOKEN>`):
+1. It should show the following when the MCP Inspector is up and running (please
+   take note of `<YOUR_SESSION_TOKEN>`):
 
     ```bash
     Starting MCP inspector...
@@ -324,7 +349,8 @@ Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
 1. For `URL`, type in `http://127.0.0.1:5000/mcp`.
 
-1. For `Configuration` -> `Proxy Session Token`, make sure `<YOUR_SESSION_TOKEN>` is present.
+1. For `Configuration` -> `Proxy Session Token`, make sure
+   `<YOUR_SESSION_TOKEN>` is present.
 
 1. Click Connect.
 

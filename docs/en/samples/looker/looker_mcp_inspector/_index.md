@@ -10,7 +10,7 @@ description: >
 
 [Model Context Protocol](https://modelcontextprotocol.io) is an open protocol
 that standardizes how applications provide context to LLMs. Check out this page
-on how to [connect to Toolbox via MCP](../../how-to/connect_via_mcp.md).
+on how to [connect to Toolbox via MCP](../../../how-to/connect_via_mcp.md).
 
 ## Step 1: Get a Looker Client ID and Client Secret
 
@@ -34,7 +34,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.12.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.20.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 

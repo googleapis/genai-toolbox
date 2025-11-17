@@ -18,7 +18,9 @@ steps:
     script: |
         #!/usr/bin/env bash
         docker buildx create --name container-builder --driver docker-container --bootstrap --use
-        docker buildx build --platform linux/amd64,linux/arm64 --build-arg COMMIT_SHA=$(git rev-parse HEAD) -t ${_DOCKER_URI}:$REF_NAME --push .
+
+        export TAGS="-t ${_DOCKER_URI}:$SHORT_SHA -t ${_DOCKER_URI}:$REF_NAME"
+        docker buildx build --platform linux/amd64,linux/arm64 --build-arg COMMIT_SHA=$(git rev-parse --short HEAD) $TAGS --push .
 
   - id: "install-dependencies"
     name: golang:1
@@ -43,7 +45,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.linux.amd64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.linux.amd64
 
   - id: "store-linux-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -52,6 +54,22 @@ steps:
     script: |
         #!/usr/bin/env bash
         gcloud storage cp toolbox.linux.amd64 gs://$_BUCKET_NAME/$REF_NAME/linux/amd64/toolbox
+
+  - id: "build-linux-amd64-geminicli"
+    name: golang:1
+    waitFor: 
+      - "install-dependencies"
+    env: 
+      - 'GOPATH=/gopath'
+    volumes:
+      - name: 'go'
+        path: '/gopath'
+    script: |
+        #!/usr/bin/env bash
+        export VERSION=$(cat ./cmd/version.txt)
+        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.linux.amd64
+
 
   - id: "build-darwin-arm64"
     name: golang:1
@@ -65,7 +83,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.darwin.arm64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.darwin.arm64
 
   - id: "store-darwin-arm64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -74,6 +92,21 @@ steps:
     script: |
         #!/usr/bin/env bash
         gcloud storage cp toolbox.darwin.arm64 gs://$_BUCKET_NAME/$REF_NAME/darwin/arm64/toolbox
+
+  - id: "build-darwin-arm64-geminicli"
+    name: golang:1
+    waitFor: 
+      - "install-dependencies"
+    env: 
+      - 'GOPATH=/gopath'
+    volumes:
+      - name: 'go'
+        path: '/gopath'
+    script: |
+        #!/usr/bin/env bash
+        export VERSION=$(cat ./cmd/version.txt)
+        CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 \
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.darwin.arm64
 
   - id: "build-darwin-amd64"
     name: golang:1
@@ -87,7 +120,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.darwin.amd64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.darwin.amd64
 
   - id: "store-darwin-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -96,6 +129,21 @@ steps:
     script: |
         #!/usr/bin/env bash
         gcloud storage cp toolbox.darwin.amd64 gs://$_BUCKET_NAME/$REF_NAME/darwin/amd64/toolbox
+
+  - id: "build-darwin-amd64-geminicli"
+    name: golang:1
+    waitFor: 
+      - "install-dependencies"
+    env: 
+      - 'GOPATH=/gopath'
+    volumes:
+      - name: 'go'
+        path: '/gopath'
+    script: |
+        #!/usr/bin/env bash
+        export VERSION=$(cat ./cmd/version.txt)
+        CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.darwin.amd64
 
   - id: "build-windows-amd64"
     name: golang:1
@@ -109,7 +157,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse HEAD)" -o toolbox.windows.amd64
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.windows.amd64
 
   - id: "store-windows-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -119,11 +167,27 @@ steps:
         #!/usr/bin/env bash
         gcloud storage cp toolbox.windows.amd64 gs://$_BUCKET_NAME/$REF_NAME/windows/amd64/toolbox.exe
 
+  - id: "build-windows-amd64-geminicli"
+    name: golang:1
+    waitFor: 
+      - "install-dependencies"
+    env: 
+      - 'GOPATH=/gopath'
+    volumes:
+      - name: 'go'
+        path: '/gopath'
+    script: |
+        #!/usr/bin/env bash
+        export VERSION=$(cat ./cmd/version.txt)
+        CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
+          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.windows.amd64
+
 options:
   automapSubstitutions: true
   dynamicSubstitutions: true
   logging: CLOUD_LOGGING_ONLY # Necessary for custom service account
-  machineType: 'E2_HIGHCPU_32'
+  pool:
+    name: projects/$PROJECT_ID/locations/us-central1/workerPools/run-release # to increase resource for running releases
 
 substitutions:
   _REGION: us-central1

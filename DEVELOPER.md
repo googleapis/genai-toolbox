@@ -44,6 +44,50 @@ Before you begin, ensure you have the following:
     curl http://127.0.0.1:5000
     ```
 
+### Tool Naming Conventions
+
+This section details the purpose and conventions for MCP Toolbox's tools naming
+properties, **tool name** and **tool kind**.
+
+```
+cancel_hotel: <- tool name
+    kind: postgres-sql  <- tool kind
+    source: my_pg_source
+```
+
+#### Tool Name
+
+Tool name is the identifier used by a Large Language Model (LLM) to invoke a
+specific tool.
+
+* Custom tools: The user can define any name they want. The below guidelines
+  do not apply.
+* Pre-built tools: The tool name is predefined and cannot be changed. It
+should follow the guidelines.
+
+The following guidelines apply to tool names:
+
+* Should use underscores over hyphens (e.g., `list_collections` instead of
+  `list-collections`).
+* Should not have the product name in the name (e.g., `list_collections` instead
+  of `firestore_list_collections`).
+* Superficial changes are NOT considered as breaking (e.g., changing tool name).
+* Non-superficial changes MAY be considered breaking (e.g. adding new parameters
+  to a function) until they can be validated through extensive testing to ensure
+  they do not negatively impact agent's performances.
+
+#### Tool Kind
+
+Tool kind serves as a category or type that a user can assign to a tool.
+
+The following guidelines apply to tool kinds:
+
+* Should user hyphens over underscores (e.g. `firestore-list-collections` or
+  `firestore_list_colelctions`).
+* Should use product name in name (e.g. `firestore-list-collections` over
+  `list-collections`).
+* Changes to tool kind are breaking changes and should be avoided.
+
 ## Testing
 
 ### Infrastructure
@@ -91,11 +135,29 @@ go test -race -v ./...
     go test -race -v ./tests/alloydbpg
     ```
 
+1. **Timeout:** The integration test should have a timeout on the server.
+   Look for code like this:
+
+   ```go
+   ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+   defer cancel()
+
+   cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+   if err != nil {
+     t.Fatalf("command initialization returned an error: %s", err)
+   }
+   defer cleanup()
+   ```
+
+   Be sure to set the timeout to a reasonable value for your tests.
+
 #### Running on Pull Requests
 
 * **Internal Contributors:** Testing workflows should trigger automatically.
 * **External Contributors:** Request Toolbox maintainers to trigger the testing
   workflows on your PR.
+  * Maintainers can comment `/gcbrun` to execute the integration tests.
+  * Maintainers can add the label `tests:run` to execute the unit tests.
 
 #### Test Resources
 
@@ -123,6 +185,9 @@ variables for each source.
 * Couchbase - setup in the test project via the Marketplace
 * DGraph - using the public dgraph interface <https://play.dgraph.io> for
   testing
+* Looker
+  * The Cloud Build service account is a user for conversational analytics
+  * The Looker instance runs under google.com:looker-sandbox.
 * Memorystore Redis - setup in the test project using a Memorystore for Redis
   standalone instance
   * Memorystore Redis Cluster, Memorystore Valkey standalone, and Memorystore
@@ -184,6 +249,31 @@ Follow these steps to preview documentation changes locally using a Hugo server:
     ```
 
 ### Previewing Documentation on Pull Requests
+
+### Document Versioning Setup
+
+There are 3 GHA workflows we use to achieve document versioning:
+
+1. **Deploy In-development docs:**
+    This workflow is run on every commit merged into the main branch. It deploys
+    the built site to the `/dev/` subdirectory for the in-development
+    documentation.
+
+1. **Deploy Versioned Docs:**
+    When a new GitHub Release is published, it performs two deployments based on
+    the new release tag. One to the new version subdirectory and one to the root
+    directory of the versioned-gh-pages branch.
+
+    **Note:** Before the release PR from release-please is merged, add the
+    newest version into the hugo.toml file.
+
+1. **Deploy Previous Version Docs:**
+    This is a manual workflow, started from the GitHub Actions UI.
+    To rebuild and redeploy documentation for an already released version that
+    were released before this new system was in place. This workflow can be
+    started on the UI by providing the git version tag which you want to create
+    the documentation for. The specific versioned subdirectory and the root docs
+    are updated on the versioned-gh-pages branch.
 
 #### Contributors
 
@@ -252,9 +342,17 @@ for instructions on developing Toolbox SDKs.
 
 ### Team
 
-Team, `@googleapis/senseai-eco`, has been set as
+Team `@googleapis/senseai-eco` has been set as
 [CODEOWNERS](.github/CODEOWNERS). The GitHub TeamSync tool is used to create
-this team from MDB Group, `senseai-eco`.
+this team from MDB Group, `senseai-eco`. Additionally, database-specific GitHub
+teams (e.g., `@googleapis/toolbox-alloydb`) have been created from MDB groups to
+manage code ownership and review for individual database products.
+
+Team `@googleapis/toolbox-contributors` has write access to this repo. They
+can create branches and approve test runs. But they do not have the ability
+to approve PRs for main. TeamSync is used to create this team from the MDB
+Group `toolbox-contributors`. Googlers who are developing for MCP-Toolbox
+but aren't part of the core team should join this group.
 
 ### Releasing
 
@@ -352,7 +450,8 @@ Trigger pull request tests for external contributors by:
 
 ## Repo Setup & Automation
 
-* .github/blunderbuss.yml - Auto-assign issues and PRs from GitHub teams
+* .github/blunderbuss.yml - Auto-assign issues and PRs from GitHub teams. Use a
+  product label to assign to a product-specific team member.
 * .github/renovate.json5 - Tooling for dependency updates. Dependabot is built
   into the GitHub repo for GitHub security warnings
 * go/github-issue-mirror - GitHub issues are automatically mirrored into buganizer

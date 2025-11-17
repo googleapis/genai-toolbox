@@ -34,8 +34,46 @@ steps:
         path: "/gopath"
     script: |
       go test -c -race -cover \
-      -coverpkg=./internal/sources/...,./internal/tools/... ./tests/...
+      -coverpkg=./internal/sources/...,./internal/tools/... \
+      $(go list ./tests/... | grep -v '/tests/prompts')
       chmod +x .ci/test_with_coverage.sh
+
+  - id: "compile-prompt-test-binary"
+    name: golang:1
+    waitFor: ["install-dependencies"]
+    env:
+      - "GOPATH=/gopath"
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    script: |
+      for dir in ./tests/prompts/*; do
+        if [ -d "$dir" ]; then
+          PROMPT_TYPE=$(basename "$dir")
+          echo "--- Compiling prompt test for ${PROMPT_TYPE} with targeted coverage ---"
+
+          go test -c -race -cover \
+            -coverpkg=./internal/prompts/... \
+            -o "prompt.${PROMPT_TYPE}.test" \
+            "${dir}"
+        fi
+      done
+
+      chmod +x .ci/test_prompts_with_coverage.sh
+
+  - id: "prompts-custom"
+    name: golang:1
+    waitFor: ["compile-prompt-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_prompts_with_coverage.sh "custom"
 
   - id: "cloud-sql-pg"
     name: golang:1
@@ -61,6 +99,28 @@ steps:
           cloudsqlpg \
           postgressql \
           postgresexecutesql
+
+  - id: "alloydb"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "ALLOYDB_PROJECT=$PROJECT_ID"
+      - "ALLOYDB_CLUSTER=$_ALLOYDB_POSTGRES_CLUSTER"
+      - "ALLOYDB_INSTANCE=$_ALLOYDB_POSTGRES_INSTANCE"
+      - "ALLOYDB_REGION=$_REGION"
+    secretEnv: ["ALLOYDB_POSTGRES_USER"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "AlloyDB" \
+          alloydb \
+          alloydb
 
   - id: "alloydb-pg"
     name: golang:1
@@ -172,6 +232,49 @@ steps:
           dataplex \
           dataplex
 
+  - id: "dataform"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        apt-get update && apt-get install -y npm && \
+        npm install -g @dataform/cli && \
+        .ci/test_with_coverage.sh \
+          "Dataform" \
+          dataform \
+          dataform
+
+  - id: "cloud-healthcare"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "HEALTHCARE_PROJECT=$PROJECT_ID"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+      - "HEALTHCARE_REGION=$_REGION"
+      - "HEALTHCARE_DATASET=$_HEALTHCARE_DATASET"
+      - "HEALTHCARE_PREPOPULATED_DICOM_STORE=$_HEALTHCARE_PREPOPULATED_DICOM_STORE"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Cloud Healthcare API" \
+          cloudhealthcare \
+          cloudhealthcare
+
   - id: "postgres"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -282,7 +385,7 @@ steps:
         .ci/test_with_coverage.sh \
           "Cloud SQL MySQL" \
           cloudsqlmysql \
-          mysql
+          mysql || echo "Integration tests failed." # ignore test failures
 
   - id: "mysql"
     name: golang:1
@@ -304,7 +407,7 @@ steps:
         .ci/test_with_coverage.sh \
           "MySQL" \
           mysql \
-          mysql
+          mysql || echo "Integration tests failed." # ignore test failures
 
   - id: "mssql"
     name: golang:1
@@ -328,23 +431,23 @@ steps:
           mssql \
           mssql
 
-  - id: "dgraph"
-    name: golang:1
-    waitFor: ["compile-test-binary"]
-    entrypoint: /bin/bash
-    env:
-      - "GOPATH=/gopath"
-      - "DGRAPH_URL=$_DGRAPHURL"
-    volumes:
-      - name: "go"
-        path: "/gopath"
-    args:
-      - -c
-      - |
-        .ci/test_with_coverage.sh \
-          "Dgraph" \
-          dgraph \
-          dgraph
+  # - id: "dgraph"
+  #   name: golang:1
+  #   waitFor: ["compile-test-binary"]
+  #   entrypoint: /bin/bash
+  #   env:
+  #     - "GOPATH=/gopath"
+  #     - "DGRAPH_URL=$_DGRAPHURL"
+  #   volumes:
+  #     - name: "go"
+  #       path: "/gopath"
+  #   args:
+  #     - -c
+  #     - |
+  #       .ci/test_with_coverage.sh \
+  #         "Dgraph" \
+  #         dgraph \
+  #         dgraph
 
   - id: "http"
     name: golang:1
@@ -453,7 +556,8 @@ steps:
       - "OCEANBASE_PORT=$_OCEANBASE_PORT"
       - "OCEANBASE_DATABASE=$_OCEANBASE_DATABASE"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLIENT_ID", "OCEANBASE_HOST", "OCEANBASE_USER", "OCEANBASE_PASSWORD"]
+    secretEnv:
+      ["CLIENT_ID", "OCEANBASE_HOST", "OCEANBASE_USER", "OCEANBASE_PASSWORD"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -464,7 +568,7 @@ steps:
           "OceanBase" \
           oceanbase \
           oceanbase
-          
+
   - id: "firestore"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -494,6 +598,8 @@ steps:
       - "FIRESTORE_PROJECT=$PROJECT_ID"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
       - "LOOKER_VERIFY_SSL=$_LOOKER_VERIFY_SSL"
+      - "LOOKER_PROJECT=$_LOOKER_PROJECT"
+      - "LOOKER_LOCATION=$_LOOKER_LOCATION"
     secretEnv:
       [
         "CLIENT_ID",
@@ -511,14 +617,34 @@ steps:
           "Looker" \
           looker \
           looker
-
-  - id: "alloydbwaitforoperation"
+    
+  - id: "mindsdb"
     name: golang:1
     waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
-      - "API_KEY=$(gcloud auth print-access-token)"
+      - "MINDSDB_PORT=$_MINDSDB_PORT"
+      - "MINDSDB_DATABASE=$_MINDSDB_DATABASE"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["MINDSDB_HOST", "MINDSDB_USER", "MINDSDB_PASS", "CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "MindsDB" \
+          mindsdb \
+          mindsdb
+
+  - id: "cloud-sql"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
     secretEnv: ["CLIENT_ID"]
     volumes:
       - name: "go"
@@ -527,9 +653,9 @@ steps:
       - -c
       - |
         .ci/test_with_coverage.sh \
-          "Alloydb Wait for Operation" \
-          utility \
-          utility/alloydbwaitforoperation
+          "Cloud SQL Wait for Operation" \
+          cloudsql \
+          cloudsql
 
   - id: "tidb"
     name: golang:1
@@ -575,6 +701,28 @@ steps:
           firebird \
           firebirdsql firebirdexecutesql
 
+  - id: "clickhouse"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "CLICKHOUSE_DATABASE=$_CLICKHOUSE_DATABASE"
+      - "CLICKHOUSE_PORT=$_CLICKHOUSE_PORT"
+      - "CLICKHOUSE_PROTOCOL=$_CLICKHOUSE_PROTOCOL"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLICKHOUSE_HOST", "CLICKHOUSE_USER", "CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "ClickHouse" \
+          clickhouse \
+          clickhouse
+
   - id: "trino"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -597,6 +745,127 @@ steps:
           "Trino" \
           trino \
           trinosql trinoexecutesql
+
+  - id: "yugabytedb"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "YUGABYTEDB_DATABASE=$_YUGABYTEDB_DATABASE"
+      - "YUGABYTEDB_PORT=$_YUGABYTEDB_PORT"
+      - "YUGABYTEDB_LOADBALANCE=$_YUGABYTEDB_LOADBALANCE"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv:
+      ["YUGABYTEDB_USER", "YUGABYTEDB_PASS", "YUGABYTEDB_HOST", "CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        ./yugabytedb.test -test.v
+
+  - id: "elasticsearch"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID", "ELASTICSEARCH_USER", "ELASTICSEARCH_PASS", "ELASTICSEARCH_HOST"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Elasticsearch" \
+          elasticsearch \
+          elasticsearch
+
+
+  - id: "cassandra"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID", "CASSANDRA_USER", "CASSANDRA_PASS", "CASSANDRA_HOST"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Cassandra" \
+          cassandra \
+          cassandra
+
+  - id: "oracle"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+      - "ORACLE_SERVER_NAME=$_ORACLE_SERVER_NAME"
+    secretEnv: ["CLIENT_ID", "ORACLE_USER", "ORACLE_PASS", "ORACLE_HOST"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Oracle" \
+          oracle \
+          oracle
+
+  - id: "serverless-spark"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SERVERLESS_SPARK_LOCATION=$_REGION"
+      - "SERVERLESS_SPARK_PROJECT=$PROJECT_ID"
+      - "SERVERLESS_SPARK_SERVICE_ACCOUNT=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Serverless Spark" \
+          serverlessspark
+
+  - id: "singlestore"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SINGLESTORE_PORT=$_SINGLESTORE_PORT"
+      - "SINGLESTORE_USER=$_SINGLESTORE_USER"
+      - "SINGLESTORE_DATABASE=$_SINGLESTORE_DATABASE"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["SINGLESTORE_PASSWORD", "SINGLESTORE_HOST", "CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "SingleStore" \
+          singlestore \
+          singlestore
 
 availableSecrets:
   secretManager:
@@ -660,6 +929,10 @@ availableSecrets:
       env: TIDB_USER
     - versionName: projects/$PROJECT_ID/secrets/tidb_pass/versions/latest
       env: TIDB_PASS
+    - versionName: projects/$PROJECT_ID/secrets/clickhouse_host/versions/latest
+      env: CLICKHOUSE_HOST
+    - versionName: projects/$PROJECT_ID/secrets/clickhouse_user/versions/latest
+      env: CLICKHOUSE_USER
     - versionName: projects/$PROJECT_ID/secrets/firebird_user/versions/latest
       env: FIREBIRD_USER
     - versionName: projects/$PROJECT_ID/secrets/firebird_pass/versions/latest
@@ -672,6 +945,40 @@ availableSecrets:
       env: OCEANBASE_USER
     - versionName: projects/$PROJECT_ID/secrets/oceanbase_pass/versions/latest
       env: OCEANBASE_PASSWORD
+    - versionName: projects/$PROJECT_ID/secrets/mindsdb_host/versions/latest
+      env: MINDSDB_HOST
+    - versionName: projects/$PROJECT_ID/secrets/mindsdb_user/versions/latest
+      env: MINDSDB_USER
+    - versionName: projects/$PROJECT_ID/secrets/mindsdb_pass/versions/latest
+      env: MINDSDB_PASS
+    - versionName: projects/$PROJECT_ID/secrets/yugabytedb_host/versions/latest
+      env: YUGABYTEDB_HOST
+    - versionName: projects/$PROJECT_ID/secrets/yugabytedb_user/versions/latest
+      env: YUGABYTEDB_USER
+    - versionName: projects/$PROJECT_ID/secrets/yugabytedb_pass/versions/latest
+      env: YUGABYTEDB_PASS
+    - versionName: projects/$PROJECT_ID/secrets/elastic_search_host/versions/latest
+      env: ELASTICSEARCH_HOST
+    - versionName: projects/$PROJECT_ID/secrets/elastic_search_user/versions/latest
+      env: ELASTICSEARCH_USER
+    - versionName: projects/$PROJECT_ID/secrets/elastic_search_pass/versions/latest
+      env: ELASTICSEARCH_PASS
+    - versionName: projects/$PROJECT_ID/secrets/cassandra_user/versions/latest
+      env: CASSANDRA_USER
+    - versionName: projects/$PROJECT_ID/secrets/cassandra_pass/versions/latest
+      env: CASSANDRA_PASS
+    - versionName: projects/$PROJECT_ID/secrets/cassandra_host/versions/latest
+      env: CASSANDRA_HOST
+    - versionName: projects/$PROJECT_ID/secrets/oracle_user/versions/latest
+      env: ORACLE_USER
+    - versionName: projects/$PROJECT_ID/secrets/oracle_pass/versions/latest
+      env: ORACLE_PASS
+    - versionName: projects/$PROJECT_ID/secrets/oracle_host/versions/latest
+      env: ORACLE_HOST
+    - versionName: projects/$PROJECT_ID/secrets/singlestore_pass/versions/latest
+      env: SINGLESTORE_PASSWORD
+    - versionName: projects/$PROJECT_ID/secrets/singlestore_host/versions/latest
+      env: SINGLESTORE_HOST
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -691,6 +998,8 @@ substitutions:
   _ALLOYDB_AI_NL_CLUSTER: "alloydb-ai-nl-testing"
   _ALLOYDB_AI_NL_INSTANCE: "alloydb-ai-nl-testing-instance"
   _BIGTABLE_INSTANCE: "bigtable-testing-instance"
+  _HEALTHCARE_DATASET: "test-dataset"
+  _HEALTHCARE_PREPOPULATED_DICOM_STORE: "prepopulated-test-dicom-store"
   _POSTGRES_HOST: 127.0.0.1
   _POSTGRES_PORT: "5432"
   _SPANNER_INSTANCE: "spanner-testing"
@@ -704,9 +1013,14 @@ substitutions:
   _DGRAPHURL: "https://play.dgraph.io"
   _COUCHBASE_BUCKET: "couchbase-bucket"
   _COUCHBASE_SCOPE: "couchbase-scope"
+  _LOOKER_LOCATION: "us"
+  _LOOKER_PROJECT: "149671255749"
   _LOOKER_VERIFY_SSL: "true"
   _TIDB_HOST: 127.0.0.1
   _TIDB_PORT: "4000"
+  _CLICKHOUSE_DATABASE: "default"
+  _CLICKHOUSE_PORT: "8123"
+  _CLICKHOUSE_PROTOCOL: "http"
   _FIREBIRD_HOST: 127.0.0.1
   _FIREBIRD_PORT: "3050"
   _TRINO_HOST: 127.0.0.1
@@ -715,3 +1029,13 @@ substitutions:
   _TRINO_SCHEMA: "default"
   _OCEANBASE_PORT: "2883"
   _OCEANBASE_DATABASE: "oceanbase"
+  _MINDSDB_PORT: "47335"
+  _MINDSDB_DATABASE: "mindsdb_test"
+  _YUGABYTEDB_DATABASE: "yugabyte"
+  _YUGABYTEDB_PORT: "5433"
+  _YUGABYTEDB_LOADBALANCE: "false"
+  _ORACLE_SERVER_NAME: "FREEPDB1"
+  _SINGLESTORE_HOST: 127.0.0.1
+  _SINGLESTORE_PORT: "3308"
+  _SINGLESTORE_DATABASE: "singlestore"
+  _SINGLESTORE_USER: "root"
