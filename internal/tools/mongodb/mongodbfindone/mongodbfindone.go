@@ -133,7 +133,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 
 	opts := options.FindOne()
 	if len(t.ProjectPayload) > 0 {
-		result, err := tools.PopulateTemplateWithJSON("MongoDBFindOneProjectString", t.ProjectPayload, paramsMap)
+		result, err := parameters.PopulateTemplateWithJSON("MongoDBFindOneProjectString", t.ProjectPayload, paramsMap)
 		if err != nil {
 			return nil, fmt.Errorf("error populating project payload: %s", err)
 		}
