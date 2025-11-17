@@ -10,12 +10,14 @@ aliases:
 
 ## About
 
-A `cloud-healthcare-retrieve-rendered-dicom-instance` tool retrieves a rendered DICOM instance from a DICOM store.
+A `cloud-healthcare-retrieve-rendered-dicom-instance` tool retrieves a rendered
+DICOM instance from a DICOM store.
 It's compatible with the following sources:
 
 - [cloud-healthcare](../../sources/cloud-healthcare.md)
 
-`cloud-healthcare-retrieve-rendered-dicom-instance` returns a base64 encoded string of the image in JPEG format.
+`cloud-healthcare-retrieve-rendered-dicom-instance` returns a base64 encoded
+string of the image in JPEG format.
 
 ## Example
 
@@ -45,4 +47,5 @@ tools:
 | FrameNumber       | integer  |    false     | The frame number to retrieve (1-based). Only applicable to multi-frame instances. Defaults to 1. |
 | storeID           |  string  |    true*     | The DICOM store ID to retrieve from.                                                             |
 
-*If the `allowedDICOMStores` in the source has length 1, then the `storeID` parameter is not needed.
+*If the `allowedDICOMStores` in the source has length 1, then the `storeID`
+parameter is not needed.

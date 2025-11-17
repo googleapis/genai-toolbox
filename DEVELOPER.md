@@ -255,18 +255,25 @@ Follow these steps to preview documentation changes locally using a Hugo server:
 There are 3 GHA workflows we use to achieve document versioning:
 
 1. **Deploy In-development docs:**
-    This workflow is run on every commit merged into the main branch. It deploys the built site to the `/dev/` subdirectory for the in-development documentation.
+    This workflow is run on every commit merged into the main branch. It deploys
+    the built site to the `/dev/` subdirectory for the in-development
+    documentation.
 
 1. **Deploy Versioned Docs:**
-    When a new GitHub Release is published, it performs two deployments based on the new release tag.
-    One to the new version subdirectory and one to the root directory of the versioned-gh-pages branch.
+    When a new GitHub Release is published, it performs two deployments based on
+    the new release tag. One to the new version subdirectory and one to the root
+    directory of the versioned-gh-pages branch.
 
-    **Note:** Before the release PR from release-please is merged, add the newest version into the hugo.toml file.
+    **Note:** Before the release PR from release-please is merged, add the
+    newest version into the hugo.toml file.
 
 1. **Deploy Previous Version Docs:**
     This is a manual workflow, started from the GitHub Actions UI.
-    To rebuild and redeploy documentation for an already released version that were released before this new system was in place. This workflow can be started on the UI by providing the git version tag which you want to create the documentation for.
-    The specific versioned subdirectory and the root docs are updated on the versioned-gh-pages branch.
+    To rebuild and redeploy documentation for an already released version that
+    were released before this new system was in place. This workflow can be
+    started on the UI by providing the git version tag which you want to create
+    the documentation for. The specific versioned subdirectory and the root docs
+    are updated on the versioned-gh-pages branch.
 
 #### Contributors
 
@@ -337,7 +344,9 @@ for instructions on developing Toolbox SDKs.
 
 Team `@googleapis/senseai-eco` has been set as
 [CODEOWNERS](.github/CODEOWNERS). The GitHub TeamSync tool is used to create
-this team from MDB Group, `senseai-eco`. Additionally, database-specific GitHub teams (e.g., `@googleapis/toolbox-alloydb`) have been created from MDB groups to manage code ownership and review for individual database products.
+this team from MDB Group, `senseai-eco`. Additionally, database-specific GitHub
+teams (e.g., `@googleapis/toolbox-alloydb`) have been created from MDB groups to
+manage code ownership and review for individual database products.
 
 Team `@googleapis/toolbox-contributors` has write access to this repo. They
 can create branches and approve test runs. But they do not have the ability
@@ -441,7 +450,8 @@ Trigger pull request tests for external contributors by:
 
 ## Repo Setup & Automation
 
-* .github/blunderbuss.yml - Auto-assign issues and PRs from GitHub teams. Use a product label to assign to a product-specific team member.
+* .github/blunderbuss.yml - Auto-assign issues and PRs from GitHub teams. Use a
+  product label to assign to a product-specific team member.
 * .github/renovate.json5 - Tooling for dependency updates. Dependabot is built
   into the GitHub repo for GitHub security warnings
 * go/github-issue-mirror - GitHub issues are automatically mirrored into buganizer

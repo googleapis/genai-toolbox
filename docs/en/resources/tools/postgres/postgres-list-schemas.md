@@ -10,17 +10,19 @@ aliases:
 
 ## About
 
-The `postgres-list-schemas` tool retrieves information about schemas in a database excluding system
-and temporary schemas.  It's compatible with any of the following sources:
+The `postgres-list-schemas` tool retrieves information about schemas in a
+database excluding system and temporary schemas.  It's compatible with any of
+the following sources:
 
 - [alloydb-postgres](../../sources/alloydb-pg.md)
 - [cloud-sql-postgres](../../sources/cloud-sql-pg.md)
 - [postgres](../../sources/postgres.md)
 
-`postgres-list-schemas` lists detailed information as JSON for each schema. The tool takes the following
-input parameters:
+`postgres-list-schemas` lists detailed information as JSON for each schema. The
+tool takes the following input parameters:
 
-- `schema_name` (optional): A pattern to filter schema names using SQL LIKE operator. 
+- `schema_name` (optional): A pattern to filter schema names using SQL LIKE
+  operator.
    If omitted, all user-defined schemas are returned.
 
 ## Example
@@ -50,6 +52,6 @@ The response is a json array with the following elements:
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "postgres-list-schemas".            |
+| kind        |  string  |     true     | Must be "postgres-list-schemas".                   |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
-| description |  string  |     false     | Description of the tool that is passed to the LLM. |
+| description |  string  |    false     | Description of the tool that is passed to the LLM. |
