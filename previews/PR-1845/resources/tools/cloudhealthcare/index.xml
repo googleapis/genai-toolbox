@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Cloud Healthcare API on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/</link><description>Recent content in Cloud Healthcare API on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/index.xml" rel="self" type="application/rss+xml"/><item><title>cloud-healthcare-fhir-fetch-page</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-fhir-fetch-page/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-fhir-fetch-page/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-fhir-fetch-page&lt;/code> tool fetches a page of FHIR resources from a given URL. It&amp;rsquo;s
-compatible with the following sources:&lt;/p>
+&lt;p>A &lt;code>cloud-healthcare-fhir-fetch-page&lt;/code> tool fetches a page of FHIR resources from
+a given URL. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>cloud-healthcare-fhir-fetch-page&lt;/code> can be used for pagination when a previous tool call (like
-&lt;code>cloud-healthcare-fhir-patient-search&lt;/code> or &lt;code>cloud-healthcare-fhir-patient-everything&lt;/code>) returns a &amp;rsquo;next&amp;rsquo; link in the response bundle.&lt;/p>
+&lt;p>&lt;code>cloud-healthcare-fhir-fetch-page&lt;/code> can be used for pagination when a previous
+tool call (like &lt;code>cloud-healthcare-fhir-patient-search&lt;/code> or
+&lt;code>cloud-healthcare-fhir-patient-everything&lt;/code>) returns a &amp;rsquo;next&amp;rsquo; link in the
+response bundle.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_fhir_store&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -62,14 +64,14 @@ compatible with the following sources:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>cloud-healthcare-fhir-patient-everything</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-fhir-patient-everything/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-fhir-patient-everything/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-fhir-patient-everything&lt;/code> tool retrieves resources related to a given patient
-from a FHIR store. It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;p>A &lt;code>cloud-healthcare-fhir-patient-everything&lt;/code> tool retrieves resources related to
+a given patient from a FHIR store. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>cloud-healthcare-fhir-patient-everything&lt;/code> returns all the information available for a given
-patient ID. It can be configured to only return certain resource types, or only
-resources that have been updated after a given time.&lt;/p>
+&lt;p>&lt;code>cloud-healthcare-fhir-patient-everything&lt;/code> returns all the information available
+for a given patient ID. It can be configured to only return certain resource
+types, or only resources that have been updated after a given time.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">fhir_patient_everything&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -144,13 +146,15 @@ resources that have been updated after a given time.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-fhir-patient-search</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-fhir-patient-search/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-fhir-patient-search/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-fhir-patient-search&lt;/code> tool searches for patients in a FHIR store based on a
-set of criteria. It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-fhir-patient-search</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-fhir-patient-search/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-fhir-patient-search/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-fhir-patient-search&lt;/code> tool searches for patients in a FHIR
+store based on a set of criteria. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>cloud-healthcare-fhir-patient-search&lt;/code> returns a list of patients that match the given criteria.&lt;/p>
+&lt;p>&lt;code>cloud-healthcare-fhir-patient-search&lt;/code> returns a list of patients that match the
+given criteria.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">fhir_patient_search&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -321,7 +325,8 @@ set of criteria. It&amp;rsquo;s compatible with the following sources:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-dataset</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-get-dataset/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-get-dataset/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-dataset</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-get-dataset/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-get-dataset/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>cloud-healthcare-get-dataset&lt;/code> tool retrieves metadata for a Healthcare dataset.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -429,8 +434,8 @@ compatible with the following sources:&lt;/p>
  &lt;/tbody>
 &lt;/table>
 &lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-dicom-store-metrics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-get-dicom-store-metrics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-get-dicom-store-metrics/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-get-dicom-store-metrics&lt;/code> tool retrieves metrics for a DICOM store. It&amp;rsquo;s
-compatible with the following sources:&lt;/p>
+&lt;p>A &lt;code>cloud-healthcare-get-dicom-store-metrics&lt;/code> tool retrieves metrics for a DICOM
+store. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
@@ -491,13 +496,16 @@ compatible with the following sources:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-fhir-resource</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-resource/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-resource/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-get-fhir-resource&lt;/code> tool retrieves a specific FHIR resource from a FHIR store.
+&lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-fhir-resource</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-resource/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-resource/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-get-fhir-resource&lt;/code> tool retrieves a specific FHIR resource
+from a FHIR store.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>cloud-healthcare-get-fhir-resource&lt;/code> returns a single FHIR resource, identified by its type and ID.&lt;/p>
+&lt;p>&lt;code>cloud-healthcare-get-fhir-resource&lt;/code> returns a single FHIR resource, identified
+by its type and ID.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_fhir_resource&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -566,7 +574,8 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-fhir-store</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-store/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-store/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-fhir-store</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-store/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-store/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>cloud-healthcare-get-fhir-store&lt;/code> tool retrieves information about a FHIR store. It&amp;rsquo;s
 compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -693,13 +702,14 @@ compatible with the following sources:&lt;/p>
  &lt;/tbody>
 &lt;/table>
 &lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-list-dicom-stores</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-list-dicom-stores/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-list-dicom-stores/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-list-dicom-stores&lt;/code> lists the available DICOM stores in the healthcare dataset.
+&lt;p>A &lt;code>cloud-healthcare-list-dicom-stores&lt;/code> lists the available DICOM stores in the
+healthcare dataset.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>cloud-healthcare-list-dicom-stores&lt;/code> returns the details of the available DICOM stores in the
-dataset of the healthcare source. It takes no extra parameters.&lt;/p>
+&lt;p>&lt;code>cloud-healthcare-list-dicom-stores&lt;/code> returns the details of the available DICOM
+stores in the dataset of the healthcare source. It takes no extra parameters.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_dicom_stores&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -737,13 +747,14 @@ dataset of the healthcare source. It takes no extra parameters.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>cloud-healthcare-list-fhir-stores</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-list-fhir-stores/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-list-fhir-stores/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-list-fhir-stores&lt;/code> lists the available FHIR stores in the healthcare dataset.
+&lt;p>A &lt;code>cloud-healthcare-list-fhir-stores&lt;/code> lists the available FHIR stores in the
+healthcare dataset.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>cloud-healthcare-list-fhir-stores&lt;/code> returns the details of the available FHIR stores in the
-dataset of the healthcare source. It takes no extra parameters.&lt;/p>
+&lt;p>&lt;code>cloud-healthcare-list-fhir-stores&lt;/code> returns the details of the available FHIR
+stores in the dataset of the healthcare source. It takes no extra parameters.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_fhir_stores&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -781,12 +792,14 @@ dataset of the healthcare source. It takes no extra parameters.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>cloud-healthcare-retrieve-rendered-dicom-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-retrieve-rendered-dicom-instance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-retrieve-rendered-dicom-instance/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-retrieve-rendered-dicom-instance&lt;/code> tool retrieves a rendered DICOM instance from a DICOM store.
+&lt;p>A &lt;code>cloud-healthcare-retrieve-rendered-dicom-instance&lt;/code> tool retrieves a rendered
+DICOM instance from a DICOM store.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>cloud-healthcare-retrieve-rendered-dicom-instance&lt;/code> returns a base64 encoded string of the image in JPEG format.&lt;/p>
+&lt;p>&lt;code>cloud-healthcare-retrieve-rendered-dicom-instance&lt;/code> returns a base64 encoded
+string of the image in JPEG format.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">retrieve_rendered_dicom_instance&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -867,13 +880,16 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-search-dicom-instances</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-instances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-instances/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-search-dicom-instances&lt;/code> tool searches for DICOM instances in a DICOM store based on a
-set of criteria. It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-search-dicom-instances</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-instances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-instances/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-search-dicom-instances&lt;/code> tool searches for DICOM instances in
+a DICOM store based on a set of criteria. It&amp;rsquo;s compatible with the following
+sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>search-dicom-instances&lt;/code> returns a list of DICOM instances that match the given criteria.&lt;/p>
+&lt;p>&lt;code>search-dicom-instances&lt;/code> returns a list of DICOM instances that match the given
+criteria.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">search_dicom_instances&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -996,7 +1012,8 @@ set of criteria. It&amp;rsquo;s compatible with the following sources:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-search-dicom-series</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-series/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-series/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-search-dicom-series</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-series/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-series/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>cloud-healthcare-search-dicom-series&lt;/code> tool searches for DICOM series in a DICOM store based on a
 set of criteria. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>

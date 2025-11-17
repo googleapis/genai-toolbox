@@ -123,6 +123,8 @@ List of reference documentation for resources in Toolbox.
   - [Utility tools](https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/utility/): Tools that provide utility.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/valkey/): Tools that work with Valkey Sources.
   - [YugabyteDB](https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/yuagbytedb/): Tools that work with Valkey Sources.
+- [Prompts](https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/prompts/): Prompts allow servers to provide structured messages and instructions for interacting with language models.
+  - [Custom](https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/prompts/custom/): Custom prompts defined by the user.
 
 ### Samples
 

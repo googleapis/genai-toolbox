@@ -27,7 +27,8 @@ insights to return, ranked by apriori support. Default to &amp;lsquo;30&amp;rsqu
 insights. Can be &lt;code>'NO_PRUNING'&lt;/code> or &lt;code>'PRUNE_REDUNDANT_INSIGHTS'&lt;/code>. Defaults to
 &lt;code>'PRUNE_REDUNDANT_INSIGHTS'&lt;/code>.&lt;/li>
 &lt;/ul>
-&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its &lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-conversational-analytics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/bigquery/bigquery-conversational-analytics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/bigquery/bigquery-conversational-analytics/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its
+&lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-conversational-analytics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/bigquery/bigquery-conversational-analytics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/bigquery/bigquery-conversational-analytics/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-conversational-analytics&lt;/code> tool allows you to ask questions about
 your data in natural language.&lt;/p>
 &lt;p>This function takes a user&amp;rsquo;s question (which can include conversational history
@@ -45,17 +46,24 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;p>&lt;code>bigquery-execute-sql&lt;/code> accepts the following parameters:&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>&lt;code>sql&lt;/code>&lt;/strong> (required): The GoogleSQL statement to execute.&lt;/li>
-&lt;li>&lt;strong>&lt;code>dry_run&lt;/code>&lt;/strong> (optional): If set to &lt;code>true&lt;/code>, the query is validated but not run,
-returning information about the execution instead. Defaults to &lt;code>false&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>&lt;code>dry_run&lt;/code>&lt;/strong> (optional): If set to &lt;code>true&lt;/code>, the query is validated but not
+run, returning information about the execution instead. Defaults to &lt;code>false&lt;/code>.&lt;/li>
 &lt;/ul>
-&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its &lt;code>bigquery&lt;/code> source:&lt;/p>
+&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its
+&lt;code>bigquery&lt;/code> source:&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>&lt;code>allowed&lt;/code> (default):&lt;/strong> All SQL statements are permitted.&lt;/li>
-&lt;li>&lt;strong>&lt;code>blocked&lt;/code>:&lt;/strong> Only &lt;code>SELECT&lt;/code> statements are allowed. Any other type of statement (e.g., &lt;code>INSERT&lt;/code>, &lt;code>UPDATE&lt;/code>, &lt;code>CREATE&lt;/code>) will be rejected.&lt;/li>
-&lt;li>&lt;strong>&lt;code>protected&lt;/code>:&lt;/strong> This mode enables session-based execution. &lt;code>SELECT&lt;/code> statements can be used on all tables, while write operations are allowed only for the session&amp;rsquo;s temporary dataset (e.g., &lt;code>CREATE TEMP TABLE ...&lt;/code>). This prevents modifications to permanent datasets while allowing stateful, multi-step operations within a secure session.&lt;/li>
+&lt;li>&lt;strong>&lt;code>blocked&lt;/code>:&lt;/strong> Only &lt;code>SELECT&lt;/code> statements are allowed. Any other type of
+statement (e.g., &lt;code>INSERT&lt;/code>, &lt;code>UPDATE&lt;/code>, &lt;code>CREATE&lt;/code>) will be rejected.&lt;/li>
+&lt;li>&lt;strong>&lt;code>protected&lt;/code>:&lt;/strong> This mode enables session-based execution. &lt;code>SELECT&lt;/code>
+statements can be used on all tables, while write operations are allowed only
+for the session&amp;rsquo;s temporary dataset (e.g., &lt;code>CREATE TEMP TABLE ...&lt;/code>). This
+prevents modifications to permanent datasets while allowing stateful,
+multi-step operations within a secure session.&lt;/li>
 &lt;/ul>
 &lt;p>The tool&amp;rsquo;s behavior is influenced by the &lt;code>allowedDatasets&lt;/code> restriction on the
-&lt;code>bigquery&lt;/code> source. Similar to &lt;code>writeMode&lt;/code>, this setting provides an additional layer of security by controlling which datasets can be accessed:&lt;/p></description></item><item><title>bigquery-forecast</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/bigquery/bigquery-forecast/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/bigquery/bigquery-forecast/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;code>bigquery&lt;/code> source. Similar to &lt;code>writeMode&lt;/code>, this setting provides an additional
+layer of security by controlling which datasets can be accessed:&lt;/p></description></item><item><title>bigquery-forecast</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/bigquery/bigquery-forecast/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/bigquery/bigquery-forecast/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-forecast&lt;/code> tool forecasts time series data in BigQuery.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -79,7 +87,8 @@ empty array if not provided.&lt;/li>
 &lt;li>&lt;strong>horizon&lt;/strong> (integer, optional): The number of future time steps you want to
 predict. It defaults to 10 if not specified.&lt;/li>
 &lt;/ul>
-&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its &lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-get-dataset-info</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/bigquery/bigquery-get-dataset-info/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/bigquery/bigquery-get-dataset-info/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its
+&lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-get-dataset-info</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/bigquery/bigquery-get-dataset-info/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/tools/bigquery/bigquery-get-dataset-info/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-get-dataset-info&lt;/code> tool retrieves metadata for a BigQuery dataset.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -248,10 +257,16 @@ the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1845/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its &lt;code>bigquery&lt;/code> source:&lt;/p>
+&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its
+&lt;code>bigquery&lt;/code> source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>&lt;code>allowed&lt;/code> (default) and &lt;code>blocked&lt;/code>:&lt;/strong> These modes do not impose any restrictions on the &lt;code>bigquery-sql&lt;/code> tool. The pre-defined SQL statement will be executed as-is.&lt;/li>
-&lt;li>&lt;strong>&lt;code>protected&lt;/code>:&lt;/strong> This mode enables session-based execution. The tool will operate within the same BigQuery session as other tools using the same source, allowing it to interact with temporary resources like &lt;code>TEMP&lt;/code> tables created within that session.&lt;/li>
+&lt;li>&lt;strong>&lt;code>allowed&lt;/code> (default) and &lt;code>blocked&lt;/code>:&lt;/strong> These modes do not impose any
+restrictions on the &lt;code>bigquery-sql&lt;/code> tool. The pre-defined SQL statement will be
+executed as-is.&lt;/li>
+&lt;li>&lt;strong>&lt;code>protected&lt;/code>:&lt;/strong> This mode enables session-based execution. The tool will
+operate within the same BigQuery session as other tools using the same source,
+allowing it to interact with temporary resources like &lt;code>TEMP&lt;/code> tables created
+within that session.&lt;/li>
 &lt;/ul>
 &lt;h3 id="googlesql">GoogleSQL&lt;/h3>
 &lt;p>BigQuery uses &lt;a href="https://cloud.google.com/bigquery/docs/reference/standard-sql/">GoogleSQL&lt;/a> for querying data. The integration
