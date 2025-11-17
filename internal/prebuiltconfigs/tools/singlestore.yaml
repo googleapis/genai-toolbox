@@ -1,0 +1,193 @@
+# Copyright 2025 Google LLC.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+sources:
+  singlestore-source:
+    kind: singlestore
+    host: ${SINGLESTORE_HOST}
+    port: ${SINGLESTORE_PORT}
+    database: ${SINGLESTORE_DATABASE}
+    user: ${SINGLESTORE_USER}
+    password: ${SINGLESTORE_PASSWORD}
+    queryTimeout: 30s # Optional
+tools:
+  execute_sql:
+    kind: singlestore-execute-sql
+    source: singlestore-source
+    description: Use this tool to execute SQL.
+  list_tables:
+    kind: singlestore-sql
+    source: singlestore-source
+    description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
+    statement: |
+        WITH constraint_columns_cte AS (
+            SELECT
+                KCU.CONSTRAINT_SCHEMA,
+                KCU.CONSTRAINT_NAME,
+                KCU.TABLE_NAME,
+                JSON_AGG(KCU.COLUMN_NAME ORDER BY KCU.ORDINAL_POSITION) AS constraint_columns
+            FROM
+                INFORMATION_SCHEMA.KEY_COLUMN_USAGE KCU
+            GROUP BY
+                KCU.CONSTRAINT_SCHEMA, KCU.CONSTRAINT_NAME, KCU.TABLE_NAME
+        ),
+        foreign_key_columns_cte AS (
+            SELECT
+                FKCU.CONSTRAINT_SCHEMA,
+                FKCU.CONSTRAINT_NAME,
+                FKCU.TABLE_NAME,
+                JSON_AGG(FKCU.REFERENCED_COLUMN_NAME ORDER BY FKCU.ORDINAL_POSITION) AS foreign_key_referenced_columns
+            FROM
+                INFORMATION_SCHEMA.KEY_COLUMN_USAGE FKCU
+            WHERE
+                FKCU.REFERENCED_TABLE_NAME IS NOT NULL
+            GROUP BY
+                FKCU.CONSTRAINT_SCHEMA, FKCU.CONSTRAINT_NAME, FKCU.TABLE_NAME
+        ),
+        table_owners AS (
+            SELECT DISTINCT
+                U.TABLE_SCHEMA,
+                FIRST_VALUE(IFNULL(U.GRANTEE, 'N/A')) OVER (PARTITION BY U.TABLE_SCHEMA ORDER BY U.GRANTEE) AS owner
+            FROM
+                INFORMATION_SCHEMA.SCHEMA_PRIVILEGES U
+        ),
+        table_columns AS (
+            SELECT
+                C.TABLE_SCHEMA,
+                C.TABLE_NAME,
+                JSON_AGG(
+                    JSON_BUILD_OBJECT(
+                        'column_name', C.COLUMN_NAME,
+                        'data_type', C.COLUMN_TYPE,
+                        'ordinal_position', C.ORDINAL_POSITION,
+                        'is_not_nullable', IF(C.IS_NULLABLE = 'NO', TRUE, FALSE),
+                        'column_default', C.COLUMN_DEFAULT,
+                        'column_comment', IFNULL(C.COLUMN_COMMENT, '')
+                    ) ORDER BY C.ORDINAL_POSITION
+                ) AS columns_json
+            FROM
+                INFORMATION_SCHEMA.COLUMNS C
+            GROUP BY
+                C.TABLE_SCHEMA, C.TABLE_NAME
+        ),
+        table_indexes AS (
+            SELECT
+                S.TABLE_SCHEMA,
+                S.TABLE_NAME,
+                JSON_AGG(
+                    JSON_BUILD_OBJECT(
+                        'index_name', S.INDEX_NAME,
+                        'is_unique', IF(S.NON_UNIQUE = 0, TRUE, FALSE),
+                        'is_primary', IF(S.INDEX_NAME = 'PRIMARY', TRUE, FALSE),
+                        'index_columns', S.INDEX_COLUMNS_ARRAY
+                    )
+                ) AS indexes_json
+            FROM (
+                SELECT
+                    S.TABLE_SCHEMA,
+                    S.TABLE_NAME,
+                    S.INDEX_NAME,
+                    MIN(S.NON_UNIQUE) AS NON_UNIQUE,
+                    JSON_AGG(S.COLUMN_NAME ORDER BY S.SEQ_IN_INDEX) AS INDEX_COLUMNS_ARRAY
+                FROM
+                    INFORMATION_SCHEMA.STATISTICS S
+                GROUP BY
+                    S.TABLE_SCHEMA, S.TABLE_NAME, S.INDEX_NAME
+            ) S
+            GROUP BY
+                S.TABLE_SCHEMA, S.TABLE_NAME
+        ),
+        table_constraints AS (
+            SELECT
+                TC.TABLE_SCHEMA,
+                TC.TABLE_NAME,
+                JSON_AGG(
+                    JSON_BUILD_OBJECT(
+                        'constraint_name', TC.CONSTRAINT_NAME,
+                        'constraint_type',
+                            CASE TC.CONSTRAINT_TYPE
+                                WHEN 'PRIMARY KEY' THEN 'PRIMARY KEY'
+                                WHEN 'FOREIGN KEY' THEN 'FOREIGN KEY'
+                                WHEN 'UNIQUE' THEN 'UNIQUE'
+                                ELSE TC.CONSTRAINT_TYPE
+                            END,
+                        'constraint_definition', '',
+                        'constraint_columns', IFNULL(CC.constraint_columns, JSON_BUILD_ARRAY()),
+                        'foreign_key_referenced_table', IF(TC.CONSTRAINT_TYPE = 'FOREIGN KEY', RC.REFERENCED_TABLE_NAME, NULL),
+                        'foreign_key_referenced_columns', IF(TC.CONSTRAINT_TYPE = 'FOREIGN KEY', IFNULL(FKC.foreign_key_referenced_columns, JSON_BUILD_ARRAY()), NULL)
+                    )
+                ) AS constraints_json
+            FROM
+                INFORMATION_SCHEMA.TABLE_CONSTRAINTS TC
+                LEFT JOIN INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS RC
+                    ON TC.CONSTRAINT_SCHEMA = RC.CONSTRAINT_SCHEMA
+                    AND TC.CONSTRAINT_NAME = RC.CONSTRAINT_NAME
+                    AND TC.TABLE_NAME = RC.TABLE_NAME
+                LEFT JOIN constraint_columns_cte CC
+                    ON TC.CONSTRAINT_SCHEMA = CC.CONSTRAINT_SCHEMA
+                    AND TC.CONSTRAINT_NAME = CC.CONSTRAINT_NAME
+                    AND TC.TABLE_NAME = CC.TABLE_NAME
+                LEFT JOIN foreign_key_columns_cte FKC
+                    ON TC.CONSTRAINT_SCHEMA = FKC.CONSTRAINT_SCHEMA
+                    AND TC.CONSTRAINT_NAME = FKC.CONSTRAINT_NAME
+                    AND TC.TABLE_NAME = FKC.TABLE_NAME
+            GROUP BY
+                TC.TABLE_SCHEMA, TC.TABLE_NAME
+        )
+        SELECT
+            T.TABLE_SCHEMA AS schema_name,
+            T.TABLE_NAME AS object_name,
+            JSON_BUILD_OBJECT(
+                'schema_name', T.TABLE_SCHEMA,
+                'object_name', T.TABLE_NAME,
+                'object_type', 'TABLE',
+                'owner', IFNULL(TOW.owner, 'N/A'),
+                'comment', IFNULL(T.TABLE_COMMENT, ''),
+                'columns', IFNULL(TC.columns_json, JSON_BUILD_ARRAY()),
+                'indexes', IFNULL(TI.indexes_json, JSON_BUILD_ARRAY()),
+                'constraints', IFNULL(TCN.constraints_json, JSON_BUILD_ARRAY()),
+                'triggers', JSON_BUILD_ARRAY()
+            ) AS object_details
+        FROM
+            INFORMATION_SCHEMA.TABLES T
+            CROSS JOIN (SELECT ? AS table_names_param) AS variables
+            LEFT JOIN table_owners TOW
+                ON T.TABLE_SCHEMA = TOW.TABLE_SCHEMA
+            LEFT JOIN table_columns TC
+                ON T.TABLE_SCHEMA = TC.TABLE_SCHEMA
+                AND T.TABLE_NAME = TC.TABLE_NAME
+            LEFT JOIN table_indexes TI
+                ON T.TABLE_SCHEMA = TI.TABLE_SCHEMA
+                AND T.TABLE_NAME = TI.TABLE_NAME
+            LEFT JOIN table_constraints TCN
+                ON T.TABLE_SCHEMA = TCN.TABLE_SCHEMA
+                AND T.TABLE_NAME = TCN.TABLE_NAME
+        WHERE
+            T.TABLE_SCHEMA NOT IN ('cluster', 'information_schema', 'memsql')
+            AND T.TABLE_TYPE = 'BASE TABLE'
+            AND (NULLIF(TRIM(variables.table_names_param), '') IS NULL OR 
+                CONCAT(',', variables.table_names_param, ',') LIKE CONCAT('%,', T.TABLE_NAME, ',%'))
+        ORDER BY
+            T.TABLE_SCHEMA, T.TABLE_NAME
+
+    parameters:
+      - name: table_names
+        type: string
+        description: "Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed."
+        default: ""
+
+toolsets:
+  singlestore-database-tools:
+    - execute_sql
+    - list_tables

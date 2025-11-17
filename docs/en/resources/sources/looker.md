@@ -48,8 +48,8 @@ permissions):
 - `roles/cloudaicompanion.user`
 - `roles/geminidataanalytics.dataAgentStatelessUser`
 
-To initialize the application default credential run `gcloud auth login --update-adc`
-in your environment before starting MCP Toolbox.
+To initialize the application default credential run `gcloud auth login
+--update-adc` in your environment before starting MCP Toolbox.
 
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 
@@ -81,7 +81,8 @@ The client id and client secret are seemingly random character sequences
 assigned by the looker server. If you are using Looker OAuth you don't need
 these settings
 
-The `project` and `location` fields are utilized **only** when using the conversational analytics tool.
+The `project` and `location` fields are utilized **only** when using the
+conversational analytics tool.
 
 {{< notice tip >}}
 Use environment variable replacement with the format ${ENV_NAME}

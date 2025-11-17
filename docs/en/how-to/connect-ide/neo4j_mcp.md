@@ -44,19 +44,19 @@ expose your developer assistant tools to a Neo4j instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.20.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.20.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.20.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.20.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -79,10 +79,10 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolb
 {{% tab header="Claude code" lang="en" %}}
 
 1.  Install [Claude
-    Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview). 
+    Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview).
 1.  Create a `.mcp.json` file in your project root if it doesn't exist.
 1.  Add the following configuration, replace the environment variables with your
-    values, and save: 
+    values, and save:
 
     ```json
     {
@@ -108,7 +108,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolb
 1.  Open [Claude desktop](https://claude.ai/download) and navigate to Settings.
 1.  Under the Developer tab, tap Edit Config to open the configuration file.
 1.  Add the following configuration, replace the environment variables with your
-    values, and save: 
+    values, and save:
 
     ```json
     {
@@ -129,15 +129,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolb
 
 1.  Restart Claude desktop.
 1.  From the new chat screen, you should see a hammer (MCP) icon appear with the
-    new MCP server available. 
+    new MCP server available.
 {{% /tab %}}
 {{% tab header="Cline" lang="en" %}}
 
 1.  Open the [Cline](https://github.com/cline/cline) extension in VS Code and
-    tap the **MCP Servers** icon. 
+    tap the **MCP Servers** icon.
 1.  Tap Configure MCP Servers to open the configuration file.
 1.  Add the following configuration, replace the environment variables with your
-    values, and save: 
+    values, and save:
 
     ```json
     {
@@ -156,13 +156,15 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolb
     }
     ```
 
-1.  You should see a green active status after the server is successfully connected.
+1.  You should see a green active status after the server is successfully
+    connected.
 {{% /tab %}}
 {{% tab header="Cursor" lang="en" %}}
 
 1.  Create a `.cursor` directory in your project root if it doesn't exist.
 1.  Create a `.cursor/mcp.json` file if it doesn't exist and open it.
-1.  Add the following configuration, replace the environment variables with your values, and save:
+1.  Add the following configuration, replace the environment variables with your
+    values, and save:
 
     ```json
     {
@@ -211,6 +213,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolb
       }
     }
     ```
+
 {{% /tab %}}
 {{% tab header="Windsurf" lang="en" %}}
 
@@ -236,6 +239,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolb
       }
     }
     ```
+
 {{% /tab %}}
 {{% tab header="Gemini CLI" lang="en" %}}
 
@@ -262,6 +266,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolb
       }
     }
     ```
+
 {{% /tab %}}
 {{% tab header="Gemini Code Assist" lang="en" %}}
 
@@ -290,6 +295,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.18.0/windows/amd64/toolb
       }
     }
     ```
+
 {{% /tab %}}
 {{< /tabpane >}}
 
