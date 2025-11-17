@@ -58,6 +58,7 @@ func toolsetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	toolsetName := chi.URLParam(r, "toolsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
 	span.SetAttributes(attribute.String("toolset_name", toolsetName))
+	span.SetAttributes(attribute.String("transport", "native"))
 	var err error
 	defer func() {
 		if err != nil {
@@ -140,6 +141,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	toolName := chi.URLParam(r, "toolName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("tool name: %s", toolName))
 	span.SetAttributes(attribute.String("tool_name", toolName))
+	span.SetAttributes(attribute.String("transport", "native"))
 	var err error
 	defer func() {
 		if err != nil {

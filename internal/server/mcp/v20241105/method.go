@@ -31,21 +31,26 @@ import (
 )
 
 // ProcessMethod returns a response for the request.
-func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, tools map[string]tools.Tool, promptset prompts.Promptset, prompts map[string]prompts.Prompt, authServices map[string]auth.AuthService, body []byte, header http.Header) (any, error) {
+func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, tools map[string]tools.Tool, promptset prompts.Promptset, prompts map[string]prompts.Prompt, authServices map[string]auth.AuthService, body []byte, header http.Header) (string, any, error) {
 	switch method {
 	case PING:
-		return pingHandler(id)
+		res, err := pingHandler(id)
+		return "", res, err
 	case TOOLS_LIST:
-		return toolsListHandler(id, toolset, body)
+		res, err := toolsListHandler(id, toolset, body)
+		return "", res, err
 	case TOOLS_CALL:
-		return toolsCallHandler(ctx, id, tools, authServices, body, header)
+		toolName, res, err := toolsCallHandler(ctx, id, tools, authServices, body, header)
+		return toolName, res, err
 	case PROMPTS_LIST:
-		return promptsListHandler(ctx, id, promptset, body)
+		res, err := promptsListHandler(ctx, id, promptset, body)
+		return "", res, err
 	case PROMPTS_GET:
-		return promptsGetHandler(ctx, id, prompts, body)
+		res, err := promptsGetHandler(ctx, id, prompts, body)
+		return "", res, err
 	default:
 		err := fmt.Errorf("invalid method %s", method)
-		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
+		return "", jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
 	}
 }
 
@@ -76,17 +81,17 @@ func toolsListHandler(id jsonrpc.RequestId, toolset tools.Toolset, body []byte) 
 }
 
 // toolsCallHandler generate a response for tools call.
-func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[string]tools.Tool, authServices map[string]auth.AuthService, body []byte, header http.Header) (any, error) {
+func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[string]tools.Tool, authServices map[string]auth.AuthService, body []byte, header http.Header) (string, any, error) {
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+		return "", jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
 	var req CallToolRequest
 	if err = json.Unmarshal(body, &req); err != nil {
 		err = fmt.Errorf("invalid mcp tools call request: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+		return "", jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
 	toolName := req.Params.Name
@@ -95,7 +100,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 	tool, ok := toolsMap[toolName]
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+		return toolName, jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
 
 	// Get access token
@@ -104,7 +109,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 	// Check if this specific tool requires the standard authorization header
 	if tool.RequiresClientAuthorization() {
 		if accessToken == "" {
-			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, "missing access token in the 'Authorization' header", nil), util.ErrUnauthorized
+			return toolName, jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, "missing access token in the 'Authorization' header", nil), util.ErrUnauthorized
 		}
 	}
 
@@ -112,13 +117,13 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 	aMarshal, err := json.Marshal(toolArgument)
 	if err != nil {
 		err = fmt.Errorf("unable to marshal tools argument: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+		return toolName, jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
 	var data map[string]any
 	if err = util.DecodeJSON(bytes.NewBuffer(aMarshal), &data); err != nil {
 		err = fmt.Errorf("unable to decode tools argument: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+		return toolName, jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
 	// Tool authentication
@@ -153,14 +158,14 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 	isAuthorized := tool.Authorized(verifiedAuthServices)
 	if !isAuthorized {
 		err = fmt.Errorf("unauthorized Tool call: Please make sure your specify correct auth headers: %w", util.ErrUnauthorized)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+		return toolName, jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, "tool invocation authorized")
 
 	params, err := tool.ParseParams(data, claimsFromAuth)
 	if err != nil {
 		err = fmt.Errorf("provided parameters were invalid: %w", err)
-		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+		return toolName, jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
@@ -170,23 +175,23 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 		errStr := err.Error()
 		// Missing authService tokens.
 		if errors.Is(err, util.ErrUnauthorized) {
-			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+			return toolName, jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
 		// Upstream auth error
 		if strings.Contains(errStr, "Error 401") || strings.Contains(errStr, "Error 403") {
 			if tool.RequiresClientAuthorization() {
 				// Error with client credentials should pass down to the client
-				return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+				return toolName, jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 			}
 			// Auth error with ADC should raise internal 500 error
-			return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+			return toolName, jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 		}
 
 		text := TextContent{
 			Type: "text",
 			Text: err.Error(),
 		}
-		return jsonrpc.JSONRPCResponse{
+		return toolName, jsonrpc.JSONRPCResponse{
 			Jsonrpc: jsonrpc.JSONRPC_VERSION,
 			Id:      id,
 			Result:  CallToolResult{Content: []TextContent{text}, IsError: true},
@@ -211,7 +216,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 		content = append(content, text)
 	}
 
-	return jsonrpc.JSONRPCResponse{
+	return toolName, jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
 		Id:      id,
 		Result:  CallToolResult{Content: content},
