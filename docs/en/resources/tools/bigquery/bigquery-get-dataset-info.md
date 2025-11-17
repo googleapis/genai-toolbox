@@ -16,12 +16,14 @@ It's compatible with the following sources:
 - [bigquery](../../sources/bigquery.md)
 
 `bigquery-get-dataset-info` accepts the following parameters:
+
 - **`dataset`** (required): Specifies the dataset for which to retrieve metadata.
 - **`project`** (optional): Defines the Google Cloud project ID. If not provided,
   the tool defaults to the project from the source configuration.
 
 The tool's behavior regarding these parameters is influenced by the
 `allowedDatasets` restriction on the `bigquery` source:
+
 - **Without `allowedDatasets` restriction:** The tool can retrieve metadata for
   any dataset specified by the `dataset` and `project` parameters.
 - **With `allowedDatasets` restriction:** Before retrieving metadata, the tool

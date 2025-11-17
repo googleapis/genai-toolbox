@@ -10,13 +10,15 @@ aliases:
 
 ## About
 
-The `postgres-database-overview` fetches the current state of the PostgreSQL server. It's compatible with any of the following sources:
+The `postgres-database-overview` fetches the current state of the PostgreSQL
+server. It's compatible with any of the following sources:
 
 - [alloydb-postgres](../../sources/alloydb-pg.md)
 - [cloud-sql-postgres](../../sources/cloud-sql-pg.md)
 - [postgres](../../sources/postgres.md)
 
-`postgres-database-overview` fetches the current state of the PostgreSQL server This tool does not take any input parameters.
+`postgres-database-overview` fetches the current state of the PostgreSQL server
+This tool does not take any input parameters.
 
 ## Example
 
@@ -30,6 +32,7 @@ tools:
 ```
 
 The response is a JSON object with the following elements:
+
 ```json
 {
  "pg_version": "PostgreSQL server version string",
@@ -44,8 +47,8 @@ The response is a JSON object with the following elements:
 
 ## Reference
 
-| **field**   | **type** | **required**  | **description**                                      |
-|-------------|:--------:|:-------------:|------------------------------------------------------|
-| kind        |  string  |     true      | Must be "postgres-database-overview".                      |
-| source      |  string  |     true      | Name of the source the SQL should execute on.        |
-| description |  string  |     false     | Description of the tool that is passed to the agent. |
+| **field**   | **type** | **required** | **description**                                      |
+|-------------|:--------:|:------------:|------------------------------------------------------|
+| kind        |  string  |     true     | Must be "postgres-database-overview".                |
+| source      |  string  |     true     | Name of the source the SQL should execute on.        |
+| description |  string  |    false     | Description of the tool that is passed to the agent. |

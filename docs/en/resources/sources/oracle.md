@@ -8,7 +8,10 @@ description: >
 
 ## About
 
-[Oracle Database][oracle-docs] is a multi-model database management system produced and marketed by Oracle Corporation. It is commonly used for running online transaction processing (OLTP), data warehousing (DW), and mixed (OLTP & DW) database workloads.
+[Oracle Database][oracle-docs] is a multi-model database management system
+produced and marketed by Oracle Corporation. It is commonly used for running
+online transaction processing (OLTP), data warehousing (DW), and mixed (OLTP &
+DW) database workloads.
 
 [oracle-docs]: https://www.oracle.com/database/
 
@@ -24,33 +27,44 @@ description: >
 
 ### Database User
 
-This source uses standard authentication. You will need to [create an Oracle user][oracle-users] to log in to the database with the necessary permissions.
+This source uses standard authentication. You will need to [create an Oracle
+user][oracle-users] to log in to the database with the necessary permissions.
 
 [oracle-users]:
     https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/CREATE-USER.html
 
 ## Connection Methods
 
-You can configure the connection to your Oracle database using one of the following three methods. **You should only use one method** in your source configuration.
+You can configure the connection to your Oracle database using one of the
+following three methods. **You should only use one method** in your source
+configuration.
 
 ### Basic Connection (Host/Port/Service Name)
 
-This is the most straightforward method, where you provide the connection details as separate fields:
+This is the most straightforward method, where you provide the connection
+details as separate fields:
 
 - `host`: The IP address or hostname of the database server.
 - `port`: The port number the Oracle listener is running on (typically 1521).
-- `serviceName`: The service name for the database instance you wish to connect to.
+- `serviceName`: The service name for the database instance you wish to connect
+  to.
 
 ### Connection String
 
-As an alternative, you can provide all the connection details in a single `connectionString`. This is a convenient way to consolidate the connection information. The typical format is `hostname:port/servicename`.
+As an alternative, you can provide all the connection details in a single
+`connectionString`. This is a convenient way to consolidate the connection
+information. The typical format is `hostname:port/servicename`.
 
 ### TNS Alias
 
-For environments that use a `tnsnames.ora` configuration file, you can connect using a TNS (Transparent Network Substrate) alias.
+For environments that use a `tnsnames.ora` configuration file, you can connect
+using a TNS (Transparent Network Substrate) alias.
 
 - `tnsAlias`: Specify the alias name defined in your `tnsnames.ora` file.
-- `tnsAdmin` (Optional): If your configuration file is not in a standard location, you can use this field to provide the path to the directory containing it. This setting will override the `TNS_ADMIN` environment variable.
+- `tnsAdmin` (Optional): If your configuration file is not in a standard
+  location, you can use this field to provide the path to the directory
+  containing it. This setting will override the `TNS_ADMIN` environment
+  variable.
 
 ## Example
 

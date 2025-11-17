@@ -40,7 +40,9 @@ tools:
     source: my-mysql-instance
     description: List table fragmentation in MySQL, by calculating the size of the data and index files and free space allocated to each table. The query calculates fragmentation percentage which represents the proportion of free space relative to the total data and index size. Storage can be reclaimed for tables with high fragmentation using OPTIMIZE TABLE.
 ```
+
 The response is a json array with the following fields:
+
 ```json
 {
   "table_schema": "The schema/database this table belongs to",

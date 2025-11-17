@@ -349,7 +349,8 @@ Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
 1. For `URL`, type in `http://127.0.0.1:5000/mcp`.
 
-1. For `Configuration` -> `Proxy Session Token`, make sure `<YOUR_SESSION_TOKEN>` is present.
+1. For `Configuration` -> `Proxy Session Token`, make sure
+   `<YOUR_SESSION_TOKEN>` is present.
 
 1. Click Connect.
 

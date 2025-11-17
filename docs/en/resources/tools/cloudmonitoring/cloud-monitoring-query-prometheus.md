@@ -36,7 +36,7 @@ project:
 - **Ad-hoc analysis:** Quickly investigate performance issues by executing
   direct promql queries for a database instance.
 - **Prebuilt Configs:** Use the already added prebuilt tools mentioned in
-  prebuilt-tools.md to query the databases system/query level metrics. 
+  prebuilt-tools.md to query the databases system/query level metrics.
 
 Here are some common use cases for the `cloud-monitoring-query-prometheus` tool:
 
@@ -54,7 +54,6 @@ Here are some common use cases for the `cloud-monitoring-query-prometheus` tool:
 Here are some examples of how to use the `cloud-monitoring-query-prometheus`
 tool.
 
-
 ```yaml
 tools:
  get_wait_time_metrics:
@@ -68,6 +67,7 @@ tools:
 ```
 
 ## Reference
+
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
 | kind        |  string  |     true     | Must be cloud-monitoring-query-prometheus.           |

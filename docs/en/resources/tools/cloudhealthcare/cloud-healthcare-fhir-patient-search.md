@@ -10,12 +10,13 @@ aliases:
 
 ## About
 
-A `cloud-healthcare-fhir-patient-search` tool searches for patients in a FHIR store based on a
-set of criteria. It's compatible with the following sources:
+A `cloud-healthcare-fhir-patient-search` tool searches for patients in a FHIR
+store based on a set of criteria. It's compatible with the following sources:
 
 - [cloud-healthcare](../../sources/cloud-healthcare.md)
 
-`cloud-healthcare-fhir-patient-search` returns a list of patients that match the given criteria.
+`cloud-healthcare-fhir-patient-search` returns a list of patients that match the
+given criteria.
 
 ## Example
 
@@ -60,4 +61,5 @@ tools:
 | summary          | boolean  |    false     | Requests the server to return a subset of the resource. True by default.       |
 | storeID          |  string  |    true*     | The FHIR store ID to search in.                                                |
 
-*If the `allowedFHIRStores` in the source has length 1, then the `storeID` parameter is not needed.
+*If the `allowedFHIRStores` in the source has length 1, then the `storeID`
+parameter is not needed.

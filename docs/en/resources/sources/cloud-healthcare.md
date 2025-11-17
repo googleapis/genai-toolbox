@@ -23,9 +23,10 @@ A dataset is a container in your Google Cloud project that holds modality-specif
 healthcare data. Datasets contain other data stores, such as FHIR stores and DICOM
 stores, which in turn hold their own types of healthcare data.
 
-A single dataset can contain one or many data stores, and those stores can all service
-the same modality or different modalities as application needs dictate. Using multiple
-stores in the same dataset might be appropriate in various situations.
+A single dataset can contain one or many data stores, and those stores can all
+service the same modality or different modalities as application needs dictate.
+Using multiple stores in the same dataset might be appropriate in various
+situations.
 
 If you are new to the Cloud Healthcare API, you can try to
 [create and view datasets and stores using curl][healthcare-quickstart-curl].
@@ -85,8 +86,9 @@ If you are new to the Cloud Healthcare API, you can try to
 
 ### IAM Permissions
 
-The Cloud Healthcare API uses [Identity and Access Management (IAM)][iam-overview] to control
-user and group access to Cloud Healthcare resources like projects, datasets, and stores.
+The Cloud Healthcare API uses [Identity and Access Management
+(IAM)][iam-overview] to control user and group access to Cloud Healthcare
+resources like projects, datasets, and stores.
 
 ### Authentication via Application Default Credentials (ADC)
 
@@ -96,9 +98,9 @@ By **default**, Toolbox will use your [Application Default Credentials
 
 When using this method, you need to ensure the IAM identity associated with your
 ADC (such as a service account) has the correct permissions for the queries you
-intend to run. Common roles include `roles/healthcare.fhirResourceReader` (which includes
-permissions to read and search for FHIR resources) or `roles/healthcare.dicomViewer` (for
-retrieving DICOM images).
+intend to run. Common roles include `roles/healthcare.fhirResourceReader` (which
+includes permissions to read and search for FHIR resources) or
+`roles/healthcare.dicomViewer` (for retrieving DICOM images).
 Follow this [guide][set-adc] to set up your ADC.
 
 ### Authentication via User's OAuth Access Token
@@ -106,8 +108,8 @@ Follow this [guide][set-adc] to set up your ADC.
 If the `useClientOAuth` parameter is set to `true`, Toolbox will instead use the
 OAuth access token for authentication. This token is parsed from the
 `Authorization` header passed in with the tool invocation request. This method
-allows Toolbox to make queries to the [Cloud Healthcare API][healthcare-docs] on behalf of the
-client or the end-user.
+allows Toolbox to make queries to the [Cloud Healthcare API][healthcare-docs] on
+behalf of the client or the end-user.
 
 When using this on-behalf-of authentication, you must ensure that the
 identity used has been granted the correct IAM permissions.

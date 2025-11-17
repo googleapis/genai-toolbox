@@ -576,18 +576,14 @@ func verifyTableListResult(t *testing.T, body map[string]interface{}, expectedTa
 				continue
 			}
 
-			// Parse object_details JSON string into map[string]interface{}
-			if objectDetailsStr, ok := tableMap["object_details"].(string); ok {
-				var objectDetails map[string]interface{}
-				if err := json.Unmarshal([]byte(objectDetailsStr), &objectDetails); err != nil {
-					t.Errorf("failed to parse object_details JSON: %v for %v", err, objectDetailsStr)
-					continue
-				}
+			objectDetails, ok := tableMap["object_details"].(map[string]interface{})
+			if !ok {
+				t.Fatalf("object_details is not of type map[string]interface{}, got: %T", tableMap["object_details"])
+			}
 
-				for _, reqKey := range requiredKeys {
-					if _, hasKey := objectDetails[reqKey]; !hasKey {
-						t.Errorf("missing required key '%s', for object_details: %v", reqKey, objectDetails)
-					}
+			for _, reqKey := range requiredKeys {
+				if _, hasKey := objectDetails[reqKey]; !hasKey {
+					t.Errorf("missing required key '%s', for object_details: %v", reqKey, objectDetails)
 				}
 			}
 

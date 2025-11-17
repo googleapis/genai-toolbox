@@ -42,7 +42,7 @@ reputation for reliability, feature robustness, and performance.
   List schemas in a PostgreSQL database.
 
 - [`postgres-database-overview`](../tools/postgres/postgres-database-overview.md)
-  Fetches the current state of the PostgreSQL server. 
+  Fetches the current state of the PostgreSQL server.
 
 - [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
   List triggers in a PostgreSQL database.

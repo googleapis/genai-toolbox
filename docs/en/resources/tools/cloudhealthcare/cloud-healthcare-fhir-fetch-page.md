@@ -10,13 +10,15 @@ aliases:
 
 ## About
 
-A `cloud-healthcare-fhir-fetch-page` tool fetches a page of FHIR resources from a given URL. It's
-compatible with the following sources:
+A `cloud-healthcare-fhir-fetch-page` tool fetches a page of FHIR resources from
+a given URL. It's compatible with the following sources:
 
 - [cloud-healthcare](../../sources/cloud-healthcare.md)
 
-`cloud-healthcare-fhir-fetch-page` can be used for pagination when a previous tool call (like
-`cloud-healthcare-fhir-patient-search` or `cloud-healthcare-fhir-patient-everything`) returns a 'next' link in the response bundle.
+`cloud-healthcare-fhir-fetch-page` can be used for pagination when a previous
+tool call (like `cloud-healthcare-fhir-patient-search` or
+`cloud-healthcare-fhir-patient-everything`) returns a 'next' link in the
+response bundle.
 
 ## Example
 

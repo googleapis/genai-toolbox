@@ -10,16 +10,20 @@ aliases:
 
 ## About
 
-The `postgres-list-sequences` tool retrieves information about sequences in a Postgres database. It's compatible with any of the following sources:
+The `postgres-list-sequences` tool retrieves information about sequences in a
+Postgres database. It's compatible with any of the following sources:
 
 - [alloydb-postgres](../../sources/alloydb-pg.md)
 - [cloud-sql-postgres](../../sources/cloud-sql-pg.md)
 - [postgres](../../sources/postgres.md)
 
-`postgres-list-sequences` lists detailed information as JSON for all sequences. The tool takes the following input parameters:
+`postgres-list-sequences` lists detailed information as JSON for all sequences.
+The tool takes the following input parameters:
 
-- `sequencename` (optional): A text to filter results by sequence name. The input is used within a LIKE clause. Default: `""`
-- `schemaname` (optional): A text to filter results by schema name. The input is used within a LIKE clause. Default: `""`
+- `sequencename` (optional): A text to filter results by sequence name. The
+  input is used within a LIKE clause. Default: `""`
+- `schemaname` (optional): A text to filter results by schema name. The input is
+  used within a LIKE clause. Default: `""`
 - `limit` (optional): The maximum number of rows to return. Default: `50`.
 
 ## Example
@@ -38,6 +42,7 @@ tools:
 ```
 
 The response is a json array with the following elements:
+
 ```json
 {
     "sequencename": "sequence name",
@@ -54,8 +59,8 @@ The response is a json array with the following elements:
 
 ## Reference
 
-| **field**   | **type** | **required**  | **description**                                      |
-|-------------|:--------:|:-------------:|------------------------------------------------------|
-| kind        |  string  |     true      | Must be "postgres-list-sequences".                      |
-| source      |  string  |     true      | Name of the source the SQL should execute on.        |
-| description |  string  |     false     | Description of the tool that is passed to the agent. |
+| **field**   | **type** | **required** | **description**                                      |
+|-------------|:--------:|:------------:|------------------------------------------------------|
+| kind        |  string  |     true     | Must be "postgres-list-sequences".                   |
+| source      |  string  |     true     | Name of the source the SQL should execute on.        |
+| description |  string  |    false     | Description of the tool that is passed to the agent. |

@@ -52,12 +52,12 @@ prompts:
 
 ### Prompt Schema
 
-| **field** | **type** | **required** | **description** |
-| --- | --- | --- | --- |
-| kind | string | No | The kind of prompt. Must be `"custom"`. |
-| description | string | No | A brief explanation of what the prompt does. |
-| messages | [][Message](#message-schema) | Yes | A list of one or more message objects that make up the prompt's content. |
-| arguments | [][Argument](#argument-schema) | No | A list of arguments that can be interpolated into the prompt's content.|
+| **field**   | **type**                       | **required** | **description**                                                          |
+|-------------|--------------------------------|--------------|--------------------------------------------------------------------------|
+| kind        | string                         | No           | The kind of prompt. Must be `"custom"`.                                  |
+| description | string                         | No           | A brief explanation of what the prompt does.                             |
+| messages    | [][Message](#message-schema)   | Yes          | A list of one or more message objects that make up the prompt's content. |
+| arguments   | [][Argument](#argument-schema) | No           | A list of arguments that can be interpolated into the prompt's content.  |
 
 ### Message Schema
 
@@ -66,4 +66,3 @@ Refer to the default prompt [Message Schema](../_index.md#message-schema).
 ### Argument Schema
 
 Refer to the default prompt [Argument Schema](../_index.md#argument-schema).
-

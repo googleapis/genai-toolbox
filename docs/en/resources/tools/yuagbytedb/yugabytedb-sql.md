@@ -9,8 +9,8 @@ description: >
 
 ## About
 
-A `yugabytedb-sql` tool executes a pre-defined SQL statement against a YugabyteDB
-database.
+A `yugabytedb-sql` tool executes a pre-defined SQL statement against a
+YugabyteDB database.
 
 The specified SQL statement is executed as a prepared statement,
 and specified parameters will inserted according to their position: e.g. `1`
@@ -92,11 +92,11 @@ tools:
 
 ## Reference
 
-| **field**          |                     **type**                     | **required** | **description**                                                                                                                            |
-|--------------------|:------------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
-| kind               |                      string                      |     true     | Must be "yugabytedb-sql".                                                                                                                  |
-| source             |                      string                      |     true     | Name of the source the SQL should execute on.                                                                                              |
-| description        |                      string                      |     true     | Description of the tool that is passed to the LLM.                                                                                         |
-| statement          |                      string                      |     true     | SQL statement to execute on.                                                                                                               |
+| **field**          |                   **type**                   | **required** | **description**                                                                                                                        |
+|--------------------|:--------------------------------------------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------|
+| kind               |                    string                    |     true     | Must be "yugabytedb-sql".                                                                                                              |
+| source             |                    string                    |     true     | Name of the source the SQL should execute on.                                                                                          |
+| description        |                    string                    |     true     | Description of the tool that is passed to the LLM.                                                                                     |
+| statement          |                    string                    |     true     | SQL statement to execute on.                                                                                                           |
 | parameters         |    [parameters](..#specifying-parameters)    |    false     | List of [parameters](..#specifying-parameters) that will be inserted into the SQL statement.                                           |
 | templateParameters | [templateParameters](..#template-parameters) |    false     | List of [templateParameters](..#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
