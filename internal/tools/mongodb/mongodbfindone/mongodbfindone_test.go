@@ -80,7 +80,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 						},
 					},
 					ProjectPayload: "{ name: 1, age: 1 }\n",
-					ProjectParams:  parameters.Parameters{}
+					ProjectParams:  parameters.Parameters{},
 				},
 			},
 		},
