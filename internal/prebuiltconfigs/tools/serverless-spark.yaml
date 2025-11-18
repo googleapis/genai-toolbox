@@ -28,9 +28,13 @@ tools:
   cancel_batch:
     kind: serverless-spark-cancel-batch
     source: serverless-spark-source
+  create_pyspark_batch:
+    kind: serverless-spark-create-pyspark-batch
+    source: serverless-spark-source
 
 toolsets:
   serverless_spark_tools:
     - list_batches
     - get_batch
     - cancel_batch
+    - create_pyspark_batch
