@@ -103,7 +103,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("schema_name", "Required: The schema name in which the table is present.", true),
+		parameters.NewStringParameterWithDefault("schema_name", "public", "Optional: The schema name in which the table is present."),
 		parameters.NewStringParameterWithRequired("table_name", "Required: The table name in which the column is present.", true),
 		parameters.NewStringParameterWithRequired("column_name", "Optional: The column name for which the cardinality is to be found. If not provided, cardinality for all columns will be returned.", false),
 	}
@@ -179,6 +179,10 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		out = append(out, rowMap)
 	}
 
+	if err := results.Err(); err != nil {
+		return err.Error(), fmt.Errorf("unable to execute query: %w", err)
+	}
+
 	return out, nil
 }
 
@@ -200,4 +204,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

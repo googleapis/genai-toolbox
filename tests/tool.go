@@ -3335,12 +3335,6 @@ func RunPostgresListQueryStatsTest(t *testing.T, ctx context.Context, pool *pgxp
 	dropExtensionFunc := createPostgresExtension(t, ctx, pool, "pg_stat_statements")
 	defer dropExtensionFunc()
 
-	// Create extension pg_stat_statements if not exists
-	createExtensionCmd := `CREATE EXTENSION IF NOT EXISTS pg_stat_statements`
-	if _, err := pool.Exec(ctx, createExtensionCmd); err != nil {
-		t.Fatalf("unable to create entension: %s", err)
-	}
-
 	type queryStatDetails struct {
 		Datname        string `json:"datname"`
 		Query          string `json:"query"`

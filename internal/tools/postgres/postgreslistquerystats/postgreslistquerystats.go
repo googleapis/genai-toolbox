@@ -179,6 +179,10 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		out = append(out, rowMap)
 	}
 
+	if err := results.Err(); err != nil {
+		return err.Error(), fmt.Errorf("unable to execute query: %w", err)
+	}
+
 	return out, nil
 }
 
@@ -200,4 +204,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }
