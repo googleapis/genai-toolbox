@@ -123,7 +123,7 @@ In this section, we will download and install the Toolbox binary.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    export VERSION="0.19.1"
+    export VERSION="0.20.0"
     curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -349,7 +349,8 @@ Run the Toolbox server, pointing to the `tools.yaml` file created earlier:
 
 1. For `URL`, type in `http://127.0.0.1:5000/mcp`.
 
-1. For `Configuration` -> `Proxy Session Token`, make sure `<YOUR_SESSION_TOKEN>` is present.
+1. For `Configuration` -> `Proxy Session Token`, make sure
+   `<YOUR_SESSION_TOKEN>` is present.
 
 1. Click Connect.
 

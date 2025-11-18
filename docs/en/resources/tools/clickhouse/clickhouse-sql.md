@@ -14,8 +14,8 @@ A `clickhouse-sql` tool executes SQL queries as prepared statements against a
 ClickHouse database. It's compatible with the
 [clickhouse](../../sources/clickhouse.md) source.
 
-This tool supports both template parameters (for SQL statement customization) 
-and regular parameters (for prepared statement values), providing flexible 
+This tool supports both template parameters (for SQL statement customization)
+and regular parameters (for prepared statement values), providing flexible
 query execution capabilities.
 
 ## Example

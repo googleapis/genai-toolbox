@@ -8,10 +8,12 @@ aliases: [/resources/tools/alloydb-get-instance]
 
 ## About
 
-The `alloydb-get-instance` tool retrieves detailed information for a single, specified AlloyDB instance. It is compatible with [alloydb-admin](../../sources/alloydb-admin.md) source.
+The `alloydb-get-instance` tool retrieves detailed information for a single,
+specified AlloyDB instance. It is compatible with
+[alloydb-admin](../../sources/alloydb-admin.md) source.
 
 | Parameter  | Type   | Description                                         | Required |
-| :--------- | :----- | :-------------------------------------------------- | :------- |
+|:-----------|:-------|:----------------------------------------------------|:---------|
 | `project`  | string | The GCP project ID to get instance for.             | Yes      |
 | `location` | string | The location of the instance (e.g., 'us-central1'). | Yes      |
 | `cluster`  | string | The ID of the cluster.                              | Yes      |
@@ -30,7 +32,7 @@ tools:
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                      |
-| ----------- | :------: | :----------: | ---------------------------------------------------- |
+|-------------|:--------:|:------------:|------------------------------------------------------|
 | kind        |  string  |     true     | Must be alloydb-get-instance.                        |
 | source      |  string  |     true     | The name of an `alloydb-admin` source.               |
-| description |  string  |     false    | Description of the tool that is passed to the agent. |
+| description |  string  |    false     | Description of the tool that is passed to the agent. |

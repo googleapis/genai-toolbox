@@ -18,18 +18,91 @@ assign_issues:
   - averikitsch
   - anubhav756
   - twishabansal
+  - dishaprakash
 assign_issues_by:
+  - labels:
+    - 'product: alloydb'
+    to:
+    - 'googleapis/toolbox-alloydb'
   - labels:
     - 'product: bigquery'
     to:
-    - Genesis929
-    - shobsi
-    - jiaxunwu
+    - 'googleapis/toolbox-bigquery'
+  - labels:
+    - 'product: bigtable'
+    to:
+    - 'googleapis/toolbox-bigtable'
+  - labels:
+    - 'product: mssql'
+    to:
+    - 'googleapis/toolbox-cloud-sql-mssql'
+  - labels:
+    - 'product: mysql'
+    to:
+    - 'googleapis/toolbox-cloud-sql-mysql'
+  - labels:
+    - 'product: postgres'
+    to:
+    - 'googleapis/toolbox-cloud-sql-postgres'
+  - labels:
+    - 'product: dataplex'
+    to:
+    - 'googleapis/toolbox-dataplex'
+  - labels:
+    - 'product: firestore'
+    to:
+    - 'googleapis/toolbox-firestore'
   - labels:
     - 'product: looker'
     to:
-    - drstrangelooker
+    - 'googleapis/toolbox-looker'
+  - labels:
+    - 'product: spanner'
+    to:
+    - 'googleapis/toolbox-spanner'
 assign_prs:
   - Yuan325
-  - duwenxin99
-  - averikitsch
+  - duwenxin99     
+  - averikitsch 
+assign_prs_by:
+  - labels:
+    - 'product: alloydb'
+    to:
+    - 'googleapis/toolbox-alloydb'
+  - labels:
+    - 'product: bigquery'
+    to:
+    - 'googleapis/toolbox-bigquery'
+  - labels:
+    - 'product: bigtable'
+    to:
+    - 'googleapis/toolbox-bigtable'
+  - labels:
+    - 'product: mssql'
+    to:
+    - 'googleapis/toolbox-cloud-sql-mssql'
+  - labels:
+    - 'product: mysql'
+    to:
+    - 'googleapis/toolbox-cloud-sql-mysql'
+  - labels:
+    - 'product: postgres'
+    to:
+    - 'googleapis/toolbox-cloud-sql-postgres'
+  - labels:
+    - 'product: dataplex'
+    to:
+    - 'googleapis/toolbox-dataplex'
+  - labels:
+    - 'product: firestore'
+    to:
+    - 'googleapis/toolbox-firestore'
+  - labels:
+    - 'product: looker'
+    to:
+    - 'googleapis/toolbox-looker'
+  - labels:
+    - 'product: spanner'
+    to:
+    - 'googleapis/toolbox-spanner'
+

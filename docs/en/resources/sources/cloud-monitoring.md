@@ -15,6 +15,7 @@ Cloud Monitoring API](https://cloud.google.com/monitoring/api). This allows
 tools to access cloud monitoring metrics explorer and run promql queries.
 
 Authentication can be handled in two ways:
+
 1.  **Application Default Credentials (ADC):** By default, the source uses ADC
     to authenticate with the API.
 2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will

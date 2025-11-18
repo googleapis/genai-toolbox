@@ -41,6 +41,18 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-list-schemas`](../tools/postgres/postgres-list-views.md)
   List schemas in a PostgreSQL database.
 
+- [`postgres-database-overview`](../tools/postgres/postgres-database-overview.md)
+  Fetches the current state of the PostgreSQL server.
+
+- [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
+  List triggers in a PostgreSQL database.
+
+- [`postgres-list-indexes`](../tools/postgres/postgres-list-indexes.md)
+  List available user indexes in a PostgreSQL database.
+
+- [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
+  List sequences in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)

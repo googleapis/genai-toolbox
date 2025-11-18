@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/firebaserules/v1"
 )
 
@@ -86,46 +87,46 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Create parameters
-	parameters := createParameters()
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	params := createParameters()
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		RulesClient:  s.FirebaseRulesClient(),
-		ProjectId:    s.GetProjectId(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		Parameters:  params,
+		RulesClient: s.FirebaseRulesClient(),
+		ProjectId:   s.GetProjectId(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
 
 // createParameters creates the parameter definitions for the tool
-func createParameters() tools.Parameters {
-	sourceParameter := tools.NewStringParameter(
+func createParameters() parameters.Parameters {
+	sourceParameter := parameters.NewStringParameter(
 		sourceKey,
 		"The Firestore Rules source code to validate",
 	)
 
-	return tools.Parameters{sourceParameter}
+	return parameters.Parameters{sourceParameter}
 }
 
 // validate interface
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Config
+	Parameters parameters.Parameters `yaml:"parameters"`
 
 	RulesClient *firebaserules.Service
 	ProjectId   string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 // Issue represents a validation issue in the rules
@@ -152,7 +153,7 @@ type ValidationResult struct {
 	RawIssues       []Issue `json:"rawIssues,omitempty"`
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	mapParams := params.AsMap()
 
 	// Get source parameter
@@ -270,8 +271,8 @@ func (t Tool) formatRulesetIssues(issues []Issue, rulesSource string) string {
 	return strings.Join(formattedOutput, "\n\n")
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
