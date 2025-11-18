@@ -59,6 +59,12 @@ to a database by following these instructions][csql-pg-quickstart].
 - [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
   List sequences in a PostgreSQL database.
 
+- [`postgres-list-query-stats`](../tools/postgres/postgres-list-query-stats.md)
+  List query statistics in a PostgreSQL database.
+
+- [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
+  List cardinality of columns in a table in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [Cloud SQL for Postgres using
