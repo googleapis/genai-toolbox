@@ -116,7 +116,6 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-// Invoke executes the tool's logic.
 func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
