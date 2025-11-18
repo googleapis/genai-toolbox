@@ -43,9 +43,7 @@ func (cfg Config) AuthServiceConfigKind() string {
 // Initialize a Google auth service
 func (cfg Config) Initialize() (auth.AuthService, error) {
 	a := &AuthService{
-		Name:     cfg.Name,
-		Kind:     AuthServiceKind,
-		ClientID: cfg.ClientID,
+		Config: cfg,
 	}
 	return a, nil
 }
@@ -54,14 +52,16 @@ var _ auth.AuthService = AuthService{}
 
 // struct used to store auth service info
 type AuthService struct {
-	Name     string `yaml:"name"`
-	Kind     string `yaml:"kind"`
-	ClientID string `yaml:"clientId"`
+	Config
 }
 
 // Returns the auth service kind
 func (a AuthService) AuthServiceKind() string {
 	return AuthServiceKind
+}
+
+func (a AuthService) ToConfig() auth.AuthServiceConfig {
+	return a.Config
 }
 
 // Returns the name of the auth service

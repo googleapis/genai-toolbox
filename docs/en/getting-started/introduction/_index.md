@@ -84,38 +84,46 @@ following instructions for your OS and CPU architecture.
 {{< tabpane text=true >}}
 {{% tab header="Linux (AMD64)" lang="en" %}}
 To install Toolbox as a binary on Linux (AMD64):
+
 ```sh
 # see releases page for other versions
-export VERSION=0.18.0
+export VERSION=0.20.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
+
 {{% /tab %}}
 {{% tab header="macOS (Apple Silicon)" lang="en" %}}
 To install Toolbox as a binary on macOS (Apple Silicon):
+
 ```sh
 # see releases page for other versions
-export VERSION=0.18.0
+export VERSION=0.20.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
 chmod +x toolbox
 ```
+
 {{% /tab %}}
 {{% tab header="macOS (Intel)" lang="en" %}}
 To install Toolbox as a binary on macOS (Intel):
+
 ```sh
 # see releases page for other versions
-export VERSION=0.18.0
+export VERSION=0.20.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
 chmod +x toolbox
 ```
+
 {{% /tab %}}
 {{% tab header="Windows (AMD64)" lang="en" %}}
 To install Toolbox as a binary on Windows (AMD64):
+
 ```powershell
 # see releases page for other versions
-$VERSION = "0.18.0"
+$VERSION = "0.20.0"
 Invoke-WebRequest -Uri "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe" -OutFile "toolbox.exe"
 ```
+
 {{% /tab %}}
 {{< /tabpane >}}
 {{% /tab %}}
@@ -124,7 +132,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.18.0
+export VERSION=0.20.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -143,7 +151,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.18.0
+go install github.com/googleapis/genai-toolbox@v0.20.0
 ```
 
 {{% /tab %}}

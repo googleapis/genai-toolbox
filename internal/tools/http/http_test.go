@@ -22,8 +22,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	http "github.com/googleapis/genai-toolbox/internal/tools/http"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlHTTP(t *testing.T) {
@@ -115,14 +115,14 @@ func TestParseFromYamlHTTP(t *testing.T) {
 					Path:         "{{.pathParam}}?name=alice&pet=cat",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-					QueryParams: []tools.Parameter{
-						tools.NewStringParameterWithAuth("country", "some description",
-							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
+					QueryParams: []parameters.Parameter{
+						parameters.NewStringParameterWithAuth("country", "some description",
+							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
 								{Name: "other-auth-service", Field: "user_id"}}),
 					},
-					PathParams: tools.Parameters{
-						&tools.StringParameter{
-							CommonParameter: tools.CommonParameter{Name: "pathParam", Type: "string", Desc: "path param"},
+					PathParams: parameters.Parameters{
+						&parameters.StringParameter{
+							CommonParameter: parameters.CommonParameter{Name: "pathParam", Type: "string", Desc: "path param"},
 						},
 					},
 					RequestBody: `{
@@ -131,9 +131,9 @@ func TestParseFromYamlHTTP(t *testing.T) {
   "food": {{.food}}
 }
 `,
-					BodyParams:   []tools.Parameter{tools.NewIntParameter("age", "age num"), tools.NewStringParameter("city", "city string")},
+					BodyParams:   []parameters.Parameter{parameters.NewIntParameter("age", "age num"), parameters.NewStringParameter("city", "city string")},
 					Headers:      map[string]string{"Authorization": "API_KEY", "Content-Type": "application/json"},
-					HeaderParams: []tools.Parameter{tools.NewStringParameter("Language", "language string")},
+					HeaderParams: []parameters.Parameter{parameters.NewStringParameter("Language", "language string")},
 				},
 			},
 		},
