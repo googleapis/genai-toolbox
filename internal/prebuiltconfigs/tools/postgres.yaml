@@ -182,7 +182,7 @@ tools:
         kind: postgres-list-query-stats
         source: postgresql-source
 
-    list_column_cardinality:
+    get_column_cardinality:
         kind: postgres-get-column-cardinality
         source: postgresql-source
 
@@ -206,5 +206,5 @@ toolsets:
         - list_indexes
         - list_sequences
         - list_query_stats
-        - list_column_cardinality
+        - get_column_cardinality
 
