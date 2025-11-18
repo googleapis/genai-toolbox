@@ -230,6 +230,8 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	query := bqClient.Query(newStatement)
 	query.Parameters = highLevelParams
 	query.Location = bqClient.Location
+	query.Labels = map[string]string{"genai-toolbox-tool": kind}
+	t.LastQuery = query
 
 	connProps := []*bigqueryapi.ConnectionProperty{}
 	if t.SessionProvider != nil {

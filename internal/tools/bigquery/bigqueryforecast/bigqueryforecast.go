@@ -279,6 +279,8 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	// JobStatistics.QueryStatistics.StatementType
 	query := bqClient.Query(sql)
 	query.Location = bqClient.Location
+	query.Labels = map[string]string{"genai-toolbox-tool": kind}
+	t.LastQuery = query
 	session, err := t.SessionProvider(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
