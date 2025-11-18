@@ -21,8 +21,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/trino/trinosql"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlTrino(t *testing.T) {
@@ -66,9 +66,9 @@ func TestParseFromYamlTrino(t *testing.T) {
 					Description:  "some description",
 					Statement:    "SELECT * FROM catalog.schema.table WHERE id = ?;\n",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-					Parameters: []tools.Parameter{
-						tools.NewStringParameterWithAuth("id", "ID to filter by",
-							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameterWithAuth("id", "ID to filter by",
+							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
 								{Name: "other-auth-service", Field: "user_id"}}),
 					},
 				},
@@ -150,16 +150,16 @@ func TestParseFromYamlWithTemplateParamsTrino(t *testing.T) {
 					Description:  "some description",
 					Statement:    "SELECT * FROM {{ .catalog }}.{{ .schema }}.{{ .tableName }} WHERE country = ?;\n",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-					Parameters: []tools.Parameter{
-						tools.NewStringParameterWithAuth("country", "some description",
-							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameterWithAuth("country", "some description",
+							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
 								{Name: "other-auth-service", Field: "user_id"}}),
 					},
-					TemplateParameters: []tools.Parameter{
-						tools.NewStringParameter("catalog", "The catalog to query from."),
-						tools.NewStringParameter("schema", "The schema to query from."),
-						tools.NewStringParameter("tableName", "The table to select data from."),
-						tools.NewArrayParameter("fieldArray", "The columns to return for the query.", tools.NewStringParameter("column", "A column name that will be returned from the query.")),
+					TemplateParameters: []parameters.Parameter{
+						parameters.NewStringParameter("catalog", "The catalog to query from."),
+						parameters.NewStringParameter("schema", "The schema to query from."),
+						parameters.NewStringParameter("tableName", "The table to select data from."),
+						parameters.NewArrayParameter("fieldArray", "The columns to return for the query.", parameters.NewStringParameter("column", "A column name that will be returned from the query.")),
 					},
 				},
 			},

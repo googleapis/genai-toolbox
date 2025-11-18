@@ -10,13 +10,14 @@ aliases:
 
 ## About
 
-A `cloud-healthcare-list-fhir-stores` lists the available FHIR stores in the healthcare dataset.
+A `cloud-healthcare-list-fhir-stores` lists the available FHIR stores in the
+healthcare dataset.
 It's compatible with the following sources:
 
 - [cloud-healthcare](../../sources/cloud-healthcare.md)
 
-`cloud-healthcare-list-fhir-stores` returns the details of the available FHIR stores in the
-dataset of the healthcare source. It takes no extra parameters.
+`cloud-healthcare-list-fhir-stores` returns the details of the available FHIR
+stores in the dataset of the healthcare source. It takes no extra parameters.
 
 ## Example
 

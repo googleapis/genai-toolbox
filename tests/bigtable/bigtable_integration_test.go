@@ -30,7 +30,7 @@ import (
 	"cloud.google.com/go/bigtable"
 	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
@@ -295,8 +295,8 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT TO_INT64(cf['age']) as age, TO_INT64(cf['id']) as id, CAST(cf['name'] AS string) as name, FROM {{.tableName}};",
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
 		},
 	}
 	toolsMap["select-templateParams-combined-tool"] = map[string]any{
@@ -304,9 +304,9 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT TO_INT64(cf['age']) as age, TO_INT64(cf['id']) as id, CAST(cf['name'] AS string) as name, FROM {{.tableName}} WHERE TO_INT64(cf['id']) = @id;",
-		"parameters":  []tools.Parameter{tools.NewIntParameter("id", "the id of the user")},
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
+		"parameters":  []parameters.Parameter{parameters.NewIntParameter("id", "the id of the user")},
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
 		},
 	}
 	toolsMap["select-fields-templateParams-tool"] = map[string]any{
@@ -314,9 +314,9 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT {{array .fields}}, FROM {{.tableName}};",
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
-			tools.NewArrayParameter("fields", "The fields to select from", tools.NewStringParameter("field", "A field that will be returned from the query.")),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
+			parameters.NewArrayParameter("fields", "The fields to select from", parameters.NewStringParameter("field", "A field that will be returned from the query.")),
 		},
 	}
 	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
@@ -324,10 +324,10 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT TO_INT64(cf['age']) as age, TO_INT64(cf['id']) as id, CAST(cf['name'] AS string) as name, FROM {{.tableName}} WHERE {{.columnFilter}} = @name;",
-		"parameters":  []tools.Parameter{tools.NewStringParameter("name", "the name of the user")},
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
-			tools.NewStringParameter("columnFilter", "some description"),
+		"parameters":  []parameters.Parameter{parameters.NewStringParameter("name", "the name of the user")},
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
+			parameters.NewStringParameter("columnFilter", "some description"),
 		},
 	}
 	config["tools"] = toolsMap

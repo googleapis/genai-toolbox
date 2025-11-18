@@ -110,18 +110,12 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	var err error
 
 	s := &Source{
-		Name:                      r.Name,
-		Kind:                      SourceKind,
-		Project:                   r.Project,
-		Location:                  r.Location,
-		Client:                    client,
-		RestService:               restService,
-		TokenSource:               tokenSource,
-		MaxQueryResultRows:        50,
-		WriteMode:                 r.WriteMode,
-		UseClientOAuth:            r.UseClientOAuth,
-		ClientCreator:             clientCreator,
-		ImpersonateServiceAccount: r.ImpersonateServiceAccount,
+		Config:             r,
+		Client:             client,
+		RestService:        restService,
+		TokenSource:        tokenSource,
+		MaxQueryResultRows: 50,
+		ClientCreator:      clientCreator,
 	}
 
 	if r.UseClientOAuth {
@@ -241,20 +235,13 @@ func setupClientCaching(s *Source, baseCreator BigqueryClientCreator) {
 var _ sources.Source = &Source{}
 
 type Source struct {
-	// BigQuery Google SQL struct with client
-	Name                      string `yaml:"name"`
-	Kind                      string `yaml:"kind"`
-	Project                   string
-	Location                  string
+	Config
 	Client                    *bigqueryapi.Client
 	RestService               *bigqueryrestapi.Service
 	TokenSource               oauth2.TokenSource
 	MaxQueryResultRows        int
 	ClientCreator             BigqueryClientCreator
 	AllowedDatasets           map[string]struct{}
-	UseClientOAuth            bool
-	ImpersonateServiceAccount string
-	WriteMode                 string
 	sessionMutex              sync.Mutex
 	makeDataplexCatalogClient func() (*dataplexapi.CatalogClient, DataplexClientCreator, error)
 	SessionProvider           BigQuerySessionProvider
@@ -277,6 +264,10 @@ type Session struct {
 func (s *Source) SourceKind() string {
 	// Returns BigQuery Google SQL source kind
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 func (s *Source) BigQueryClient() *bigqueryapi.Client {

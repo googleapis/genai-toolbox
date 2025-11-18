@@ -169,10 +169,10 @@ testing and debugging Toolbox server.
 
 ### Tested Clients
 
-| Client | SSE Works | MCP Config Docs |
-|--------|--------|--------|
-| Claude Desktop | ✅ | <https://modelcontextprotocol.io/quickstart/user#1-download-claude-for-desktop> |
-| MCP Inspector | ✅ | <https://github.com/modelcontextprotocol/inspector> |
-| Cursor | ✅ | <https://docs.cursor.com/context/model-context-protocol> |
-| Windsurf | ✅ | <https://docs.windsurf.com/windsurf/mcp> |
-| VS Code (Insiders) | ✅ | <https://code.visualstudio.com/docs/copilot/chat/mcp-servers> |
+| Client             | SSE Works  | MCP Config Docs                                                                 |
+|--------------------|------------|---------------------------------------------------------------------------------|
+| Claude Desktop     | ✅         | <https://modelcontextprotocol.io/quickstart/user#1-download-claude-for-desktop> |
+| MCP Inspector      | ✅         | <https://github.com/modelcontextprotocol/inspector>                             |
+| Cursor             | ✅         | <https://docs.cursor.com/context/model-context-protocol>                        |
+| Windsurf           | ✅         | <https://docs.windsurf.com/windsurf/mcp>                                        |
+| VS Code (Insiders) | ✅         | <https://code.visualstudio.com/docs/copilot/chat/mcp-servers>                   |

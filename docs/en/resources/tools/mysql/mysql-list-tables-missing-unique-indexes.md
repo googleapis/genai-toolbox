@@ -33,7 +33,9 @@ tools:
     source: my-mysql-instance
     description: Find tables that do not have primary or unique key constraint. A primary key or unique key is the only mechanism that guaranttes a row is unique. Without them, the database-level protection against data integrity issues will be missing.
 ```
+
 The response is a json array with the following fields:
+
 ```json
 {
   "table_schema": "the schema/database this table belongs to",

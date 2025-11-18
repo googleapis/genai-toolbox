@@ -21,7 +21,6 @@ description: >
 - [`clickhouse-sql`](../tools/clickhouse/clickhouse-sql.md)  
   Execute SQL queries as prepared statements in ClickHouse.
 
-
 ## Requirements
 
 ### Database User

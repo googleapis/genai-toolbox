@@ -14,21 +14,28 @@ aliases:
 A `mindsdb-execute-sql` tool executes a SQL statement against a MindsDB
 federated database. It's compatible with any of the following sources:
 
-- [mindsdb](../sources/mindsdb.md)
+- [mindsdb](../../sources/mindsdb.md)
 
 `mindsdb-execute-sql` takes one input parameter `sql` and runs the SQL
 statement against the `source`. This tool enables you to:
 
-- **Query Multiple Datasources**: Execute SQL across hundreds of connected datasources
-- **Cross-Datasource Joins**: Perform joins between different databases, APIs, and file systems
-- **ML Model Predictions**: Query ML models as virtual tables for real-time predictions
-- **Unstructured Data**: Query documents, images, and other unstructured data as structured tables
-- **Federated Analytics**: Perform analytics across multiple datasources simultaneously
-- **API Translation**: Automatically translate SQL queries into REST APIs, GraphQL, and native protocols
+- **Query Multiple Datasources**: Execute SQL across hundreds of connected
+  datasources
+- **Cross-Datasource Joins**: Perform joins between different databases, APIs,
+  and file systems
+- **ML Model Predictions**: Query ML models as virtual tables for real-time
+  predictions
+- **Unstructured Data**: Query documents, images, and other unstructured data as
+  structured tables
+- **Federated Analytics**: Perform analytics across multiple datasources
+  simultaneously
+- **API Translation**: Automatically translate SQL queries into REST APIs,
+  GraphQL, and native protocols
 
 ## Example Queries
 
 ### Cross-Datasource Analytics
+
 ```sql
 -- Join Salesforce opportunities with GitHub activity
 SELECT 
@@ -43,6 +50,7 @@ GROUP BY s.opportunity_name, s.amount, g.repository_name;
 ```
 
 ### Email & Communication Analysis
+
 ```sql
 -- Analyze email patterns with Slack activity
 SELECT 
@@ -57,6 +65,7 @@ GROUP BY e.sender, e.subject, s.channel_name;
 ```
 
 ### ML Model Predictions
+
 ```sql
 -- Use ML model to predict customer churn
 SELECT 
@@ -69,6 +78,7 @@ WHERE predicted_churn_probability > 0.8;
 ```
 
 ### MongoDB Query
+
 ```sql
 -- Query MongoDB collections as structured tables
 SELECT 
@@ -119,8 +129,8 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "mindsdb-execute-sql".                                                                   |
-| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               | 
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "mindsdb-execute-sql".                     |
+| source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

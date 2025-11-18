@@ -93,7 +93,8 @@ implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/s
 ### Adding a New Tool
 
 > [!NOTE]
-> Please follow the tool naming convention detailed [here](./DEVELOPER.md#tool-naming-conventions).
+> Please follow the tool naming convention detailed
+> [here](./DEVELOPER.md#tool-naming-conventions).
 
 We recommend looking at an [example tool
 implementation](https://github.com/googleapis/genai-toolbox/tree/main/internal/tools/postgres/postgressql).
@@ -129,10 +130,10 @@ tools.
 
 * **Add a test file** under a new directory `tests/newdb`.
 * **Add pre-defined integration test suites** in the
-  `/tests/newdb/newdb_integration_test.go` that are **required** to be run as long as your
-  code contains related features. Please check each test suites for the config
-  defaults, if your source require test suites config updates, please refer to
-  [config option](./tests/option.go):
+  `/tests/newdb/newdb_integration_test.go` that are **required** to be run as
+  long as your code contains related features. Please check each test suites for
+  the config defaults, if your source require test suites config updates, please
+  refer to [config option](./tests/option.go):
 
      1. [RunToolGetTest][tool-get]: tests for the `GET` endpoint that returns the
             tool's manifest.

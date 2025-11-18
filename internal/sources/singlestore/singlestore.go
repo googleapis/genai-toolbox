@@ -78,9 +78,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name: r.Name,
-		Kind: SourceKind,
-		Pool: pool,
+		Config: r,
+		Pool:   pool,
 	}
 	return s, nil
 }
@@ -89,14 +88,17 @@ var _ sources.Source = &Source{}
 
 // Source represents a SingleStore database source and holds its connection pool.
 type Source struct {
-	Name string `yaml:"name"`
-	Kind string `yaml:"kind"`
+	Config
 	Pool *sql.DB
 }
 
 // SourceKind returns the kind of the source configuration.
 func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 // SingleStorePool returns the underlying *sql.DB connection pool for SingleStore.

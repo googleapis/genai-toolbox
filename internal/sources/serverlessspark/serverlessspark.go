@@ -73,10 +73,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name:      r.Name,
-		Kind:      SourceKind,
-		Project:   r.Project,
-		Location:  r.Location,
+		Config:    r,
 		Client:    client,
 		OpsClient: opsClient,
 	}
@@ -86,16 +83,17 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name      string `yaml:"name"`
-	Kind      string `yaml:"kind"`
-	Project   string
-	Location  string
+	Config
 	Client    *dataproc.BatchControllerClient
 	OpsClient *longrunning.OperationsClient
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 func (s *Source) GetBatchControllerClient() *dataproc.BatchControllerClient {

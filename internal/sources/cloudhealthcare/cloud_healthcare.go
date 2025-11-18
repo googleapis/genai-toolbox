@@ -119,17 +119,12 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		allowedDICOMStores[store] = struct{}{}
 	}
 	s := &Source{
-		name:               c.Name,
-		kind:               SourceKind,
-		project:            c.Project,
-		region:             c.Region,
-		dataset:            c.Dataset,
+		Config:             c,
 		service:            service,
 		serviceCreator:     serviceCreator,
 		tokenSource:        tokenSource,
 		allowedFHIRStores:  allowedFHIRStores,
 		allowedDICOMStores: allowedDICOMStores,
-		useClientOAuth:     c.UseClientOAuth,
 	}
 	return s, nil
 }
@@ -187,33 +182,32 @@ func initHealthcareConnection(ctx context.Context, tracer trace.Tracer, name str
 var _ sources.Source = &Source{}
 
 type Source struct {
-	name               string `yaml:"name"`
-	kind               string `yaml:"kind"`
-	project            string
-	region             string
-	dataset            string
+	Config
 	service            *healthcare.Service
 	serviceCreator     HealthcareServiceCreator
 	tokenSource        oauth2.TokenSource
 	allowedFHIRStores  map[string]struct{}
 	allowedDICOMStores map[string]struct{}
-	useClientOAuth     bool
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
 }
 
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
+}
+
 func (s *Source) Project() string {
-	return s.project
+	return s.Config.Project
 }
 
 func (s *Source) Region() string {
-	return s.region
+	return s.Config.Region
 }
 
 func (s *Source) DatasetID() string {
-	return s.dataset
+	return s.Dataset
 }
 
 func (s *Source) Service() *healthcare.Service {
@@ -259,5 +253,5 @@ func (s *Source) IsDICOMStoreAllowed(storeID string) bool {
 }
 
 func (s *Source) UseClientAuthorization() bool {
-	return s.useClientOAuth
+	return s.UseClientOAuth
 }

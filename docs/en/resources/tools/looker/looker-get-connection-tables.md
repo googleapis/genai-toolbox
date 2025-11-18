@@ -16,7 +16,8 @@ It's compatible with the following sources:
 
 - [looker](../../sources/looker.md)
 
-`looker-get-connection-tables` accepts a `conn` parameter, a `schema` parameter, and an optional `db` parameter.
+`looker-get-connection-tables` accepts a `conn` parameter, a `schema` parameter,
+and an optional `db` parameter.
 
 ## Example
 

@@ -18,12 +18,12 @@ import (
 	"testing"
 
 	"github.com/googleapis/genai-toolbox/internal/tools/couchbase"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
 func TestParseFromYamlCouchbase(t *testing.T) {
@@ -55,8 +55,8 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 					Source:       "my-couchbase-instance",
 					Description:  "some tool description",
 					Statement:    "select * from hotel WHERE name = $hotel;\n",
-					Parameters: []tools.Parameter{
-						tools.NewStringParameter("hotel", "hotel parameter description"),
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameter("hotel", "hotel parameter description"),
 					},
 				},
 			},
@@ -123,11 +123,11 @@ func TestParseFromYamlWithTemplateMssql(t *testing.T) {
 					Source:       "my-couchbase-instance",
 					Description:  "some tool description",
 					Statement:    "select * from {{.tableName}} WHERE name = $hotel;\n",
-					Parameters: []tools.Parameter{
-						tools.NewStringParameter("hotel", "hotel parameter description"),
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameter("hotel", "hotel parameter description"),
 					},
-					TemplateParameters: []tools.Parameter{
-						tools.NewStringParameter("tableName", "The table to select hotels from."),
+					TemplateParameters: []parameters.Parameter{
+						parameters.NewStringParameter("tableName", "The table to select hotels from."),
 					},
 				},
 			},

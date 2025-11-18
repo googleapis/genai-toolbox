@@ -11,7 +11,7 @@ aliases:
 ## About
 
  `serverless-spark-cancel-batch` tool cancels a running Spark batch operation in
- a Google Cloud Serverless for Apache Spark source. The cancellation request is 
+ a Google Cloud Serverless for Apache Spark source. The cancellation request is
  asynchronous, so the batch state will not change immediately after the tool
  returns; it can take a minute or so for the cancellation to be reflected.
 
@@ -21,7 +21,9 @@ It's compatible with the following sources:
 
 `serverless-spark-cancel-batch` accepts the following parameters:
 
-- **`operation`** (required): The name of the operation to cancel. For example, for `projects/my-project/locations/us-central1/operations/my-operation`, you would pass `my-operation`.
+- **`operation`** (required): The name of the operation to cancel. For example,
+  for `projects/my-project/locations/us-central1/operations/my-operation`, you
+  would pass `my-operation`.
 
 The tool inherits the `project` and `location` from the source configuration.
 

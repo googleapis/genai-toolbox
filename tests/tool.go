@@ -1398,6 +1398,249 @@ func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool
 	}
 }
 
+func RunPostgresDatabaseOverviewTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	const api = "http://127.0.0.1:5000/api/tool/database_overview/invoke"
+	requestBody := bytes.NewBuffer([]byte(`{}`))
+
+	resp, respBody := RunRequest(t, http.MethodPost, api, requestBody, nil)
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, http.StatusOK, string(respBody))
+	}
+
+	var bodyWrapper struct {
+		Result json.RawMessage `json:"result"`
+	}
+	if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+		t.Fatalf("error decoding response wrapper: %v, body: %s", err, string(respBody))
+	}
+
+	var resultString string
+	if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+		resultString = string(bodyWrapper.Result)
+	}
+
+	var got []map[string]any
+	if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+		t.Fatalf("failed to unmarshal nested result string: %v, result string: %s", err, resultString)
+	}
+
+	if len(got) != 1 {
+		t.Fatalf("Expected exactly one row in the result, got %d", len(got))
+	}
+
+	resultRow := got[0]
+
+	// Define expected keys based on the SELECT statement
+	expectedKeys := []string{
+		"pg_version",
+		"is_replica",
+		"uptime",
+		"max_connections",
+		"current_connections",
+		"active_connections",
+		"pct_connections_used",
+	}
+
+	for _, key := range expectedKeys {
+		if _, ok := resultRow[key]; !ok {
+			t.Errorf("Missing expected key in result: %s", key)
+		}
+	}
+
+	// Check types of the fields. JSON numbers are unmarshalled into float64.
+	if _, ok := resultRow["pg_version"].(string); !ok {
+		t.Errorf("Expected 'pg_version' to be a string, got %T", resultRow["pg_version"])
+	}
+	if _, ok := resultRow["is_replica"].(bool); !ok {
+		t.Errorf("Expected 'is_replica' to be a bool, got %T", resultRow["is_replica"])
+	}
+	if _, ok := resultRow["uptime"].(string); !ok {
+		t.Errorf("Expected 'uptime' to be a string, got %T", resultRow["uptime"])
+	}
+	if _, ok := resultRow["max_connections"].(float64); !ok {
+		t.Errorf("Expected 'max_connections' to be a number (float64), got %T", resultRow["max_connections"])
+	}
+	if _, ok := resultRow["current_connections"].(float64); !ok {
+		t.Errorf("Expected 'current_connections' to be a number (float64), got %T", resultRow["current_connections"])
+	}
+	if _, ok := resultRow["active_connections"].(float64); !ok {
+		t.Errorf("Expected 'active_connections' to be a number (float64), got %T", resultRow["active_connections"])
+	}
+	if _, ok := resultRow["pct_connections_used"].(float64); !ok {
+		t.Errorf("Expected 'pct_connections_used' to be a number (float64), got %T", resultRow["pct_connections_used"])
+	}
+
+	// Basic sanity checks on values
+	if maxConn, ok := resultRow["max_connections"].(float64); ok {
+		if maxConn <= 0 {
+			t.Errorf("Expected 'max_connections' to be positive, got %f", maxConn)
+		}
+	}
+
+	if pctUsed, ok := resultRow["pct_connections_used"].(float64); ok {
+		if pctUsed < 0 || pctUsed > 100 {
+			t.Errorf("Expected 'pct_connections_used' to be between 0 and 100, got %f", pctUsed)
+		}
+	}
+}
+
+func setupPostgresTrigger(t *testing.T, ctx context.Context, pool *pgxpool.Pool, schemaName, tableName, functionName, triggerName string) func() {
+	t.Helper()
+
+	createSchemaStmt := fmt.Sprintf("CREATE SCHEMA %s", schemaName)
+	if _, err := pool.Exec(ctx, createSchemaStmt); err != nil {
+		t.Fatalf("failed to create schema %s: %v", schemaName, err)
+	}
+
+	createTableStmt := fmt.Sprintf("CREATE TABLE %s.%s (id SERIAL PRIMARY KEY, name TEXT)", schemaName, tableName)
+	if _, err := pool.Exec(ctx, createTableStmt); err != nil {
+		t.Fatalf("failed to create table %s.%s: %v", schemaName, tableName, err)
+	}
+
+	createFunctionStmt := fmt.Sprintf(`
+	CREATE OR REPLACE FUNCTION %s.%s() RETURNS TRIGGER AS $$
+	BEGIN
+		RETURN NEW;
+	END;
+	$$ LANGUAGE plpgsql;
+`, schemaName, functionName)
+	if _, err := pool.Exec(ctx, createFunctionStmt); err != nil {
+		t.Fatalf("failed to create function %s.%s: %v", schemaName, functionName, err)
+	}
+
+	createTriggerStmt := fmt.Sprintf(`
+	CREATE TRIGGER %s
+	AFTER INSERT ON %s.%s
+	FOR EACH ROW
+	EXECUTE FUNCTION %s.%s();
+`, triggerName, schemaName, tableName, schemaName, functionName)
+	if _, err := pool.Exec(ctx, createTriggerStmt); err != nil {
+		t.Fatalf("failed to create trigger %s: %v", triggerName, err)
+	}
+
+	return func() {
+		dropSchemaStmt := fmt.Sprintf("DROP SCHEMA %s CASCADE", schemaName)
+		if _, err := pool.Exec(ctx, dropSchemaStmt); err != nil {
+			t.Fatalf("failed to drop schema %s: %v", schemaName, err)
+		}
+	}
+}
+
+func RunPostgresListTriggersTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
+	schemaName := "test_schema_" + uniqueID
+	tableName := "test_table_" + uniqueID
+	functionName := "test_func_" + uniqueID
+	triggerName := "test_trigger_" + uniqueID
+
+	cleanup := setupPostgresTrigger(t, ctx, pool, schemaName, tableName, functionName, triggerName)
+	defer cleanup()
+
+	// Definition can vary slightly based on server version/settings, so we fetch it to compare.
+	var expectedDef string
+	getDefQuery := fmt.Sprintf("SELECT pg_get_triggerdef(oid) FROM pg_trigger WHERE tgname = '%s'", triggerName)
+	err := pool.QueryRow(ctx, getDefQuery).Scan(&expectedDef)
+	if err != nil {
+		t.Fatalf("failed to fetch trigger definition: %v", err)
+	}
+
+	wantTrigger := map[string]any{
+		"trigger_name":     triggerName,
+		"schema_name":      schemaName,
+		"table_name":       tableName,
+		"status":           "ENABLED",
+		"timing":           "AFTER",
+		"events":           "INSERT",
+		"activation_level": "ROW",
+		"function_name":    functionName,
+		"definition":       expectedDef,
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           []map[string]any
+	}{
+		{
+			name:           "list all triggers (expecting the one we created)",
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantTrigger},
+		},
+		{
+			name:           "filter by trigger_name",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"trigger_name": "%s"}`, triggerName))),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantTrigger},
+		},
+		{
+			name:           "filter by schema_name",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"schema_name": "%s"}`, schemaName))),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantTrigger},
+		},
+		{
+			name:           "filter by table_name",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"table_name": "%s"}`, tableName))),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantTrigger},
+		},
+		{
+			name:           "filter by non-existent trigger_name",
+			requestBody:    bytes.NewBuffer([]byte(`{"trigger_name": "non_existent_trigger"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+		{
+			name:           "filter by non-existent schema_name",
+			requestBody:    bytes.NewBuffer([]byte(`{"schema_name": "non_existent_schema"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+		{
+			name:           "filter by non-existent table_name",
+			requestBody:    bytes.NewBuffer([]byte(`{"table_name": "non_existent_table"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_triggers/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []map[string]any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v, content: %s", err, resultString)
+			}
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("Unexpected result (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
 func RunPostgresListActiveQueriesTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
 	type queryListDetails struct {
 		ProcessId        any    `json:"pid"`
@@ -1579,6 +1822,257 @@ func RunPostgresListInstalledExtensionsTest(t *testing.T) {
 
 			// Intentionally not adding the output check as output depends on the postgres instance used where the the functional test runs.
 			// Adding the check will make the test flaky.
+		})
+	}
+}
+
+func setupPostgresIndex(t *testing.T, ctx context.Context, pool *pgxpool.Pool, schemaName string, tableName string) func(t *testing.T) {
+	t.Helper()
+	createSchemaStmt := fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s;", schemaName)
+	if _, err := pool.Exec(ctx, createSchemaStmt); err != nil {
+		t.Fatalf("unable to create schema %s: %v", schemaName, err)
+	}
+
+	fullTableName := fmt.Sprintf("%s.%s", schemaName, tableName)
+	createTableStmt := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT, email TEXT);", fullTableName)
+	if _, err := pool.Exec(ctx, createTableStmt); err != nil {
+		t.Fatalf("unable to create table %s: %v", fullTableName, err)
+	}
+
+	// Create a unique index on email
+	index1Stmt := fmt.Sprintf("CREATE UNIQUE INDEX %s_email_idx ON %s (email);", tableName, fullTableName)
+	if _, err := pool.Exec(ctx, index1Stmt); err != nil {
+		t.Fatalf("unable to create index %s_email_idx: %v", tableName, err)
+	}
+
+	// Create a non-unique index on name
+	index2Stmt := fmt.Sprintf("CREATE INDEX %s_name_idx ON %s (name);", tableName, fullTableName)
+	if _, err := pool.Exec(ctx, index2Stmt); err != nil {
+		t.Fatalf("unable to create index %s_name_idx: %v", tableName, err)
+	}
+
+	return func(t *testing.T) {
+		t.Helper()
+		if _, err := pool.Exec(ctx, fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE;", schemaName)); err != nil {
+			t.Errorf("unable to drop schema: %v", err)
+		}
+	}
+}
+
+func RunPostgresListIndexesTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	schemaName := "testschema_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableName := "table1_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	cleanup := setupPostgresIndex(t, ctx, pool, schemaName, tableName)
+	defer cleanup(t)
+
+	// Primary key index
+	wantIndexPK := map[string]any{
+		"schema_name":      schemaName,
+		"table_name":       tableName,
+		"index_name":       tableName + "_pkey",
+		"index_type":       "btree",
+		"is_unique":        true,
+		"is_primary":       true,
+		"is_used":          false,
+		"index_definition": fmt.Sprintf("CREATE UNIQUE INDEX %s_pkey ON %s.%s USING btree (id)", tableName, schemaName, tableName),
+		// Size and scan counts can vary, so omitting them from strict checks or using ranges might be better in real tests.
+	}
+	// Email unique index
+	wantIndexEmail := map[string]any{
+		"schema_name":      schemaName,
+		"table_name":       tableName,
+		"index_name":       tableName + "_email_idx",
+		"index_type":       "btree",
+		"is_unique":        true,
+		"is_primary":       false,
+		"is_used":          false,
+		"index_definition": fmt.Sprintf("CREATE UNIQUE INDEX %s_email_idx ON %s.%s USING btree (email)", tableName, schemaName, tableName),
+	}
+	// Name non-unique index
+	wantIndexName := map[string]any{
+		"schema_name":      schemaName,
+		"table_name":       tableName,
+		"index_name":       tableName + "_name_idx",
+		"index_type":       "btree",
+		"is_unique":        false,
+		"is_primary":       false,
+		"is_used":          false,
+		"index_definition": fmt.Sprintf("CREATE INDEX %s_name_idx ON %s.%s USING btree (name)", tableName, schemaName, tableName),
+	}
+
+	allWantIndexes := []map[string]any{wantIndexEmail, wantIndexName, wantIndexPK}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           []map[string]any
+	}{
+		// List all indexes is skipped because the output might include indexes for other database tables
+		// defined outside of this test, which could make the test flaky.
+		{
+			name:           "list_indexes for a specific schema and table",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s", "table_name": "%s"}`, schemaName, tableName)),
+			wantStatusCode: http.StatusOK,
+			want:           allWantIndexes,
+		},
+		{
+			name:           "list_indexes for a specific schema",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s"}`, schemaName)),
+			wantStatusCode: http.StatusOK,
+			want:           allWantIndexes,
+		},
+		{
+			name:           "list_indexes with non-existent schema",
+			requestBody:    bytes.NewBufferString(`{"schema_name": "non_existent_schema"}`),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+		{
+			name:           "list_indexes with non-existent table in existing schema",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s", "table_name": "non_existent_table"}`, schemaName)),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+		{
+			name:           "list_indexes filter by index name",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s", "table_name": "%s", "index_name": "%s"}`, schemaName, tableName, tableName+"_email_idx")),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantIndexEmail},
+		},
+		{
+			name:           "list_indexes filter by non-existent index name",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s", "table_name": "%s", "index_name": "non_existent_idx"}`, schemaName, tableName)),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_indexes/invoke"
+
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []map[string]any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v, resultString: %s", err, resultString)
+			}
+			// Normalize got by removing fields that are hard to predict (like size)
+			for _, index := range got {
+				delete(index, "index_size_bytes")
+				delete(index, "index_scans")
+				delete(index, "tuples_read")
+				delete(index, "tuples_fetched")
+			}
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("Unexpected result (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func setupListSequencesTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) (string, func(t *testing.T)) {
+	sequenceName := "list_sequences_seq1_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	createSequence1Stmt := fmt.Sprintf("CREATE SEQUENCE %s INCREMENT 1 START 1;", sequenceName)
+
+	_, err := pool.Exec(ctx, createSequence1Stmt)
+	if err != nil {
+		t.Fatalf("unable to create sequence %s: %s", sequenceName, err)
+	}
+	return sequenceName, func(t *testing.T) {
+		_, err := pool.Exec(ctx, fmt.Sprintf("DROP SEQUENCE IF EXISTS %s;", sequenceName))
+		if err != nil {
+			t.Errorf("unable to drop sequences: %v", err)
+		}
+	}
+}
+
+func RunPostgresListSequencesTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	sequenceName, teardown := setupListSequencesTest(t, ctx, pool)
+	defer teardown(t)
+
+	wantSequence := map[string]any{
+		"sequencename":  sequenceName,
+		"schemaname":    "public",
+		"sequenceowner": "postgres",
+		"data_type":     "bigint",
+		"start_value":   float64(1),
+		"min_value":     float64(1),
+		"max_value":     float64(9223372036854775807),
+		"increment_by":  float64(1),
+		"last_value":    nil,
+	}
+
+	invokeTcs := []struct {
+		name           string
+		api            string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           []map[string]any
+	}{
+		{
+			name:           "invoke list_sequences",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"sequencename": "%s"}`, sequenceName)),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantSequence},
+		},
+		{
+			name:           "invoke list_sequences with non-existent sequence",
+			requestBody:    bytes.NewBufferString(`{"sequencename": "non_existent_sequence"}`),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_sequences/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []map[string]any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v", err)
+			}
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("Unexpected result (-want +got):\n%s", diff)
+			}
 		})
 	}
 }
@@ -2447,6 +2941,222 @@ func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 					gotJSON, _ := json.MarshalIndent(got, "", "  ")
 					wantJSON, _ := json.MarshalIndent(want, "", "  ")
 					t.Errorf("Unexpected result:\ngot:\n%s\n\nwant:\n%s", string(gotJSON), string(wantJSON))
+				}
+			}
+		})
+	}
+}
+
+// RunPostgresListLocksTest runs tests for the postgres list-locks tool
+func RunPostgresListLocksTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	type lockDetails struct {
+		Pid           any    `json:"pid"`
+		Usename       string `json:"usename"`
+		Database      string `json:"database"`
+		RelName       string `json:"relname"`
+		LockType      string `json:"locktype"`
+		Mode          string `json:"mode"`
+		Granted       bool   `json:"granted"`
+		FastPath      bool   `json:"fastpath"`
+		VirtualXid    any    `json:"virtualxid"`
+		TransactionId any    `json:"transactionid"`
+		ClassId       any    `json:"classid"`
+		ObjId         any    `json:"objid"`
+		ObjSubId      any    `json:"objsubid"`
+		PageNumber    any    `json:"page"`
+		TupleNumber   any    `json:"tuple"`
+		VirtualBlock  any    `json:"virtualblock"`
+		BlockNumber   any    `json:"blockno"`
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		expectResults  bool
+	}{
+		{
+			name:           "invoke list_locks with no arguments",
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusOK,
+			expectResults:  false, // locks may or may not exist
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_locks/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []lockDetails
+			if resultString != "null" {
+				if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+					t.Fatalf("failed to unmarshal result: %v, result string: %s", err, resultString)
+				}
+			}
+
+			// Verify that if results exist, they have the expected structure
+			for _, lock := range got {
+				if lock.LockType == "" {
+					t.Errorf("lock type should not be empty")
+				}
+			}
+		})
+	}
+}
+
+// RunPostgresLongRunningTransactionsTest runs tests for the postgres long-running-transactions tool
+func RunPostgresLongRunningTransactionsTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	type transactionDetails struct {
+		Pid               any    `json:"pid"`
+		Usename           string `json:"usename"`
+		Database          string `json:"database"`
+		ApplicationName   string `json:"application_name"`
+		XactStart         any    `json:"xact_start"`
+		XactDurationSecs  any    `json:"xact_duration_secs"`
+		IdleInTransaction string `json:"idle_in_transaction"`
+		Query             string `json:"query"`
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+	}{
+		{
+			name:           "invoke long_running_transactions with default threshold",
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "invoke long_running_transactions with custom threshold",
+			requestBody:    bytes.NewBuffer([]byte(`{"min_transaction_duration_secs": 3600}`)),
+			wantStatusCode: http.StatusOK,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/long_running_transactions/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []transactionDetails
+			if resultString != "null" {
+				if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+					t.Fatalf("failed to unmarshal result: %v, result string: %s", err, resultString)
+				}
+			}
+
+			// Verify that if results exist, they have the expected structure
+			for _, tx := range got {
+				if tx.XactDurationSecs == nil {
+					t.Errorf("transaction duration should not be null for long-running transactions")
+				}
+			}
+		})
+	}
+}
+
+// RunPostgresReplicationStatsTest runs tests for the postgres replication-stats tool
+func RunPostgresReplicationStatsTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	type replicationStats struct {
+		ClientAddr          string `json:"client_addr"`
+		Username            string `json:"usename"`
+		ApplicationName     string `json:"application_name"`
+		ClientHostname      string `json:"client_hostname"`
+		BackendStart        any    `json:"backend_start"`
+		State               string `json:"state"`
+		SyncState           string `json:"sync_state"`
+		ReplyTime           any    `json:"reply_time"`
+		FlushLsn            string `json:"flush_lsn"`
+		ReplayLsn           string `json:"replay_lsn"`
+		WriteLag            any    `json:"write_lag"`
+		FlushLag            any    `json:"flush_lag"`
+		ReplayLag           any    `json:"replay_lag"`
+		SyncPriority        any    `json:"sync_priority"`
+		ReplicationSlotName any    `json:"slot_name"`
+		IsStreaming         bool   `json:"is_streaming"`
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+	}{
+		{
+			name:           "invoke replication_stats with no arguments",
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+			wantStatusCode: http.StatusOK,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/replication_stats/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []replicationStats
+			if resultString != "null" {
+				if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+					t.Fatalf("failed to unmarshal result: %v, result string: %s", err, resultString)
+				}
+			}
+
+			// Verify that if results exist, they have the expected structure
+			for _, stat := range got {
+				if stat.State == "" {
+					t.Errorf("replication state should not be empty")
 				}
 			}
 		})

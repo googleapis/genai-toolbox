@@ -227,7 +227,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	params, err := tool.ParseParams(data, claimsFromAuth)
 	if err != nil {
 		// If auth error, return 401
-		if errors.Is(err, tools.ErrUnauthorized) {
+		if errors.Is(err, util.ErrUnauthorized) {
 			s.logger.DebugContext(ctx, fmt.Sprintf("error parsing authenticated parameters from ID token: %s", err))
 			_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
 			return

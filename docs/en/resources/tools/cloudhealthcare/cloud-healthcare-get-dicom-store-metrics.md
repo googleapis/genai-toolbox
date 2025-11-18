@@ -10,8 +10,8 @@ aliases:
 
 ## About
 
-A `cloud-healthcare-get-dicom-store-metrics` tool retrieves metrics for a DICOM store. It's
-compatible with the following sources:
+A `cloud-healthcare-get-dicom-store-metrics` tool retrieves metrics for a DICOM
+store. It's compatible with the following sources:
 
 - [cloud-healthcare](../../sources/cloud-healthcare.md)
 
@@ -41,4 +41,5 @@ tools:
 |-----------|:--------:|:------------:|----------------------------------------|
 | storeID   |  string  |    true*     | The DICOM store ID to get metrics for. |
 
-*If the `allowedDICOMStores` in the source has length 1, then the `storeID` parameter is not needed.
+*If the `allowedDICOMStores` in the source has length 1, then the `storeID`
+parameter is not needed.

@@ -40,4 +40,3 @@ tools:
 | source      |  string  |     true     | Name of the source the SQL should execute on.                                            |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.                                       |
 | readOnly    |   bool   |    false     | When set to `true`, the `statement` is run as a read-only transaction. Default: `false`. |
-

@@ -23,6 +23,7 @@ import (
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -62,14 +63,14 @@ var _ compatibleSource = &bigqueryds.Source{}
 var compatibleSources = [...]string{bigqueryds.SourceKind}
 
 type Config struct {
-	Name               string           `yaml:"name" validate:"required"`
-	Kind               string           `yaml:"kind" validate:"required"`
-	Source             string           `yaml:"source" validate:"required"`
-	Description        string           `yaml:"description" validate:"required"`
-	Statement          string           `yaml:"statement" validate:"required"`
-	AuthRequired       []string         `yaml:"authRequired"`
-	Parameters         tools.Parameters `yaml:"parameters"`
-	TemplateParameters tools.Parameters `yaml:"templateParameters"`
+	Name               string                `yaml:"name" validate:"required"`
+	Kind               string                `yaml:"kind" validate:"required"`
+	Source             string                `yaml:"source" validate:"required"`
+	Description        string                `yaml:"description" validate:"required"`
+	Statement          string                `yaml:"statement" validate:"required"`
+	AuthRequired       []string              `yaml:"authRequired"`
+	Parameters         parameters.Parameters `yaml:"parameters"`
+	TemplateParameters parameters.Parameters `yaml:"templateParameters"`
 }
 
 // validate interface
@@ -92,7 +93,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	allParameters, paramManifest, err := tools.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
+	allParameters, paramManifest, err := parameters.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
 	if err != nil {
 		return nil, err
 	}
@@ -101,14 +102,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:               cfg.Name,
-		Kind:               kind,
-		AuthRequired:       cfg.AuthRequired,
-		Parameters:         cfg.Parameters,
-		TemplateParameters: cfg.TemplateParameters,
-		AllParams:          allParameters,
-
-		Statement:       cfg.Statement,
+		Config:          cfg,
+		AllParams:       allParameters,
 		UseClientOAuth:  s.UseClientAuthorization(),
 		Client:          s.BigQueryClient(),
 		RestService:     s.BigQueryRestService(),
@@ -124,15 +119,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name               string           `yaml:"name"`
-	Kind               string           `yaml:"kind"`
-	AuthRequired       []string         `yaml:"authRequired"`
-	UseClientOAuth     bool             `yaml:"useClientOAuth"`
-	Parameters         tools.Parameters `yaml:"parameters"`
-	TemplateParameters tools.Parameters `yaml:"templateParameters"`
-	AllParams          tools.Parameters `yaml:"allParams"`
+	Config
+	UseClientOAuth bool                  `yaml:"useClientOAuth"`
+	AllParams      parameters.Parameters `yaml:"allParams"`
 
-	Statement       string
 	Client          *bigqueryapi.Client
 	RestService     *bigqueryrestapi.Service
 	SessionProvider bigqueryds.BigQuerySessionProvider
@@ -141,12 +131,16 @@ type Tool struct {
 	mcpManifest     tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	highLevelParams := make([]bigqueryapi.QueryParameter, 0, len(t.Parameters))
 	lowLevelParams := make([]*bigqueryrestapi.QueryParameter, 0, len(t.Parameters))
 
 	paramsMap := params.AsMap()
-	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
+	newStatement, err := parameters.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("unable to extract template params %w", err)
 	}
@@ -156,14 +150,14 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		value := paramsMap[name]
 
 		// This block for converting []any to typed slices is still necessary and correct.
-		if arrayParam, ok := p.(*tools.ArrayParameter); ok {
+		if arrayParam, ok := p.(*parameters.ArrayParameter); ok {
 			arrayParamValue, ok := value.([]any)
 			if !ok {
 				return nil, fmt.Errorf("unable to convert parameter `%s` to []any", name)
 			}
 			itemType := arrayParam.GetItems().GetType()
 			var err error
-			value, err = tools.ConvertAnySliceToTyped(arrayParamValue, itemType)
+			value, err = parameters.ConvertAnySliceToTyped(arrayParamValue, itemType)
 			if err != nil {
 				return nil, fmt.Errorf("unable to convert parameter `%s` from []any to typed slice: %w", name, err)
 			}
@@ -188,7 +182,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 			ParameterValue: &bigqueryrestapi.QueryParameterValue{},
 		}
 
-		if arrayParam, ok := p.(*tools.ArrayParameter); ok {
+		if arrayParam, ok := p.(*parameters.ArrayParameter); ok {
 			// Handle array types based on their defined item type.
 			lowLevelParam.ParameterType.Type = "ARRAY"
 			itemType, err := bqutil.BQTypeStringFromToolType(arrayParam.GetItems().GetType())
@@ -301,8 +295,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return "Query executed successfully and returned no content.", nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.AllParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.AllParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {

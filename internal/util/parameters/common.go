@@ -12,21 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tools
+package parameters
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"text/template"
 )
-
-var validName = regexp.MustCompile(`^[a-zA-Z0-9_-]*$`)
-
-func IsValidName(s string) bool {
-	return validName.MatchString(s)
-}
 
 // ConvertAnySliceToTyped a []any to typed slice ([]string, []int, []float etc.)
 func ConvertAnySliceToTyped(s []any, itemType string) (any, error) {

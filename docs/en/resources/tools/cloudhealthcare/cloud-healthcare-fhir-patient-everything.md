@@ -10,14 +10,14 @@ aliases:
 
 ## About
 
-A `cloud-healthcare-fhir-patient-everything` tool retrieves resources related to a given patient
-from a FHIR store. It's compatible with the following sources:
+A `cloud-healthcare-fhir-patient-everything` tool retrieves resources related to
+a given patient from a FHIR store. It's compatible with the following sources:
 
 - [cloud-healthcare](../../sources/cloud-healthcare.md)
 
-`cloud-healthcare-fhir-patient-everything` returns all the information available for a given
-patient ID. It can be configured to only return certain resource types, or only
-resources that have been updated after a given time.
+`cloud-healthcare-fhir-patient-everything` returns all the information available
+for a given patient ID. It can be configured to only return certain resource
+types, or only resources that have been updated after a given time.
 
 ## Example
 
@@ -46,4 +46,5 @@ tools:
 | sinceFilter         |  string  |    false     | If provided, only resources updated after this time are returned. The time uses the format YYYY-MM-DDThh:mm:ss.sss+zz:zz. The time must be specified to the second and include a time zone. For example, 2015-02-07T13:28:17.239+02:00 or 2017-01-01T00:00:00Z. |
 | storeID             |  string  |    true*     | The FHIR store ID to search in.                                                                                                                                                                                                                                 |
 
-*If the `allowedFHIRStores` in the source has length 1, then the `storeID` parameter is not needed.
+*If the `allowedFHIRStores` in the source has length 1, then the `storeID`
+parameter is not needed.

@@ -19,7 +19,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/googleapi"
 )
 
@@ -37,7 +37,7 @@ const IncludeAttributesKey = "includefield"
 // ValidateAndFetchStoreID validates the provided storeID against the allowedStores.
 // If only one store is allowed, it returns that storeID.
 // If multiple stores are allowed, it checks if the storeID parameter is in the allowed list.
-func ValidateAndFetchStoreID(params tools.ParamValues, allowedStores map[string]struct{}) (string, error) {
+func ValidateAndFetchStoreID(params parameters.ParamValues, allowedStores map[string]struct{}) (string, error) {
 	if len(allowedStores) == 1 {
 		for k := range allowedStores {
 			return k, nil
@@ -58,14 +58,14 @@ func ValidateAndFetchStoreID(params tools.ParamValues, allowedStores map[string]
 
 // ParseDICOMSearchParameters extracts the search parameters for various DICOM
 // search methods.
-func ParseDICOMSearchParameters(params tools.ParamValues, paramKeys []string) ([]googleapi.CallOption, error) {
+func ParseDICOMSearchParameters(params parameters.ParamValues, paramKeys []string) ([]googleapi.CallOption, error) {
 	var opts []googleapi.CallOption
 	for k, v := range params.AsMap() {
 		if k == IncludeAttributesKey {
 			if _, ok := v.([]any); !ok {
 				return nil, fmt.Errorf("invalid '%s' parameter; expected a string array", k)
 			}
-			attributeIDsSlice, err := tools.ConvertAnySliceToTyped(v.([]any), "string")
+			attributeIDsSlice, err := parameters.ConvertAnySliceToTyped(v.([]any), "string")
 			if err != nil {
 				return nil, fmt.Errorf("can't convert '%s' to array of strings: %s", k, err)
 			}
