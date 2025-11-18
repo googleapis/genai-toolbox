@@ -59,7 +59,7 @@ npm install genkit @genkit-ai/googleai
 npm install llamaindex @llamaindex/google @llamaindex/workflow
 {{< /tab >}}
 {{< tab header="GoogleGenAI" lang="bash" >}}
-npm install @google/genai 
+npm install @google/genai
 {{< /tab >}}
 {{< /tabpane >}}
 

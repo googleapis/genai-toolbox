@@ -10,31 +10,36 @@ aliases:
 
 ## About
 
-The `looker-health-pulse` tool performs health checks on a Looker instance. The `action` parameter selects the type of check to perform:
+The `looker-health-pulse` tool performs health checks on a Looker instance. The
+`action` parameter selects the type of check to perform:
 
-- `check_db_connections`: Checks all database connections, runs supported tests, and reports query counts.
-- `check_dashboard_performance`: Finds dashboards with slow running queries in the last 7 days.
-- `check_dashboard_errors`: Lists dashboards with erroring queries in the last 7 days.
-- `check_explore_performance`: Lists the slowest explores in the last 7 days and reports average query runtime.
-- `check_schedule_failures`: Lists schedules that have failed in the last 7 days.
-- `check_legacy_features`: Lists enabled legacy features. (*To note, this function is not
-  available in Looker Core.*)
+- `check_db_connections`: Checks all database connections, runs supported tests,
+  and reports query counts.
+- `check_dashboard_performance`: Finds dashboards with slow running queries in
+  the last 7 days.
+- `check_dashboard_errors`: Lists dashboards with erroring queries in the last 7
+  days.
+- `check_explore_performance`: Lists the slowest explores in the last 7 days and
+  reports average query runtime.
+- `check_schedule_failures`: Lists schedules that have failed in the last 7
+  days.
+- `check_legacy_features`: Lists enabled legacy features. (*To note, this
+  function is not available in Looker Core.*)
 
 ## Parameters
 
-| **field**     | **type** | **required** | **description**                             |
-|---------------|:--------:|:------------:|---------------------------------------------|
-| action        | string   | true         | The health check to perform                 |
+| **field** | **type** | **required** | **description**             |
+|-----------|:--------:|:------------:|-----------------------------|
+| action    |  string  |     true     | The health check to perform |
 
-
-| **action**                | **description**                                                                |
-|---------------------------|--------------------------------------------------------------------------------|
-| check_db_connections      | Checks all database connections and reports query counts and errors            |
-| check_dashboard_performance | Finds dashboards with slow queries (>30s) in the last 7 days                 |
-| check_dashboard_errors    | Lists dashboards with erroring queries in the last 7 days                      |
-| check_explore_performance | Lists slowest explores and average query runtime                               |
-| check_schedule_failures   | Lists failed schedules in the last 7 days                                      |
-| check_legacy_features     | Lists enabled legacy features                                                  |
+| **action**                  | **description**                                                     |
+|-----------------------------|---------------------------------------------------------------------|
+| check_db_connections        | Checks all database connections and reports query counts and errors |
+| check_dashboard_performance | Finds dashboards with slow queries (>30s) in the last 7 days        |
+| check_dashboard_errors      | Lists dashboards with erroring queries in the last 7 days           |
+| check_explore_performance   | Lists slowest explores and average query runtime                    |
+| check_schedule_failures     | Lists failed schedules in the last 7 days                           |
+| check_legacy_features       | Lists enabled legacy features                                       |
 
 ## Example
 

@@ -46,6 +46,7 @@ to expose your developer assistant tools to a Looker instance:
    v0.10.0+:
 
    <!-- {x-release-please-start-version} -->
+
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
 curl -O https://storage.googleapis.com/genai-toolbox/v0.20.0/linux/amd64/toolbox
@@ -82,7 +83,8 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.20.0/windows/amd64/toolb
 {{< tabpane text=true >}}
 {{% tab header="Gemini-CLI" lang="en" %}}
 
-1. Install [Gemini-CLI](https://github.com/google-gemini/gemini-cli#install-globally-with-npm).
+1. Install
+   [Gemini-CLI](https://github.com/google-gemini/gemini-cli#install-globally-with-npm).
 1. Create a directory `.gemini` in your home directory if it doesn't exist.
 1. Create the file `.gemini/settings.json` if it doesn't exist.
 1. Add the following configuration, or add the mcpServers stanza if you already
@@ -287,7 +289,8 @@ Your AI tool is now connected to Looker using MCP. Try asking your AI
 assistant to list models, explores, dimensions, and measures. Run a
 query, retrieve the SQL for a query, and run a saved Look.
 
-The full tool list is available in the [Prebuilt Tools Reference](../../reference/prebuilt-tools/#looker).
+The full tool list is available in the [Prebuilt Tools
+Reference](../../reference/prebuilt-tools/#looker).
 
 The following tools are available to the LLM:
 
@@ -314,8 +317,10 @@ instance and create new saved content.
 1. **get_looks**: Return the saved Looks that match a title or description
 1. **run_look**: Run a saved Look and return the data
 1. **make_look**: Create a saved Look in Looker and return the URL
-1. **get_dashboards**: Return the saved dashboards that match a title or description
-1. **run_dashbaord**: Run the queries associated with a dashboard and return the data
+1. **get_dashboards**: Return the saved dashboards that match a title or
+   description
+1. **run_dashbaord**: Run the queries associated with a dashboard and return the
+   data
 1. **make_dashboard**: Create a saved dashboard in Looker and return the URL
 1. **add_dashboard_element**: Add a tile to a dashboard
 
@@ -344,7 +349,8 @@ as well as get the database schema needed to write LookML effectively.
 1. **get_connection_schemas**: Get the list of schemas for a connection
 1. **get_connection_databases**: Get the list of databases for a connection
 1. **get_connection_tables**: Get the list of tables for a connection
-1. **get_connection_table_columns**: Get the list of columns for a table in a connection
+1. **get_connection_table_columns**: Get the list of columns for a table in a
+   connection
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs

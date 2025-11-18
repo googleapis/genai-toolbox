@@ -804,8 +804,6 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     For more detailed instructions on using the Toolbox Go SDK, see the
     [project's README][toolbox-core-go-readme].
 
-    [toolbox-go]: https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/core
-    [toolbox-core-go-readme]: https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md
 
   </details>
 </details>

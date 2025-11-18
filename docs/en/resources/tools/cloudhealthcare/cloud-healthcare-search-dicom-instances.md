@@ -10,12 +10,14 @@ aliases:
 
 ## About
 
-A `cloud-healthcare-search-dicom-instances` tool searches for DICOM instances in a DICOM store based on a
-set of criteria. It's compatible with the following sources:
+A `cloud-healthcare-search-dicom-instances` tool searches for DICOM instances in
+a DICOM store based on a set of criteria. It's compatible with the following
+sources:
 
 - [cloud-healthcare](../../sources/cloud-healthcare.md)
 
-`search-dicom-instances` returns a list of DICOM instances that match the given criteria.
+`search-dicom-instances` returns a list of DICOM instances that match the given
+criteria.
 
 ## Example
 
@@ -52,4 +54,5 @@ tools:
 | includefield           | []string |    false     | List of attributeIDs to include in the output, such as DICOM tag IDs or keywords. Set to `["all"]` to return all available tags.                                                                                                                                                                                                                                              |
 | storeID                |  string  |    true*     | The DICOM store ID to search in.                                                                                                                                                                                                                                                                                                                                              |
 
-*If the `allowedDICOMStores` in the source has length 1, then the `storeID` parameter is not needed.
+*If the `allowedDICOMStores` in the source has length 1, then the `storeID`
+parameter is not needed.
