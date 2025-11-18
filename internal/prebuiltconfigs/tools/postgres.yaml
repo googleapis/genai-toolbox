@@ -178,6 +178,14 @@ tools:
         kind: postgres-list-sequences
         source: postgresql-source
 
+    list_query_stats:
+        kind: postgres-list-query-stats
+        source: postgresql-source
+
+    get_column_cardinality:
+        kind: postgres-get-column-cardinality
+        source: postgresql-source
+
 toolsets:
     postgres_database_tools:
         - execute_sql
@@ -197,3 +205,6 @@ toolsets:
         - list_triggers
         - list_indexes
         - list_sequences
+        - list_query_stats
+        - get_column_cardinality
+
