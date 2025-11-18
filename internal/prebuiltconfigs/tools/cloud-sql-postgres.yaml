@@ -196,11 +196,11 @@ tools:
 
     list_query_stats:
         kind: postgres-list-query-stats
-        source: postgresql-source
+        source: cloudsql-pg-source
 
-    list_column_cardinality:
+    get_column_cardinality:
         kind: postgres-get-column-cardinality
-        source: postgresql-source
+        source: cloudsql-pg-source
 
 toolsets:
     cloud_sql_postgres_database_tools:
@@ -225,4 +225,4 @@ toolsets:
         - list_locks
         - replication_stats
         - list_query_stats
-        - list_column_cardinality
+        - get_column_cardinality

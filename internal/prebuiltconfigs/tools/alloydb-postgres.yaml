@@ -194,11 +194,11 @@ tools:
 
     list_query_stats:
         kind: postgres-list-query-stats
-        source: postgresql-source
+        source: alloydb-pg-source
 
-    list_column_cardinality:
+    get_column_cardinality:
         kind: postgres-get-column-cardinality
-        source: postgresql-source
+        source: alloydb-pg-source
 
 toolsets:
     alloydb_postgres_database_tools:
@@ -223,4 +223,4 @@ toolsets:
         - list_locks
         - replication_stats
         - list_query_stats
-        - list_column_cardinality
+        - get_column_cardinality
