@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package postgreslistinstalledextensions
+package postgreslongrunningtransactions
 
 import (
 	"context"
@@ -28,27 +28,34 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const kind string = "postgres-list-installed-extensions"
+const kind string = "postgres-long-running-transactions"
 
-const listAvailableExtensionsQuery = `
+const longRunningTransactions = `
 	SELECT
-		e.extname AS name,
-		e.extversion AS version,
-		n.nspname AS schema,
-		pg_get_userbyid(e.extowner) AS owner,
-		c.description AS description
-	FROM
-		pg_catalog.pg_extension e
-	LEFT JOIN
-		pg_catalog.pg_namespace n
-	ON
-		n.oid = e.extnamespace
-	LEFT JOIN
-		pg_catalog.pg_description c
-	ON
-		c.objoid = e.oid
-		AND c.classoid = 'pg_catalog.pg_extension'::pg_catalog.regclass
-	ORDER BY 1;
+        pid,
+        datname,
+        usename,
+        application_name as appname,
+        client_addr,
+        state,
+        now() - backend_start as conn_age,
+        now() - xact_start as xact_age,
+        now() - query_start as query_age,
+        now() - state_change as last_activity_age,
+        wait_event_type,
+        wait_event,
+        query
+    FROM
+        pg_stat_activity
+    WHERE
+        state <> 'idle'
+        AND (now() - xact_start) > COALESCE($1::INTERVAL, interval '5 minutes')
+        AND xact_start IS NOT NULL
+        AND pid <> pg_backend_pid()
+    ORDER BY
+        xact_age DESC
+    LIMIT 
+        COALESCE($2::int, 20);
 `
 
 func init() {
@@ -80,7 +87,7 @@ type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
+	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
@@ -104,21 +111,32 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	params := parameters.Parameters{}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
+	allParameters := parameters.Parameters{
+		parameters.NewStringParameterWithDefault("min_duration", "5 minutes", "Optional: Only show transactions running at least this long (e.g., '1 minute', '15 minutes', '30 seconds')."),
+		parameters.NewIntParameterWithDefault("limit", 20, "Optional: The maximum number of long-running transactions to return. Defaults to 20."),
+	}
+	paramManifest := allParameters.Manifest()
+
+	if cfg.Description == "" {
+		cfg.Description = "Identifies and lists database transactions that exceed a specified time limit. For each of the long running transactions, the output contains the process id, database name, user name, application name, client address, state, connection age, transaction age, query age, last activity age, wait event type, wait event, and query string."
+	}
+
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	// finish tool setup
-	t := Tool{
-		Config: cfg,
-		Pool:   s.PostgresPool(),
+	return Tool{
+		name:         cfg.Name,
+		kind:         cfg.Kind,
+		authRequired: cfg.AuthRequired,
+		allParams:    allParameters,
+		pool:         s.PostgresPool(),
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
-			Parameters:   params.Manifest(),
+			Parameters:   paramManifest,
 			AuthRequired: cfg.AuthRequired,
 		},
 		mcpManifest: mcpManifest,
-	}
-	return t, nil
+	}, nil
 }
 
 // validate interface
@@ -126,42 +144,54 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	Pool        *pgxpool.Pool
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	name         string                `yaml:"name"`
+	kind         string                `yaml:"kind"`
+	authRequired []string              `yaml:"authRequired"`
+	allParams    parameters.Parameters `yaml:"allParams"`
+	pool         *pgxpool.Pool
+	manifest     tools.Manifest
+	mcpManifest  tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	results, err := t.Pool.Query(ctx, listAvailableExtensionsQuery)
+	paramsMap := params.AsMap()
+
+	newParams, err := parameters.GetParams(t.allParams, paramsMap)
+	if err != nil {
+		return nil, fmt.Errorf("unable to extract standard params %w", err)
+	}
+	sliceParams := newParams.AsSlice()
+
+	results, err := t.pool.Query(ctx, longRunningTransactions, sliceParams...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
+	defer results.Close()
 
 	fields := results.FieldDescriptions()
+	var out []map[string]any
 
-	var out []any
 	for results.Next() {
-		v, err := results.Values()
+		values, err := results.Values()
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse row: %w", err)
 		}
-		vMap := make(map[string]any)
-		for i, f := range fields {
-			vMap[f.Name] = v[i]
+		rowMap := make(map[string]any)
+		for i, field := range fields {
+			rowMap[string(field.Name)] = values[i]
 		}
-		out = append(out, vMap)
-	}
-
-	// this will catch actual query execution errors
-	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		out = append(out, rowMap)
 	}
 
 	return out, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParamValues{}, nil
+	return parameters.ParseParams(t.allParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -173,13 +203,9 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+	return tools.IsAuthorized(t.authRequired, verifiedAuthServices)
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
-}
-
-func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
 }
