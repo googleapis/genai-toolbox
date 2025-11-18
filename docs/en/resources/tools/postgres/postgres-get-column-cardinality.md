@@ -40,10 +40,12 @@ tools:
 The response is a json array with the following elements:
 
 ```json
-{
-  "column_name": "name of the column",
-  "estimated_cardinality": "estimated number of unique values in the column"
-}
+[
+  {
+    "column_name": "name of the column",
+    "estimated_cardinality": "estimated number of unique values in the column"
+  }
+]
 ```
 
 ## Notes

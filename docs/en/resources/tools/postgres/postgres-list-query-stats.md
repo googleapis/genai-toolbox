@@ -39,18 +39,20 @@ tools:
 The response is a json array with the following elements:
 
 ```json
-{
-  "datname": "database name",
-  "query": "the SQL query text",
-  "calls": "number of times the query was executed",
-  "total_exec_time": "total execution time in milliseconds",
-  "min_exec_time": "minimum execution time in milliseconds",
-  "max_exec_time": "maximum execution time in milliseconds",
-  "mean_exec_time": "mean execution time in milliseconds",
-  "rows": "total number of rows retrieved or affected",
-  "shared_blks_hit": "number of shared block cache hits",
-  "shared_blks_read": "number of shared block disk reads"
-}
+[
+  {
+    "datname": "database name",
+    "query": "the SQL query text",
+    "calls": "number of times the query was executed",
+    "total_exec_time": "total execution time in milliseconds",
+    "min_exec_time": "minimum execution time in milliseconds",
+    "max_exec_time": "maximum execution time in milliseconds",
+    "mean_exec_time": "mean execution time in milliseconds",
+    "rows": "total number of rows retrieved or affected",
+    "shared_blks_hit": "number of shared block cache hits",
+    "shared_blks_read": "number of shared block disk reads"
+  }
+]
 ```
 
 ## Notes
