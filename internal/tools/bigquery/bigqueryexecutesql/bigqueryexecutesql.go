@@ -304,7 +304,6 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	query := bqClient.Query(sql)
 	query.Location = bqClient.Location
 	query.Labels = map[string]string{"genai-toolbox-tool": kind}
-	t.LastQuery = query
 
 	query.ConnectionProperties = connProps
 

@@ -290,7 +290,6 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 
 	createModelQuery := bqClient.Query(createModelSQL)
 	createModelQuery.Labels = map[string]string{"genai-toolbox-tool": kind}
-	t.LastQueries = append(t.LastQueries, createModelQuery)
 
 	// Get session from provider if in protected mode.
 	// Otherwise, a new session will be created by the first query.
@@ -336,7 +335,6 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	getInsightsQuery := bqClient.Query(getInsightsSQL)
 	getInsightsQuery.Labels = map[string]string{"genai-toolbox-tool": kind}
 	getInsightsQuery.ConnectionProperties = []*bigqueryapi.ConnectionProperty{{Key: "session_id", Value: sessionID}}
-	t.LastQueries = append(t.LastQueries, getInsightsQuery)
 
 	job, err := getInsightsQuery.Run(ctx)
 	if err != nil {
