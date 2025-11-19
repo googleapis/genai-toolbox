@@ -3,16 +3,21 @@
 ## [0.21.0](https://github.com/googleapis/genai-toolbox/compare/v0.20.0...v0.21.0) (2025-11-19)
 
 
+### ⚠ BREAKING CHANGES
+
+* **tools/spanner-list-tables:** Unmarshal `object_details` json string into map to make response have nested json ([#1894](https://github.com/googleapis/genai-toolbox/issues/1894)) ([446d62a](https://github.com/googleapis/genai-toolbox/commit/446d62acd995d5128f52e9db254dd1c7138227c6))
+
+
 ### Features
 
-* **tools/postgres:** Add long_running_transactions, list_locks and replication_stats tools ([#1751](https://github.com/googleapis/genai-toolbox/issues/1751)) ([5abad5d](https://github.com/googleapis/genai-toolbox/commit/5abad5d56c6cc5ba86adc5253b948bf8230fa830))
+* **tools/postgres:** Add `long_running_transactions`, `list_locks` and `replication_stats` tools ([#1751](https://github.com/googleapis/genai-toolbox/issues/1751)) ([5abad5d](https://github.com/googleapis/genai-toolbox/commit/5abad5d56c6cc5ba86adc5253b948bf8230fa830))
 
 
 ### Bug Fixes
 
 * **tools/alloydbgetinstance:** Remove parameter duplication ([#1993](https://github.com/googleapis/genai-toolbox/issues/1993)) ([0e269a1](https://github.com/googleapis/genai-toolbox/commit/0e269a1d125eed16a51ead27db4398e6e48cb948))
-* **tools/spanner-list-tables:** Unmarshal object_details json string into map to make response have nested json ([#1894](https://github.com/googleapis/genai-toolbox/issues/1894)) ([446d62a](https://github.com/googleapis/genai-toolbox/commit/446d62acd995d5128f52e9db254dd1c7138227c6))
 * **tools:** Check for query execution error for pgxpool.Pool ([#1969](https://github.com/googleapis/genai-toolbox/issues/1969)) ([2bff138](https://github.com/googleapis/genai-toolbox/commit/2bff1384a3570ef46bc03ebebc507923af261987))
+
 
 ## [0.20.0](https://github.com/googleapis/genai-toolbox/compare/v0.19.1...v0.20.0) (2025-11-14)
 
