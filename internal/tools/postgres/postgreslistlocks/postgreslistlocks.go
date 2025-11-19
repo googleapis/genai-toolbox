@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package postgreslistinstalledextensions
+package postgreslistlocks
 
 import (
 	"context"
@@ -28,27 +28,27 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const kind string = "postgres-list-installed-extensions"
+const kind string = "postgres-list-locks"
 
-const listAvailableExtensionsQuery = `
+const listLocks = `
 	SELECT
-		e.extname AS name,
-		e.extversion AS version,
-		n.nspname AS schema,
-		pg_get_userbyid(e.extowner) AS owner,
-		c.description AS description
-	FROM
-		pg_catalog.pg_extension e
-	LEFT JOIN
-		pg_catalog.pg_namespace n
-	ON
-		n.oid = e.extnamespace
-	LEFT JOIN
-		pg_catalog.pg_description c
-	ON
-		c.objoid = e.oid
-		AND c.classoid = 'pg_catalog.pg_extension'::pg_catalog.regclass
-	ORDER BY 1;
+        locked.pid,
+        locked.usename,
+        locked.query,
+        string_agg(locked.transactionid::text,':') as trxid,
+        string_agg(locked.lockinfo,'||') as locks
+    FROM
+        (SELECT
+          a.pid,
+          a.usename,
+          a.query,
+          l.transactionid,
+          (l.granted::text||','||coalesce(l.relation::regclass,0)::text||','||l.mode::text)::text as lockinfo
+        FROM
+          pg_stat_activity a
+          JOIN pg_locks l ON l.pid = a.pid  AND a.pid != pg_backend_pid()) as locked
+    GROUP BY 
+        locked.pid, locked.usename, locked.query;
 `
 
 func init() {
@@ -80,7 +80,7 @@ type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
+	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
@@ -104,21 +104,29 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	params := parameters.Parameters{}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
+	allParameters := parameters.Parameters{}
+	paramManifest := allParameters.Manifest()
+
+	if cfg.Description == "" {
+		cfg.Description = "Identifies all locks held by active processes showing the process ID, user, query text, and an aggregated list of all transactions and specific locks (relation, mode, grant status) associated with each process."
+	}
+
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	// finish tool setup
-	t := Tool{
-		Config: cfg,
-		Pool:   s.PostgresPool(),
+	return Tool{
+		name:         cfg.Name,
+		kind:         cfg.Kind,
+		authRequired: cfg.AuthRequired,
+		allParams:    allParameters,
+		pool:         s.PostgresPool(),
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
-			Parameters:   params.Manifest(),
+			Parameters:   paramManifest,
 			AuthRequired: cfg.AuthRequired,
 		},
 		mcpManifest: mcpManifest,
-	}
-	return t, nil
+	}, nil
 }
 
 // validate interface
@@ -126,42 +134,54 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	Pool        *pgxpool.Pool
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	name         string                `yaml:"name"`
+	kind         string                `yaml:"kind"`
+	authRequired []string              `yaml:"authRequired"`
+	allParams    parameters.Parameters `yaml:"allParams"`
+	pool         *pgxpool.Pool
+	manifest     tools.Manifest
+	mcpManifest  tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	results, err := t.Pool.Query(ctx, listAvailableExtensionsQuery)
+	paramsMap := params.AsMap()
+
+	newParams, err := parameters.GetParams(t.allParams, paramsMap)
+	if err != nil {
+		return nil, fmt.Errorf("unable to extract standard params %w", err)
+	}
+	sliceParams := newParams.AsSlice()
+
+	results, err := t.pool.Query(ctx, listLocks, sliceParams...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
+	defer results.Close()
 
 	fields := results.FieldDescriptions()
+	var out []map[string]any
 
-	var out []any
 	for results.Next() {
-		v, err := results.Values()
+		values, err := results.Values()
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse row: %w", err)
 		}
-		vMap := make(map[string]any)
-		for i, f := range fields {
-			vMap[f.Name] = v[i]
+		rowMap := make(map[string]any)
+		for i, field := range fields {
+			rowMap[string(field.Name)] = values[i]
 		}
-		out = append(out, vMap)
-	}
-
-	// this will catch actual query execution errors
-	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		out = append(out, rowMap)
 	}
 
 	return out, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParamValues{}, nil
+	return parameters.ParseParams(t.allParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -173,13 +193,9 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+	return tools.IsAuthorized(t.authRequired, verifiedAuthServices)
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
-}
-
-func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
 }

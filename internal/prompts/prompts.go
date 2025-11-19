@@ -72,6 +72,7 @@ type Prompt interface {
 	ParseArgs(map[string]any, map[string]map[string]any) (parameters.ParamValues, error)
 	Manifest() Manifest
 	McpManifest() McpManifest
+	ToConfig() PromptConfig
 }
 
 // Manifest is the representation of prompts sent to Client SDKs.

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package postgreslistinstalledextensions
+package postgresreplicationstats
 
 import (
 	"context"
@@ -28,27 +28,24 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const kind string = "postgres-list-installed-extensions"
+const kind string = "postgres-replication-stats"
 
-const listAvailableExtensionsQuery = `
+const replicationStats = `
 	SELECT
-		e.extname AS name,
-		e.extversion AS version,
-		n.nspname AS schema,
-		pg_get_userbyid(e.extowner) AS owner,
-		c.description AS description
-	FROM
-		pg_catalog.pg_extension e
-	LEFT JOIN
-		pg_catalog.pg_namespace n
-	ON
-		n.oid = e.extnamespace
-	LEFT JOIN
-		pg_catalog.pg_description c
-	ON
-		c.objoid = e.oid
-		AND c.classoid = 'pg_catalog.pg_extension'::pg_catalog.regclass
-	ORDER BY 1;
+		pid,
+		usename,
+        application_name,
+		backend_xmin,
+        client_addr,
+        state,
+        sync_state,
+        pg_size_pretty(pg_wal_lsn_diff(pg_current_wal_lsn(), sent_lsn)) AS sent_lag,
+        pg_size_pretty(pg_wal_lsn_diff(sent_lsn, write_lsn)) AS write_lag,
+        pg_size_pretty(pg_wal_lsn_diff(write_lsn, flush_lsn)) AS flush_lag,
+        pg_size_pretty(pg_wal_lsn_diff(flush_lsn, replay_lsn)) AS replay_lag,
+        pg_size_pretty(pg_wal_lsn_diff(pg_current_wal_lsn(), replay_lsn)) AS total_lag
+    FROM
+        pg_stat_replication;
 `
 
 func init() {
@@ -80,7 +77,7 @@ type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
+	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
@@ -104,21 +101,29 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	params := parameters.Parameters{}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
+	allParameters := parameters.Parameters{}
+	paramManifest := allParameters.Manifest()
+
+	if cfg.Description == "" {
+		cfg.Description = "Lists each replica's process ID, user name, application name, backend_xmin (standby's xmin horizon reported by hot_standby_feedback), client IP address, connection state, and sync_state, along with lag sizes in bytes for sent_lag (primary to sent), write_lag (sent to written), flush_lag (written to flushed), replay_lag (flushed to replayed), and the overall total_lag (primary to replayed)."
+	}
+
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	// finish tool setup
-	t := Tool{
-		Config: cfg,
-		Pool:   s.PostgresPool(),
+	return Tool{
+		name:         cfg.Name,
+		kind:         cfg.Kind,
+		authRequired: cfg.AuthRequired,
+		allParams:    allParameters,
+		pool:         s.PostgresPool(),
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
-			Parameters:   params.Manifest(),
+			Parameters:   paramManifest,
 			AuthRequired: cfg.AuthRequired,
 		},
 		mcpManifest: mcpManifest,
-	}
-	return t, nil
+	}, nil
 }
 
 // validate interface
@@ -126,42 +131,54 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	Pool        *pgxpool.Pool
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
+	name         string                `yaml:"name"`
+	kind         string                `yaml:"kind"`
+	authRequired []string              `yaml:"authRequired"`
+	allParams    parameters.Parameters `yaml:"allParams"`
+	pool         *pgxpool.Pool
+	manifest     tools.Manifest
+	mcpManifest  tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	results, err := t.Pool.Query(ctx, listAvailableExtensionsQuery)
+	paramsMap := params.AsMap()
+
+	newParams, err := parameters.GetParams(t.allParams, paramsMap)
+	if err != nil {
+		return nil, fmt.Errorf("unable to extract standard params %w", err)
+	}
+	sliceParams := newParams.AsSlice()
+
+	results, err := t.pool.Query(ctx, replicationStats, sliceParams...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
+	defer results.Close()
 
 	fields := results.FieldDescriptions()
+	var out []map[string]any
 
-	var out []any
 	for results.Next() {
-		v, err := results.Values()
+		values, err := results.Values()
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse row: %w", err)
 		}
-		vMap := make(map[string]any)
-		for i, f := range fields {
-			vMap[f.Name] = v[i]
+		rowMap := make(map[string]any)
+		for i, field := range fields {
+			rowMap[string(field.Name)] = values[i]
 		}
-		out = append(out, vMap)
-	}
-
-	// this will catch actual query execution errors
-	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		out = append(out, rowMap)
 	}
 
 	return out, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParamValues{}, nil
+	return parameters.ParseParams(t.allParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -173,13 +190,9 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+	return tools.IsAuthorized(t.authRequired, verifiedAuthServices)
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
-}
-
-func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
 }
