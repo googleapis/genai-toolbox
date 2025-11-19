@@ -118,6 +118,10 @@ func (t MockTool) McpManifest() tools.McpManifest {
 	return mcpManifest
 }
 
+func (t MockTool) GetAuthTokenHeaderName() string {
+	return "Authorization"
+}
+
 // MockPrompt is used to mock prompts in tests
 type MockPrompt struct {
 	Name        string
