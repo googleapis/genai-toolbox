@@ -202,6 +202,9 @@ func AddPostgresPrebuiltConfig(t *testing.T, config map[string]any) map[string]a
 		PostgresListTriggersToolKind            = "postgres-list-triggers"
 		PostgresListIndexesToolKind             = "postgres-list-indexes"
 		PostgresListSequencesToolKind           = "postgres-list-sequences"
+		PostgresLongRunningTransactionsToolKind = "postgres-long-running-transactions"
+		PostgresListLocksToolKind               = "postgres-list-locks"
+		PostgresReplicationStatsToolKind        = "postgres-replication-stats"
 	)
 
 	tools, ok := config["tools"].(map[string]any)
@@ -260,6 +263,18 @@ func AddPostgresPrebuiltConfig(t *testing.T, config map[string]any) map[string]a
 		"source": "my-instance",
 	}
 
+	tools["long_running_transactions"] = map[string]any{
+		"kind":   PostgresLongRunningTransactionsToolKind,
+		"source": "my-instance",
+	}
+	tools["list_locks"] = map[string]any{
+		"kind":   PostgresListLocksToolKind,
+		"source": "my-instance",
+	}
+	tools["replication_stats"] = map[string]any{
+		"kind":   PostgresReplicationStatsToolKind,
+		"source": "my-instance",
+	}
 	config["tools"] = tools
 	return config
 }
