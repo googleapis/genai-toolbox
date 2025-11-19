@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>AlloyDB for PostgreSQL on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/alloydb/</link><description>Recent content in AlloyDB for PostgreSQL on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/resources/tools/alloydb/index.xml" rel="self" type="application/rss+xml"/><item><title>alloydb-create-cluster</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/alloydb/alloydb-create-cluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/alloydb/alloydb-create-cluster/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-create-cluster&lt;/code> tool creates a new AlloyDB for PostgreSQL cluster in a specified project and location. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.
+&lt;p>The &lt;code>alloydb-create-cluster&lt;/code> tool creates a new AlloyDB for PostgreSQL cluster
+in a specified project and location. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.
 This tool provisions a cluster with a &lt;strong>private IP address&lt;/strong> within the specified VPC network.&lt;/p>
 &lt;p>&lt;strong>Permissions &amp;amp; APIs Required:&lt;/strong>
 Before using, ensure the following on your GCP project:&lt;/p>
 &lt;ol>
 &lt;li>
-&lt;p>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/p>
+&lt;p>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB
+API&lt;/a> is
+enabled.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>The user or service account executing the tool has one of the following IAM roles:&lt;/p>
+&lt;p>The user or service account executing the tool has one of the following IAM
+roles:&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>roles/alloydb.admin&lt;/code> (the AlloyDB Admin predefined IAM role)&lt;/li>
 &lt;li>&lt;code>roles/owner&lt;/code> (the Owner basic IAM role)&lt;/li>
@@ -110,7 +115,9 @@ specified AlloyDB cluster. It is compatible with
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>alloydb-get-instance</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/alloydb/alloydb-get-instance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/alloydb/alloydb-get-instance/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-get-instance&lt;/code> tool retrieves detailed information for a single, specified AlloyDB instance. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
+&lt;p>The &lt;code>alloydb-get-instance&lt;/code> tool retrieves detailed information for a single,
+specified AlloyDB instance. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;table>
  &lt;thead>
  &lt;tr>
