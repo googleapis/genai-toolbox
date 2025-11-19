@@ -319,7 +319,7 @@ instance and create new saved content.
 1. **make_look**: Create a saved Look in Looker and return the URL
 1. **get_dashboards**: Return the saved dashboards that match a title or
    description
-1. **run_dashbaord**: Run the queries associated with a dashboard and return the
+1. **run_dashboard**: Run the queries associated with a dashboard and return the
    data
 1. **make_dashboard**: Create a saved dashboard in Looker and return the URL
 1. **add_dashboard_element**: Add a tile to a dashboard

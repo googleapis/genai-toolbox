@@ -116,7 +116,7 @@ In this section, we will download Toolbox, configure our tools in a
     ```
 
     {{< notice note >}}
-    Toolbox enables dynamic reloading by default. To disable, use the
-    `--disable-reload` flag.
+Toolbox enables dynamic reloading by default. To disable, use the
+`--disable-reload` flag.
     {{< /notice >}}
 <!-- [END configure_toolbox] -->
