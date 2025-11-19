@@ -70,4 +70,4 @@ jobs:
         run: ./mcp-publisher login github-oidc
 
       - name: Publish to MCP Registry
-        run: ./mcp-publisher publish --file=.registry/server.json
+        run: ./mcp-publisher publish
