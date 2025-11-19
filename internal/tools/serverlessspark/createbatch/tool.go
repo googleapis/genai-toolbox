@@ -89,12 +89,12 @@ func (t *Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, par
 		return nil, fmt.Errorf("failed to build batch: %w", err)
 	}
 
-	if t.Config.RuntimeConfig != nil {
-		batch.RuntimeConfig = proto.Clone(t.Config.RuntimeConfig).(*dataproc.RuntimeConfig)
+	if t.RuntimeConfig != nil {
+		batch.RuntimeConfig = proto.Clone(t.RuntimeConfig).(*dataproc.RuntimeConfig)
 	}
 
-	if t.Config.EnvironmentConfig != nil {
-		batch.EnvironmentConfig = proto.Clone(t.Config.EnvironmentConfig).(*dataproc.EnvironmentConfig)
+	if t.EnvironmentConfig != nil {
+		batch.EnvironmentConfig = proto.Clone(t.EnvironmentConfig).(*dataproc.EnvironmentConfig)
 	}
 
 	// Common override for version if present in params
