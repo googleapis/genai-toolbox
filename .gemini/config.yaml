@@ -1,0 +1,4 @@
+ignore_patterns:
+  - "package-lock.json"
+  - "go.sum"
+  - "requirements.txt"
