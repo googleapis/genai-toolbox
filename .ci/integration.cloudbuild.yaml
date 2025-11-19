@@ -866,6 +866,7 @@ steps:
           "SingleStore" \
           singlestore \
           singlestore
+
   - id: "mariadb"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -873,10 +874,9 @@ steps:
     env:
       - "GOPATH=/gopath"
       - "MARIADB_DATABASE=$_MARIADB_DATABASE"
-      - "MARIADB_HOST=$_MARIADB_HOST"
       - "MARIADB_PORT=$_MARIADB_PORT"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["MARIADB_USER", "MARIADB_PASS", "CLIENT_ID"]
+    secretEnv: ["MARIADB_USER", "MARIADB_PASS", "MARIADB_HOST", "CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -886,7 +886,7 @@ steps:
         .ci/test_with_coverage.sh \
           "MariaDB" \
           mariadb \
-          mariadb || echo "Integration tests failed."   # ignore failures
+          mariadb
 
 
 availableSecrets:
@@ -1005,6 +1005,8 @@ availableSecrets:
       env: MARIADB_USER
     - versionName: projects/$PROJECT_ID/secrets/mariadb_pass/versions/latest
       env: MARIADB_PASS
+    - versionName: projects/$PROJECT_ID/secrets/mariadb_host/versions/latest
+      env: MARIADB_HOST
 
 
 options:
@@ -1066,7 +1068,6 @@ substitutions:
   _SINGLESTORE_PORT: "3308"
   _SINGLESTORE_DATABASE: "singlestore"
   _SINGLESTORE_USER: "root"
-  _MARIADB_HOST: 127.0.0.1
   _MARIADB_PORT: "3307"
   _MARIADB_DATABASE: test_database
 
