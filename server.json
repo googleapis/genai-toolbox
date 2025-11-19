@@ -18,7 +18,6 @@
     "packages": [
         {
             "registryType": "oci",
-            "registryBaseUrl": "https://artifactregistry.googleapis.com",
             "identifier": "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.20.0",
             "transport": {
                 "type": "streamable-http",
@@ -35,6 +34,7 @@
                 {
                     "type": "named",
                     "name": "--address",
+                    "valueHint": "host",
                     "description": "Address of the interface the server will listen on.",
                     "value": "{host}",
                     "variables": {
@@ -48,6 +48,7 @@
                 {
                     "type": "named",
                     "name": "--port",
+                    "valueHint": "port",
                     "description": "Port the server will listen on.",
                     "value": "{port}",
                     "variables": {
