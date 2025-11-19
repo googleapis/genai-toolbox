@@ -2020,7 +2020,7 @@ instance and create new saved content.
 1. **make_look**: Create a saved Look in Looker and return the URL
 1. **get_dashboards**: Return the saved dashboards that match a title or
    description
-1. **run_dashbaord**: Run the queries associated with a dashboard and return the
+1. **run_dashboard**: Run the queries associated with a dashboard and return the
    data
 1. **make_dashboard**: Create a saved dashboard in Looker and return the URL
 1. **add_dashboard_element**: Add a tile to a dashboard
@@ -6065,6 +6065,14 @@ cluster][alloydb-free-trial].
 
 - [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
   List sequences in a PostgreSQL database.
+- [`postgres-long-running-transactions`](../tools/postgres/postgres-long-running-transactions.md)
+  List long running transactions in a PostgreSQL database.
+
+- [`postgres-list-locks`](../tools/postgres/postgres-list-locks.md)
+  List lock stats in a PostgreSQL database.
+
+- [`postgres-replication-stats`](../tools/postgres/postgres-replication-stats.md)
+  List replication stats in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -6960,6 +6968,14 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
   List sequences in a PostgreSQL database.
+- [`postgres-long-running-transactions`](../tools/postgres/postgres-long-running-transactions.md)
+  List long running transactions in a PostgreSQL database.
+
+- [`postgres-list-locks`](../tools/postgres/postgres-list-locks.md)
+  List lock stats in a PostgreSQL database.
+
+- [`postgres-replication-stats`](../tools/postgres/postgres-replication-stats.md)
+  List replication stats in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -8618,6 +8634,15 @@ reputation for reliability, feature robustness, and performance.
 
 - [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
   List sequences in a PostgreSQL database.
+
+- [`postgres-long-running-transactions`](../tools/postgres/postgres-long-running-transactions.md)
+  List long running transactions in a PostgreSQL database.
+
+- [`postgres-list-locks`](../tools/postgres/postgres-list-locks.md)
+  List lock stats in a PostgreSQL database.
+
+- [`postgres-replication-stats`](../tools/postgres/postgres-replication-stats.md)
+  List replication stats in a PostgreSQL database.
 
 ### Pre-built Configurations
 
