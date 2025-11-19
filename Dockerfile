@@ -34,4 +34,6 @@ WORKDIR /app
 COPY --from=build --chown=nonroot /go/src/genai-toolbox/genai-toolbox /toolbox
 USER nonroot
 
+LABEL io.modelcontextprotocol.server.name="io.github.googleapis/genai-toolbox"
+
 ENTRYPOINT ["/toolbox"] 
