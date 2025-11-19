@@ -35,7 +35,7 @@ jobs:
         shell: bash
         run: |
           MAX_ATTEMPTS=10
-          VERSION=$(jq -r '.version' .registry/server.json)
+          VERSION=$(jq -r '.version' server.json)
           REGISTRY_URL="https://us-central1-docker.pkg.dev/v2/database-toolbox/toolbox/toolbox/manifests/${VERSION}"
 
           # initially sleep time to wait for the version release
