@@ -10,3 +10,4 @@ description: >
 - [serverless-spark-list-batches](./serverless-spark-list-batches.md)
 - [serverless-spark-cancel-batch](./serverless-spark-cancel-batch.md)
 - [serverless-spark-create-pyspark-batch](./serverless-spark-create-pyspark-batch.md)
+- [serverless-spark-create-spark-batch](./serverless-spark-create-spark-batch.md)
