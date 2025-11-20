@@ -85,9 +85,9 @@ using a TNS (Transparent Network Substrate) alias.
   containing it. This setting will override the `TNS_ADMIN` environment
   variable.
 
-## Example
+## Examples
 
-This example demonstrates the optional `useOCI` field.
+This example demonstrates the four connection methods you could choose from:
 
 ```yaml
 sources:
@@ -111,6 +111,41 @@ sources:
         password: ${PASSWORD}
 
         # Optional: Set to true to use the OCI-based driver for advanced features (Requires Oracle Instant Client)
+```
+
+### Using an Oracle Wallet
+
+Oracle Wallet allows you to store credentails used for database connection. Depending whether you are using an OCI-based driver, the wallet configuration is different.
+
+#### Pure Go Driver (`useOCI: false`) - Oracle Wallet
+
+The `go-ora` driver uses the `walletLocation` field to connect to a database secured with an Oracle Wallet without standard username and password.
+
+```yaml
+sources:
+    pure-go-wallet:
+        kind: oracle
+        connectionString: "127.0.0.1:1521/XEPDB1"
+        user: ${USER_NAME}
+        password: ${PASSWORD}
+        # The TNS Alias is often required to connect to a service registered in tnsnames.ora
+        tnsAlias: "SECURE_DB_ALIAS"
+        walletLocation: "/path/to/my/wallet/directory"
+```
+
+#### OCI-Based Driver (`useOCI: true`) - Oracle Wallet
+
+For the OCI-based driver, wallet authentication is triggered by setting tnsAdmin to the wallet directory and connecting via a tnsAlias. 
+
+```yaml
+sources:
+    oci-wallet:
+        kind: oracle
+        connectionString: "127.0.0.1:1521/XEPDB1"
+        user: ${USER_NAME}
+        password: ${PASSWORD}
+        tnsAlias: "WALLET_DB_ALIAS"
+        tnsAdmin: "/opt/oracle/wallet" # Directory containing tnsnames.ora, sqlnet.ora, and wallet files
         useOCI: true
 ```
 
