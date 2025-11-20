@@ -42,13 +42,13 @@ export ALLOYDB_POSTGRES_IP_TYPE="PUBLIC"  # Optional: `PUBLIC`, `PRIVATE`, `PSC`
 
 1.  **Install [Docker](https://docs.docker.com/install/)**.
 
-2 .  **Configure your client**:
+2.  **Configure your client**:
     Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
 
     ```json
     {
       "mcpServers": {
-        "alloydb-admin": {
+        "alloydb-postgres": {
           "command": "docker",
           "args": [
             "run",
@@ -113,7 +113,7 @@ export ALLOYDB_POSTGRES_IP_TYPE="PUBLIC"  # Optional: `PUBLIC`, `PRIVATE`, `PSC`
     ```json
     {
       "mcpServers": {
-        "alloydb-admin": {
+        "alloydb-postgres": {
           "command": "./path/to/toolbox",
           "args": ["--prebuilt", "alloydb-postgres", "--stdio"],
         }

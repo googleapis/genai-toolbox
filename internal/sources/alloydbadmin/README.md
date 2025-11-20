@@ -24,7 +24,7 @@ An editor configured to use the AlloyDB MCP server can use its AI capabilities t
 
 1.  **Install [Docker](https://docs.docker.com/install/)**.
 
-2 .  **Configure your client**:
+2.  **Configure your client**:
     Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
 
     ```json
