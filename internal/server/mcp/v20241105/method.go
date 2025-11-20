@@ -23,26 +23,26 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
+	"github.com/googleapis/genai-toolbox/internal/server/resources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 // ProcessMethod returns a response for the request.
-func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, tools map[string]tools.Tool, promptset prompts.Promptset, prompts map[string]prompts.Prompt, authServices map[string]auth.AuthService, body []byte, header http.Header) (any, error) {
+func ProcessMethod(ctx context.Context, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
 	switch method {
 	case PING:
 		return pingHandler(id)
 	case TOOLS_LIST:
 		return toolsListHandler(id, toolset, body)
 	case TOOLS_CALL:
-		return toolsCallHandler(ctx, id, tools, authServices, body, header)
+		return toolsCallHandler(ctx, id, resourceMgr, body, header)
 	case PROMPTS_LIST:
 		return promptsListHandler(ctx, id, promptset, body)
 	case PROMPTS_GET:
-		return promptsGetHandler(ctx, id, prompts, body)
+		return promptsGetHandler(ctx, id, resourceMgr, body)
 	default:
 		err := fmt.Errorf("invalid method %s", method)
 		return jsonrpc.NewError(id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
@@ -76,7 +76,10 @@ func toolsListHandler(id jsonrpc.RequestId, toolset tools.Toolset, body []byte) 
 }
 
 // toolsCallHandler generate a response for tools call.
-func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[string]tools.Tool, authServices map[string]auth.AuthService, body []byte, header http.Header) (any, error) {
+func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
+	toolsMap := resourceMgr.GetToolsMap()
+	authServices := resourceMgr.GetAuthServiceMap()
+
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -102,7 +105,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 	accessToken := tools.AccessToken(header.Get(tool.GetAuthTokenHeaderName()))
 
 	// Check if this specific tool requires the standard authorization header
-	if tool.RequiresClientAuthorization() {
+	if tool.RequiresClientAuthorization(resourceMgr) {
 		if accessToken == "" {
 			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, "missing access token in the 'Authorization' header", nil), util.ErrUnauthorized
 		}
@@ -165,7 +168,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 	logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
 	// run tool invocation and generate response.
-	results, err := tool.Invoke(ctx, params, accessToken)
+	results, err := tool.Invoke(ctx, resourceMgr, params, accessToken)
 	if err != nil {
 		errStr := err.Error()
 		// Missing authService tokens.
@@ -174,7 +177,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 		}
 		// Upstream auth error
 		if strings.Contains(errStr, "Error 401") || strings.Contains(errStr, "Error 403") {
-			if tool.RequiresClientAuthorization() {
+			if tool.RequiresClientAuthorization(resourceMgr) {
 				// Error with client credentials should pass down to the client
 				return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 			}
@@ -245,7 +248,8 @@ func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, promptset pro
 }
 
 // promptsGetHandler handles the "prompts/get" method.
-func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, promptsMap map[string]prompts.Prompt, body []byte) (any, error) {
+func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, body []byte) (any, error) {
+	promptsMap := resourceMgr.GetPromptsMap()
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {

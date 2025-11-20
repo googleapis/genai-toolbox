@@ -22,7 +22,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -31,6 +30,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
+	"github.com/googleapis/genai-toolbox/internal/server/resources"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -48,109 +48,7 @@ type Server struct {
 	logger          log.Logger
 	instrumentation *telemetry.Instrumentation
 	sseManager      *sseManager
-	ResourceMgr     *ResourceManager
-}
-
-// ResourceManager contains available resources for the server. Should be initialized with NewResourceManager().
-type ResourceManager struct {
-	mu           sync.RWMutex
-	sources      map[string]sources.Source
-	authServices map[string]auth.AuthService
-	tools        map[string]tools.Tool
-	toolsets     map[string]tools.Toolset
-	prompts      map[string]prompts.Prompt
-	promptsets   map[string]prompts.Promptset
-}
-
-func NewResourceManager(
-	sourcesMap map[string]sources.Source,
-	authServicesMap map[string]auth.AuthService,
-	toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset,
-	promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset,
-
-) *ResourceManager {
-	resourceMgr := &ResourceManager{
-		mu:           sync.RWMutex{},
-		sources:      sourcesMap,
-		authServices: authServicesMap,
-		tools:        toolsMap,
-		toolsets:     toolsetsMap,
-		prompts:      promptsMap,
-		promptsets:   promptsetsMap,
-	}
-
-	return resourceMgr
-}
-
-func (r *ResourceManager) GetSource(sourceName string) (sources.Source, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	source, ok := r.sources[sourceName]
-	return source, ok
-}
-
-func (r *ResourceManager) GetAuthService(authServiceName string) (auth.AuthService, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	authService, ok := r.authServices[authServiceName]
-	return authService, ok
-}
-
-func (r *ResourceManager) GetTool(toolName string) (tools.Tool, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	tool, ok := r.tools[toolName]
-	return tool, ok
-}
-
-func (r *ResourceManager) GetToolset(toolsetName string) (tools.Toolset, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	toolset, ok := r.toolsets[toolsetName]
-	return toolset, ok
-}
-
-func (r *ResourceManager) GetPrompt(promptName string) (prompts.Prompt, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	prompt, ok := r.prompts[promptName]
-	return prompt, ok
-}
-
-func (r *ResourceManager) GetPromptset(promptsetName string) (prompts.Promptset, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	promptset, ok := r.promptsets[promptsetName]
-	return promptset, ok
-}
-
-func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset, promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	r.sources = sourcesMap
-	r.authServices = authServicesMap
-	r.tools = toolsMap
-	r.toolsets = toolsetsMap
-	r.prompts = promptsMap
-	r.promptsets = promptsetsMap
-}
-
-func (r *ResourceManager) GetAuthServiceMap() map[string]auth.AuthService {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	return r.authServices
-}
-
-func (r *ResourceManager) GetToolsMap() map[string]tools.Tool {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	return r.tools
-}
-
-func (r *ResourceManager) GetPromptsMap() map[string]prompts.Prompt {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	return r.prompts
+	ResourceMgr     *resources.ResourceManager
 }
 
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
@@ -429,7 +327,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := NewResourceManager(sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
+	resourceManager := resources.NewResourceManager(sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	s := &Server{
 		version:         cfg.Version,

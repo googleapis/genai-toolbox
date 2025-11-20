@@ -403,7 +403,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 			t.Fatalf("Failed to initialize tool: %v", err)
 		}
 
-		result, err := tool.Invoke(ctx, parameters.ParamValues{}, "")
+		result, err := tool.Invoke(ctx, nil, parameters.ParamValues{}, "")
 		if err != nil {
 			t.Fatalf("Failed to invoke tool: %v", err)
 		}
@@ -444,7 +444,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 			{Name: "min_age", Value: 28},
 		}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to invoke tool: %v", err)
 		}
@@ -485,7 +485,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 			{Name: "id", Value: 999}, // Non-existent ID
 		}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to invoke tool: %v", err)
 		}
@@ -519,7 +519,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 			t.Fatalf("Failed to initialize tool: %v", err)
 		}
 
-		_, err = tool.Invoke(ctx, parameters.ParamValues{}, "")
+		_, err = tool.Invoke(ctx, nil, parameters.ParamValues{}, "")
 		if err == nil {
 			t.Error("Expected error for invalid SQL, got nil")
 		}
@@ -574,7 +574,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 			{Name: "sql", Value: createSQL},
 		}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to create table: %v", err)
 		}
@@ -612,7 +612,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 			{Name: "sql", Value: insertSQL},
 		}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to insert data: %v", err)
 		}
@@ -650,7 +650,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 			{Name: "sql", Value: selectSQL},
 		}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to select data: %v", err)
 		}
@@ -688,7 +688,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 			{Name: "sql", Value: dropSQL},
 		}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to drop table: %v", err)
 		}
@@ -726,7 +726,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 			{Name: "sql", Value: ""},
 		}
 
-		_, err = tool.Invoke(ctx, params, "")
+		_, err = tool.Invoke(ctx, nil, params, "")
 		if err == nil {
 			t.Error("Expected error for empty SQL parameter, got nil")
 		} else {
@@ -758,7 +758,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 			{Name: "sql", Value: injectionSQL},
 		}
 
-		_, err = tool.Invoke(ctx, params, "")
+		_, err = tool.Invoke(ctx, nil, params, "")
 		// This should either fail or only execute the first statement
 		// dont check the specific error as behavior may vary
 		_ = err // We're not checking the error intentionally
@@ -807,7 +807,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 			{Name: "sql", Value: longQuery},
 		}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to execute long query: %v", err)
 		}
@@ -862,7 +862,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 			t.Fatalf("Failed to initialize tool: %v", err)
 		}
 
-		result, err := tool.Invoke(ctx, parameters.ParamValues{}, "")
+		result, err := tool.Invoke(ctx, nil, parameters.ParamValues{}, "")
 		if err != nil {
 			t.Fatalf("Failed to select null values: %v", err)
 		}
@@ -916,7 +916,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 					{Name: "limit", Value: n + 1},
 				}
 
-				result, err := tool.Invoke(ctx, params, "")
+				result, err := tool.Invoke(ctx, nil, params, "")
 				if err != nil {
 					t.Errorf("Concurrent query %d failed: %v", n, err)
 					return
@@ -1056,7 +1056,7 @@ func TestClickHouseListDatabasesTool(t *testing.T) {
 
 		params := parameters.ParamValues{}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to list databases: %v", err)
 		}
@@ -1170,7 +1170,7 @@ func TestClickHouseListTablesTool(t *testing.T) {
 			{Name: "database", Value: testDBName},
 		}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to list tables: %v", err)
 		}
@@ -1234,7 +1234,7 @@ func TestClickHouseListTablesTool(t *testing.T) {
 
 		params := parameters.ParamValues{}
 
-		_, err = tool.Invoke(ctx, params, "")
+		_, err = tool.Invoke(ctx, nil, params, "")
 		if err == nil {
 			t.Error("Expected error for missing database parameter, got nil")
 		} else {
