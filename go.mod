@@ -18,6 +18,7 @@ require (
 	github.com/ClickHouse/clickhouse-go/v2 v2.40.3
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.53.0
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.29.0
+	github.com/apache/cassandra-gocql-driver/v2 v2.0.0
 	github.com/cenkalti/backoff/v5 v5.0.3
 	github.com/couchbase/gocb/v2 v2.11.1
 	github.com/couchbase/tools-common/http v1.0.9
@@ -31,7 +32,6 @@ require (
 	github.com/go-playground/validator/v10 v10.28.0
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/goccy/go-yaml v1.18.0
-	github.com/gocql/gocql v1.7.0
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.6
@@ -122,7 +122,6 @@ require (
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.2 // indirect
-	github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
