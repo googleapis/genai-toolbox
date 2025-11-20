@@ -120,7 +120,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	cfg.NLConfigParameters = append([]parameters.Parameter{newQuestionParam}, cfg.NLConfigParameters...)
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, cfg.NLConfigParameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, cfg.NLConfigParameters, nil)
 
 	t := Tool{
 		Config:      cfg,
