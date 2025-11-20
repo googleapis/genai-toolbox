@@ -16,7 +16,7 @@ An editor configured to use the AlloyDB MCP server can use its AI capabilities t
 ### Prerequisites
 
 *   A Google Cloud project with the **AlloyDB API** enabled.
-*   Ensure the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set with [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud).
+*   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
 *   IAM Permissions:
     *   AlloyDB Client (`roles/alloydb.client`) (for connecting and querying)
     *   Service Usage Consumer (`roles/serviceusage.serviceUsageConsumer`)
@@ -42,7 +42,9 @@ export ALLOYDB_POSTGRES_IP_TYPE="PUBLIC"  # Optional: `PUBLIC`, `PRIVATE`, `PSC`
 
 1.  **Install [Docker](https://docs.docker.com/install/)**.
 
-2.  **Configure your client**:
+2. Ensure the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set with [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud).
+
+3.  **Configure your client**:
     Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
 
     ```json

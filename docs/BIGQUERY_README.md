@@ -15,7 +15,7 @@ An editor configured to use the BigQuery MCP server can use its AI capabilities 
 ### Prerequisites
 
 *   A Google Cloud project with the **BigQuery API** enabled.
-*   Ensure the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set with [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud).
+*   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
 *   IAM Permissions:
     *   BigQuery User (`roles/bigquery.user`)
 
@@ -33,7 +33,9 @@ export BIGQUERY_USE_CLIENT_OAUTH="true"  # Optional
 
 1.  **Install [Docker](https://docs.docker.com/install/)**.
 
-2.  **Configure your client**:
+2. Ensure the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set with [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud).
+
+3.  **Configure your client**:
     Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
 
     ```json

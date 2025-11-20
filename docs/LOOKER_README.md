@@ -22,11 +22,24 @@ An editor configured to use the Looker MCP server can use its AI capabilities to
 
 ### Configuration
 
+The MCP server is configured using environment variables.
+
+```bash
+export LOOKER_BASE_URL="<your-looker-instance-url>"  # e.g. `https://looker.example.com`. You may need to add the port, i.e. `:19999`.
+export LOOKER_CLIENT_ID="<your-looker-client-id>"
+export LOOKER_CLIENT_SECRET="<your-looker-client-secret>"
+export LOOKER_VERIFY_SSL="true" # Optional, defaults to true
+export LOOKER_SHOW_HIDDEN_MODELS="true" # Optional, defaults to true
+export LOOKER_SHOW_HIDDEN_EXPLORES="true" # Optional, defaults to true
+export LOOKER_SHOW_HIDDEN_FIELDS="true" # Optional, defaults to true
+```
+
 #### Docker Configuration
 
 1.  **Install [Docker](https://docs.docker.com/install/)**.
+2.  Ensure the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set with [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud).
 
-2.  **Configure your client**:
+3.  **Configure your client**:
     Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
 
     ```json
@@ -38,6 +51,12 @@ An editor configured to use the Looker MCP server can use its AI capabilities to
             "run",
             "-i",
             "--rm",
+            "-e",
+            "LOOKER_BASE_URL",
+            "-e",
+            "LOOKER_CLIENT_ID",
+            "-e",
+            "LOOKER_CLIENT_SECRET",
             "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest",
             "--prebuilt",
             "looker",

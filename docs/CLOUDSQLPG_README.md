@@ -16,17 +16,34 @@ An editor configured to use the Cloud SQL for PostgreSQL MCP server can use its 
 ### Prerequisites
 
 *   A Google Cloud project with the **Cloud SQL Admin API** enabled.
-*   Ensure the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set with [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud).
+*   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
 *   IAM Permissions:
     *   Cloud SQL Client (`roles/cloudsql.client`)
 
 ### Configuration
 
+The MCP server is configured using environment variables.
+
+```bash
+export CLOUD_SQL_POSTGRES_PROJECT="<your-gcp-project-id>"
+export CLOUD_SQL_POSTGRES_REGION="<your-cloud-sql-region>"
+export CLOUD_SQL_POSTGRES_INSTANCE="<your-cloud-sql-instance-id>"
+export CLOUD_SQL_POSTGRES_DATABASE="<your-database-name>"
+export CLOUD_SQL_POSTGRES_USER="<your-database-user>"  # Optional
+export CLOUD_SQL_POSTGRES_PASSWORD="<your-database-password>"  # Optional
+export CLOUD_SQL_POSTGRES_IP_TYPE="PUBLIC"  # Optional: `PUBLIC`, `PRIVATE`, `PSC`. Defaults to `PUBLIC`.
+```
+
+> **Note:** If your instance uses private IPs, you must run the MCP server in the same Virtual Private Cloud (VPC) network.
+
+
 #### Docker Configuration
 
 1.  **Install [Docker](https://docs.docker.com/install/)**.
 
-2.  **Configure your client**:
+2.  Ensure the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set with [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud).
+
+3.  **Configure your client**:
     Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
 
     ```json
@@ -38,6 +55,20 @@ An editor configured to use the Cloud SQL for PostgreSQL MCP server can use its 
             "run",
             "-i",
             "--rm",
+            "-e",
+            "CLOUD_SQL_POSTGRES_PROJECT",
+            "-e",
+            "CLOUD_SQL_POSTGRES_REGION",
+            "-e",
+            "CLOUD_SQL_POSTGRES_INSTANCE",
+            "-e",
+            "CLOUD_SQL_POSTGRES_DATABASE",
+            "-e",
+            "CLOUD_SQL_POSTGRES_USER",
+            "-e",
+            "CLOUD_SQL_POSTGRES_PASSWORD",
+            "-e",
+            "CLOUD_SQL_POSTGRES_IP_TYPE",
             "-e",
             "GOOGLE_APPLICATION_CREDENTIALS=/tmp/keys/adc.json",
             "-v",

@@ -14,18 +14,28 @@ An editor configured to use the Cloud Spanner MCP server can use its AI capabili
 ### Prerequisites
 
 *   A Google Cloud project with the **Cloud Spanner API** enabled.
-*   Ensure the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set with [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud).
+*   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
 *   IAM Permissions:
     *   Cloud Spanner Database User (`roles/spanner.databaseUser`) (for data access)
     *   Cloud Spanner Viewer (`roles/spanner.viewer`) (for schema access)
 
 ### Configuration
 
+The MCP server is configured using environment variables.
+
+```bash
+export SPANNER_PROJECT="<your-gcp-project-id>"
+export SPANNER_INSTANCE="<your-spanner-instance-id>"
+export SPANNER_DATABASE="<your-spanner-database-id>"
+export SPANNER_DIALECT="googlesql" # Optional: "googlesql" or "postgresql". Defaults to "googlesql".
+```
+
 #### Docker Configuration
 
 1.  **Install [Docker](https://docs.docker.com/install/)**.
+2.  Ensure the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set with [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud).
 
-2.  **Configure your client**:
+3.  **Configure your client**:
     Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
 
     ```json

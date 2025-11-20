@@ -1,4 +1,4 @@
-# Cloud SQL for MySQL MCP Server
+# Cloud SQL for MySQL Admin MCP Server
 
 The Cloud SQL for MySQL Model Context Protocol (MCP) Server gives AI-powered development tools the ability to work with your Google Cloud SQL for MySQL databases. It supports connecting to instances, exploring schemas, and running queries.
 
@@ -6,19 +6,17 @@ The Cloud SQL for MySQL Model Context Protocol (MCP) Server gives AI-powered dev
 
 An editor configured to use the Cloud SQL for MySQL MCP server can use its AI capabilities to help you:
 
-- **Query Data** - Execute SQL queries and analyze query plans
-- **Explore Schema** - List tables and view schema details
-- **Database Maintenance** - Check for fragmentation and missing indexes
-- **Monitor Performance** - View active queries
+- **Provision & Manage Infrastructure** - Create and manage Cloud SQL instances and users
 
 ## Installation and Setup
 
 ### Prerequisites
 
 *   A Google Cloud project with the **Cloud SQL Admin API** enabled.
-*   Ensure the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set with [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud).
+*   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
 *   IAM Permissions:
-    *   Cloud SQL Client (`roles/cloudsql.client`)
+  * Cloud SQL Viewer (`roles/cloudsql.viewer`)
+  * Cloud SQL Admin (`roles/cloudsql.admin`)
 
 ### Configuration
 
@@ -26,13 +24,15 @@ An editor configured to use the Cloud SQL for MySQL MCP server can use its AI ca
 
 1.  **Install [Docker](https://docs.docker.com/install/)**.
 
-2.  **Configure your client**:
+2.  Ensure the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set with [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud).
+
+3.  **Configure your client**:
     Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
 
     ```json
     {
       "mcpServers": {
-        "cloud-sql-mysql": {
+        "cloud-sql-mysql-admin": {
           "command": "docker",
           "args": [
             "run",
@@ -44,17 +44,9 @@ An editor configured to use the Cloud SQL for MySQL MCP server can use its AI ca
             "${GOOGLE_APPLICATION_CREDENTIAL}:/tmp/keys/adc.json:ro",
             "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest",
             "--prebuilt",
-            "cloud-sql-mysql",
+            "cloud-sql-mysql-admin",
             "--stdio"
-          ],
-          "env": {
-            "CLOUD_SQL_MYSQL_PROJECT": "your-project-id",
-            "CLOUD_SQL_MYSQL_REGION": "your-region",
-            "CLOUD_SQL_MYSQL_INSTANCE": "your-instance-id",
-            "CLOUD_SQL_MYSQL_DATABASE": "your-database-name",
-            "CLOUD_SQL_MYSQL_USER": "your-username",
-            "CLOUD_SQL_MYSQL_PASSWORD": "your-password"
-          }
+          ]
         }
       }
     }
@@ -79,17 +71,9 @@ An editor configured to use the Cloud SQL for MySQL MCP server can use its AI ca
     ```json
     {
       "mcpServers": {
-        "cloud-sql-mysql": {
+        "cloud-sql-mysql-admin": {
           "command": "./path/to/toolbox",
-          "args": ["--prebuilt", "cloud-sql-mysql", "--stdio"],
-          "env": {
-            "CLOUD_SQL_MYSQL_PROJECT": "your-project-id",
-            "CLOUD_SQL_MYSQL_REGION": "your-region",
-            "CLOUD_SQL_MYSQL_INSTANCE": "your-instance-id",
-            "CLOUD_SQL_MYSQL_DATABASE": "your-database-name",
-            "CLOUD_SQL_MYSQL_USER": "your-username",
-            "CLOUD_SQL_MYSQL_PASSWORD": "your-password"
-          }
+          "args": ["--prebuilt", "cloud-sql-mysql-admin", "--stdio"]
         }
       }
     }
@@ -99,9 +83,8 @@ An editor configured to use the Cloud SQL for MySQL MCP server can use its AI ca
 
 Once configured, the MCP server will automatically provide Cloud SQL for MySQL capabilities to your AI assistant. You can:
 
-*   "Show me the schema for the 'orders' table."
-*   "List the top 10 active queries."
-*   "Check for tables missing unique indexes."
+   * "Create a new Cloud SQL for MySQL instance named 'e-commerce-prod' in the 'my-gcp-project' project."
+   * "Create a new user named 'analyst' with read access to all tables."
 
 ## Server Capabilities
 
@@ -109,12 +92,13 @@ The Cloud SQL for MySQL MCP server provides the following tools:
 
 | Tool Name | Description |
 | :--- | :--- |
-| `execute_sql` | Use this tool to execute SQL. |
-| `list_active_queries` | Lists top N ongoing queries from processlist and innodb_trx. |
-| `get_query_plan` | Provide information about how MySQL executes a SQL statement (EXPLAIN). |
-| `list_tables` | Lists detailed schema information for user-created tables. |
-| `list_tables_missing_unique_indexes` | Find tables that do not have primary or unique key constraint. |
-| `list_table_fragmentation` | List table fragmentation in MySQL. |
+| `create_instance` | Create an instance (PRIMARY, READ-POOL, or SECONDARY). |
+| `create_user` | Create BUILT-IN or IAM-based users for an instance. |
+| `get_instance` | Get details about an instance. |
+| `get_user` | Get details about a user in an instance. |
+| `list_instances` | List instances in a given project and location. |
+| `list_users` | List users in a given project and location. |
+| `wait_for_operation` | Poll the operations API until the operation is done. |
 
 ## Documentation
 
