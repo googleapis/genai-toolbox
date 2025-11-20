@@ -171,3 +171,7 @@ func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any)
 }
 
 var _ tools.Tool = Tool{}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
+}
