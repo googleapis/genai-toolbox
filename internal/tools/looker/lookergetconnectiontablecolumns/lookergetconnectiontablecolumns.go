@@ -79,7 +79,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	tablesParameter := parameters.NewStringParameter("tables", "A comma separated list of tables containing the columns.")
 	params := parameters.Parameters{connParameter, dbParameter, schemaParameter, tablesParameter}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
+	readOnlyHint := true
+	annotations := tools.ToolAnnotations{
+		ReadOnlyHint: &readOnlyHint,
+	}
+
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, &annotations)
 
 	// finish tool setup
 	return Tool{

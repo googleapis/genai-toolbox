@@ -76,7 +76,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	modelParameter := parameters.NewStringParameter("model", "The model containing the explores.")
 	params := parameters.Parameters{modelParameter}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
+	readOnlyHint := true
+	annotations := tools.ToolAnnotations{
+		ReadOnlyHint: &readOnlyHint,
+	}
+
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, &annotations)
 
 	// finish tool setup
 	return Tool{

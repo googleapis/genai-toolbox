@@ -82,7 +82,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	descParameter := parameters.NewStringParameterWithDefault("description", "", "The description of the Dashboard")
 	params = append(params, descParameter)
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
+	readOnlyHint := false
+	annotations := tools.ToolAnnotations{
+		ReadOnlyHint: &readOnlyHint,
+	}
+
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, &annotations)
 
 	// finish tool setup
 	return Tool{

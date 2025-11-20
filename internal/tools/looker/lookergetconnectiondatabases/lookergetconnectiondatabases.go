@@ -75,7 +75,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	connParameter := parameters.NewStringParameter("conn", "The connection containing the databases.")
 	params := parameters.Parameters{connParameter}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
+	readOnlyHint := true
+	annotations := tools.ToolAnnotations{
+		ReadOnlyHint: &readOnlyHint,
+	}
+
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, &annotations)
 
 	// finish tool setup
 	return Tool{
