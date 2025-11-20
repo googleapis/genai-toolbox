@@ -77,8 +77,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	params := parameters.Parameters{projectIdParameter, filePathParameter}
 
 	readOnlyHint := false
+	destructiveHint := true
 	annotations := tools.ToolAnnotations{
-		ReadOnlyHint: &readOnlyHint,
+		ReadOnlyHint:    &readOnlyHint,
+		DestructiveHint: &destructiveHint,
 	}
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, &annotations)
