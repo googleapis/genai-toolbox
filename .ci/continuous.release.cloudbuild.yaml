@@ -70,6 +70,11 @@ steps:
       - "install-zig"
     env:
       - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=linux'
+      - 'GOARCH=amd64'
+      - 'CC=/zig-tools/zig cc -target x86_64-linux-gnu'
+      - 'CXX=/zig-tools/zig c++ -target x86_64-linux-gnu'
     volumes:
       - name: 'go'
         path: '/gopath'
@@ -77,10 +82,7 @@ steps:
         path: '/zig-tools'
     script: |
         #!/usr/bin/env bash
-        CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
-        CC="/zig-tools/zig cc -target x86_64-linux-gnu" \
-        CXX="/zig-tools/zig c++ -target x86_64-linux-gnu" \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.linux.amd64
+        go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.linux.amd64
 
   - id: "store-linux-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -97,6 +99,11 @@ steps:
       - "install-zig"
     env:
       - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=linux'
+      - 'GOARCH=amd64'
+      - 'CC=/zig-tools/zig cc -target x86_64-linux-gnu'
+      - 'CXX=/zig-tools/zig c++ -target x86_64-linux-gnu'
     volumes:
       - name: 'go'
         path: '/gopath'
@@ -105,10 +112,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
-        CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
-        CC="/zig-tools/zig cc -target x86_64-linux-gnu" \
-        CXX="/zig-tools/zig c++ -target x86_64-linux-gnu" \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.linux.amd64
+        go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.linux.amd64
 
   - id: "build-darwin-arm64"
     name: golang:1
@@ -118,6 +122,15 @@ steps:
       - "install-macos-sdk"
     env:
       - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=darwin'
+      - 'GOARCH=arm64'
+      - 'SDK_PATH=/macos-sdk/MacOSX14.5.sdk'
+      - 'MACOS_MIN_VER=10.14'
+      - 'CGO_LDFLAGS=-mmacosx-version-min=10.14 --sysroot /macos-sdk/MacOSX14.5.sdk -F/macos-sdk/MacOSX14.5.sdk/System/Library/Frameworks -L/usr/lib'
+      - 'COMMON_FLAGS=-mmacosx-version-min=10.14 -target aarch64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
+      - 'CC=/zig-tools/zig cc -mmacosx-version-min=10.14 -target aarch64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
+      - 'CXX=/zig-tools/zig c++ -mmacosx-version-min=10.14 -target aarch64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
     volumes:
       - name: 'go'
         path: '/gopath'
@@ -127,14 +140,6 @@ steps:
         path: '/macos-sdk'
     script: |
         #!/usr/bin/env bash
-        SDK_PATH="/macos-sdk/MacOSX14.5.sdk"
-        export MACOS_MIN_VER=10.14
-
-        CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 \
-        CGO_LDFLAGS="-mmacosx-version-min=${MACOS_MIN_VER} --sysroot ${SDK_PATH} -F${SDK_PATH}/System/Library/Frameworks -L/usr/lib" \
-        COMMON_FLAGS="-mmacosx-version-min=${MACOS_MIN_VER} -target aarch64-macos.11.0.0-none -isysroot ${SDK_PATH} -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks" \
-        CC="/zig-tools/zig cc ${COMMON_FLAGS}" \
-        CXX="/zig-tools/zig c++ ${COMMON_FLAGS}" \
          go build -trimpath -buildmode=pie -ldflags "-s -w -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.darwin.arm64
 
   - id: "store-darwin-arm64"
@@ -153,6 +158,15 @@ steps:
       - "install-macos-sdk"
     env:
       - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=darwin'
+      - 'GOARCH=arm64'
+      - 'SDK_PATH=/macos-sdk/MacOSX14.5.sdk'
+      - 'MACOS_MIN_VER=10.14'
+      - 'CGO_LDFLAGS=-mmacosx-version-min=10.14 --sysroot /macos-sdk/MacOSX14.5.sdk -F/macos-sdk/MacOSX14.5.sdk/System/Library/Frameworks -L/usr/lib'
+      - 'COMMON_FLAGS=-mmacosx-version-min=10.14 -target aarch64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
+      - 'CC=/zig-tools/zig cc -mmacosx-version-min=10.14 -target aarch64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
+      - 'CXX=/zig-tools/zig c++ -mmacosx-version-min=10.14 -target aarch64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
     volumes:
       - name: 'go'
         path: '/gopath'
@@ -162,14 +176,6 @@ steps:
         path: '/macos-sdk'
     script: |
         #!/usr/bin/env bash
-        SDK_PATH="/macos-sdk/MacOSX14.5.sdk"
-        export MACOS_MIN_VER=10.14
-
-        CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 \
-        CGO_LDFLAGS="-mmacosx-version-min=${MACOS_MIN_VER} --sysroot ${SDK_PATH} -F${SDK_PATH}/System/Library/Frameworks -L/usr/lib" \
-        COMMON_FLAGS="-mmacosx-version-min=${MACOS_MIN_VER} -target aarch64-macos.11.0.0-none -isysroot ${SDK_PATH} -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks" \
-        CC="/zig-tools/zig cc ${COMMON_FLAGS}" \
-        CXX="/zig-tools/zig c++ ${COMMON_FLAGS}" \
          go build -trimpath -buildmode=pie -ldflags "-s -w -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.darwin.arm64
 
   - id: "build-darwin-amd64"
@@ -180,6 +186,15 @@ steps:
       - "install-macos-sdk"
     env:
       - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=darwin'
+      - 'GOARCH=amd64'
+      - 'SDK_PATH=/macos-sdk/MacOSX14.5.sdk'
+      - 'MACOS_MIN_VER=10.14'
+      - 'CGO_LDFLAGS=-mmacosx-version-min=10.14 --sysroot /macos-sdk/MacOSX14.5.sdk -F/macos-sdk/MacOSX14.5.sdk/System/Library/Frameworks -L/usr/lib'
+      - 'COMMON_FLAGS=-mmacosx-version-min=10.14 -target x86_64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
+      - 'CC=/zig-tools/zig cc -mmacosx-version-min=10.14 -target x86_64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
+      - 'CXX=/zig-tools/zig c++ -mmacosx-version-min=10.14 -target x86_64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
     volumes:
       - name: 'go'
         path: '/gopath'
@@ -189,14 +204,6 @@ steps:
         path: '/macos-sdk'
     script: |
         #!/usr/bin/env bash
-        SDK_PATH="/macos-sdk/MacOSX14.5.sdk"
-        export MACOS_MIN_VER=10.14
-
-        CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 \
-        CGO_LDFLAGS="-mmacosx-version-min=${MACOS_MIN_VER} --sysroot ${SDK_PATH} -F${SDK_PATH}/System/Library/Frameworks -L/usr/lib" \
-        COMMON_FLAGS="-mmacosx-version-min=${MACOS_MIN_VER} -target x86_64-macos.11.0.0-none -isysroot ${SDK_PATH} -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks" \
-        CC="/zig-tools/zig cc ${COMMON_FLAGS}" \
-        CXX="/zig-tools/zig c++ ${COMMON_FLAGS}" \
          go build -trimpath -buildmode=pie -ldflags "-s -w -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.darwin.amd64
 
   - id: "store-darwin-amd64"
@@ -215,6 +222,15 @@ steps:
       - "install-macos-sdk"
     env:
       - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=darwin'
+      - 'GOARCH=amd64'
+      - 'SDK_PATH=/macos-sdk/MacOSX14.5.sdk'
+      - 'MACOS_MIN_VER=10.14'
+      - 'CGO_LDFLAGS=-mmacosx-version-min=10.14 --sysroot /macos-sdk/MacOSX14.5.sdk -F/macos-sdk/MacOSX14.5.sdk/System/Library/Frameworks -L/usr/lib'
+      - 'COMMON_FLAGS=-mmacosx-version-min=10.14 -target x86_64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
+      - 'CC=/zig-tools/zig cc -mmacosx-version-min=10.14 -target x86_64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
+      - 'CXX=/zig-tools/zig c++ -mmacosx-version-min=10.14 -target x86_64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
     volumes:
       - name: 'go'
         path: '/gopath'
@@ -224,14 +240,6 @@ steps:
         path: '/macos-sdk'
     script: |
         #!/usr/bin/env bash
-        SDK_PATH="/macos-sdk/MacOSX14.5.sdk"
-        export MACOS_MIN_VER=10.14
-
-        CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 \
-        CGO_LDFLAGS="-mmacosx-version-min=${MACOS_MIN_VER} --sysroot ${SDK_PATH} -F${SDK_PATH}/System/Library/Frameworks -L/usr/lib" \
-        COMMON_FLAGS="-mmacosx-version-min=${MACOS_MIN_VER} -target x86_64-macos.11.0.0-none -isysroot ${SDK_PATH} -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks" \
-        CC="/zig-tools/zig cc ${COMMON_FLAGS}" \
-        CXX="/zig-tools/zig c++ ${COMMON_FLAGS}" \
          go build -trimpath -buildmode=pie -ldflags "-s -w -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.darwin.amd64
 
   - id: "build-windows-amd64"
@@ -241,6 +249,11 @@ steps:
       - "install-zig"
     env:
       - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=windows'
+      - 'GOARCH=amd64'
+      - 'CC=/zig-tools/zig cc -target x86_64-windows-gnu'
+      - 'CXX=/zig-tools/zig c++ -target x86_64-windows-gnu'
     volumes:
       - name: 'go'
         path: '/gopath'
@@ -248,10 +261,7 @@ steps:
         path: '/zig-tools'
     script: |
         #!/usr/bin/env bash
-        CGO_ENABLED=1 GOOS=windows GOARCH=amd64 \
-        CC="/zig-tools/zig cc -target x86_64-windows-gnu" \
-        CXX="/zig-tools/zig c++ -target x86_64-windows-gnu" \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.windows.amd64
+        go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.windows.amd64
 
   - id: "store-windows-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -268,6 +278,11 @@ steps:
       - "install-zig"
     env:
       - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=windows'
+      - 'GOARCH=amd64'
+      - 'CC=/zig-tools/zig cc -target x86_64-windows-gnu'
+      - 'CXX=/zig-tools/zig c++ -target x86_64-windows-gnu'
     volumes:
       - name: 'go'
         path: '/gopath'
@@ -276,10 +291,7 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=$(cat ./cmd/version.txt)
-        CGO_ENABLED=1 GOOS=windows GOARCH=amd64 \
-        CC="/zig-tools/zig cc -target x86_64-windows-gnu" \
-        CXX="/zig-tools/zig c++ -target x86_64-windows-gnu" \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.windows.amd64
+        go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.windows.amd64
 
 options:
   automapSubstitutions: true
