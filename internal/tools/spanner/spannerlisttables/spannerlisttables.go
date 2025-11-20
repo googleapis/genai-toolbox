@@ -244,6 +244,10 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
+}
+
 // PostgreSQL statement for listing tables
 const postgresqlStatement = `
 WITH table_info_cte AS (
