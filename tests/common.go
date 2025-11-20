@@ -858,7 +858,7 @@ func TestCloudSQLMySQL_IPTypeParsingFromYAML(t *testing.T) {
 					project: my-project
 					region: my-region
 					instance: my-instance
-					ipType: private 
+					ipType: private
 					database: my_db
 					user: my_user
 					password: my_pass
@@ -898,7 +898,7 @@ func TestCloudSQLMySQL_IPTypeParsingFromYAML(t *testing.T) {
 // Finds and drops all tables in a postgres database.
 func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
 	query := `
-	SELECT table_name FROM information_schema.tables 
+	SELECT table_name FROM information_schema.tables
 	WHERE table_schema = 'public' AND table_type = 'BASE TABLE';`
 
 	rows, err := pool.Query(ctx, query)
@@ -931,7 +931,7 @@ func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool
 // Finds and drops all tables in a mysql database.
 func CleanupMySQLTables(t *testing.T, ctx context.Context, pool *sql.DB) {
 	query := `
-	SELECT table_name FROM information_schema.tables 
+	SELECT table_name FROM information_schema.tables
 	WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';`
 
 	rows, err := pool.QueryContext(ctx, query)
@@ -988,13 +988,4 @@ func CleanupMSSQLTables(t *testing.T, ctx context.Context, pool *sql.DB) {
 		t.Fatalf("Failed to drop all MSSQL tables: %v", err)
 	}
 
-}
-
-// GetMariaDBWants return the expected wants for mariaDB
-func GetMariaDBWants() (string, string, string, string) {
-	select1Want := `[{"1":1}]`
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: Error 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near 'SELEC 1' at line 1"}],"isError":true}}`
-	createTableStatement := `"CREATE TABLE t (id INT AUTO_INCREMENT PRIMARY KEY, name TEXT)"`
-	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
-	return select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want
 }
