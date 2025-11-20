@@ -66,10 +66,11 @@ func toolsListHandler(id jsonrpc.RequestId, toolset tools.Toolset, body []byte) 
 	}
 
 	// exclude annotations from this version
-	manifests := toolset.McpManifest
-	for i := range manifests {
-		manifests[i].Annotations = nil
-	}
+manifests := make([]tools.McpManifest, len(toolset.McpManifest))
+for i, m := range toolset.McpManifest {
+	m.Annotations = nil
+	manifests[i] = m
+}
 
 	result := ListToolsResult{
 		Tools: manifests,
