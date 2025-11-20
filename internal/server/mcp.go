@@ -519,7 +519,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			err = fmt.Errorf("promptset does not exist")
 			return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
-		res, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, s.ResourceMgr.GetToolsMap(), promptset, s.ResourceMgr.GetPromptsMap(), s.ResourceMgr.GetAuthServiceMap(), body, header)
+		res, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, promptset, s.ResourceMgr, body, header)
 		return "", res, err
 	}
 }
