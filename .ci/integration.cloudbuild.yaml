@@ -848,7 +848,7 @@ steps:
           export PATH="/usr/local/go/bin:$$PATH"
 
           go test -c ./tests/oracle
-          ./test_with_coverage.sh \
+          .ci/test_with_coverage.sh \
           "Oracle DB" \
           oracle 
           oracle
