@@ -47,7 +47,7 @@ You may need to restart Antigravity for changes to take effect.
   {
     "mcpServers": {
       "alloydb-admin": {
-        "command": "./path/to/toolbox",
+        "command": "toolbox",
         "args": ["--prebuilt", "alloydb-postgres-admin", "--stdio"],
       }
     }

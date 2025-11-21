@@ -61,7 +61,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
 {
   "mcpServers": {
     "cloud-sql-mssql": {
-      "command": "./path/to/toolbox",
+      "command": "toolbox",
       "args": ["--prebuilt", "cloud-sql-mssql", "--stdio"],
       "env": {
         "CLOUD_SQL_MSSQL_PROJECT": "your-project-id",

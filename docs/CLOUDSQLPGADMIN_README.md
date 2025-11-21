@@ -47,7 +47,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
 {
   "mcpServers": {
     "cloud-sql-postgres-admin": {
-      "command": "./path/to/toolbox",
+      "command": "toolbox",
       "args": ["--prebuilt", "cloud-sql-postgres-admin", "--stdio"]
     }
   }

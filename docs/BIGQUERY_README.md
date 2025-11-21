@@ -56,7 +56,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
 {
   "mcpServers": {
     "bigquery": {
-      "command": "./path/to/toolbox",
+      "command": "toolbox",
       "args": ["--prebuilt", "bigquery", "--stdio"],
     }
   }

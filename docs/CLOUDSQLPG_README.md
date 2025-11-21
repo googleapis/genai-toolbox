@@ -64,7 +64,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
 {
   "mcpServers": {
     "cloud-sql-postgres": {
-      "command": "./path/to/toolbox",
+      "command": "toolbox",
       "args": ["--prebuilt", "cloud-sql-postgres", "--stdio"],
       "env": {
         "CLOUD_SQL_POSTGRES_PROJECT": "your-project-id",

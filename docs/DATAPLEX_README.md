@@ -53,7 +53,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
 {
   "mcpServers": {
     "dataplex": {
-      "command": "./path/to/toolbox",
+      "command": "toolbox",
       "args": ["--prebuilt", "dataplex", "--stdio"],
       "env": {
         "DATAPLEX_PROJECT": "your-project-id"

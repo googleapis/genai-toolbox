@@ -47,7 +47,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
 {
   "mcpServers": {
     "cloud-sql-sqlserver-admin": {
-      "command": "./path/to/toolbox",
+      "command": "toolbox",
       "args": ["--prebuilt", "cloud-sql-mssql-admin", "--stdio"],
     }
   }
