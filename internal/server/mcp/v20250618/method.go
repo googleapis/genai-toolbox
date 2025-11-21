@@ -99,7 +99,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 	}
 
 	// Get access token
-	accessToken := tools.AccessToken(header.Get("Authorization"))
+	accessToken := tools.AccessToken(header.Get(tool.GetAuthTokenHeaderName()))
 
 	// Check if this specific tool requires the standard authorization header
 	if tool.RequiresClientAuthorization() {
