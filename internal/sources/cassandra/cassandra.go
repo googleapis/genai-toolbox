@@ -18,8 +18,8 @@ import (
 	"context"
 	"fmt"
 
+	gocql "github.com/apache/cassandra-gocql-driver/v2"
 	"github.com/goccy/go-yaml"
-	"github.com/gocql/gocql"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"go.opentelemetry.io/otel/trace"
 )

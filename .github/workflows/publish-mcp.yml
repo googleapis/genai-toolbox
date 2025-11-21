@@ -29,13 +29,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Wait for image in Artifact Registry
         shell: bash
         run: |
           MAX_ATTEMPTS=10
-          VERSION=$(jq -r '.version' .registry/server.json)
+          VERSION=$(jq -r '.version' server.json)
           REGISTRY_URL="https://us-central1-docker.pkg.dev/v2/database-toolbox/toolbox/toolbox/manifests/${VERSION}"
 
           # initially sleep time to wait for the version release
@@ -70,4 +70,4 @@ jobs:
         run: ./mcp-publisher login github-oidc
 
       - name: Publish to MCP Registry
-        run: ./mcp-publisher publish --file=.registry/server.json
+        run: ./mcp-publisher publish
