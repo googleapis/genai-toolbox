@@ -25,6 +25,7 @@ import (
 	healthcareds "github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/common"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/healthcare/v1"
 )
 
@@ -91,20 +92,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	typeParameter := tools.NewStringParameter(typeKey, "The FHIR resource type to retrieve (e.g., Patient, Observation).")
-	idParameter := tools.NewStringParameter(idKey, "The ID of the FHIR resource to retrieve.")
-	parameters := tools.Parameters{typeParameter, idParameter}
+	typeParameter := parameters.NewStringParameter(typeKey, "The FHIR resource type to retrieve (e.g., Patient, Observation).")
+	idParameter := parameters.NewStringParameter(idKey, "The ID of the FHIR resource to retrieve.")
+	params := parameters.Parameters{typeParameter, idParameter}
 	if len(s.AllowedFHIRStores()) != 1 {
-		parameters = append(parameters, tools.NewStringParameter(common.StoreKey, "The FHIR store ID to retrieve the resource from."))
+		params = append(params, parameters.NewStringParameter(common.StoreKey, "The FHIR store ID to retrieve the resource from."))
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	t := Tool{
-		Name:           cfg.Name,
-		Kind:           kind,
-		Parameters:     parameters,
-		AuthRequired:   cfg.AuthRequired,
+		Config:         cfg,
+		Parameters:     params,
 		Project:        s.Project(),
 		Region:         s.Region(),
 		Dataset:        s.DatasetID(),
@@ -112,7 +111,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		UseClientOAuth: s.UseClientAuthorization(),
 		ServiceCreator: s.ServiceCreator(),
 		Service:        s.Service(),
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		manifest:       tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:    mcpManifest,
 	}
 	return t, nil
@@ -122,11 +121,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string           `yaml:"name"`
-	Kind           string           `yaml:"kind"`
-	AuthRequired   []string         `yaml:"authRequired"`
-	UseClientOAuth bool             `yaml:"useClientOAuth"`
-	Parameters     tools.Parameters `yaml:"parameters"`
+	Config
+	UseClientOAuth bool                  `yaml:"useClientOAuth"`
+	Parameters     parameters.Parameters `yaml:"parameters"`
 
 	Project, Region, Dataset string
 	AllowedStores            map[string]struct{}
@@ -136,7 +133,11 @@ type Tool struct {
 	mcpManifest              tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	storeID, err := common.ValidateAndFetchStoreID(params, t.AllowedStores)
 	if err != nil {
 		return nil, err
@@ -187,8 +188,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return jsonMap, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -205,4 +206,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return t.UseClientOAuth
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }
