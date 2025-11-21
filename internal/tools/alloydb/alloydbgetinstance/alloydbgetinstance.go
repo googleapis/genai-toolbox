@@ -84,9 +84,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		parameters.NewStringParameter("location", "The location of the instance (e.g., 'us-central1')."),
 		parameters.NewStringParameter("cluster", "The ID of the cluster."),
 		parameters.NewStringParameter("instance", "The ID of the instance."),
-		parameters.NewStringParameter("location", "The location of the instance (e.g., 'us-central1')."),
-		parameters.NewStringParameter("cluster", "The ID of the cluster."),
-		parameters.NewStringParameter("instance", "The ID of the instance."),
 	}
 	paramManifest := allParameters.Manifest()
 
@@ -177,4 +174,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return t.Source.UseClientAuthorization()
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }
