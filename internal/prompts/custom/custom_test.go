@@ -33,7 +33,7 @@ func TestConfig(t *testing.T) {
 		{Parameter: parameters.NewStringParameterWithRequired("location", "The location.", false)},
 	}
 
-	cfg := &custom.Config{
+	cfg := custom.Config{
 		Name:        "TestConfig",
 		Description: "A test config.",
 		Messages: []custom.Message{
@@ -42,18 +42,17 @@ func TestConfig(t *testing.T) {
 		Arguments: testArgs,
 	}
 
-	t.Run("Initialize and Kind", func(t *testing.T) {
-		p, err := cfg.Initialize()
-		if err != nil {
-			t.Fatalf("Initialize() failed: %v", err)
-		}
-		if p == nil {
-			t.Fatal("Initialize() returned a nil prompt")
-		}
-		if cfg.PromptConfigKind() != "custom" {
-			t.Errorf("PromptConfigKind() = %q, want %q", cfg.PromptConfigKind(), "custom")
-		}
-	})
+	// initialize and check kind
+	p, err := cfg.Initialize()
+	if err != nil {
+		t.Fatalf("Initialize() failed: %v", err)
+	}
+	if p == nil {
+		t.Fatal("Initialize() returned a nil prompt")
+	}
+	if cfg.PromptConfigKind() != "custom" {
+		t.Errorf("PromptConfigKind() = %q, want %q", cfg.PromptConfigKind(), "custom")
+	}
 
 	t.Run("Manifest", func(t *testing.T) {
 		want := prompts.Manifest{
@@ -63,7 +62,7 @@ func TestConfig(t *testing.T) {
 				{Name: "location", Type: "string", Required: false, Description: "The location.", AuthServices: []string{}},
 			},
 		}
-		got := cfg.Manifest()
+		got := p.Manifest()
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("Manifest() mismatch (-want +got):\n%s", diff)
 		}
@@ -78,7 +77,7 @@ func TestConfig(t *testing.T) {
 				{Name: "location", Description: "The location.", Required: false},
 			},
 		}
-		got := cfg.McpManifest()
+		got := p.McpManifest()
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("McpManifest() mismatch (-want +got):\n%s", diff)
 		}
@@ -93,7 +92,7 @@ func TestConfig(t *testing.T) {
 			{Role: "user", Content: "Hello, my name is Alice and I am in Wonderland."},
 		}
 
-		got, err := cfg.SubstituteParams(argValues)
+		got, err := p.SubstituteParams(argValues)
 		if err != nil {
 			t.Fatalf("SubstituteParams() failed: %v", err)
 		}
@@ -118,7 +117,7 @@ func TestConfig(t *testing.T) {
 				{Name: "name", Value: "Bob"},
 				{Name: "location", Value: "the Builder"},
 			}
-			got, err := cfg.ParseArgs(argsIn, nil)
+			got, err := p.ParseArgs(argsIn, nil)
 			if err != nil {
 				t.Fatalf("ParseArgs() failed: %v", err)
 			}
@@ -131,7 +130,7 @@ func TestConfig(t *testing.T) {
 			argsIn := map[string]any{
 				"location": "missing name",
 			}
-			_, err := cfg.ParseArgs(argsIn, nil)
+			_, err := p.ParseArgs(argsIn, nil)
 			if err == nil {
 				t.Fatal("expected an error for missing required arg, but got nil")
 			}
