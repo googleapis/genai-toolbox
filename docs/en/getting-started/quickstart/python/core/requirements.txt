@@ -1,3 +1,3 @@
 google-genai==1.52.0
-toolbox-core==0.5.2
+toolbox-core==0.5.3
 pytest==9.0.1
