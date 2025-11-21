@@ -15,12 +15,15 @@ An editor configured to use the Cloud SQL for PostgreSQL MCP server can use its 
 *   Download and install [MCP Toolbox](https://github.com/googleapis/genai-toolbox):
   1.  **Download the Toolbox binary**:
       Download the latest binary for your operating system and architecture from the storage bucket. Check the [releases page](https://github.com/googleapis/genai-toolbox/releases) for OS and CPU architecture support:
-      `https://storage.googleapis.com/genai-toolbox/v0.20.0/<os>/<arch>/toolbox`
+      `https://storage.googleapis.com/genai-toolbox/v0.21.0/<os>/<arch>/toolbox`
       *   Replace `<os>` with `linux`, `darwin` (macOS), or `windows`.
       *   Replace `<arch>` with `amd64` (Intel) or `arm64` (Apple Silicon).
       
-      
-
+      <!-- {x-release-please-start-version} -->
+      ```
+      curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
+      ```
+      <!-- {x-release-please-end} -->
   2.  **Make it executable**:
       ```bash
       chmod +x toolbox
@@ -31,7 +34,8 @@ An editor configured to use the Cloud SQL for PostgreSQL MCP server can use its 
       export PATH=$PATH:/path/to/toolbox
       ```
     
-You may need to restart Antigravity for changes to take effect.
+**Note:** You may need to restart Antigravity for changes to take effect. 
+Windows OS users will need to follow one of the Windows-specific methods.
 
 *   A Google Cloud project with the **Cloud SQL Admin API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
