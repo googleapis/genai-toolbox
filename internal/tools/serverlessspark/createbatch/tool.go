@@ -18,11 +18,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/common"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -131,7 +133,20 @@ func (t *Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, par
 		return nil, fmt.Errorf("failed to unmarshal create batch op metadata JSON: %w", err)
 	}
 
-	return result, nil
+	projectID, location, batchID, err := common.ExtractBatchDetails(meta.GetBatch())
+	if err != nil {
+		return nil, fmt.Errorf("error extracting batch details from name %q: %v", meta.GetBatch(), err)
+	}
+	consoleUrl := common.BatchConsoleURL(projectID, location, batchID)
+	logsUrl := common.BatchLogsURL(projectID, location, batchID, meta.GetCreateTime().AsTime(), time.Time{})
+
+	wrappedResult := map[string]any{
+		"opMetadata": meta,
+		"consoleUrl": consoleUrl,
+		"logsUrl":    logsUrl,
+	}
+
+	return wrappedResult, nil
 }
 
 func (t *Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

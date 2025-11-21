@@ -23,30 +23,32 @@ import (
 )
 
 func TestExtractBatchDetails_Success(t *testing.T) {
-	t.Parallel()
 	batchName := "projects/my-project/locations/us-central1/batches/my-batch"
 	projectID, location, batchID, err := ExtractBatchDetails(batchName)
 	if err != nil {
-		t.Errorf("ExtractBatchDetails() error = %v, wantErr %v", err, false)
+		t.Errorf("ExtractBatchDetails() error = %v, want no error", err)
 		return
 	}
-	if projectID != "my-project" {
-		t.Errorf("ExtractBatchDetails() projectID = %v, want %v", projectID, "my-project")
+	wantProject := "my-project"
+	wantLocation := "us-central1"
+	wantBatchID := "my-batch"
+	if projectID != wantProject {
+		t.Errorf("ExtractBatchDetails() projectID = %v, want %v", projectID, wantProject)
 	}
-	if location != "us-central1" {
-		t.Errorf("ExtractBatchDetails() location = %v, want %v", location, "us-central1")
+	if location != wantLocation {
+		t.Errorf("ExtractBatchDetails() location = %v, want %v", location, wantLocation)
 	}
-	if batchID != "my-batch" {
-		t.Errorf("ExtractBatchDetails() batchID = %v, want %v", batchID, "my-batch")
+	if batchID != wantBatchID {
+		t.Errorf("ExtractBatchDetails() batchID = %v, want %v", batchID, wantBatchID)
 	}
 }
 
 func TestExtractBatchDetails_Failure(t *testing.T) {
-	t.Parallel()
 	batchName := "invalid-name"
 	_, _, _, err := ExtractBatchDetails(batchName)
-	if err == nil {
-		t.Errorf("ExtractBatchDetails() error = %v, wantErr %v", err, true)
+	wantErr := "failed to parse batch name: invalid-name"
+	if err == nil || err.Error() != wantErr {
+		t.Errorf("ExtractBatchDetails() error = %v, want %v", err, wantErr)
 	}
 }
 
@@ -59,7 +61,6 @@ func TestBatchConsoleURL(t *testing.T) {
 }
 
 func TestBatchLogsURL(t *testing.T) {
-	t.Parallel()
 	startTime := time.Date(2025, 10, 1, 5, 0, 0, 0, time.UTC)
 	endTime := time.Date(2025, 10, 1, 6, 0, 0, 0, time.UTC)
 	got := BatchLogsURL("my-project", "us-central1", "my-batch", startTime, endTime)
@@ -78,7 +79,6 @@ func TestBatchLogsURL(t *testing.T) {
 }
 
 func TestBatchConsoleURLFromProto(t *testing.T) {
-	t.Parallel()
 	batchPb := &dataprocpb.Batch{
 		Name: "projects/my-project/locations/us-central1/batches/my-batch",
 	}
@@ -93,7 +93,6 @@ func TestBatchConsoleURLFromProto(t *testing.T) {
 }
 
 func TestBatchLogsURLFromProto(t *testing.T) {
-	t.Parallel()
 	createTime := time.Date(2025, 10, 1, 5, 0, 0, 0, time.UTC)
 	stateTime := time.Date(2025, 10, 1, 6, 0, 0, 0, time.UTC)
 	batchPb := &dataprocpb.Batch{
