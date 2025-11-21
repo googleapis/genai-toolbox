@@ -18,8 +18,8 @@ import (
 	"context"
 	"fmt"
 
+	gocql "github.com/apache/cassandra-gocql-driver/v2"
 	yaml "github.com/goccy/go-yaml"
-	"github.com/gocql/gocql"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cassandra"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -135,7 +135,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
 	sliceParams := newParams.AsSlice()
-	iter := t.Session.Query(newStatement, sliceParams...).WithContext(ctx).Iter()
+	iter := t.Session.Query(newStatement, sliceParams...).IterContext(ctx)
 
 	// Create a slice to store the out
 	var out []map[string]interface{}
