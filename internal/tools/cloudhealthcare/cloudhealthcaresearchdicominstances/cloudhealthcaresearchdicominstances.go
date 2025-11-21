@@ -26,6 +26,7 @@ import (
 	healthcareds "github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/common"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/healthcare/v1"
 )
@@ -100,30 +101,28 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	parameters := tools.Parameters{
-		tools.NewStringParameterWithDefault(studyInstanceUIDKey, "", "The UID of the DICOM study"),
-		tools.NewStringParameterWithDefault(patientNameKey, "", "The name of the patient"),
-		tools.NewStringParameterWithDefault(patientIDKey, "", "The ID of the patient"),
-		tools.NewStringParameterWithDefault(accessionNumberKey, "", "The accession number of the series"),
-		tools.NewStringParameterWithDefault(referringPhysicianNameKey, "", "The name of the referring physician"),
-		tools.NewStringParameterWithDefault(studyDateKey, "", "The date of the study in the format `YYYYMMDD`. You can also specify a date range in the format `YYYYMMDD-YYYYMMDD`"),
-		tools.NewStringParameterWithDefault(seriesInstanceUIDKey, "", "The UID of the DICOM series"),
-		tools.NewStringParameterWithDefault(modalityKey, "", "The modality of the series"),
-		tools.NewStringParameterWithDefault(sopInstanceUIDKey, "", "The UID of the SOP instance."),
-		tools.NewBooleanParameterWithDefault(common.EnablePatientNameFuzzyMatchingKey, false, `Whether to enable fuzzy matching for patient names. Fuzzy matching will perform tokenization and normalization of both the value of PatientName in the query and the stored value. It will match if any search token is a prefix of any stored token. For example, if PatientName is "John^Doe", then "jo", "Do" and "John Doe" will all match. However "ohn" will not match`),
-		tools.NewArrayParameterWithDefault(common.IncludeAttributesKey, []any{}, "List of attributeIDs, such as DICOM tag IDs or keywords. Set to [\"all\"] to return all available tags.", tools.NewStringParameter("attributeID", "The attributeID to include. Set to 'all' to return all available tags")),
+	params := parameters.Parameters{
+		parameters.NewStringParameterWithDefault(studyInstanceUIDKey, "", "The UID of the DICOM study"),
+		parameters.NewStringParameterWithDefault(patientNameKey, "", "The name of the patient"),
+		parameters.NewStringParameterWithDefault(patientIDKey, "", "The ID of the patient"),
+		parameters.NewStringParameterWithDefault(accessionNumberKey, "", "The accession number of the series"),
+		parameters.NewStringParameterWithDefault(referringPhysicianNameKey, "", "The name of the referring physician"),
+		parameters.NewStringParameterWithDefault(studyDateKey, "", "The date of the study in the format `YYYYMMDD`. You can also specify a date range in the format `YYYYMMDD-YYYYMMDD`"),
+		parameters.NewStringParameterWithDefault(seriesInstanceUIDKey, "", "The UID of the DICOM series"),
+		parameters.NewStringParameterWithDefault(modalityKey, "", "The modality of the series"),
+		parameters.NewStringParameterWithDefault(sopInstanceUIDKey, "", "The UID of the SOP instance."),
+		parameters.NewBooleanParameterWithDefault(common.EnablePatientNameFuzzyMatchingKey, false, `Whether to enable fuzzy matching for patient names. Fuzzy matching will perform tokenization and normalization of both the value of PatientName in the query and the stored value. It will match if any search token is a prefix of any stored token. For example, if PatientName is "John^Doe", then "jo", "Do" and "John Doe" will all match. However "ohn" will not match`),
+		parameters.NewArrayParameterWithDefault(common.IncludeAttributesKey, []any{}, "List of attributeIDs, such as DICOM tag IDs or keywords. Set to [\"all\"] to return all available tags.", parameters.NewStringParameter("attributeID", "The attributeID to include. Set to 'all' to return all available tags")),
 	}
 	if len(s.AllowedDICOMStores()) != 1 {
-		parameters = append(parameters, tools.NewStringParameter(common.StoreKey, "The DICOM store ID to get details for."))
+		params = append(params, parameters.NewStringParameter(common.StoreKey, "The DICOM store ID to get details for."))
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	t := Tool{
-		Name:           cfg.Name,
-		Kind:           kind,
-		Parameters:     parameters,
-		AuthRequired:   cfg.AuthRequired,
+		Config:         cfg,
+		Parameters:     params,
 		Project:        s.Project(),
 		Region:         s.Region(),
 		Dataset:        s.DatasetID(),
@@ -131,7 +130,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		UseClientOAuth: s.UseClientAuthorization(),
 		ServiceCreator: s.ServiceCreator(),
 		Service:        s.Service(),
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		manifest:       tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:    mcpManifest,
 	}
 	return t, nil
@@ -141,11 +140,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string           `yaml:"name"`
-	Kind           string           `yaml:"kind"`
-	AuthRequired   []string         `yaml:"authRequired"`
-	UseClientOAuth bool             `yaml:"useClientOAuth"`
-	Parameters     tools.Parameters `yaml:"parameters"`
+	Config
+	UseClientOAuth bool                  `yaml:"useClientOAuth"`
+	Parameters     parameters.Parameters `yaml:"parameters"`
 
 	Project, Region, Dataset string
 	AllowedStores            map[string]struct{}
@@ -155,7 +152,11 @@ type Tool struct {
 	mcpManifest              tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	storeID, err := common.ValidateAndFetchStoreID(params, t.AllowedStores)
 	if err != nil {
 		return nil, err
@@ -227,8 +228,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return result, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -245,4 +246,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return t.UseClientOAuth
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

@@ -16,6 +16,7 @@ package spannerlisttables
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -24,6 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	spannerdb "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/iterator"
 )
 
@@ -82,13 +84,13 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Define parameters for the tool
-	allParameters := tools.Parameters{
-		tools.NewStringParameterWithDefault(
+	allParameters := parameters.Parameters{
+		parameters.NewStringParameterWithDefault(
 			"table_names",
 			"",
 			"Optional: A comma-separated list of table names. If empty, details for all tables in user-accessible schemas will be listed.",
 		),
-		tools.NewStringParameterWithDefault(
+		parameters.NewStringParameterWithDefault(
 			"output_format",
 			"detailed",
 			"Optional: Use 'simple' to return table names only or use 'detailed' to return the full information schema.",
@@ -103,14 +105,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		AllParams:    allParameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.SpannerClient(),
-		dialect:      s.DatabaseDialect(),
-		manifest:     tools.Manifest{Description: description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		AllParams:   allParameters,
+		Client:      s.SpannerClient(),
+		dialect:     s.DatabaseDialect(),
+		manifest:    tools.Manifest{Description: description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -119,14 +119,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	AllParams    tools.Parameters `yaml:"allParams"`
-	Client       *spanner.Client
-	dialect      string
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Config
+	AllParams   parameters.Parameters `yaml:"allParams"`
+	Client      *spanner.Client
+	dialect     string
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 // processRows iterates over the spanner.RowIterator and converts each row to a map[string]any.
@@ -146,7 +144,16 @@ func processRows(iter *spanner.RowIterator) ([]any, error) {
 		vMap := make(map[string]any)
 		cols := row.ColumnNames()
 		for i, c := range cols {
-			vMap[c] = row.ColumnValue(i)
+			if c == "object_details" {
+				jsonString := row.ColumnValue(i).AsInterface().(string)
+				var details map[string]interface{}
+				if err := json.Unmarshal([]byte(jsonString), &details); err != nil {
+					return nil, fmt.Errorf("unable to unmarshal JSON: %w", err)
+				}
+				vMap[c] = details
+			} else {
+				vMap[c] = row.ColumnValue(i)
+			}
 		}
 		out = append(out, vMap)
 	}
@@ -165,7 +172,7 @@ func (t Tool) getStatement() string {
 	}
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
 	// Get the appropriate SQL statement based on dialect
@@ -213,8 +220,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return results, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.AllParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.AllParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -231,6 +238,14 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }
 
 // PostgreSQL statement for listing tables

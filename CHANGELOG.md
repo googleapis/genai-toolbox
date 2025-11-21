@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.21.0](https://github.com/googleapis/genai-toolbox/compare/v0.20.0...v0.21.0) (2025-11-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* **tools/spanner-list-tables:** Unmarshal `object_details` json string into map to make response have nested json ([#1894](https://github.com/googleapis/genai-toolbox/issues/1894)) ([446d62a](https://github.com/googleapis/genai-toolbox/commit/446d62acd995d5128f52e9db254dd1c7138227c6))
+
+
+### Features
+
+* **tools/postgres:** Add `long_running_transactions`, `list_locks` and `replication_stats` tools ([#1751](https://github.com/googleapis/genai-toolbox/issues/1751)) ([5abad5d](https://github.com/googleapis/genai-toolbox/commit/5abad5d56c6cc5ba86adc5253b948bf8230fa830))
+
+
+### Bug Fixes
+
+* **tools/alloydbgetinstance:** Remove parameter duplication ([#1993](https://github.com/googleapis/genai-toolbox/issues/1993)) ([0e269a1](https://github.com/googleapis/genai-toolbox/commit/0e269a1d125eed16a51ead27db4398e6e48cb948))
+* **tools:** Check for query execution error for pgxpool.Pool ([#1969](https://github.com/googleapis/genai-toolbox/issues/1969)) ([2bff138](https://github.com/googleapis/genai-toolbox/commit/2bff1384a3570ef46bc03ebebc507923af261987))
+
+
+## [0.20.0](https://github.com/googleapis/genai-toolbox/compare/v0.19.1...v0.20.0) (2025-11-14)
+
+
+### Features
+
+* Added prompt support for toolbox ([#1798](https://github.com/googleapis/genai-toolbox/issues/1798)) ([cd56ea4](https://github.com/googleapis/genai-toolbox/commit/cd56ea44fbdd149fcb92324e70ee36ac747635db))
+* **source/alloydb, source/cloud-sql-postgres,source/cloud-sql-mysql,source/cloud-sql-mssql:** Use project from env for alloydb and cloud sql control plane tools ([#1588](https://github.com/googleapis/genai-toolbox/issues/1588)) ([12bdd95](https://github.com/googleapis/genai-toolbox/commit/12bdd954597e49d3ec6b247cc104584c5a4d1943))
+* **source/mysql:** Set default host and port for MySQL source ([#1922](https://github.com/googleapis/genai-toolbox/issues/1922)) ([2c228ef](https://github.com/googleapis/genai-toolbox/commit/2c228ef4f2d4cb8dfc41e845466bfe3566d141a1))
+* **source/Postgresql:** Set default host and port for Postgresql  source ([#1927](https://github.com/googleapis/genai-toolbox/issues/1927)) ([7e6e88a](https://github.com/googleapis/genai-toolbox/commit/7e6e88a21f2b9b60e0d645cdde33a95892d31a04))
+* **tool/looker-generate-embed-url:** Adding generate embed url tool ([#1877](https://github.com/googleapis/genai-toolbox/issues/1877)) ([ef63860](https://github.com/googleapis/genai-toolbox/commit/ef63860559798fbad54c1051d9f53bce42d66464))
+* **tools/postgres:** Add `list_triggers`, `database_overview` tools for postgres ([#1912](https://github.com/googleapis/genai-toolbox/issues/1912)) ([a4c9287](https://github.com/googleapis/genai-toolbox/commit/a4c9287aecf848faa98d973a9ce5b13fa309a58e))
+* **tools/postgres:** Add list_indexes, list_sequences tools for postgres ([#1765](https://github.com/googleapis/genai-toolbox/issues/1765)) ([897c63d](https://github.com/googleapis/genai-toolbox/commit/897c63dcea43226262d2062088c59f2d1068fca7))
+
 ## [0.19.1](https://github.com/googleapis/genai-toolbox/compare/v0.18.0...v0.19.1) (2025-11-07)
 
 

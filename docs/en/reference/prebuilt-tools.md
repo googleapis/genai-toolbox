@@ -46,6 +46,10 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
     *   `list_schemas`: Lists schemas in the database. 
+    *   `database_overview`: Fetches the current state of the PostgreSQL server. 
+    *   `list_triggers`: Lists triggers in the database. 
+    *   `list_indexes`: List available user indexes in a PostgreSQL database.
+    *   `list_sequences`: List sequences in a PostgreSQL database.
 
 ## AlloyDB Postgres Admin
 
@@ -216,6 +220,10 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
     *   `list_schemas`: Lists schemas in the database. 
+    *   `database_overview`: Fetches the current state of the PostgreSQL server. 
+    *   `list_triggers`: Lists triggers in the database. 
+    *   `list_indexes`: List available user indexes in a PostgreSQL database.
+    *   `list_sequences`: List sequences in a PostgreSQL database.
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -489,8 +497,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 
 *   `--prebuilt` value: `postgres`
 *   **Environment Variables:**
-    *   `POSTGRES_HOST`: The hostname or IP address of the PostgreSQL server.
-    *   `POSTGRES_PORT`: The port number for the PostgreSQL server.
+    *   `POSTGRES_HOST`: (Optional) The hostname or IP address of the PostgreSQL server.
+    *   `POSTGRES_PORT`: (Optional) The port number for the PostgreSQL server.
     *   `POSTGRES_DATABASE`: The name of the database to connect to.
     *   `POSTGRES_USER`: The database username.
     *   `POSTGRES_PASSWORD`: The password for the database user.
@@ -513,6 +521,10 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
     *   `list_schemas`: Lists schemas in the database. 
+    *   `database_overview`: Fetches the current state of the PostgreSQL server. 
+    *   `list_triggers`: Lists triggers in the database. 
+    *   `list_indexes`: List available user indexes in a PostgreSQL database.
+    *   `list_sequences`: List sequences in a PostgreSQL database.
 
 ## Google Cloud Serverless for Apache Spark
 

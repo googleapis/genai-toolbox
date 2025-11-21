@@ -21,8 +21,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/yugabytedbsql"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlYugabyteDBSQL(t *testing.T) {
@@ -66,9 +66,9 @@ func TestParseFromYamlYugabyteDBSQL(t *testing.T) {
 					Description:  "search hotels by city",
 					Statement:    "SELECT * FROM hotels WHERE city = $1;\n",
 					AuthRequired: []string{"auth-service-a", "auth-service-b"},
-					Parameters: []tools.Parameter{
-						tools.NewStringParameterWithAuth("city", "city name",
-							[]tools.ParamAuthService{
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameterWithAuth("city", "city name",
+							[]parameters.ParamAuthService{
 								{Name: "auth-service-a", Field: "user_id"},
 								{Name: "auth-service-b", Field: "user_id"},
 							},
@@ -184,12 +184,12 @@ func TestParseFromYamlWithTemplateParamsYugabyteDB(t *testing.T) {
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 					AuthRequired: []string{},
-					Parameters: []tools.Parameter{
-						tools.NewStringParameter("name", "some description"),
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameter("name", "some description"),
 					},
-					TemplateParameters: []tools.Parameter{
-						tools.NewStringParameter("tableName", "The table to select hotels from."),
-						tools.NewArrayParameter("fieldArray", "The columns to return for the query.", tools.NewStringParameter("column", "A column name that will be returned from the query.")),
+					TemplateParameters: []parameters.Parameter{
+						parameters.NewStringParameter("tableName", "The table to select hotels from."),
+						parameters.NewArrayParameter("fieldArray", "The columns to return for the query.", parameters.NewStringParameter("column", "A column name that will be returned from the query.")),
 					},
 				},
 			},

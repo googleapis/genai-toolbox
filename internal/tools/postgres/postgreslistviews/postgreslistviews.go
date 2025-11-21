@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -92,9 +93,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	allParameters := tools.Parameters{
-		tools.NewStringParameterWithDefault("viewname", "", "Optional: A specific view name to search for."),
-		tools.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return."),
+	allParameters := parameters.Parameters{
+		parameters.NewStringParameterWithDefault("viewname", "", "Optional: A specific view name to search for."),
+		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return."),
 	}
 	paramManifest := allParameters.Manifest()
 	description := cfg.Description
@@ -105,11 +106,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		name:         cfg.Name,
-		kind:         kind,
-		authRequired: cfg.AuthRequired,
-		allParams:    allParameters,
-		pool:         s.PostgresPool(),
+		Config:    cfg,
+		allParams: allParameters,
+		pool:      s.PostgresPool(),
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   paramManifest,
@@ -123,19 +122,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	name         string           `yaml:"name"`
-	kind         string           `yaml:"kind"`
-	authRequired []string         `yaml:"authRequired"`
-	allParams    tools.Parameters `yaml:"allParams"`
-	pool         *pgxpool.Pool
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Config
+	allParams   parameters.Parameters `yaml:"allParams"`
+	pool        *pgxpool.Pool
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	newParams, err := tools.GetParams(t.allParams, paramsMap)
+	newParams, err := parameters.GetParams(t.allParams, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
@@ -162,11 +159,16 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		out = append(out, rowMap)
 	}
 
+	// this will catch actual query execution errors
+	if err := results.Err(); err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+
 	return out, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.allParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.allParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -178,9 +180,17 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.authRequired, verifiedAuthServices)
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

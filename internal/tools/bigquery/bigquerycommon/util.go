@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	bigqueryapi "cloud.google.com/go/bigquery"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 )
 
@@ -79,7 +79,7 @@ func InitializeDatasetParameters(
 	defaultProjectID string,
 	projectKey, datasetKey string,
 	projectDescription, datasetDescription string,
-) (projectParam, datasetParam tools.Parameter) {
+) (projectParam, datasetParam parameters.Parameter) {
 	if len(allowedDatasets) > 0 {
 		if len(allowedDatasets) == 1 {
 			parts := strings.Split(allowedDatasets[0], ".")
@@ -87,7 +87,7 @@ func InitializeDatasetParameters(
 			datasetID := parts[1]
 			projectDescription += fmt.Sprintf(" Must be `%s`.", defaultProjectID)
 			datasetDescription += fmt.Sprintf(" Must be `%s`.", datasetID)
-			datasetParam = tools.NewStringParameterWithDefault(datasetKey, datasetID, datasetDescription)
+			datasetParam = parameters.NewStringParameterWithDefault(datasetKey, datasetID, datasetDescription)
 		} else {
 			datasetIDsByProject := make(map[string][]string)
 			for _, ds := range allowedDatasets {
@@ -108,13 +108,13 @@ func InitializeDatasetParameters(
 			sort.Strings(datasetDescriptions)
 			projectDescription += fmt.Sprintf(" Must be one of the following: %s.", strings.Join(projectIDList, ", "))
 			datasetDescription += fmt.Sprintf(" Must be one of the allowed datasets: %s.", strings.Join(datasetDescriptions, "; "))
-			datasetParam = tools.NewStringParameter(datasetKey, datasetDescription)
+			datasetParam = parameters.NewStringParameter(datasetKey, datasetDescription)
 		}
 	} else {
-		datasetParam = tools.NewStringParameter(datasetKey, datasetDescription)
+		datasetParam = parameters.NewStringParameter(datasetKey, datasetDescription)
 	}
 
-	projectParam = tools.NewStringParameterWithDefault(projectKey, defaultProjectID, projectDescription)
+	projectParam = parameters.NewStringParameterWithDefault(projectKey, defaultProjectID, projectDescription)
 
 	return projectParam, datasetParam
 }
