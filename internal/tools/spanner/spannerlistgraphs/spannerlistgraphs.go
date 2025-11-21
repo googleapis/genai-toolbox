@@ -218,6 +218,10 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
+}
+
 // GoogleSQL statement for listing graphs
 const googleSQLStatement = `
 WITH FilterGraphNames AS (

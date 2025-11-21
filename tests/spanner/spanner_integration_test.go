@@ -159,7 +159,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 				LABEL EDGE
 		)
 	`, nodeTableName, edgeTableName, graphName)
-	teardownGraph := setupSpannerGraph(t, ctx, adminClient, createGraphStmt, graphName, dbString, nil)
+	teardownGraph := setupSpannerGraph(t, ctx, adminClient, createGraphStmt, graphName, dbString)
 	defer teardownGraph(t)
 
 	// Write config into a file and pass it to command
@@ -210,7 +210,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 		tests.DisableDdlTest(),
 	)
 	runSpannerSchemaToolInvokeTest(t, accessSchemaWant)
-	runSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam, tableNameAuth)
+	runSpannerExecuteSqlToolInvokeTest(t, select1Want, invokeParamWant, tableNameParam)
 	runSpannerListTablesTest(t, tableNameParam, tableNameAuth, tableNameTemplateParam)
 	runSpannerListGraphsTest(t, graphName)
 }
@@ -292,7 +292,7 @@ func setupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.
 }
 
 // setupSpannerGraph creates a graph and inserts data into it.
-func setupSpannerGraph(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, createStatement, graphName, dbString string, params map[string]any) func(*testing.T) {
+func setupSpannerGraph(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, createStatement, graphName, dbString string) func(*testing.T) {
 	// Create graph
 	op, err := adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
 		Database:   dbString,
@@ -471,7 +471,7 @@ func addTemplateParamConfig(t *testing.T, config map[string]any) map[string]any 
 	return config
 }
 
-func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWant, tableNameParam, tableNameAuth string) {
+func runSpannerExecuteSqlToolInvokeTest(t *testing.T, select1Want, invokeParamWant, tableNameParam string) {
 	// Get ID token
 	idToken, err := tests.GetGoogleIdToken(tests.ClientId)
 	if err != nil {
