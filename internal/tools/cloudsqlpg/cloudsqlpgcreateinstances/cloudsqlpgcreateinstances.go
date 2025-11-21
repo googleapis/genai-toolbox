@@ -17,14 +17,13 @@ package cloudsqlpgcreateinstances
 import (
 	"context"
 	"fmt"
-	"strings"
-
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	sqladmin "google.golang.org/api/sqladmin/v1"
+	"strings"
 )
 
 const kind string = "cloud-sql-postgres-create-instance"
@@ -116,6 +115,7 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
+// Invoke executes the tool's logic.
 func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
