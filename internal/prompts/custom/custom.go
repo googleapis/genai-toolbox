@@ -53,29 +53,44 @@ type Config struct {
 }
 
 // Interface compliance checks.
-var _ prompts.PromptConfig = (*Config)(nil)
-var _ prompts.Prompt = (*Config)(nil)
+var _ prompts.PromptConfig = Config{}
+var _ prompts.Prompt = Prompt{}
 
-func (c *Config) PromptConfigKind() string {
+func (c Config) PromptConfigKind() string {
 	return kind
 }
 
-func (c *Config) Initialize() (prompts.Prompt, error) {
-	return c, nil
+func (c Config) Initialize() (prompts.Prompt, error) {
+	p := Prompt{
+		Config:      c,
+		manifest:    prompts.GetManifest(c.Description, c.Arguments),
+		mcpManifest: prompts.GetMcpManifest(c.Name, c.Description, c.Arguments),
+	}
+	return p, nil
 }
 
-func (c *Config) Manifest() prompts.Manifest {
-	return prompts.GetManifest(c.Description, c.Arguments)
+type Prompt struct {
+	Config
+	manifest    prompts.Manifest
+	mcpManifest prompts.McpManifest
 }
 
-func (c *Config) McpManifest() prompts.McpManifest {
-	return prompts.GetMcpManifest(c.Name, c.Description, c.Arguments)
+func (p Prompt) ToConfig() prompts.PromptConfig {
+	return p.Config
 }
 
-func (c *Config) SubstituteParams(argValues parameters.ParamValues) (any, error) {
-	return prompts.SubstituteMessages(c.Messages, c.Arguments, argValues)
+func (p Prompt) Manifest() prompts.Manifest {
+	return p.manifest
 }
 
-func (c *Config) ParseArgs(args map[string]any, data map[string]map[string]any) (parameters.ParamValues, error) {
-	return prompts.ParseArguments(c.Arguments, args, data)
+func (p Prompt) McpManifest() prompts.McpManifest {
+	return p.mcpManifest
+}
+
+func (p Prompt) SubstituteParams(argValues parameters.ParamValues) (any, error) {
+	return prompts.SubstituteMessages(p.Messages, p.Arguments, argValues)
+}
+
+func (p Prompt) ParseArgs(args map[string]any, data map[string]map[string]any) (parameters.ParamValues, error) {
+	return prompts.ParseArguments(p.Arguments, args, data)
 }
