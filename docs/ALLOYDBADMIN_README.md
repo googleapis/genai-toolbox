@@ -14,11 +14,11 @@ An editor configured to use the AlloyDB MCP server can use its AI capabilities t
 
 *   Download and install [MCP Toolbox](https://github.com/googleapis/genai-toolbox)
   1.  **Download the Toolbox binary**:
-      Download the latest binary for your operating system and architecture from the storage bucket:
+      Download the latest binary for your operating system and architecture from the storage bucket. Check the [releases page](https://github.com/googleapis/genai-toolbox/releases) for OS and CPU architecture support:
       `https://storage.googleapis.com/genai-toolbox/v0.20.0/<os>/<arch>/toolbox`
       *   Replace `<os>` with `linux`, `darwin` (macOS), or `windows`.
       *   Replace `<arch>` with `amd64` (Intel) or `arm64` (Apple Silicon).
-      Check the [releases page](https://github.com/googleapis/genai-toolbox/releases) for OS and CPU architecture support.
+      
       
 
   2.  **Make it executable**:
@@ -31,7 +31,7 @@ An editor configured to use the AlloyDB MCP server can use its AI capabilities t
       export PATH=$PATH:/path/to/toolbox
       ```
     
-    You may need to restart Antigravity for changes to take effect.
+You may need to restart Antigravity for changes to take effect.
 
 *   A Google Cloud project with the **AlloyDB API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
