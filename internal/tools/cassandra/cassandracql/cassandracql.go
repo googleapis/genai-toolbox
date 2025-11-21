@@ -113,7 +113,7 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 // RequiresClientAuthorization implements tools.Tool.
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return false
 }
 
@@ -123,7 +123,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 // Invoke implements tools.Tool.
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	newStatement, err := parameters.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
