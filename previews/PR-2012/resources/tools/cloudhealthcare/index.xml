@@ -1,0 +1,1250 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Cloud Healthcare API on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/</link><description>Recent content in Cloud Healthcare API on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/index.xml" rel="self" type="application/rss+xml"/><item><title>cloud-healthcare-fhir-fetch-page</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-fhir-fetch-page/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-fhir-fetch-page/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-fhir-fetch-page&lt;/code> tool fetches a page of FHIR resources from
+a given URL. It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>cloud-healthcare-fhir-fetch-page&lt;/code> can be used for pagination when a previous
+tool call (like &lt;code>cloud-healthcare-fhir-patient-search&lt;/code> or
+&lt;code>cloud-healthcare-fhir-patient-everything&lt;/code>) returns a &amp;rsquo;next&amp;rsquo; link in the
+response bundle.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_fhir_store&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-healthcare-fhir-fetch-page&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-healthcare-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to fetch a page of FHIR resources from a FHIR Bundle&amp;#39;s entry.link.url&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-healthcare-fhir-fetch-page&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the healthcare source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h3 id="parameters">Parameters&lt;/h3>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>pageURL&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The full URL of the FHIR page to fetch. This would usually be the value of &lt;code>Bundle.entry.link.url&lt;/code> field within the response returned from FHIR search or FHIR patient everything operations.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>cloud-healthcare-fhir-patient-everything</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-fhir-patient-everything/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-fhir-patient-everything/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-fhir-patient-everything&lt;/code> tool retrieves resources related to
+a given patient from a FHIR store. It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>cloud-healthcare-fhir-patient-everything&lt;/code> returns all the information available
+for a given patient ID. It can be configured to only return certain resource
+types, or only resources that have been updated after a given time.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">fhir_patient_everything&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-healthcare-fhir-patient-everything&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-healthcare-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to retrieve all the information about a given patient.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-healthcare-fhir-patient-everything&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the healthcare source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h3 id="parameters">Parameters&lt;/h3>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>patientID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The ID of the patient FHIR resource for which the information is required.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>resourceTypesFilter&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>String of comma-delimited FHIR resource types. If provided, only resources of the specified resource type(s) are returned.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>sinceFilter&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>If provided, only resources updated after this time are returned. The time uses the format YYYY-MM-DDThh:mm:ss.sss+zz:zz. The time must be specified to the second and include a time zone. For example, 2015-02-07T13:28:17.239+02:00 or 2017-01-01T00:00:00Z.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>storeID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true*&lt;/td>
+ &lt;td>The FHIR store ID to search in.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-fhir-patient-search</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-fhir-patient-search/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-fhir-patient-search/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-fhir-patient-search&lt;/code> tool searches for patients in a FHIR
+store based on a set of criteria. It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>cloud-healthcare-fhir-patient-search&lt;/code> returns a list of patients that match the
+given criteria.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">fhir_patient_search&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-healthcare-fhir-patient-search&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-healthcare-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to search for patients in the FHIR store.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-healthcare-fhir-patient-search&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the healthcare source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h3 id="parameters">Parameters&lt;/h3>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>active&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Whether the patient record is active.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>city&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The city of the patient&amp;rsquo;s address.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>country&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The country of the patient&amp;rsquo;s address.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>postalcode&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The postal code of the patient&amp;rsquo;s address.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>state&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The state of the patient&amp;rsquo;s address.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>addressSubstring&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>A substring to search for in any address field.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>birthDateRange&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>A date range for the patient&amp;rsquo;s birth date in the format YYYY-MM-DD/YYYY-MM-DD.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>deathDateRange&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>A date range for the patient&amp;rsquo;s death date in the format YYYY-MM-DD/YYYY-MM-DD.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>deceased&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Whether the patient is deceased.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>email&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The patient&amp;rsquo;s email address.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>gender&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The patient&amp;rsquo;s gender.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>addressUse&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The use of the patient&amp;rsquo;s address.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>name&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The patient&amp;rsquo;s name.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>givenName&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>A portion of the given name of the patient.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>familyName&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>A portion of the family name of the patient.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>phone&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The patient&amp;rsquo;s phone number.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>language&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The patient&amp;rsquo;s preferred language.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>identifier&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>An identifier for the patient.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>summary&lt;/td>
+ &lt;td style="text-align: center">boolean&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Requests the server to return a subset of the resource. True by default.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>storeID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true*&lt;/td>
+ &lt;td>The FHIR store ID to search in.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-dataset</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-get-dataset/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-get-dataset/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-get-dataset&lt;/code> tool retrieves metadata for a Healthcare dataset.
+It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>cloud-healthcare-get-dataset&lt;/code> returns the metadata of the healthcare dataset
+configured in the source. It takes no extra parameters.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_dataset&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-healthcare-get-dataset&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-healthcare-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to get healthcare dataset metadata.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-healthcare-get-dataset&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the healthcare source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>cloud-healthcare-get-dicom-store</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-get-dicom-store/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-get-dicom-store/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-get-dicom-store&lt;/code> tool retrieves information about a DICOM store. It&amp;rsquo;s
+compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>cloud-healthcare-get-dicom-store&lt;/code> returns the details of a DICOM store.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_dicom_store&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-healthcare-get-dicom-store&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-healthcare-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to get information about a DICOM store.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-healthcare-get-dicom-store&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the healthcare source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h3 id="parameters">Parameters&lt;/h3>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>storeID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true*&lt;/td>
+ &lt;td>The DICOM store ID to get details for.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-dicom-store-metrics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-get-dicom-store-metrics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-get-dicom-store-metrics/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-get-dicom-store-metrics&lt;/code> tool retrieves metrics for a DICOM
+store. It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>cloud-healthcare-get-dicom-store-metrics&lt;/code> returns the metrics of a DICOM store.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_dicom_store_metrics&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-healthcare-get-dicom-store-metrics&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-healthcare-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to get metrics for a DICOM store.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-healthcare-get-dicom-store-metrics&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the healthcare source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h3 id="parameters">Parameters&lt;/h3>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>storeID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true*&lt;/td>
+ &lt;td>The DICOM store ID to get metrics for.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-fhir-resource</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-resource/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-resource/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-get-fhir-resource&lt;/code> tool retrieves a specific FHIR resource
+from a FHIR store.
+It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>cloud-healthcare-get-fhir-resource&lt;/code> returns a single FHIR resource, identified
+by its type and ID.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_fhir_resource&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-healthcare-get-fhir-resource&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-healthcare-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to retrieve a specific FHIR resource.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-healthcare-get-fhir-resource&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the healthcare source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h3 id="parameters">Parameters&lt;/h3>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>resourceType&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The FHIR resource type to retrieve (e.g., Patient, Observation).&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>resourceID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The ID of the FHIR resource to retrieve.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>storeID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true*&lt;/td>
+ &lt;td>The FHIR store ID to retrieve the resource from.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-fhir-store</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-store/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-store/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-get-fhir-store&lt;/code> tool retrieves information about a FHIR store. It&amp;rsquo;s
+compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>cloud-healthcare-get-fhir-store&lt;/code> returns the details of a FHIR store.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_fhir_store&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-healthcare-get-fhir-store&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-healthcare-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to get information about a FHIR store.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-healthcare-get-fhir-store&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the healthcare source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h3 id="parameters">Parameters&lt;/h3>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>storeID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true*&lt;/td>
+ &lt;td>The FHIR store ID to get details for.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-fhir-store-metrics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-store-metrics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-store-metrics/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-get-fhir-store-metrics&lt;/code> tool retrieves metrics for a FHIR store. It&amp;rsquo;s
+compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>cloud-healthcare-get-fhir-store-metrics&lt;/code> returns the metrics of a FHIR store.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_fhir_store_metrics&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-healthcare-get-fhir-store-metrics&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-healthcare-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to get metrics for a FHIR store.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-healthcare-get-fhir-store-metrics&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the healthcare source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h3 id="parameters">Parameters&lt;/h3>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>storeID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true*&lt;/td>
+ &lt;td>The FHIR store ID to get metrics for.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-list-dicom-stores</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-list-dicom-stores/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-list-dicom-stores/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-list-dicom-stores&lt;/code> lists the available DICOM stores in the
+healthcare dataset.
+It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>cloud-healthcare-list-dicom-stores&lt;/code> returns the details of the available DICOM
+stores in the dataset of the healthcare source. It takes no extra parameters.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_dicom_stores&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-healthcare-list-dicom-stores&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-healthcare-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to list DICOM stores in the healthcare dataset.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-healthcare-list-dicom-stores&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the healthcare source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>cloud-healthcare-list-fhir-stores</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-list-fhir-stores/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-list-fhir-stores/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-list-fhir-stores&lt;/code> lists the available FHIR stores in the
+healthcare dataset.
+It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>cloud-healthcare-list-fhir-stores&lt;/code> returns the details of the available FHIR
+stores in the dataset of the healthcare source. It takes no extra parameters.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_fhir_stores&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-healthcare-list-fhir-stores&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-healthcare-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to list FHIR stores in the healthcare dataset.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-healthcare-list-fhir-stores&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the healthcare source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>cloud-healthcare-retrieve-rendered-dicom-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-retrieve-rendered-dicom-instance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-retrieve-rendered-dicom-instance/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-retrieve-rendered-dicom-instance&lt;/code> tool retrieves a rendered
+DICOM instance from a DICOM store.
+It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>cloud-healthcare-retrieve-rendered-dicom-instance&lt;/code> returns a base64 encoded
+string of the image in JPEG format.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">retrieve_rendered_dicom_instance&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-healthcare-retrieve-rendered-dicom-instance&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-healthcare-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to retrieve a rendered DICOM instance from the DICOM store.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-healthcare-retrieve-rendered-dicom-instance&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the healthcare source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h3 id="parameters">Parameters&lt;/h3>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>StudyInstanceUID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The UID of the DICOM study.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>SeriesInstanceUID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The UID of the DICOM series.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>SOPInstanceUID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The UID of the SOP instance.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>FrameNumber&lt;/td>
+ &lt;td style="text-align: center">integer&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The frame number to retrieve (1-based). Only applicable to multi-frame instances. Defaults to 1.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>storeID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true*&lt;/td>
+ &lt;td>The DICOM store ID to retrieve from.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-search-dicom-instances</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-instances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-instances/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-search-dicom-instances&lt;/code> tool searches for DICOM instances in
+a DICOM store based on a set of criteria. It&amp;rsquo;s compatible with the following
+sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>search-dicom-instances&lt;/code> returns a list of DICOM instances that match the given
+criteria.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">search_dicom_instances&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-healthcare-search-dicom-instances&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-healthcare-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to search for DICOM instances in the DICOM store.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-healthcare-search-dicom-instances&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the healthcare source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h3 id="parameters">Parameters&lt;/h3>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>StudyInstanceUID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The UID of the DICOM study.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>PatientName&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The name of the patient.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>PatientID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The ID of the patient.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>AccessionNumber&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The accession number of the study.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>ReferringPhysicianName&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The name of the referring physician.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>StudyDate&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The date of the study in the format &lt;code>YYYYMMDD&lt;/code>. You can also specify a date range in the format &lt;code>YYYYMMDD-YYYYMMDD&lt;/code>.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>SeriesInstanceUID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The UID of the DICOM series.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>Modality&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The modality of the series.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>SOPInstanceUID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The UID of the SOP instance.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>fuzzymatching&lt;/td>
+ &lt;td style="text-align: center">boolean&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Whether to enable fuzzy matching for patient names. Fuzzy matching will perform tokenization and normalization of both the value of PatientName in the query and the stored value. It will match if any search token is a prefix of any stored token. For example, if PatientName is &amp;ldquo;John^Doe&amp;rdquo;, then &amp;ldquo;jo&amp;rdquo;, &amp;ldquo;Do&amp;rdquo; and &amp;ldquo;John Doe&amp;rdquo; will all match. However &amp;ldquo;ohn&amp;rdquo; will not match.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>includefield&lt;/td>
+ &lt;td style="text-align: center">[]string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>List of attributeIDs to include in the output, such as DICOM tag IDs or keywords. Set to &lt;code>[&amp;quot;all&amp;quot;]&lt;/code> to return all available tags.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>storeID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true*&lt;/td>
+ &lt;td>The DICOM store ID to search in.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-search-dicom-series</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-series/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-series/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-search-dicom-series&lt;/code> tool searches for DICOM series in a DICOM store based on a
+set of criteria. It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>cloud-healthcare-search-dicom-series&lt;/code> returns a list of DICOM series that match the given criteria.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">search_dicom_series&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-healthcare-search-dicom-series&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-healthcare-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to search for DICOM series in the DICOM store.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-healthcare-search-dicom-series&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the healthcare source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h3 id="parameters">Parameters&lt;/h3>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>StudyInstanceUID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The UID of the DICOM study.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>PatientName&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The name of the patient.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>PatientID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The ID of the patient.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>AccessionNumber&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The accession number of the study.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>ReferringPhysicianName&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The name of the referring physician.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>StudyDate&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The date of the study in the format &lt;code>YYYYMMDD&lt;/code>. You can also specify a date range in the format &lt;code>YYYYMMDD-YYYYMMDD&lt;/code>.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>SeriesInstanceUID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The UID of the DICOM series.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>Modality&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The modality of the series.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>fuzzymatching&lt;/td>
+ &lt;td style="text-align: center">boolean&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Whether to enable fuzzy matching for patient names. Fuzzy matching will perform tokenization and normalization of both the value of PatientName in the query and the stored value. It will match if any search token is a prefix of any stored token. For example, if PatientName is &amp;ldquo;John^Doe&amp;rdquo;, then &amp;ldquo;jo&amp;rdquo;, &amp;ldquo;Do&amp;rdquo; and &amp;ldquo;John Doe&amp;rdquo; will all match. However &amp;ldquo;ohn&amp;rdquo; will not match.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>includefield&lt;/td>
+ &lt;td style="text-align: center">[]string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>List of attributeIDs to include in the output, such as DICOM tag IDs or keywords. Set to &lt;code>[&amp;quot;all&amp;quot;]&lt;/code> to return all available tags.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>storeID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true*&lt;/td>
+ &lt;td>The DICOM store ID to search in.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;p>*If the &lt;code>allowedDIComStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-search-dicom-studies</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-studies/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-studies/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-search-dicom-studies&lt;/code> tool searches for DICOM studies in a DICOM store based on a
+set of criteria. It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2012/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>cloud-healthcare-search-dicom-studies&lt;/code> returns a list of DICOM studies that match the given criteria.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">search_dicom_studies&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-healthcare-search-dicom-studies&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-healthcare-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to search for DICOM studies in the DICOM store.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-healthcare-search-dicom-studies&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the healthcare source.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;h3 id="parameters">Parameters&lt;/h3>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>StudyInstanceUID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The UID of the DICOM study.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>PatientName&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The name of the patient.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>PatientID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The ID of the patient.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>AccessionNumber&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The accession number of the study.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>ReferringPhysicianName&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The name of the referring physician.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>StudyDate&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The date of the study in the format &lt;code>YYYYMMDD&lt;/code>. You can also specify a date range in the format &lt;code>YYYYMMDD-YYYYMMDD&lt;/code>.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>fuzzymatching&lt;/td>
+ &lt;td style="text-align: center">boolean&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>Whether to enable fuzzy matching for patient names. Fuzzy matching will perform tokenization and normalization of both the value of PatientName in the query and the stored value. It will match if any search token is a prefix of any stored token. For example, if PatientName is &amp;ldquo;John^Doe&amp;rdquo;, then &amp;ldquo;jo&amp;rdquo;, &amp;ldquo;Do&amp;rdquo; and &amp;ldquo;John Doe&amp;rdquo; will all match. However &amp;ldquo;ohn&amp;rdquo; will not match.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>includefield&lt;/td>
+ &lt;td style="text-align: center">[]string&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>List of attributeIDs to include in the output, such as DICOM tag IDs or keywords. Set to &lt;code>[&amp;quot;all&amp;quot;]&lt;/code> to return all available tags.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>storeID&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true*&lt;/td>
+ &lt;td>The DICOM store ID to search in.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table>
+&lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item></channel></rss>
