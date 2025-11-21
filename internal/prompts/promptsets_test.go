@@ -32,19 +32,20 @@ type mockPrompt struct {
 	mcpManifest prompts.McpManifest
 }
 
-func (m *mockPrompt) SubstituteParams(parameters.ParamValues) (any, error) { return nil, nil }
-func (m *mockPrompt) ParseArgs(map[string]any, map[string]map[string]any) (parameters.ParamValues, error) {
+func (m mockPrompt) SubstituteParams(parameters.ParamValues) (any, error) { return nil, nil }
+func (m mockPrompt) ParseArgs(map[string]any, map[string]map[string]any) (parameters.ParamValues, error) {
 	return nil, nil
 }
-func (m *mockPrompt) Manifest() prompts.Manifest       { return m.manifest }
-func (m *mockPrompt) McpManifest() prompts.McpManifest { return m.mcpManifest }
+func (m mockPrompt) Manifest() prompts.Manifest       { return m.manifest }
+func (m mockPrompt) McpManifest() prompts.McpManifest { return m.mcpManifest }
+func (m mockPrompt) ToConfig() prompts.PromptConfig   { return nil }
 
 // newMockPrompt creates a new mock prompt for testing.
 func newMockPrompt(name, desc string) prompts.Prompt {
 	args := prompts.Arguments{
 		{Parameter: parameters.NewStringParameter("arg1", "Test argument")},
 	}
-	return &mockPrompt{
+	return mockPrompt{
 		name: name,
 		desc: desc,
 		args: args,
@@ -91,7 +92,9 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 				PromptNames: []string{"prompt1", "prompt2"},
 			},
 			want: prompts.Promptset{
-				Name: "default",
+				PromptsetConfig: prompts.PromptsetConfig{
+					Name: "default",
+				},
 				Prompts: []*prompts.Prompt{
 					prompt1Ptr,
 					prompt2Ptr,
@@ -117,7 +120,9 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 				PromptNames: []string{"prompt1"},
 			},
 			want: prompts.Promptset{
-				Name: "single",
+				PromptsetConfig: prompts.PromptsetConfig{
+					Name: "single",
+				},
 				Prompts: []*prompts.Prompt{
 					prompt1Ptr,
 				},
@@ -139,7 +144,7 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 				Name:        "invalid name", // Contains a space
 				PromptNames: []string{"prompt1"},
 			},
-			want:    prompts.Promptset{Name: "invalid name"}, // Expect partial struct
+			want:    prompts.Promptset{PromptsetConfig: prompts.PromptsetConfig{Name: "invalid name"}}, // Expect partial struct
 			wantErr: "invalid promptset name",
 		},
 		{
@@ -150,7 +155,9 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 			},
 			// Expect partial struct with fields populated up to the error
 			want: prompts.Promptset{
-				Name: "missing_prompt",
+				PromptsetConfig: prompts.PromptsetConfig{
+					Name: "missing_prompt",
+				},
 				Prompts: []*prompts.Prompt{
 					prompt1Ptr,
 				},
@@ -173,7 +180,9 @@ func TestPromptsetConfig_Initialize(t *testing.T) {
 				PromptNames: []string{},
 			},
 			want: prompts.Promptset{
-				Name:    "empty",
+				PromptsetConfig: prompts.PromptsetConfig{
+					Name: "empty",
+				},
 				Prompts: []*prompts.Prompt{},
 				Manifest: prompts.PromptsetManifest{
 					ServerVersion:   serverVersion,
