@@ -17,8 +17,20 @@ package cmd
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"fmt"
+	"io"
+	"os"
+	"path"
+	"path/filepath"
+	"regexp"
+	"runtime"
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/google/go-cmp/cmp"
+
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
@@ -35,17 +47,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/spf13/cobra"
-	"io"
-	"os"
-	"path"
-	"path/filepath"
-	"regexp"
-	"runtime"
-	"strings"
-	"testing"
-	"time"
-
-	_ "embed"
 )
 
 func withDefaults(c server.ServerConfig) server.ServerConfig {
