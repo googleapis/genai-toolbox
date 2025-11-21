@@ -12,6 +12,27 @@ An editor configured to use the Cloud SQL for SQL Server MCP server can use its 
 
 ### Prerequisites
 
+*   Download and install [MCP Toolbox](https://github.com/googleapis/genai-toolbox)
+  1.  **Download the Toolbox binary**:
+      Download the latest binary for your operating system and architecture from the storage bucket:
+      `https://storage.googleapis.com/genai-toolbox/v0.20.0/<os>/<arch>/toolbox`
+      *   Replace `<os>` with `linux`, `darwin` (macOS), or `windows`.
+      *   Replace `<arch>` with `amd64` (Intel) or `arm64` (Apple Silicon).
+      Check the [releases page](https://github.com/googleapis/genai-toolbox/releases) for OS and CPU architecture support.
+      
+
+  2.  **Make it executable**:
+      ```bash
+      chmod +x toolbox
+      ```
+
+  3.  **Add the binary to $PATH in `.~/bash_profile`**:
+      ```bash
+      export PATH=$PATH:/path/to/toolbox
+      ```
+    
+    You may need to restart Antigravity for changes to take effect.
+
 *   A Google Cloud project with the **Cloud SQL Admin API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
 *   IAM Permissions:
@@ -20,64 +41,18 @@ An editor configured to use the Cloud SQL for SQL Server MCP server can use its 
 
 ### Configuration
 
-#### Docker Configuration
+Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
 
-1.  **Install [Docker](https://docs.docker.com/install/)**.
-2.  Ensure the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set with [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud).
-
-3.  **Configure your client**:
-    Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
-
-    ```json
-    {
-      "mcpServers": {
-        "cloud-sql-sqlserver-admin": {
-          "command": "docker",
-          "args": [
-            "run",
-            "-i",
-            "--rm",
-            "-e",
-            "GOOGLE_APPLICATION_CREDENTIALS=/tmp/keys/adc.json",
-            "-v",
-            "${GOOGLE_APPLICATION_CREDENTIAL}:/tmp/keys/adc.json:ro",
-            "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest",
-            "--prebuilt",
-            "cloud-sql-mssql-admin",
-            "--stdio"
-          ],
-          
-        }
-      }
+```json
+{
+  "mcpServers": {
+    "cloud-sql-sqlserver-admin": {
+      "command": "./path/to/toolbox",
+      "args": ["--prebuilt", "cloud-sql-mssql-admin", "--stdio"],
     }
-    ```
-
-#### Binary Configuration
-
-1.  **Download the Toolbox binary**:
-    Download the latest binary for your operating system and architecture from the storage bucket:
-    `https://storage.googleapis.com/genai-toolbox/v0.20.0/<os>/<arch>/toolbox`
-    *   Replace `<os>` with `linux`, `darwin` (macOS), or `windows`.
-    *   Replace `<arch>` with `amd64` (Intel) or `arm64` (Apple Silicon).
-
-2.  **Make it executable**:
-    ```bash
-    chmod +x toolbox
-    ```
-
-3.  **Configure your client**:
-    Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
-
-    ```json
-    {
-      "mcpServers": {
-        "cloud-sql-sqlserver-admin": {
-          "command": "./path/to/toolbox",
-          "args": ["--prebuilt", "cloud-sql-mssql-admin", "--stdio"],
-        }
-      }
-    }
-    ```
+  }
+}
+```
 
 ## Usage
 

@@ -17,6 +17,27 @@ An editor configured to use the Looker MCP server can use its AI capabilities to
 
 ### Prerequisites
 
+*   Download and install [MCP Toolbox](https://github.com/googleapis/genai-toolbox)
+  1.  **Download the Toolbox binary**:
+      Download the latest binary for your operating system and architecture from the storage bucket:
+      `https://storage.googleapis.com/genai-toolbox/v0.20.0/<os>/<arch>/toolbox`
+      *   Replace `<os>` with `linux`, `darwin` (macOS), or `windows`.
+      *   Replace `<arch>` with `amd64` (Intel) or `arm64` (Apple Silicon).
+      Check the [releases page](https://github.com/googleapis/genai-toolbox/releases) for OS and CPU architecture support.
+      
+
+  2.  **Make it executable**:
+      ```bash
+      chmod +x toolbox
+      ```
+
+  3.  **Add the binary to $PATH in `.~/bash_profile`**:
+      ```bash
+      export PATH=$PATH:/path/to/toolbox
+      ```
+    
+    You may need to restart Antigravity for changes to take effect.
+
 *   Access to a Looker instance.
 *   API Credentials (`Client ID` and `Client Secret`) or OAuth configuration.
 
@@ -34,74 +55,22 @@ export LOOKER_SHOW_HIDDEN_EXPLORES="true" # Optional, defaults to true
 export LOOKER_SHOW_HIDDEN_FIELDS="true" # Optional, defaults to true
 ```
 
-#### Docker Configuration
+Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
 
-1.  **Install [Docker](https://docs.docker.com/install/)**.
-2.  Ensure the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set with [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud).
-
-3.  **Configure your client**:
-    Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
-
-    ```json
-    {
-      "mcpServers": {
-        "looker": {
-          "command": "docker",
-          "args": [
-            "run",
-            "-i",
-            "--rm",
-            "-e",
-            "LOOKER_BASE_URL",
-            "-e",
-            "LOOKER_CLIENT_ID",
-            "-e",
-            "LOOKER_CLIENT_SECRET",
-            "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest",
-            "--prebuilt",
-            "looker",
-            "--stdio"
-          ],
-          "env": {
-            "LOOKER_BASE_URL": "https://your.looker.instance.com",
-            "LOOKER_CLIENT_ID": "your-client-id",
-            "LOOKER_CLIENT_SECRET": "your-client-secret"
-          }
-        }
+```json
+{
+  "mcpServers": {
+    "looker": {
+      "command": "./path/to/toolbox",
+      "args": ["--prebuilt", "looker", "--stdio"],
+      "env": {
+        "LOOKER_BASE_URL": "https://your.looker.instance.com",
+        "LOOKER_CLIENT_ID": "your-client-id",
+        "LOOKER_CLIENT_SECRET": "your-client-secret"
       }
     }
-    ```
-
-#### Binary Configuration
-
-1.  **Download the Toolbox binary**:
-    Download the latest binary for your operating system and architecture from the storage bucket:
-    `https://storage.googleapis.com/genai-toolbox/v0.20.0/<os>/<arch>/toolbox`
-    *   Replace `<os>` with `linux`, `darwin` (macOS), or `windows`.
-    *   Replace `<arch>` with `amd64` (Intel) or `arm64` (Apple Silicon).
-
-2.  **Make it executable**:
-    ```bash
-    chmod +x toolbox
-    ```
-
-3.  **Configure your client**:
-    Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
-
-    ```json
-    {
-      "mcpServers": {
-        "looker": {
-          "command": "./path/to/toolbox",
-          "args": ["--prebuilt", "looker", "--stdio"],
-          "env": {
-            "LOOKER_BASE_URL": "https://your.looker.instance.com",
-            "LOOKER_CLIENT_ID": "your-client-id",
-            "LOOKER_CLIENT_SECRET": "your-client-secret"
-          }
-        }
-      }
-    }
+  }
+}
     ```
 
 ## Usage

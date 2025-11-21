@@ -13,6 +13,27 @@ An editor configured to use the Cloud SQL for SQL Server MCP server can use its 
 
 ### Prerequisites
 
+*   Download and install [MCP Toolbox](https://github.com/googleapis/genai-toolbox)
+  1.  **Download the Toolbox binary**:
+      Download the latest binary for your operating system and architecture from the storage bucket:
+      `https://storage.googleapis.com/genai-toolbox/v0.20.0/<os>/<arch>/toolbox`
+      *   Replace `<os>` with `linux`, `darwin` (macOS), or `windows`.
+      *   Replace `<arch>` with `amd64` (Intel) or `arm64` (Apple Silicon).
+      Check the [releases page](https://github.com/googleapis/genai-toolbox/releases) for OS and CPU architecture support.
+      
+
+  2.  **Make it executable**:
+      ```bash
+      chmod +x toolbox
+      ```
+
+  3.  **Add the binary to $PATH in `.~/bash_profile`**:
+      ```bash
+      export PATH=$PATH:/path/to/toolbox
+      ```
+    
+    You may need to restart Antigravity for changes to take effect.
+
 *   A Google Cloud project with the **Cloud SQL Admin API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
 *   IAM Permissions:
@@ -34,94 +55,26 @@ export CLOUD_SQL_MSSQL_IP_TYPE="PUBLIC"  # Optional: `PUBLIC`, `PRIVATE`, `PSC`.
 
 > **Note:** If your instance uses private IPs, you must run the MCP server in the same Virtual Private Cloud (VPC) network.
 
-#### Docker Configuration
+Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
 
-1.  **Install [Docker](https://docs.docker.com/install/)**.
-
-2.  Ensure the `GOOGLE_APPLICATION_CREDENTIALS` environment variable is set with [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud).
-
-3.  **Configure your client**:
-    Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
-
-    ```json
-    {
-      "mcpServers": {
-        "cloud-sql-mssql": {
-          "command": "docker",
-          "args": [
-            "run",
-            "-i",
-            "--rm",
-            "-e",
-            "CLOUD_SQL_MSSQL_PROJECT",
-            "-e",
-            "CLOUD_SQL_MSSQL_REGION",
-            "-e",
-            "CLOUD_SQL_MSSQL_INSTANCE",
-            "-e",
-            "CLOUD_SQL_MSSQL_DATABASE",
-            "-e",
-            "CLOUD_SQL_MSSQL_USER",
-            "-e",
-            "CLOUD_SQL_MSSQL_PASSWORD",
-            "-e",
-            "CLOUD_SQL_MSSQL_IP_TYPE",
-            "-e",
-            "GOOGLE_APPLICATION_CREDENTIALS=/tmp/keys/adc.json",
-            "-v",
-            "${GOOGLE_APPLICATION_CREDENTIAL}:/tmp/keys/adc.json:ro",
-            "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest",
-            "--prebuilt",
-            "cloud-sql-mssql",
-            "--stdio"
-          ],
-          "env": {
-            "CLOUD_SQL_MSSQL_PROJECT": "your-project-id",
-            "CLOUD_SQL_MSSQL_REGION": "your-region",
-            "CLOUD_SQL_MSSQL_INSTANCE": "your-instance-id",
-            "CLOUD_SQL_MSSQL_DATABASE": "your-database-name",
-            "CLOUD_SQL_MSSQL_USER": "your-username",
-            "CLOUD_SQL_MSSQL_PASSWORD": "your-password"
-          }
-        }
+```json
+{
+  "mcpServers": {
+    "cloud-sql-mssql": {
+      "command": "./path/to/toolbox",
+      "args": ["--prebuilt", "cloud-sql-mssql", "--stdio"],
+      "env": {
+        "CLOUD_SQL_MSSQL_PROJECT": "your-project-id",
+        "CLOUD_SQL_MSSQL_REGION": "your-region",
+        "CLOUD_SQL_MSSQL_INSTANCE": "your-instance-id",
+        "CLOUD_SQL_MSSQL_DATABASE": "your-database-name",
+        "CLOUD_SQL_MSSQL_USER": "your-username",
+        "CLOUD_SQL_MSSQL_PASSWORD": "your-password"
       }
     }
-    ```
-
-#### Binary Configuration
-
-1.  **Download the Toolbox binary**:
-    Download the latest binary for your operating system and architecture from the storage bucket:
-    `https://storage.googleapis.com/genai-toolbox/v0.20.0/<os>/<arch>/toolbox`
-    *   Replace `<os>` with `linux`, `darwin` (macOS), or `windows`.
-    *   Replace `<arch>` with `amd64` (Intel) or `arm64` (Apple Silicon).
-
-2.  **Make it executable**:
-    ```bash
-    chmod +x toolbox
-    ```
-
-3.  **Configure your client**:
-    Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
-
-    ```json
-    {
-      "mcpServers": {
-        "cloud-sql-mssql": {
-          "command": "./path/to/toolbox",
-          "args": ["--prebuilt", "cloud-sql-mssql", "--stdio"],
-          "env": {
-            "CLOUD_SQL_MSSQL_PROJECT": "your-project-id",
-            "CLOUD_SQL_MSSQL_REGION": "your-region",
-            "CLOUD_SQL_MSSQL_INSTANCE": "your-instance-id",
-            "CLOUD_SQL_MSSQL_DATABASE": "your-database-name",
-            "CLOUD_SQL_MSSQL_USER": "your-username",
-            "CLOUD_SQL_MSSQL_PASSWORD": "your-password"
-          }
-        }
-      }
-    }
-    ```
+  }
+}
+```
 
 ## Usage
 
