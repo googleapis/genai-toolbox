@@ -13,7 +13,7 @@ An editor configured to use the Cloud SQL for SQL Server MCP server can use its 
 
 ### Prerequisites
 
-*   Download and install [MCP Toolbox](https://github.com/googleapis/genai-toolbox)
+*   Download and install [MCP Toolbox](https://github.com/googleapis/genai-toolbox):
   1.  **Download the Toolbox binary**:
       Download the latest binary for your operating system and architecture from the storage bucket. Check the [releases page](https://github.com/googleapis/genai-toolbox/releases) for OS and CPU architecture support:
       `https://storage.googleapis.com/genai-toolbox/v0.20.0/<os>/<arch>/toolbox`
