@@ -331,7 +331,7 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				for _, tc := range tcs {
 					t.Run(tc.name, func(t *testing.T) {
 						t.Parallel()
-						runCreatePysparkBatchTest(t, client, ctx, tc.toolName, tc.request, tc.waitForSuccess, tc.validate)
+						runCreateSparkBatchTest(t, client, ctx, tc.toolName, tc.request, tc.waitForSuccess, tc.validate)
 					})
 				}
 			})
@@ -958,63 +958,35 @@ func runCreateSparkBatchTest(
 		t.Fatalf("unable to find result in response body")
 	}
 
-	var meta dataprocpb.BatchOperationMetadata
-	if err := json.Unmarshal([]byte(result), &meta); err != nil {
+	var resultMap map[string]any
+	if err := json.Unmarshal([]byte(result), &resultMap); err != nil {
 		t.Fatalf("failed to unmarshal result: %v", err)
 	}
-
-	if validate != nil {
-		b, err := client.GetBatch(ctx, &dataprocpb.GetBatchRequest{Name: meta.Batch})
-		if err != nil {
-			t.Fatalf("failed to get batch: %s", err)
-		}
-		validate(t, b)
+	consoleURL, ok := resultMap["consoleUrl"].(string)
+	if !ok || !strings.HasPrefix(consoleURL, batchURLPrefix) {
+		t.Errorf("unexpected consoleUrl: %v", consoleURL)
 	}
-
-	if waitForSuccess {
-		waitForBatch(t, client, ctx, meta.Batch, []dataprocpb.Batch_State{dataprocpb.Batch_SUCCEEDED}, 5*time.Minute)
+	logsURL, ok := resultMap["logsUrl"].(string)
+	if !ok || !strings.HasPrefix(logsURL, logsURLPrefix) {
+		t.Errorf("unexpected logsUrl: %v", logsURL)
 	}
-}
-
-func runCreatePysparkBatchTest(
-	t *testing.T,
-	client *dataproc.BatchControllerClient,
-	ctx context.Context,
-	toolName string,
-	request map[string]any,
-	waitForSuccess bool,
-	validate func(t *testing.T, b *dataprocpb.Batch),
-) {
-	resp, err := invokeTool(toolName, request, nil)
-	if err != nil {
-		t.Fatalf("invokeTool failed: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-	}
-
-	var body map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
-		t.Fatalf("error parsing response body: %v", err)
-	}
-
-	result, ok := body["result"].(string)
+	metaMap, ok := resultMap["opMetadata"].(map[string]any)
 	if !ok {
-		t.Fatalf("unable to find result in response body")
+		t.Fatalf("unexpected opMetadata: %v", metaMap)
 	}
-
+	metaJson, err := json.Marshal(metaMap)
+	if err != nil {
+		t.Fatalf("failed to marshal op metadata to JSON: %s", err)
+	}
 	var meta dataprocpb.BatchOperationMetadata
-	if err := json.Unmarshal([]byte(result), &meta); err != nil {
+	if err := json.Unmarshal([]byte(metaJson), &meta); err != nil {
 		t.Fatalf("failed to unmarshal result: %v", err)
 	}
 
 	if validate != nil {
 		b, err := client.GetBatch(ctx, &dataprocpb.GetBatchRequest{Name: meta.Batch})
 		if err != nil {
-			t.Fatalf("failed to get batch: %s", err)
+			t.Fatalf("failed to get batch %s: %s", meta.Batch, err)
 		}
 		validate(t, b)
 	}
