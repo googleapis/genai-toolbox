@@ -206,3 +206,7 @@ func replaceCommandsParams(commands [][]string, params parameters.Parameters, pa
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
+}

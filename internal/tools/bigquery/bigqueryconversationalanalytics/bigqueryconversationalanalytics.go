@@ -579,3 +579,7 @@ func appendMessage(messages []map[string]any, newMessage map[string]any) []map[s
 	}
 	return append(messages, newMessage)
 }
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
+}

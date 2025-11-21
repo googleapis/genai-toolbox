@@ -407,3 +407,7 @@ func (t Tool) fetchInstanceData(ctx context.Context, project, instance string) (
 	}
 	return data, nil
 }
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
+}

@@ -26,10 +26,14 @@ type PromptsetConfig struct {
 }
 
 type Promptset struct {
-	Name        string            `yaml:"name"`
+	PromptsetConfig
 	Prompts     []*Prompt         `yaml:",inline"`
 	Manifest    PromptsetManifest `yaml:",inline"`
 	McpManifest []McpManifest     `yaml:",inline"`
+}
+
+func (p Promptset) ToConfig() PromptsetConfig {
+	return p.PromptsetConfig
 }
 
 type PromptsetManifest struct {

@@ -40,12 +40,12 @@ extraFiles: [
     "gemini-extension.json",
     {
         "type": "json",
-        "path": ".registry/server.json",
+        "path": "server.json",
         "jsonpath": "$.version"
     },
     {
         "type": "json",
-        "path": ".registry/server.json",
+        "path": "server.json",
         "jsonpath": "$.packages[0].identifier"
     },
 ]

@@ -61,6 +61,7 @@ type compatibleSource interface {
 	GoogleCloudProject() string
 	GoogleCloudLocation() string
 	UseClientAuthorization() bool
+	GetAuthTokenHeaderName() string
 }
 
 // Structs for building the JSON payload
@@ -185,15 +186,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Config:         cfg,
-		ApiSettings:    s.GetApiSettings(),
-		Project:        s.GoogleCloudProject(),
-		Location:       s.GoogleCloudLocation(),
-		Parameters:     params,
-		UseClientOAuth: s.UseClientAuthorization(),
-		TokenSource:    ts,
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:    mcpManifest,
+		Config:              cfg,
+		ApiSettings:         s.GetApiSettings(),
+		Project:             s.GoogleCloudProject(),
+		Location:            s.GoogleCloudLocation(),
+		Parameters:          params,
+		UseClientOAuth:      s.UseClientAuthorization(),
+		AuthTokenHeaderName: s.GetAuthTokenHeaderName(),
+		TokenSource:         ts,
+		manifest:            tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:         mcpManifest,
 	}
 	return t, nil
 }
@@ -203,14 +205,15 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	ApiSettings    *rtl.ApiSettings
-	UseClientOAuth bool                  `yaml:"useClientOAuth"`
-	Parameters     parameters.Parameters `yaml:"parameters"`
-	Project        string
-	Location       string
-	TokenSource    oauth2.TokenSource
-	manifest       tools.Manifest
-	mcpManifest    tools.McpManifest
+	ApiSettings         *rtl.ApiSettings
+	UseClientOAuth      bool `yaml:"useClientOAuth"`
+	AuthTokenHeaderName string
+	Parameters          parameters.Parameters `yaml:"parameters"`
+	Project             string
+	Location            string
+	TokenSource         oauth2.TokenSource
+	manifest            tools.Manifest
+	mcpManifest         tools.McpManifest
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -548,4 +551,8 @@ func appendMessage(messages []map[string]any, newMessage map[string]any) []map[s
 		}
 	}
 	return append(messages, newMessage)
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return t.AuthTokenHeaderName
 }

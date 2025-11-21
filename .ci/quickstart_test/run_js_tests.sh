@@ -77,8 +77,10 @@ run_orch_test() {
     setup_orch_table
 
     cd "$orch_dir"
-    if [ -f "package.json" ]; then
-      echo "Installing dependencies for $orch_name..."
+    echo "Installing dependencies for $orch_name..."
+    if [ -f "package-lock.json" ]; then
+      npm ci
+    else
       npm install
     fi
 

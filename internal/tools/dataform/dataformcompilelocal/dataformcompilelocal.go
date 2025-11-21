@@ -121,3 +121,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 func (t Tool) RequiresClientAuthorization() bool {
 	return false
 }
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
+}

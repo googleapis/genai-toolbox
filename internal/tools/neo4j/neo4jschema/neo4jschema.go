@@ -710,3 +710,7 @@ func (t Tool) extractIndexes(ctx context.Context) ([]types.Index, error) {
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
+}
