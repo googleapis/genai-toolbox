@@ -172,3 +172,7 @@ func (t Tool) RequiresClientAuthorization() bool {
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
+}
