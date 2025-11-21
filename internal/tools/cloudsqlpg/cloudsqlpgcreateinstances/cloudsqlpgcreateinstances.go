@@ -25,7 +25,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	sqladmin "google.golang.org/api/sqladmin/v1"
-	"strings"
 )
 
 const kind string = "cloud-sql-postgres-create-instance"
