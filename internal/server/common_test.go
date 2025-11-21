@@ -35,8 +35,8 @@ import (
 const fakeVersionString = "0.0.0"
 
 var (
-	_ tools.Tool     = &MockTool{}
-	_ prompts.Prompt = &MockPrompt{}
+	_ tools.Tool     = MockTool{}
+	_ prompts.Prompt = MockPrompt{}
 )
 
 // MockTool is used to mock tools in tests
@@ -118,6 +118,10 @@ func (t MockTool) McpManifest() tools.McpManifest {
 	return mcpManifest
 }
 
+func (t MockTool) GetAuthTokenHeaderName() string {
+	return "Authorization"
+}
+
 // MockPrompt is used to mock prompts in tests
 type MockPrompt struct {
 	Name        string
@@ -155,6 +159,10 @@ func (p MockPrompt) Manifest() prompts.Manifest {
 
 func (p MockPrompt) McpManifest() prompts.McpManifest {
 	return prompts.GetMcpManifest(p.Name, p.Description, p.Args)
+}
+
+func (p MockPrompt) ToConfig() prompts.PromptConfig {
+	return nil
 }
 
 var tool1 = MockTool{
