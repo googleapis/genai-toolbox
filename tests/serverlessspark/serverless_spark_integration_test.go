@@ -744,6 +744,17 @@ func runListBatchesTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 			if !reflect.DeepEqual(actual, tc.want) {
 				t.Fatalf("unexpected batches: got %+v, want %+v", actual, tc.want)
 			}
+
+			// want has URLs because it's created from Batch instances by the same utility function
+			// used by the tool internals. Double-check that the URLs are reasonable.
+			for _, batch := range tc.want {
+				if !strings.HasPrefix(batch.ConsoleURL, batchURLPrefix) {
+					t.Errorf("unexpected consoleUrl in batch: %#v", batch)
+				}
+				if !strings.HasPrefix(batch.LogsURL, logsURLPrefix) {
+					t.Errorf("unexpected logsUrl in batch: %#v", batch)
+				}
+			}
 		})
 	}
 }
@@ -772,8 +783,12 @@ func listBatchesRpc(t *testing.T, client *dataproc.BatchControllerClient, ctx co
 	if !exact && (len(batchPbs) == 0 || len(batchPbs) > n) {
 		t.Fatalf("expected between 1 and %d batches, got %d", n, len(batchPbs))
 	}
+	batches, err := serverlesssparklistbatches.ToBatches(batchPbs)
+	if err != nil {
+		t.Fatalf("failed to convert batches to JSON: %v", err)
+	}
 
-	return serverlesssparklistbatches.ToBatches(batchPbs)
+	return batches
 }
 
 func runAuthTest(t *testing.T, toolName string, request map[string]any, wantStatus int) {
