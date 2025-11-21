@@ -17,6 +17,8 @@ package cloudsqlpgcreateinstances
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
