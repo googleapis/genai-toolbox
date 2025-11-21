@@ -21,6 +21,10 @@ Apache Spark.
   Get a Serverless Spark batch.
 - [`serverless-spark-cancel-batch`](../tools/serverless-spark/serverless-spark-cancel-batch.md)
   Cancel a running Serverless Spark batch operation.
+- [`serverless-spark-create-pyspark-batch`](../tools/serverless-spark/serverless-spark-create-pyspark-batch.md)
+  Create a Serverless Spark PySpark batch operation.
+- [`serverless-spark-create-spark-batch`](../tools/serverless-spark/serverless-spark-create-spark-batch.md)
+  Create a Serverless Spark Java batch operation.
 
 ## Requirements
 
