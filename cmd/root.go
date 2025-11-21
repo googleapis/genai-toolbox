@@ -98,6 +98,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlmssql/cloudsqlmssqlcreateinstance"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlmysql/cloudsqlmysqlcreateinstance"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg/cloudsqlpgcreateinstances"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg/cloudsqlpgupgradeprecheck"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataform/dataformcompilelocal"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexlookupentry"
