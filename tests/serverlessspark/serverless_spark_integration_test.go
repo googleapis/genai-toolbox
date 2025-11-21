@@ -48,6 +48,11 @@ var (
 	serverlessSparkServiceAccount = os.Getenv("SERVERLESS_SPARK_SERVICE_ACCOUNT")
 )
 
+const (
+	batchURLPrefix = "https://console.cloud.google.com/dataproc/batches/"
+	logsURLPrefix  = "https://console.cloud.google.com/logs/viewer?"
+)
+
 func getServerlessSparkVars(t *testing.T) map[string]any {
 	switch "" {
 	case serverlessSparkLocation:
@@ -868,11 +873,27 @@ func runGetBatchTest(t *testing.T, client *dataproc.BatchControllerClient, ctx c
 			if !ok {
 				t.Fatalf("unable to find result in response body")
 			}
+			var wrappedResult map[string]any
+			if err := json.Unmarshal([]byte(result), &wrappedResult); err != nil {
+				t.Fatalf("error unmarshalling result: %s", err)
+			}
+			consoleURL, ok := wrappedResult["consoleUrl"].(string)
+			if !ok || !strings.HasPrefix(consoleURL, batchURLPrefix) {
+				t.Errorf("unexpected consoleUrl: %v", consoleURL)
+			}
+			logsURL, ok := wrappedResult["logsUrl"].(string)
+			if !ok || !strings.HasPrefix(logsURL, logsURLPrefix) {
+				t.Errorf("unexpected logsUrl: %v", logsURL)
+			}
+			batchJSON, err := json.Marshal(wrappedResult["batch"])
+			if err != nil {
+				t.Fatalf("failed to marshal batch: %v", err)
+			}
 
 			// Unmarshal JSON to proto for proto-aware deep comparison.
 			var batch dataprocpb.Batch
-			if err := protojson.Unmarshal([]byte(result), &batch); err != nil {
-				t.Fatalf("error unmarshalling result: %s", err)
+			if err := protojson.Unmarshal(batchJSON, &batch); err != nil {
+				t.Fatalf("error unmarshalling batch from wrapped result: %s", err)
 			}
 
 			if !cmp.Equal(&batch, tc.want, protocmp.Transform()) {
