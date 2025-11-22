@@ -111,7 +111,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		parameters.NewIntParameterWithDefault("data_free_threshold_bytes", 1, "(Optional) Only show tables with at least this much free space in bytes. Default is 1"),
 		parameters.NewIntParameterWithDefault("limit", 10, "(Optional) Max rows to return, default is 10"),
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
 	// finish tool setup
 	t := Tool{

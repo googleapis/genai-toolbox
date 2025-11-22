@@ -101,7 +101,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if description == "" {
 		description = "Lists detailed schema information (object type, columns, constraints, indexes) as JSON for user-created tables. Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
 
 	// finish tool setup
 	t := Tool{

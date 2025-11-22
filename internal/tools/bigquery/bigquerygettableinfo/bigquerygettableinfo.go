@@ -104,7 +104,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	tableParameter := parameters.NewStringParameter(tableKey, "The table to get metadata information.")
 	params := parameters.Parameters{projectParameter, datasetParameter, tableParameter}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
 	// finish tool setup
 	t := Tool{

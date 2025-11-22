@@ -84,7 +84,7 @@ func TestGetMcpManifestMetadata(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			got := tools.GetMcpManifest(tc.name, tc.description, tc.authInvoke, tc.params)
+			got := tools.GetMcpManifest(tc.name, tc.description, tc.authInvoke, tc.params, nil)
 			gotM := got.Metadata
 			if diff := cmp.Diff(tc.wantMetadata, gotM); diff != "" {
 				t.Fatalf("unexpected metadata (-want +got):\n%s", diff)
