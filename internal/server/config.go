@@ -62,6 +62,8 @@ type ServerConfig struct {
 	DisableReload bool
 	// UI indicates if Toolbox UI endpoints (/ui) are available
 	UI bool
+	// Specifies a list of origins permitted to access this server.
+	AllowedOrigins []string
 }
 
 type logFormat string
