@@ -54,18 +54,8 @@ An editor configured to use the Cloud SQL for MySQL MCP server can use its AI ca
 
 ### Configuration
 
-Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
-
-```json
-{
-  "mcpServers": {
-    "cloud-sql-mysql-admin": {
-      "command": "toolbox",
-      "args": ["--prebuilt", "cloud-sql-mysql-admin", "--stdio"]
-    }
-  }
-}
-```
+1. **Access the Store**: Open the MCP Store panel within the "..." dropdown at the top of the editor's side panel.
+2. **Browse and Install**: Search for "Cloud SQL for MySQL Admin", and click "Install".
 
 ## Usage
 

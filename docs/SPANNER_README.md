@@ -55,33 +55,13 @@ An editor configured to use the Cloud Spanner MCP server can use its AI capabili
 
 ### Configuration
 
-The MCP server is configured using environment variables.
-
-```bash
-export SPANNER_PROJECT="<your-gcp-project-id>"
-export SPANNER_INSTANCE="<your-spanner-instance-id>"
-export SPANNER_DATABASE="<your-spanner-database-id>"
-export SPANNER_DIALECT="googlesql" # Optional: "googlesql" or "postgresql". Defaults to "googlesql".
-```
-
-Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
-
-```json
-{
-  "mcpServers": {
-    "spanner": {
-      "command": "toolbox",
-      "args": ["--prebuilt", "spanner", "--stdio"],
-      "env": {
-        "SPANNER_PROJECT": "your-project-id",
-        "SPANNER_INSTANCE": "your-instance-id",
-        "SPANNER_DATABASE": "your-database-name",
-        "SPANNER_DIALECT": "googlesql"
-      }
-    }
-  }
-}
-```
+1. **Access the Store**: Open the MCP Store panel within the "..." dropdown at the top of the editor's side panel.
+2. **Browse and Install**: Search for "Spanner", and click "Install".
+3. **Configuration**: The following configuration is needed for the server:
+   * Spanner Project ID: The GCP project ID.
+   * Spanner Instance ID: The Spanner instance ID.
+   * Spanner Database ID: The Spanner database ID.
+   * Spanner Dialect: (Optional) The database dialect i.e. "googlesql" or "postgresql". Defaults to "googlesql" if unspecified.
 
 ## Usage
 

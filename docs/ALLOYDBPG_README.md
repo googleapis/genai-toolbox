@@ -57,33 +57,20 @@ An editor configured to use the AlloyDB MCP server can use its AI capabilities t
 
 ### Configuration
 
-The AlloyDB MCP server is configured using environment variables.
+1. **Access the Store**: Open the MCP Store panel within the "..." dropdown at the top of the editor's side panel.
+2. **Browse and Install**: Search for "AlloyDB for PostgreSQL", and click "Install".
+3. **Configuration**: The following configuration is needed for the server:
+   * AlloyDB Project ID: The GCP project ID.
+   * AlloyDB Region: The region of your AlloyDB instance.
+   * AlloyDB Cluster ID: The ID of your AlloyDB cluster.
+   * AlloyDB Instance ID: The ID of your AlloyDB instance.
+   * AlloyDB Database Name: The name of the database.
+   * AlloyDB Database User: (Optional) The database username. Defaults to IAM authentication if unspecified.
+   * AlloyDB Database Password: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.
+   * AlloyDB IP Type: (Optional) The IP type i.e. “Public” or “Private”. Defaults to "Public" if unspecified.
 
-```bash
-export ALLOYDB_POSTGRES_PROJECT="<your-gcp-project-id>"
-export ALLOYDB_POSTGRES_REGION="<your-alloydb-region>"
-export ALLOYDB_POSTGRES_CLUSTER="<your-alloydb-cluster-id>"
-export ALLOYDB_POSTGRES_INSTANCE="<your-alloydb-instance-id>"
-export ALLOYDB_POSTGRES_DATABASE="<your-database-name>"
-export ALLOYDB_POSTGRES_USER="<your-database-user>"  # Optional
-export ALLOYDB_POSTGRES_PASSWORD="<your-database-password>"  # Optional
-export ALLOYDB_POSTGRES_IP_TYPE="PUBLIC"  # Optional: `PUBLIC`, `PRIVATE`, `PSC`. Defaults to `PUBLIC`.
-```
-
-> **Note:** If your AlloyDB instance uses private IPs, you must run the MCP server in the same Virtual Private Cloud (VPC) network.
-
-Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
-
-```json
-{
-  "mcpServers": {
-    "alloydb-postgres": {
-      "command": "toolbox",
-      "args": ["--prebuilt", "alloydb-postgres", "--stdio"],
-    }
-  }
-}
-```
+> [!NOTE]
+> If your AlloyDB instance uses private IPs, you must run the MCP server in the same Virtual Private Cloud (VPC) network.
 
 ## Usage
 

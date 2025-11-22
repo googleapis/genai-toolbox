@@ -54,40 +54,20 @@ An editor configured to use the Cloud SQL for SQL Server MCP server can use its 
 
 ### Configuration
 
-The MCP server is configured using environment variables.
+1. **Access the Store**: Open the MCP Store panel within the "..." dropdown at the top of the editor's side panel.
+2. **Browse and Install**: Search for "Cloud SQL for SQL Server", and click "Install".
+3. **Configuration**: The following configuration is needed for the server:
+   * Cloud SQL Project ID: The GCP project ID.
+   * Cloud SQL Region: The region of your Cloud SQL instance.
+   * Cloud SQL Instance ID: The ID of your Cloud SQL instance.
+   * Cloud SQL Database Name: The name of the database.
+   * Cloud SQL Database User: (Optional) The database username. Defaults to IAM authentication if unspecified.
+   * Cloud SQL Database Password: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.
+   * Cloud SQL IP Type: (Optional) The IP type i.e. “Public” or “Private”. Defaults to "Public" if unspecified.
 
-```bash
-export CLOUD_SQL_MSSQL_PROJECT="<your-gcp-project-id>"
-export CLOUD_SQL_MSSQL_REGION="<your-cloud-sql-region>"
-export CLOUD_SQL_MSSQL_INSTANCE="<your-cloud-sql-instance-id>"
-export CLOUD_SQL_MSSQL_DATABASE="<your-database-name>"
-export CLOUD_SQL_MSSQL_USER="<your-database-user>"  # Optional
-export CLOUD_SQL_MSSQL_PASSWORD="<your-database-password>"  # Optional
-export CLOUD_SQL_MSSQL_IP_TYPE="PUBLIC"  # Optional: `PUBLIC`, `PRIVATE`, `PSC`. Defaults to `PUBLIC`.
-```
+> [!NOTE]
+> If your instance uses private IPs, you must run the MCP server in the same Virtual Private Cloud (VPC) network.
 
-> **Note:** If your instance uses private IPs, you must run the MCP server in the same Virtual Private Cloud (VPC) network.
-
-Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
-
-```json
-{
-  "mcpServers": {
-    "cloud-sql-mssql": {
-      "command": "toolbox",
-      "args": ["--prebuilt", "cloud-sql-mssql", "--stdio"],
-      "env": {
-        "CLOUD_SQL_MSSQL_PROJECT": "your-project-id",
-        "CLOUD_SQL_MSSQL_REGION": "your-region",
-        "CLOUD_SQL_MSSQL_INSTANCE": "your-instance-id",
-        "CLOUD_SQL_MSSQL_DATABASE": "your-database-name",
-        "CLOUD_SQL_MSSQL_USER": "your-username",
-        "CLOUD_SQL_MSSQL_PASSWORD": "your-password"
-      }
-    }
-  }
-}
-```
 
 ## Usage
 

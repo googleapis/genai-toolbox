@@ -56,35 +56,18 @@ An editor configured to use the Looker MCP server can use its AI capabilities to
 
 ### Configuration
 
-The MCP server is configured using environment variables.
-
-```bash
-export LOOKER_BASE_URL="<your-looker-instance-url>"  # e.g. `https://looker.example.com`. You may need to add the port, i.e. `:19999`.
-export LOOKER_CLIENT_ID="<your-looker-client-id>"
-export LOOKER_CLIENT_SECRET="<your-looker-client-secret>"
-export LOOKER_VERIFY_SSL="true" # Optional, defaults to true
-export LOOKER_SHOW_HIDDEN_MODELS="true" # Optional, defaults to true
-export LOOKER_SHOW_HIDDEN_EXPLORES="true" # Optional, defaults to true
-export LOOKER_SHOW_HIDDEN_FIELDS="true" # Optional, defaults to true
-```
-
-Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
-
-```json
-{
-  "mcpServers": {
-    "looker": {
-      "command": "toolbox",
-      "args": ["--prebuilt", "looker", "--stdio"],
-      "env": {
-        "LOOKER_BASE_URL": "https://your.looker.instance.com",
-        "LOOKER_CLIENT_ID": "your-client-id",
-        "LOOKER_CLIENT_SECRET": "your-client-secret"
-      }
-    }
-  }
-}
-```
+1. **Access the Store**: Open the MCP Store panel within the "..." dropdown at the top of the editor's side panel.
+2. **Browse and Install**: Search for "Looker", and click "Install".
+3. **Configuration**: The following configuration is needed for the server:
+   * Dataplex Project ID: The GCP project ID.
+   * Looker Base URL: The URL of your Looker instance.
+   * Looker Client ID: The client ID for the Looker API.
+   * Looker Client Secret: The client secret for the Looker API.
+   * Looker Verify SSL: Whether to verify SSL certificates.
+   * Looker Use Client OAuth: Whether to use OAuth for authentication.
+   * Looker Show Hidden Models: Whether to show hidden models.
+   * Looker Show Hidden Explores: Whether to show hidden explores.
+   * Looker Show Hidden Fields: Whether to show hidden fields.
 
 ## Usage
 
