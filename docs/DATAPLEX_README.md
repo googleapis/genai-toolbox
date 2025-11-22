@@ -54,27 +54,10 @@ An editor configured to use the Dataplex MCP server can use its AI capabilities 
 
 ### Configuration
 
-The MCP server is configured using environment variables.
-
-```bash
-export DATAPLEX_PROJECT="<your-gcp-project-id>"
-```
-
-Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
-
-```json
-{
-  "mcpServers": {
-    "dataplex": {
-      "command": "toolbox",
-      "args": ["--prebuilt", "dataplex", "--stdio"],
-      "env": {
-        "DATAPLEX_PROJECT": "your-project-id"
-      }
-    }
-  }
-}
-```
+1. **Access the Store**: Open the MCP Store panel within the "..." dropdown at the top of the editor's side panel.
+2. **Browse and Install**: Search for "Dataplex", and click "Install".
+3. **Configuration**: The following configuration is needed for the server:
+   * Dataplex Project ID: The GCP project ID.
 
 ## Usage
 

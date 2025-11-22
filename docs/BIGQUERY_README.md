@@ -55,26 +55,11 @@ An editor configured to use the BigQuery MCP server can use its AI capabilities 
 
 ### Configuration
 
-The BigQuery MCP server is configured using environment variables.
-
-```bash
-export BIGQUERY_PROJECT="<your-gcp-project-id>"
-export BIGQUERY_LOCATION="<your-dataset-location>"  # Optional
-export BIGQUERY_USE_CLIENT_OAUTH="true"  # Optional
-```
-
-Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
-
-```json
-{
-  "mcpServers": {
-    "bigquery": {
-      "command": "toolbox",
-      "args": ["--prebuilt", "bigquery", "--stdio"],
-    }
-  }
-}
-```
+1. **Access the Store**: Open the MCP Store panel within the "..." dropdown at the top of the editor's side panel.
+2. **Browse and Install**: Search for "BigQuery", and click "Install".
+3. **Configuration**: The following configuration is needed for the server:
+   * BigQuery Project ID: The GCP project ID.
+   * BigQuery Location: (Optional) The location of your BigQuery dataset (e.g. "US", "EU").
 
 ### Usage 
 
