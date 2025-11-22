@@ -54,18 +54,8 @@ An editor configured to use the AlloyDB MCP server can use its AI capabilities t
 
 ### Configuration
 
-  Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
-
-  ```json
-  {
-    "mcpServers": {
-      "alloydb-admin": {
-        "command": "toolbox",
-        "args": ["--prebuilt", "alloydb-postgres-admin", "--stdio"],
-      }
-    }
-  }
-  ```
+1. **Access the Store**: Open the MCP Store panel within the "..." dropdown at the top of the editor's side panel.
+2. **Browse and Install**: Search for "AlloyDB for PostgreSQL Admin", and click "Install".
 
 ## Usage
 

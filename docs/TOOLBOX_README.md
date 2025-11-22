@@ -44,9 +44,12 @@ The MCP Toolbox for Databases Server gives AI-powered development tools the abil
 
 ### Configuration
 
-Add your [`tools.yaml` configuration
-file](https://googleapis.github.io/genai-toolbox/getting-started/configure/) to
-the directory you are running Antigravity
+1. **Access the Store**: Open the MCP Store panel within the "..." dropdown at the top of the editor's side panel.
+2. **Browse and Install**: Search for "MCP Toolbox for Databases", and click "Install".
+3. **Configuration**: The following configuration is needed for the server:
+   * Add your [`tools.yaml` configuration
+     file](https://googleapis.github.io/genai-toolbox/getting-started/configure/)
+     to the directory you are running Antigravity
 
 ## Usage
 

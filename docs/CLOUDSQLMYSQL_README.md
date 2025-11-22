@@ -56,40 +56,19 @@ An editor configured to use the Cloud SQL for MySQL MCP server can use its AI ca
 
 ### Configuration
 
-The MCP server is configured using environment variables.
+1. **Access the Store**: Open the MCP Store panel within the "..." dropdown at the top of the editor's side panel.
+2. **Browse and Install**: Search for "Cloud SQL for MySQL", and click "Install".
+3. **Configuration**: The following configuration is needed for the server:
+   * Cloud SQL Project ID: The GCP project ID.
+   * Cloud SQL Region: The region of your Cloud SQL instance.
+   * Cloud SQL Instance ID: The ID of your Cloud SQL instance.
+   * Cloud SQL Database Name: The name of the database.
+   * Cloud SQL Database User: The database username.
+   * Cloud SQL Database Password: The password for the database user.
+   * Cloud SQL IP Type: (Optional) The IP type i.e. “Public” or “Private”. Defaults to "Public" if unspecified.
 
-```bash
-export CLOUD_SQL_MYSQL_PROJECT="<your-gcp-project-id>"
-export CLOUD_SQL_MYSQL_REGION="<your-cloud-sql-region>"
-export CLOUD_SQL_MYSQL_INSTANCE="<your-cloud-sql-instance-id>"
-export CLOUD_SQL_MYSQL_DATABASE="<your-database-name>"
-export CLOUD_SQL_MYSQL_USER="<your-database-user>"  # Optional
-export CLOUD_SQL_MYSQL_PASSWORD="<your-database-password>"  # Optional
-export CLOUD_SQL_MYSQL_IP_TYPE="PUBLIC"  # Optional: `PUBLIC`, `PRIVATE`, `PSC`. Defaults to `PUBLIC`.
-```
-
-> **Note:** If your instance uses private IPs, you must run the MCP server in the same Virtual Private Cloud (VPC) network.
-
-Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
-
-```json
-{
-  "mcpServers": {
-    "cloud-sql-mysql": {
-      "command": "toolbox",
-      "args": ["--prebuilt", "cloud-sql-mysql", "--stdio"],
-      "env": {
-        "CLOUD_SQL_MYSQL_PROJECT": "your-project-id",
-        "CLOUD_SQL_MYSQL_REGION": "your-region",
-        "CLOUD_SQL_MYSQL_INSTANCE": "your-instance-id",
-        "CLOUD_SQL_MYSQL_DATABASE": "your-database-name",
-        "CLOUD_SQL_MYSQL_USER": "your-username",
-        "CLOUD_SQL_MYSQL_PASSWORD": "your-password"
-      }
-    }
-  }
-}
-```
+> [!NOTE]
+> If your instance uses private IPs, you must run the MCP server in the same Virtual Private Cloud (VPC) network.
 
 ## Usage
 
