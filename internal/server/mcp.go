@@ -143,12 +143,35 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 			}
 			return err
 		}
-		v, res, err := processMcpMessage(ctx, []byte(line), s.server, s.protocol, "", "", nil)
-		if err != nil {
+
+		// Parse the message to determine the trace name
+		var baseMessage jsonrpc.BaseMessage
+		traceName := "toolbox/server/mcp"
+		if err := json.Unmarshal([]byte(line), &baseMessage); err == nil && baseMessage.Method != "" {
+			switch baseMessage.Method {
+			case "tools/list":
+				traceName = "toolbox/server/toolset/get"
+			case "tools/call":
+				traceName = "toolbox/server/tool/invoke"
+			}
+		}
+
+		// Create a span for this message
+		spanCtx, span := s.server.instrumentation.Tracer.Start(ctx, traceName)
+		span.SetAttributes(attribute.String("transport", "stdio"))
+
+		v, toolName, res, processErr := processMcpMessage(spanCtx, []byte(line), s.server, s.protocol, "", "", nil)
+		if toolName != "" {
+			span.SetAttributes(attribute.String("tool_name", toolName))
+		}
+		if processErr != nil {
 			// errors during the processing of message will generate a valid MCP Error response.
 			// server can continue to run.
-			s.server.logger.ErrorContext(ctx, err.Error())
+			s.server.logger.ErrorContext(spanCtx, processErr.Error())
+			span.SetStatus(codes.Error, processErr.Error())
 		}
+		span.End()
+
 		if v != "" {
 			s.protocol = v
 		}
@@ -333,7 +356,28 @@ func methodNotAllowed(s *Server, w http.ResponseWriter, r *http.Request) {
 func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/mcp")
+	// Read and parse the body to determine the trace name
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		// Generate a new uuid if unable to decode
+		id := uuid.New().String()
+		s.logger.DebugContext(r.Context(), err.Error())
+		render.JSON(w, r, jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil))
+		return
+	}
+
+	var baseMessage jsonrpc.BaseMessage
+	traceName := "toolbox/server/mcp"
+	if err := json.Unmarshal(body, &baseMessage); err == nil && baseMessage.Method != "" {
+		switch baseMessage.Method {
+		case "tools/list":
+			traceName = "toolbox/server/toolset/get"
+		case "tools/call":
+			traceName = "toolbox/server/tool/invoke"
+		}
+	}
+
+	ctx, span := s.instrumentation.Tracer.Start(r.Context(), traceName)
 	r = r.WithContext(ctx)
 	ctx = util.WithLogger(r.Context(), s.logger)
 
@@ -376,8 +420,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	promptsetName := chi.URLParam(r, "promptsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
 	span.SetAttributes(attribute.String("toolset_name", toolsetName))
-
-	var err error
+	span.SetAttributes(attribute.String("transport", "mcp-http"))
 	defer func() {
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
@@ -396,17 +439,10 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		)
 	}()
 
-	// Read and returns a body from io.Reader
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		// Generate a new uuid if unable to decode
-		id := uuid.New().String()
-		s.logger.DebugContext(ctx, err.Error())
-		render.JSON(w, r, jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil))
-		return
+	v, toolName, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName, promptsetName, r.Header)
+	if toolName != "" {
+		span.SetAttributes(attribute.String("tool_name", toolName))
 	}
-
-	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName, promptsetName, r.Header)
 	if err != nil {
 		s.logger.DebugContext(ctx, fmt.Errorf("error processing message: %w", err).Error())
 	}
@@ -459,10 +495,11 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 }
 
 // processMcpMessage process the messages received from clients
-func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVersion string, toolsetName string, promptsetName string, header http.Header) (string, any, error) {
+// Returns: protocolVersion string, toolName string, response any, error
+func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVersion string, toolsetName string, promptsetName string, header http.Header) (string, string, any, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return "", jsonrpc.NewError("", jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
+		return "", "", jsonrpc.NewError("", jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
 	// Generic baseMessage could either be a JSONRPCNotification or JSONRPCRequest
@@ -476,50 +513,50 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		unmarshalErr := json.Unmarshal(body, &a)
 		if unmarshalErr == nil {
 			err = fmt.Errorf("not supporting batch requests")
-			return "", jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+			return "", "", jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
 
-		return "", jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil), err
+		return "", "", jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil), err
 	}
 
 	// Check if method is present
 	if baseMessage.Method == "" {
 		err = fmt.Errorf("method not found")
-		return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
+		return "", "", jsonrpc.NewError(baseMessage.Id, jsonrpc.METHOD_NOT_FOUND, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("method is: %s", baseMessage.Method))
 
 	// Check for JSON-RPC 2.0
 	if baseMessage.Jsonrpc != jsonrpc.JSONRPC_VERSION {
 		err = fmt.Errorf("invalid json-rpc version")
-		return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+		return "", "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
 	// Check if message is a notification
 	if baseMessage.Id == nil {
 		err := mcp.NotificationHandler(ctx, body)
-		return "", nil, err
+		return "", "", nil, err
 	}
 
 	switch baseMessage.Method {
 	case mcputil.INITIALIZE:
 		res, v, err := mcp.InitializeResponse(ctx, baseMessage.Id, body, s.version)
 		if err != nil {
-			return "", res, err
+			return "", "", res, err
 		}
-		return v, res, err
+		return v, "", res, err
 	default:
 		toolset, ok := s.ResourceMgr.GetToolset(toolsetName)
 		if !ok {
 			err = fmt.Errorf("toolset does not exist")
-			return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+			return "", "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
 		promptset, ok := s.ResourceMgr.GetPromptset(promptsetName)
 		if !ok {
 			err = fmt.Errorf("promptset does not exist")
-			return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+			return "", "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
-		res, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, s.ResourceMgr.GetToolsMap(), promptset, s.ResourceMgr.GetPromptsMap(), s.ResourceMgr.GetAuthServiceMap(), body, header)
-		return "", res, err
+		toolName, res, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, s.ResourceMgr.GetToolsMap(), promptset, s.ResourceMgr.GetPromptsMap(), s.ResourceMgr.GetAuthServiceMap(), body, header)
+		return protocolVersion, toolName, res, err
 	}
 }
