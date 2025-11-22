@@ -318,6 +318,31 @@ steps:
           postgressql \
           postgresexecutesql
 
+  - id: "cockroachdb"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "COCKROACHDB_DATABASE=$_DATABASE_NAME"
+      - "COCKROACHDB_HOST=$_COCKROACHDB_HOST"
+      - "COCKROACHDB_PORT=$_COCKROACHDB_PORT"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["COCKROACHDB_USER", "COCKROACHDB_PASS", "CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "CockroachDB" \
+          cockroachdb \
+          cockroachdbsql \
+          cockroachdbexecutesql \
+          cockroachdblisttables \
+          cockroachdblistschemas
+
   - id: "spanner"
     name: golang:1
     waitFor: ["compile-test-binary"]
