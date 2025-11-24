@@ -114,15 +114,13 @@ app = App(root_agent=root_agent, name="my_agent")
 
 ## Step 5: Deploy to Agent Engine
 
-Deploy your agent to Vertex AI Agent Engine using the generated `Makefile`.
+Run the deployment command:
 
-1.  Run the deployment command:
+```bash
+make backend
+```
 
-    ```bash
-    make backend
-    ```
-
-    This command will build your agent's container image and deploy it to Vertex AI.
+This command will build your agent's container image and deploy it to Vertex AI.
 
 ## Step 6: Test your Deployment
 
