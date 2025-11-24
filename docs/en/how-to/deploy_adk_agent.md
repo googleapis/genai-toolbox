@@ -71,7 +71,11 @@ You need to update your agent's code to connect to the Cloud Run URL of your MCP
 
 2.  Open your agent file (`my_agent/agent.py`).
 
-3.  Update the `ToolboxSyncClient` initialization to use your Cloud Run URL. Since Cloud Run services are secured by default, you also need to provide an authentication token.
+3.  Update the `ToolboxSyncClient` initialization to use your Cloud Run URL.
+
+    {{% alert color="info" %}}
+Since Cloud Run services are secured by default, you also need to provide an authentication token.
+    {{% /alert %}}
 
     Replace your existing client initialization code with the following:
 
