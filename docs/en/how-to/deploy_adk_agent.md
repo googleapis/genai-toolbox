@@ -65,28 +65,15 @@ You need to update your agent's code to connect to the Cloud Run URL of your Too
     ```python
     from google.adk import Agent
     from google.adk.apps import App
-    from toolbox_core import ToolboxSyncClient
-    import google.auth
-    import google.auth.transport.requests
-    import google.oauth2.id_token
+    from toolbox_core import ToolboxSyncClient, auth_methods
 
     # TODO(developer): Replace with your Toolbox Cloud Run Service URL
     TOOLBOX_URL = "https://your-toolbox-service-xyz.a.run.app"
 
-    def get_auth_header(url):
-        """Retrieves the ID token for the given URL and returns the Auth header."""
-        if "localhost" in url or "127.0.0.1" in url:
-            return {}
-        
-        auth_req = google.auth.transport.requests.Request()
-        # Fetch the ID token for the Cloud Run service
-        id_token = google.oauth2.id_token.fetch_id_token(auth_req, url)
-        return {"Authorization": f"Bearer {id_token}"}
-
     # Initialize the client with the Cloud Run URL and Auth headers
     client = ToolboxSyncClient(
         TOOLBOX_URL, 
-        client_headers=get_auth_header(TOOLBOX_URL)
+        client_headers={"Authorization": auth_methods.get_google_id_token(TOOLBOX_URL)}
     )
 
     root_agent = Agent(
