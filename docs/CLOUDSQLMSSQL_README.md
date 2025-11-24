@@ -61,8 +61,8 @@ An editor configured to use the Cloud SQL for SQL Server MCP server can use its 
    * Cloud SQL Region: The region of your Cloud SQL instance.
    * Cloud SQL Instance ID: The ID of your Cloud SQL instance.
    * Cloud SQL Database Name: The name of the database.
-   * Cloud SQL Database User: (Optional) The database username. Defaults to IAM authentication if unspecified.
-   * Cloud SQL Database Password: (Optional) The password for the database user. Defaults to IAM authentication if unspecified.
+   * Cloud SQL Database User: The database username.
+   * Cloud SQL Database Password: The password for the database user.
    * Cloud SQL IP Type: (Optional) The IP type i.e. “Public” or “Private”. Defaults to "Public" if unspecified.
 
 > [!NOTE]

@@ -59,7 +59,6 @@ An editor configured to use the Looker MCP server can use its AI capabilities to
 1. **Access the Store**: Open the MCP Store panel within the "..." dropdown at the top of the editor's side panel.
 2. **Browse and Install**: Search for "Looker", and click "Install".
 3. **Configuration**: The following configuration is needed for the server:
-   * Dataplex Project ID: The GCP project ID.
    * Looker Base URL: The URL of your Looker instance.
    * Looker Client ID: The client ID for the Looker API.
    * Looker Client Secret: The client secret for the Looker API.

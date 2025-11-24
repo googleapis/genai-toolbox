@@ -61,7 +61,7 @@ An editor configured to use the Cloud Spanner MCP server can use its AI capabili
    * Spanner Project ID: The GCP project ID.
    * Spanner Instance ID: The Spanner instance ID.
    * Spanner Database ID: The Spanner database ID.
-   * Spanner Dialect: (Optional) The database dialect i.e. "googlesql" or "postgresql". Defaults to "googlesql" if unspecified.
+   * Spanner Dialect: (Optional) The database dialect, which can be "googlesql" or "postgresql". Defaults to "googlesql" if unspecified.
 
 ## Usage
 
