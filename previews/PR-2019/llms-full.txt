@@ -5282,9 +5282,13 @@ Deploy your agent to Vertex AI Agent Engine using the generated `Makefile`.
 
 ## Step 6: Test your Deployment
 
-Once the deployment is complete, you can verify that your agent is running and correctly connected to Toolbox.
+Once the deployment is complete, you can verify that your agent is running and correctly connected to Toolbox directly from the Google Cloud Console.
 
-Follow the Test Deployment section in the ADK documentation to send requests to your deployed agent.
+1.  Go to the [Agent Engine page](https://console.cloud.google.com/vertex-ai/agent-engine) in the Google Cloud Console.
+2.  Click on the name of the agent you just deployed.
+3.  Select the **Playground** tab from the top menu to quickly start chatting with your new agent.
+
+For additional test scenarios, refer to the [Test Deployment](https://google.github.io/adk-docs/deploy/agent-engine/#test-deployment) section in the ADK documentation.
 
 # Deploy to Kubernetes
 How to set up and configure Toolbox to deploy on Kubernetes with Google Kubernetes Engine (GKE).
