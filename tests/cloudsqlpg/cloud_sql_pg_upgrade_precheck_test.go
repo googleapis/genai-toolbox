@@ -19,10 +19,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/tests"
-	sqladmin "google.golang.org/api/sqladmin/v1"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -31,6 +27,11 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/tests"
+	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
 var (
