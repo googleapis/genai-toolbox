@@ -17,13 +17,14 @@ package cloudsqlpgupgradeprecheck
 import (
 	"context"
 	"fmt"
+	"time"
+
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	sqladmin "google.golang.org/api/sqladmin/v1"
-	"time"
 )
 
 const kind string = "postgres-upgrade-precheck"
