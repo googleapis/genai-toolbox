@@ -1,0 +1,120 @@
+---
+title: "Deploy ADK Agent to Cloud"
+type: docs
+weight: 4
+description: >
+  How to deploy your ADK Agent to Vertex AI Agent Engine and connect it to a Toolbox deployed on Cloud Run.
+---
+
+## Before you begin
+
+This guide assumes you have already done the following:
+
+1.  Completed the [Python Quickstart (Local)](../getting-started/local_quickstart.md) and have a working ADK agent running locally.
+2.  Installed the [Google Cloud CLI](https://cloud.google.com/sdk/docs/install).
+3.  A Google Cloud project with billing enabled.
+
+## Step 1: Deploy Toolbox to Cloud Run
+
+Before deploying your agent, your Toolbox server needs to be accessible from the cloud. We will deploy Toolbox to Cloud Run.
+
+Follow the [Deploy to Cloud Run](deploy_toolbox.md) guide to deploy your Toolbox instance.
+
+**Important:** After deployment, note down the **Service URL** of your Toolbox Cloud Run service (e.g., `https://toolbox-service-xyz.a.run.app`). You will need this to configure your agent.
+
+## Step 2: Prepare your Agent for Deployment
+
+We will use the `agent-starter-pack` tool to enhance your local agent project with the necessary configuration for deployment to Vertex AI Agent Engine.
+
+1.  Open a terminal and navigate to the **parent directory** of your agent project (the directory containing the `my_agent` folder).
+
+2.  Run the following command to enhance your project:
+
+    ```bash
+    uvx agent-starter-pack enhance --adk -d agent_engine
+    ```
+
+    Follow the interactive prompts to configure your deployment settings. This process will generate deployment configuration files (like a `Makefile` and `Dockerfile`) in your project directory.
+
+## Step 3: Configure Google Cloud Authentication
+
+Ensure your local environment is authenticated with Google Cloud to perform the deployment.
+
+1.  Login with Application Default Credentials (ADC):
+
+    ```bash
+    gcloud auth application-default login
+    ```
+
+2.  Set your active project:
+
+    ```bash
+    gcloud config set project <YOUR_PROJECT_ID>
+    ```
+
+## Step 4: Connect Agent to Deployed Toolbox
+
+You need to update your agent's code to connect to the Cloud Run URL of your Toolbox instead of the local address.
+
+1.  Open your agent file (e.g., `my_agent/agent.py`).
+
+2.  Update the `ToolboxSyncClient` initialization to use your Cloud Run URL. Since Cloud Run services are secured by default, you also need to provide an authentication token.
+
+    Replace your existing client initialization code with the following:
+
+    ```python
+    from google.adk import Agent
+    from google.adk.apps import App
+    from toolbox_core import ToolboxSyncClient
+    import google.auth
+    import google.auth.transport.requests
+    import google.oauth2.id_token
+
+    # TODO(developer): Replace with your Toolbox Cloud Run Service URL
+    TOOLBOX_URL = "https://your-toolbox-service-xyz.a.run.app"
+
+    def get_auth_header(url):
+        """Retrieves the ID token for the given URL and returns the Auth header."""
+        if "localhost" in url or "127.0.0.1" in url:
+            return {}
+        
+        auth_req = google.auth.transport.requests.Request()
+        # Fetch the ID token for the Cloud Run service
+        id_token = google.oauth2.id_token.fetch_id_token(auth_req, url)
+        return {"Authorization": f"Bearer {id_token}"}
+
+    # Initialize the client with the Cloud Run URL and Auth headers
+    client = ToolboxSyncClient(
+        TOOLBOX_URL, 
+        client_headers=get_auth_header(TOOLBOX_URL)
+    )
+
+    root_agent = Agent(
+        name='root_agent',
+        model='gemini-2.5-flash',
+        instruction="You are a helpful AI assistant designed to provide accurate and useful information.",
+        tools=client.load_toolset(),
+    )
+
+    app = App(root_agent=root_agent, name="my_agent")
+    ```
+
+## Step 5: Deploy to Agent Engine
+
+Deploy your agent to Vertex AI Agent Engine using the generated `Makefile`.
+
+1.  Navigate into your agent directory (e.g., `cd my_agent`).
+
+2.  Run the deployment command:
+
+    ```bash
+    make backend
+    ```
+
+    This command will build your agent's container image and deploy it to Vertex AI.
+
+## Step 6: Test your Deployment
+
+Once the deployment is complete, you can verify that your agent is running and correctly connected to Toolbox.
+
+Follow the Test Deployment section in the ADK documentation to send requests to your deployed agent.
