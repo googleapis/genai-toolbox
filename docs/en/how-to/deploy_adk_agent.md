@@ -106,6 +106,8 @@ Since Cloud Run services are secured by default, you also need to provide an aut
     {{% alert title="Important" %}}
 Ensure that the `name` parameter in the `App` initialization matches the name of your agent's parent directory (e.g., `my_agent`).
 ```python
+...
+
 app = App(root_agent=root_agent, name="my_agent")
 ```
     {{% /alert %}}
