@@ -128,4 +128,4 @@ Deploy your agent to Vertex AI Agent Engine using the generated `Makefile`.
 
 Once the deployment command (`make backend`) completes, it will output the URL for the Agent Engine Playground. You can click on this URL to open the Playground in your browser and start chatting with your agent to test the tools.
 
-For additional test scenarios, refer to the [Test Deployment](https://google.github.io/adk-docs/deploy/agent-engine/#test-deployment) section in the ADK documentation.
+For additional test scenarios, refer to the [Test deployed agent](https://google.github.io/adk-docs/deploy/agent-engine/#test-deployment) section in the ADK documentation.
