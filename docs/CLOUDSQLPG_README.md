@@ -11,9 +11,7 @@ An editor configured to use the Cloud SQL for PostgreSQL MCP server can use its 
 - **Monitor Performance** - View active queries, bloat, and memory configurations
 - **Manage Extensions** - List available and installed extensions
 
-## Installation and Setup
-
-### Prerequisites
+## Prerequisites
 
 *   Download and install [MCP Toolbox](https://github.com/googleapis/genai-toolbox):
     1.  **Download the Toolbox binary**:
@@ -28,14 +26,15 @@ An editor configured to use the Cloud SQL for PostgreSQL MCP server can use its 
         ```
         <!-- {x-release-please-end} -->
     2.  **Make it executable**:
+
         ```bash
         chmod +x toolbox
         ```
 
-    3.  **Move binary to `/usr/local/bin/` or `/usr/bin/`**:
+    3.  **Add the binary to $PATH in `.~/bash_profile`**:
+
         ```bash
-        sudo mv toolbox /usr/local/bin/
-        # sudo mv toolbox /usr/bin/
+        export PATH=$PATH:/path/to/toolbox
         ```
 
         **On Windows, move binary to the `WindowsApps\` folder**:
@@ -54,43 +53,15 @@ An editor configured to use the Cloud SQL for PostgreSQL MCP server can use its 
 *   IAM Permissions:
     *   Cloud SQL Client (`roles/cloudsql.client`)
 
-### Configuration
-
-The MCP server is configured using environment variables.
-
-```bash
-export CLOUD_SQL_POSTGRES_PROJECT="<your-gcp-project-id>"
-export CLOUD_SQL_POSTGRES_REGION="<your-cloud-sql-region>"
-export CLOUD_SQL_POSTGRES_INSTANCE="<your-cloud-sql-instance-id>"
-export CLOUD_SQL_POSTGRES_DATABASE="<your-database-name>"
-export CLOUD_SQL_POSTGRES_USER="<your-database-user>"  # Optional
-export CLOUD_SQL_POSTGRES_PASSWORD="<your-database-password>"  # Optional
-export CLOUD_SQL_POSTGRES_IP_TYPE="PUBLIC"  # Optional: `PUBLIC`, `PRIVATE`, `PSC`. Defaults to `PUBLIC`.
-```
-
 > **Note:** If your instance uses private IPs, you must run the MCP server in the same Virtual Private Cloud (VPC) network.
 
+## Install & Configuration
 
-Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
+1. In the Antigravity MCP Store, click the "Install" button.
 
-```json
-{
-  "mcpServers": {
-    "cloud-sql-postgres": {
-      "command": "toolbox",
-      "args": ["--prebuilt", "cloud-sql-postgres", "--stdio"],
-      "env": {
-        "CLOUD_SQL_POSTGRES_PROJECT": "your-project-id",
-        "CLOUD_SQL_POSTGRES_REGION": "your-region",
-        "CLOUD_SQL_POSTGRES_INSTANCE": "your-instance-id",
-        "CLOUD_SQL_POSTGRES_DATABASE": "your-database-name",
-        "CLOUD_SQL_POSTGRES_USER": "your-username",
-        "CLOUD_SQL_POSTGRES_PASSWORD": "your-password"
-      }
-    }
-  }
-}
-```
+2. Add the required inputs for your [instance](https://cloud.google.com/sql/docs/postgres/instance-info) in the configuration pop-up, then click "Save". You can update this configuration at anytime in the "Configure" tab.
+
+You'll now be able to see all enabled tools in the "Tools" tab.
 
 ## Usage
 
