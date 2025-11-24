@@ -162,18 +162,23 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 
     {{< tabpane persist=header >}}
 {{< tab header="Python" lang="python" >}}
+import asyncio
 from toolbox_core import ToolboxClient, auth_methods
 
 # Replace with the Cloud Run service URL generated in the previous step
-
 URL = "https://cloud-run-url.app"
 
 auth_token_provider = auth_methods.aget_google_id_token(URL) # can also use sync method
 
-async with ToolboxClient(
-    URL,
-    client_headers={"Authorization": auth_token_provider},
-) as toolbox:
+async def main():
+  async with ToolboxClient(
+      URL,
+      client_headers={"Authorization": auth_token_provider},
+  ) as toolbox:
+    toolset = await toolbox.load_toolset()
+    # ...
+
+asyncio.run(main())
 {{< /tab >}}
 {{< tab header="Javascript" lang="javascript" >}}
 import { ToolboxClient } from '@toolbox-sdk/core';
