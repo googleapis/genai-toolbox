@@ -1,5 +1,5 @@
 ---
-title: "Deploy ADK Agent to Cloud"
+title: "Deploy ADK Agent and MCP Toolbox"
 type: docs
 weight: 4
 description: >
@@ -20,8 +20,9 @@ Before deploying your agent, your MCP Toolbox server needs to be accessible from
 
 Follow the [Deploy to Cloud Run](deploy_toolbox.md) guide to deploy your MCP Toolbox instance.
 
-**Important:** After deployment, note down the **Service URL** of your MCP Toolbox Cloud Run service (e.g., `https://toolbox-service-xyz.a.run.app`). You will need this to configure your agent.
-
+{{% alert title="Important" %}}
+After deployment, note down the Service URL of your MCP Toolbox Cloud Run service. You will need this to configure your agent.
+{{% /alert %}}
 ## Step 2: Prepare your Agent for Deployment
 
 We will use the `agent-starter-pack` tool to enhance your local agent project with the necessary configuration for deployment to Vertex AI Agent Engine.
@@ -34,7 +35,13 @@ We will use the `agent-starter-pack` tool to enhance your local agent project wi
     uvx agent-starter-pack enhance --adk -d agent_engine
     ```
 
-    Follow the interactive prompts to configure your deployment settings. This process will generate deployment configuration files (like a `Makefile` and `Dockerfile`) in your project directory.
+3.  Follow the interactive prompts to configure your deployment settings. This process will generate deployment configuration files (like a `Makefile` and `Dockerfile`) in your project directory.
+
+4.  Add `toolbox-core` as a dependency to the new project:
+
+    ```bash
+    uv add toolbox-core
+    ```
 
 ## Step 3: Configure Google Cloud Authentication
 
@@ -56,9 +63,15 @@ Ensure your local environment is authenticated with Google Cloud to perform the 
 
 You need to update your agent's code to connect to the Cloud Run URL of your MCP Toolbox instead of the local address.
 
-1.  Open your agent file (e.g., `my_agent/agent.py`).
+1.  Recall that you can find the Cloud Run deployment URL of the MCP Toolbox server using the following command:
 
-2.  Update the `ToolboxSyncClient` initialization to use your Cloud Run URL. Since Cloud Run services are secured by default, you also need to provide an authentication token.
+    ```bash
+    gcloud run services describe toolbox --format 'value(status.url)'
+    ```
+
+2.  Open your agent file (`my_agent/agent.py`).
+
+3.  Update the `ToolboxSyncClient` initialization to use your Cloud Run URL. Since Cloud Run services are secured by default, you also need to provide an authentication token.
 
     Replace your existing client initialization code with the following:
 
@@ -86,13 +99,18 @@ You need to update your agent's code to connect to the Cloud Run URL of your MCP
     app = App(root_agent=root_agent, name="my_agent")
     ```
 
+    {{% alert title="Important" %}}
+Ensure that the `name` parameter in the `App` initialization matches the name of your agent's parent directory (e.g., `my_agent`).
+```python
+app = App(root_agent=root_agent, name="my_agent")
+```
+    {{% /alert %}}
+
 ## Step 5: Deploy to Agent Engine
 
 Deploy your agent to Vertex AI Agent Engine using the generated `Makefile`.
 
-1.  Navigate into your agent directory (e.g., `cd my_agent`).
-
-2.  Run the deployment command:
+1.  Run the deployment command:
 
     ```bash
     make backend
@@ -102,10 +120,6 @@ Deploy your agent to Vertex AI Agent Engine using the generated `Makefile`.
 
 ## Step 6: Test your Deployment
 
-Once the deployment is complete, you can verify that your agent is running and correctly connected to MCP Toolbox directly from the Google Cloud Console.
-
-1.  Go to the [Agent Engine page](https://console.cloud.google.com/vertex-ai/agent-engine) in the Google Cloud Console.
-2.  Click on the name of the agent you just deployed.
-3.  Select the **Playground** tab from the top menu to quickly start chatting with your new agent.
+Once the deployment command (`make backend`) completes, it will output the URL for the Agent Engine Playground. You can click on this URL to open the Playground in your browser and start chatting with your agent to test the tools.
 
 For additional test scenarios, refer to the [Test Deployment](https://google.github.io/adk-docs/deploy/agent-engine/#test-deployment) section in the ADK documentation.
