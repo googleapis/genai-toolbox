@@ -14,29 +14,38 @@ An editor configured to use the Cloud SQL for SQL Server MCP server can use its 
 ### Prerequisites
 
 *   Download and install [MCP Toolbox](https://github.com/googleapis/genai-toolbox):
-  1.  **Download the Toolbox binary**:
-      Download the latest binary for your operating system and architecture from the storage bucket. Check the [releases page](https://github.com/googleapis/genai-toolbox/releases) for OS and CPU architecture support:
-      `https://storage.googleapis.com/genai-toolbox/v0.21.0/<os>/<arch>/toolbox`
-      *   Replace `<os>` with `linux`, `darwin` (macOS), or `windows`.
-      *   Replace `<arch>` with `amd64` (Intel) or `arm64` (Apple Silicon).
+    1.  **Download the Toolbox binary**:
+        Download the latest binary for your operating system and architecture from the storage bucket. Check the [releases page](https://github.com/googleapis/genai-toolbox/releases) for OS and CPU architecture support:
+        `https://storage.googleapis.com/genai-toolbox/v0.21.0/<os>/<arch>/toolbox`
+        *   Replace `<os>` with `linux`, `darwin` (macOS), or `windows`.
+        *   Replace `<arch>` with `amd64` (Intel) or `arm64` (Apple Silicon).
       
-      <!-- {x-release-please-start-version} -->
-      ```
-      curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
-      ```
-      <!-- {x-release-please-end} -->
-  2.  **Make it executable**:
-      ```bash
-      chmod +x toolbox
-      ```
+        <!-- {x-release-please-start-version} -->
+        ```
+        curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
+        ```
+        <!-- {x-release-please-end} -->
+    2.  **Make it executable**:
+        ```bash
+        chmod +x toolbox
+        ```
 
-  3.  **Add the binary to $PATH in `.~/bash_profile`**:
-      ```bash
-      export PATH=$PATH:/path/to/toolbox
-      ```
+    3.  **Move binary to `/usr/local/bin/` or `/usr/bin/`**:
+        ```bash
+        sudo mv toolbox /usr/local/bin/
+        # sudo mv toolbox /usr/bin/
+        ```
+
+        **On Windows, move binary to the `WindowsApps\` folder**:
+        ```
+        move "C:\Users\<path-to-binary>\toolbox.exe" "C:\Users\<username>\AppData\Local\Microsoft\WindowsApps\"
+        ```
     
-**Note:** You may need to restart Antigravity for changes to take effect. 
-Windows OS users will need to follow one of the Windows-specific methods.
+        **Tip:** Ensure the destination folder for your binary is included in
+        your system's PATH environment variable. To check `PATH`, use `echo
+        $PATH` (or `echo %PATH%` on Windows).
+
+        **Note:** You may need to restart Antigravity for changes to take effect.
 
 *   A Google Cloud project with the **Cloud SQL Admin API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
@@ -91,9 +100,9 @@ Once configured, the MCP server will automatically provide Cloud SQL for SQL Ser
 
 The Cloud SQL for SQL Server MCP server provides the following tools:
 
-| Tool Name | Description |
-| :--- | :--- |
-| `execute_sql` | Use this tool to execute SQL. |
+| Tool Name     | Description                                                |
+|:--------------|:-----------------------------------------------------------|
+| `execute_sql` | Use this tool to execute SQL.                              |
 | `list_tables` | Lists detailed schema information for user-created tables. |
 
 ## Documentation

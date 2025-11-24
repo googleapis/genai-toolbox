@@ -163,9 +163,9 @@ To install Toolbox as a binary:
 > To install Toolbox as a binary on Windows (AMD64):
 >
 > ```powershell
-> # see releases page for other versions
-> $VERSION = "0.21.0"
-> Invoke-WebRequest -Uri "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe" -OutFile "toolbox.exe"
+> :: see releases page for other versions
+> set VERSION=0.21.0
+> curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
 > ```
 >
 > </details>

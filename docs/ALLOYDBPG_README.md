@@ -16,29 +16,38 @@ An editor configured to use the AlloyDB MCP server can use its AI capabilities t
 ### Prerequisites
 
 *   Download and install [MCP Toolbox](https://github.com/googleapis/genai-toolbox):
-  1.  **Download the Toolbox binary**:
-      Download the latest binary for your operating system and architecture from the storage bucket. Check the [releases page](https://github.com/googleapis/genai-toolbox/releases) for OS and CPU architecture support:
-      `https://storage.googleapis.com/genai-toolbox/v0.21.0/<os>/<arch>/toolbox`
-      *   Replace `<os>` with `linux`, `darwin` (macOS), or `windows`.
-      *   Replace `<arch>` with `amd64` (Intel) or `arm64` (Apple Silicon).
+    1.  **Download the Toolbox binary**:
+        Download the latest binary for your operating system and architecture from the storage bucket. Check the [releases page](https://github.com/googleapis/genai-toolbox/releases) for OS and CPU architecture support:
+        `https://storage.googleapis.com/genai-toolbox/v0.21.0/<os>/<arch>/toolbox`
+        *   Replace `<os>` with `linux`, `darwin` (macOS), or `windows`.
+        *   Replace `<arch>` with `amd64` (Intel) or `arm64` (Apple Silicon).
       
-      <!-- {x-release-please-start-version} -->
-      ```
-      curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
-      ```
-      <!-- {x-release-please-end} -->
-  2.  **Make it executable**:
-      ```bash
-      chmod +x toolbox
-      ```
+        <!-- {x-release-please-start-version} -->
+        ```
+        curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
+        ```
+        <!-- {x-release-please-end} -->
+    2.  **Make it executable**:
+        ```bash
+        chmod +x toolbox
+        ```
 
-  3.  **Add the binary to $PATH in `.~/bash_profile`**:
-      ```bash
-      export PATH=$PATH:/path/to/toolbox
-      ```
+    3.  **Move binary to `/usr/local/bin/` or `/usr/bin/`**:
+        ```bash
+        sudo mv toolbox /usr/local/bin/
+        # sudo mv toolbox /usr/bin/
+        ```
+
+        **On Windows, move binary to the `WindowsApps\` folder**:
+        ```
+        move "C:\Users\<path-to-binary>\toolbox.exe" "C:\Users\<username>\AppData\Local\Microsoft\WindowsApps\"
+        ```
     
-**Note:** You may need to restart Antigravity for changes to take effect. 
-Windows OS users will need to follow one of the Windows-specific methods.
+        **Tip:** Ensure the destination folder for your binary is included in
+        your system's PATH environment variable. To check `PATH`, use `echo
+        $PATH` (or `echo %PATH%` on Windows).
+
+        **Note:** You may need to restart Antigravity for changes to take effect.
 
 *   A Google Cloud project with the **AlloyDB API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
@@ -88,19 +97,19 @@ Once configured, the MCP server will automatically provide AlloyDB capabilities 
 
 The AlloyDB MCP server provides the following tools:
 
-| Tool Name | Description |
-| :--- | :--- |
-| `list_tables` | Lists detailed schema information for user-created tables. |
-| `execute_sql` | Executes a SQL query. |
-| `list_active_queries` | List currently running queries. |
-| `list_available_extensions` | List available extensions for installation. |
-| `list_installed_extensions` | List installed extensions. |
-| `get_query_plan` | Get query plan for a SQL statement. |
-| `list_autovacuum_configurations` | List autovacuum configurations and their values. |
-| `list_memory_configurations` | List memory configurations and their values. |
-| `list_top_bloated_tables` | List top bloated tables. |
-| `list_replication_slots` | List replication slots. |
-| `list_invalid_indexes` | List invalid indexes. |
+| Tool Name                        | Description                                                |
+|:---------------------------------|:-----------------------------------------------------------|
+| `list_tables`                    | Lists detailed schema information for user-created tables. |
+| `execute_sql`                    | Executes a SQL query.                                      |
+| `list_active_queries`            | List currently running queries.                            |
+| `list_available_extensions`      | List available extensions for installation.                |
+| `list_installed_extensions`      | List installed extensions.                                 |
+| `get_query_plan`                 | Get query plan for a SQL statement.                        |
+| `list_autovacuum_configurations` | List autovacuum configurations and their values.           |
+| `list_memory_configurations`     | List memory configurations and their values.               |
+| `list_top_bloated_tables`        | List top bloated tables.                                   |
+| `list_replication_slots`         | List replication slots.                                    |
+| `list_invalid_indexes`           | List invalid indexes.                                      |
 
 ## Documentation
 
