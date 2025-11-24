@@ -5170,7 +5170,7 @@ contain the specific error message needed to diagnose the problem.
 
 
 # Deploy ADK Agent to Cloud
-How to deploy your ADK Agent to Vertex AI Agent Engine and connect it to a Toolbox deployed on Cloud Run.
+How to deploy your ADK Agent to Vertex AI Agent Engine and connect it to an MCP Toolbox deployed on Cloud Run.
 
 
 ## Before you begin
@@ -5181,13 +5181,13 @@ This guide assumes you have already done the following:
 2.  Installed the [Google Cloud CLI](https://cloud.google.com/sdk/docs/install).
 3.  A Google Cloud project with billing enabled.
 
-## Step 1: Deploy Toolbox to Cloud Run
+## Step 1: Deploy MCP Toolbox to Cloud Run
 
-Before deploying your agent, your Toolbox server needs to be accessible from the cloud. We will deploy Toolbox to Cloud Run.
+Before deploying your agent, your MCP Toolbox server needs to be accessible from the cloud. We will deploy MCP Toolbox to Cloud Run.
 
-Follow the [Deploy to Cloud Run](deploy_toolbox.md) guide to deploy your Toolbox instance.
+Follow the [Deploy to Cloud Run](deploy_toolbox.md) guide to deploy your MCP Toolbox instance.
 
-**Important:** After deployment, note down the **Service URL** of your Toolbox Cloud Run service (e.g., `https://toolbox-service-xyz.a.run.app`). You will need this to configure your agent.
+**Important:** After deployment, note down the **Service URL** of your MCP Toolbox Cloud Run service (e.g., `https://toolbox-service-xyz.a.run.app`). You will need this to configure your agent.
 
 ## Step 2: Prepare your Agent for Deployment
 
@@ -5219,9 +5219,9 @@ Ensure your local environment is authenticated with Google Cloud to perform the 
     gcloud config set project <YOUR_PROJECT_ID>
     ```
 
-## Step 4: Connect Agent to Deployed Toolbox
+## Step 4: Connect Agent to Deployed MCP Toolbox
 
-You need to update your agent's code to connect to the Cloud Run URL of your Toolbox instead of the local address.
+You need to update your agent's code to connect to the Cloud Run URL of your MCP Toolbox instead of the local address.
 
 1.  Open your agent file (e.g., `my_agent/agent.py`).
 
@@ -5269,7 +5269,7 @@ Deploy your agent to Vertex AI Agent Engine using the generated `Makefile`.
 
 ## Step 6: Test your Deployment
 
-Once the deployment is complete, you can verify that your agent is running and correctly connected to Toolbox directly from the Google Cloud Console.
+Once the deployment is complete, you can verify that your agent is running and correctly connected to MCP Toolbox directly from the Google Cloud Console.
 
 1.  Go to the [Agent Engine page](https://console.cloud.google.com/vertex-ai/agent-engine) in the Google Cloud Console.
 2.  Click on the name of the agent you just deployed.
