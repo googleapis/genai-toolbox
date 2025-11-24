@@ -350,7 +350,7 @@ options:
 substitutions:
   _REGION: us-central1
   _AR_HOSTNAME: ${_REGION}-docker.pkg.dev
-  _AR_REPO_NAME: test
-  _BUCKET_NAME: test-cross-comp
+  _AR_REPO_NAME: toolbox
+  _BUCKET_NAME: genai-toolbox
   _DOCKER_URI: ${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPO_NAME}/toolbox
-  _PUSH_LATEST: "false"
+  _PUSH_LATEST: "false" # Substituted in trigger
