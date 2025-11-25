@@ -692,7 +692,7 @@ How to get started running Toolbox locally with [Python](https://github.com/goog
 
 This guide assumes you have already done the following:
 
-1. Installed [Python 3.9+][install-python] (including [pip][install-pip] and
+1. Installed [Python 3.10+][install-python] (including [pip][install-pip] and
    your preferred virtual environment tool for managing dependencies e.g.
    [venv][install-venv]).
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
@@ -5052,18 +5052,23 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 
     {{< tabpane persist=header >}}
 {{< tab header="Python" lang="python" >}}
+import asyncio
 from toolbox_core import ToolboxClient, auth_methods
 
 # Replace with the Cloud Run service URL generated in the previous step
-
 URL = "https://cloud-run-url.app"
 
 auth_token_provider = auth_methods.aget_google_id_token(URL) # can also use sync method
 
-async with ToolboxClient(
-    URL,
-    client_headers={"Authorization": auth_token_provider},
-) as toolbox:
+async def main():
+  async with ToolboxClient(
+      URL,
+      client_headers={"Authorization": auth_token_provider},
+  ) as toolbox:
+    toolset = await toolbox.load_toolset()
+    # ...
+
+asyncio.run(main())
 {{< /tab >}}
 {{< tab header="Javascript" lang="javascript" >}}
 import { ToolboxClient } from '@toolbox-sdk/core';
@@ -8942,6 +8947,9 @@ the Google Cloud console][spanner-quickstart].
 - [`spanner-list-tables`](../tools/spanner/spanner-list-tables.md)  
   Retrieve schema information about tables in a Spanner database.
 
+- [`spanner-list-graphs`](../tools/spanner/spanner-list-graphs.md)  
+  Retrieve schema information about graphs in a Spanner database.
+
 ### Pre-built Configurations
 
 - [Spanner using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/spanner_mcp/)  
@@ -10525,7 +10533,7 @@ Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.
 
 This guide assumes you have already done the following:
 
-1. Installed [Python 3.9+][install-python] (including [pip][install-pip] and
+1. Installed [Python 3.10+][install-python] (including [pip][install-pip] and
     your preferred virtual environment tool for managing dependencies e.g.
     [venv][install-venv]).
 1. Installed and configured the [Google Cloud SDK (gcloud CLI)][install-gcloud].
@@ -11868,15 +11876,11 @@ most popular issues, so make sure to +1 ones you are the most interested in.
 
 ## Can Toolbox be used for non-database tools?
 
-Currently, Toolbox is primarily focused on making it easier to create and
-develop tools focused on interacting with Databases. We believe that there are a
-lot of unique problems when interacting with Databases for Gen AI use cases, and
-want to prioritize solving those first.  
+**Yes!** While Toolbox is primarily focused on databases, it also supports generic 
+**HTTP tools** (`kind: http`). These allow you to connect your agents to REST APIs 
+and other web services, enabling workflows that extend beyond database interactions.
 
-However, we've also received feedback that supporting more generic HTTP or
-GRPC tools might be helpful in assisting with migrating to Toolbox or in
-accomplishing more complicated workflows. We're looking into what that might
-best look like in Toolbox.
+For configuration details, see the [HTTP Tools documentation](../resources/tools/http/http.md).
 
 ## Can I use _$BAR_ orchestration framework to use tools from Toolbox?
 
