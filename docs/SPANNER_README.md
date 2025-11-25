@@ -9,31 +9,44 @@ An editor configured to use the Cloud Spanner MCP server can use its AI capabili
 - **Query Data** - Execute DML and DQL SQL queries
 - **Explore Schema** - List tables and view schema details
 
-## Installation and Setup
-
-### Prerequisites
+## Prerequisites
 
 *   Download and install [MCP Toolbox](https://github.com/googleapis/genai-toolbox):
     1.  **Download the Toolbox binary**:
-        Download the latest binary for your operating system and architecture from the storage bucket. Check the [releases page](https://github.com/googleapis/genai-toolbox/releases) for OS and CPU architecture support:
-        `https://storage.googleapis.com/genai-toolbox/v0.21.0/<os>/<arch>/toolbox`
-        *   Replace `<os>` with `linux`, `darwin` (macOS), or `windows`.
-        *   Replace `<arch>` with `amd64` (Intel) or `arm64` (Apple Silicon).
+        Download the latest binary for your operating system and architecture from the storage bucket. Check the [releases page](https://github.com/googleapis/genai-toolbox/releases) for additional versions: 
       
         <!-- {x-release-please-start-version} -->
-        ```
-        curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
-        ```
+        * To install Toolbox as a binary on Linux (AMD64):
+          ```bash
+          curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
+          ```
+
+        * To install Toolbox as a binary on macOS (Apple Silicon):
+          ```bash
+          curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/arm64/toolbox
+          ```
+
+        * To install Toolbox as a binary on macOS (Intel):
+          ```bash
+          curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/amd64/toolbox
+          ```
+
+        * To install Toolbox as a binary on Windows (AMD64):
+          ```powershell
+          curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe"
+          ```
         <!-- {x-release-please-end} -->
+        
     2.  **Make it executable**:
+
         ```bash
         chmod +x toolbox
         ```
 
-    3.  **Move binary to `/usr/local/bin/` or `/usr/bin/`**:
+    3.  **Add the binary to $PATH in `.~/bash_profile`** (Note: You may need to restart Antigravity for changes to take effect.):
+
         ```bash
-        sudo mv toolbox /usr/local/bin/
-        # sudo mv toolbox /usr/bin/
+        export PATH=$PATH:path/to/folder
         ```
 
         **On Windows, move binary to the `WindowsApps\` folder**:
@@ -45,43 +58,19 @@ An editor configured to use the Cloud Spanner MCP server can use its AI capabili
         your system's PATH environment variable. To check `PATH`, use `echo
         $PATH` (or `echo %PATH%` on Windows).
 
-        **Note:** You may need to restart Antigravity for changes to take effect.
-
 *   A Google Cloud project with the **Cloud Spanner API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
 *   IAM Permissions:
     *   Cloud Spanner Database User (`roles/spanner.databaseUser`) (for data access)
     *   Cloud Spanner Viewer (`roles/spanner.viewer`) (for schema access)
 
-### Configuration
+## Install & Configuration
 
-The MCP server is configured using environment variables.
+1. In the Antigravity MCP Store, click the "Install" button.
 
-```bash
-export SPANNER_PROJECT="<your-gcp-project-id>"
-export SPANNER_INSTANCE="<your-spanner-instance-id>"
-export SPANNER_DATABASE="<your-spanner-database-id>"
-export SPANNER_DIALECT="googlesql" # Optional: "googlesql" or "postgresql". Defaults to "googlesql".
-```
+2. Add the required inputs for your [instance](https://docs.cloud.google.com/spanner/docs/instances) in the configuration pop-up, then click "Save". You can update this configuration at any time in the "Configure" tab.
 
-Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
-
-```json
-{
-  "mcpServers": {
-    "spanner": {
-      "command": "toolbox",
-      "args": ["--prebuilt", "spanner", "--stdio"],
-      "env": {
-        "SPANNER_PROJECT": "your-project-id",
-        "SPANNER_INSTANCE": "your-instance-id",
-        "SPANNER_DATABASE": "your-database-name",
-        "SPANNER_DIALECT": "googlesql"
-      }
-    }
-  }
-}
-```
+You'll now be able to see all enabled tools in the "Tools" tab.
 
 ## Usage
 
@@ -100,6 +89,36 @@ The Cloud Spanner MCP server provides the following tools:
 | `execute_sql`     | Use this tool to execute DML SQL.                          |
 | `execute_sql_dql` | Use this tool to execute DQL SQL.                          |
 | `list_tables`     | Lists detailed schema information for user-created tables. |
+
+## Custom MCP Server Configuration
+
+The MCP server is configured using environment variables.
+
+```bash
+export SPANNER_PROJECT="<your-gcp-project-id>"
+export SPANNER_INSTANCE="<your-spanner-instance-id>"
+export SPANNER_DATABASE="<your-spanner-database-id>"
+export SPANNER_DIALECT="googlesql" # Optional: "googlesql" or "postgresql". Defaults to "googlesql".
+```
+
+Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI, `mcp_config.json` for Antigravity):
+
+```json
+{
+  "mcpServers": {
+    "spanner": {
+      "command": "toolbox",
+      "args": ["--prebuilt", "spanner", "--stdio"],
+      "env": {
+        "SPANNER_PROJECT": "your-project-id",
+        "SPANNER_INSTANCE": "your-instance-id",
+        "SPANNER_DATABASE": "your-database-name",
+        "SPANNER_DIALECT": "googlesql"
+      }
+    }
+  }
+}
+```
 
 ## Documentation
 
