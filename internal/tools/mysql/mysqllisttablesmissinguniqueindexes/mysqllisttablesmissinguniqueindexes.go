@@ -22,7 +22,6 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
-	"github.com/googleapis/genai-toolbox/internal/sources/mariadb"
 	"github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
@@ -76,9 +75,8 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &mysql.Source{}
 var _ compatibleSource = &cloudsqlmysql.Source{}
-var _ compatibleSource = &mariadb.Source{}
 
-var compatibleSources = [...]string{mysql.SourceKind, cloudsqlmysql.SourceKind, mariadb.SourceKind}
+var compatibleSources = [...]string{mysql.SourceKind, cloudsqlmysql.SourceKind}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`

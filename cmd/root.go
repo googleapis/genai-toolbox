@@ -234,7 +234,6 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/http"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/looker"
-	_ "github.com/googleapis/genai-toolbox/internal/sources/mariadb"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mindsdb"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/mssql"

@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"regexp"
 	"strings"
@@ -37,7 +36,7 @@ import (
 )
 
 var (
-	MariaDBSourceKind = "mariadb"
+	MariaDBSourceKind = "mysql"
 	MariaDBToolKind   = "mysql-sql"
 	MariaDBDatabase   = os.Getenv("MARIADB_DATABASE")
 	MariaDBHost       = os.Getenv("MARIADB_HOST")
@@ -70,32 +69,16 @@ func getMariaDBVars(t *testing.T) map[string]any {
 	}
 }
 
-// Copied over from mariadb.go
-func initMariaDB(host, port, user, password, database string) (*sql.DB, error) {
+// Copied over from mysql.go
+func initMariaDB(host, port, user, pass, dbname string) (*sql.DB, error) {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, pass, host, port, dbname)
 
-	q := url.Values{}
-
-	// defaults
-	q.Set("parseTime", "true")
-	q.Set("clientFoundRows", "true")
-
-	// driver accepts additional params in DSN, including "interpolateParams=true&tls=skip-verify"
-	dsn := fmt.Sprintf(
-		"%s:%s@tcp(%s:%s)/%s?%s",
-		user,
-		password,
-		host,
-		port,
-		database,
-		q.Encode(),
-	)
-
-	db, err := sql.Open("mysql", dsn)
+	// Interact with the driver directly as you normally would
+	pool, err := sql.Open("mysql", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("sql.Open: %w", err)
 	}
-
-	return db, nil
+	return pool, nil
 }
 
 func TestMySQLToolEndpoints(t *testing.T) {
