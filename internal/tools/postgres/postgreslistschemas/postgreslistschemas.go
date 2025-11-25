@@ -32,28 +32,28 @@ const kind string = "postgres-list-schemas"
 
 const listSchemasStatement = `
 	WITH
-	schema_grants AS (
-		SELECT schema_oid, jsonb_object_agg(grantee, privileges) AS grants
-		FROM
-		(
-			SELECT
-			n.oid AS schema_oid,
-			CASE
-				WHEN p.grantee = 0 THEN 'PUBLIC'
-				ELSE pg_catalog.pg_get_userbyid(p.grantee)
-				END
-				AS grantee,
-			jsonb_agg(p.privilege_type ORDER BY p.privilege_type) AS privileges
-			FROM pg_catalog.pg_namespace n, aclexplode(n.nspacl) p
-			WHERE n.nspacl IS NOT NULL
-			GROUP BY n.oid, grantee
-		) permissions_by_grantee
-		GROUP BY schema_oid
-	),
-	all_schemas AS (
-		SELECT
-		n.nspname AS schema_name,
-		pg_catalog.pg_get_userbyid(n.nspowner) AS owner,
+    schema_grants AS (
+        SELECT schema_oid, jsonb_object_agg(grantee, privileges) AS grants
+        FROM
+        (
+            SELECT
+            n.oid AS schema_oid,
+            CASE
+                WHEN p.grantee = 0 THEN 'PUBLIC'
+                ELSE pg_catalog.pg_get_userbyid(p.grantee)
+                END
+                AS grantee,
+            jsonb_agg(p.privilege_type ORDER BY p.privilege_type) AS privileges
+            FROM pg_catalog.pg_namespace n, aclexplode(n.nspacl) p
+            WHERE n.nspacl IS NOT NULL
+            GROUP BY n.oid, grantee
+        ) permissions_by_grantee
+        GROUP BY schema_oid
+    ),
+    all_schemas AS (
+        SELECT
+        n.nspname AS schema_name,
+        pg_catalog.pg_get_userbyid(n.nspowner) AS owner,
 		COALESCE(sg.grants, '{}'::jsonb) AS grants,
 		(
 			SELECT COUNT(*)
@@ -67,18 +67,21 @@ const listSchemasStatement = `
 		) AS views,
 		(SELECT COUNT(*) FROM pg_catalog.pg_proc p WHERE p.pronamespace = n.oid)
 			AS functions
-		FROM pg_catalog.pg_namespace n
-		LEFT JOIN schema_grants sg
-		ON n.oid = sg.schema_oid
-	)
+        FROM pg_catalog.pg_namespace n
+        LEFT JOIN schema_grants sg
+        ON n.oid = sg.schema_oid
+    )
 	SELECT *
 	FROM all_schemas
-	-- Exclude system schemas and temporary schemas created per session.
+    -- Exclude system schemas and temporary schemas created per session.
 	WHERE
-	schema_name NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
-	AND schema_name NOT LIKE 'pg_temp_%'
-	AND ($1::text IS NULL OR schema_name LIKE '%' || $1::text || '%')
-	ORDER BY schema_name;
+        schema_name NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+        AND schema_name NOT LIKE 'pg_temp_%'
+        AND schema_name NOT LIKE 'pg_toast_temp_%'
+        AND ($1::text IS NULL OR schema_name ILIKE '%' || $1::text || '%')
+        AND ($2::text IS NULL OR owner ILIKE '%' || $2::text || '%')
+    ORDER BY schema_name
+    LIMIT COALESCE($3::int, NULL);
 `
 
 func init() {
@@ -136,12 +139,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameterWithDefault("schema_name", "", "Optional: A specific schema name pattern to search for."),
+		parameters.NewStringParameterWithDefault("owner", "", "Optional: A specific schema owner name pattern to search for."),
+		parameters.NewIntParameterWithDefault("limit", 10, "Optional: The maximum number of schemas to return."),
 	}
-	description := cfg.Description
-	if description == "" {
-		description = "Lists all schemas in the database ordered by schema name and excluding system and temporary schemas. It returns the schema name, schema owner, grants, number of functions, number of tables and number of views within each schema."
+
+	if cfg.Description == "" {
+		cfg.Description = "Lists all schemas in the database ordered by schema name and excluding system and temporary schemas. It returns the schema name, schema owner, grants, number of functions, number of tables and number of views within each schema."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
 	// finish tool setup
 	return Tool{
@@ -169,7 +174,13 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	sliceParams := params.AsSlice()
+	paramsMap := params.AsMap()
+
+	newParams, err := parameters.GetParams(t.allParams, paramsMap)
+	if err != nil {
+		return nil, fmt.Errorf("unable to extract standard params %w", err)
+	}
+	sliceParams := newParams.AsSlice()
 
 	results, err := t.pool.Query(ctx, listSchemasStatement, sliceParams...)
 	if err != nil {
