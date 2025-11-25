@@ -16,6 +16,7 @@ package looker
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	geminidataanalytics "cloud.google.com/go/geminidataanalytics/apiv1beta"
@@ -46,11 +47,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 		Name:               name,
 		SslVerification:    true,
 		Timeout:            "600s",
-		UseClientOAuth:     false,
+		UseClientOAuth:     "false",
 		ShowHiddenModels:   true,
 		ShowHiddenExplores: true,
 		ShowHiddenFields:   true,
 		Location:           "us",
+		SessionLength:      1200,
 	} // Default Ssl,timeout, ShowHidden
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
@@ -65,13 +67,14 @@ type Config struct {
 	ClientId           string `yaml:"client_id"`
 	ClientSecret       string `yaml:"client_secret"`
 	SslVerification    bool   `yaml:"verify_ssl"`
-	UseClientOAuth     bool   `yaml:"use_client_oauth"`
+	UseClientOAuth     string `yaml:"use_client_oauth"`
 	Timeout            string `yaml:"timeout"`
 	ShowHiddenModels   bool   `yaml:"show_hidden_models"`
 	ShowHiddenExplores bool   `yaml:"show_hidden_explores"`
 	ShowHiddenFields   bool   `yaml:"show_hidden_fields"`
 	Project            string `yaml:"project"`
 	Location           string `yaml:"location"`
+	SessionLength      int64  `yaml:"sessionLength"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -112,20 +115,13 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	tokenSource, _ = initGoogleCloudConnection(ctx)
 
 	s := &Source{
-		Name:               r.Name,
-		Kind:               SourceKind,
-		Timeout:            r.Timeout,
-		UseClientOAuth:     r.UseClientOAuth,
-		ApiSettings:        &cfg,
-		ShowHiddenModels:   r.ShowHiddenModels,
-		ShowHiddenExplores: r.ShowHiddenExplores,
-		ShowHiddenFields:   r.ShowHiddenFields,
-		Project:            r.Project,
-		Location:           r.Location,
-		TokenSource:        tokenSource,
+		Config:              r,
+		ApiSettings:         &cfg,
+		TokenSource:         tokenSource,
+		AuthTokenHeaderName: "Authorization",
 	}
 
-	if !r.UseClientOAuth {
+	if strings.ToLower(r.UseClientOAuth) == "false" {
 		if r.ClientId == "" || r.ClientSecret == "" {
 			return nil, fmt.Errorf("client_id and client_secret need to be specified")
 		}
@@ -135,6 +131,11 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 			return nil, fmt.Errorf("incorrect settings: %w", err)
 		}
 		logger.DebugContext(ctx, fmt.Sprintf("logged in as %s %s", *resp.FirstName, *resp.LastName))
+	} else {
+		if strings.ToLower(r.UseClientOAuth) != "true" {
+			s.AuthTokenHeaderName = r.UseClientOAuth
+		}
+		logger.DebugContext(ctx, fmt.Sprintf("Using AuthTokenHeaderName: %s", s.AuthTokenHeaderName))
 	}
 
 	return s, nil
@@ -144,22 +145,19 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name               string `yaml:"name"`
-	Kind               string `yaml:"kind"`
-	Timeout            string `yaml:"timeout"`
-	Client             *v4.LookerSDK
-	ApiSettings        *rtl.ApiSettings
-	UseClientOAuth     bool   `yaml:"use_client_oauth"`
-	ShowHiddenModels   bool   `yaml:"show_hidden_models"`
-	ShowHiddenExplores bool   `yaml:"show_hidden_explores"`
-	ShowHiddenFields   bool   `yaml:"show_hidden_fields"`
-	Project            string `yaml:"project"`
-	Location           string `yaml:"location"`
-	TokenSource        oauth2.TokenSource
+	Config
+	Client              *v4.LookerSDK
+	ApiSettings         *rtl.ApiSettings
+	TokenSource         oauth2.TokenSource
+	AuthTokenHeaderName string
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 func (s *Source) GetApiSettings() *rtl.ApiSettings {
@@ -167,7 +165,11 @@ func (s *Source) GetApiSettings() *rtl.ApiSettings {
 }
 
 func (s *Source) UseClientAuthorization() bool {
-	return s.UseClientOAuth
+	return strings.ToLower(s.UseClientOAuth) != "false"
+}
+
+func (s *Source) GetAuthTokenHeaderName() string {
+	return s.AuthTokenHeaderName
 }
 
 func (s *Source) GoogleCloudProject() string {

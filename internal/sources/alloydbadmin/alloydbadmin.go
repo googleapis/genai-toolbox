@@ -70,6 +70,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	Name           string `yaml:"name" validate:"required"`
 	Kind           string `yaml:"kind" validate:"required"`
+	DefaultProject string `yaml:"defaultProject"`
 	UseClientOAuth bool   `yaml:"useClientOAuth"`
 }
 
@@ -111,11 +112,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name:           r.Name,
-		Kind:           SourceKind,
-		BaseURL:        "https://alloydb.googleapis.com",
-		Service:        service,
-		UseClientOAuth: r.UseClientOAuth,
+		Config:  r,
+		BaseURL: "https://alloydb.googleapis.com",
+		Service: service,
 	}
 
 	return s, nil
@@ -124,15 +123,17 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name           string `yaml:"name"`
-	Kind           string `yaml:"kind"`
-	BaseURL        string
-	Service        *alloydbrestapi.Service
-	UseClientOAuth bool
+	Config
+	BaseURL string
+	Service *alloydbrestapi.Service
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 func (s *Source) GetService(ctx context.Context, accessToken string) (*alloydbrestapi.Service, error) {

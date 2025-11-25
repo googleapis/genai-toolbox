@@ -19,7 +19,6 @@ sources:
         region: ${CLOUD_SQL_MSSQL_REGION}
         instance: ${CLOUD_SQL_MSSQL_INSTANCE}
         database: ${CLOUD_SQL_MSSQL_DATABASE}
-        ipAddress: ${CLOUD_SQL_MSSQL_IP_ADDRESS}
         user: ${CLOUD_SQL_MSSQL_USER}
         password: ${CLOUD_SQL_MSSQL_PASSWORD}
         ipType: ${CLOUD_SQL_MSSQL_IP_TYPE:public}

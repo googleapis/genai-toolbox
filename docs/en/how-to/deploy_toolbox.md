@@ -164,7 +164,8 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 {{< tab header="Python" lang="python" >}}
 from toolbox_core import ToolboxClient, auth_methods
 
-# Replace with the Cloud Run service URL generated in the previous step.
+# Replace with the Cloud Run service URL generated in the previous step
+
 URL = "https://cloud-run-url.app"
 
 auth_token_provider = auth_methods.aget_google_id_token(URL) # can also use sync method
@@ -204,7 +205,6 @@ func main() {
 {{< /tab >}}
 {{< /tabpane >}}
 
-
 Now, you can use this client to connect to the deployed Cloud Run instance!
 
 ## Troubleshooting
@@ -215,21 +215,21 @@ for your service in the Google Cloud Console's Cloud Run section. They often
 contain the specific error message needed to diagnose the problem.
 {{< /notice >}}
 
-* **Deployment Fails with "Container failed to start":** This is almost always
+- **Deployment Fails with "Container failed to start":** This is almost always
     caused by a port mismatch. Ensure your container's `--port` argument is set to
     `8080` to match the `$PORT` environment variable provided by Cloud Run.
 
-* **Client Receives Permission Denied Error (401 or 403):** If your client
+- **Client Receives Permission Denied Error (401 or 403):** If your client
   application (e.g., your local SDK) gets a `401 Unauthorized` or `403
   Forbidden` error when trying to call your Cloud Run service, it means the
   client is not properly authenticated as an invoker.
-    * Ensure the user or service account calling the service has the **Cloud Run
+  - Ensure the user or service account calling the service has the **Cloud Run
       Invoker** (`roles/run.invoker`) IAM role.
-    * If running locally, make sure your Application Default Credentials are set
+  - If running locally, make sure your Application Default Credentials are set
       up correctly by running `gcloud auth application-default login`.
 
-* **Service Fails to Access Secrets (in logs):** If your application starts but
+- **Service Fails to Access Secrets (in logs):** If your application starts but
   the logs show errors like "permission denied" when trying to access Secret
   Manager, it means the Toolbox service account is missing permissions.
-    * Ensure the `toolbox-identity` service account has the **Secret Manager
+  - Ensure the `toolbox-identity` service account has the **Secret Manager
       Secret Accessor** (`roles/secretmanager.secretAccessor`) IAM role.

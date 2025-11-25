@@ -1,11 +1,9 @@
 ---
-title: "Cloud SQL Admin"
+title: Cloud SQL Admin
 type: docs
 weight: 1
-description: >
-  A "cloud-sql-admin" source provides a client for the Cloud SQL Admin API.
-aliases:
-- /resources/sources/cloud-sql-admin
+description: "A \"cloud-sql-admin\" source provides a client for the Cloud SQL Admin API.\n"
+aliases: [/resources/sources/cloud-sql-admin]
 ---
 
 ## About
@@ -16,6 +14,7 @@ allows tools to perform administrative tasks on Cloud SQL instances, such as
 creating users and databases.
 
 Authentication can be handled in two ways:
+
 1.  **Application Default Credentials (ADC):** By default, the source uses ADC
     to authenticate with the API.
 2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will
@@ -37,6 +36,7 @@ sources:
 ## Reference
 
 | **field**      | **type** | **required** | **description**                                                                                                                                |
-|----------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------|
+| -------------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | kind           |  string  |     true     | Must be "cloud-sql-admin".                                                                                                                     |
-| useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
+| defaultProject |  string  |     false    | The Google Cloud project ID to use for Cloud SQL infrastructure tools.                                                                         |
+| useClientOAuth |  boolean |     false    | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |

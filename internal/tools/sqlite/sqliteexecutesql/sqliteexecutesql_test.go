@@ -26,6 +26,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/sqlite/sqliteexecutesql"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	_ "modernc.org/sqlite"
 )
 
@@ -98,12 +100,12 @@ func TestTool_Invoke(t *testing.T) {
 		Name         string
 		Kind         string
 		AuthRequired []string
-		Parameters   tools.Parameters
+		Parameters   parameters.Parameters
 		DB           *sql.DB
 	}
 	type args struct {
 		ctx         context.Context
-		params      tools.ParamValues
+		params      parameters.ParamValues
 		accessToken tools.AccessToken
 	}
 	tests := []struct {
@@ -120,7 +122,7 @@ func TestTool_Invoke(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "sql", Value: "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER)"},
 				},
 			},
@@ -134,7 +136,7 @@ func TestTool_Invoke(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "sql", Value: "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER); INSERT INTO users (id, name, age) VALUES (1, 'Alice', 30), (2, 'Bob', 25)"},
 				},
 			},
@@ -154,13 +156,25 @@ func TestTool_Invoke(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "sql", Value: "SELECT * FROM users"},
 				},
 			},
 			want: []any{
-				map[string]any{"id": int64(1), "name": "Alice", "age": int64(30)},
-				map[string]any{"id": int64(2), "name": "Bob", "age": int64(25)},
+				orderedmap.Row{
+					Columns: []orderedmap.Column{
+						{Name: "id", Value: int64(1)},
+						{Name: "name", Value: "Alice"},
+						{Name: "age", Value: int64(30)},
+					},
+				},
+				orderedmap.Row{
+					Columns: []orderedmap.Column{
+						{Name: "id", Value: int64(2)},
+						{Name: "name", Value: "Bob"},
+						{Name: "age", Value: int64(25)},
+					},
+				},
 			},
 			wantErr: false,
 		},
@@ -177,7 +191,7 @@ func TestTool_Invoke(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "sql", Value: "DROP TABLE users"},
 				},
 			},
@@ -191,7 +205,7 @@ func TestTool_Invoke(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "sql", Value: "SELECT * FROM non_existent_table"},
 				},
 			},
@@ -205,7 +219,7 @@ func TestTool_Invoke(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "sql", Value: ""},
 				},
 			},
@@ -228,12 +242,18 @@ func TestTool_Invoke(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "sql", Value: "SELECT * FROM data_types"},
 				},
 			},
 			want: []any{
-				map[string]any{"id": int64(1), "null_col": nil, "blob_col": []byte{1, 2, 3}},
+				orderedmap.Row{
+					Columns: []orderedmap.Column{
+						{Name: "id", Value: int64(1)},
+						{Name: "null_col", Value: nil},
+						{Name: "blob_col", Value: []byte{1, 2, 3}},
+					},
+				},
 			},
 			wantErr: false,
 		},
@@ -259,25 +279,37 @@ func TestTool_Invoke(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "sql", Value: "SELECT u.name, o.item FROM users u JOIN orders o ON u.id = o.user_id"},
 				},
 			},
 			want: []any{
-				map[string]any{"name": "Alice", "item": "Laptop"},
-				map[string]any{"name": "Bob", "item": "Keyboard"},
+				orderedmap.Row{
+					Columns: []orderedmap.Column{
+						{Name: "name", Value: "Alice"},
+						{Name: "item", Value: "Laptop"},
+					},
+				},
+				orderedmap.Row{
+					Columns: []orderedmap.Column{
+						{Name: "name", Value: "Bob"},
+						{Name: "item", Value: "Keyboard"},
+					},
+				},
 			},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tr := &sqliteexecutesql.Tool{
-				Name:         tt.fields.Name,
-				Kind:         tt.fields.Kind,
-				AuthRequired: tt.fields.AuthRequired,
-				Parameters:   tt.fields.Parameters,
-				DB:           tt.fields.DB,
+			tr := sqliteexecutesql.Tool{
+				Config: sqliteexecutesql.Config{
+					Name:         tt.fields.Name,
+					Kind:         tt.fields.Kind,
+					AuthRequired: tt.fields.AuthRequired,
+				},
+				Parameters: tt.fields.Parameters,
+				DB:         tt.fields.DB,
 			}
 			got, err := tr.Invoke(tt.args.ctx, tt.args.params, tt.args.accessToken)
 			if (err != nil) != tt.wantErr {
@@ -292,7 +324,7 @@ func TestTool_Invoke(t *testing.T) {
 			}
 
 			if !isEqual {
-				t.Errorf("Tool.Invoke() = %v, want %v", got, tt.want)
+				t.Errorf("Tool.Invoke() = %+v, want %v", got, tt.want)
 			}
 		})
 	}

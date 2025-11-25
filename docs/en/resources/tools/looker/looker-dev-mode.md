@@ -16,8 +16,8 @@ It's compatible with the following sources:
 
 - [looker](../../sources/looker.md)
 
-`looker-dev-mode` accepts a boolean parameter, true to enter dev mode and false to exit dev mode.
-
+`looker-dev-mode` accepts a boolean parameter, true to enter dev mode and false
+to exit dev mode.
 
 ## Example
 
@@ -35,8 +35,8 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker-dev-mode".                                                                       |
-| source      |                   string                   |     true     | Name of the source Looker instance.                                                              |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "looker-dev-mode".                         |
+| source      |  string  |     true     | Name of the source Looker instance.                |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

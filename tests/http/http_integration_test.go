@@ -29,7 +29,7 @@ import (
 	"time"
 
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
@@ -79,22 +79,22 @@ func multiTool(w http.ResponseWriter, r *http.Request) {
 // handleQueryTest simply returns the raw query string it received so the test
 // can verify it's formatted correctly.
 func handleQueryTest(w http.ResponseWriter, r *http.Request) {
-    // expect GET method
-    if r.Method != http.MethodGet {
-        errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
-        http.Error(w, errorMessage, http.StatusBadRequest)
-        return
-    }
+	// expect GET method
+	if r.Method != http.MethodGet {
+		errorMessage := fmt.Sprintf("expected GET method but got: %s", string(r.Method))
+		http.Error(w, errorMessage, http.StatusBadRequest)
+		return
+	}
 
-    w.WriteHeader(http.StatusOK)
-    enc := json.NewEncoder(w)
-    enc.SetEscapeHTML(false) 
+	w.WriteHeader(http.StatusOK)
+	enc := json.NewEncoder(w)
+	enc.SetEscapeHTML(false)
 
-    err := enc.Encode(r.URL.RawQuery)
-    if err != nil {
-        http.Error(w, "Failed to write response", http.StatusInternalServerError)
-        return
-    }
+	err := enc.Encode(r.URL.RawQuery)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // handler function for the test server
@@ -510,14 +510,14 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"method":      "GET",
 				"path":        "/tool1",
 				"description": "some description",
-				"queryParams": []tools.Parameter{
-					tools.NewIntParameter("id", "user ID")},
+				"queryParams": []parameters.Parameter{
+					parameters.NewIntParameter("id", "user ID")},
 				"requestBody": `{
 "age": 36,
 "name": "{{.name}}"
 }
 `,
-				"bodyParams": []tools.Parameter{tools.NewStringParameter("name", "user name")},
+				"bodyParams": []parameters.Parameter{parameters.NewStringParameter("name", "user name")},
 				"headers":    map[string]string{"Content-Type": "application/json"},
 			},
 			"my-tool-by-id": map[string]any{
@@ -526,8 +526,8 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"method":      "GET",
 				"path":        "/tool1id",
 				"description": "some description",
-				"queryParams": []tools.Parameter{
-					tools.NewIntParameter("id", "user ID")},
+				"queryParams": []parameters.Parameter{
+					parameters.NewIntParameter("id", "user ID")},
 				"headers": map[string]string{"Content-Type": "application/json"},
 			},
 			"my-tool-by-name": map[string]any{
@@ -536,8 +536,8 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"method":      "GET",
 				"path":        "/tool1name",
 				"description": "some description",
-				"queryParams": []tools.Parameter{
-					tools.NewStringParameterWithRequired("name", "user name", false)},
+				"queryParams": []parameters.Parameter{
+					parameters.NewStringParameterWithRequired("name", "user name", false)},
 				"headers": map[string]string{"Content-Type": "application/json"},
 			},
 			"my-query-param-tool": map[string]any{
@@ -546,10 +546,10 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"method":      "GET",
 				"path":        "/toolQueryTest",
 				"description": "Tool to test optional query parameters.",
-				"queryParams": []tools.Parameter{
-					tools.NewStringParameterWithRequired("reqId", "required ID", true),
-					tools.NewStringParameterWithRequired("page", "optional page number", false),
-					tools.NewStringParameterWithRequired("filter", "optional filter string", false),
+				"queryParams": []parameters.Parameter{
+					parameters.NewStringParameterWithRequired("reqId", "required ID", true),
+					parameters.NewStringParameterWithRequired("page", "optional page number", false),
+					parameters.NewStringParameterWithRequired("filter", "optional filter string", false),
 				},
 			},
 			"my-auth-tool": map[string]any{
@@ -559,9 +559,9 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"path":        "/tool2",
 				"description": "some description",
 				"requestBody": "{}",
-				"queryParams": []tools.Parameter{
-					tools.NewStringParameterWithAuth("email", "some description",
-						[]tools.ParamAuthService{{Name: "my-google-auth", Field: "email"}}),
+				"queryParams": []parameters.Parameter{
+					parameters.NewStringParameterWithAuth("email", "some description",
+						[]parameters.ParamAuthService{{Name: "my-google-auth", Field: "email"}}),
 				},
 			},
 			"my-auth-required-tool": map[string]any{
@@ -579,29 +579,24 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolKind string) map[string
 				"method":      "get",
 				"path":        "/{{.path}}?id=2",
 				"description": "some description",
-				"headers": 
-					map[string]string{
-						"X-Custom-Header": "example",
+				"headers": map[string]string{
+					"X-Custom-Header": "example",
+				},
+				"pathParams": []parameters.Parameter{
+					&parameters.StringParameter{
+						CommonParameter: parameters.CommonParameter{Name: "path", Type: "string", Desc: "path param"},
 					},
-				"pathParams":
-					[]tools.Parameter{
-						&tools.StringParameter{
-							CommonParameter: tools.CommonParameter{Name: "path", Type: "string", Desc: "path param"},
-						},
-					},
-				"queryParams":
-					[]tools.Parameter{
-						tools.NewIntParameter("id", "user ID"), tools.NewStringParameter("country", "country"),
-					},
+				},
+				"queryParams": []parameters.Parameter{
+					parameters.NewIntParameter("id", "user ID"), parameters.NewStringParameter("country", "country"),
+				},
 				"requestBody": `{
 					"place": "zoo",
 					"animals": {{json .animalArray }}
 					}
 					`,
-				"bodyParams":   
-					[]tools.Parameter{tools.NewArrayParameter("animalArray", "animals in the zoo", tools.NewStringParameter("animals", "desc"))},
-				"headerParams": 
-					[]tools.Parameter{tools.NewStringParameter("X-Other-Header", "custom header")},
+				"bodyParams":   []parameters.Parameter{parameters.NewArrayParameter("animalArray", "animals in the zoo", parameters.NewStringParameter("animals", "desc"))},
+				"headerParams": []parameters.Parameter{parameters.NewStringParameter("X-Other-Header", "custom header")},
 			},
 		},
 	}

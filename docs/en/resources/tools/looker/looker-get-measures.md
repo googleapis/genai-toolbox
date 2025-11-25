@@ -58,7 +58,6 @@ The response is a json array with the following elements:
 }
 ```
 
-
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |

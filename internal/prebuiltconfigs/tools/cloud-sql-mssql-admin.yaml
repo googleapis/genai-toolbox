@@ -15,6 +15,7 @@
 sources:
   cloud-sql-admin-source:
     kind: cloud-sql-admin
+    defaultProject: ${CLOUD_SQL_MSSQL_PROJECT:}
 
 tools:
   create_instance:

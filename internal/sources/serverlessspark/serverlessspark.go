@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
+	longrunning "cloud.google.com/go/longrunning/autogen"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
@@ -66,13 +67,15 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	if err != nil {
 		return nil, fmt.Errorf("failed to create dataproc client: %w", err)
 	}
+	opsClient, err := longrunning.NewOperationsClient(ctx, option.WithEndpoint(endpoint), option.WithUserAgent(ua))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create longrunning client: %w", err)
+	}
 
 	s := &Source{
-		Name:     r.Name,
-		Kind:     SourceKind,
-		Project:  r.Project,
-		Location: r.Location,
-		Client:   client,
+		Config:    r,
+		Client:    client,
+		OpsClient: opsClient,
 	}
 	return s, nil
 }
@@ -80,17 +83,33 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name     string `yaml:"name"`
-	Kind     string `yaml:"kind"`
-	Project  string
-	Location string
-	Client   *dataproc.BatchControllerClient
+	Config
+	Client    *dataproc.BatchControllerClient
+	OpsClient *longrunning.OperationsClient
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
 }
 
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
+}
+
 func (s *Source) GetBatchControllerClient() *dataproc.BatchControllerClient {
 	return s.Client
+}
+
+func (s *Source) GetOperationsClient(ctx context.Context) (*longrunning.OperationsClient, error) {
+	return s.OpsClient, nil
+}
+
+func (s *Source) Close() error {
+	if err := s.Client.Close(); err != nil {
+		return err
+	}
+	if err := s.OpsClient.Close(); err != nil {
+		return err
+	}
+	return nil
 }

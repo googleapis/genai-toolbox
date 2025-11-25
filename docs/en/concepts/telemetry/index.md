@@ -183,11 +183,11 @@ Protocol (OTLP). If you would like to use a collector, please refer to this
 
 The following flags are used to determine Toolbox's telemetry configuration:
 
-| **flag**                   | **type** | **description**                                                                                                |
-|----------------------------|----------|----------------------------------------------------------------------------------------------------------------|
-| `--telemetry-gcp`          | bool     | Enable exporting directly to Google Cloud Monitoring. Default is `false`.                                      |
+| **flag**                   | **type** | **description**                                                                                                  |
+|----------------------------|----------|------------------------------------------------------------------------------------------------------------------|
+| `--telemetry-gcp`          | bool     | Enable exporting directly to Google Cloud Monitoring. Default is `false`.                                        |
 | `--telemetry-otlp`         | string   | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. "<http://127.0.0.1:4318>"). |
-| `--telemetry-service-name` | string   | Sets the value of the `service.name` resource attribute. Default is `toolbox`.                                 |
+| `--telemetry-service-name` | string   | Sets the value of the `service.name` resource attribute. Default is `toolbox`.                                   |
 
 In addition to the flags noted above, you can also make additional configuration
 for OpenTelemetry via the [General SDK Configuration][sdk-configuration] through

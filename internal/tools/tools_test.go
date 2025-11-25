@@ -19,10 +19,11 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestGetMcpManifestMetadata(t *testing.T) {
-	authServices := []tools.ParamAuthService{
+	authServices := []parameters.ParamAuthService{
 		{
 			Name:  "my-google-auth-service",
 			Field: "auth_field",
@@ -36,7 +37,7 @@ func TestGetMcpManifestMetadata(t *testing.T) {
 		name         string
 		description  string
 		authInvoke   []string
-		params       tools.Parameters
+		params       parameters.Parameters
 		wantMetadata map[string]any
 	}{
 		{
@@ -44,7 +45,7 @@ func TestGetMcpManifestMetadata(t *testing.T) {
 			name:         "basic",
 			description:  "foo bar",
 			authInvoke:   []string{},
-			params:       tools.Parameters{tools.NewStringParameter("string-param", "string parameter")},
+			params:       parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter")},
 			wantMetadata: nil,
 		},
 		{
@@ -52,7 +53,7 @@ func TestGetMcpManifestMetadata(t *testing.T) {
 			name:         "basic",
 			description:  "foo bar",
 			authInvoke:   []string{"auth1", "auth2"},
-			params:       tools.Parameters{tools.NewStringParameter("string-param", "string parameter")},
+			params:       parameters.Parameters{parameters.NewStringParameter("string-param", "string parameter")},
 			wantMetadata: map[string]any{"toolbox/authInvoke": []string{"auth1", "auth2"}},
 		},
 		{
@@ -60,7 +61,7 @@ func TestGetMcpManifestMetadata(t *testing.T) {
 			name:        "basic",
 			description: "foo bar",
 			authInvoke:  []string{},
-			params:      tools.Parameters{tools.NewStringParameterWithAuth("string-param", "string parameter", authServices)},
+			params:      parameters.Parameters{parameters.NewStringParameterWithAuth("string-param", "string parameter", authServices)},
 			wantMetadata: map[string]any{
 				"toolbox/authParam": map[string][]string{
 					"string-param": []string{"my-google-auth-service", "other-auth-service"},
@@ -72,7 +73,7 @@ func TestGetMcpManifestMetadata(t *testing.T) {
 			name:        "basic",
 			description: "foo bar",
 			authInvoke:  []string{"auth1", "auth2"},
-			params:      tools.Parameters{tools.NewStringParameterWithAuth("string-param", "string parameter", authServices)},
+			params:      parameters.Parameters{parameters.NewStringParameterWithAuth("string-param", "string parameter", authServices)},
 			wantMetadata: map[string]any{
 				"toolbox/authInvoke": []string{"auth1", "auth2"},
 				"toolbox/authParam": map[string][]string{

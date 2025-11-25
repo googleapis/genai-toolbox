@@ -1,0 +1,77 @@
+{
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+    "name": "io.github.googleapis/genai-toolbox",
+    "description": "MCP Toolbox for Databases enables your agent to connect to your database.",
+    "title": "MCP Toolbox",
+    "websiteUrl": "https://github.com/googleapis/genai-toolbox",
+    "icons": [
+        {
+            "src": "https://github.com/googleapis/genai-toolbox/blob/main/.hugo/assets/icons/logo.svg",
+            "mimeType": "image/svg+xml"
+        }
+    ],
+    "repository": {
+        "url": "https://github.com/googleapis/genai-toolbox",
+        "source": "github"
+    },
+    "version": "0.21.0",
+    "packages": [
+        {
+            "registryType": "oci",
+            "identifier": "us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:0.21.0",
+            "transport": {
+                "type": "streamable-http",
+                "url": "http://{host}:{port}/mcp"
+            },
+            "runtimeArguments": [
+                {
+                    "type": "named",
+                    "name": "--tools-file",
+                    "description": "File path specifying the tool configuration.",
+                    "default": "tools.yaml",
+                    "isRequired": false
+                },
+                {
+                    "type": "named",
+                    "name": "--address",
+                    "valueHint": "host",
+                    "description": "Address of the interface the server will listen on.",
+                    "value": "{host}",
+                    "variables": {
+                        "host": {
+                            "description": "ip address",
+                            "isRequired": true,
+                            "default": "127.0.0.1"
+                        }
+                    }
+                },
+                {
+                    "type": "named",
+                    "name": "--port",
+                    "valueHint": "port",
+                    "description": "Port the server will listen on.",
+                    "value": "{port}",
+                    "variables": {
+                        "port": {
+                            "description": "port",
+                            "isRequired": true,
+                            "default": "5000"
+                        }
+                    }
+                },
+                {
+                    "type": "named",
+                    "name": "--log-level",
+                    "description": "Specify the minimum level logged.",
+                    "default": "info",
+                    "choices": [
+                        "debug",
+                        "info",
+                        "warn",
+                        "error"
+                    ]
+                }
+            ]
+        }
+    ]
+}

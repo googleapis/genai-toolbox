@@ -34,7 +34,8 @@ database layer.
 
 {{< notice tip >}} AlloyDB AI natural language is currently in gated public
 preview. For more information on availability and limitations, please see
-[AlloyDB AI natural language overview](https://cloud.google.com/alloydb/docs/ai/natural-language-overview)
+[AlloyDB AI natural language
+overview](https://cloud.google.com/alloydb/docs/ai/natural-language-overview)
 {{< /notice >}}
 
 To enable AlloyDB AI natural language for your AlloyDB cluster, please follow
@@ -42,8 +43,21 @@ the steps listed in the [Generate SQL queries that answer natural language
 questions][alloydb-ai-gen-nl], including enabling the extension and configuring
 context for your application.
 
-[alloydb-ai-nl-overview]: https://cloud.google.com/alloydb/docs/ai/natural-language-overview
-[alloydb-ai-gen-nl]: https://cloud.google.com/alloydb/docs/ai/generate-sql-queries-natural-language
+{{< notice note >}}
+As of AlloyDB AI NL v1.0.3+, the signature of `execute_nl_query` has been
+updated. Run `SELECT extversion FROM pg_extension WHERE extname =
+'alloydb_ai_nl';` to check which version your instance is using.
+AlloyDB AI NL v1.0.3+ is required for Toolbox v0.19.0+. Starting with Toolbox
+v0.19.0, users who previously used the create_configuration operation for the
+natural language configuration must update it. To do so, please drop the
+existing configuration and redefine it using the instructions
+[here](https://docs.cloud.google.com/alloydb/docs/ai/use-natural-language-generate-sql-queries#create-config).
+{{< /notice >}}
+
+[alloydb-ai-nl-overview]:
+    https://cloud.google.com/alloydb/docs/ai/natural-language-overview
+[alloydb-ai-gen-nl]:
+    https://cloud.google.com/alloydb/docs/ai/generate-sql-queries-natural-language
 
 ## Configuration
 
@@ -73,12 +87,17 @@ Parameters](../#array-parameters) or Bound Parameters to provide secure
 access to queries generated using natural language, as these parameters are not
 visible to the LLM.
 
-[alloydb-psv]: https://cloud.google.com/alloydb/docs/parameterized-secure-views-overview
+[alloydb-psv]:
+    https://cloud.google.com/alloydb/docs/parameterized-secure-views-overview
 
-{{< notice tip >}} Make sure to enable the `parameterized_views` extension before running this tool. You can do so by running this command in the AlloyDB studio:
+{{< notice tip >}} Make sure to enable the `parameterized_views` extension
+before running this tool. You can do so by running this command in the AlloyDB
+studio:
+
 ```sql
 CREATE EXTENSION IF NOT EXISTS parameterized_views;
 ```
+
 {{< /notice >}}
 
 ## Example
@@ -101,12 +120,13 @@ tools:
           - name: my_google_service
             field: email
 ```
+
 ## Reference
 
-| **field**          |                  **type**                  | **required** | **description**                                                          |
-|--------------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------|
-| kind               |                   string                   |     true     | Must be "alloydb-ai-nl".                                                 |
-| source             |                   string                   |     true     | Name of the AlloyDB source the natural language query should execute on. |
-| description        |                   string                   |     true     | Description of the tool that is passed to the LLM.                       |
-| nlConfig           |                   string                   |     true     | The name of the  `nl_config` in AlloyDB                                  |
+| **field**          |                **type**                 | **required** | **description**                                                          |
+|--------------------|:---------------------------------------:|:------------:|--------------------------------------------------------------------------|
+| kind               |                 string                  |     true     | Must be "alloydb-ai-nl".                                                 |
+| source             |                 string                  |     true     | Name of the AlloyDB source the natural language query should execute on. |
+| description        |                 string                  |     true     | Description of the tool that is passed to the LLM.                       |
+| nlConfig           |                 string                  |     true     | The name of the  `nl_config` in AlloyDB                                  |
 | nlConfigParameters | [parameters](../#specifying-parameters) |     true     | List of PSV parameters defined in the `nl_config`                        |

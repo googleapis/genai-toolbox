@@ -21,8 +21,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/alloydbainl"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlAlloyDBNLA(t *testing.T) {
@@ -62,9 +62,9 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 					Description:  "AlloyDB natural language query tool",
 					NLConfig:     "my_nl_config",
 					AuthRequired: []string{"my-google-auth-service"},
-					NLConfigParameters: []tools.Parameter{
-						tools.NewStringParameterWithAuth("user_id", "user_id to use",
-							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "sub"}}),
+					NLConfigParameters: []parameters.Parameter{
+						parameters.NewStringParameterWithAuth("user_id", "user_id to use",
+							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "sub"}}),
 					},
 				},
 			},
@@ -103,11 +103,11 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 					Description:  "AlloyDB natural language query tool with multiple parameters",
 					NLConfig:     "complex_nl_config",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-					NLConfigParameters: []tools.Parameter{
-						tools.NewStringParameterWithAuth("user_id", "user_id to use",
-							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "sub"}}),
-						tools.NewStringParameterWithAuth("user_email", "user_email to use",
-							[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_email"}}),
+					NLConfigParameters: []parameters.Parameter{
+						parameters.NewStringParameterWithAuth("user_id", "user_id to use",
+							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "sub"}}),
+						parameters.NewStringParameterWithAuth("user_email", "user_email to use",
+							[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_email"}}),
 					},
 				},
 			},
