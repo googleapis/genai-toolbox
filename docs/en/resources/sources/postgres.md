@@ -68,6 +68,9 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
   List cardinality of columns in a table in a PostgreSQL database.
 
+- [`postgres-list-roles`](../tools/postgres/postgres-list-roles.md)
+  Lists all the user-created roles in PostgreSQL database..
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)

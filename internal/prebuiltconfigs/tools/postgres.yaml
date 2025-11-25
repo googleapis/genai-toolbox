@@ -201,6 +201,10 @@ tools:
         kind: postgres-get-column-cardinality
         source: postgresql-source
 
+    list_roles:
+        kind: postgres-list-roles
+        source: postgresql-source
+
 toolsets:
     postgres_database_tools:
         - execute_sql
@@ -220,9 +224,9 @@ toolsets:
         - list_triggers
         - list_indexes
         - list_sequences
+        - list_roles
         - long_running_transactions
         - list_locks
         - replication_stats
         - list_query_stats
         - get_column_cardinality
-

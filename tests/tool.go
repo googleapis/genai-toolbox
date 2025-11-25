@@ -2077,6 +2077,159 @@ func RunPostgresListSequencesTest(t *testing.T, ctx context.Context, pool *pgxpo
 	}
 }
 
+func setupPostgresRoles(t *testing.T, ctx context.Context, pool *pgxpool.Pool) (string, string, string, func(t *testing.T)) {
+	t.Helper()
+	suffix := strings.ReplaceAll(uuid.New().String(), "-", "")
+
+	adminUser := "test_role_admin_" + suffix
+	superUser := "test_role_super_" + suffix
+	normalUser := "test_role_normal_" + suffix
+
+	createAdminStmt := fmt.Sprintf("CREATE ROLE %s NOLOGIN;", adminUser)
+	if _, err := pool.Exec(ctx, createAdminStmt); err != nil {
+		t.Fatalf("unable to create role %s: %v", adminUser, err)
+	}
+
+	createSuperUserStmt := fmt.Sprintf("CREATE ROLE %s LOGIN CREATEDB;", superUser)
+	if _, err := pool.Exec(ctx, createSuperUserStmt); err != nil {
+		t.Fatalf("unable to create role %s: %v", superUser, err)
+	}
+
+	createNormalUserStmt := fmt.Sprintf("CREATE ROLE %s LOGIN;", normalUser)
+	if _, err := pool.Exec(ctx, createNormalUserStmt); err != nil {
+		t.Fatalf("unable to create role %s: %v", normalUser, err)
+	}
+
+	// Establish Relationships (Admin -> Superuser -> Normal)
+	if _, err := pool.Exec(ctx, fmt.Sprintf("GRANT %s TO %s;", adminUser, superUser)); err != nil {
+		t.Fatalf("unable to grant %s to %s: %v", adminUser, superUser, err)
+	}
+	if _, err := pool.Exec(ctx, fmt.Sprintf("GRANT %s TO %s;", superUser, normalUser)); err != nil {
+		t.Fatalf("unable to grant %s to %s: %v", superUser, normalUser, err)
+	}
+
+	return adminUser, superUser, normalUser, func(t *testing.T) {
+		t.Helper()
+		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", normalUser))
+		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", superUser))
+		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", adminUser))
+	}
+}
+
+func RunPostgresListRolesTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	adminUser, superUser, normalUser, cleanup := setupPostgresRoles(t, ctx, pool)
+	defer cleanup(t)
+
+	wantAdmin := map[string]any{
+		"role_name":           adminUser,
+		"connection_limit":    float64(-1),
+		"is_superuser":        false,
+		"inherits_privileges": true,
+		"can_create_roles":    false,
+		"can_create_db":       false,
+		"can_login":           false,
+		"is_replication_role": false,
+		"bypass_rls":          false,
+		"direct_members":      []any{superUser},
+		"member_of":           []any{},
+	}
+
+	wantSuperUser := map[string]any{
+		"role_name":           superUser,
+		"connection_limit":    float64(-1),
+		"is_superuser":        false,
+		"inherits_privileges": true,
+		"can_create_roles":    false,
+		"can_create_db":       true,
+		"can_login":           true,
+		"is_replication_role": false,
+		"bypass_rls":          false,
+		"direct_members":      []any{normalUser},
+		"member_of":           []any{adminUser},
+	}
+
+	wantNormalUser := map[string]any{
+		"role_name":           normalUser,
+		"connection_limit":    float64(-1),
+		"is_superuser":        false,
+		"inherits_privileges": true,
+		"can_create_roles":    false,
+		"can_create_db":       false,
+		"can_login":           true,
+		"is_replication_role": false,
+		"bypass_rls":          false,
+		"direct_members":      []any{},
+		"member_of":           []any{superUser},
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           []map[string]any
+	}{
+		{
+			name:           "list_roles with filter for created roles",
+			requestBody:    bytes.NewBufferString(`{"role_name": "test_role_"}`),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantAdmin, wantNormalUser, wantSuperUser},
+		},
+		{
+			name:           "list_roles filter specific role",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"role_name": "%s"}`, superUser)),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantSuperUser},
+		},
+		{
+			name:           "list_roles non-existent role",
+			requestBody:    bytes.NewBufferString(`{"role_name": "non_existent_role_xyz"}`),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_roles/invoke"
+
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []map[string]any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v, resultString: %s", err, resultString)
+			}
+
+			// remove fields that change every run
+			for _, role := range got {
+				delete(role, "oid")
+				delete(role, "valid_until")
+			}
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("Unexpected result (-want +got):\n%s, got: %+v, want: %+v", diff, got, tc.want)
+			}
+		})
+	}
+}
+
 // RunMySQLListTablesTest run tests against the mysql-list-tables tool
 func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string) {
 	type tableInfo struct {
