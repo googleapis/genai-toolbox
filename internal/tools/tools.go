@@ -68,10 +68,10 @@ type ToolConfig interface {
 
 // https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations
 type ToolAnnotations struct {
-	DestructiveHint *bool `json:"destructiveHint,omitempty"`
-	IdempotentHint  *bool `json:"idempotentHint,omitempty"`
-	OpenWorldHint   *bool `json:"openWorldHint,omitempty"`
-	ReadOnlyHint    *bool `json:"readOnlyHint,omitempty"`
+	DestructiveHint *bool `json:"destructiveHint,omitempty" yaml:"destructiveHint,omitempty"`
+	IdempotentHint  *bool `json:"idempotentHint,omitempty" yaml:"idempotentHint,omitempty"`
+	OpenWorldHint   *bool `json:"openWorldHint,omitempty" yaml:"openWorldHint,omitempty"`
+	ReadOnlyHint    *bool `json:"readOnlyHint,omitempty" yaml:"readOnlyHint,omitempty"`
 }
 
 type AccessToken string
