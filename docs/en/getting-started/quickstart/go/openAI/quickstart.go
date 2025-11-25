@@ -7,29 +7,31 @@ import (
 	"log"
 
 	"github.com/googleapis/mcp-toolbox-sdk-go/core"
-	openai "github.com/openai/openai-go"
+	openai "github.com/openai/openai-go/v3"
 )
 
 // ConvertToOpenAITool converts a ToolboxTool into the go-openai library's Tool format.
-func ConvertToOpenAITool(toolboxTool *core.ToolboxTool) openai.ChatCompletionToolParam {
+func ConvertToOpenAITool(toolboxTool *core.ToolboxTool) openai.ChatCompletionToolUnionParam {
 	// Get the input schema
 	jsonSchemaBytes, err := toolboxTool.InputSchema()
 	if err != nil {
-		return openai.ChatCompletionToolParam{}
+		return openai.ChatCompletionToolUnionParam{}
 	}
 
 	// Unmarshal the JSON bytes into FunctionParameters
 	var paramsSchema openai.FunctionParameters
 	if err := json.Unmarshal(jsonSchemaBytes, &paramsSchema); err != nil {
-		return openai.ChatCompletionToolParam{}
+		return openai.ChatCompletionToolUnionParam{}
 	}
 
 	// Create and return the final tool parameter struct.
-	return openai.ChatCompletionToolParam{
-		Function: openai.FunctionDefinitionParam{
-			Name:        toolboxTool.Name(),
-			Description: openai.String(toolboxTool.Description()),
-			Parameters:  paramsSchema,
+	return openai.ChatCompletionToolUnionParam{
+		OfFunction: &openai.ChatCompletionFunctionToolParam{
+			Function: openai.FunctionDefinitionParam{
+				Name:        toolboxTool.Name(),
+				Description: openai.String(toolboxTool.Description()),
+				Parameters:  paramsSchema,
+			},
 		},
 	}
 }
@@ -69,7 +71,7 @@ func main() {
 		log.Fatalf("Failed to load tool : %v\nMake sure your Toolbox server is running and the tool is configured.", err)
 	}
 
-	openAITools := make([]openai.ChatCompletionToolParam, len(tools))
+	openAITools := make([]openai.ChatCompletionToolUnionParam, len(tools))
 	toolsMap := make(map[string]*core.ToolboxTool, len(tools))
 
 	for i, tool := range tools {

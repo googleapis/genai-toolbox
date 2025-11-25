@@ -29,7 +29,7 @@ steps:
   - id: "install-dependencies"
     name: golang:1
     waitFor: ['-']
-    env: 
+    env:
       - 'GOPATH=/gopath'
     volumes:
       - name: 'go'
@@ -37,20 +37,56 @@ steps:
     script: |
         go get -d ./...
 
+  - id: "install-zig"
+    name: golang:1
+    waitFor: ['-']
+    volumes:
+      - name: 'zig'
+        path: '/zig-tools'
+    script: |
+        #!/usr/bin/env bash
+        set -e
+        apt-get update && apt-get install -y xz-utils
+        curl -fL "https://ziglang.org/download/0.15.2/zig-x86_64-linux-0.15.2.tar.xz" -o zig.tar.xz
+        tar -xf zig.tar.xz -C /zig-tools --strip-components=1
+
+  - id: "install-macos-sdk"
+    name: golang:1
+    waitFor: ['-']
+    volumes:
+      - name: 'macos-sdk'
+        path: '/macos-sdk'
+    script: |
+        #!/usr/bin/env bash
+        set -e
+        apt-get update && apt-get install -y xz-utils
+        echo "Downloading macOS 14.5 SDK..."
+        curl -fL -o sdk.tar.xz https://github.com/alexey-lysiuk/macos-sdk/releases/download/14.5/MacOSX14.5.tar.xz
+        
+        mkdir -p /macos-sdk/MacOSX14.5.sdk
+        echo "Unpacking macOS 14.5 SDK..."
+        tar -xf sdk.tar.xz -C /macos-sdk/MacOSX14.5.sdk --strip-components=1
+
   - id: "build-linux-amd64"
     name: golang:1
-    waitFor: 
+    waitFor:
       - "install-dependencies"
-    env: 
+      - "install-zig"
+    env:
       - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=linux'
+      - 'GOARCH=amd64'
+      - 'CC=/zig-tools/zig cc -target x86_64-linux-gnu'
+      - 'CXX=/zig-tools/zig c++ -target x86_64-linux-gnu'
     volumes:
       - name: 'go'
         path: '/gopath'
+      - name: 'zig'
+        path: '/zig-tools'
     script: |
         #!/usr/bin/env bash
-        export VERSION=$(cat ./cmd/version.txt)
-        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.linux.amd64
+        go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.linux.amd64
 
   - id: "store-linux-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -63,18 +99,24 @@ steps:
 
   - id: "build-linux-amd64-geminicli"
     name: golang:1
-    waitFor: 
+    waitFor:
       - "install-dependencies"
-    env: 
+      - "install-zig"
+    env:
       - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=linux'
+      - 'GOARCH=amd64'
+      - 'CC=/zig-tools/zig cc -target x86_64-linux-gnu'
+      - 'CXX=/zig-tools/zig c++ -target x86_64-linux-gnu'
     volumes:
       - name: 'go'
         path: '/gopath'
+      - name: 'zig'
+        path: '/zig-tools'
     script: |
         #!/usr/bin/env bash
-        export VERSION=$(cat ./cmd/version.txt)
-        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=geminicli.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.linux.amd64
+        go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=geminicli.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.linux.amd64
 
   - id: "store-linux-amd64-geminicli"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -87,18 +129,31 @@ steps:
 
   - id: "build-darwin-arm64"
     name: golang:1
-    waitFor: 
+    waitFor:
       - "install-dependencies"
-    env: 
+      - "install-zig"
+      - "install-macos-sdk"
+    env:
       - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=darwin'
+      - 'GOARCH=arm64'
+      - 'SDK_PATH=/macos-sdk/MacOSX14.5.sdk'
+      - 'MACOS_MIN_VER=10.14'
+      - 'CGO_LDFLAGS=-mmacosx-version-min=10.14 --sysroot /macos-sdk/MacOSX14.5.sdk -F/macos-sdk/MacOSX14.5.sdk/System/Library/Frameworks -L/usr/lib'
+      - 'COMMON_FLAGS=-mmacosx-version-min=10.14 -target aarch64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
+      - 'CC=/zig-tools/zig cc -mmacosx-version-min=10.14 -target aarch64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
+      - 'CXX=/zig-tools/zig c++ -mmacosx-version-min=10.14 -target aarch64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
     volumes:
       - name: 'go'
         path: '/gopath'
+      - name: 'zig'
+        path: '/zig-tools'
+      - name: 'macos-sdk'
+        path: '/macos-sdk'
     script: |
         #!/usr/bin/env bash
-        export VERSION=$(cat ./cmd/version.txt)
-        CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.darwin.arm64
+         go build -trimpath -buildmode=pie -ldflags "-s -w -X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.darwin.arm64
 
   - id: "store-darwin-arm64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -107,22 +162,36 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=v$(cat ./cmd/version.txt)
-        gcloud storage cp toolbox.darwin.arm64 gs://$_BUCKET_NAME/$VERSION/darwin/arm64/toolbox
+        gcloud storage cp toolbox.darwin.arm64 \
+        gs://$_BUCKET_NAME/$VERSION/darwin/arm64/toolbox
 
   - id: "build-darwin-arm64-geminicli"
     name: golang:1
-    waitFor: 
+    waitFor:
       - "install-dependencies"
-    env: 
+      - "install-zig"
+      - "install-macos-sdk"
+    env:
       - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=darwin'
+      - 'GOARCH=arm64'
+      - 'SDK_PATH=/macos-sdk/MacOSX14.5.sdk'
+      - 'MACOS_MIN_VER=10.14'
+      - 'CGO_LDFLAGS=-mmacosx-version-min=10.14 --sysroot /macos-sdk/MacOSX14.5.sdk -F/macos-sdk/MacOSX14.5.sdk/System/Library/Frameworks -L/usr/lib'
+      - 'COMMON_FLAGS=-mmacosx-version-min=10.14 -target aarch64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
+      - 'CC=/zig-tools/zig cc -mmacosx-version-min=10.14 -target aarch64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
+      - 'CXX=/zig-tools/zig c++ -mmacosx-version-min=10.14 -target aarch64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
     volumes:
       - name: 'go'
         path: '/gopath'
+      - name: 'zig'
+        path: '/zig-tools'
+      - name: 'macos-sdk'
+        path: '/macos-sdk'
     script: |
         #!/usr/bin/env bash
-        export VERSION=$(cat ./cmd/version.txt)
-        CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=geminicli.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.darwin.arm64
+         go build -trimpath -buildmode=pie -ldflags "-s -w -X github.com/googleapis/genai-toolbox/cmd.buildType=geminicli.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.darwin.arm64
 
   - id: "store-darwin-arm64-geminicli"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -135,18 +204,31 @@ steps:
 
   - id: "build-darwin-amd64"
     name: golang:1
-    waitFor: 
+    waitFor:
       - "install-dependencies"
-    env: 
+      - "install-zig"
+      - "install-macos-sdk"
+    env:
       - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=darwin'
+      - 'GOARCH=amd64'
+      - 'SDK_PATH=/macos-sdk/MacOSX14.5.sdk'
+      - 'MACOS_MIN_VER=10.14'
+      - 'CGO_LDFLAGS=-mmacosx-version-min=10.14 --sysroot /macos-sdk/MacOSX14.5.sdk -F/macos-sdk/MacOSX14.5.sdk/System/Library/Frameworks -L/usr/lib'
+      - 'COMMON_FLAGS=-mmacosx-version-min=10.14 -target x86_64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
+      - 'CC=/zig-tools/zig cc -mmacosx-version-min=10.14 -target x86_64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
+      - 'CXX=/zig-tools/zig c++ -mmacosx-version-min=10.14 -target x86_64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
     volumes:
       - name: 'go'
         path: '/gopath'
+      - name: 'zig'
+        path: '/zig-tools'
+      - name: 'macos-sdk'
+        path: '/macos-sdk'
     script: |
         #!/usr/bin/env bash
-        export VERSION=$(cat ./cmd/version.txt)
-        CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.darwin.amd64
+         go build -trimpath -buildmode=pie -ldflags "-s -w -X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.darwin.amd64
 
   - id: "store-darwin-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -159,18 +241,31 @@ steps:
 
   - id: "build-darwin-amd64-geminicli"
     name: golang:1
-    waitFor: 
+    waitFor:
       - "install-dependencies"
-    env: 
+      - "install-zig"
+      - "install-macos-sdk"
+    env:
       - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=darwin'
+      - 'GOARCH=amd64'
+      - 'SDK_PATH=/macos-sdk/MacOSX14.5.sdk'
+      - 'MACOS_MIN_VER=10.14'
+      - 'CGO_LDFLAGS=-mmacosx-version-min=10.14 --sysroot /macos-sdk/MacOSX14.5.sdk -F/macos-sdk/MacOSX14.5.sdk/System/Library/Frameworks -L/usr/lib'
+      - 'COMMON_FLAGS=-mmacosx-version-min=10.14 -target x86_64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
+      - 'CC=/zig-tools/zig cc -mmacosx-version-min=10.14 -target x86_64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
+      - 'CXX=/zig-tools/zig c++ -mmacosx-version-min=10.14 -target x86_64-macos.11.0.0-none -isysroot /macos-sdk/MacOSX14.5.sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks'
     volumes:
       - name: 'go'
         path: '/gopath'
+      - name: 'zig'
+        path: '/zig-tools'
+      - name: 'macos-sdk'
+        path: '/macos-sdk'
     script: |
         #!/usr/bin/env bash
-        export VERSION=$(cat ./cmd/version.txt)
-        CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=geminicli.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.darwin.amd64
+         go build -trimpath -buildmode=pie -ldflags "-s -w -X github.com/googleapis/genai-toolbox/cmd.buildType=geminicli.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.darwin.amd64
 
   - id: "store-darwin-amd64-geminicli"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -179,22 +274,29 @@ steps:
     script: |
         #!/usr/bin/env bash
         export VERSION=v$(cat ./cmd/version.txt)
-        gcloud storage cp toolbox.geminicli.darwin.amd64 gs://$_BUCKET_NAME/geminicli/$VERSION/darwin/amd64/toolbox
+        gcloud storage cp toolbox.geminicli.darwin.amd64 \
+        gs://$_BUCKET_NAME/geminicli/$VERSION/darwin/amd64/toolbox
 
   - id: "build-windows-amd64"
     name: golang:1
-    waitFor: 
+    waitFor:
       - "install-dependencies"
-    env: 
+      - "install-zig"
+    env:
       - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=windows'
+      - 'GOARCH=amd64'
+      - 'CC=/zig-tools/zig cc -target x86_64-windows-gnu'
+      - 'CXX=/zig-tools/zig c++ -target x86_64-windows-gnu'
     volumes:
       - name: 'go'
         path: '/gopath'
+      - name: 'zig'
+        path: '/zig-tools'
     script: |
         #!/usr/bin/env bash
-        export VERSION=$(cat ./cmd/version.txt)
-        CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.windows.amd64
+        go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.windows.amd64
 
   - id: "store-windows-amd64"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -207,18 +309,26 @@ steps:
 
   - id: "build-windows-amd64-geminicli"
     name: golang:1
-    waitFor: 
+    waitFor:
       - "install-dependencies"
-    env: 
+      - "install-zig"
+    env:
       - 'GOPATH=/gopath'
+      - 'CGO_ENABLED=1'
+      - 'GOOS=windows'
+      - 'GOARCH=amd64'
+      - 'CC=/zig-tools/zig cc -target x86_64-windows-gnu'
+      - 'CXX=/zig-tools/zig c++ -target x86_64-windows-gnu'
     volumes:
       - name: 'go'
         path: '/gopath'
+      - name: 'zig'
+        path: '/zig-tools'
+      - name: 'macos-sdk'
+        path: '/macos-sdk'
     script: |
         #!/usr/bin/env bash
-        export VERSION=$(cat ./cmd/version.txt)
-        CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
-          go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=geminicli.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.windows.amd64
+        go build -ldflags "-X github.com/googleapis/genai-toolbox/cmd.buildType=geminicli.binary -X github.com/googleapis/genai-toolbox/cmd.commitSha=$(git rev-parse --short HEAD)" -o toolbox.geminicli.windows.amd64
 
   - id: "store-windows-amd64-geminicli"
     name: "gcr.io/cloud-builders/gcloud:latest"
@@ -243,4 +353,4 @@ substitutions:
   _AR_REPO_NAME: toolbox
   _BUCKET_NAME: genai-toolbox
   _DOCKER_URI: ${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPO_NAME}/toolbox
-  _PUSH_LATEST: "true"
+  _PUSH_LATEST: "false" # Substituted in trigger

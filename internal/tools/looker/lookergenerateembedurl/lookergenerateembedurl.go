@@ -85,11 +85,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		Config:         cfg,
-		Parameters:     params,
-		UseClientOAuth: s.UseClientOAuth,
-		Client:         s.Client,
-		ApiSettings:    s.ApiSettings,
+		Config:              cfg,
+		Parameters:          params,
+		UseClientOAuth:      s.UseClientAuthorization(),
+		AuthTokenHeaderName: s.GetAuthTokenHeaderName(),
+		Client:              s.Client,
+		ApiSettings:         s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   params.Manifest(),
@@ -105,14 +106,15 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	UseClientOAuth bool
-	Client         *v4.LookerSDK
-	ApiSettings    *rtl.ApiSettings
-	AuthRequired   []string `yaml:"authRequired"`
-	Parameters     parameters.Parameters
-	manifest       tools.Manifest
-	mcpManifest    tools.McpManifest
-	SessionLength  int64
+	UseClientOAuth      bool
+	AuthTokenHeaderName string
+	Client              *v4.LookerSDK
+	ApiSettings         *rtl.ApiSettings
+	AuthRequired        []string `yaml:"authRequired"`
+	Parameters          parameters.Parameters
+	manifest            tools.Manifest
+	mcpManifest         tools.McpManifest
+	SessionLength       int64
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -176,4 +178,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return t.UseClientOAuth
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return t.AuthTokenHeaderName
 }

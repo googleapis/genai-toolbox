@@ -81,7 +81,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	allParameters := parameters.Parameters{
 		projectParam,
-		parameters.NewStringParameter("project", "The GCP project ID."),
 		parameters.NewStringParameter("location", "The location of the cluster (e.g., 'us-central1')."),
 		parameters.NewStringParameter("cluster", "The ID of the cluster where the user will be created."),
 		parameters.NewStringParameter("user", "The name for the new user. Must be unique within the cluster."),
@@ -211,4 +210,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return t.Source.UseClientAuthorization()
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }
