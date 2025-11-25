@@ -68,7 +68,7 @@ An editor configured to use the Looker MCP server can use its AI capabilities to
 
 1. In the Antigravity MCP Store, click the "Install" button.
 
-2. Add the required inputs for your [instance](https://docs.cloud.google.com/looker/docs/set-up-and-administer-looker) in the configuration pop-up, then click "Save". You can update this configuration at anytime in the "Configure" tab.
+2. Add the required inputs for your [instance](https://docs.cloud.google.com/looker/docs/set-up-and-administer-looker) in the configuration pop-up, then click "Save". You can update this configuration at any time in the "Configure" tab.
 
 You'll now be able to see all enabled tools in the "Tools" tab.
 
