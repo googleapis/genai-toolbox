@@ -48,7 +48,7 @@ most popular issues, so make sure to +1 ones you are the most interested in.
 **HTTP tools** (`kind: http`). These allow you to connect your agents to REST APIs 
 and other web services, enabling workflows that extend beyond database interactions.
 
-For configuration details, see the [HTTP Tools documentation](/genai-toolbox/resources/tools/http/http/).
+For configuration details, see the [HTTP Tools documentation](../resources/tools/http/http.md).
 
 ## Can I use _$BAR_ orchestration framework to use tools from Toolbox?
 
