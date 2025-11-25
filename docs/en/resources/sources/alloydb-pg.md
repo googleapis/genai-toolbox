@@ -71,6 +71,13 @@ cluster][alloydb-free-trial].
 - [`postgres-replication-stats`](../tools/postgres/postgres-replication-stats.md)
   List replication stats in a PostgreSQL database.
 
+- [`postgres-list-pg-settings`](../tools/postgres/postgres-list-pg-settings.md)
+  List configuration parameters for the PostgreSQL server.
+
+- [`postgres-list-database-stats`](../tools/postgres/postgres-list-database-stats.md)
+  Lists the key performance and activity statistics for each database in the AlloyDB
+  instance.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)

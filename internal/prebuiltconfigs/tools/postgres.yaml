@@ -193,6 +193,14 @@ tools:
         kind: postgres-list-sequences
         source: postgresql-source
 
+    list_pg_settings:
+        kind: postgres-list-pg-settings
+        source: postgresql-source
+    
+    list_database_stats:
+        kind: postgres-list-database-stats
+        source: postgresql-source
+
 toolsets:
     postgres_database_tools:
         - execute_sql
@@ -215,3 +223,5 @@ toolsets:
         - long_running_transactions
         - list_locks
         - replication_stats
+        - list_pg_settings
+        - list_database_stats
