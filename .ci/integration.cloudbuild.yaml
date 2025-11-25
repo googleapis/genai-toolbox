@@ -693,17 +693,13 @@ steps:
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
       - "SNOWFLAKE_DATABASE=$_SNOWFLAKE_DATABASE"
       - "SNOWFLAKE_SCHEMA=$_SNOWFLAKE_SCHEMA"
-      - "SNOWFLAKE_HOST=$_SNOWFLAKE_HOST"
-      - "SNOWFLAKE_PORT=$_SNOWFLAKE_PORT"
-      - "SNOWFLAKE_ACCOUNT=$_SNOWFLAKE_ACCOUNT"
-    secretEnv: ["CLIENT_ID", "SNOWFLAKE_USER", "SNOWFLAKE_PASS"]
+    secretEnv: ["CLIENT_ID", "SNOWFLAKE_USER", "SNOWFLAKE_PASS", "SNOWFLAKE_ACCOUNT"]
     volumes:
       - name: "go"
         path: "/gopath"
     args:
       - -c
       - |
-        echo "$$SNOWFLAKE_HOST snowflake.localhost.localstack.cloud" >> /etc/hosts
         .ci/test_with_coverage.sh \
           "Snowflake" \
           snowflake \
@@ -812,6 +808,8 @@ availableSecrets:
       env: YUGABYTEDB_USER
     - versionName: projects/$PROJECT_ID/secrets/yugabytedb_pass/versions/latest
       env: YUGABYTEDB_PASS
+    - versionName: projects/$PROJECT_ID/secrets/snowflake_pass/versions/latest
+      env: SNOWFLAKE_ACCOUNT
     - versionName: projects/$PROJECT_ID/secrets/snowflake_user/versions/latest
       env: SNOWFLAKE_USER
     - versionName: projects/$PROJECT_ID/secrets/snowflake_pass/versions/latest
@@ -875,6 +873,3 @@ substitutions:
   _YUGABYTEDB_LOADBALANCE: "false"
   _SNOWFLAKE_DATABASE: "test"
   _SNOWFLAKE_SCHEMA: "PUBLIC"
-  _SNOWFLAKE_HOST: "127.0.0.1"
-  _SNOWFLAKE_PORT: "4566"
-  _SNOWFLAKE_ACCOUNT: "test"
