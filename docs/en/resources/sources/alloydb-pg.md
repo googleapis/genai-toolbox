@@ -71,6 +71,9 @@ cluster][alloydb-free-trial].
 - [`postgres-replication-stats`](../tools/postgres/postgres-replication-stats.md)
   List replication stats in a PostgreSQL database.
 
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
+  List tablespaces in an AlloyDB for PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)

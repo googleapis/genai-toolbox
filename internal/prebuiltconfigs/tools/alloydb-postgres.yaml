@@ -175,7 +175,7 @@ tools:
     list_schemas:
         kind: postgres-list-schemas
         source: alloydb-pg-source
-    
+        
     list_indexes:
         kind: postgres-list-indexes
         source: alloydb-pg-source
@@ -190,6 +190,10 @@ tools:
     
     list_triggers:
         kind: postgres-list-triggers
+        source: alloydb-pg-source
+
+    list_tablespaces:
+        kind: postgres-list-tablespaces
         source: alloydb-pg-source
 
 toolsets:
@@ -214,4 +218,4 @@ toolsets:
         - long_running_transactions
         - list_locks
         - replication_stats
-        
+        - list_tablespaces
