@@ -62,8 +62,8 @@ To connect to the database to explore and query data, search the MCP store for t
 *   A Google Cloud project with the **Cloud SQL Admin API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
 *   IAM Permissions:
-  * Cloud SQL Viewer (`roles/cloudsql.viewer`)
-  * Cloud SQL Admin (`roles/cloudsql.admin`)
+    * Cloud SQL Viewer (`roles/cloudsql.viewer`)
+    * Cloud SQL Admin (`roles/cloudsql.admin`)
 
 ## Install & Configuration
 
