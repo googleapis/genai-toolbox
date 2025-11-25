@@ -74,6 +74,9 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
   List tablespaces in a PostgreSQL database.
 
+- [`postgres-list-roles`](../tools/postgres/postgres-list-roles.md)
+  Lists all the user-created roles in PostgreSQL database..
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)

@@ -209,6 +209,10 @@ tools:
         kind: postgres-list-tablespaces
         source: postgresql-source
 
+    list_roles:
+        kind: postgres-list-roles
+        source: postgresql-source
+
 toolsets:
     postgres_database_tools:
         - execute_sql
@@ -235,3 +239,4 @@ toolsets:
         - get_column_cardinality
         - list_publication_tables
         - list_tablespaces
+        - list_roles

@@ -83,6 +83,9 @@ cluster][alloydb-free-trial].
 - [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
   List tablespaces in an AlloyDB for PostgreSQL database.
 
+- [`postgres-list-roles`](../tools/postgres/postgres-list-roles.md)
+  Lists all the user-created roles in PostgreSQL database..
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
