@@ -79,7 +79,7 @@ func getSnowflakeVars(t *testing.T) map[string]any {
 }
 
 // Copied over from snowflake.go
-func initSnowflakeConnection(ctx context.Context, account, user, password, database, schema, warehouse, role string) (*sqlx.DB, error)
+func initSnowflakeConnectionPool(ctx context.Context, account, user, password, database, schema, warehouse, role string) (*sqlx.DB, error){
 	// Set defaults for optional parameters
 	if warehouse == "" {
 		warehouse = "COMPUTE_WH"
@@ -105,7 +105,7 @@ func TestSnowflake(t *testing.T) {
 
 	var args []string
 
-	db, err := initSnowflakeConnectionPool(ctx, SnowflakeAccount, SnowflakeUser, SnowflakePassword, SnowflakeHost, SnowflakePort, SnowflakeDatabase, SnowflakeSchema, SnowflakeWarehouse, SnowflakeRole)
+	db, err := initSnowflakeConnectionPool(ctx, SnowflakeAccount, SnowflakeUser, SnowflakePassword, SnowflakeDatabase, SnowflakeSchema, SnowflakeWarehouse, SnowflakeRole)
 	if err != nil {
 		t.Fatalf("unable to create snowflake connection pool: %s", err)
 	}
