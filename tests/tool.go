@@ -1260,8 +1260,8 @@ func RunPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth, user
 	}
 }
 
-func setUpPostgresViews(t *testing.T, ctx context.Context, pool *pgxpool.Pool, viewName, tableName string) func() {
-	createView := fmt.Sprintf("CREATE VIEW %s AS SELECT name FROM %s", viewName, tableName)
+func setUpPostgresViews(t *testing.T, ctx context.Context, pool *pgxpool.Pool, viewName string) func() {
+	createView := fmt.Sprintf("CREATE VIEW %s AS SELECT 1 AS col", viewName)
 	_, err := pool.Exec(ctx, createView)
 	if err != nil {
 		t.Fatalf("failed to create view: %v", err)
@@ -1275,9 +1275,10 @@ func setUpPostgresViews(t *testing.T, ctx context.Context, pool *pgxpool.Pool, v
 	}
 }
 
-func RunPostgresListViewsTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool, tableName string) {
-	viewName1 := "test_view_1" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	dropViewfunc1 := setUpPostgresViews(t, ctx, pool, viewName1, tableName)
+func RunPostgresListViewsTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	//adding this line temporarily
+	viewName := "test_view_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	dropViewfunc1 := setUpPostgresViews(t, ctx, pool, viewName)
 	defer dropViewfunc1()
 
 	invokeTcs := []struct {
@@ -1288,13 +1289,13 @@ func RunPostgresListViewsTest(t *testing.T, ctx context.Context, pool *pgxpool.P
 	}{
 		{
 			name:           "invoke list_views with newly created view",
-			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"viewname": "%s"}`, viewName1))),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"view_name": "%s"}`, viewName))),
 			wantStatusCode: http.StatusOK,
-			want:           fmt.Sprintf(`[{"schemaname":"public","viewname":"%s","viewowner":"postgres"}]`, viewName1),
+			want:           fmt.Sprintf(`[{"schema_name":"public","view_name":"%s","owner_name":"postgres","definition":" SELECT 1 AS col;"}]`, viewName),
 		},
 		{
 			name:           "invoke list_views with non-existent_view",
-			requestBody:    bytes.NewBuffer([]byte(`{"viewname": "non_existent_view"}`)),
+			requestBody:    bytes.NewBuffer([]byte(`{"view_name": "non_existent_view"}`)),
 			wantStatusCode: http.StatusOK,
 			want:           `null`,
 		},
@@ -1350,10 +1351,24 @@ func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool
 		requestBody    io.Reader
 		wantStatusCode int
 		want           []map[string]any
+		compareSubset  bool
 	}{
 		{
 			name:           "invoke list_schemas with schema_name",
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"schema_name": "%s"}`, schemaName))),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantSchema},
+		},
+		{
+			name:           "invoke list_schemas with owner name",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"owner": "%s"}`, "postgres"))),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantSchema},
+			compareSubset:  true,
+		},
+		{
+			name:           "invoke list_schemas with limit 1",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"schema_name": "%s","limit": 1}`, schemaName))),
 			wantStatusCode: http.StatusOK,
 			want:           []map[string]any{wantSchema},
 		},
@@ -1392,8 +1407,25 @@ func RunPostgresListSchemasTest(t *testing.T, ctx context.Context, pool *pgxpool
 				t.Fatalf("failed to unmarshal nested result string: %v", err)
 			}
 
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("Unexpected result (-want +got):\n%s", diff)
+			if tc.compareSubset {
+				// Assert that the 'wantTrigger' is present in the 'got' list.
+				found := false
+				for _, resultSchema := range got {
+					if resultSchema["schema_name"] == wantSchema["schema_name"] {
+						found = true
+						if diff := cmp.Diff(wantSchema, resultSchema); diff != "" {
+							t.Errorf("Mismatch in fields for the expected trigger (-want +got):\n%s", diff)
+						}
+						break
+					}
+				}
+				if !found {
+					t.Errorf("Expected schema '%s' not found in the list of all schemas.", wantSchema)
+				}
+			} else {
+				if diff := cmp.Diff(tc.want, got); diff != "" {
+					t.Errorf("Unexpected result (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
@@ -2179,15 +2211,15 @@ func RunPostgresListSequencesTest(t *testing.T, ctx context.Context, pool *pgxpo
 	defer teardown(t)
 
 	wantSequence := map[string]any{
-		"sequencename":  sequenceName,
-		"schemaname":    "public",
-		"sequenceowner": "postgres",
-		"data_type":     "bigint",
-		"start_value":   float64(1),
-		"min_value":     float64(1),
-		"max_value":     float64(9223372036854775807),
-		"increment_by":  float64(1),
-		"last_value":    nil,
+		"sequence_name":  sequenceName,
+		"schema_name":    "public",
+		"sequence_owner": "postgres",
+		"data_type":      "bigint",
+		"start_value":    float64(1),
+		"min_value":      float64(1),
+		"max_value":      float64(9223372036854775807),
+		"increment_by":   float64(1),
+		"last_value":     nil,
 	}
 
 	invokeTcs := []struct {
@@ -2199,13 +2231,13 @@ func RunPostgresListSequencesTest(t *testing.T, ctx context.Context, pool *pgxpo
 	}{
 		{
 			name:           "invoke list_sequences",
-			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"sequencename": "%s"}`, sequenceName)),
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"sequence_name": "%s"}`, sequenceName)),
 			wantStatusCode: http.StatusOK,
 			want:           []map[string]any{wantSequence},
 		},
 		{
 			name:           "invoke list_sequences with non-existent sequence",
-			requestBody:    bytes.NewBufferString(`{"sequencename": "non_existent_sequence"}`),
+			requestBody:    bytes.NewBufferString(`{"sequence_name": "non_existent_sequence"}`),
 			wantStatusCode: http.StatusOK,
 			want:           nil,
 		},
