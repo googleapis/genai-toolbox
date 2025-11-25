@@ -23,10 +23,10 @@ The MCP Toolbox for Databases Server gives AI-powered development tools the abil
         chmod +x toolbox
         ```
 
-    3.  **Move binary to `/usr/local/bin/` or `/usr/bin/`**:
+    3.  **Add the binary to $PATH in `.~/bash_profile`** (Note: You may need to restart Antigravity for changes to take effect.):
+
         ```bash
-        sudo mv toolbox /usr/local/bin/
-        # sudo mv toolbox /usr/bin/
+        export PATH=$PATH:path/to/folder
         ```
 
         **On Windows, move binary to the `WindowsApps\` folder**:
@@ -38,11 +38,9 @@ The MCP Toolbox for Databases Server gives AI-powered development tools the abil
         your system's PATH environment variable. To check `PATH`, use `echo
         $PATH` (or `echo %PATH%` on Windows).
 
-        **Note:** You may need to restart Antigravity for changes to take effect.
+        *   Any required APIs and permissions for connecting to your database.
 
-*   Any required APIs and permissions for connecting to your database.
-
-### Configuration
+## Custom MCP Server Configuration
 
 Add your [`tools.yaml` configuration
 file](https://googleapis.github.io/genai-toolbox/getting-started/configure/) to
