@@ -34,6 +34,9 @@ the Google Cloud console][spanner-quickstart].
 - [`spanner-list-tables`](../tools/spanner/spanner-list-tables.md)  
   Retrieve schema information about tables in a Spanner database.
 
+- [`spanner-list-graphs`](../tools/spanner/spanner-list-graphs.md)  
+  Retrieve schema information about graphs in a Spanner database.
+
 ### Pre-built Configurations
 
 - [Spanner using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/spanner_mcp/)  
