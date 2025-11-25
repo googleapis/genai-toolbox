@@ -217,6 +217,10 @@ tools:
         kind: postgres-list-database-stats
         source: postgresql-source
 
+    list_roles:
+        kind: postgres-list-roles
+        source: postgresql-source
+
 toolsets:
     postgres_database_tools:
         - execute_sql
@@ -245,3 +249,4 @@ toolsets:
         - list_tablespaces
         - list_pg_settings
         - list_database_stats
+        - list_roles
