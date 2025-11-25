@@ -37,7 +37,7 @@ For AlloyDB infrastructure management, search the MCP store for the AlloyDB for 
 
         * To install Toolbox as a binary on Windows (AMD64):
           ```powershell
-          curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v0.21.0%/windows/amd64/toolbox.exe"
+          curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe"
           ```
         <!-- {x-release-please-end} -->
         
@@ -126,7 +126,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
   "mcpServers": {
     "alloydb-postgres": {
       "command": "toolbox",
-      "args": ["--prebuilt", "alloydb-postgres", "--stdio"],
+      "args": ["--prebuilt", "alloydb-postgres", "--stdio"]
     }
   }
 }

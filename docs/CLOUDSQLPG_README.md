@@ -37,7 +37,7 @@ For Cloud SQL infrastructure management, search the MCP store for the Cloud SQL 
 
         * To install Toolbox as a binary on Windows (AMD64):
           ```powershell
-          curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v0.21.0%/windows/amd64/toolbox.exe"
+          curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe"
           ```
         <!-- {x-release-please-end} -->
         

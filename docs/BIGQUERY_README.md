@@ -34,7 +34,7 @@ An editor configured to use the BigQuery MCP server can use its AI capabilities 
 
         * To install Toolbox as a binary on Windows (AMD64):
           ```powershell
-          curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v0.21.0%/windows/amd64/toolbox.exe"
+          curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe"
           ```
         <!-- {x-release-please-end} -->
         
@@ -120,7 +120,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
   "mcpServers": {
     "bigquery": {
       "command": "toolbox",
-      "args": ["--prebuilt", "bigquery", "--stdio"],
+      "args": ["--prebuilt", "bigquery", "--stdio"]
     }
   }
 }

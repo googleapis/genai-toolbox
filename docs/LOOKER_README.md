@@ -36,7 +36,7 @@ An editor configured to use the Looker MCP server can use its AI capabilities to
 
         * To install Toolbox as a binary on Windows (AMD64):
           ```powershell
-          curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v0.21.0%/windows/amd64/toolbox.exe"
+          curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe"
           ```
         <!-- {x-release-please-end} -->
         

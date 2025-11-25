@@ -34,7 +34,7 @@ To connect to the database to explore and query data, search the MCP store for t
 
         * To install Toolbox as a binary on Windows (AMD64):
           ```powershell
-          curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v0.21.0%/windows/amd64/toolbox.exe"
+          curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe"
           ```
         <!-- {x-release-please-end} -->
         
