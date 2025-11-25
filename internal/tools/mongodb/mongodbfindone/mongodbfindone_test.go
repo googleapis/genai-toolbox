@@ -56,9 +56,6 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 					projectPayload: |
 					  { name: 1, age: 1 }
 					projectParams: []
-					sortPayload: |
-					  { timestamp: -1 }
-					sortParams: []
 			`,
 			want: server.ToolConfigs{
 				"example_tool": mongodbfindone.Config{
