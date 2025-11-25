@@ -200,6 +200,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/singlestore/singlestoreexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/singlestore/singlestoresql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerlistgraphs"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerlisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannersql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlite/sqliteexecutesql"
