@@ -808,7 +808,7 @@ availableSecrets:
       env: YUGABYTEDB_USER
     - versionName: projects/$PROJECT_ID/secrets/yugabytedb_pass/versions/latest
       env: YUGABYTEDB_PASS
-    - versionName: projects/$PROJECT_ID/secrets/snowflake_pass/versions/latest
+    - versionName: projects/$PROJECT_ID/secrets/snowflake_account/versions/latest
       env: SNOWFLAKE_ACCOUNT
     - versionName: projects/$PROJECT_ID/secrets/snowflake_user/versions/latest
       env: SNOWFLAKE_USER
