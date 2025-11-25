@@ -1060,6 +1060,7 @@ availableSecrets:
       env: ELASTICSEARCH_PASS
     - versionName: projects/$PROJECT_ID/secrets/snowflake_account/versions/latest
     - versionName: projects/$PROJECT_ID/secrets/snowflake_pass/versions/latest
+    - versionName: projects/$PROJECT_ID/secrets/snowflake_account/versions/latest
       env: SNOWFLAKE_ACCOUNT
     - versionName: projects/$PROJECT_ID/secrets/snowflake_user/versions/latest
       env: SNOWFLAKE_USER
