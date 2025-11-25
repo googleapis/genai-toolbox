@@ -31,13 +31,16 @@ import (
 const kind string = "postgres-list-views"
 
 const listViewsStatement = `
-			SELECT schemaname, viewname, viewowner
-			FROM pg_views
-			WHERE
-				schemaname NOT IN ('pg_catalog', 'information_schema')
-				AND ($1::text IS NULL OR viewname LIKE '%' || $1::text || '%')
-			ORDER BY viewname
-			LIMIT COALESCE($2::int, 50);
+	SELECT schemaname, viewname, viewowner, definition
+	FROM pg_views
+	WHERE
+		schemaname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+		AND schemaname NOT LIKE 'pg_temp_%'
+		AND ($1::text IS NULL OR viewname ILIKE '%' || $1::text || '%')
+		AND ($2::text IS NULL OR schemaname ILIKE '%' || $2::text || '%')
+	ORDER BY
+		schemaname, viewname
+	LIMIT COALESCE($3::int, 50);
 `
 
 func init() {
@@ -95,14 +98,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameterWithDefault("viewname", "", "Optional: A specific view name to search for."),
+		parameters.NewStringParameterWithDefault("schemaname", "", "Optional: A specific schema name to search for."),
 		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return."),
 	}
 	paramManifest := allParameters.Manifest()
-	description := cfg.Description
-	if description == "" {
-		description = "Lists views in the database from pg_views with a default limit of 50 rows. Returns schemaname, viewname and the ownername."
+	if cfg.Description == "" {
+		cfg.Description = "Lists views in the database from pg_views with a default limit of 50 rows. Returns schemaname, viewname, ownername and the definition."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	// finish tool setup
 	return Tool{
