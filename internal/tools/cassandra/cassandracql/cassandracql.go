@@ -80,7 +80,7 @@ func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 		return nil, err
 	}
 
-	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, allParameters)
+	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, allParameters, nil)
 
 	t := Tool{
 		Config:      c,
