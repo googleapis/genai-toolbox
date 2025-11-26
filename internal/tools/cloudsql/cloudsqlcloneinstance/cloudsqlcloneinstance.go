@@ -96,7 +96,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
 
-	return &Tool{
+	return Tool{
 		Config:      cfg,
 		Source:      s,
 		AllParams:   allParameters,
