@@ -10173,7 +10173,20 @@ select or create a Google Cloud project.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>&lt;a href="https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#confirm_billing_is_enabled_on_a_project">Make sure that billing is enabled for your Google Cloud
-project&lt;/a>.&lt;/p></description></item><item><title>Deploy to Kubernetes</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1997/how-to/deploy_gke/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1997/how-to/deploy_gke/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+project&lt;/a>.&lt;/p></description></item><item><title>Deploy ADK Agent and MCP Toolbox</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1997/how-to/deploy_adk_agent/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1997/how-to/deploy_adk_agent/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+&lt;p>This guide assumes you have already done the following:&lt;/p>
+&lt;ol>
+&lt;li>Completed the &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1997/getting-started/local_quickstart/">Python Quickstart
+(Local)&lt;/a> and have a working ADK
+agent running locally.&lt;/li>
+&lt;li>Installed the &lt;a href="https://cloud.google.com/sdk/docs/install">Google Cloud CLI&lt;/a>.&lt;/li>
+&lt;li>A Google Cloud project with billing enabled.&lt;/li>
+&lt;/ol>
+&lt;h2 id="step-1-deploy-mcp-toolbox-to-cloud-run">Step 1: Deploy MCP Toolbox to Cloud Run&lt;/h2>
+&lt;p>Before deploying your agent, your MCP Toolbox server needs to be accessible from
+the cloud. We will deploy MCP Toolbox to Cloud Run.&lt;/p>
+&lt;p>Follow the &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1997/how-to/deploy_toolbox/">Deploy to Cloud Run&lt;/a> guide to deploy your MCP
+Toolbox instance.&lt;/p></description></item><item><title>Deploy to Kubernetes</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1997/how-to/deploy_gke/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1997/how-to/deploy_gke/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
 &lt;ol>
 &lt;li>
 &lt;p>Set the PROJECT_ID environment variable:&lt;/p>
