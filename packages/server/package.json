@@ -4,6 +4,9 @@
   "name": "@toolbox-sdk/server",
   "version": "0.21.0",
   "bin": { "toolbox": "./bin/run.js" },
+  "files": [
+    "bin/run.js"
+  ],
   "optionalDependencies": {
     "@toolbox-sdk/server-darwin-arm64": "0.21.0",
     "@toolbox-sdk/server-darwin-x64": "0.21.0",
