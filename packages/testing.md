@@ -68,7 +68,7 @@
 
 5. From the packages/server folder, run 
     ```sh
-    npx --registry=http://localhost:4873/ -y toolbox
+    npx --registry=http://localhost:4873/ -y @toolbox-sdk/server
     ```
 
     This should start up the toolbox server with the tools.yaml file.
