@@ -105,7 +105,12 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	accessToken := tools.AccessToken(header.Get(tool.GetAuthTokenHeaderName()))
 
 	// Check if this specific tool requires the standard authorization header
-	if tool.RequiresClientAuthorization(resourceMgr) {
+	clientAuth, err := tool.RequiresClientAuthorization(resourceMgr)
+	if err != nil {
+		errMsg := fmt.Errorf("error during invocation: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, errMsg.Error(), nil), errMsg
+	}
+	if clientAuth {
 		if accessToken == "" {
 			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, "missing access token in the 'Authorization' header", nil), util.ErrUnauthorized
 		}
@@ -177,7 +182,12 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 		}
 		// Upstream auth error
 		if strings.Contains(errStr, "Error 401") || strings.Contains(errStr, "Error 403") {
-			if tool.RequiresClientAuthorization(resourceMgr) {
+			clientAuth, err := tool.RequiresClientAuthorization(resourceMgr)
+			if err != nil {
+				errMsg := fmt.Errorf("error during invocation: %w", err)
+				return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, errMsg.Error(), nil), errMsg
+			}
+			if clientAuth {
 				// Error with client credentials should pass down to the client
 				return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 			}
