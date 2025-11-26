@@ -34,7 +34,7 @@
 
     Now, you have published your package.
 
-4. Now add a tools.yaml file to the server folder. It should look like this:
+4. Now create a new folder (let's call it testing.) Add a tools.yaml file to the folder. It should look like this:
     ```yaml
       sources:
         my-pg-source:
@@ -66,14 +66,17 @@
               required: true
     ```
 
-5. From the packages/server folder, run 
+    Note: Do not test this directly to the server folder. The registry might pick up local packages instead of global installation.
+    Use a separate testing folder outside the server folder for this testing.
+
+6. From the testing folder, run 
     ```sh
     npx --registry=http://localhost:4873/ -y @toolbox-sdk/server
     ```
 
     This should start up the toolbox server with the tools.yaml file.
 
-6. Run the command to verify that the tools are available:
+7. Run the command to verify that the tools are available:
 
     ```sh
     curl --location 'http://127.0.0.1:5000/mcp' \
