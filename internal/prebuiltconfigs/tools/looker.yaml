@@ -29,8 +29,6 @@ tools:
     get_models:
         kind: looker-get-models
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           The get_models tool retrieves the list of LookML models in the Looker system.
 
@@ -39,8 +37,6 @@ tools:
     get_explores:
         kind: looker-get-explores
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           The get_explores tool retrieves the list of explores defined in a LookML model
           in the Looker system.
@@ -50,8 +46,6 @@ tools:
     get_dimensions:
         kind: looker-get-dimensions
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           The get_dimensions tool retrieves the list of dimensions defined in
           an explore.
@@ -67,8 +61,6 @@ tools:
     get_measures:
         kind: looker-get-measures
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           The get_measures tool retrieves the list of measures defined in
           an explore.
@@ -84,8 +76,6 @@ tools:
     get_filters:
         kind: looker-get-filters
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           The get_filters tool retrieves the list of filters defined in
           an explore.
@@ -96,8 +86,6 @@ tools:
     get_parameters:
         kind: looker-get-parameters
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           The get_parameters tool retrieves the list of parameters defined in
           an explore.
@@ -108,8 +96,6 @@ tools:
     query:
         kind: looker-query
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           Query Tool
 
@@ -150,8 +136,6 @@ tools:
     query_sql:
         kind: looker-query-sql
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           Query SQL Tool
 
@@ -164,8 +148,6 @@ tools:
     query_url:
         kind: looker-query-url
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           Query URL Tool
 
@@ -616,8 +598,6 @@ tools:
     get_looks:
         kind: looker-get-looks
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           get_looks Tool
 
@@ -638,8 +618,6 @@ tools:
     run_look:
         kind: looker-run-look
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           run_look Tool
 
@@ -650,8 +628,6 @@ tools:
     make_look:
         kind: looker-make-look
         source: looker-source
-        annotations:
-          readOnlyHint: false
         description: |
           make_look Tool
 
@@ -671,8 +647,6 @@ tools:
     get_dashboards:
         kind: looker-get-dashboards
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           get_dashboards Tool
 
@@ -692,8 +666,6 @@ tools:
     run_dashboard:
         kind: looker-run-dashboard
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           run_dashboard Tool
 
@@ -704,8 +676,6 @@ tools:
     make_dashboard:
         kind: looker-make-dashboard
         source: looker-source
-        annotations:
-          readOnlyHint: false
         description: |
           make_dashboard Tool
 
@@ -723,8 +693,6 @@ tools:
     add_dashboard_element:
         kind: looker-add-dashboard-element
         source: looker-source
-        annotations:
-          readOnlyHint: false
         description: |
           add_dashboard_element Tool
 
@@ -742,8 +710,6 @@ tools:
     health_pulse:
         kind: looker-health-pulse
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           health-pulse Tool
 
@@ -763,8 +729,6 @@ tools:
     health_analyze:
         kind: looker-health-analyze
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           health-analyze Tool
 
@@ -781,8 +745,6 @@ tools:
     health_vacuum:
         kind: looker-health-vacuum
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           health-vacuum Tool
 
@@ -802,8 +764,6 @@ tools:
     dev_mode:
         kind: looker-dev-mode
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           dev_mode Tool
 
@@ -813,8 +773,6 @@ tools:
     get_projects:
         kind: looker-get-projects
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           get_projects Tool
 
@@ -824,8 +782,6 @@ tools:
     get_project_files:
         kind: looker-get-project-files
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           get_project_files Tool
 
@@ -835,8 +791,6 @@ tools:
     get_project_file:
         kind: looker-get-project-file
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           get_project_file Tool
 
@@ -846,8 +800,6 @@ tools:
     create_project_file:
         kind: looker-create-project-file
         source: looker-source
-        annotations:
-          readOnlyHint: false
         description: |
           create_project_file Tool
 
@@ -860,9 +812,6 @@ tools:
     update_project_file:
         kind: looker-update-project-file
         source: looker-source
-        annotations:
-          destructiveHint: true
-          readOnlyHint: false
         description: |
           update_project_file Tool
 
@@ -875,9 +824,6 @@ tools:
     delete_project_file:
         kind: looker-delete-project-file
         source: looker-source
-        annotations:
-          destructiveHint: true
-          readOnlyHint: false
         description: |
           delete_project_file Tool
 
@@ -890,8 +836,6 @@ tools:
     get_connections:
         kind: looker-get-connections
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           get_connections Tool
 
@@ -902,8 +846,6 @@ tools:
     get_connection_schemas:
         kind: looker-get-connection-schemas
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           get_connection_schemas Tool
 
@@ -913,8 +855,6 @@ tools:
     get_connection_databases:
         kind: looker-get-connection-databases
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           get_connection_databases Tool
 
@@ -924,8 +864,6 @@ tools:
     get_connection_tables:
         kind: looker-get-connection-tables
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           get_connection_tables Tool
 
@@ -935,8 +873,6 @@ tools:
     get_connection_table_columns:
         kind: looker-get-connection-table-columns
         source: looker-source
-        annotations:
-          readOnlyHint: true
         description: |
           get_connection_table_columns Tool
 
