@@ -66,6 +66,14 @@ type ToolConfig interface {
 	Initialize(map[string]sources.Source) (Tool, error)
 }
 
+// https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations
+type ToolAnnotations struct {
+	DestructiveHint *bool `json:"destructiveHint,omitempty" yaml:"destructiveHint,omitempty"`
+	IdempotentHint  *bool `json:"idempotentHint,omitempty" yaml:"idempotentHint,omitempty"`
+	OpenWorldHint   *bool `json:"openWorldHint,omitempty" yaml:"openWorldHint,omitempty"`
+	ReadOnlyHint    *bool `json:"readOnlyHint,omitempty" yaml:"readOnlyHint,omitempty"`
+}
+
 type AccessToken string
 
 func (token AccessToken) ParseBearerToken() (string, error) {
@@ -99,18 +107,20 @@ type McpManifest struct {
 	// The name of the tool.
 	Name string `json:"name"`
 	// A human-readable description of the tool.
-	Description string `json:"description,omitempty"`
+	Description string           `json:"description,omitempty"`
+	Annotations *ToolAnnotations `json:"annotations,omitempty"`
 	// A JSON Schema object defining the expected parameters for the tool.
 	InputSchema parameters.McpToolsSchema `json:"inputSchema,omitempty"`
 	Metadata    map[string]any            `json:"_meta,omitempty"`
 }
 
-func GetMcpManifest(name, desc string, authInvoke []string, params parameters.Parameters) McpManifest {
+func GetMcpManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *ToolAnnotations) McpManifest {
 	inputSchema, authParams := params.McpManifest()
 	mcpManifest := McpManifest{
 		Name:        name,
 		Description: desc,
 		InputSchema: inputSchema,
+		Annotations: annotations,
 	}
 
 	// construct metadata, if applicable
