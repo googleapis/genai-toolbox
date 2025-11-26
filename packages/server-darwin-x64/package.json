@@ -4,6 +4,7 @@
   "os": ["darwin"],
   "cpu": ["x64"],
   "main": "bin/toolbox",
+  "repository": "googleapis/genai-toolbox",
   "scripts": {
     "prepack": "node scripts/downloadBinary.js darwin x64"
   },

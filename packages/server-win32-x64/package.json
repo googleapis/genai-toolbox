@@ -4,6 +4,7 @@
   "os": ["win32"],
   "cpu": ["x64"],
   "main": "bin/toolbox.exe",
+  "repository": "googleapis/genai-toolbox",
   "scripts": {
     "prepack": "node scripts/downloadBinary.js win32 x64"
   },

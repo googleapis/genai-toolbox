@@ -7,6 +7,7 @@
   "files": [
     "bin/run.js"
   ],
+  "repository": "googleapis/genai-toolbox",
   "optionalDependencies": {
     "@toolbox-sdk/server-darwin-arm64": "0.21.0",
     "@toolbox-sdk/server-darwin-x64": "0.21.0",
