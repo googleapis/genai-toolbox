@@ -1,0 +1,13 @@
+{
+  "name": "@toolbox-sdk/server-linux-x64",
+  "version": "0.21.0",
+  "os": ["linux"],
+  "cpu": ["x64"],
+  "main": "bin/toolbox",
+  "scripts": {
+    "prepack": "node scripts/downloadBinary.js linux x64"
+  },
+  "files": [
+    "bin/toolbox"
+  ]
+}

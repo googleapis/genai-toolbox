@@ -1,0 +1,13 @@
+{
+  "name": "@toolbox-sdk/server-darwin-arm64",
+  "version": "0.21.0",
+  "os": ["darwin"],
+  "cpu": ["arm64"],
+  "main": "bin/toolbox",
+  "scripts": {
+    "prepack": "node scripts/downloadBinary.js darwin arm64"
+  },
+  "files": [
+    "bin/toolbox"
+  ]
+}
