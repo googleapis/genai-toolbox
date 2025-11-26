@@ -4,10 +4,10 @@ const path = require('path');
 const os = require('os');
 
 const PLATFORMS = {
-  'darwin-arm64': 'server-darwin-arm64',
-  'darwin-x64': 'server-darwin-x64',
-  'linux-x64': 'server-linux-x64',
-  'win32-x64': 'server-win32-x64'
+  'darwin-arm64': '@toolbox-sdk/server-darwin-arm64',
+  'darwin-x64': '@toolbox-sdk/server-darwin-x64',
+  'linux-x64': '@toolbox-sdk/server-linux-x64',
+  'win32-x64': '@toolbox-sdk/server-win32-x64'
 };
 
 const currentKey = `${os.platform()}-${os.arch()}`;
