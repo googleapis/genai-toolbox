@@ -76,7 +76,7 @@
 6. Run the command to verify that the tools are available:
 
     ```sh
-    curl --location 'http://127.0.0.1:5000/mcp/tools/list' \
+    curl --location 'http://127.0.0.1:5000/mcp' \
     --header 'Content-Type: application/json' \
     --data '{
         "jsonrpc": "2.0",
