@@ -59,7 +59,7 @@ func (cfg Config) Initialize(_ map[string]sources.Source) (tools.Tool, error) {
 	durationParameter := parameters.NewStringParameter("duration", "The duration to wait for, specified as a string (e.g., '10s', '2m', '1h').")
 	params := parameters.Parameters{durationParameter}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
 	t := Tool{
 		Config:      cfg,

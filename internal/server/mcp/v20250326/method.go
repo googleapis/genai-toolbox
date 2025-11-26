@@ -65,8 +65,15 @@ func toolsListHandler(id jsonrpc.RequestId, toolset tools.Toolset, body []byte) 
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
+	// exclude annotations from this version
+	manifests := make([]tools.McpManifest, len(toolset.McpManifest))
+	for i, m := range toolset.McpManifest {
+		m.Annotations = nil
+		manifests[i] = m
+	}
+
 	result := ListToolsResult{
-		Tools: toolset.McpManifest,
+		Tools: manifests,
 	}
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,

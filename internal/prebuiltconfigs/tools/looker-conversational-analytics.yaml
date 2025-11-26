@@ -28,6 +28,8 @@ tools:
     ask_data_insights:
         kind: looker-conversational-analytics
         source: looker-source
+        annotations:
+          readOnlyHint: true
         description: |
           Use this tool to perform data analysis, get insights,
           or answer complex questions about the contents of specific
@@ -36,6 +38,8 @@ tools:
     get_models:
         kind: looker-get-models
         source: looker-source
+        annotations:
+          readOnlyHint: true
         description: |
           The get_models tool retrieves the list of LookML models in the Looker system.
 
@@ -44,6 +48,8 @@ tools:
     get_explores:
         kind: looker-get-explores
         source: looker-source
+        annotations:
+          readOnlyHint: true
         description: |
           The get_explores tool retrieves the list of explores defined in a LookML model
           in the Looker system.
