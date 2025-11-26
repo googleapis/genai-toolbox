@@ -50,7 +50,7 @@ const listTablesStatement = `
 		WHERE
 			t.relkind = ANY(dk.kinds) -- Filter by selected table relkinds ('r', 'p')
 			AND (NULLIF(TRIM($1), '') IS NULL OR t.relname = ANY(string_to_array($1,','))) -- $1 is object_names
-			AND ns.nspname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+			AND ns.nspname NOT IN ('pg_catalog', 'information_schema', 'pg_toast','google_ml')
 			AND ns.nspname NOT LIKE 'pg_temp_%' AND ns.nspname NOT LIKE 'pg_toast_temp_%'
 	),
 	columns_info AS (
