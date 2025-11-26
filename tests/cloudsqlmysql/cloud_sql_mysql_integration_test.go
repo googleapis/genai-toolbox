@@ -191,3 +191,70 @@ func TestCloudSQLMySQLIpConnection(t *testing.T) {
 		})
 	}
 }
+
+func TestCloudSQLMySQLIAMConnection(t *testing.T) {
+	getCloudSQLMySQLVars(t)
+	// service account email used for IAM should trim the suffix
+	serviceAccountEmail := strings.TrimSuffix(tests.ServiceAccountEmail, ".gserviceaccount.com")
+
+	noPassSourceConfig := map[string]any{
+		"kind":     CloudSQLMySQLSourceKind,
+		"project":  CloudSQLMySQLProject,
+		"instance": CloudSQLMySQLInstance,
+		"region":   CloudSQLMySQLRegion,
+		"database": CloudSQLMySQLDatabase,
+		"user":     serviceAccountEmail,
+	}
+
+	noUserSourceConfig := map[string]any{
+		"kind":     CloudSQLMySQLSourceKind,
+		"project":  CloudSQLMySQLProject,
+		"instance": CloudSQLMySQLInstance,
+		"region":   CloudSQLMySQLRegion,
+		"database": CloudSQLMySQLDatabase,
+		"password": "random",
+	}
+
+	noUserNoPassSourceConfig := map[string]any{
+		"kind":     CloudSQLMySQLSourceKind,
+		"project":  CloudSQLMySQLProject,
+		"instance": CloudSQLMySQLInstance,
+		"region":   CloudSQLMySQLRegion,
+		"database": CloudSQLMySQLDatabase,
+	}
+	tcs := []struct {
+		name         string
+		sourceConfig map[string]any
+		isErr        bool
+	}{
+		{
+			name:         "no user no pass",
+			sourceConfig: noUserNoPassSourceConfig,
+			isErr:        false,
+		},
+		{
+			name:         "no password",
+			sourceConfig: noPassSourceConfig,
+			isErr:        false,
+		},
+		{
+			name:         "no user",
+			sourceConfig: noUserSourceConfig,
+			isErr:        true,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tests.RunSourceConnectionTest(t, tc.sourceConfig, CloudSQLMySQLToolKind)
+			if err != nil {
+				if tc.isErr {
+					return
+				}
+				t.Fatalf("Connection test failure: %s", err)
+			}
+			if tc.isErr {
+				t.Fatalf("Expected error but test passed.")
+			}
+		})
+	}
+}
