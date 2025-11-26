@@ -189,6 +189,10 @@ func (t *Tool) Authorized(verifiedAuthServices []string) bool {
 	return true
 }
 
-func (t *Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization() bool {
 	return t.Source.UseClientAuthorization()
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }
