@@ -134,7 +134,7 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 	// Resolve credentials local to this package
 	user, pass, useIAM, err := getConnectionConfig(ctx, user, pass)
 	if err != nil {
-		return nil, fmt.Errorf("unable to resolve credentials: %w", err)
+		return nil, fmt.Errorf("unable to get Cloud SQL connection config: %w", err)
 	}
 
 	// Create a new dialer with options
