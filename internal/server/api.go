@@ -262,6 +262,13 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		}
 
 		if statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
+			clientAuth, err := tool.RequiresClientAuthorization(s.ResourceMgr)
+			if err != nil {
+				errMsg := fmt.Errorf("error during invocation: %w", err)
+				s.logger.DebugContext(ctx, errMsg.Error())
+				_ = render.Render(w, r, newErrResponse(errMsg, http.StatusNotFound))
+				return
+			}
 			if clientAuth {
 				// Propagate the original 401/403 error.
 				s.logger.DebugContext(ctx, fmt.Sprintf("error invoking tool. Client credentials lack authorization to the source: %v", err))
