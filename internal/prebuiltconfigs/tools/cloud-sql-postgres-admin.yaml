@@ -56,5 +56,5 @@ toolsets:
     - list_databases
     - create_user
     - wait_for_operation
-    - clone_instance
     - postgres_upgrade_precheck
+    - clone_instance
