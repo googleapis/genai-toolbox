@@ -156,4 +156,6 @@ func TestPostgres(t *testing.T) {
 	tests.RunPostgresLongRunningTransactionsTest(t, ctx, pool)
 	tests.RunPostgresListLocksTest(t, ctx, pool)
 	tests.RunPostgresReplicationStatsTest(t, ctx, pool)
+	tests.RunPostgresListPgSettingsTest(t, ctx, pool)
+	tests.RunPostgresListDatabaseStatsTest(t, ctx, pool)
 }
