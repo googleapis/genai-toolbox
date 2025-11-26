@@ -66,5 +66,5 @@ The toolbox automatically handles platform-specific binaries. Supported platform
 ## Resources
 
 For more information, visit the 
-- [main repository](https://github.com/googleapis/genai-toolbox)
+- [MCP Toolbox repository](https://github.com/googleapis/genai-toolbox)
 - [Official Documentation](https://googleapis.github.io/genai-toolbox/getting-started/introduction/)
