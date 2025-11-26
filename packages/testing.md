@@ -12,7 +12,7 @@
     The output will show the config file location and the URL. Open your browser to:
     http://localhost:4873
 
-    > Note: You can use `npm unpublish > server-darwin-arm64@1.0.0 --force --registry http://localhost:4873` to unpublish the package.
+    > Note: You can use `npm unpublish @toolbox-sdk/server --force --registry http://localhost:4873` to unpublish the package.
 
 2. Pack all 4 packages and publish them to the local registry. Go in each package (eg. server-darwin-arm64) and run
     ```sh
