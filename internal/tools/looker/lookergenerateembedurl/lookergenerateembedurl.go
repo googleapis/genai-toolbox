@@ -47,11 +47,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
+	Name         string                 `yaml:"name" validate:"required"`
+	Kind         string                 `yaml:"kind" validate:"required"`
+	Source       string                 `yaml:"source" validate:"required"`
+	Description  string                 `yaml:"description" validate:"required"`
+	AuthRequired []string               `yaml:"authRequired"`
+	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -81,15 +82,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		idParameter,
 	}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, cfg.Annotations)
 
 	// finish tool setup
 	return Tool{
-		Config:         cfg,
-		Parameters:     params,
-		UseClientOAuth: s.UseClientOAuth,
-		Client:         s.Client,
-		ApiSettings:    s.ApiSettings,
+		Config:              cfg,
+		Parameters:          params,
+		UseClientOAuth:      s.UseClientAuthorization(),
+		AuthTokenHeaderName: s.GetAuthTokenHeaderName(),
+		Client:              s.Client,
+		ApiSettings:         s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   params.Manifest(),
@@ -105,14 +107,15 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	UseClientOAuth bool
-	Client         *v4.LookerSDK
-	ApiSettings    *rtl.ApiSettings
-	AuthRequired   []string `yaml:"authRequired"`
-	Parameters     parameters.Parameters
-	manifest       tools.Manifest
-	mcpManifest    tools.McpManifest
-	SessionLength  int64
+	UseClientOAuth      bool
+	AuthTokenHeaderName string
+	Client              *v4.LookerSDK
+	ApiSettings         *rtl.ApiSettings
+	AuthRequired        []string `yaml:"authRequired"`
+	Parameters          parameters.Parameters
+	manifest            tools.Manifest
+	mcpManifest         tools.McpManifest
+	SessionLength       int64
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -176,4 +179,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return t.UseClientOAuth
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return t.AuthTokenHeaderName
 }

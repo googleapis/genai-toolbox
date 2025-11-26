@@ -110,7 +110,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		parameters.NewStringParameterWithDefault("table_schema", "", "(Optional) The database where the check is to be performed. Check all tables visible to the current user if not specified"),
 		parameters.NewIntParameterWithDefault("limit", 50, "(Optional) Max rows to return, default is 50"),
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
 	// finish tool setup
 	t := Tool{
@@ -227,4 +227,8 @@ func (t Tool) RequiresClientAuthorization() bool {
 
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

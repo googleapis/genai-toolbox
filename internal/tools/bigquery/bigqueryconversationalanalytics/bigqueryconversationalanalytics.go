@@ -151,7 +151,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	tableRefsParameter := parameters.NewStringParameter("table_references", tableRefsDescription)
 
 	params := parameters.Parameters{userQueryParameter, tableRefsParameter}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
 	// Get cloud-platform token source for Gemini Data Analytics API during initialization
 	var bigQueryTokenSourceWithScope oauth2.TokenSource
@@ -578,4 +578,8 @@ func appendMessage(messages []map[string]any, newMessage map[string]any) []map[s
 		}
 	}
 	return append(messages, newMessage)
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

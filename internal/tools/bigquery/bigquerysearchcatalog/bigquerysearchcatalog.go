@@ -97,7 +97,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if cfg.Description != "" {
 		description = cfg.Description
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, params)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, params, nil)
 
 	t := Tool{
 		Config:            cfg,
@@ -286,4 +286,8 @@ func (t Tool) Manifest() tools.Manifest {
 func (t Tool) McpManifest() tools.McpManifest {
 	// Returns the tool MCP manifest
 	return t.mcpManifest
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }
