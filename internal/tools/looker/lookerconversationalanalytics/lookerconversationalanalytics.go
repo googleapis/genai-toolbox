@@ -26,7 +26,6 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	lookerds "github.com/googleapis/genai-toolbox/internal/sources/looker"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -56,12 +55,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	GetApiSettings() *rtl.ApiSettings
 	GoogleCloudTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error)
 	GoogleCloudProject() string
 	GoogleCloudLocation() string
 	UseClientAuthorization() bool
 	GetAuthTokenHeaderName() string
+	LookerApiSettings() *rtl.ApiSettings
 }
 
 // Structs for building the JSON payload
@@ -124,11 +123,6 @@ type CAPayload struct {
 	ClientIdEnum  string        `json:"clientIdEnum"`
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &lookerds.Source{}
-
-var compatibleSources = [...]string{lookerds.SourceKind}
-
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
@@ -154,7 +148,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, cfg.Source)
 	}
 
 	if s.GoogleCloudProject() == "" {
@@ -186,16 +180,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Config:              cfg,
-		ApiSettings:         s.GetApiSettings(),
-		Project:             s.GoogleCloudProject(),
-		Location:            s.GoogleCloudLocation(),
-		Parameters:          params,
-		UseClientOAuth:      s.UseClientAuthorization(),
-		AuthTokenHeaderName: s.GetAuthTokenHeaderName(),
-		TokenSource:         ts,
-		manifest:            tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:         mcpManifest,
+		Config:      cfg,
+		Parameters:  params,
+		TokenSource: ts,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -205,15 +194,10 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	ApiSettings         *rtl.ApiSettings
-	UseClientOAuth      bool `yaml:"useClientOAuth"`
-	AuthTokenHeaderName string
-	Parameters          parameters.Parameters `yaml:"parameters"`
-	Project             string
-	Location            string
-	TokenSource         oauth2.TokenSource
-	manifest            tools.Manifest
-	mcpManifest         tools.McpManifest
+	Parameters  parameters.Parameters `yaml:"parameters"`
+	TokenSource oauth2.TokenSource
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -221,6 +205,15 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+
 	var tokenStr string
 	var err error
 
@@ -243,16 +236,16 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	ler := make([]LookerExploreReference, 0)
 	for _, er := range exploreReferences {
 		ler = append(ler, LookerExploreReference{
-			LookerInstanceUri: t.ApiSettings.BaseUrl,
+			LookerInstanceUri: source.LookerApiSettings().BaseUrl,
 			LookmlModel:       er.(map[string]any)["model"].(string),
 			Explore:           er.(map[string]any)["explore"].(string),
 		})
 	}
 	oauth_creds := OAuthCredentials{}
-	if t.UseClientOAuth {
+	if source.UseClientAuthorization() {
 		oauth_creds.Token = TokenBased{AccessToken: string(accessToken)}
 	} else {
-		oauth_creds.Secret = SecretBased{ClientId: t.ApiSettings.ClientId, ClientSecret: t.ApiSettings.ClientSecret}
+		oauth_creds.Secret = SecretBased{ClientId: source.LookerApiSettings().ClientId, ClientSecret: source.LookerApiSettings().ClientSecret}
 	}
 
 	lers := LookerExploreReferences{
@@ -263,8 +256,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	// Construct URL, headers, and payload
-	projectID := t.Project
-	location := t.Location
+	projectID := source.GoogleCloudProject()
+	location := source.GoogleCloudLocation()
 	caURL := fmt.Sprintf("https://geminidataanalytics.googleapis.com/v1beta/projects/%s/locations/%s:chat", url.PathEscape(projectID), url.PathEscape(location))
 
 	headers := map[string]string{
@@ -305,12 +298,21 @@ func (t Tool) McpManifest() tools.McpManifest {
 	return t.mcpManifest
 }
 
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return false, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return false, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+	return source.UseClientAuthorization(), nil
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return t.UseClientOAuth
+func (t Tool) Authorized(verifiedAuthServices []string) bool {
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
 // StreamMessage represents a single message object from the streaming API response.
@@ -553,6 +555,15 @@ func appendMessage(messages []map[string]any, newMessage map[string]any) []map[s
 	return append(messages, newMessage)
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return t.AuthTokenHeaderName
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return "", fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return "", fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+	return source.GetAuthTokenHeaderName(), nil
 }
