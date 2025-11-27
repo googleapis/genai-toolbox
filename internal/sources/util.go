@@ -49,7 +49,7 @@ func GetCloudSQLOpts(ipType, userAgent string, useIAM bool) ([]cloudsqlconn.Opti
 
 // GetIAMPrincipalEmailFromADC finds the email associated with ADC
 func GetIAMPrincipalEmailFromADC(ctx context.Context, dbType string) (string, error) {
-	// 1. Find ADC and returns an HTTP client associated with it
+	// Finds ADC and returns an HTTP client associated with it
 	client, err := google.DefaultClient(ctx,
 		"https://www.googleapis.com/auth/userinfo.email")
 	if err != nil {
