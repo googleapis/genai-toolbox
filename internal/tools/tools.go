@@ -82,7 +82,7 @@ type Tool interface {
 	Manifest() Manifest
 	McpManifest() McpManifest
 	Authorized([]string) bool
-	RequiresClientAuthorization(SourceProvider) bool
+	RequiresClientAuthorization(SourceProvider) (bool, error)
 	ToConfig() ToolConfig
 	GetAuthTokenHeaderName() string
 }

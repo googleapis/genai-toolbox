@@ -77,9 +77,9 @@ func (t MockTool) Authorized(verifiedAuthServices []string) bool {
 	return !t.unauthorized
 }
 
-func (t MockTool) RequiresClientAuthorization(tools.SourceProvider) bool {
+func (t MockTool) RequiresClientAuthorization(tools.SourceProvider) (bool, error) {
 	// defaulted to false
-	return t.requiresClientAuthrorization
+	return t.requiresClientAuthrorization, nil
 }
 
 func (t MockTool) McpManifest() tools.McpManifest {
