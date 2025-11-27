@@ -21,7 +21,6 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
@@ -50,6 +49,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
+type compatibleSource interface {
+	UseClientAuthorization() bool
+	GetAuthTokenHeaderName() string
+	LookerClient() *v4.LookerSDK
+	LookerApiSettings() *rtl.ApiSettings
+}
+
 type Config struct {
 	Name         string         `yaml:"name" validate:"required"`
 	Kind         string         `yaml:"kind" validate:"required"`
@@ -66,16 +72,6 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	s, ok := rawS.(*lookersrc.Source)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
-	}
-
 	actionParameter := parameters.NewStringParameterWithRequired("action", "The health check to run. Can be either: `check_db_connections`, `check_dashboard_performance`,`check_dashboard_errors`,`check_explore_performance`,`check_schedule_failures`, or `check_legacy_features`", true)
 
 	params := parameters.Parameters{
@@ -86,12 +82,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		Config:              cfg,
-		Parameters:          params,
-		UseClientOAuth:      s.UseClientAuthorization(),
-		AuthTokenHeaderName: s.GetAuthTokenHeaderName(),
-		Client:              s.Client,
-		ApiSettings:         s.ApiSettings,
+		Config:     cfg,
+		Parameters: params,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   params.Manifest(),
@@ -105,13 +97,9 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	UseClientOAuth      bool
-	AuthTokenHeaderName string
-	Client              *v4.LookerSDK
-	ApiSettings         *rtl.ApiSettings
-	Parameters          parameters.Parameters `yaml:"parameters"`
-	manifest            tools.Manifest
-	mcpManifest         tools.McpManifest
+	Parameters  parameters.Parameters `yaml:"parameters"`
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -119,18 +107,27 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
 	}
 
-	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
+	sdk, err := lookercommon.GetLookerSDK(source.UseClientAuthorization(), source.LookerApiSettings(), source.LookerClient(), accessToken)
 	if err != nil {
 		return nil, fmt.Errorf("error getting sdk: %w", err)
 	}
 
 	pulseTool := &pulseTool{
-		ApiSettings: t.ApiSettings,
+		ApiSettings: source.LookerApiSettings(),
 		SdkClient:   sdk,
 	}
 
@@ -144,7 +141,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		Action: action,
 	}
 
-	result, err := pulseTool.RunPulse(ctx, pulseParams)
+	result, err := pulseTool.RunPulse(ctx, source, pulseParams)
 	if err != nil {
 		return nil, fmt.Errorf("error running pulse: %w", err)
 	}
@@ -166,12 +163,21 @@ func (t Tool) McpManifest() tools.McpManifest {
 	return t.mcpManifest
 }
 
-func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return false, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return false, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+	return source.UseClientAuthorization(), nil
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return t.UseClientOAuth
+func (t Tool) Authorized(verifiedAuthServices []string) bool {
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
 // =================================================================================================================
@@ -192,27 +198,27 @@ type pulseTool struct {
 	SdkClient   *v4.LookerSDK
 }
 
-func (t *pulseTool) RunPulse(ctx context.Context, params PulseParams) (interface{}, error) {
+func (t *pulseTool) RunPulse(ctx context.Context, source compatibleSource, params PulseParams) (interface{}, error) {
 	switch params.Action {
 	case "check_db_connections":
-		return t.checkDBConnections(ctx)
+		return t.checkDBConnections(ctx, source)
 	case "check_dashboard_performance":
-		return t.checkDashboardPerformance(ctx)
+		return t.checkDashboardPerformance(ctx, source)
 	case "check_dashboard_errors":
-		return t.checkDashboardErrors(ctx)
+		return t.checkDashboardErrors(ctx, source)
 	case "check_explore_performance":
-		return t.checkExplorePerformance(ctx)
+		return t.checkExplorePerformance(ctx, source)
 	case "check_schedule_failures":
-		return t.checkScheduleFailures(ctx)
+		return t.checkScheduleFailures(ctx, source)
 	case "check_legacy_features":
-		return t.checkLegacyFeatures(ctx)
+		return t.checkLegacyFeatures(ctx, source)
 	default:
 		return nil, fmt.Errorf("unknown action: %s", params.Action)
 	}
 }
 
 // Check DB connections and run tests
-func (t *pulseTool) checkDBConnections(ctx context.Context) (interface{}, error) {
+func (t *pulseTool) checkDBConnections(ctx context.Context, source compatibleSource) (interface{}, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
@@ -226,7 +232,7 @@ func (t *pulseTool) checkDBConnections(ctx context.Context) (interface{}, error)
 		"looker__ilooker":                      {},
 	}
 
-	connections, err := t.SdkClient.AllConnections("", t.ApiSettings)
+	connections, err := t.SdkClient.AllConnections("", source.LookerApiSettings())
 	if err != nil {
 		return nil, fmt.Errorf("error fetching connections: %w", err)
 	}
@@ -245,7 +251,7 @@ func (t *pulseTool) checkDBConnections(ctx context.Context) (interface{}, error)
 	for _, conn := range filteredConnections {
 		var errors []string
 		// Test connection (simulate test_connection endpoint)
-		resp, err := t.SdkClient.TestConnection(*conn.Name, nil, t.ApiSettings)
+		resp, err := t.SdkClient.TestConnection(*conn.Name, nil, source.LookerApiSettings())
 		if err != nil {
 			errors = append(errors, "API JSONDecode Error")
 		} else {
@@ -269,7 +275,7 @@ func (t *pulseTool) checkDBConnections(ctx context.Context) (interface{}, error)
 			},
 			Limit: &limit,
 		}
-		raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", t.ApiSettings)
+		raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", source.LookerApiSettings())
 		if err != nil {
 			return nil, err
 		}
@@ -290,7 +296,7 @@ func (t *pulseTool) checkDBConnections(ctx context.Context) (interface{}, error)
 	return results, nil
 }
 
-func (t *pulseTool) checkDashboardPerformance(ctx context.Context) (interface{}, error) {
+func (t *pulseTool) checkDashboardPerformance(ctx context.Context, source compatibleSource) (interface{}, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
@@ -311,7 +317,7 @@ func (t *pulseTool) checkDashboardPerformance(ctx context.Context) (interface{},
 		Sorts: &[]string{"query.count desc"},
 		Limit: &limit,
 	}
-	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", t.ApiSettings)
+	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", source.LookerApiSettings())
 	if err != nil {
 		return nil, err
 	}
@@ -322,7 +328,7 @@ func (t *pulseTool) checkDashboardPerformance(ctx context.Context) (interface{},
 	return dashboards, nil
 }
 
-func (t *pulseTool) checkDashboardErrors(ctx context.Context) (interface{}, error) {
+func (t *pulseTool) checkDashboardErrors(ctx context.Context, source compatibleSource) (interface{}, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
@@ -343,7 +349,7 @@ func (t *pulseTool) checkDashboardErrors(ctx context.Context) (interface{}, erro
 		Sorts: &[]string{"history.query_run_count desc"},
 		Limit: &limit,
 	}
-	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", t.ApiSettings)
+	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", source.LookerApiSettings())
 	if err != nil {
 		return nil, err
 	}
@@ -354,7 +360,7 @@ func (t *pulseTool) checkDashboardErrors(ctx context.Context) (interface{}, erro
 	return dashboards, nil
 }
 
-func (t *pulseTool) checkExplorePerformance(ctx context.Context) (interface{}, error) {
+func (t *pulseTool) checkExplorePerformance(ctx context.Context, source compatibleSource) (interface{}, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
@@ -373,7 +379,7 @@ func (t *pulseTool) checkExplorePerformance(ctx context.Context) (interface{}, e
 		Sorts: &[]string{"history.average_runtime desc"},
 		Limit: &limit,
 	}
-	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", t.ApiSettings)
+	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", source.LookerApiSettings())
 	if err != nil {
 		return nil, err
 	}
@@ -384,7 +390,7 @@ func (t *pulseTool) checkExplorePerformance(ctx context.Context) (interface{}, e
 
 	// Average query runtime
 	query.Fields = &[]string{"history.average_runtime"}
-	rawAvg, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", t.ApiSettings)
+	rawAvg, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", source.LookerApiSettings())
 	if err != nil {
 		return nil, err
 	}
@@ -399,7 +405,7 @@ func (t *pulseTool) checkExplorePerformance(ctx context.Context) (interface{}, e
 	return explores, nil
 }
 
-func (t *pulseTool) checkScheduleFailures(ctx context.Context) (interface{}, error) {
+func (t *pulseTool) checkScheduleFailures(ctx context.Context, source compatibleSource) (interface{}, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
@@ -418,7 +424,7 @@ func (t *pulseTool) checkScheduleFailures(ctx context.Context) (interface{}, err
 		Sorts: &[]string{"scheduled_job.count desc"},
 		Limit: &limit,
 	}
-	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", t.ApiSettings)
+	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", source.LookerApiSettings())
 	if err != nil {
 		return nil, err
 	}
@@ -429,14 +435,14 @@ func (t *pulseTool) checkScheduleFailures(ctx context.Context) (interface{}, err
 	return schedules, nil
 }
 
-func (t *pulseTool) checkLegacyFeatures(ctx context.Context) (interface{}, error) {
+func (t *pulseTool) checkLegacyFeatures(ctx context.Context, source compatibleSource) (interface{}, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
 	}
 	logger.InfoContext(ctx, "Test 6/6: Checking for enabled legacy features")
 
-	features, err := t.SdkClient.AllLegacyFeatures(t.ApiSettings)
+	features, err := t.SdkClient.AllLegacyFeatures(source.LookerApiSettings())
 	if err != nil {
 		if strings.Contains(err.Error(), "Unsupported in Looker (Google Cloud core)") {
 			return []map[string]string{{"Feature": "Unsupported in Looker (Google Cloud core)"}}, nil
@@ -457,6 +463,15 @@ func (t *pulseTool) checkLegacyFeatures(ctx context.Context) (interface{}, error
 // END LOOKER HEALTH PULSE CORE LOGIC
 // =================================================================================================================
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return t.AuthTokenHeaderName
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return "", fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return "", fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+	return source.GetAuthTokenHeaderName(), nil
 }

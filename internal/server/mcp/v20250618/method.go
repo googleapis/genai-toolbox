@@ -102,7 +102,12 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	}
 
 	// Get access token
-	accessToken := tools.AccessToken(header.Get(tool.GetAuthTokenHeaderName()))
+	authTokenHeadername, err := tool.GetAuthTokenHeaderName(resourceMgr)
+	if err != nil {
+		errMsg := fmt.Errorf("error during invocation: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, errMsg.Error(), nil), errMsg
+	}
+	accessToken := tools.AccessToken(header.Get(authTokenHeadername))
 
 	// Check if this specific tool requires the standard authorization header
 	clientAuth, err := tool.RequiresClientAuthorization(resourceMgr)
