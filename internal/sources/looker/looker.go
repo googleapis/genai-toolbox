@@ -160,10 +160,6 @@ func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
 }
 
-func (s *Source) GetApiSettings() *rtl.ApiSettings {
-	return s.ApiSettings
-}
-
 func (s *Source) UseClientAuthorization() bool {
 	return strings.ToLower(s.UseClientOAuth) != "false"
 }
@@ -186,6 +182,30 @@ func (s *Source) GoogleCloudTokenSource() oauth2.TokenSource {
 
 func (s *Source) GoogleCloudTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error) {
 	return google.DefaultTokenSource(ctx, scope)
+}
+
+func (s *Source) LookerClient() *v4.LookerSDK {
+	return s.Client
+}
+
+func (s *Source) LookerApiSettings() *rtl.ApiSettings {
+	return s.ApiSettings
+}
+
+func (s *Source) LookerShowHiddenFields() bool {
+	return s.ShowHiddenFields
+}
+
+func (s *Source) LookerShowHiddenModels() bool {
+	return s.ShowHiddenModels
+}
+
+func (s *Source) LookerShowHiddenExplores() bool {
+	return s.ShowHiddenExplores
+}
+
+func (s *Source) LookerSessionLength() int64 {
+	return s.SessionLength
 }
 
 func initGoogleCloudConnection(ctx context.Context) (oauth2.TokenSource, error) {
