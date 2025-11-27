@@ -25,26 +25,24 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-type compatibleSource interface {
-	ClickHousePool() *sql.DB
-}
-
-var compatibleSources = []string{"clickhouse"}
-
 const listDatabasesKind string = "clickhouse-list-databases"
 
 func init() {
-	if !tools.Register(listDatabasesKind, newListDatabasesConfig) {
+	if !tools.Register(listDatabasesKind, newConfig) {
 		panic(fmt.Sprintf("tool kind %q already registered", listDatabasesKind))
 	}
 }
 
-func newListDatabasesConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
+func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
 	actual := Config{Name: name}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
 	return actual, nil
+}
+
+type compatibleSource interface {
+	ClickHousePool() *sql.DB
 }
 
 type Config struct {
@@ -63,23 +61,12 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", listDatabasesKind, compatibleSources)
-	}
-
 	allParameters, paramManifest, _ := parameters.ProcessParameters(nil, cfg.Parameters)
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 
 	t := Tool{
 		Config:      cfg,
 		AllParams:   allParameters,
-		Pool:        s.ClickHousePool(),
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
@@ -90,9 +77,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	AllParams parameters.Parameters `yaml:"allParams"`
-
-	Pool        *sql.DB
+	AllParams   parameters.Parameters `yaml:"allParams"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -102,10 +87,19 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", listDatabasesKind, t.Source)
+	}
+
 	// Query to list all databases
 	query := "SHOW DATABASES"
 
-	results, err := t.Pool.QueryContext(ctx, query)
+	results, err := source.ClickHousePool().QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
@@ -146,8 +140,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
 func (t Tool) GetAuthTokenHeaderName() string {
