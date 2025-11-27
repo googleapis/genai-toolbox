@@ -57,11 +57,6 @@ type compatibleSource interface {
 	BigQuerySession() bigqueryds.BigQuerySessionProvider
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &bigqueryds.Source{}
-
-var compatibleSources = [...]string{bigqueryds.SourceKind}
-
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
@@ -87,7 +82,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, cfg.Source)
 	}
 
 	allowedDatasets := s.BigQueryAllowedDatasets()
@@ -116,17 +111,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Config:           cfg,
-		Parameters:       params,
-		UseClientOAuth:   s.UseClientAuthorization(),
-		ClientCreator:    s.BigQueryClientCreator(),
-		Client:           s.BigQueryClient(),
-		RestService:      s.BigQueryRestService(),
-		IsDatasetAllowed: s.IsDatasetAllowed,
-		SessionProvider:  s.BigQuerySession(),
-		AllowedDatasets:  allowedDatasets,
-		manifest:         tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:      mcpManifest,
+		Config:      cfg,
+		Parameters:  params,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -136,17 +124,9 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	UseClientOAuth bool                  `yaml:"useClientOAuth"`
-	Parameters     parameters.Parameters `yaml:"parameters"`
-
-	Client           *bigqueryapi.Client
-	RestService      *bigqueryrestapi.Service
-	ClientCreator    bigqueryds.BigqueryClientCreator
-	IsDatasetAllowed func(projectID, datasetID string) bool
-	AllowedDatasets  []string
-	SessionProvider  bigqueryds.BigQuerySessionProvider
-	manifest         tools.Manifest
-	mcpManifest      tools.McpManifest
+	Parameters  parameters.Parameters `yaml:"parameters"`
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -154,6 +134,15 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+
 	paramsMap := params.AsMap()
 	historyData, ok := paramsMap["history_data"].(string)
 	if !ok {
@@ -188,17 +177,17 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
-	bqClient := t.Client
-	restService := t.RestService
+	bqClient := source.BigQueryClient()
+	restService := source.BigQueryRestService()
 	var err error
 
 	// Initialize new client if using user OAuth token
-	if t.UseClientOAuth {
+	if source.UseClientAuthorization() {
 		tokenStr, err := accessToken.ParseBearerToken()
 		if err != nil {
 			return nil, fmt.Errorf("error parsing access token: %w", err)
 		}
-		bqClient, restService, err = t.ClientCreator(tokenStr, false)
+		bqClient, restService, err = source.BigQueryClientCreator()(tokenStr, false)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
 		}
@@ -207,9 +196,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	var historyDataSource string
 	trimmedUpperHistoryData := strings.TrimSpace(strings.ToUpper(historyData))
 	if strings.HasPrefix(trimmedUpperHistoryData, "SELECT") || strings.HasPrefix(trimmedUpperHistoryData, "WITH") {
-		if len(t.AllowedDatasets) > 0 {
+		if len(source.BigQueryAllowedDatasets()) > 0 {
 			var connProps []*bigqueryapi.ConnectionProperty
-			session, err := t.SessionProvider(ctx)
+			session, err := source.BigQuerySession()(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
 			}
@@ -218,7 +207,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 					{Key: "session_id", Value: session.ID},
 				}
 			}
-			dryRunJob, err := bqutil.DryRunQuery(ctx, restService, t.Client.Project(), t.Client.Location, historyData, nil, connProps)
+			dryRunJob, err := bqutil.DryRunQuery(ctx, restService, source.BigQueryClient().Project(), source.BigQueryClient().Location, historyData, nil, connProps)
 			if err != nil {
 				return nil, fmt.Errorf("query validation failed: %w", err)
 			}
@@ -230,7 +219,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			queryStats := dryRunJob.Statistics.Query
 			if queryStats != nil {
 				for _, tableRef := range queryStats.ReferencedTables {
-					if !t.IsDatasetAllowed(tableRef.ProjectId, tableRef.DatasetId) {
+					if !source.IsDatasetAllowed(tableRef.ProjectId, tableRef.DatasetId) {
 						return nil, fmt.Errorf("query in history_data accesses dataset '%s.%s', which is not in the allowed list", tableRef.ProjectId, tableRef.DatasetId)
 					}
 				}
@@ -240,7 +229,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 		historyDataSource = fmt.Sprintf("(%s)", historyData)
 	} else {
-		if len(t.AllowedDatasets) > 0 {
+		if len(source.BigQueryAllowedDatasets()) > 0 {
 			parts := strings.Split(historyData, ".")
 			var projectID, datasetID string
 
@@ -249,13 +238,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 				projectID = parts[0]
 				datasetID = parts[1]
 			case 2: // dataset.table
-				projectID = t.Client.Project()
+				projectID = source.BigQueryClient().Project()
 				datasetID = parts[0]
 			default:
 				return nil, fmt.Errorf("invalid table ID format for 'history_data': %q. Expected 'dataset.table' or 'project.dataset.table'", historyData)
 			}
 
-			if !t.IsDatasetAllowed(projectID, datasetID) {
+			if !source.IsDatasetAllowed(projectID, datasetID) {
 				return nil, fmt.Errorf("access to dataset '%s.%s' (from table '%s') is not allowed", projectID, datasetID, historyData)
 			}
 		}
@@ -279,7 +268,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// JobStatistics.QueryStatistics.StatementType
 	query := bqClient.Query(sql)
 	query.Location = bqClient.Location
-	session, err := t.SessionProvider(ctx)
+	session, err := source.BigQuerySession()(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
 	}
@@ -349,8 +338,17 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return t.UseClientOAuth
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return false, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return false, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+	return source.UseClientAuthorization(), nil
 }
 
 func (t Tool) GetAuthTokenHeaderName() string {
