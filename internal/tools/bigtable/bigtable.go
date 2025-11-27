@@ -21,7 +21,6 @@ import (
 	"cloud.google.com/go/bigtable"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	bigtabledb "github.com/googleapis/genai-toolbox/internal/sources/bigtable"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
@@ -46,11 +45,6 @@ type compatibleSource interface {
 	BigtableClient() *bigtable.Client
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &bigtabledb.Source{}
-
-var compatibleSources = [...]string{bigtabledb.SourceKind}
-
 type Config struct {
 	Name               string                `yaml:"name" validate:"required"`
 	Kind               string                `yaml:"kind" validate:"required"`
@@ -70,18 +64,6 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	allParameters, paramManifest, err := parameters.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
 	if err != nil {
 		return nil, err
@@ -93,7 +75,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	t := Tool{
 		Config:      cfg,
 		AllParams:   allParameters,
-		Client:      s.BigtableClient(),
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
@@ -105,9 +86,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	AllParams parameters.Parameters `yaml:"allParams"`
-
-	Client      *bigtable.Client
+	AllParams   parameters.Parameters `yaml:"allParams"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -156,6 +135,15 @@ func getMapParamsType(tparams parameters.Parameters, params parameters.ParamValu
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+
 	paramsMap := params.AsMap()
 	newStatement, err := parameters.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
@@ -172,7 +160,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("fail to get map params: %w", err)
 	}
 
-	ps, err := t.Client.PrepareStatement(
+	ps, err := source.BigtableClient().PrepareStatement(
 		ctx,
 		newStatement,
 		mapParamsType,
@@ -224,8 +212,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
 func (t Tool) GetAuthTokenHeaderName() string {
