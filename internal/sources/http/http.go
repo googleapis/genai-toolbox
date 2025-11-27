@@ -107,7 +107,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Config: r,
-		Client: &client,
+		client: &client,
 	}
 	return s, nil
 
@@ -117,7 +117,7 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Config
-	Client *http.Client
+	client *http.Client
 }
 
 func (s *Source) SourceKind() string {
@@ -126,4 +126,20 @@ func (s *Source) SourceKind() string {
 
 func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
+}
+
+func (s *Source) HttpDefaultHeaders() map[string]string {
+	return s.DefaultHeaders
+}
+
+func (s *Source) HttpBaseURL() string {
+	return s.BaseURL
+}
+
+func (s *Source) HttpQueryParams() map[string]string {
+	return s.QueryParams
+}
+
+func (s *Source) Client() *http.Client {
+	return s.client
 }
