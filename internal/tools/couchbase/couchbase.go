@@ -22,7 +22,6 @@ import (
 	"github.com/couchbase/gocb/v2"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/couchbase"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
@@ -48,11 +47,6 @@ type compatibleSource interface {
 	CouchbaseQueryScanConsistency() uint
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &couchbase.Source{}
-
-var compatibleSources = [...]string{couchbase.SourceKind}
-
 type Config struct {
 	Name               string                `yaml:"name" validate:"required"`
 	Kind               string                `yaml:"kind" validate:"required"`
@@ -72,18 +66,6 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	allParameters, paramManifest, err := parameters.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
 	if err != nil {
 		return nil, err
@@ -92,12 +74,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
 	// finish tool setup
 	t := Tool{
-		Config:               cfg,
-		AllParams:            allParameters,
-		Scope:                s.CouchbaseScope(),
-		QueryScanConsistency: s.CouchbaseQueryScanConsistency(),
-		manifest:             tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:          mcpManifest,
+		Config:      cfg,
+		AllParams:   allParameters,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -107,12 +87,9 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	AllParams parameters.Parameters `yaml:"allParams"`
-
-	Scope                *gocb.Scope
-	QueryScanConsistency uint
-	manifest             tools.Manifest
-	mcpManifest          tools.McpManifest
+	AllParams   parameters.Parameters `yaml:"allParams"`
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -120,6 +97,15 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+
 	namedParamsMap := params.AsMap()
 	newStatement, err := parameters.ResolveTemplateParams(t.TemplateParameters, t.Statement, namedParamsMap)
 	if err != nil {
@@ -130,8 +116,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
-	results, err := t.Scope.Query(newStatement, &gocb.QueryOptions{
-		ScanConsistency: gocb.QueryScanConsistency(t.QueryScanConsistency),
+	results, err := source.CouchbaseScope().Query(newStatement, &gocb.QueryOptions{
+		ScanConsistency: gocb.QueryScanConsistency(source.CouchbaseQueryScanConsistency()),
 		NamedParameters: newParams.AsMap(),
 	})
 	if err != nil {
@@ -166,8 +152,8 @@ func (t Tool) Authorized(verifiedAuthSources []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthSources)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
 func (t Tool) GetAuthTokenHeaderName() string {
