@@ -100,7 +100,7 @@ func NotificationHandler(ctx context.Context, body []byte) error {
 
 // ProcessMethod returns a response for the request.
 // This is the Operation phase of the lifecycle for MCP client-server connections.
-func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId, method string, toolset tools.Toolset, tools map[string]tools.Tool, promptset prompts.Promptset, prompts map[string]prompts.Prompt, authServices map[string]auth.AuthService, body []byte, header http.Header) (any, error) {
+func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId, method string, toolset tools.Toolset, tools map[string]tools.Tool, promptset prompts.Promptset, prompts map[string]prompts.Prompt, authServices map[string]auth.AuthService, body []byte, header http.Header) (string, any, error) {
 	switch mcpVersion {
 	case v20250618.PROTOCOL_VERSION:
 		return v20250618.ProcessMethod(ctx, id, method, toolset, tools, promptset, prompts, authServices, body, header)
