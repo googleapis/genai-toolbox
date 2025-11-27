@@ -195,7 +195,7 @@ func TestCloudSQLMySQLIpConnection(t *testing.T) {
 func TestCloudSQLMySQLIAMConnection(t *testing.T) {
 	getCloudSQLMySQLVars(t)
 	// service account email used for IAM should trim the suffix
-	serviceAccountEmail := strings.TrimSuffix(tests.ServiceAccountEmail, ".gserviceaccount.com")
+	serviceAccountEmail, _, _ := strings.Cut(tests.ServiceAccountEmail, "@")
 
 	noPassSourceConfig := map[string]any{
 		"kind":     CloudSQLMySQLSourceKind,

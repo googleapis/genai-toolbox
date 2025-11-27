@@ -53,7 +53,7 @@ type Config struct {
 	Project  string         `yaml:"project" validate:"required"`
 	Region   string         `yaml:"region" validate:"required"`
 	Instance string         `yaml:"instance" validate:"required"`
-	IPType   sources.IPType `yaml:"ipType" validate:"required"`
+	IPType   sources.IPType `yaml:"ipType"`
 	User     string         `yaml:"user"`
 	Password string         `yaml:"password"`
 	Database string         `yaml:"database" validate:"required"`
@@ -115,7 +115,7 @@ func getConnectionConfig(ctx context.Context, user, pass string) (string, string
 		if pass != "" {
 			return "", "", useIAM, fmt.Errorf("password is provided without a username. Please provide both a username and password, or leave both fields empty")
 		}
-		email, err := sources.GetIAMPrincipalEmailFromADC(ctx)
+		email, err := sources.GetIAMPrincipalEmailFromADC(ctx, "mysql")
 		if err != nil {
 			return "", "", useIAM, fmt.Errorf("error getting email from ADC: %v", err)
 		}
@@ -131,7 +131,7 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
-	// Resolve credentials local to this package
+	// Configure the driver to connect to the database
 	user, pass, useIAM, err := getConnectionConfig(ctx, user, pass)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get Cloud SQL connection config: %w", err)
@@ -147,22 +147,16 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 		return nil, err
 	}
 
-	// Register a unique driver name for this specific configuration
-	// This prevents conflicts between database sources using
-	// IAM authentication and Password authentication
-	driverName := fmt.Sprintf("cloudsql-mysql-%s", name)
-
-	if !slices.Contains(sql.Drivers(), driverName) {
-		_, err = mysql.RegisterDriver(driverName, opts...)
+	if !slices.Contains(sql.Drivers(), "cloudsql-mysql") {
+		_, err = mysql.RegisterDriver("cloudsql-mysql", opts...)
 		if err != nil {
 			return nil, fmt.Errorf("unable to register driver: %w", err)
 		}
 	}
 	// Tell the driver to use the Cloud SQL Go Connector to create connections
-	dsn := fmt.Sprintf("%s:%s@%s(%s:%s:%s)/%s?connectionAttributes=program_name:%s",
+	dsn := fmt.Sprintf("%s:%s@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s",
 		user,
 		pass,
-		driverName,
 		project,
 		region,
 		instance,
@@ -171,7 +165,7 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 	)
 
 	db, err := sql.Open(
-		driverName,
+		"cloudsql-mysql",
 		dsn,
 	)
 	if err != nil {
