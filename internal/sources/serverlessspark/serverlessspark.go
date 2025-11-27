@@ -96,6 +96,14 @@ func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
 }
 
+func (s *Source) GetProject() string {
+	return s.Project
+}
+
+func (s *Source) GetLocation() string {
+	return s.Location
+}
+
 func (s *Source) GetBatchControllerClient() *dataproc.BatchControllerClient {
 	return s.Client
 }
