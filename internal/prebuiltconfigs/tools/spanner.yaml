@@ -37,8 +37,14 @@ tools:
     source: spanner-source
     description: "Lists detailed schema information (object type, columns, constraints, indexes) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
 
+  list_graphs:
+    kind: spanner-list-graphs
+    source: spanner-source
+    description: "Lists detailed graph schema information (node tables, edge tables, labels and property declarations) as JSON for user-created graphs. Filters by a comma-separated list of names. If names are omitted, lists all graphs in user schemas."
+
 toolsets:
   spanner-database-tools:
     - execute_sql
     - execute_sql_dql
     - list_tables
+    - list_graphs
