@@ -20,6 +20,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -27,6 +28,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/go-chi/httplog/v2"
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/log"
@@ -388,6 +390,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	// set up http serving
 	r := chi.NewRouter()
 	r.Use(middleware.Recoverer)
+
 	// logging
 	logLevel, err := log.SeverityToLevel(cfg.LogLevel.String())
 	if err != nil {
@@ -440,6 +443,21 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		sseManager:      sseManager,
 		ResourceMgr:     resourceManager,
 	}
+
+	// cors
+	if slices.Contains(cfg.AllowedOrigins, "*") {
+		s.logger.WarnContext(ctx, "wildcard (`*`) allows all origin to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-origins` flag to prevent DNS rebinding attacks")
+	}
+	corsOpts := cors.Options{
+		AllowedOrigins:   cfg.AllowedOrigins,
+		AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
+		AllowCredentials: true, // required since Toolbox uses auth headers
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "Mcp-Session-Id", "MCP-Protocol-Version"},
+		ExposedHeaders:   []string{"Mcp-Session-Id"}, // headers that are sent to clients
+		MaxAge:           300,                        // cache preflight results for 5 minutes
+	}
+	r.Use(cors.Handler(corsOpts))
+
 	// control plane
 	apiR, err := apiRouter(s)
 	if err != nil {
