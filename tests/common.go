@@ -207,6 +207,7 @@ func AddPostgresPrebuiltConfig(t *testing.T, config map[string]any) map[string]a
 		PostgresReplicationStatsToolKind        = "postgres-replication-stats"
 		PostgresListQueryStatsToolKind          = "postgres-list-query-stats"
 		PostgresGetColumnCardinalityToolKind    = "postgres-get-column-cardinality"
+		PostgresListTableStats                  = "postgres-list-table-stats"
 	)
 
 	tools, ok := config["tools"].(map[string]any)
@@ -284,6 +285,11 @@ func AddPostgresPrebuiltConfig(t *testing.T, config map[string]any) map[string]a
 
 	tools["get_column_cardinality"] = map[string]any{
 		"kind":   PostgresGetColumnCardinalityToolKind,
+		"source": "my-instance",
+	}
+
+	tools["list_table_stats"] = map[string]any{
+		"kind":   PostgresListTableStats,
 		"source": "my-instance",
 	}
 

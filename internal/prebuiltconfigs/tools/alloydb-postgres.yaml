@@ -200,6 +200,10 @@ tools:
         kind: postgres-get-column-cardinality
         source: alloydb-pg-source
 
+    list_table_stats:
+        kind: postgres-list-table-stats
+        source: alloydb-pg-source
+
 toolsets:
     alloydb_postgres_database_tools:
         - execute_sql
@@ -224,3 +228,4 @@ toolsets:
         - replication_stats
         - list_query_stats
         - get_column_cardinality
+        - list_table_stats

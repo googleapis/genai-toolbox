@@ -58,6 +58,7 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
   List sequences in a PostgreSQL database.
+
 - [`postgres-long-running-transactions`](../tools/postgres/postgres-long-running-transactions.md)
   List long running transactions in a PostgreSQL database.
 
@@ -72,6 +73,9 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
   List cardinality of columns in a table in a PostgreSQL database.
+
+- [`postgres-list-table-stats`](../tools/postgres/postgres-list-table-stats.md)
+  List statistics of a table in a PostgreSQL database.
 
 ### Pre-built Configurations
 
