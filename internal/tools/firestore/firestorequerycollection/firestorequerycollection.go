@@ -23,7 +23,6 @@ import (
 	firestoreapi "cloud.google.com/go/firestore"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -92,11 +91,6 @@ type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &firestoreds.Source{}
-
-var compatibleSources = [...]string{firestoreds.SourceKind}
-
 // Config represents the configuration for the Firestore query collection tool
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
@@ -116,18 +110,6 @@ func (cfg Config) ToolConfigKind() string {
 
 // Initialize creates a new Tool instance from the configuration
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	// Create parameters
 	params := createParameters()
 
@@ -137,7 +119,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	t := Tool{
 		Config:      cfg,
 		Parameters:  params,
-		Client:      s.FirestoreClient(),
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
@@ -199,9 +180,7 @@ var _ tools.Tool = Tool{}
 // Tool represents the Firestore query collection tool
 type Tool struct {
 	Config
-	Parameters parameters.Parameters `yaml:"parameters"`
-
-	Client      *firestoreapi.Client
+	Parameters  parameters.Parameters `yaml:"parameters"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -266,6 +245,15 @@ type QueryResponse struct {
 
 // Invoke executes the Firestore query based on the provided parameters
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+
 	// Parse parameters
 	queryParams, err := t.parseQueryParameters(params)
 	if err != nil {
@@ -273,7 +261,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	// Build the query
-	query, err := t.buildQuery(queryParams)
+	query, err := t.buildQuery(source, queryParams)
 	if err != nil {
 		return nil, err
 	}
@@ -396,8 +384,8 @@ func (t Tool) parseOrderBy(orderByRaw interface{}) (*OrderByConfig, error) {
 }
 
 // buildQuery constructs the Firestore query from parameters
-func (t Tool) buildQuery(params *queryParameters) (*firestoreapi.Query, error) {
-	collection := t.Client.Collection(params.CollectionPath)
+func (t Tool) buildQuery(source compatibleSource, params *queryParameters) (*firestoreapi.Query, error) {
+	collection := source.FirestoreClient().Collection(params.CollectionPath)
 	query := collection.Query
 
 	// Apply filters
@@ -531,8 +519,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
 func (t Tool) GetAuthTokenHeaderName() string {
