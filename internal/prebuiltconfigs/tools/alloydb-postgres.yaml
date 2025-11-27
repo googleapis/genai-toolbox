@@ -200,6 +200,10 @@ tools:
         kind: postgres-get-column-cardinality
         source: alloydb-pg-source
 
+    list_roles:
+        kind: postgres-list-roles
+        source: alloydb-pg-source
+
 toolsets:
     alloydb_postgres_database_tools:
         - execute_sql
@@ -222,5 +226,6 @@ toolsets:
         - long_running_transactions
         - list_locks
         - replication_stats
+        - list_roles
         - list_query_stats
         - get_column_cardinality

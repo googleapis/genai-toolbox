@@ -187,6 +187,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistinstalledextensions"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistlocks"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistquerystats"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistroles"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistschemas"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistsequences"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttables"
