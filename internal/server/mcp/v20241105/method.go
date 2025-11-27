@@ -182,7 +182,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 		}
 		// Upstream auth error
 		if strings.Contains(errStr, "Error 401") || strings.Contains(errStr, "Error 403") {
-		if clientAuth {
+			if clientAuth {
 				// Error with client credentials should pass down to the client
 				return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 			}
