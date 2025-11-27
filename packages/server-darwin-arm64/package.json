@@ -1,6 +1,6 @@
 {
   "name": "@toolbox-sdk/server-darwin-arm64",
-  "version": "0.21.0",
+  "version": "0.21.1",
   "os": ["darwin"],
   "cpu": ["arm64"],
   "main": "bin/toolbox",
