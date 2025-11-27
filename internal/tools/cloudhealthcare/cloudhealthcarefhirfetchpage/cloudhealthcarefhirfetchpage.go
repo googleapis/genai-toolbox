@@ -62,11 +62,6 @@ type compatibleSource interface {
 	UseClientAuthorization() bool
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &healthcareds.Source{}
-
-var compatibleSources = [...]string{healthcareds.SourceKind}
-
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
@@ -83,35 +78,16 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	urlParameter := parameters.NewStringParameter(pageURLKey, "The full URL of the FHIR page to fetch. This would be the value of `Bundle.entry.link.url` field within the response returned from FHIR search or FHIR patient everything operations.")
 	params := parameters.Parameters{urlParameter}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	// finish tool setup
 	t := Tool{
-		Config:         cfg,
-		Parameters:     params,
-		Project:        s.Project(),
-		Region:         s.Region(),
-		Dataset:        s.DatasetID(),
-		AllowedStores:  s.AllowedFHIRStores(),
-		UseClientOAuth: s.UseClientAuthorization(),
-		ServiceCreator: s.ServiceCreator(),
-		Service:        s.Service(),
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:    mcpManifest,
+		Config:      cfg,
+		Parameters:  params,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -121,14 +97,9 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	UseClientOAuth           bool                  `yaml:"useClientOAuth"`
-	Parameters               parameters.Parameters `yaml:"parameters"`
-	Project, Region, Dataset string
-	AllowedStores            map[string]struct{}
-	Service                  *healthcare.Service
-	ServiceCreator           healthcareds.HealthcareServiceCreator
-	manifest                 tools.Manifest
-	mcpManifest              tools.McpManifest
+	Parameters  parameters.Parameters `yaml:"parameters"`
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -136,13 +107,22 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+
 	url, ok := params.AsMap()[pageURLKey].(string)
 	if !ok {
 		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", pageURLKey)
 	}
 
 	var httpClient *http.Client
-	if t.UseClientOAuth {
+	if source.UseClientAuthorization() {
 		tokenStr, err := accessToken.ParseBearerToken()
 		if err != nil {
 			return nil, fmt.Errorf("error parsing access token: %w", err)
@@ -150,7 +130,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: tokenStr})
 		httpClient = oauth2.NewClient(ctx, ts)
 	} else {
-		// The t.Service object holds a client with the default credentials.
+		// The source.Service() object holds a client with the default credentials.
 		// However, the client is not exported, so we have to create a new one.
 		var err error
 		httpClient, err = google.DefaultClient(ctx, healthcare.CloudHealthcareScope)
@@ -201,8 +181,17 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return t.UseClientOAuth
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return false, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return false, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+	return source.UseClientAuthorization(), nil
 }
 
 func (t Tool) GetAuthTokenHeaderName() string {
