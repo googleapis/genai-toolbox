@@ -100,6 +100,12 @@
  &lt;td>&lt;/td>
  &lt;/tr>
  &lt;tr>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;code>--allowed-origins&lt;/code>&lt;/td>
+ &lt;td>Specifies a list of origins permitted to access this server.&lt;/td>
+ &lt;td>&lt;code>*&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
  &lt;td>&lt;code>-v&lt;/code>&lt;/td>
  &lt;td>&lt;code>--version&lt;/code>&lt;/td>
  &lt;td>version for toolbox&lt;/td>
