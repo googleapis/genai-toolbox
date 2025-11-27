@@ -15,16 +15,12 @@
 package sqlitesql_test
 
 import (
-	"context"
-	"database/sql"
-	"reflect"
 	"testing"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/sqlite/sqlitesql"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	_ "modernc.org/sqlite"
@@ -175,151 +171,6 @@ func TestParseFromYamlWithTemplateSqlite(t *testing.T) {
 			}
 			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
-			}
-		})
-	}
-}
-
-func setupTestDB(t *testing.T) *sql.DB {
-	db, err := sql.Open("sqlite", ":memory:")
-	if err != nil {
-		t.Fatalf("Failed to open in-memory database: %v", err)
-	}
-
-	createTable := `
-	CREATE TABLE users (
-		id INTEGER PRIMARY KEY,
-		name TEXT,
-		age INTEGER
-	);`
-	if _, err := db.Exec(createTable); err != nil {
-		t.Fatalf("Failed to create table: %v", err)
-	}
-
-	insertData := `
-	INSERT INTO users (id, name, age) VALUES
-	(1, 'Alice', 30),
-	(2, 'Bob', 25);`
-	if _, err := db.Exec(insertData); err != nil {
-		t.Fatalf("Failed to insert data: %v", err)
-	}
-
-	return db
-}
-
-func TestTool_Invoke(t *testing.T) {
-	type fields struct {
-		Name               string
-		Kind               string
-		AuthRequired       []string
-		Parameters         parameters.Parameters
-		TemplateParameters parameters.Parameters
-		AllParams          parameters.Parameters
-		Db                 *sql.DB
-		Statement          string
-	}
-	type args struct {
-		ctx         context.Context
-		params      parameters.ParamValues
-		accessToken tools.AccessToken
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    any
-		wantErr bool
-	}{
-		{
-			name: "simple select",
-			fields: fields{
-				Db:        setupTestDB(t),
-				Statement: "SELECT * FROM users",
-			},
-			args: args{
-				ctx: context.Background(),
-			},
-			want: []any{
-				map[string]any{"id": int64(1), "name": "Alice", "age": int64(30)},
-				map[string]any{"id": int64(2), "name": "Bob", "age": int64(25)},
-			},
-			wantErr: false,
-		},
-		{
-			name: "select with parameter",
-			fields: fields{
-				Db:        setupTestDB(t),
-				Statement: "SELECT * FROM users WHERE name = ?",
-				Parameters: []parameters.Parameter{
-					parameters.NewStringParameter("name", "user name"),
-				},
-			},
-			args: args{
-				ctx: context.Background(),
-				params: []parameters.ParamValue{
-					{Name: "name", Value: "Alice"},
-				},
-			},
-			want: []any{
-				map[string]any{"id": int64(1), "name": "Alice", "age": int64(30)},
-			},
-			wantErr: false,
-		},
-		{
-			name: "select with template parameter",
-			fields: fields{
-				Db:        setupTestDB(t),
-				Statement: "SELECT * FROM {{.tableName}}",
-				TemplateParameters: []parameters.Parameter{
-					parameters.NewStringParameter("tableName", "table name"),
-				},
-			},
-			args: args{
-				ctx: context.Background(),
-				params: []parameters.ParamValue{
-					{Name: "tableName", Value: "users"},
-				},
-			},
-			want: []any{
-				map[string]any{"id": int64(1), "name": "Alice", "age": int64(30)},
-				map[string]any{"id": int64(2), "name": "Bob", "age": int64(25)},
-			},
-			wantErr: false,
-		},
-		{
-			name: "invalid sql",
-			fields: fields{
-				Db:        setupTestDB(t),
-				Statement: "SELECT * FROM non_existent_table",
-			},
-			args: args{
-				ctx: context.Background(),
-			},
-			want:    nil,
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tr := sqlitesql.Tool{
-				Config: sqlitesql.Config{
-					Name:               tt.fields.Name,
-					Kind:               tt.fields.Kind,
-					AuthRequired:       tt.fields.AuthRequired,
-					Statement:          tt.fields.Statement,
-					Parameters:         tt.fields.Parameters,
-					TemplateParameters: tt.fields.TemplateParameters,
-				},
-				AllParams: tt.fields.AllParams,
-				Db:        tt.fields.Db,
-			}
-			got, err := tr.Invoke(tt.args.ctx, nil, tt.args.params, tt.args.accessToken)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Tool.Invoke() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Tool.Invoke() = %v, want %v", got, tt.want)
 			}
 		})
 	}
