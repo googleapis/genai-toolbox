@@ -326,7 +326,7 @@ func TestHttpToolEndpoints(t *testing.T) {
 
 	// Run tests
 	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, `"hello world"`, tests.DisableArrayTest())
+	tests.RunToolInvokeTest(t, `"hello world"`, tests.DisableArrayTest(), tests.WithNullWant("null"))
 	runAdvancedHTTPInvokeTest(t)
 	runQueryParamInvokeTest(t)
 }
