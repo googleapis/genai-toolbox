@@ -63,6 +63,9 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	if c.TelemetryServiceName == "" {
 		c.TelemetryServiceName = "toolbox"
 	}
+	if c.AllowedOrigins == nil {
+		c.AllowedOrigins = []string{"*"}
+	}
 	return c
 }
 
@@ -192,6 +195,13 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--disable-reload"},
 			want: withDefaults(server.ServerConfig{
 				DisableReload: true,
+			}),
+		},
+		{
+			desc: "allowed origin",
+			args: []string{"--allowed-origins", "http://foo.com,http://bar.com"},
+			want: withDefaults(server.ServerConfig{
+				AllowedOrigins: []string{"http://foo.com", "http://bar.com"},
 			}),
 		},
 	}
