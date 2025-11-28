@@ -7,13 +7,13 @@ A CLI tool for running a toolbox server.
 You can install the toolbox globally:
 
 ```bash
-npm install -g toolbox
+npm install -g @toolbox-sdk/server
 ```
 
 Or run it directly using npx:
 
 ```bash
-npx toolbox
+npx @toolbox-sdk/server
 ```
 
 ## Configuration
@@ -60,8 +60,8 @@ To learn more on how to configure your toolbox, visit the [official docsite](htt
 The toolbox automatically handles platform-specific binaries. Supported platforms include:
 - macOS (arm64, x64)
 - Linux (x64)
-- Windows (x64)
 
+Note: Windows is not supported yet.
 
 ## Resources
 
