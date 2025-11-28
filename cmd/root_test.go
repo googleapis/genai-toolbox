@@ -1618,7 +1618,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"spanner-database-tools": tools.ToolsetConfig{
 					Name:      "spanner-database-tools",
-					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs"},
 				},
 			},
 		},
