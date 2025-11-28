@@ -212,7 +212,7 @@ func TestToolGetEndpoint(t *testing.T) {
 }
 
 func TestToolInvokeEndpoint(t *testing.T) {
-	mockTools := []MockTool{tool1, tool2, tool4, tool5}
+	mockTools := []MockTool{tool1, tool2, tool4, tool5, toolNilSlice}
 	toolsMap, toolsets, _, _ := setUpResources(t, mockTools, nil)
 	r, shutdown := setUpServer(t, "api", toolsMap, toolsets, nil, nil)
 	defer shutdown()
@@ -260,6 +260,13 @@ func TestToolInvokeEndpoint(t *testing.T) {
 			requestBody: bytes.NewBuffer([]byte(`{}`)),
 			want:        "",
 			isErr:       true,
+		},
+		{
+			name:        "nil slice result",
+			toolName:    toolNilSlice.Name,
+			requestBody: bytes.NewBuffer([]byte(`{}`)),
+			want:        "{result:[]}\n",
+			isErr:       false,
 		},
 	}
 

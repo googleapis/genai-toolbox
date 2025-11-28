@@ -50,6 +50,10 @@ type MockTool struct {
 }
 
 func (t MockTool) Invoke(context.Context, parameters.ParamValues, tools.AccessToken) (any, error) {
+	if t.Name == "nil_slice_returner" {
+		var s []any
+		return s, nil
+	}
 	mock := []any{t.Name}
 	return mock, nil
 }
@@ -196,6 +200,11 @@ var tool5 = MockTool{
 	Name:                         "require_client_auth_tool",
 	Params:                       []parameters.Parameter{},
 	requiresClientAuthrorization: true,
+}
+
+var toolNilSlice = MockTool{
+	Name:   "nil_slice_returner",
+	Params: []parameters.Parameter{},
 }
 
 var prompt1 = MockPrompt{
