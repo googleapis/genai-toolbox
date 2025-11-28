@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -272,7 +273,9 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 		return
 	}
-
+	if v := reflect.ValueOf(res); v.Kind() == reflect.Slice && v.IsNil() {
+		res = []any{}
+	}
 	resMarshal, err := json.Marshal(res)
 	if err != nil {
 		err = fmt.Errorf("unable to marshal result: %w", err)
