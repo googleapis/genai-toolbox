@@ -25,6 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/iterator"
 )
 
@@ -85,30 +86,28 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Get the Dataplex client using the method from the source
 	makeCatalogClient := s.MakeDataplexCatalogClient()
 
-	prompt := tools.NewStringParameter("prompt", "Prompt representing search intention. Do not rewrite the prompt.")
-	datasetIds := tools.NewArrayParameterWithDefault("datasetIds", []any{}, "Array of dataset IDs.", tools.NewStringParameter("datasetId", "The IDs of the bigquery dataset."))
-	projectIds := tools.NewArrayParameterWithDefault("projectIds", []any{}, "Array of project IDs.", tools.NewStringParameter("projectId", "The IDs of the bigquery project."))
-	types := tools.NewArrayParameterWithDefault("types", []any{}, "Array of data types to filter by.", tools.NewStringParameter("type", "The type of the data. Accepted values are: CONNECTION, POLICY, DATASET, MODEL, ROUTINE, TABLE, VIEW."))
-	pageSize := tools.NewIntParameterWithDefault("pageSize", 5, "Number of results in the search page.")
-	parameters := tools.Parameters{prompt, datasetIds, projectIds, types, pageSize}
+	prompt := parameters.NewStringParameter("prompt", "Prompt representing search intention. Do not rewrite the prompt.")
+	datasetIds := parameters.NewArrayParameterWithDefault("datasetIds", []any{}, "Array of dataset IDs.", parameters.NewStringParameter("datasetId", "The IDs of the bigquery dataset."))
+	projectIds := parameters.NewArrayParameterWithDefault("projectIds", []any{}, "Array of project IDs.", parameters.NewStringParameter("projectId", "The IDs of the bigquery project."))
+	types := parameters.NewArrayParameterWithDefault("types", []any{}, "Array of data types to filter by.", parameters.NewStringParameter("type", "The type of the data. Accepted values are: CONNECTION, POLICY, DATASET, MODEL, ROUTINE, TABLE, VIEW."))
+	pageSize := parameters.NewIntParameterWithDefault("pageSize", 5, "Number of results in the search page.")
+	params := parameters.Parameters{prompt, datasetIds, projectIds, types, pageSize}
 
 	description := "Use this tool to find tables, views, models, routines or connections."
 	if cfg.Description != "" {
 		description = cfg.Description
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, params, nil)
 
 	t := Tool{
-		Name:              cfg.Name,
-		Kind:              kind,
-		Parameters:        parameters,
-		AuthRequired:      cfg.AuthRequired,
+		Config:            cfg,
+		Parameters:        params,
 		UseClientOAuth:    s.UseClientAuthorization(),
 		MakeCatalogClient: makeCatalogClient,
 		ProjectID:         s.BigQueryProject(),
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
-			Parameters:   parameters.Manifest(),
+			Parameters:   params.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
 		mcpManifest: mcpManifest,
@@ -117,15 +116,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 }
 
 type Tool struct {
-	Name              string
-	Kind              string
-	Parameters        tools.Parameters
-	AuthRequired      []string
+	Config
+	Parameters        parameters.Parameters
 	UseClientOAuth    bool
 	MakeCatalogClient func() (*dataplexapi.CatalogClient, bigqueryds.DataplexClientCreator, error)
 	ProjectID         string
 	manifest          tools.Manifest
 	mcpManifest       tools.McpManifest
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
@@ -205,21 +206,21 @@ func ExtractType(resourceString string) string {
 	return typeMap[resourceString[lastIndex+1:]]
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	pageSize := int32(paramsMap["pageSize"].(int))
 	prompt, _ := paramsMap["prompt"].(string)
-	projectIdSlice, err := tools.ConvertAnySliceToTyped(paramsMap["projectIds"].([]any), "string")
+	projectIdSlice, err := parameters.ConvertAnySliceToTyped(paramsMap["projectIds"].([]any), "string")
 	if err != nil {
 		return nil, fmt.Errorf("can't convert projectIds to array of strings: %s", err)
 	}
 	projectIds := projectIdSlice.([]string)
-	datasetIdSlice, err := tools.ConvertAnySliceToTyped(paramsMap["datasetIds"].([]any), "string")
+	datasetIdSlice, err := parameters.ConvertAnySliceToTyped(paramsMap["datasetIds"].([]any), "string")
 	if err != nil {
 		return nil, fmt.Errorf("can't convert datasetIds to array of strings: %s", err)
 	}
 	datasetIds := datasetIdSlice.([]string)
-	typesSlice, err := tools.ConvertAnySliceToTyped(paramsMap["types"].([]any), "string")
+	typesSlice, err := parameters.ConvertAnySliceToTyped(paramsMap["types"].([]any), "string")
 	if err != nil {
 		return nil, fmt.Errorf("can't convert types to array of strings: %s", err)
 	}
@@ -272,9 +273,9 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return results, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	// Parse parameters from the provided data
-	return tools.ParseParams(t.Parameters, data, claims)
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -285,4 +286,8 @@ func (t Tool) Manifest() tools.Manifest {
 func (t Tool) McpManifest() tools.McpManifest {
 	// Returns the tool MCP manifest
 	return t.mcpManifest
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

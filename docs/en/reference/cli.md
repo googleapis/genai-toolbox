@@ -25,6 +25,7 @@ description: >
 |              | `--tools-files`            | Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --prebuilt, --tools-file, or --tools-folder.                                                    |             |
 |              | `--tools-folder`           | Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --prebuilt, --tools-file, or --tools-files. |             |
 |              | `--ui`                     | Launches the Toolbox UI web server.                                                                                                                                                           |             |
+|              | `--allowed-origins`        | Specifies a list of origins permitted to access this server.                                                                                                                                  | `*`         |
 | `-v`         | `--version`                | version for toolbox                                                                                                                                                                           |             |
 
 ## Examples
@@ -32,10 +33,12 @@ description: >
 ### Transport Configuration
 
 **Server Settings:**
+
 - `--address`, `-a`: Server listening address (default: "127.0.0.1")
 - `--port`, `-p`: Server listening port (default: 5000)
 
 **STDIO:**
+
 - `--stdio`: Run in MCP STDIO mode instead of HTTP server
 
 #### Usage Examples
@@ -50,15 +53,19 @@ description: >
 The CLI supports multiple mutually exclusive ways to specify tool configurations:
 
 **Single File:** (default)
+
 - `--tools-file`: Path to a single YAML configuration file (default: `tools.yaml`)
 
 **Multiple Files:**
+
 - `--tools-files`: Comma-separated list of YAML files to merge
 
 **Directory:**
+
 - `--tools-folder`: Directory containing YAML files to load and merge
 
 **Prebuilt Configurations:**
+
 - `--prebuilt`: Use predefined configurations for specific database types (e.g.,
   'bigquery', 'postgres', 'spanner'). See [Prebuilt Tools
   Reference](prebuilt-tools.md) for allowed values.

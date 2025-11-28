@@ -87,12 +87,16 @@ When `output_format` is set to "simple", the tool returns a minimal JSON structu
   {
     "schema_name": "public",
     "object_name": "users",
-    "object_details": "{\"name\":\"users\"}"
+    "object_details": {
+      "name": "users"
+    }
   },
   {
     "schema_name": "public",
     "object_name": "orders",
-    "object_details": "{\"name\":\"orders\"}"
+    "object_details": {
+      "name": "orders"
+    }
   }
 ]
 ```
@@ -107,50 +111,55 @@ comprehensive schema information:
   {
     "schema_name": "public",
     "object_name": "users",
-    "object_details": "{
-      \"schema_name\": \"public\",
-      \"object_name\": \"users\",
-      \"object_type\": \"BASE TABLE\",
-      \"columns\": [
+    "object_details": {
+      "schema_name": "public",
+      "object_name": "users",
+      "object_type": "BASE TABLE",
+      "columns": [
         {
-          \"column_name\": \"id\",
-          \"data_type\": \"INT64\",
-          \"ordinal_position\": 1,
-          \"is_not_nullable\": true,
-          \"column_default\": null
+          "column_name": "id",
+          "data_type": "INT64",
+          "ordinal_position": 1,
+          "is_not_nullable": true,
+          "column_default": null
         },
         {
-          \"column_name\": \"email\",
-          \"data_type\": \"STRING(255)\",
-          \"ordinal_position\": 2,
-          \"is_not_nullable\": true,
-          \"column_default\": null
+          "column_name": "email",
+          "data_type": "STRING(255)",
+          "ordinal_position": 2,
+          "is_not_nullable": true,
+          "column_default": null
         }
       ],
-      \"constraints\": [
+      "constraints": [
         {
-          \"constraint_name\": \"PK_users\",
-          \"constraint_type\": \"PRIMARY KEY\",
-          \"constraint_definition\": \"PRIMARY KEY (id)\",
-          \"constraint_columns\": [\"id\"],
-          \"foreign_key_referenced_table\": null,
-          \"foreign_key_referenced_columns\": []
-        }
-      ],
-      \"indexes\": [
-        {
-          \"index_name\": \"idx_users_email\",
-          \"index_type\": \"INDEX\",
-          \"is_unique\": true,
-          \"is_null_filtered\": false,
-          \"interleaved_in_table\": null,
-          \"index_key_columns\": [
-            {\"column_name\": \"email\", \"ordering\": \"ASC\"}
+          "constraint_name": "PK_users",
+          "constraint_type": "PRIMARY KEY",
+          "constraint_definition": "PRIMARY KEY (id)",
+          "constraint_columns": [
+            "id"
           ],
-          \"storing_columns\": []
+          "foreign_key_referenced_table": null,
+          "foreign_key_referenced_columns": []
+        }
+      ],
+      "indexes": [
+        {
+          "index_name": "idx_users_email",
+          "index_type": "INDEX",
+          "is_unique": true,
+          "is_null_filtered": false,
+          "interleaved_in_table": null,
+          "index_key_columns": [
+            {
+              "column_name": "email",
+              "ordering": "ASC"
+            }
+          ],
+          "storing_columns": []
         }
       ]
-    }"
+    }
   }
 ]
 ```

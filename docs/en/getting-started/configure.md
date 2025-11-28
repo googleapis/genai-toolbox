@@ -99,7 +99,8 @@ my_second_toolset = client.load_toolset("my_second_toolset")
 
 ### Prompts
 
-The `prompts` section of your `tools.yaml` defines the templates containing structured messages and instructions for interacting with language models.
+The `prompts` section of your `tools.yaml` defines the templates containing
+structured messages and instructions for interacting with language models.
 
 ```yaml
 prompts:

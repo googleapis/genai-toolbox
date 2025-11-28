@@ -23,7 +23,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 // Test type aliases for convenience.
@@ -38,8 +38,8 @@ func Ptr[T any](v T) *T {
 	return &v
 }
 
-func makeArrayArg(name, desc string, items tools.Parameter) Argument {
-	return Argument{Parameter: tools.NewArrayParameter(name, desc, items)}
+func makeArrayArg(name, desc string, items parameters.Parameter) Argument {
+	return Argument{Parameter: parameters.NewArrayParameter(name, desc, items)}
 }
 
 func TestArgMcpManifest(t *testing.T) {
@@ -51,21 +51,21 @@ func TestArgMcpManifest(t *testing.T) {
 	}{
 		{
 			name: "Required with no default",
-			arg:  Argument{Parameter: tools.NewStringParameterWithRequired("name1", "desc1", true)},
+			arg:  Argument{Parameter: parameters.NewStringParameterWithRequired("name1", "desc1", true)},
 			expected: ArgMcpManifest{
 				Name: "name1", Description: "desc1", Required: true,
 			},
 		},
 		{
 			name: "Not required with no default",
-			arg:  Argument{Parameter: tools.NewStringParameterWithRequired("name2", "desc2", false)},
+			arg:  Argument{Parameter: parameters.NewStringParameterWithRequired("name2", "desc2", false)},
 			expected: ArgMcpManifest{
 				Name: "name2", Description: "desc2", Required: false,
 			},
 		},
 		{
 			name: "Implicitly required with default",
-			arg:  Argument{Parameter: tools.NewStringParameterWithDefault("name3", "defaultVal", "desc3")},
+			arg:  Argument{Parameter: parameters.NewStringParameterWithDefault("name3", "defaultVal", "desc3")},
 			expected: ArgMcpManifest{
 				Name: "name3", Description: "desc3", Required: false,
 			},
@@ -86,14 +86,14 @@ func TestArgMcpManifest(t *testing.T) {
 func TestArgumentsUnmarshalYAML(t *testing.T) {
 	t.Parallel()
 	// paramComparer allows cmp.Diff to intelligently compare the parsed results.
-	var transformFunc func(tools.Parameter) any
-	transformFunc = func(p tools.Parameter) any {
+	var transformFunc func(parameters.Parameter) any
+	transformFunc = func(p parameters.Parameter) any {
 		s := struct{ Name, Type, Desc string }{
 			Name: p.GetName(),
 			Type: p.GetType(),
 			Desc: p.Manifest().Description,
 		}
-		if arr, ok := p.(*tools.ArrayParameter); ok {
+		if arr, ok := p.(*parameters.ArrayParameter); ok {
 			s.Desc = fmt.Sprintf("%s items:%v", s.Desc, transformFunc(arr.GetItems()))
 		}
 		return s
@@ -112,7 +112,7 @@ func TestArgumentsUnmarshalYAML(t *testing.T) {
 				{"name": "p1", "description": "d1"},
 			},
 			expectedArgs: Arguments{
-				{Parameter: tools.NewStringParameter("p1", "d1")},
+				{Parameter: parameters.NewStringParameter("p1", "d1")},
 			},
 		},
 		{
@@ -121,7 +121,7 @@ func TestArgumentsUnmarshalYAML(t *testing.T) {
 				{"name": "p1", "description": "d1", "type": "integer"},
 			},
 			expectedArgs: Arguments{
-				{Parameter: tools.NewIntParameter("p1", "d1")},
+				{Parameter: parameters.NewIntParameter("p1", "d1")},
 			},
 		},
 		{
@@ -139,7 +139,7 @@ func TestArgumentsUnmarshalYAML(t *testing.T) {
 				},
 			},
 			expectedArgs: Arguments{
-				makeArrayArg("param_array", "an array", tools.NewStringParameter("item_name", "an item")),
+				makeArrayArg("param_array", "an array", parameters.NewStringParameter("item_name", "an item")),
 			},
 		},
 		{
@@ -186,14 +186,14 @@ func TestArgumentsUnmarshalYAML(t *testing.T) {
 func TestParseArguments(t *testing.T) {
 	t.Parallel()
 	testArguments := prompts.Arguments{
-		{Parameter: tools.NewStringParameter("name", "A required name.")},
-		{Parameter: tools.NewIntParameterWithRequired("count", "An optional count.", false)},
+		{Parameter: parameters.NewStringParameter("name", "A required name.")},
+		{Parameter: parameters.NewIntParameterWithRequired("count", "An optional count.", false)},
 	}
 
 	testCases := []struct {
 		name    string
 		argsIn  map[string]any
-		want    tools.ParamValues
+		want    parameters.ParamValues
 		wantErr string
 	}{
 		{
@@ -202,7 +202,7 @@ func TestParseArguments(t *testing.T) {
 				"name":  "test-name",
 				"count": 42,
 			},
-			want: tools.ParamValues{
+			want: parameters.ParamValues{
 				{Name: "name", Value: "test-name"},
 				{Name: "count", Value: 42},
 			},
@@ -212,7 +212,7 @@ func TestParseArguments(t *testing.T) {
 			argsIn: map[string]any{
 				"name": "another-name",
 			},
-			want: tools.ParamValues{
+			want: parameters.ParamValues{
 				{Name: "name", Value: "another-name"},
 				{Name: "count", Value: nil},
 			},

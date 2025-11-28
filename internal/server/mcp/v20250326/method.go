@@ -65,8 +65,15 @@ func toolsListHandler(id jsonrpc.RequestId, toolset tools.Toolset, body []byte) 
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
+	// exclude annotations from this version
+	manifests := make([]tools.McpManifest, len(toolset.McpManifest))
+	for i, m := range toolset.McpManifest {
+		m.Annotations = nil
+		manifests[i] = m
+	}
+
 	result := ListToolsResult{
-		Tools: toolset.McpManifest,
+		Tools: manifests,
 	}
 	return jsonrpc.JSONRPCResponse{
 		Jsonrpc: jsonrpc.JSONRPC_VERSION,
@@ -99,12 +106,12 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 	}
 
 	// Get access token
-	accessToken := tools.AccessToken(header.Get("Authorization"))
+	accessToken := tools.AccessToken(header.Get(tool.GetAuthTokenHeaderName()))
 
 	// Check if this specific tool requires the standard authorization header
 	if tool.RequiresClientAuthorization() {
 		if accessToken == "" {
-			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, "missing access token in the 'Authorization' header", nil), tools.ErrUnauthorized
+			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, "missing access token in the 'Authorization' header", nil), util.ErrUnauthorized
 		}
 	}
 
@@ -152,7 +159,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 	// Check if any of the specified auth services is verified
 	isAuthorized := tool.Authorized(verifiedAuthServices)
 	if !isAuthorized {
-		err = fmt.Errorf("unauthorized Tool call: Please make sure your specify correct auth headers: %w", tools.ErrUnauthorized)
+		err = fmt.Errorf("unauthorized Tool call: Please make sure your specify correct auth headers: %w", util.ErrUnauthorized)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, "tool invocation authorized")
@@ -169,7 +176,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, toolsMap map[st
 	if err != nil {
 		errStr := err.Error()
 		// Missing authService tokens.
-		if errors.Is(err, tools.ErrUnauthorized) {
+		if errors.Is(err, util.ErrUnauthorized) {
 			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
 		// Upstream auth error

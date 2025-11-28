@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
@@ -71,19 +72,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	project := s.DefaultProject
-	var projectParam tools.Parameter
+	var projectParam parameters.Parameter
 	if project != "" {
-		projectParam = tools.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
 	} else {
-		projectParam = tools.NewStringParameter("project", "The project ID")
+		projectParam = parameters.NewStringParameter("project", "The project ID")
 	}
 
-	allParameters := tools.Parameters{
+	allParameters := parameters.Parameters{
 		projectParam,
-		tools.NewStringParameter("name", "The name of the instance"),
-		tools.NewStringParameterWithDefault("databaseVersion", "MYSQL_8_4", "The database version for MySQL. If not specified, defaults to the latest available version (e.g., MYSQL_8_4)."),
-		tools.NewStringParameter("rootPassword", "The root password for the instance"),
-		tools.NewStringParameterWithDefault("editionPreset", "Development", "The edition of the instance. Can be `Production` or `Development`. This determines the default machine type and availability. Defaults to `Development`."),
+		parameters.NewStringParameter("name", "The name of the instance"),
+		parameters.NewStringParameterWithDefault("databaseVersion", "MYSQL_8_4", "The database version for MySQL. If not specified, defaults to the latest available version (e.g., MYSQL_8_4)."),
+		parameters.NewStringParameter("rootPassword", "The root password for the instance"),
+		parameters.NewStringParameterWithDefault("editionPreset", "Development", "The edition of the instance. Can be `Production` or `Development`. This determines the default machine type and availability. Defaults to `Development`."),
 	}
 	paramManifest := allParameters.Manifest()
 
@@ -91,34 +92,32 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if description == "" {
 		description = "Creates a MySQL instance using `Production` and `Development` presets. For the `Development` template, it chooses a 2 vCPU, 16 GiB RAM, 100 GiB SSD configuration with Non-HA/zonal availability. For the `Production` template, it chooses an 8 vCPU, 64 GiB RAM, 250 GiB SSD configuration with HA/regional availability. The Enterprise Plus edition is used in both cases. The default database version is `MYSQL_8_4`. The agent should ask the user if they want to use a different version."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
 
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		AuthRequired: cfg.AuthRequired,
-		Source:       s,
-		AllParams:    allParameters,
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		Source:      s,
+		AllParams:   allParameters,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}, nil
 }
 
 // Tool represents the create-instances tool.
 type Tool struct {
-	Name         string   `yaml:"name"`
-	Kind         string   `yaml:"kind"`
-	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
-
+	Config
 	Source      *cloudsqladmin.Source
-	AllParams   tools.Parameters `yaml:"allParams"`
+	AllParams   parameters.Parameters `yaml:"allParams"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
 // Invoke executes the tool's logic.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
 	project, ok := paramsMap["project"].(string)
@@ -182,8 +181,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 }
 
 // ParseParams parses the parameters for the tool.
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.AllParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.AllParams, data, claims)
 }
 
 // Manifest returns the tool's manifest.
@@ -203,4 +202,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return t.Source.UseClientAuthorization()
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

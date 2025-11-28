@@ -8,18 +8,22 @@ description: >
 
 ## About
 
-[SingleStore][singlestore-docs] is a distributed SQL database built to power intelligent applications. It is both relational and multi-model, enabling developers to easily build and scale applications and workloads.
+[SingleStore][singlestore-docs] is a distributed SQL database built to power
+intelligent applications. It is both relational and multi-model, enabling
+developers to easily build and scale applications and workloads.
 
-SingleStore is built around Universal Storage which combines in-memory rowstore and on-disk columnstore data formats to deliver a single table type that is optimized to handle both transactional and analytical workloads.
+SingleStore is built around Universal Storage which combines in-memory rowstore
+and on-disk columnstore data formats to deliver a single table type that is
+optimized to handle both transactional and analytical workloads.
 
 [singlestore-docs]: https://docs.singlestore.com/
 
 ## Available Tools
 
-- [`singlestore-sql`](../tools/singlestore/singlestore-sql.md)  
+- [`singlestore-sql`](../tools/singlestore/singlestore-sql.md)
   Execute pre-defined prepared SQL queries in SingleStore.
 
-- [`singlestore-execute-sql`](../tools/singlestore/singlestore-execute-sql.md)  
+- [`singlestore-execute-sql`](../tools/singlestore/singlestore-execute-sql.md)
   Run parameterized SQL queries in SingleStore.
 
 ## Requirements
@@ -29,7 +33,8 @@ SingleStore is built around Universal Storage which combines in-memory rowstore 
 This source only uses standard authentication. You will need to [create a
 database user][singlestore-user] to login to the database with.
 
-[singlestore-user]: https://docs.singlestore.com/cloud/reference/sql-reference/security-management-commands/create-user/
+[singlestore-user]:
+    https://docs.singlestore.com/cloud/reference/sql-reference/security-management-commands/create-user/
 
 ## Example
 
@@ -53,7 +58,7 @@ instead of hardcoding your secrets into the configuration file.
 ## Reference
 
 | **field**    | **type** | **required** | **description**                                                                                 |
-| ------------ | :------: | :----------: | ----------------------------------------------------------------------------------------------- |
+|--------------|:--------:|:------------:|-------------------------------------------------------------------------------------------------|
 | kind         |  string  |     true     | Must be "singlestore".                                                                          |
 | host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
 | port         |  string  |     true     | Port to connect to (e.g. "3306").                                                               |

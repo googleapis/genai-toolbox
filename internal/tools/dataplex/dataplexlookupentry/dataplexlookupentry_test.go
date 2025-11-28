@@ -21,8 +21,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexlookupentry"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlDataplexLookupEntry(t *testing.T) {
@@ -88,11 +88,11 @@ func TestParseFromYamlDataplexLookupEntry(t *testing.T) {
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
-					Parameters: []tools.Parameter{
-						tools.NewStringParameter("name", "some name description"),
-						tools.NewStringParameter("view", "some view description"),
-						tools.NewArrayParameterWithDefault("aspectTypes", []any{}, "some aspect types description", tools.NewStringParameter("aspectType", "some aspect type description")),
-						tools.NewStringParameter("entry", "some entry description"),
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameter("name", "some name description"),
+						parameters.NewStringParameter("view", "some view description"),
+						parameters.NewArrayParameterWithDefault("aspectTypes", []any{}, "some aspect types description", parameters.NewStringParameter("aspectType", "some aspect type description")),
+						parameters.NewStringParameter("entry", "some entry description"),
 					},
 				},
 			},

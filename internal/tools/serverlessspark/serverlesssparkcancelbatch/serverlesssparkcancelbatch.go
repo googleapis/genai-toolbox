@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 const kind = "serverless-spark-cancel-batch"
@@ -75,8 +76,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		desc = "Cancels a running Serverless Spark (aka Dataproc Serverless) batch operation. Note that the batch state will not change immediately after the tool returns; it can take a minute or so for the cancellation to be reflected."
 	}
 
-	allParameters := tools.Parameters{
-		tools.NewStringParameter("operation", "The name of the operation to cancel, e.g. for \"projects/my-project/locations/us-central1/operations/my-operation\", pass \"my-operation\""),
+	allParameters := parameters.Parameters{
+		parameters.NewStringParameter("operation", "The name of the operation to cancel, e.g. for \"projects/my-project/locations/us-central1/operations/my-operation\", pass \"my-operation\""),
 	}
 	inputSchema, _ := allParameters.McpManifest()
 
@@ -87,32 +88,27 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	return &Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Source:       ds,
-		AuthRequired: cfg.AuthRequired,
-		manifest:     tools.Manifest{Description: desc, Parameters: allParameters.Manifest()},
-		mcpManifest:  mcpManifest,
-		Parameters:   allParameters,
+		Config:      cfg,
+		Source:      ds,
+		manifest:    tools.Manifest{Description: desc, Parameters: allParameters.Manifest()},
+		mcpManifest: mcpManifest,
+		Parameters:  allParameters,
 	}, nil
 }
 
 // Tool is the implementation of the tool.
 type Tool struct {
-	Name         string   `yaml:"name"`
-	Kind         string   `yaml:"kind"`
-	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
+	Config
 
 	Source *serverlessspark.Source
 
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
-	Parameters  tools.Parameters
+	Parameters  parameters.Parameters
 }
 
 // Invoke executes the tool's operation.
-func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t *Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	client, err := t.Source.GetOperationsClient(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get operations client: %w", err)
@@ -140,8 +136,8 @@ func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken
 	return fmt.Sprintf("Cancelled [%s].", operation), nil
 }
 
-func (t *Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t *Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t *Tool) Manifest() tools.Manifest {
@@ -159,4 +155,12 @@ func (t *Tool) Authorized(services []string) bool {
 func (t *Tool) RequiresClientAuthorization() bool {
 	// Client OAuth not supported, rely on ADCs.
 	return false
+}
+
+func (t *Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

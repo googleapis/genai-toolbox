@@ -47,12 +47,37 @@ to a database by following these instructions][csql-pg-quickstart].
 - [`postgres-list-schemas`](../tools/postgres/postgres-list-schemas.md)
   List schemas in a PostgreSQL database.
 
+- [`postgres-database-overview`](../tools/postgres/postgres-database-overview.md)
+  Fetches the current state of the PostgreSQL server.
+
+- [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
+  List triggers in a PostgreSQL database.
+
+- [`postgres-list-indexes`](../tools/postgres/postgres-list-indexes.md)
+  List available user indexes in a PostgreSQL database.
+
+- [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
+  List sequences in a PostgreSQL database.
+- [`postgres-long-running-transactions`](../tools/postgres/postgres-long-running-transactions.md)
+  List long running transactions in a PostgreSQL database.
+
+- [`postgres-list-locks`](../tools/postgres/postgres-list-locks.md)
+  List lock stats in a PostgreSQL database.
+
+- [`postgres-replication-stats`](../tools/postgres/postgres-replication-stats.md)
+  List replication stats in a PostgreSQL database.
+
+- [`postgres-list-query-stats`](../tools/postgres/postgres-list-query-stats.md)
+  List query statistics in a PostgreSQL database.
+
+- [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
+  List cardinality of columns in a table in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [Cloud SQL for Postgres using
   MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_pg_mcp/)
 Connect your IDE to Cloud SQL for Postgres using Toolbox.
-
 
 ## Requirements
 

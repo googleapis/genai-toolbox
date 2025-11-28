@@ -22,6 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	alloydbadmin "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 const kind string = "alloydb-get-user"
@@ -71,18 +72,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	project := s.DefaultProject
-	var projectParam tools.Parameter
+	var projectParam parameters.Parameter
 	if project != "" {
-		projectParam = tools.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
 	} else {
-		projectParam = tools.NewStringParameter("project", "The GCP project ID.")
+		projectParam = parameters.NewStringParameter("project", "The GCP project ID.")
 	}
 
-	allParameters := tools.Parameters{
+	allParameters := parameters.Parameters{
 		projectParam,
-		tools.NewStringParameter("location", "The location of the cluster (e.g., 'us-central1')."),
-		tools.NewStringParameter("cluster", "The ID of the cluster."),
-		tools.NewStringParameter("user", "The ID of the user."),
+		parameters.NewStringParameter("location", "The location of the cluster (e.g., 'us-central1')."),
+		parameters.NewStringParameter("cluster", "The ID of the cluster."),
+		parameters.NewStringParameter("user", "The ID of the user."),
 	}
 	paramManifest := allParameters.Manifest()
 
@@ -90,11 +91,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if description == "" {
 		description = "Retrieves details about a specific AlloyDB user."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
 
 	return Tool{
-		Name:        cfg.Name,
-		Kind:        kind,
+		Config:      cfg,
 		Source:      s,
 		AllParams:   allParameters,
 		manifest:    tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
@@ -104,18 +104,20 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 // Tool represents the get-user tool.
 type Tool struct {
-	Name string `yaml:"name"`
-	Kind string `yaml:"kind"`
-
+	Config
 	Source    *alloydbadmin.Source
-	AllParams tools.Parameters
+	AllParams parameters.Parameters
 
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
 // Invoke executes the tool's logic.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
 	project, ok := paramsMap["project"].(string)
@@ -151,8 +153,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 }
 
 // ParseParams parses the parameters for the tool.
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.AllParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.AllParams, data, claims)
 }
 
 // Manifest returns the tool's manifest.
@@ -172,4 +174,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization() bool {
 	return t.Source.UseClientAuthorization()
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

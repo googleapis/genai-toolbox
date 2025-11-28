@@ -98,6 +98,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlmssql/cloudsqlmssqlcreateinstance"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlmysql/cloudsqlmysqlcreateinstance"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg/cloudsqlpgcreateinstances"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsqlpg/cloudsqlpgupgradeprecheck"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataform/dataformcompilelocal"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexlookupentry"
@@ -122,6 +123,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookercreateprojectfile"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerdeleteprojectfile"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerdevmode"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergenerateembedurl"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetconnectiondatabases"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetconnections"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetconnectionschemas"
@@ -176,13 +178,22 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/oceanbase/oceanbasesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/oracle/oracleexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/oracle/oraclesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresdatabaseoverview"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresgetcolumncardinality"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistactivequeries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistavailableextensions"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistindexes"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistinstalledextensions"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistlocks"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistquerystats"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistschemas"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistsequences"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttables"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttriggers"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistviews"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslongrunningtransactions"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresreplicationstats"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparkcancelbatch"
@@ -191,6 +202,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/singlestore/singlestoreexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/singlestore/singlestoresql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerlistgraphs"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerlisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannersql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/sqlite/sqliteexecutesql"
@@ -351,6 +363,7 @@ func NewCommand(opts ...Option) *Command {
 	flags.BoolVar(&cmd.cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 	flags.BoolVar(&cmd.cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
 	flags.BoolVar(&cmd.cfg.UI, "ui", false, "Launches the Toolbox UI web server.")
+	flags.StringSliceVar(&cmd.cfg.AllowedOrigins, "allowed-origins", []string{"*"}, "Specifies a list of origins permitted to access this server. Defaults to '*'.")
 
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }

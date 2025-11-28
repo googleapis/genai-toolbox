@@ -125,7 +125,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.19.1
+> export VERSION=0.21.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 > chmod +x toolbox
 > ```
@@ -138,7 +138,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.19.1
+> export VERSION=0.21.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
 > chmod +x toolbox
 > ```
@@ -151,7 +151,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.19.1
+> export VERSION=0.21.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
 > chmod +x toolbox
 > ```
@@ -163,9 +163,9 @@ To install Toolbox as a binary:
 > To install Toolbox as a binary on Windows (AMD64):
 >
 > ```powershell
-> # see releases page for other versions
-> $VERSION = "0.19.1"
-> Invoke-WebRequest -Uri "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe" -OutFile "toolbox.exe"
+> :: see releases page for other versions
+> set VERSION=0.21.0
+> curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
 > ```
 >
 > </details>
@@ -177,7 +177,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.19.1
+export VERSION=0.21.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -201,7 +201,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.19.1
+go install github.com/googleapis/genai-toolbox@v0.21.0
 ```
 <!-- {x-release-please-end} -->
 
@@ -804,8 +804,6 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     For more detailed instructions on using the Toolbox Go SDK, see the
     [project's README][toolbox-core-go-readme].
 
-    [toolbox-go]: https://pkg.go.dev/github.com/googleapis/mcp-toolbox-sdk-go/core
-    [toolbox-core-go-readme]: https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md
 
   </details>
 </details>
