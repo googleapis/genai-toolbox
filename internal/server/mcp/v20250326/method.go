@@ -84,7 +84,6 @@ func toolsListHandler(id jsonrpc.RequestId, toolset tools.Toolset, body []byte) 
 
 // toolsCallHandler generate a response for tools call.
 func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
-	toolsMap := resourceMgr.GetToolsMap()
 	authServices := resourceMgr.GetAuthServiceMap()
 
 	// retrieve logger from context
@@ -102,7 +101,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	toolName := req.Params.Name
 	toolArgument := req.Params.Arguments
 	logger.DebugContext(ctx, fmt.Sprintf("tool name: %s", toolName))
-	tool, ok := toolsMap[toolName]
+	tool, ok := resourceMgr.GetTool(toolName)
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
@@ -255,7 +254,6 @@ func promptsListHandler(ctx context.Context, id jsonrpc.RequestId, promptset pro
 
 // promptsGetHandler handles the "prompts/get" method.
 func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *resources.ResourceManager, body []byte) (any, error) {
-	promptsMap := resourceMgr.GetPromptsMap()
 	// retrieve logger from context
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -271,7 +269,7 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *r
 
 	promptName := req.Params.Name
 	logger.DebugContext(ctx, fmt.Sprintf("prompt name: %s", promptName))
-	prompt, ok := promptsMap[promptName]
+	prompt, ok := resourceMgr.GetPrompt(promptName)
 	if !ok {
 		err := fmt.Errorf("prompt with name %q does not exist", promptName)
 		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
