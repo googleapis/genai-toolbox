@@ -110,17 +110,29 @@ func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, aut
 func (r *ResourceManager) GetAuthServiceMap() map[string]auth.AuthService {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	return r.authServices
+    copiedMap := make(map[string]auth.AuthService, len(r.authServices))
+	for k, v := range r.authServices {
+		copiedMap[k] = v
+	}
+	return copiedMap
 }
 
 func (r *ResourceManager) GetToolsMap() map[string]tools.Tool {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	return r.tools
+    copiedMap := make(map[string]tools.Tool, len(r.tools))
+	for k, v := range r.tools {
+		copiedMap[k] = v
+	}
+    return copiedMap
 }
 
 func (r *ResourceManager) GetPromptsMap() map[string]prompts.Prompt {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	return r.prompts
+    copiedMap := make(map[string]prompts.Prompt, len(r.prompts))
+	for k, v := range r.prompts {
+		copiedMap[k] = v
+	}
+	return copiedMap
 }
