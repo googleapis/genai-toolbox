@@ -120,7 +120,7 @@ func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string
 			// If password is provided without an username, raise an error
 			return "", useIAM, fmt.Errorf("password is provided without a username. Please provide both a username and password, or leave both fields empty")
 		}
-		email, err := sources.GetIAMPrincipalEmailFromADC(ctx)
+		email, err := sources.GetIAMPrincipalEmailFromADC(ctx, "postgres")
 		if err != nil {
 			return "", useIAM, fmt.Errorf("error getting email from ADC: %v", err)
 		}
