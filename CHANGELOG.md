@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.22.0](https://github.com/googleapis/genai-toolbox/compare/v0.21.0...v0.22.0) (2025-11-29)
+
+
+### Features
+
+* Add allowed-origins flag ([#1984](https://github.com/googleapis/genai-toolbox/issues/1984)) ([862868f](https://github.com/googleapis/genai-toolbox/commit/862868f28476ea981575ce412faa7d6a03138f31))
+* Add list-query-stats and get-column-cardinality functions ([#1976](https://github.com/googleapis/genai-toolbox/issues/1976)) ([9f76026](https://github.com/googleapis/genai-toolbox/commit/9f760269253a8cc92a357e995c6993ccc4a0fb7b))
+* Support alternate accessToken header name ([#1968](https://github.com/googleapis/genai-toolbox/issues/1968)) ([18017d6](https://github.com/googleapis/genai-toolbox/commit/18017d6545335a6fc1c472617101c35254d9a597))
+* Support for annotations ([#2007](https://github.com/googleapis/genai-toolbox/issues/2007)) ([ac21335](https://github.com/googleapis/genai-toolbox/commit/ac21335f4e88ca52d954d7f8143a551a35661b94))
+* **tools/cloudsqlpg:** Add CloudSQL PostgreSQL pre-check tool ([#1722](https://github.com/googleapis/genai-toolbox/issues/1722)) ([8752e05](https://github.com/googleapis/genai-toolbox/commit/8752e05ab6e98812d95673a6f1ff67e9a6ae48d2))
+* **tools/spanner-list-graph:** Tool impl + docs + tests ([#1923](https://github.com/googleapis/genai-toolbox/issues/1923)) ([a0f44d3](https://github.com/googleapis/genai-toolbox/commit/a0f44d34ea3f044dd08501be616f70ddfd63ab45))
+
+
+### Bug Fixes
+
+* Add import for firebirdsql ([#2045](https://github.com/googleapis/genai-toolbox/issues/2045)) ([fb7aae9](https://github.com/googleapis/genai-toolbox/commit/fb7aae9d35b760d3471d8379642f835a0d84ec41))
+* Correct FAQ to mention HTTP tools ([#2036](https://github.com/googleapis/genai-toolbox/issues/2036)) ([7b44237](https://github.com/googleapis/genai-toolbox/commit/7b44237d4a21bfbf8d3cebe4d32a15affa29584d))
+* **tools/alloydbcreateuser:** Remove duplication of project praram ([#2028](https://github.com/googleapis/genai-toolbox/issues/2028)) ([730ac6d](https://github.com/googleapis/genai-toolbox/commit/730ac6d22805fd50b4a675b74c1865f4e7689e7c))
+
 ## [0.21.0](https://github.com/googleapis/genai-toolbox/compare/v0.20.0...v0.21.0) (2025-11-19)
 
 
