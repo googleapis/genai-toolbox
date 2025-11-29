@@ -154,8 +154,9 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 		}
 	}
 	// Tell the driver to use the Cloud SQL Go Connector to create connections
-	dsn := fmt.Sprintf("%s:@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s",
+	dsn := fmt.Sprintf("%s:%s@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s",
 		user,
+		pass,
 		project,
 		region,
 		instance,
