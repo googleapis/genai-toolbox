@@ -93,7 +93,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		minQueriesParameter,
 	}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, cfg.Annotations)
+	annotations := cfg.Annotations
+	if annotations == nil {
+		readOnlyHint := true
+		annotations = &tools.ToolAnnotations{
+			ReadOnlyHint: &readOnlyHint,
+		}
+	}
+
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
 
 	return Tool{
 		Config:              cfg,
