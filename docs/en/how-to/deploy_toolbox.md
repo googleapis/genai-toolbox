@@ -104,7 +104,7 @@ section.
     export IMAGE=us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
     ```
 
-{{< notice note >}}  
+   {{< notice note >}}  
 **The `$PORT` Environment Variable**  
 Google Cloud Run dictates the port your application must listen on by setting
 the `$PORT` environment variable inside your container. This value defaults to
@@ -140,6 +140,45 @@ deployment will time out.
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
     ```
 
+### Update deployed server to be secure
+
+To prevent DNS rebinding attack, use the `--allowed-origins` flag to specify a
+list of origins permitted to access the server. In order to do that, you will
+have to re-deploy the cloud run service with the new flag.
+
+1. Set an environment variable to the cloud run url: 
+
+    ```bash
+    export URL=<cloud run url>
+    ```
+
+2. Redeploy Toolbox:
+
+    ```bash
+    gcloud run deploy toolbox \
+        --image $IMAGE \
+        --service-account toolbox-identity \
+        --region us-central1 \
+        --set-secrets "/app/tools.yaml=tools:latest" \
+        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL"
+        # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
+    ```
+
+    If you are using a VPC network, use the command below:
+
+    ```bash
+    gcloud run deploy toolbox \
+        --image $IMAGE \
+        --service-account toolbox-identity \
+        --region us-central1 \
+        --set-secrets "/app/tools.yaml=tools:latest" \
+        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL" \
+        # TODO(dev): update the following to match your VPC if necessary
+        --network default \
+        --subnet default
+        # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
+    ```
+
 ## Connecting with Toolbox Client SDK
 
 You can connect to Toolbox Cloud Run instances directly through the SDK.
@@ -162,18 +201,23 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 
     {{< tabpane persist=header >}}
 {{< tab header="Python" lang="python" >}}
+import asyncio
 from toolbox_core import ToolboxClient, auth_methods
 
 # Replace with the Cloud Run service URL generated in the previous step
-
 URL = "https://cloud-run-url.app"
 
 auth_token_provider = auth_methods.aget_google_id_token(URL) # can also use sync method
 
-async with ToolboxClient(
-    URL,
-    client_headers={"Authorization": auth_token_provider},
-) as toolbox:
+async def main():
+  async with ToolboxClient(
+      URL,
+      client_headers={"Authorization": auth_token_provider},
+  ) as toolbox:
+    toolset = await toolbox.load_toolset()
+    # ...
+
+asyncio.run(main())
 {{< /tab >}}
 {{< tab header="Javascript" lang="javascript" >}}
 import { ToolboxClient } from '@toolbox-sdk/core';

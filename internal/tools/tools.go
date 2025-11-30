@@ -66,6 +66,14 @@ type ToolConfig interface {
 	Initialize(map[string]sources.Source) (Tool, error)
 }
 
+// https://modelcontextprotocol.io/specification/2025-06-18/schema#toolannotations
+type ToolAnnotations struct {
+	DestructiveHint *bool `json:"destructiveHint,omitempty" yaml:"destructiveHint,omitempty"`
+	IdempotentHint  *bool `json:"idempotentHint,omitempty" yaml:"idempotentHint,omitempty"`
+	OpenWorldHint   *bool `json:"openWorldHint,omitempty" yaml:"openWorldHint,omitempty"`
+	ReadOnlyHint    *bool `json:"readOnlyHint,omitempty" yaml:"readOnlyHint,omitempty"`
+}
+
 type AccessToken string
 
 func (token AccessToken) ParseBearerToken() (string, error) {
@@ -77,13 +85,21 @@ func (token AccessToken) ParseBearerToken() (string, error) {
 }
 
 type Tool interface {
-	Invoke(context.Context, parameters.ParamValues, AccessToken) (any, error)
+	Invoke(context.Context, SourceProvider, parameters.ParamValues, AccessToken) (any, error)
 	ParseParams(map[string]any, map[string]map[string]any) (parameters.ParamValues, error)
 	Manifest() Manifest
 	McpManifest() McpManifest
 	Authorized([]string) bool
-	RequiresClientAuthorization() bool
+	RequiresClientAuthorization(SourceProvider) bool
 	ToConfig() ToolConfig
+	GetAuthTokenHeaderName() string
+}
+
+// SourceProvider defines the minimal view of the server.ResourceManager
+// that the Tool package needs.
+// This is implemented to prevent import cycles.
+type SourceProvider interface {
+	GetSource(sourceName string) (sources.Source, bool)
 }
 
 // Manifest is the representation of tools sent to Client SDKs.
@@ -98,18 +114,20 @@ type McpManifest struct {
 	// The name of the tool.
 	Name string `json:"name"`
 	// A human-readable description of the tool.
-	Description string `json:"description,omitempty"`
+	Description string           `json:"description,omitempty"`
+	Annotations *ToolAnnotations `json:"annotations,omitempty"`
 	// A JSON Schema object defining the expected parameters for the tool.
 	InputSchema parameters.McpToolsSchema `json:"inputSchema,omitempty"`
 	Metadata    map[string]any            `json:"_meta,omitempty"`
 }
 
-func GetMcpManifest(name, desc string, authInvoke []string, params parameters.Parameters) McpManifest {
+func GetMcpManifest(name, desc string, authInvoke []string, params parameters.Parameters, annotations *ToolAnnotations) McpManifest {
 	inputSchema, authParams := params.McpManifest()
 	mcpManifest := McpManifest{
 		Name:        name,
 		Description: desc,
 		InputSchema: inputSchema,
+		Annotations: annotations,
 	}
 
 	// construct metadata, if applicable

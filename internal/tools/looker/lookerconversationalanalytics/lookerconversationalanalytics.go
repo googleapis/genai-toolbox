@@ -61,6 +61,7 @@ type compatibleSource interface {
 	GoogleCloudProject() string
 	GoogleCloudLocation() string
 	UseClientAuthorization() bool
+	GetAuthTokenHeaderName() string
 }
 
 // Structs for building the JSON payload
@@ -129,11 +130,12 @@ var _ compatibleSource = &lookerds.Source{}
 var compatibleSources = [...]string{lookerds.SourceKind}
 
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
+	Name         string                 `yaml:"name" validate:"required"`
+	Kind         string                 `yaml:"kind" validate:"required"`
+	Source       string                 `yaml:"source" validate:"required"`
+	Description  string                 `yaml:"description" validate:"required"`
+	AuthRequired []string               `yaml:"authRequired"`
+	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -174,7 +176,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	)
 
 	params := parameters.Parameters{userQueryParameter, exploreRefsParameter}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
+
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, cfg.Annotations)
 
 	// Get cloud-platform token source for Gemini Data Analytics API during initialization
 	ctx := context.Background()
@@ -185,15 +188,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Config:         cfg,
-		ApiSettings:    s.GetApiSettings(),
-		Project:        s.GoogleCloudProject(),
-		Location:       s.GoogleCloudLocation(),
-		Parameters:     params,
-		UseClientOAuth: s.UseClientAuthorization(),
-		TokenSource:    ts,
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:    mcpManifest,
+		Config:              cfg,
+		ApiSettings:         s.GetApiSettings(),
+		Project:             s.GoogleCloudProject(),
+		Location:            s.GoogleCloudLocation(),
+		Parameters:          params,
+		UseClientOAuth:      s.UseClientAuthorization(),
+		AuthTokenHeaderName: s.GetAuthTokenHeaderName(),
+		TokenSource:         ts,
+		manifest:            tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest:         mcpManifest,
 	}
 	return t, nil
 }
@@ -203,21 +207,22 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	ApiSettings    *rtl.ApiSettings
-	UseClientOAuth bool                  `yaml:"useClientOAuth"`
-	Parameters     parameters.Parameters `yaml:"parameters"`
-	Project        string
-	Location       string
-	TokenSource    oauth2.TokenSource
-	manifest       tools.Manifest
-	mcpManifest    tools.McpManifest
+	ApiSettings         *rtl.ApiSettings
+	UseClientOAuth      bool `yaml:"useClientOAuth"`
+	AuthTokenHeaderName string
+	Parameters          parameters.Parameters `yaml:"parameters"`
+	Project             string
+	Location            string
+	TokenSource         oauth2.TokenSource
+	manifest            tools.Manifest
+	mcpManifest         tools.McpManifest
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	var tokenStr string
 	var err error
 
@@ -306,7 +311,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return t.UseClientOAuth
 }
 
@@ -548,4 +553,8 @@ func appendMessage(messages []map[string]any, newMessage map[string]any) []map[s
 		}
 	}
 	return append(messages, newMessage)
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return t.AuthTokenHeaderName
 }
