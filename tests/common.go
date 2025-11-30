@@ -870,7 +870,7 @@ func TestCloudSQLMySQL_IPTypeParsingFromYAML(t *testing.T) {
 					project: my-project
 					region: my-region
 					instance: my-instance
-					ipType: private 
+					ipType: private
 					database: my_db
 					user: my_user
 					password: my_pass
@@ -910,7 +910,7 @@ func TestCloudSQLMySQL_IPTypeParsingFromYAML(t *testing.T) {
 // Finds and drops all tables in a postgres database.
 func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
 	query := `
-	SELECT table_name FROM information_schema.tables 
+	SELECT table_name FROM information_schema.tables
 	WHERE table_schema = 'public' AND table_type = 'BASE TABLE';`
 
 	rows, err := pool.Query(ctx, query)
@@ -943,7 +943,7 @@ func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool
 // Finds and drops all tables in a mysql database.
 func CleanupMySQLTables(t *testing.T, ctx context.Context, pool *sql.DB) {
 	query := `
-	SELECT table_name FROM information_schema.tables 
+	SELECT table_name FROM information_schema.tables
 	WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';`
 
 	rows, err := pool.QueryContext(ctx, query)
