@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"os"
 	"reflect"
@@ -66,7 +67,7 @@ func getServerlessSparkVars(t *testing.T) map[string]any {
 
 func TestServerlessSparkToolEndpoints(t *testing.T) {
 	sourceConfig := getServerlessSparkVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
 	toolsFile := map[string]any{
@@ -104,6 +105,54 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 			},
 			"cancel-batch-with-auth": map[string]any{
 				"kind":         "serverless-spark-cancel-batch",
+				"source":       "my-spark",
+				"authRequired": []string{"my-google-auth"},
+			},
+			"create-pyspark-batch": map[string]any{
+				"kind":   "serverless-spark-create-pyspark-batch",
+				"source": "my-spark",
+				"environmentConfig": map[string]any{
+					"executionConfig": map[string]any{
+						"serviceAccount": serverlessSparkServiceAccount,
+					},
+				},
+			},
+			"create-pyspark-batch-2-3": map[string]any{
+				"kind":          "serverless-spark-create-pyspark-batch",
+				"source":        "my-spark",
+				"runtimeConfig": map[string]any{"version": "2.3"},
+				"environmentConfig": map[string]any{
+					"executionConfig": map[string]any{
+						"serviceAccount": serverlessSparkServiceAccount,
+					},
+				},
+			},
+			"create-pyspark-batch-with-auth": map[string]any{
+				"kind":         "serverless-spark-create-pyspark-batch",
+				"source":       "my-spark",
+				"authRequired": []string{"my-google-auth"},
+			},
+			"create-spark-batch": map[string]any{
+				"kind":   "serverless-spark-create-spark-batch",
+				"source": "my-spark",
+				"environmentConfig": map[string]any{
+					"executionConfig": map[string]any{
+						"serviceAccount": serverlessSparkServiceAccount,
+					},
+				},
+			},
+			"create-spark-batch-2-3": map[string]any{
+				"kind":          "serverless-spark-create-spark-batch",
+				"source":        "my-spark",
+				"runtimeConfig": map[string]any{"version": "2.3"},
+				"environmentConfig": map[string]any{
+					"executionConfig": map[string]any{
+						"serviceAccount": serverlessSparkServiceAccount,
+					},
+				},
+			},
+			"create-spark-batch-with-auth": map[string]any{
+				"kind":         "serverless-spark-create-spark-batch",
 				"source":       "my-spark",
 				"authRequired": []string{"my-google-auth"},
 			},
@@ -220,6 +269,216 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 			})
 		})
 
+		t.Run("create-pyspark-batch", func(t *testing.T) {
+			t.Parallel()
+
+			t.Run("success", func(t *testing.T) {
+				t.Parallel()
+				piPy := "file:///usr/lib/spark/examples/src/main/python/pi.py"
+				tcs := []struct {
+					name           string
+					toolName       string
+					request        map[string]any
+					waitForSuccess bool
+					validate       func(t *testing.T, b *dataprocpb.Batch)
+				}{
+					{
+						name:           "no params",
+						toolName:       "create-pyspark-batch",
+						waitForSuccess: true,
+						request:        map[string]any{"mainFile": piPy},
+					},
+					// Tests below are just verifying options are set correctly on created batches,
+					// they don't need to wait for success.
+					{
+						name:     "with arg",
+						toolName: "create-pyspark-batch",
+						request:  map[string]any{"mainFile": piPy, "args": []string{"100"}},
+						validate: func(t *testing.T, b *dataprocpb.Batch) {
+							if !cmp.Equal(b.GetPysparkBatch().Args, []string{"100"}) {
+								t.Errorf("unexpected args: got %v, want %v", b.GetPysparkBatch().Args, []string{"100"})
+							}
+						},
+					},
+					{
+						name:     "version",
+						toolName: "create-pyspark-batch",
+						request:  map[string]any{"mainFile": piPy, "version": "2.2"},
+						validate: func(t *testing.T, b *dataprocpb.Batch) {
+							v := b.GetRuntimeConfig().GetVersion()
+							if v != "2.2" {
+								t.Errorf("unexpected version: got %v, want 2.2", v)
+							}
+						},
+					},
+					{
+						name:     "version param overrides tool",
+						toolName: "create-pyspark-batch-2-3",
+						request:  map[string]any{"mainFile": piPy, "version": "2.2"},
+						validate: func(t *testing.T, b *dataprocpb.Batch) {
+							v := b.GetRuntimeConfig().GetVersion()
+							if v != "2.2" {
+								t.Errorf("unexpected version: got %v, want 2.2", v)
+							}
+						},
+					},
+				}
+				for _, tc := range tcs {
+					t.Run(tc.name, func(t *testing.T) {
+						t.Parallel()
+						runCreatePysparkBatchTest(t, client, ctx, tc.toolName, tc.request, tc.waitForSuccess, tc.validate)
+					})
+				}
+			})
+
+			t.Run("auth", func(t *testing.T) {
+				t.Parallel()
+				// Batch creation succeeds even with an invalid main file, but will fail quickly once running.
+				runAuthTest(t, "create-pyspark-batch-with-auth", map[string]any{"mainFile": "file:///placeholder"}, http.StatusOK)
+			})
+
+			t.Run("errors", func(t *testing.T) {
+				t.Parallel()
+				tcs := []struct {
+					name    string
+					request map[string]any
+					wantMsg string
+				}{
+					{
+						name:    "missing main file",
+						request: map[string]any{},
+						wantMsg: "parameter \\\"mainFile\\\" is required",
+					},
+				}
+				for _, tc := range tcs {
+					t.Run(tc.name, func(t *testing.T) {
+						t.Parallel()
+						testError(t, "create-pyspark-batch", tc.request, http.StatusBadRequest, tc.wantMsg)
+					})
+				}
+			})
+		})
+
+		t.Run("create-spark-batch", func(t *testing.T) {
+			t.Parallel()
+
+			t.Run("success", func(t *testing.T) {
+				t.Parallel()
+				tcs := []struct {
+					name           string
+					toolName       string
+					request        map[string]any
+					waitForSuccess bool
+					validate       func(t *testing.T, b *dataprocpb.Batch)
+				}{
+					{
+						name:           "main class",
+						toolName:       "create-spark-batch",
+						waitForSuccess: true,
+						request:        javaReq(map[string]any{}),
+					},
+					{
+						// spark-examples.jar doesn't have a Main-Class, so pick an arbitrary other
+						// jar that does. Note there's a chance a subminor release of 2.2 will
+						// upgrade Spark and its dependencies, causing a failure. If that happens,
+						// find the new ivy jar filename and use that. The alternative would be to
+						// pin a subminor version, but that's guaranteed to be GC'ed after 1 year,
+						// whereas 2.2 is old enough it's unlikely to see a Spark version bump.
+						name:           "main jar",
+						toolName:       "create-spark-batch",
+						waitForSuccess: true,
+						request: map[string]any{
+							"version":     "2.2",
+							"mainJarFile": "file:///usr/lib/spark/jars/ivy-2.5.2.jar",
+							"args":        []string{"-version"},
+						},
+					},
+					// Tests below are just verifying options are set correctly on created batches,
+					// they don't need to wait for success.
+					{
+						name:     "with arg",
+						toolName: "create-spark-batch",
+						request:  javaReq(map[string]any{"args": []string{"100"}}),
+						validate: func(t *testing.T, b *dataprocpb.Batch) {
+							if !cmp.Equal(b.GetSparkBatch().Args, []string{"100"}) {
+								t.Errorf("unexpected args: got %v, want %v", b.GetSparkBatch().Args, []string{"100"})
+							}
+						},
+					},
+					{
+						name:     "version",
+						toolName: "create-spark-batch",
+						request:  javaReq(map[string]any{"version": "2.2"}),
+						validate: func(t *testing.T, b *dataprocpb.Batch) {
+							v := b.GetRuntimeConfig().GetVersion()
+							if v != "2.2" {
+								t.Errorf("unexpected version: got %v, want 2.2", v)
+							}
+						},
+					},
+					{
+						name:     "version param overrides tool",
+						toolName: "create-spark-batch-2-3",
+						request:  javaReq(map[string]any{"version": "2.2"}),
+						validate: func(t *testing.T, b *dataprocpb.Batch) {
+							v := b.GetRuntimeConfig().GetVersion()
+							if v != "2.2" {
+								t.Errorf("unexpected version: got %v, want 2.2", v)
+							}
+						},
+					},
+				}
+				for _, tc := range tcs {
+					t.Run(tc.name, func(t *testing.T) {
+						t.Parallel()
+						runCreateSparkBatchTest(t, client, ctx, tc.toolName, tc.request, tc.waitForSuccess, tc.validate)
+					})
+				}
+			})
+
+			t.Run("auth", func(t *testing.T) {
+				t.Parallel()
+				// Batch creation succeeds even with an invalid main file, but will fail quickly once running.
+				runAuthTest(t, "create-spark-batch-with-auth", map[string]any{"mainJarFile": "file:///placeholder"}, http.StatusOK)
+			})
+
+			t.Run("errors", func(t *testing.T) {
+				t.Parallel()
+				tcs := []struct {
+					name    string
+					request map[string]any
+					wantMsg string
+				}{
+					{
+						name:    "no main jar or main class",
+						request: map[string]any{},
+						wantMsg: "must provide either mainJarFile or mainClass",
+					},
+					{
+						name: "both main jar and main class",
+						request: map[string]any{
+							"mainJarFile": "my.jar",
+							"mainClass":   "com.example.MyClass",
+						},
+						wantMsg: "cannot provide both mainJarFile and mainClass",
+					},
+					{
+						name: "main class without jar files",
+						request: map[string]any{
+							"mainClass": "com.example.MyClass",
+						},
+						wantMsg: "jarFiles is required when mainClass is provided",
+					},
+				}
+				for _, tc := range tcs {
+					t.Run(tc.name, func(t *testing.T) {
+						t.Parallel()
+						testError(t, "create-spark-batch", tc.request, http.StatusBadRequest, tc.wantMsg)
+					})
+				}
+			})
+		})
+
 		t.Run("cancel-batch", func(t *testing.T) {
 			t.Parallel()
 			t.Run("success", func(t *testing.T) {
@@ -299,13 +558,16 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 }
 
 func waitForBatch(t *testing.T, client *dataproc.BatchControllerClient, parentCtx context.Context, batch string, desiredStates []dataprocpb.Batch_State, timeout time.Duration) {
+	t.Logf("waiting %s for batch %s to reach one of %v", timeout, batch, desiredStates)
 	ctx, cancel := context.WithTimeout(parentCtx, timeout)
 	defer cancel()
 
+	start := time.Now()
+	lastLog := start
 	for {
 		select {
 		case <-ctx.Done():
-			t.Fatalf("timed out waiting for batch %s to reach one of states %v", batch, desiredStates)
+			t.Fatalf("timed out waiting for batch %s to reach one of %v", batch, desiredStates)
 		default:
 		}
 
@@ -315,12 +577,18 @@ func waitForBatch(t *testing.T, client *dataproc.BatchControllerClient, parentCt
 			t.Fatalf("failed to get batch %s: %v", batch, err)
 		}
 
+		now := time.Now()
+		if now.Sub(lastLog) >= 30*time.Second {
+			t.Logf("%s: batch %s is in state %s after %s", t.Name(), batch.Name, batch.State, now.Sub(start))
+			lastLog = now
+		}
+
 		if slices.Contains(desiredStates, batch.State) {
 			return
 		}
 
 		if batch.State == dataprocpb.Batch_FAILED || batch.State == dataprocpb.Batch_CANCELLED || batch.State == dataprocpb.Batch_SUCCEEDED {
-			t.Fatalf("batch op %s is in a terminal state %s, but wanted one of %v. State message: %s", batch, batch.State, desiredStates, batch.StateMessage)
+			t.Fatalf("batch op %s is in a terminal state %s, but wanted one of %v. State message: %s", batch.Name, batch.State, desiredStates, batch.StateMessage)
 		}
 		time.Sleep(2 * time.Second)
 	}
@@ -362,7 +630,7 @@ func createBatch(t *testing.T, client *dataproc.BatchControllerClient, ctx conte
 	}
 
 	// Wait for the batch to become at least PENDING; it typically takes >10s to go from PENDING to
-	// RUNNING, giving us plenty of time to cancel it before it completes.
+	// RUNNING, giving the cancel batch tests plenty of time to cancel it before it completes.
 	waitForBatch(t, client, ctx, meta.Batch, []dataprocpb.Batch_State{dataprocpb.Batch_PENDING, dataprocpb.Batch_RUNNING}, 1*time.Minute)
 	return meta.Batch
 }
@@ -612,6 +880,111 @@ func runGetBatchTest(t *testing.T, client *dataproc.BatchControllerClient, ctx c
 				t.Errorf("GetBatch() returned diff (-got +want):\n%s", diff)
 			}
 		})
+	}
+}
+
+func javaReq(req map[string]any) map[string]any {
+	merged := map[string]any{
+		"mainClass": "org.apache.spark.examples.SparkPi",
+		"jarFiles":  []string{"file:///usr/lib/spark/examples/jars/spark-examples.jar"},
+	}
+	maps.Copy(merged, req)
+	return merged
+}
+
+func runCreateSparkBatchTest(
+	t *testing.T,
+	client *dataproc.BatchControllerClient,
+	ctx context.Context,
+	toolName string,
+	request map[string]any,
+	waitForSuccess bool,
+	validate func(t *testing.T, b *dataprocpb.Batch),
+) {
+	resp, err := invokeTool(toolName, request, nil)
+	if err != nil {
+		t.Fatalf("invokeTool failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	var body map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatalf("error parsing response body: %v", err)
+	}
+
+	result, ok := body["result"].(string)
+	if !ok {
+		t.Fatalf("unable to find result in response body")
+	}
+
+	var meta dataprocpb.BatchOperationMetadata
+	if err := json.Unmarshal([]byte(result), &meta); err != nil {
+		t.Fatalf("failed to unmarshal result: %v", err)
+	}
+
+	if validate != nil {
+		b, err := client.GetBatch(ctx, &dataprocpb.GetBatchRequest{Name: meta.Batch})
+		if err != nil {
+			t.Fatalf("failed to get batch: %s", err)
+		}
+		validate(t, b)
+	}
+
+	if waitForSuccess {
+		waitForBatch(t, client, ctx, meta.Batch, []dataprocpb.Batch_State{dataprocpb.Batch_SUCCEEDED}, 5*time.Minute)
+	}
+}
+
+func runCreatePysparkBatchTest(
+	t *testing.T,
+	client *dataproc.BatchControllerClient,
+	ctx context.Context,
+	toolName string,
+	request map[string]any,
+	waitForSuccess bool,
+	validate func(t *testing.T, b *dataprocpb.Batch),
+) {
+	resp, err := invokeTool(toolName, request, nil)
+	if err != nil {
+		t.Fatalf("invokeTool failed: %v", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	var body map[string]any
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		t.Fatalf("error parsing response body: %v", err)
+	}
+
+	result, ok := body["result"].(string)
+	if !ok {
+		t.Fatalf("unable to find result in response body")
+	}
+
+	var meta dataprocpb.BatchOperationMetadata
+	if err := json.Unmarshal([]byte(result), &meta); err != nil {
+		t.Fatalf("failed to unmarshal result: %v", err)
+	}
+
+	if validate != nil {
+		b, err := client.GetBatch(ctx, &dataprocpb.GetBatchRequest{Name: meta.Batch})
+		if err != nil {
+			t.Fatalf("failed to get batch: %s", err)
+		}
+		validate(t, b)
+	}
+
+	if waitForSuccess {
+		waitForBatch(t, client, ctx, meta.Batch, []dataprocpb.Batch_State{dataprocpb.Batch_SUCCEEDED}, 5*time.Minute)
 	}
 }
 
