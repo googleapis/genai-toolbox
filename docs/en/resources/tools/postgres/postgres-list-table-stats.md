@@ -164,7 +164,7 @@ tools:
 
 ## Use Cases
 
-- **Finding undersized indexes**: Identify tables with low `idx_scan_ratio_percent` to evaluate index strategy.
+- **Finding ineffective indexes**: Identify tables with low `idx_scan_ratio_percent` to evaluate index strategy.
 - **Detecting table bloat**: Sort by `dead_rows` to find tables needing VACUUM.
 - **Monitoring growth**: Track `total_size_bytes` over time for capacity planning.
 - **Audit maintenance**: Check `last_autovacuum` and `last_autoanalyze` timestamps to ensure maintenance tasks are running.
