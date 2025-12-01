@@ -313,7 +313,7 @@ func TestTool_Invoke(t *testing.T) {
 				AllParams: tt.fields.AllParams,
 				Db:        tt.fields.Db,
 			}
-			got, err := tr.Invoke(tt.args.ctx, tt.args.params, tt.args.accessToken)
+			got, err := tr.Invoke(tt.args.ctx, nil, tt.args.params, tt.args.accessToken)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Tool.Invoke() error = %v, wantErr %v", err, tt.wantErr)
 				return
