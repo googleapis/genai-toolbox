@@ -98,7 +98,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	params := parameters.Parameters{}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
 	// Set a default cache expiration if not provided in the configuration.
 	if cfg.CacheExpireMinutes == nil {
@@ -135,7 +135,7 @@ type Tool struct {
 
 // Invoke executes the tool's main logic: fetching the Neo4j schema.
 // It first checks the cache for a valid schema before extracting it from the database.
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	// Check if a valid schema is already in the cache.
 	if cachedSchema, ok := t.cache.Get("schema"); ok {
 		if schema, ok := cachedSchema.(*types.SchemaInfo); ok {
@@ -176,7 +176,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return false
 }
 
