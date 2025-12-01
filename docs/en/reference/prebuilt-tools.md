@@ -563,6 +563,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `execute_sql`: Executes a DML SQL query.
     *   `execute_sql_dql`: Executes a DQL SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_graphs`: Lists graphs in the database.
 
 ## Spanner (PostgreSQL dialect)
 

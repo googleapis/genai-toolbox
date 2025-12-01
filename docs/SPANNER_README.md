@@ -84,11 +84,12 @@ Once configured, the MCP server will automatically provide Cloud Spanner capabil
 
 The Cloud Spanner MCP server provides the following tools:
 
-| Tool Name         | Description                                                |
-|:------------------|:-----------------------------------------------------------|
-| `execute_sql`     | Use this tool to execute DML SQL.                          |
-| `execute_sql_dql` | Use this tool to execute DQL SQL.                          |
-| `list_tables`     | Lists detailed schema information for user-created tables. |
+| Tool Name         | Description                                                      |
+|:------------------|:-----------------------------------------------------------------|
+| `execute_sql`     | Use this tool to execute DML SQL.                                |
+| `execute_sql_dql` | Use this tool to execute DQL SQL.                                |
+| `list_tables`     | Lists detailed schema information for user-created tables.       |
+| `list_graphs`     | Lists detailed graph schema information for user-created graphs. |
 
 ## Custom MCP Server Configuration
 
