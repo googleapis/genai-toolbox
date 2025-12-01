@@ -15,8 +15,8 @@
 sources:
     mssql-source:
       kind: mssql
-      host: ${MSSQL_HOST}
-      port: ${MSSQL_PORT}
+      host: ${MSSQL_HOST:localhost}
+      port: ${MSSQL_PORT:1433}
       database: ${MSSQL_DATABASE}
       user: ${MSSQL_USER}
       password: ${MSSQL_PASSWORD}
