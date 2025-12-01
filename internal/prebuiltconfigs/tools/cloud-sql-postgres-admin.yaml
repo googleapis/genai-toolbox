@@ -39,6 +39,10 @@ tools:
   wait_for_operation:
     kind: cloud-sql-wait-for-operation
     source: cloud-sql-admin-source
+    multiplier: 4
+  clone_instance:
+    kind: cloud-sql-clone-instance
+    source: cloud-sql-admin-source
   postgres_upgrade_precheck:
     kind: postgres-upgrade-precheck
     source: cloud-sql-admin-source
@@ -53,3 +57,4 @@ toolsets:
     - create_user
     - wait_for_operation
     - postgres_upgrade_precheck
+    - clone_instance
