@@ -450,8 +450,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 
 *   `--prebuilt` value: `mssql`
 *   **Environment Variables:**
-    *   `MSSQL_HOST`: The hostname or IP address of the SQL Server instance.
-    *   `MSSQL_PORT`: The port number for the SQL Server instance.
+    *   `MSSQL_HOST`: (Optional) The hostname or IP address of the SQL Server instance.
+    *   `MSSQL_PORT`: (Optional) The port number for the SQL Server instance.
     *   `MSSQL_DATABASE`: The name of the database to connect to.
     *   `MSSQL_USER`: The database username.
     *   `MSSQL_PASSWORD`: The password for the database user.
