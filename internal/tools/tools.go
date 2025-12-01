@@ -85,14 +85,21 @@ func (token AccessToken) ParseBearerToken() (string, error) {
 }
 
 type Tool interface {
-	Invoke(context.Context, parameters.ParamValues, AccessToken) (any, error)
+	Invoke(context.Context, SourceProvider, parameters.ParamValues, AccessToken) (any, error)
 	ParseParams(map[string]any, map[string]map[string]any) (parameters.ParamValues, error)
 	Manifest() Manifest
 	McpManifest() McpManifest
 	Authorized([]string) bool
-	RequiresClientAuthorization() bool
+	RequiresClientAuthorization(SourceProvider) bool
 	ToConfig() ToolConfig
 	GetAuthTokenHeaderName() string
+}
+
+// SourceProvider defines the minimal view of the server.ResourceManager
+// that the Tool package needs.
+// This is implemented to prevent import cycles.
+type SourceProvider interface {
+	GetSource(sourceName string) (sources.Source, bool)
 }
 
 // Manifest is the representation of tools sent to Client SDKs.
