@@ -13,9 +13,8 @@ An editor configured to use the Dataplex MCP server can use its AI capabilities 
 
 *   [Node.js](https://nodejs.org/) installed.
 
-    ### Windows Configuration
-
-    If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure Windows Defender Access Control](https://docs.citrix.com/en-us/citrix-virtual-apps-desktops/2402-ltsr/install-configure/install-vdas/config-win-defender-access-control.html) for more details.
+    > [!NOTE]
+    > If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure Windows Defender Access Control](https://docs.citrix.com/en-us/citrix-virtual-apps-desktops/2402-ltsr/install-configure/install-vdas/config-win-defender-access-control.html) for more details.
 
 *   A Google Cloud project with the **Dataplex API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
