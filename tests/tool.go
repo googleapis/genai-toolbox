@@ -2078,7 +2078,7 @@ func RunPostgresListSequencesTest(t *testing.T, ctx context.Context, pool *pgxpo
 }
 
 // RunMySQLListTablesTest run tests against the mysql-list-tables tool
-func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string, user string) {
+func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string) {
 	type tableInfo struct {
 		ObjectName    string `json:"object_name"`
 		SchemaName    string `json:"schema_name"`
@@ -2107,7 +2107,6 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 	}
 
 	paramTableWant := objectDetails{
-		Owner:      user,
 		ObjectName: tableNameParam,
 		SchemaName: databaseName,
 		ObjectType: "TABLE",
@@ -2121,7 +2120,6 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 	}
 
 	authTableWant := objectDetails{
-		Owner:      user,
 		ObjectName: tableNameAuth,
 		SchemaName: databaseName,
 		ObjectType: "TABLE",
@@ -2234,6 +2232,9 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 						if err := json.Unmarshal([]byte(table.ObjectDetails), &d); err != nil {
 							t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
 						}
+						// Set Owner to nil for verification purposes because
+						// standard MySQL returns nil while Cloud SQL returns the user.
+						d.Owner = nil
 						details = append(details, d)
 					}
 					got = details
