@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"reflect"
 	"sort"
 	"strings"
 
@@ -123,31 +124,50 @@ func InitializeDatasetParameters(
 // NormalizeValue converts BigQuery specific types to standard JSON-compatible types.
 // Specifically, it handles *big.Rat (used for NUMERIC/BIGNUMERIC) by converting
 // them to decimal strings with up to 38 digits of precision, trimming trailing zeros.
-// It recursively handles slices (arrays) and maps (structs).
+// It recursively handles slices (arrays) and maps (structs) using reflection.
 func NormalizeValue(v any) any {
-	switch val := v.(type) {
-	case *big.Rat:
+	if v == nil {
+		return nil
+	}
+
+	// Handle *big.Rat specifically.
+	if rat, ok := v.(*big.Rat); ok {
 		// Convert big.Rat to a decimal string.
 		// Use a precision of 38 digits (enough for BIGNUMERIC and NUMERIC)
 		// and trim trailing zeros to match BigQuery's behavior.
-		s := val.FloatString(38)
+		s := rat.FloatString(38)
 		if strings.Contains(s, ".") {
 			s = strings.TrimRight(s, "0")
 			s = strings.TrimRight(s, ".")
 		}
 		return s
-	case []interface{}: // For ARRAY or generic slice
-		newSlice := make([]interface{}, len(val))
-		for i, elem := range val {
-			newSlice[i] = NormalizeValue(elem)
+	}
+
+	// Use reflection for slices and maps to handle various underlying types.
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.Slice, reflect.Array:
+		// Preserve []byte as is, so json.Marshal encodes it as Base64 string (BigQuery BYTES behavior).
+		if rv.Type().Elem().Kind() == reflect.Uint8 {
+			return v
+		}
+		newSlice := make([]any, rv.Len())
+		for i := 0; i < rv.Len(); i++ {
+			newSlice[i] = NormalizeValue(rv.Index(i).Interface())
 		}
 		return newSlice
-	case map[string]interface{}: // For STRUCT (nested map)
-		newMap := make(map[string]interface{}, len(val))
-		for k, v := range val {
-			newMap[k] = NormalizeValue(v)
+	case reflect.Map:
+		// Ensure keys are strings to produce a JSON-compatible map.
+		if rv.Type().Key().Kind() != reflect.String {
+			return v
+		}
+		newMap := make(map[string]any, rv.Len())
+		iter := rv.MapRange()
+		for iter.Next() {
+			newMap[iter.Key().String()] = NormalizeValue(iter.Value().Interface())
 		}
 		return newMap
 	}
+
 	return v
 }

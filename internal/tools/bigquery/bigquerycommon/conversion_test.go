@@ -92,6 +92,24 @@ func TestNormalizeValue(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "slice of *big.Rat",
+			input: []*big.Rat{
+				new(big.Rat).SetFrac64(19, 2),
+				new(big.Rat).SetFrac64(1, 4),
+			},
+			expected: []any{"9.5", "0.25"},
+		},
+		{
+			name:     "slice of strings",
+			input:    []string{"a", "b"},
+			expected: []any{"a", "b"},
+		},
+		{
+			name:     "byte slice (BYTES)",
+			input:    []byte("hello"),
+			expected: []byte("hello"),
+		},
 	}
 
 	for _, tt := range tests {
