@@ -68,7 +68,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
   "mcpServers": {
     "spanner": {
       "command": "npx",
-      "args": ["-y", "@toolbox-sdk/toolbox", "--prebuilt", "spanner", "--stdio"],
+      "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "spanner", "--stdio"],
       "env": {
         "SPANNER_PROJECT": "your-project-id",
         "SPANNER_INSTANCE": "your-instance-id",

@@ -78,7 +78,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
   "mcpServers": {
     "looker": {
       "command": "npx",
-      "args": ["-y", "@toolbox-sdk/toolbox", "--prebuilt", "looker", "--stdio"],
+      "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "looker", "--stdio"],
       "env": {
         "LOOKER_BASE_URL": "https://your.looker.instance.com",
         "LOOKER_CLIENT_ID": "your-client-id",

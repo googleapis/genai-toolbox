@@ -90,7 +90,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
   "mcpServers": {
     "cloud-sql-postgres": {
       "command": "npx",
-      "args": ["-y", "@toolbox-sdk/toolbox", "--prebuilt", "cloud-sql-postgres", "--stdio"],
+      "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "cloud-sql-postgres", "--stdio"],
       "env": {
         "CLOUD_SQL_POSTGRES_PROJECT": "your-project-id",
         "CLOUD_SQL_POSTGRES_REGION": "your-region",

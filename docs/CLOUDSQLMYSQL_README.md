@@ -78,7 +78,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
   "mcpServers": {
     "cloud-sql-mysql": {
       "command": "npx",
-      "args": ["-y", "@toolbox-sdk/toolbox", "--prebuilt", "cloud-sql-mysql", "--stdio"],
+      "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "cloud-sql-mysql", "--stdio"],
       "env": {
         "CLOUD_SQL_MYSQL_PROJECT": "your-project-id",
         "CLOUD_SQL_MYSQL_REGION": "your-region",

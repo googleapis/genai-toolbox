@@ -72,7 +72,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
   "mcpServers": {
     "cloud-sql-mssql": {
       "command": "npx",
-      "args": ["-y", "@toolbox-sdk/toolbox", "--prebuilt", "cloud-sql-mssql", "--stdio"],
+      "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "cloud-sql-mssql", "--stdio"],
       "env": {
         "CLOUD_SQL_MSSQL_PROJECT": "your-project-id",
         "CLOUD_SQL_MSSQL_REGION": "your-region",

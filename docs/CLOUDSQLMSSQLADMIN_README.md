@@ -61,7 +61,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
   "mcpServers": {
     "cloud-sql-sqlserver-admin": {
       "command": "npx",
-      "args": ["-y", "@toolbox-sdk/toolbox", "--prebuilt", "cloud-sql-mssql-admin", "--stdio"]
+      "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "cloud-sql-mssql-admin", "--stdio"]
     }
   }
 }

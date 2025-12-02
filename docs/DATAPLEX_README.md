@@ -62,7 +62,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
   "mcpServers": {
     "dataplex": {
       "command": "npx",
-      "args": ["-y", "@toolbox-sdk/toolbox", "--prebuilt", "dataplex", "--stdio"],
+      "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "dataplex", "--stdio"],
       "env": {
         "DATAPLEX_PROJECT": "your-project-id"
       }

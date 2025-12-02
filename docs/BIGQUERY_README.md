@@ -79,7 +79,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
   "mcpServers": {
     "bigquery": {
       "command": "npx",
-      "args": ["-y", "@toolbox-sdk/toolbox", "--prebuilt", "bigquery", "--stdio"]
+      "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "bigquery", "--stdio"]
     }
   }
 }

@@ -85,7 +85,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
   "mcpServers": {
     "alloydb-postgres": {
       "command": "npx",
-      "args": ["-y", "@toolbox-sdk/toolbox", "--prebuilt", "alloydb-postgres", "--stdio"]
+      "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "alloydb-postgres", "--stdio"]
     }
   }
 }
