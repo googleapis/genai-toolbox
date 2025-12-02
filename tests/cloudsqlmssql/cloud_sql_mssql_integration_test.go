@@ -252,7 +252,7 @@ func TestCloudSQLMSSQLIAMConnection(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tests.RunSourceConnectionTest(t, tc.sourceConfig, CloudSQLMSSQLUser)
+			err := tests.RunSourceConnectionTest(t, tc.sourceConfig, CloudSQLMSSQLToolKind)
 			if err != nil {
 				if tc.isErr {
 					return
