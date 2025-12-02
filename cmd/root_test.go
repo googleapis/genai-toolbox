@@ -1458,7 +1458,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "postgres_upgrade_precheck"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "postgres_upgrade_precheck", "clone_instance"},
 				},
 			},
 		},
@@ -1468,7 +1468,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_mysql_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mysql_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance"},
 				},
 			},
 		},
@@ -1478,7 +1478,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_mssql_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mssql_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance"},
 				},
 			},
 		},
@@ -1488,7 +1488,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"alloydb_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "alloydb_postgres_database_tools",
-ToolNames: []string{"database_overview", "execute_sql", "get_column_cardinality", "get_query_plan", "list_active_queries", "list_autovacuum_configurations", "list_available_extensions", "list_indexes", "list_installed_extensions", "list_invalid_indexes", "list_locks", "list_memory_configurations", "list_query_stats", "list_replication_slots", "list_schemas", "list_sequences", "list_table_stats", "list_tables", "list_top_bloated_tables", "list_triggers", "list_views", "long_running_transactions", "replication_stats"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_table_stats"},
 				},
 			},
 		},
@@ -1518,7 +1518,7 @@ ToolNames: []string{"database_overview", "execute_sql", "get_column_cardinality"
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_database_tools",
-ToolNames: []string{"database_overview", "execute_sql", "get_column_cardinality", "get_query_plan", "list_active_queries", "list_autovacuum_configurations", "list_available_extensions", "list_indexes", "list_installed_extensions", "list_invalid_indexes", "list_locks", "list_memory_configurations", "list_query_stats", "list_replication_slots", "list_schemas", "list_sequences", "list_table_stats", "list_tables", "list_top_bloated_tables", "list_triggers", "list_views", "long_running_transactions", "replication_stats"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_table_stats"},
 				},
 			},
 		},
@@ -1618,7 +1618,7 @@ ToolNames: []string{"database_overview", "execute_sql", "get_column_cardinality"
 			wantToolset: server.ToolsetConfigs{
 				"postgres_database_tools": tools.ToolsetConfig{
 					Name:      "postgres_database_tools",
-ToolNames: []string{"database_overview", "execute_sql", "get_column_cardinality", "get_query_plan", "list_active_queries", "list_autovacuum_configurations", "list_available_extensions", "list_indexes", "list_installed_extensions", "list_invalid_indexes", "list_locks", "list_memory_configurations", "list_query_stats", "list_replication_slots", "list_schemas", "list_sequences", "list_table_stats", "list_tables", "list_top_bloated_tables", "list_triggers", "list_views", "long_running_transactions", "replication_stats"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_table_stats"},
 				},
 			},
 		},
@@ -1628,7 +1628,7 @@ ToolNames: []string{"database_overview", "execute_sql", "get_column_cardinality"
 			wantToolset: server.ToolsetConfigs{
 				"spanner-database-tools": tools.ToolsetConfig{
 					Name:      "spanner-database-tools",
-					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs"},
 				},
 			},
 		},
