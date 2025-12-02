@@ -153,16 +153,31 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 			return nil, fmt.Errorf("unable to register driver: %w", err)
 		}
 	}
+
+	var dsn string
 	// Tell the driver to use the Cloud SQL Go Connector to create connections
-	dsn := fmt.Sprintf("%s:%s@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s",
-		user,
-		pass,
-		project,
-		region,
-		instance,
-		dbname,
-		url.QueryEscape(userAgent),
-	)
+	if useIAM {
+		// Set allowCleartextPasswords to true for IAM
+		dsn = fmt.Sprintf("%s:%s@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s",
+			user,
+			pass,
+			project,
+			region,
+			instance,
+			dbname,
+			url.QueryEscape(userAgent),
+		)
+	} else {
+		dsn = fmt.Sprintf("%s:%s@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s",
+			user,
+			pass,
+			project,
+			region,
+			instance,
+			dbname,
+			url.QueryEscape(userAgent),
+		)
+	}
 
 	db, err := sql.Open(
 		"cloudsql-mysql",
