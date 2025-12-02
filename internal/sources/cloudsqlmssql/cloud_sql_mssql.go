@@ -56,8 +56,8 @@ type Config struct {
 	Instance  string         `yaml:"instance" validate:"required"`
 	IPAddress string         `yaml:"ipAddress"` // Deprecated: kept for backwards compatibility
 	IPType    sources.IPType `yaml:"ipType" validate:"required"`
-	User      string         `yaml:"user" validate:"required"`
-	Password  string         `yaml:"password" validate:"required"`
+	User      string         `yaml:"user"`
+	Password  string         `yaml:"password"`
 	Database  string         `yaml:"database" validate:"required"`
 }
 
@@ -107,6 +107,32 @@ func (s *Source) MSSQLDB() *sql.DB {
 	return s.Db
 }
 
+func getConnectionConfig(ctx context.Context, user, pass string) (string, string, bool, error) {
+	useIAM := true
+
+	// If username and password both provided, use password authentication
+	if user != "" && pass != "" {
+		useIAM = false
+		return user, pass, useIAM, nil
+	}
+
+	// If username is empty, fetch email from ADC
+	// otherwise, use username as IAM email
+	if user == "" {
+		if pass != "" {
+			return "", "", useIAM, fmt.Errorf("password is provided without a username. Please provide both a username and password, or leave both fields empty")
+		}
+		email, err := sources.GetIAMPrincipalEmailFromADC(ctx, "mssql")
+		if err != nil {
+			return "", "", useIAM, fmt.Errorf("error getting email from ADC: %v", err)
+		}
+		user = email
+	}
+
+	// Pass the user, empty password and useIAM set to true
+	return user, pass, useIAM, nil
+}
+
 func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipType, user, pass, dbname string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
@@ -117,6 +143,10 @@ func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name,
 		return nil, err
 	}
 
+	user, pass, useIAM, err := getConnectionConfig(ctx, user, pass)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get Cloud SQL connection config: %w", err)
+	}
 	// Create dsn
 	query := url.Values{}
 	query.Add("app name", userAgent)
@@ -130,7 +160,7 @@ func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name,
 	}
 
 	// Get dial options
-	opts, err := sources.GetCloudSQLOpts(ipType, userAgent, false)
+	opts, err := sources.GetCloudSQLOpts(ipType, userAgent, useIAM)
 	if err != nil {
 		return nil, err
 	}

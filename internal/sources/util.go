@@ -95,7 +95,7 @@ func GetIAMPrincipalEmailFromADC(ctx context.Context, dbType string) (string, er
 	case "mysql":
 		username, _, _ = strings.Cut(fullEmail, "@")
 
-	case "postgres":
+	case "postgres", "mssql":
 		// service account email used for IAM should trim the suffix
 		username = strings.TrimSuffix(fullEmail, ".gserviceaccount.com")
 
