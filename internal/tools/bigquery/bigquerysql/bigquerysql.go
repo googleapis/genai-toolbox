@@ -17,6 +17,7 @@ package bigquerysql
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"reflect"
 	"strings"
 
@@ -274,7 +275,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 		vMap := make(map[string]any)
 		for key, value := range row {
-			vMap[key] = value
+			vMap[key] = normalizeValue(value)
 		}
 		out = append(out, vMap)
 	}
@@ -317,4 +318,32 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool
 
 func (t Tool) GetAuthTokenHeaderName() string {
 	return "Authorization"
+}
+
+func normalizeValue(v any) any {
+	switch val := v.(type) {
+	case *big.Rat:
+		// Convert big.Rat to a decimal string.
+		// Use a precision of 38 digits (enough for BIGNUMERIC and NUMERIC)
+		// and trim trailing zeros to match BigQuery's behavior.
+		s := val.FloatString(38)
+		if strings.Contains(s, ".") {
+			s = strings.TrimRight(s, "0")
+			s = strings.TrimRight(s, ".")
+		}
+		return s
+	case []interface{}: // For ARRAY or generic slice
+		newSlice := make([]interface{}, len(val))
+		for i, elem := range val {
+			newSlice[i] = normalizeValue(elem)
+		}
+		return newSlice
+	case map[string]interface{}: // For STRUCT (nested map)
+		newMap := make(map[string]interface{}, len(val))
+		for k, v := range val {
+			newMap[k] = normalizeValue(v)
+		}
+		return newMap
+	}
+	return v
 }
