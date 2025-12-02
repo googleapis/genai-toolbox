@@ -212,25 +212,25 @@ steps:
           bigquery \
           bigquery
 
-  # - id: "dataplex"
-  #   name: golang:1
-  #   waitFor: ["compile-test-binary"]
-  #   entrypoint: /bin/bash
-  #   env:
-  #     - "GOPATH=/gopath"
-  #     - "DATAPLEX_PROJECT=$PROJECT_ID"
-  #     - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-  #   secretEnv: ["CLIENT_ID"]
-  #   volumes:
-  #     - name: "go"
-  #       path: "/gopath"
-  #   args:
-  #     - -c
-  #     - |
-  #       .ci/test_with_coverage.sh \
-  #         "Dataplex" \
-  #         dataplex \
-  #         dataplex
+  - id: "dataplex"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "DATAPLEX_PROJECT=$PROJECT_ID"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Dataplex" \
+          dataplex \
+          dataplex
 
   - id: "dataform"
     name: golang:1
@@ -252,28 +252,28 @@ steps:
           dataform \
           dataform
 
-  # - id: "cloud-healthcare"
-  #   name: golang:1
-  #   waitFor: ["compile-test-binary"]
-  #   entrypoint: /bin/bash
-  #   env:
-  #     - "GOPATH=/gopath"
-  #     - "HEALTHCARE_PROJECT=$PROJECT_ID"
-  #     - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-  #     - "HEALTHCARE_REGION=$_REGION"
-  #     - "HEALTHCARE_DATASET=$_HEALTHCARE_DATASET"
-  #     - "HEALTHCARE_PREPOPULATED_DICOM_STORE=$_HEALTHCARE_PREPOPULATED_DICOM_STORE"
-  #   secretEnv: ["CLIENT_ID"]
-  #   volumes:
-  #     - name: "go"
-  #       path: "/gopath"
-  #   args:
-  #     - -c
-  #     - |
-  #       .ci/test_with_coverage.sh \
-  #         "Cloud Healthcare API" \
-  #         cloudhealthcare \
-  #         cloudhealthcare
+  - id: "cloud-healthcare"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "HEALTHCARE_PROJECT=$PROJECT_ID"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+      - "HEALTHCARE_REGION=$_REGION"
+      - "HEALTHCARE_DATASET=$_HEALTHCARE_DATASET"
+      - "HEALTHCARE_PREPOPULATED_DICOM_STORE=$_HEALTHCARE_PREPOPULATED_DICOM_STORE"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Cloud Healthcare API" \
+          cloudhealthcare \
+          cloudhealthcare || echo "Integration tests failed."
 
   - id: "postgres"
     name: golang:1
@@ -385,7 +385,7 @@ steps:
         .ci/test_with_coverage.sh \
           "Cloud SQL MySQL" \
           cloudsqlmysql \
-          mysql || echo "Integration tests failed." # ignore test failures
+          mysql
 
   - id: "mysql"
     name: golang:1
@@ -407,7 +407,7 @@ steps:
         .ci/test_with_coverage.sh \
           "MySQL" \
           mysql \
-          mysql || echo "Integration tests failed." # ignore test failures
+          mysql
 
   - id: "mssql"
     name: golang:1
