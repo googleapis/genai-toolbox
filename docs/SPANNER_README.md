@@ -12,9 +12,6 @@ An editor configured to use the Cloud Spanner MCP server can use its AI capabili
 ## Prerequisites
 
 *   [Node.js](https://nodejs.org/) installed.
-
-
-
 *   A Google Cloud project with the **Cloud Spanner API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
 *   IAM Permissions:

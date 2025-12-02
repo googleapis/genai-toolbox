@@ -13,9 +13,6 @@ To connect to the database to explore and query data, search the MCP store for t
 ## Prerequisites
 
 *   [Node.js](https://nodejs.org/) installed.
-
-
-
 *   A Google Cloud project with the **AlloyDB API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
 *   IAM Permissions:
@@ -24,7 +21,7 @@ To connect to the database to explore and query data, search the MCP store for t
 
 ## Install & Configuration
 
-1. In the Antigravity MCP Store, click the "Install" button.
+In the Antigravity MCP Store, click the "Install" button.
 
 You'll now be able to see all enabled tools in the "Tools" tab.
 

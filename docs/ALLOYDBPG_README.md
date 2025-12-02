@@ -16,9 +16,6 @@ For AlloyDB infrastructure management, search the MCP store for the AlloyDB for 
 ## Prerequisites
 
 *   [Node.js](https://nodejs.org/) installed.
-
-
-
 *   A Google Cloud project with the **AlloyDB API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
 *   IAM Permissions:

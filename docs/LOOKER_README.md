@@ -15,9 +15,6 @@ An editor configured to use the Looker MCP server can use its AI capabilities to
 ## Prerequisites
 
 *   [Node.js](https://nodejs.org/) installed.
-
-
-
 *   Access to a Looker instance.
 *   API Credentials (`Client ID` and `Client Secret`) or OAuth configuration.
 

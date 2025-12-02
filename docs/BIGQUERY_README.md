@@ -13,9 +13,6 @@ An editor configured to use the BigQuery MCP server can use its AI capabilities 
 ## Prerequisites
 
 *   [Node.js](https://nodejs.org/) installed.
-
-
-
 *   A Google Cloud project with the **BigQuery API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
 *   IAM Permissions:
