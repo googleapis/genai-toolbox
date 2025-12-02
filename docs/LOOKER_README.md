@@ -14,52 +14,11 @@ An editor configured to use the Looker MCP server can use its AI capabilities to
 
 ## Prerequisites
 
-*   Download and install [MCP Toolbox](https://github.com/googleapis/genai-toolbox):
-    1.  **Download the Toolbox binary**:
-        Download the latest binary for your operating system and architecture from the storage bucket. Check the [releases page](https://github.com/googleapis/genai-toolbox/releases) for additional versions: 
-      
-        <!-- {x-release-please-start-version} -->
-        * To install Toolbox as a binary on Linux (AMD64):
-          ```bash
-          curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
-          ```
+*   [Node.js](https://nodejs.org/) installed.
 
-        * To install Toolbox as a binary on macOS (Apple Silicon):
-          ```bash
-          curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/arm64/toolbox
-          ```
+    ### Windows Configuration
 
-        * To install Toolbox as a binary on macOS (Intel):
-          ```bash
-          curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/amd64/toolbox
-          ```
-
-        * To install Toolbox as a binary on Windows (AMD64):
-          ```powershell
-          curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe"
-          ```
-        <!-- {x-release-please-end} -->
-        
-    2.  **Make it executable**:
-
-        ```bash
-        chmod +x toolbox
-        ```
-
-    3.  **Add the binary to $PATH in `.~/bash_profile`** (Note: You may need to restart Antigravity for changes to take effect.):
-
-        ```bash
-        export PATH=$PATH:path/to/folder
-        ```
-
-        **On Windows, move binary to the `WindowsApps\` folder**:
-        ```
-        move "C:\Users\<path-to-binary>\toolbox.exe" "C:\Users\<username>\AppData\Local\Microsoft\WindowsApps\"
-        ```
-    
-        **Tip:** Ensure the destination folder for your binary is included in
-        your system's PATH environment variable. To check `PATH`, use `echo
-        $PATH` (or `echo %PATH%` on Windows).
+    If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure Windows Defender Access Control](https://docs.citrix.com/en-us/citrix-virtual-apps-desktops/2402-ltsr/install-configure/install-vdas/config-win-defender-access-control.html) for more details.
 
 *   Access to a Looker instance.
 *   API Credentials (`Client ID` and `Client Secret`) or OAuth configuration.
@@ -118,8 +77,8 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
 {
   "mcpServers": {
     "looker": {
-      "command": "toolbox",
-      "args": ["--prebuilt", "looker", "--stdio"],
+      "command": "npx",
+      "args": ["-y", "@toolbox-sdk/toolbox", "--prebuilt", "looker", "--stdio"],
       "env": {
         "LOOKER_BASE_URL": "https://your.looker.instance.com",
         "LOOKER_CLIENT_ID": "your-client-id",
