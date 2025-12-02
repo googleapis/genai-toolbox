@@ -17,6 +17,7 @@ package bigquerycommon
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"sort"
 	"strings"
 
@@ -117,4 +118,36 @@ func InitializeDatasetParameters(
 	projectParam = parameters.NewStringParameterWithDefault(projectKey, defaultProjectID, projectDescription)
 
 	return projectParam, datasetParam
+}
+
+// NormalizeValue converts BigQuery specific types to standard JSON-compatible types.
+// Specifically, it handles *big.Rat (used for NUMERIC/BIGNUMERIC) by converting
+// them to decimal strings with up to 38 digits of precision, trimming trailing zeros.
+// It recursively handles slices (arrays) and maps (structs).
+func NormalizeValue(v any) any {
+	switch val := v.(type) {
+	case *big.Rat:
+		// Convert big.Rat to a decimal string.
+		// Use a precision of 38 digits (enough for BIGNUMERIC and NUMERIC)
+		// and trim trailing zeros to match BigQuery's behavior.
+		s := val.FloatString(38)
+		if strings.Contains(s, ".") {
+			s = strings.TrimRight(s, "0")
+			s = strings.TrimRight(s, ".")
+		}
+		return s
+	case []interface{}: // For ARRAY or generic slice
+		newSlice := make([]interface{}, len(val))
+		for i, elem := range val {
+			newSlice[i] = NormalizeValue(elem)
+		}
+		return newSlice
+	case map[string]interface{}: // For STRUCT (nested map)
+		newMap := make(map[string]interface{}, len(val))
+		for k, v := range val {
+			newMap[k] = NormalizeValue(v)
+		}
+		return newMap
+	}
+	return v
 }
