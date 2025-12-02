@@ -14,8 +14,7 @@ An editor configured to use the BigQuery MCP server can use its AI capabilities 
 
 *   [Node.js](https://nodejs.org/) installed.
 
-> [!NOTE]
-> If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure exclusions for Microsoft Defender Antivirus](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-exclusions-microsoft-defender-antivirus?view=o365-worldwide) for more details.
+
 
 *   A Google Cloud project with the **BigQuery API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
@@ -27,6 +26,9 @@ An editor configured to use the BigQuery MCP server can use its AI capabilities 
 1. In the Antigravity MCP Store, click the "Install" button.
 
 2. Add the required inputs in the configuration pop-up, then click "Save". You can update this configuration at any time in the "Configure" tab.
+
+> [!NOTE]
+> If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure exclusions for Microsoft Defender Antivirus](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-exclusions-microsoft-defender-antivirus?view=o365-worldwide) for more details.
 
 You'll now be able to see all enabled tools in the "Tools" tab.
 

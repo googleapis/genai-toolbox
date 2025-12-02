@@ -14,8 +14,7 @@ To connect to the database to explore and query data, search the MCP store for t
 
 *   [Node.js](https://nodejs.org/) installed.
 
-> [!NOTE]
-> If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure exclusions for Microsoft Defender Antivirus](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-exclusions-microsoft-defender-antivirus?view=o365-worldwide) for more details.
+
 
 *   A Google Cloud project with the **Cloud SQL Admin API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
@@ -28,6 +27,9 @@ To connect to the database to explore and query data, search the MCP store for t
 1. In the Antigravity MCP Store, click the "Install" button.
 
 You'll now be able to see all enabled tools in the "Tools" tab.
+
+> [!NOTE]
+> If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure exclusions for Microsoft Defender Antivirus](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-exclusions-microsoft-defender-antivirus?view=o365-worldwide) for more details.
 
 ## Usage
 

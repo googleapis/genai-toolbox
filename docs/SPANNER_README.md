@@ -13,8 +13,7 @@ An editor configured to use the Cloud Spanner MCP server can use its AI capabili
 
 *   [Node.js](https://nodejs.org/) installed.
 
-> [!NOTE]
-> If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure exclusions for Microsoft Defender Antivirus](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-exclusions-microsoft-defender-antivirus?view=o365-worldwide) for more details.
+
 
 *   A Google Cloud project with the **Cloud Spanner API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
@@ -29,6 +28,9 @@ An editor configured to use the Cloud Spanner MCP server can use its AI capabili
 2. Add the required inputs for your [instance](https://docs.cloud.google.com/spanner/docs/instances) in the configuration pop-up, then click "Save". You can update this configuration at any time in the "Configure" tab.
 
 You'll now be able to see all enabled tools in the "Tools" tab.
+
+> [!NOTE]
+> If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure exclusions for Microsoft Defender Antivirus](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-exclusions-microsoft-defender-antivirus?view=o365-worldwide) for more details.
 
 ## Usage
 

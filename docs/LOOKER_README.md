@@ -16,8 +16,7 @@ An editor configured to use the Looker MCP server can use its AI capabilities to
 
 *   [Node.js](https://nodejs.org/) installed.
 
-> [!NOTE]
-> If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure exclusions for Microsoft Defender Antivirus](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-exclusions-microsoft-defender-antivirus?view=o365-worldwide) for more details.
+
 
 *   Access to a Looker instance.
 *   API Credentials (`Client ID` and `Client Secret`) or OAuth configuration.
@@ -29,6 +28,9 @@ An editor configured to use the Looker MCP server can use its AI capabilities to
 2. Add the required inputs for your [instance](https://docs.cloud.google.com/looker/docs/set-up-and-administer-looker) in the configuration pop-up, then click "Save". You can update this configuration at any time in the "Configure" tab.
 
 You'll now be able to see all enabled tools in the "Tools" tab.
+
+> [!NOTE]
+> If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure exclusions for Microsoft Defender Antivirus](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-exclusions-microsoft-defender-antivirus?view=o365-worldwide) for more details.
 
 ## Usage
 
