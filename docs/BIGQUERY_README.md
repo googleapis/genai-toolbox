@@ -15,7 +15,7 @@ An editor configured to use the BigQuery MCP server can use its AI capabilities 
 *   [Node.js](https://nodejs.org/) installed.
 
 > [!NOTE]
-> If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure Windows Defender Access Control](https://docs.citrix.com/en-us/citrix-virtual-apps-desktops/2402-ltsr/install-configure/install-vdas/config-win-defender-access-control.html) for more details.
+> If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure exclusions for Microsoft Defender Antivirus](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-exclusions-microsoft-defender-antivirus?view=o365-worldwide) for more details.
 
 *   A Google Cloud project with the **BigQuery API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.

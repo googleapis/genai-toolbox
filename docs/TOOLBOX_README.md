@@ -18,7 +18,7 @@ The MCP Toolbox for Databases Server gives AI-powered development tools the abil
 3.  Click "View raw config" and update the `tools.yaml` path with the full absolute path to your file.
 
 > [!NOTE]
-> If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure Windows Defender Access Control](https://docs.citrix.com/en-us/citrix-virtual-apps-desktops/2402-ltsr/install-configure/install-vdas/config-win-defender-access-control.html) for more details.
+> If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure exclusions for Microsoft Defender Antivirus](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-exclusions-microsoft-defender-antivirus?view=o365-worldwide) for more details.
 
 ## Usage
 
@@ -31,7 +31,7 @@ Interact with your custom tools using natural language.
   "mcpServers": {
     "mcp-toolbox": {
       "command": "npx",
-      "args": ["@toolbox-sdk/server", "--tools-file", "your-tool-file.yaml"],
+      "args": ["-y", "@toolbox-sdk/server", "--tools-file", "your-tool-file.yaml"],
       "env": {
         "ENV_VAR_NAME": "ENV_VAR_VALUE",
       }
