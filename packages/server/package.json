@@ -1,6 +1,6 @@
 {
   "name": "@toolbox-sdk/server",
-  "version": "0.21.1",
+  "version": "0.21.2",
   "bin": {
     "toolbox": "./bin/run.js"
   },
@@ -11,6 +11,7 @@
   "optionalDependencies": {
     "@toolbox-sdk/server-darwin-arm64": "0.21.1",
     "@toolbox-sdk/server-darwin-x64": "0.21.1",
-    "@toolbox-sdk/server-linux-x64": "0.21.1"
+    "@toolbox-sdk/server-linux-x64": "0.21.1",
+    "@toolbox-sdk/server-win32-x64": "0.21.1"
   }
 }

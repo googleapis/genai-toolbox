@@ -1,6 +1,6 @@
 {
   "name": "@toolbox-sdk/server-win32-x64",
-  "version": "0.21.0",
+  "version": "0.21.1",
   "os": ["win32"],
   "cpu": ["x64"],
   "main": "bin/toolbox.exe",
