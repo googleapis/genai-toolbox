@@ -2078,7 +2078,7 @@ func RunPostgresListSequencesTest(t *testing.T, ctx context.Context, pool *pgxpo
 }
 
 // RunMySQLListTablesTest run tests against the mysql-list-tables tool
-func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string) {
+func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string, user string) {
 	type tableInfo struct {
 		ObjectName    string `json:"object_name"`
 		SchemaName    string `json:"schema_name"`
@@ -2107,6 +2107,7 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 	}
 
 	paramTableWant := objectDetails{
+		Owner:      user,
 		ObjectName: tableNameParam,
 		SchemaName: databaseName,
 		ObjectType: "TABLE",
@@ -2120,6 +2121,7 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 	}
 
 	authTableWant := objectDetails{
+		Owner:      user,
 		ObjectName: tableNameAuth,
 		SchemaName: databaseName,
 		ObjectType: "TABLE",

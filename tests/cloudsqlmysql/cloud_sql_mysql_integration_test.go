@@ -160,7 +160,7 @@ func TestCloudSQLMySQLToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 
 	// Run specific MySQL tool tests
-	tests.RunMySQLListTablesTest(t, CloudSQLMySQLDatabase, tableNameParam, tableNameAuth)
+	tests.RunMySQLListTablesTest(t, CloudSQLMySQLDatabase, tableNameParam, tableNameAuth, CloudSQLMySQLUser)
 	tests.RunMySQLListActiveQueriesTest(t, ctx, pool)
 }
 
