@@ -89,19 +89,25 @@ func GetIAMPrincipalEmailFromADC(ctx context.Context, dbType string) (string, er
 		return "", fmt.Errorf("email field is not a string")
 	}
 
+	var username string
 	// Format the username based on Database Type
 	switch strings.ToLower(dbType) {
 	case "mysql":
-		username, _, _ := strings.Cut(fullEmail, "@")
-		return username, nil
+		username, _, _ = strings.Cut(fullEmail, "@")
 
 	case "postgres":
 		// service account email used for IAM should trim the suffix
-		return strings.TrimSuffix(emailValue.(string), ".gserviceaccount.com"), nil
+		username = strings.TrimSuffix(fullEmail, ".gserviceaccount.com")
 
 	default:
 		return "", fmt.Errorf("unsupported dbType: %s. Use 'mysql' or 'postgres'", dbType)
 	}
+
+	if username == "" {
+		return "", fmt.Errorf("username from ADC cannot be an empty string")
+	}
+
+	return username, nil
 }
 
 func GetIAMAccessToken(ctx context.Context) (string, error) {
