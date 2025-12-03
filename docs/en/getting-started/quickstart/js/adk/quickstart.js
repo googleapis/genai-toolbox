@@ -20,7 +20,7 @@ const queries = [
 
 process.env.GOOGLE_GENAI_API_KEY = process.env.GOOGLE_API_KEY || 'your-api-key'; // Replace it with your API key
 
-async function main() {
+async function runAgent() {
   const userId = 'test_user';
   const client = new ToolboxClient('http://127.0.0.1:5000');
   const tools = await client.loadToolset("my-toolset");
@@ -47,8 +47,8 @@ async function runPrompt(runner, userId, sessionId, prompt) {
   const stream = runner.runAsync({ userId, sessionId, newMessage: content });
   const responses = await Array.fromAsync(stream);
   const accumulatedResponse = responses
-      .flatMap((e) => e.content?.parts?.map((p) => p.text) ?? [])
-      .join('');
+    .flatMap((e) => e.content?.parts?.map((p) => p.text) ?? [])
+    .join('');
 
   console.log(`\nMODEL RESPONSE: ${accumulatedResponse}\n`);
 }
