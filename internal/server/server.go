@@ -383,47 +383,39 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		_, _ = w.Write([]byte("🧰 Hello, World! 🧰"))
 	})
 
-	if cfg.OAuthProtectedResource != "" {
-		data, err := os.ReadFile(cfg.OAuthProtectedResource)
-		if err != nil {
-			return nil, fmt.Errorf("error reading yaml file %s: %w", cfg.OAuthProtectedResource, err)
-		}
-		var protectedResourceMetadata map[string]interface{}
-		err = yaml.Unmarshal(data, &protectedResourceMetadata)
-		if err != nil {
-			return nil, fmt.Errorf("error unmarshalling yaml file %s: %w", cfg.OAuthProtectedResource, err)
-		}
-		jsonData, err := json.MarshalIndent(protectedResourceMetadata, "", "  ")
-		if err != nil {
-			return nil, fmt.Errorf("error marshalling yaml file %s as json: %w", cfg.OAuthProtectedResource, err)
-		}
-
-		r.Get("/.well-known/oauth-protected-resource", func(w http.ResponseWriter, r *http.Request) {
-			_, _ = w.Write(jsonData)
-		})
+	if err := serveJsonFromYamlFile(r, cfg.OAuthProtectedResource, "/.well-known/oauth-protected-resource"); err != nil {
+		return nil, err
 	}
 
-	if cfg.OAuthAuthorizationServer != "" {
-		data, err := os.ReadFile(cfg.OAuthAuthorizationServer)
-		if err != nil {
-			return nil, fmt.Errorf("error reading yaml file %s: %w", cfg.OAuthAuthorizationServer, err)
-		}
-		var authServerMetadata map[string]interface{}
-		err = yaml.Unmarshal(data, &authServerMetadata)
-		if err != nil {
-			return nil, fmt.Errorf("error unmarshalling yaml file %s: %w", cfg.OAuthAuthorizationServer, err)
-		}
-		jsonData, err := json.MarshalIndent(authServerMetadata, "", "  ")
-		if err != nil {
-			return nil, fmt.Errorf("error marshalling yaml file %s as json: %w", cfg.OAuthAuthorizationServer, err)
-		}
-
-		r.Get("/.well-known/oauth-authorization-server", func(w http.ResponseWriter, r *http.Request) {
-			_, _ = w.Write(jsonData)
-		})
+	if err := serveJsonFromYamlFile(r, cfg.OAuthAuthorizationServer, "/.well-known/oauth-authorization-server"); err != nil {
+		return nil, err
 	}
 
 	return s, nil
+}
+
+// helper function to serve yaml files as json from fixed paths.
+func serveJsonFromYamlFile(r *chi.Mux, filePath, endpointPath string) error {
+	if filePath == "" {
+		return nil
+	}
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("error reading yaml file %s: %w", filePath, err)
+	}
+	var metadata map[string]interface{}
+	if err := yaml.Unmarshal(data, &metadata); err != nil {
+		return fmt.Errorf("error unmarshalling yaml file %s: %w", filePath, err)
+	}
+	jsonData, err := json.MarshalIndent(metadata, "", "  ")
+	if err != nil {
+		return fmt.Errorf("error marshalling yaml file %s as json: %w", filePath, err)
+	}
+	r.Get(endpointPath, func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(jsonData)
+	})
+	return nil
 }
 
 // Listen starts a listener for the given Server instance.
