@@ -16,14 +16,18 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
+
+	yaml "github.com/goccy/go-yaml"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -378,6 +382,46 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("🧰 Hello, World! 🧰"))
 	})
+
+	if cfg.OAuthProtectedResource != "" {
+		data, err := os.ReadFile(cfg.OAuthProtectedResource)
+		if err != nil {
+			return nil, fmt.Errorf("error reading yaml file %s: %w", cfg.OAuthProtectedResource, err)
+		}
+		var protectedResourceMetadata map[string]interface{}
+		err = yaml.Unmarshal(data, &protectedResourceMetadata)
+		if err != nil {
+			return nil, fmt.Errorf("error unmarshalling yaml file %s: %w", cfg.OAuthProtectedResource, err)
+		}
+		jsonData, err := json.MarshalIndent(protectedResourceMetadata, "", "  ")
+		if err != nil {
+			return nil, fmt.Errorf("error marshalling yaml file %s as json: %w", cfg.OAuthProtectedResource, err)
+		}
+
+		r.Get("/.well-known/oauth-protected-resource", func(w http.ResponseWriter, r *http.Request) {
+			_, _ = w.Write(jsonData)
+		})
+	}
+
+	if cfg.OAuthAuthorizationServer != "" {
+		data, err := os.ReadFile(cfg.OAuthAuthorizationServer)
+		if err != nil {
+			return nil, fmt.Errorf("error reading yaml file %s: %w", cfg.OAuthAuthorizationServer, err)
+		}
+		var authServerMetadata map[string]interface{}
+		err = yaml.Unmarshal(data, &authServerMetadata)
+		if err != nil {
+			return nil, fmt.Errorf("error unmarshalling yaml file %s: %w", cfg.OAuthAuthorizationServer, err)
+		}
+		jsonData, err := json.MarshalIndent(authServerMetadata, "", "  ")
+		if err != nil {
+			return nil, fmt.Errorf("error marshalling yaml file %s as json: %w", cfg.OAuthAuthorizationServer, err)
+		}
+
+		r.Get("/.well-known/oauth-authorization-server", func(w http.ResponseWriter, r *http.Request) {
+			_, _ = w.Write(jsonData)
+		})
+	}
 
 	return s, nil
 }
