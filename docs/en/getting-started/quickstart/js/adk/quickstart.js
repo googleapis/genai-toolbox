@@ -20,7 +20,7 @@ const queries = [
 
 process.env.GOOGLE_GENAI_API_KEY = process.env.GOOGLE_API_KEY || 'your-api-key'; // Replace it with your API key
 
-async function runAgent() {
+export async function main() {
   const userId = 'test_user';
   const client = new ToolboxClient('http://127.0.0.1:5000');
   const tools = await client.loadToolset("my-toolset");
