@@ -293,6 +293,16 @@ toolbox --tools-file "tools.yaml"
 
 <details>
 
+<details>
+<summary>Node.js (npx)</summary>
+
+To run Toolbox directly without manually downloading the binary (requires Node.js):
+```sh
+npx @toolbox-sdk/server --tools-file tools.yaml
+```
+
+</details>
+
 <summary>Gemini CLI</summary>
 
 Interact with your custom tools using natural language. Check
