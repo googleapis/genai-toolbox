@@ -68,16 +68,18 @@ in the given dashboard.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-conversational-analytics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-conversational-analytics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-conversational-analytics/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>looker-conversational-analytics&lt;/code> tool allows you to ask questions about your Looker data.&lt;/p>
+&lt;p>A &lt;code>looker-conversational-analytics&lt;/code> tool allows you to ask questions about your
+Looker data.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>looker-conversational-analytics&lt;/code> accepts two parameters:&lt;/p>
 &lt;ol>
-&lt;li>&lt;code>user_query_with_context&lt;/code>: The question asked of the Conversational Analytics system.&lt;/li>
-&lt;li>&lt;code>explore_references&lt;/code>: A list of one to five explores that can be queried to answer the
-question. The form of the entry is &lt;code>[{&amp;quot;model&amp;quot;: &amp;quot;model name&amp;quot;, &amp;quot;explore&amp;quot;: &amp;quot;explore name&amp;quot;}, ...]&lt;/code>&lt;/li>
+&lt;li>&lt;code>user_query_with_context&lt;/code>: The question asked of the Conversational Analytics
+system.&lt;/li>
+&lt;li>&lt;code>explore_references&lt;/code>: A list of one to five explores that can be queried to
+answer the question. The form of the entry is &lt;code>[{&amp;quot;model&amp;quot;: &amp;quot;model name&amp;quot;, &amp;quot;explore&amp;quot;: &amp;quot;explore name&amp;quot;}, ...]&lt;/code>&lt;/li>
 &lt;/ol>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -225,7 +227,8 @@ as well as the file content.&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>looker-dev-mode&lt;/code> accepts a boolean parameter, true to enter dev mode and false to exit dev mode.&lt;/p>
+&lt;p>&lt;code>looker-dev-mode&lt;/code> accepts a boolean parameter, true to enter dev mode and false
+to exit dev mode.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">dev_mode&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -266,7 +269,23 @@ as well as the file content.&lt;/p>
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>looker-get-connection-databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-get-connection-databases/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-get-connection-databases/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>looker-generate-embed-url</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-generate-embed-url/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-generate-embed-url/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>looker-generate-embed-url&lt;/code> tool generates an embeddable URL for a given
+piece of Looker content. The url generated is created for the user authenticated
+to the Looker source. When opened in the browser it will create a Looker Embed
+session.&lt;/p>
+&lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/looker/">looker&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>looker-generate-embed-url&lt;/code> takes two parameters:&lt;/p>
+&lt;ol>
+&lt;li>the &lt;code>type&lt;/code> of content (e.g., &amp;ldquo;dashboards&amp;rdquo;, &amp;ldquo;looks&amp;rdquo;, &amp;ldquo;query-visualization&amp;rdquo;)&lt;/li>
+&lt;li>the &lt;code>id&lt;/code> of the content&lt;/li>
+&lt;/ol>
+&lt;p>It&amp;rsquo;s recommended to use other tools from the Looker MCP toolbox with this tool
+to do things like fetch dashboard id&amp;rsquo;s, generate a query, etc that can be
+supplied to this tool.&lt;/p></description></item><item><title>looker-get-connection-databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-get-connection-databases/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-get-connection-databases/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>looker-get-connection-databases&lt;/code> tool returns all the databases in a connection.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -414,7 +433,8 @@ as well as the file content.&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>looker-get-connection-tables&lt;/code> accepts a &lt;code>conn&lt;/code> parameter, a &lt;code>schema&lt;/code> parameter, and an optional &lt;code>db&lt;/code> parameter.&lt;/p>
+&lt;p>&lt;code>looker-get-connection-tables&lt;/code> accepts a &lt;code>conn&lt;/code> parameter, a &lt;code>schema&lt;/code> parameter,
+and an optional &lt;code>db&lt;/code> parameter.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_connection_tables&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -959,11 +979,18 @@ in a given model in the source.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-health-analyze</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-health-analyze/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-health-analyze/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>looker-health-analyze&lt;/code> tool performs various analysis tasks on a Looker instance. The &lt;code>action&lt;/code> parameter selects the type of analysis to perform:&lt;/p>
+&lt;p>The &lt;code>looker-health-analyze&lt;/code> tool performs various analysis tasks on a Looker
+instance. The &lt;code>action&lt;/code> parameter selects the type of analysis to perform:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>projects&lt;/code>: Analyzes all projects or a specified project, reporting on the number of models and view files, as well as Git connection and validation status.&lt;/li>
-&lt;li>&lt;code>models&lt;/code>: Analyzes all models or a specified model, providing a count of explores, unused explores, and total query counts.&lt;/li>
-&lt;li>&lt;code>explores&lt;/code>: Analyzes all explores or a specified explore, reporting on the number of joins, unused joins, fields, unused fields, and query counts. Being classified as &lt;strong>Unused&lt;/strong> is determined by whether a field has been used as a field or filter within the past 90 days in production.&lt;/li>
+&lt;li>&lt;code>projects&lt;/code>: Analyzes all projects or a specified project, reporting on the
+number of models and view files, as well as Git connection and validation
+status.&lt;/li>
+&lt;li>&lt;code>models&lt;/code>: Analyzes all models or a specified model, providing a count of
+explores, unused explores, and total query counts.&lt;/li>
+&lt;li>&lt;code>explores&lt;/code>: Analyzes all explores or a specified explore, reporting on the
+number of joins, unused joins, fields, unused fields, and query counts. Being
+classified as &lt;strong>Unused&lt;/strong> is determined by whether a field has been used as a
+field or filter within the past 90 days in production.&lt;/li>
 &lt;/ul>
 &lt;h2 id="parameters">Parameters&lt;/h2>
 &lt;table>
@@ -1062,15 +1089,21 @@ in a given model in the source.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-health-pulse</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-health-pulse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-health-pulse/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>looker-health-pulse&lt;/code> tool performs health checks on a Looker instance. The &lt;code>action&lt;/code> parameter selects the type of check to perform:&lt;/p>
+&lt;p>The &lt;code>looker-health-pulse&lt;/code> tool performs health checks on a Looker instance. The
+&lt;code>action&lt;/code> parameter selects the type of check to perform:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>check_db_connections&lt;/code>: Checks all database connections, runs supported tests, and reports query counts.&lt;/li>
-&lt;li>&lt;code>check_dashboard_performance&lt;/code>: Finds dashboards with slow running queries in the last 7 days.&lt;/li>
-&lt;li>&lt;code>check_dashboard_errors&lt;/code>: Lists dashboards with erroring queries in the last 7 days.&lt;/li>
-&lt;li>&lt;code>check_explore_performance&lt;/code>: Lists the slowest explores in the last 7 days and reports average query runtime.&lt;/li>
-&lt;li>&lt;code>check_schedule_failures&lt;/code>: Lists schedules that have failed in the last 7 days.&lt;/li>
-&lt;li>&lt;code>check_legacy_features&lt;/code>: Lists enabled legacy features. (&lt;em>To note, this function is not
-available in Looker Core.&lt;/em>)&lt;/li>
+&lt;li>&lt;code>check_db_connections&lt;/code>: Checks all database connections, runs supported tests,
+and reports query counts.&lt;/li>
+&lt;li>&lt;code>check_dashboard_performance&lt;/code>: Finds dashboards with slow running queries in
+the last 7 days.&lt;/li>
+&lt;li>&lt;code>check_dashboard_errors&lt;/code>: Lists dashboards with erroring queries in the last 7
+days.&lt;/li>
+&lt;li>&lt;code>check_explore_performance&lt;/code>: Lists the slowest explores in the last 7 days and
+reports average query runtime.&lt;/li>
+&lt;li>&lt;code>check_schedule_failures&lt;/code>: Lists schedules that have failed in the last 7
+days.&lt;/li>
+&lt;li>&lt;code>check_legacy_features&lt;/code>: Lists enabled legacy features. (&lt;em>To note, this
+function is not available in Looker Core.&lt;/em>)&lt;/li>
 &lt;/ul>
 &lt;h2 id="parameters">Parameters&lt;/h2>
 &lt;table>
@@ -1176,7 +1209,9 @@ available in Looker Core.&lt;/em>)&lt;/li>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-health-vacuum</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-health-vacuum/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-health-vacuum/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>looker-health-vacuum&lt;/code> tool helps you identify unused LookML objects such as models, explores, joins, and fields. The &lt;code>action&lt;/code> parameter selects the type of vacuum to perform:&lt;/p>
+&lt;p>The &lt;code>looker-health-vacuum&lt;/code> tool helps you identify unused LookML objects such as
+models, explores, joins, and fields. The &lt;code>action&lt;/code> parameter selects the type of
+vacuum to perform:&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>models&lt;/code>: Identifies unused explores within a model.&lt;/li>
 &lt;li>&lt;code>explores&lt;/code>: Identifies unused joins and fields within an explore.&lt;/li>
@@ -1231,7 +1266,8 @@ available in Looker Core.&lt;/em>)&lt;/li>
  &lt;/tbody>
 &lt;/table>
 &lt;h2 id="example">Example&lt;/h2>
-&lt;p>Identify unnused fields (&lt;em>in this case, less than 1 query in the last 20 days&lt;/em>) and joins in the &lt;code>order_items&lt;/code> explore and &lt;code>thelook&lt;/code> model&lt;/p></description></item><item><title>looker-make-dashboard</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-make-dashboard/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-make-dashboard/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>Identify unnused fields (&lt;em>in this case, less than 1 query in the last 20 days&lt;/em>)
+and joins in the &lt;code>order_items&lt;/code> explore and &lt;code>thelook&lt;/code> model&lt;/p></description></item><item><title>looker-make-dashboard</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-make-dashboard/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-make-dashboard/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>looker-make-dashboard&lt;/code> creates a dashboard in the user&amp;rsquo;s
 Looker personal folder.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>

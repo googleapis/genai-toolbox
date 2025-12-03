@@ -84,16 +84,21 @@ application end user natural language questions. Natural language streamlines
 the development of generative AI applications by transferring the complexity
 of converting natural language to SQL from the application layer to the
 database layer.&lt;/p></description></item><item><title>alloydb-create-cluster</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/alloydb/alloydb-create-cluster/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/alloydb/alloydb-create-cluster/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-create-cluster&lt;/code> tool creates a new AlloyDB for PostgreSQL cluster in a specified project and location. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.
+&lt;p>The &lt;code>alloydb-create-cluster&lt;/code> tool creates a new AlloyDB for PostgreSQL cluster
+in a specified project and location. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.
 This tool provisions a cluster with a &lt;strong>private IP address&lt;/strong> within the specified VPC network.&lt;/p>
 &lt;p>&lt;strong>Permissions &amp;amp; APIs Required:&lt;/strong>
 Before using, ensure the following on your GCP project:&lt;/p>
 &lt;ol>
 &lt;li>
-&lt;p>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB API&lt;/a> is enabled.&lt;/p>
+&lt;p>The &lt;a href="https://console.cloud.google.com/apis/library/alloydb.googleapis.com">AlloyDB
+API&lt;/a> is
+enabled.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>The user or service account executing the tool has one of the following IAM roles:&lt;/p>
+&lt;p>The user or service account executing the tool has one of the following IAM
+roles:&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>roles/alloydb.admin&lt;/code> (the AlloyDB Admin predefined IAM role)&lt;/li>
 &lt;li>&lt;code>roles/owner&lt;/code> (the Owner basic IAM role)&lt;/li>
@@ -195,7 +200,9 @@ specified AlloyDB cluster. It is compatible with
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>alloydb-get-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/alloydb/alloydb-get-instance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/alloydb/alloydb-get-instance/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>alloydb-get-instance&lt;/code> tool retrieves detailed information for a single, specified AlloyDB instance. It is compatible with &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
+&lt;p>The &lt;code>alloydb-get-instance&lt;/code> tool retrieves detailed information for a single,
+specified AlloyDB instance. It is compatible with
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/alloydb-admin/">alloydb-admin&lt;/a> source.&lt;/p>
 &lt;table>
  &lt;thead>
  &lt;tr>
@@ -593,7 +600,8 @@ insights to return, ranked by apriori support. Default to &amp;lsquo;30&amp;rsqu
 insights. Can be &lt;code>'NO_PRUNING'&lt;/code> or &lt;code>'PRUNE_REDUNDANT_INSIGHTS'&lt;/code>. Defaults to
 &lt;code>'PRUNE_REDUNDANT_INSIGHTS'&lt;/code>.&lt;/li>
 &lt;/ul>
-&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its &lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-conversational-analytics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/bigquery/bigquery-conversational-analytics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/bigquery/bigquery-conversational-analytics/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its
+&lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-conversational-analytics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/bigquery/bigquery-conversational-analytics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/bigquery/bigquery-conversational-analytics/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-conversational-analytics&lt;/code> tool allows you to ask questions about
 your data in natural language.&lt;/p>
 &lt;p>This function takes a user&amp;rsquo;s question (which can include conversational history
@@ -611,17 +619,24 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;p>&lt;code>bigquery-execute-sql&lt;/code> accepts the following parameters:&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>&lt;code>sql&lt;/code>&lt;/strong> (required): The GoogleSQL statement to execute.&lt;/li>
-&lt;li>&lt;strong>&lt;code>dry_run&lt;/code>&lt;/strong> (optional): If set to &lt;code>true&lt;/code>, the query is validated but not run,
-returning information about the execution instead. Defaults to &lt;code>false&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>&lt;code>dry_run&lt;/code>&lt;/strong> (optional): If set to &lt;code>true&lt;/code>, the query is validated but not
+run, returning information about the execution instead. Defaults to &lt;code>false&lt;/code>.&lt;/li>
 &lt;/ul>
-&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its &lt;code>bigquery&lt;/code> source:&lt;/p>
+&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its
+&lt;code>bigquery&lt;/code> source:&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>&lt;code>allowed&lt;/code> (default):&lt;/strong> All SQL statements are permitted.&lt;/li>
-&lt;li>&lt;strong>&lt;code>blocked&lt;/code>:&lt;/strong> Only &lt;code>SELECT&lt;/code> statements are allowed. Any other type of statement (e.g., &lt;code>INSERT&lt;/code>, &lt;code>UPDATE&lt;/code>, &lt;code>CREATE&lt;/code>) will be rejected.&lt;/li>
-&lt;li>&lt;strong>&lt;code>protected&lt;/code>:&lt;/strong> This mode enables session-based execution. &lt;code>SELECT&lt;/code> statements can be used on all tables, while write operations are allowed only for the session&amp;rsquo;s temporary dataset (e.g., &lt;code>CREATE TEMP TABLE ...&lt;/code>). This prevents modifications to permanent datasets while allowing stateful, multi-step operations within a secure session.&lt;/li>
+&lt;li>&lt;strong>&lt;code>blocked&lt;/code>:&lt;/strong> Only &lt;code>SELECT&lt;/code> statements are allowed. Any other type of
+statement (e.g., &lt;code>INSERT&lt;/code>, &lt;code>UPDATE&lt;/code>, &lt;code>CREATE&lt;/code>) will be rejected.&lt;/li>
+&lt;li>&lt;strong>&lt;code>protected&lt;/code>:&lt;/strong> This mode enables session-based execution. &lt;code>SELECT&lt;/code>
+statements can be used on all tables, while write operations are allowed only
+for the session&amp;rsquo;s temporary dataset (e.g., &lt;code>CREATE TEMP TABLE ...&lt;/code>). This
+prevents modifications to permanent datasets while allowing stateful,
+multi-step operations within a secure session.&lt;/li>
 &lt;/ul>
 &lt;p>The tool&amp;rsquo;s behavior is influenced by the &lt;code>allowedDatasets&lt;/code> restriction on the
-&lt;code>bigquery&lt;/code> source. Similar to &lt;code>writeMode&lt;/code>, this setting provides an additional layer of security by controlling which datasets can be accessed:&lt;/p></description></item><item><title>bigquery-forecast</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/bigquery/bigquery-forecast/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/bigquery/bigquery-forecast/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;code>bigquery&lt;/code> source. Similar to &lt;code>writeMode&lt;/code>, this setting provides an additional
+layer of security by controlling which datasets can be accessed:&lt;/p></description></item><item><title>bigquery-forecast</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/bigquery/bigquery-forecast/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/bigquery/bigquery-forecast/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-forecast&lt;/code> tool forecasts time series data in BigQuery.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -645,7 +660,8 @@ empty array if not provided.&lt;/li>
 &lt;li>&lt;strong>horizon&lt;/strong> (integer, optional): The number of future time steps you want to
 predict. It defaults to 10 if not specified.&lt;/li>
 &lt;/ul>
-&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its &lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-get-dataset-info</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/bigquery/bigquery-get-dataset-info/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/bigquery/bigquery-get-dataset-info/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its
+&lt;code>bigquery&lt;/code> source:&lt;/p></description></item><item><title>bigquery-get-dataset-info</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/bigquery/bigquery-get-dataset-info/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/bigquery/bigquery-get-dataset-info/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>bigquery-get-dataset-info&lt;/code> tool retrieves metadata for a BigQuery dataset.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -814,10 +830,16 @@ the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/bigquery/">bigquery&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its &lt;code>bigquery&lt;/code> source:&lt;/p>
+&lt;p>The behavior of this tool is influenced by the &lt;code>writeMode&lt;/code> setting on its
+&lt;code>bigquery&lt;/code> source:&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>&lt;code>allowed&lt;/code> (default) and &lt;code>blocked&lt;/code>:&lt;/strong> These modes do not impose any restrictions on the &lt;code>bigquery-sql&lt;/code> tool. The pre-defined SQL statement will be executed as-is.&lt;/li>
-&lt;li>&lt;strong>&lt;code>protected&lt;/code>:&lt;/strong> This mode enables session-based execution. The tool will operate within the same BigQuery session as other tools using the same source, allowing it to interact with temporary resources like &lt;code>TEMP&lt;/code> tables created within that session.&lt;/li>
+&lt;li>&lt;strong>&lt;code>allowed&lt;/code> (default) and &lt;code>blocked&lt;/code>:&lt;/strong> These modes do not impose any
+restrictions on the &lt;code>bigquery-sql&lt;/code> tool. The pre-defined SQL statement will be
+executed as-is.&lt;/li>
+&lt;li>&lt;strong>&lt;code>protected&lt;/code>:&lt;/strong> This mode enables session-based execution. The tool will
+operate within the same BigQuery session as other tools using the same source,
+allowing it to interact with temporary resources like &lt;code>TEMP&lt;/code> tables created
+within that session.&lt;/li>
 &lt;/ul>
 &lt;h3 id="googlesql">GoogleSQL&lt;/h3>
 &lt;p>BigQuery uses &lt;a href="https://cloud.google.com/bigquery/docs/reference/standard-sql/">GoogleSQL&lt;/a> for querying data. The integration
@@ -964,7 +986,10 @@ inserted according to their name: e.g. &lt;code>@name&lt;/code>.&lt;/p>
 &lt;/svg>
 
  &lt;/span>Note&lt;/p></description></item><item><title>Cassandra</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cassandra/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cassandra/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://cassandra.apache.org/">Apache Cassandra&lt;/a> is a NoSQL distributed database. By design, NoSQL databases are lightweight, open-source, non-relational, and largely distributed. Counted among their strengths are horizontal scalability, distributed architectures, and a flexible approach to schema definition.&lt;/p>
+&lt;p>&lt;a href="https://cassandra.apache.org/">Apache Cassandra&lt;/a> is a NoSQL distributed database. By design,
+NoSQL databases are lightweight, open-source, non-relational, and largely
+distributed. Counted among their strengths are horizontal scalability,
+distributed architectures, and a flexible approach to schema definition.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cassandra/cassandra-cql/">&lt;code>cassandra-cql&lt;/code>&lt;/a>&lt;br>
@@ -1111,14 +1136,15 @@ database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cassandra/">cassandra&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>The specified CQL statement is executed as a &lt;a href="https://docs.datastax.com/en/datastax-drivers/developing/prepared-statements.html">prepared statement&lt;/a>,
-and expects parameters in the CQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
+&lt;p>The specified CQL statement is executed as a &lt;a href="https://docs.datastax.com/en/datastax-drivers/developing/prepared-statements.html">prepared
+statement&lt;/a>, and expects parameters in the CQL query to be in
+the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;blockquote>
 &lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent CQL injections.
 Query parameters can be used as substitutes for arbitrary expressions.
-Parameters cannot be used as substitutes for keyspaces, table names, column names,
-or other parts of the query.&lt;/p></description></item><item><title>CLI</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/reference/cli/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/reference/cli/</guid><description>&lt;h2 id="reference">Reference&lt;/h2>
+Parameters cannot be used as substitutes for keyspaces, table names, column
+names, or other parts of the query.&lt;/p></description></item><item><title>CLI</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/reference/cli/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/reference/cli/</guid><description>&lt;h2 id="reference">Reference&lt;/h2>
 &lt;table>
  &lt;thead>
  &lt;tr>
@@ -1218,6 +1244,12 @@ or other parts of the query.&lt;/p></description></item><item><title>CLI</title>
  &lt;td>&lt;code>--ui&lt;/code>&lt;/td>
  &lt;td>Launches the Toolbox UI web server.&lt;/td>
  &lt;td>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;code>--allowed-origins&lt;/code>&lt;/td>
+ &lt;td>Specifies a list of origins permitted to access this server.&lt;/td>
+ &lt;td>&lt;code>*&lt;/code>&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td>&lt;code>-v&lt;/code>&lt;/td>
@@ -1589,13 +1621,15 @@ Google Cloud project.&lt;/p>
 &lt;/svg>
 
  &lt;/span>Info&lt;/p></description></item><item><title>cloud-healthcare-fhir-fetch-page</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-fhir-fetch-page/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-fhir-fetch-page/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-fhir-fetch-page&lt;/code> tool fetches a page of FHIR resources from a given URL. It&amp;rsquo;s
-compatible with the following sources:&lt;/p>
+&lt;p>A &lt;code>cloud-healthcare-fhir-fetch-page&lt;/code> tool fetches a page of FHIR resources from
+a given URL. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>cloud-healthcare-fhir-fetch-page&lt;/code> can be used for pagination when a previous tool call (like
-&lt;code>cloud-healthcare-fhir-patient-search&lt;/code> or &lt;code>cloud-healthcare-fhir-patient-everything&lt;/code>) returns a &amp;rsquo;next&amp;rsquo; link in the response bundle.&lt;/p>
+&lt;p>&lt;code>cloud-healthcare-fhir-fetch-page&lt;/code> can be used for pagination when a previous
+tool call (like &lt;code>cloud-healthcare-fhir-patient-search&lt;/code> or
+&lt;code>cloud-healthcare-fhir-patient-everything&lt;/code>) returns a &amp;rsquo;next&amp;rsquo; link in the
+response bundle.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_fhir_store&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -1652,14 +1686,14 @@ compatible with the following sources:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>cloud-healthcare-fhir-patient-everything</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-fhir-patient-everything/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-fhir-patient-everything/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-fhir-patient-everything&lt;/code> tool retrieves resources related to a given patient
-from a FHIR store. It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;p>A &lt;code>cloud-healthcare-fhir-patient-everything&lt;/code> tool retrieves resources related to
+a given patient from a FHIR store. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>cloud-healthcare-fhir-patient-everything&lt;/code> returns all the information available for a given
-patient ID. It can be configured to only return certain resource types, or only
-resources that have been updated after a given time.&lt;/p>
+&lt;p>&lt;code>cloud-healthcare-fhir-patient-everything&lt;/code> returns all the information available
+for a given patient ID. It can be configured to only return certain resource
+types, or only resources that have been updated after a given time.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">fhir_patient_everything&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -1734,13 +1768,15 @@ resources that have been updated after a given time.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-fhir-patient-search</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-fhir-patient-search/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-fhir-patient-search/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-fhir-patient-search&lt;/code> tool searches for patients in a FHIR store based on a
-set of criteria. It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-fhir-patient-search</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-fhir-patient-search/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-fhir-patient-search/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-fhir-patient-search&lt;/code> tool searches for patients in a FHIR
+store based on a set of criteria. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>cloud-healthcare-fhir-patient-search&lt;/code> returns a list of patients that match the given criteria.&lt;/p>
+&lt;p>&lt;code>cloud-healthcare-fhir-patient-search&lt;/code> returns a list of patients that match the
+given criteria.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">fhir_patient_search&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -1911,7 +1947,8 @@ set of criteria. It&amp;rsquo;s compatible with the following sources:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-dataset</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-get-dataset/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-get-dataset/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-dataset</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-get-dataset/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-get-dataset/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>cloud-healthcare-get-dataset&lt;/code> tool retrieves metadata for a Healthcare dataset.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -2019,8 +2056,8 @@ compatible with the following sources:&lt;/p>
  &lt;/tbody>
 &lt;/table>
 &lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-dicom-store-metrics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-get-dicom-store-metrics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-get-dicom-store-metrics/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-get-dicom-store-metrics&lt;/code> tool retrieves metrics for a DICOM store. It&amp;rsquo;s
-compatible with the following sources:&lt;/p>
+&lt;p>A &lt;code>cloud-healthcare-get-dicom-store-metrics&lt;/code> tool retrieves metrics for a DICOM
+store. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
@@ -2081,13 +2118,16 @@ compatible with the following sources:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-fhir-resource</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-resource/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-resource/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-get-fhir-resource&lt;/code> tool retrieves a specific FHIR resource from a FHIR store.
+&lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-fhir-resource</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-resource/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-resource/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-get-fhir-resource&lt;/code> tool retrieves a specific FHIR resource
+from a FHIR store.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>cloud-healthcare-get-fhir-resource&lt;/code> returns a single FHIR resource, identified by its type and ID.&lt;/p>
+&lt;p>&lt;code>cloud-healthcare-get-fhir-resource&lt;/code> returns a single FHIR resource, identified
+by its type and ID.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_fhir_resource&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -2156,7 +2196,8 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-fhir-store</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-store/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-store/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-get-fhir-store</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-store/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-get-fhir-store/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>cloud-healthcare-get-fhir-store&lt;/code> tool retrieves information about a FHIR store. It&amp;rsquo;s
 compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -2283,13 +2324,14 @@ compatible with the following sources:&lt;/p>
  &lt;/tbody>
 &lt;/table>
 &lt;p>*If the &lt;code>allowedFHIRStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-list-dicom-stores</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-list-dicom-stores/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-list-dicom-stores/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-list-dicom-stores&lt;/code> lists the available DICOM stores in the healthcare dataset.
+&lt;p>A &lt;code>cloud-healthcare-list-dicom-stores&lt;/code> lists the available DICOM stores in the
+healthcare dataset.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>cloud-healthcare-list-dicom-stores&lt;/code> returns the details of the available DICOM stores in the
-dataset of the healthcare source. It takes no extra parameters.&lt;/p>
+&lt;p>&lt;code>cloud-healthcare-list-dicom-stores&lt;/code> returns the details of the available DICOM
+stores in the dataset of the healthcare source. It takes no extra parameters.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_dicom_stores&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -2327,13 +2369,14 @@ dataset of the healthcare source. It takes no extra parameters.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>cloud-healthcare-list-fhir-stores</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-list-fhir-stores/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-list-fhir-stores/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-list-fhir-stores&lt;/code> lists the available FHIR stores in the healthcare dataset.
+&lt;p>A &lt;code>cloud-healthcare-list-fhir-stores&lt;/code> lists the available FHIR stores in the
+healthcare dataset.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>cloud-healthcare-list-fhir-stores&lt;/code> returns the details of the available FHIR stores in the
-dataset of the healthcare source. It takes no extra parameters.&lt;/p>
+&lt;p>&lt;code>cloud-healthcare-list-fhir-stores&lt;/code> returns the details of the available FHIR
+stores in the dataset of the healthcare source. It takes no extra parameters.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_fhir_stores&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -2371,12 +2414,14 @@ dataset of the healthcare source. It takes no extra parameters.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>cloud-healthcare-retrieve-rendered-dicom-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-retrieve-rendered-dicom-instance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-retrieve-rendered-dicom-instance/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-retrieve-rendered-dicom-instance&lt;/code> tool retrieves a rendered DICOM instance from a DICOM store.
+&lt;p>A &lt;code>cloud-healthcare-retrieve-rendered-dicom-instance&lt;/code> tool retrieves a rendered
+DICOM instance from a DICOM store.
 It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>cloud-healthcare-retrieve-rendered-dicom-instance&lt;/code> returns a base64 encoded string of the image in JPEG format.&lt;/p>
+&lt;p>&lt;code>cloud-healthcare-retrieve-rendered-dicom-instance&lt;/code> returns a base64 encoded
+string of the image in JPEG format.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">retrieve_rendered_dicom_instance&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -2457,13 +2502,16 @@ It&amp;rsquo;s compatible with the following sources:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-search-dicom-instances</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-instances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-instances/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>cloud-healthcare-search-dicom-instances&lt;/code> tool searches for DICOM instances in a DICOM store based on a
-set of criteria. It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-search-dicom-instances</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-instances/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-instances/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>cloud-healthcare-search-dicom-instances&lt;/code> tool searches for DICOM instances in
+a DICOM store based on a set of criteria. It&amp;rsquo;s compatible with the following
+sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-healthcare/">cloud-healthcare&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>search-dicom-instances&lt;/code> returns a list of DICOM instances that match the given criteria.&lt;/p>
+&lt;p>&lt;code>search-dicom-instances&lt;/code> returns a list of DICOM instances that match the given
+criteria.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">search_dicom_instances&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -2586,7 +2634,8 @@ set of criteria. It&amp;rsquo;s compatible with the following sources:&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
-&lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code> parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-search-dicom-series</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-series/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-series/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>*If the &lt;code>allowedDICOMStores&lt;/code> in the source has length 1, then the &lt;code>storeID&lt;/code>
+parameter is not needed.&lt;/p></description></item><item><title>cloud-healthcare-search-dicom-series</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-series/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudhealthcare/cloud-healthcare-search-dicom-series/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>cloud-healthcare-search-dicom-series&lt;/code> tool searches for DICOM series in a DICOM store based on a
 set of criteria. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -3148,16 +3197,21 @@ parameters will be used according to their name: e.g. &lt;code>$id&lt;/code>.&lt
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
 names, or other parts of the query.&lt;/p></description></item><item><title>dataform-compile-local</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/dataform/dataform-compile-local/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/dataform/dataform-compile-local/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>dataform-compile-local&lt;/code> tool runs the &lt;code>dataform compile&lt;/code> command on a local Dataform project.&lt;/p>
+&lt;p>A &lt;code>dataform-compile-local&lt;/code> tool runs the &lt;code>dataform compile&lt;/code> command on a local
+Dataform project.&lt;/p>
 &lt;p>It is a standalone tool and &lt;strong>is not&lt;/strong> compatible with any sources.&lt;/p>
-&lt;p>At invocation time, the tool executes &lt;code>dataform compile --json&lt;/code> in the specified project directory and returns the resulting JSON object from the CLI.&lt;/p>
+&lt;p>At invocation time, the tool executes &lt;code>dataform compile --json&lt;/code> in the specified
+project directory and returns the resulting JSON object from the CLI.&lt;/p>
 &lt;p>&lt;code>dataform-compile-local&lt;/code> takes the following parameter:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>project_dir&lt;/code> (string): The absolute or relative path to the local Dataform project directory. The server process must have read access to this path.&lt;/li>
+&lt;li>&lt;code>project_dir&lt;/code> (string): The absolute or relative path to the local Dataform
+project directory. The server process must have read access to this path.&lt;/li>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="dataform-cli">Dataform CLI&lt;/h3>
-&lt;p>This tool executes the &lt;code>dataform&lt;/code> command-line interface (CLI) via a system call. You must have the &lt;strong>&lt;code>dataform&lt;/code> CLI&lt;/strong> installed and available in the server&amp;rsquo;s system &lt;code>PATH&lt;/code>.&lt;/p></description></item><item><title>Dataplex</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/dataplex/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/dataplex/</guid><description>&lt;h1 id="dataplex-source">Dataplex Source&lt;/h1>
+&lt;p>This tool executes the &lt;code>dataform&lt;/code> command-line interface (CLI) via a system
+call. You must have the &lt;strong>&lt;code>dataform&lt;/code> CLI&lt;/strong> installed and available in the
+server&amp;rsquo;s system &lt;code>PATH&lt;/code>.&lt;/p></description></item><item><title>Dataplex</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/dataplex/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/dataplex/</guid><description>&lt;h1 id="dataplex-source">Dataplex Source&lt;/h1>
 &lt;p>&lt;a href="https://cloud.google.com/dataplex/docs">Dataplex&lt;/a> Universal Catalog is a unified, intelligent governance
 solution for data and AI assets in Google Cloud. Dataplex Universal Catalog
 powers AI, analytics, and business intelligence at scale.&lt;/p>
@@ -3264,15 +3318,17 @@ query.&lt;/p>
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
 names, or other parts of the query.&lt;/p></description></item><item><title>Elasticsearch</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/elasticsearch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/elasticsearch/</guid><description>&lt;h1 id="elasticsearch-source">Elasticsearch Source&lt;/h1>
-&lt;p>&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">Elasticsearch&lt;/a> is a distributed, free and open search and analytics engine
-for all types of data, including textual, numerical, geospatial, structured,
-and unstructured.&lt;/p>
+&lt;p>&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">Elasticsearch&lt;/a> is a distributed, free and open search and
+analytics engine for all types of data, including textual, numerical,
+geospatial, structured, and unstructured.&lt;/p>
 &lt;p>If you are new to Elasticsearch, you can learn how to
 &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started.html">set up a cluster and start indexing data&lt;/a>.&lt;/p>
 &lt;p>Elasticsearch uses &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/esql.html">ES|QL&lt;/a> for querying data. ES|QL
 is a powerful query language that allows you to search and aggregate data in
 Elasticsearch.&lt;/p>
-&lt;p>See the &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">official documentation&lt;/a> for more information.&lt;/p></description></item><item><title>Firebird</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/firebird/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/firebird/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>See the &lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">official
+documentation&lt;/a>
+for more information.&lt;/p></description></item><item><title>Firebird</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/firebird/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/firebird/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://firebirdsql.org/">Firebird&lt;/a> is a relational database management system offering many
 ANSI SQL standard features that runs on Linux, Windows, and a variety of Unix
 platforms. It is known for its small footprint, powerful features, and easy
@@ -4102,16 +4158,18 @@ in the given dashboard.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-conversational-analytics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-conversational-analytics/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-conversational-analytics/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>looker-conversational-analytics&lt;/code> tool allows you to ask questions about your Looker data.&lt;/p>
+&lt;p>A &lt;code>looker-conversational-analytics&lt;/code> tool allows you to ask questions about your
+Looker data.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>looker-conversational-analytics&lt;/code> accepts two parameters:&lt;/p>
 &lt;ol>
-&lt;li>&lt;code>user_query_with_context&lt;/code>: The question asked of the Conversational Analytics system.&lt;/li>
-&lt;li>&lt;code>explore_references&lt;/code>: A list of one to five explores that can be queried to answer the
-question. The form of the entry is &lt;code>[{&amp;quot;model&amp;quot;: &amp;quot;model name&amp;quot;, &amp;quot;explore&amp;quot;: &amp;quot;explore name&amp;quot;}, ...]&lt;/code>&lt;/li>
+&lt;li>&lt;code>user_query_with_context&lt;/code>: The question asked of the Conversational Analytics
+system.&lt;/li>
+&lt;li>&lt;code>explore_references&lt;/code>: A list of one to five explores that can be queried to
+answer the question. The form of the entry is &lt;code>[{&amp;quot;model&amp;quot;: &amp;quot;model name&amp;quot;, &amp;quot;explore&amp;quot;: &amp;quot;explore name&amp;quot;}, ...]&lt;/code>&lt;/li>
 &lt;/ol>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -4259,7 +4317,8 @@ as well as the file content.&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>looker-dev-mode&lt;/code> accepts a boolean parameter, true to enter dev mode and false to exit dev mode.&lt;/p>
+&lt;p>&lt;code>looker-dev-mode&lt;/code> accepts a boolean parameter, true to enter dev mode and false
+to exit dev mode.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">dev_mode&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -4300,7 +4359,23 @@ as well as the file content.&lt;/p>
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>looker-get-connection-databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-get-connection-databases/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-get-connection-databases/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>looker-generate-embed-url</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-generate-embed-url/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-generate-embed-url/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>looker-generate-embed-url&lt;/code> tool generates an embeddable URL for a given
+piece of Looker content. The url generated is created for the user authenticated
+to the Looker source. When opened in the browser it will create a Looker Embed
+session.&lt;/p>
+&lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/looker/">looker&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>looker-generate-embed-url&lt;/code> takes two parameters:&lt;/p>
+&lt;ol>
+&lt;li>the &lt;code>type&lt;/code> of content (e.g., &amp;ldquo;dashboards&amp;rdquo;, &amp;ldquo;looks&amp;rdquo;, &amp;ldquo;query-visualization&amp;rdquo;)&lt;/li>
+&lt;li>the &lt;code>id&lt;/code> of the content&lt;/li>
+&lt;/ol>
+&lt;p>It&amp;rsquo;s recommended to use other tools from the Looker MCP toolbox with this tool
+to do things like fetch dashboard id&amp;rsquo;s, generate a query, etc that can be
+supplied to this tool.&lt;/p></description></item><item><title>looker-get-connection-databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-get-connection-databases/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-get-connection-databases/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>looker-get-connection-databases&lt;/code> tool returns all the databases in a connection.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
@@ -4448,7 +4523,8 @@ as well as the file content.&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>looker-get-connection-tables&lt;/code> accepts a &lt;code>conn&lt;/code> parameter, a &lt;code>schema&lt;/code> parameter, and an optional &lt;code>db&lt;/code> parameter.&lt;/p>
+&lt;p>&lt;code>looker-get-connection-tables&lt;/code> accepts a &lt;code>conn&lt;/code> parameter, a &lt;code>schema&lt;/code> parameter,
+and an optional &lt;code>db&lt;/code> parameter.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_connection_tables&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -4993,11 +5069,18 @@ in a given model in the source.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-health-analyze</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-health-analyze/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-health-analyze/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>looker-health-analyze&lt;/code> tool performs various analysis tasks on a Looker instance. The &lt;code>action&lt;/code> parameter selects the type of analysis to perform:&lt;/p>
+&lt;p>The &lt;code>looker-health-analyze&lt;/code> tool performs various analysis tasks on a Looker
+instance. The &lt;code>action&lt;/code> parameter selects the type of analysis to perform:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>projects&lt;/code>: Analyzes all projects or a specified project, reporting on the number of models and view files, as well as Git connection and validation status.&lt;/li>
-&lt;li>&lt;code>models&lt;/code>: Analyzes all models or a specified model, providing a count of explores, unused explores, and total query counts.&lt;/li>
-&lt;li>&lt;code>explores&lt;/code>: Analyzes all explores or a specified explore, reporting on the number of joins, unused joins, fields, unused fields, and query counts. Being classified as &lt;strong>Unused&lt;/strong> is determined by whether a field has been used as a field or filter within the past 90 days in production.&lt;/li>
+&lt;li>&lt;code>projects&lt;/code>: Analyzes all projects or a specified project, reporting on the
+number of models and view files, as well as Git connection and validation
+status.&lt;/li>
+&lt;li>&lt;code>models&lt;/code>: Analyzes all models or a specified model, providing a count of
+explores, unused explores, and total query counts.&lt;/li>
+&lt;li>&lt;code>explores&lt;/code>: Analyzes all explores or a specified explore, reporting on the
+number of joins, unused joins, fields, unused fields, and query counts. Being
+classified as &lt;strong>Unused&lt;/strong> is determined by whether a field has been used as a
+field or filter within the past 90 days in production.&lt;/li>
 &lt;/ul>
 &lt;h2 id="parameters">Parameters&lt;/h2>
 &lt;table>
@@ -5096,15 +5179,21 @@ in a given model in the source.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-health-pulse</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-health-pulse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-health-pulse/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>looker-health-pulse&lt;/code> tool performs health checks on a Looker instance. The &lt;code>action&lt;/code> parameter selects the type of check to perform:&lt;/p>
+&lt;p>The &lt;code>looker-health-pulse&lt;/code> tool performs health checks on a Looker instance. The
+&lt;code>action&lt;/code> parameter selects the type of check to perform:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>check_db_connections&lt;/code>: Checks all database connections, runs supported tests, and reports query counts.&lt;/li>
-&lt;li>&lt;code>check_dashboard_performance&lt;/code>: Finds dashboards with slow running queries in the last 7 days.&lt;/li>
-&lt;li>&lt;code>check_dashboard_errors&lt;/code>: Lists dashboards with erroring queries in the last 7 days.&lt;/li>
-&lt;li>&lt;code>check_explore_performance&lt;/code>: Lists the slowest explores in the last 7 days and reports average query runtime.&lt;/li>
-&lt;li>&lt;code>check_schedule_failures&lt;/code>: Lists schedules that have failed in the last 7 days.&lt;/li>
-&lt;li>&lt;code>check_legacy_features&lt;/code>: Lists enabled legacy features. (&lt;em>To note, this function is not
-available in Looker Core.&lt;/em>)&lt;/li>
+&lt;li>&lt;code>check_db_connections&lt;/code>: Checks all database connections, runs supported tests,
+and reports query counts.&lt;/li>
+&lt;li>&lt;code>check_dashboard_performance&lt;/code>: Finds dashboards with slow running queries in
+the last 7 days.&lt;/li>
+&lt;li>&lt;code>check_dashboard_errors&lt;/code>: Lists dashboards with erroring queries in the last 7
+days.&lt;/li>
+&lt;li>&lt;code>check_explore_performance&lt;/code>: Lists the slowest explores in the last 7 days and
+reports average query runtime.&lt;/li>
+&lt;li>&lt;code>check_schedule_failures&lt;/code>: Lists schedules that have failed in the last 7
+days.&lt;/li>
+&lt;li>&lt;code>check_legacy_features&lt;/code>: Lists enabled legacy features. (&lt;em>To note, this
+function is not available in Looker Core.&lt;/em>)&lt;/li>
 &lt;/ul>
 &lt;h2 id="parameters">Parameters&lt;/h2>
 &lt;table>
@@ -5210,7 +5299,9 @@ available in Looker Core.&lt;/em>)&lt;/li>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>looker-health-vacuum</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-health-vacuum/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-health-vacuum/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>looker-health-vacuum&lt;/code> tool helps you identify unused LookML objects such as models, explores, joins, and fields. The &lt;code>action&lt;/code> parameter selects the type of vacuum to perform:&lt;/p>
+&lt;p>The &lt;code>looker-health-vacuum&lt;/code> tool helps you identify unused LookML objects such as
+models, explores, joins, and fields. The &lt;code>action&lt;/code> parameter selects the type of
+vacuum to perform:&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>models&lt;/code>: Identifies unused explores within a model.&lt;/li>
 &lt;li>&lt;code>explores&lt;/code>: Identifies unused joins and fields within an explore.&lt;/li>
@@ -5265,7 +5356,8 @@ available in Looker Core.&lt;/em>)&lt;/li>
  &lt;/tbody>
 &lt;/table>
 &lt;h2 id="example">Example&lt;/h2>
-&lt;p>Identify unnused fields (&lt;em>in this case, less than 1 query in the last 20 days&lt;/em>) and joins in the &lt;code>order_items&lt;/code> explore and &lt;code>thelook&lt;/code> model&lt;/p></description></item><item><title>looker-make-dashboard</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-make-dashboard/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-make-dashboard/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>Identify unnused fields (&lt;em>in this case, less than 1 query in the last 20 days&lt;/em>)
+and joins in the &lt;code>order_items&lt;/code> explore and &lt;code>thelook&lt;/code> model&lt;/p></description></item><item><title>looker-make-dashboard</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-make-dashboard/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/looker/looker-make-dashboard/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>looker-make-dashboard&lt;/code> creates a dashboard in the user&amp;rsquo;s
 Looker personal folder.&lt;/p>
 &lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
@@ -6084,22 +6176,35 @@ as well as the new file content.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>MindsDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/mindsdb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/mindsdb/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://docs.mindsdb.com/">MindsDB&lt;/a> is an AI federated database in the world. It allows you to combine information from hundreds of datasources as if they were SQL, supporting joins across datasources and enabling you to query all unstructured data as if it were structured.&lt;/p>
-&lt;p>MindsDB translates MySQL queries into whatever API is needed - whether it&amp;rsquo;s REST APIs, GraphQL, or native database protocols. This means you can write standard SQL queries and MindsDB automatically handles the translation to APIs like Salesforce, Jira, GitHub, email systems, MongoDB, and hundreds of other datasources.&lt;/p></description></item><item><title>mindsdb-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/mindsdb/mindsdb-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/mindsdb/mindsdb-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://docs.mindsdb.com/">MindsDB&lt;/a> is an AI federated database in the world. It allows you
+to combine information from hundreds of datasources as if they were SQL,
+supporting joins across datasources and enabling you to query all unstructured
+data as if it were structured.&lt;/p>
+&lt;p>MindsDB translates MySQL queries into whatever API is needed - whether it&amp;rsquo;s REST
+APIs, GraphQL, or native database protocols. This means you can write standard
+SQL queries and MindsDB automatically handles the translation to APIs like
+Salesforce, Jira, GitHub, email systems, MongoDB, and hundreds of other
+datasources.&lt;/p></description></item><item><title>mindsdb-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/mindsdb/mindsdb-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/mindsdb/mindsdb-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>mindsdb-execute-sql&lt;/code> tool executes a SQL statement against a MindsDB
 federated database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/mindsdb.md">mindsdb&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/mindsdb/">mindsdb&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>mindsdb-execute-sql&lt;/code> takes one input parameter &lt;code>sql&lt;/code> and runs the SQL
 statement against the &lt;code>source&lt;/code>. This tool enables you to:&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>Query Multiple Datasources&lt;/strong>: Execute SQL across hundreds of connected datasources&lt;/li>
-&lt;li>&lt;strong>Cross-Datasource Joins&lt;/strong>: Perform joins between different databases, APIs, and file systems&lt;/li>
-&lt;li>&lt;strong>ML Model Predictions&lt;/strong>: Query ML models as virtual tables for real-time predictions&lt;/li>
-&lt;li>&lt;strong>Unstructured Data&lt;/strong>: Query documents, images, and other unstructured data as structured tables&lt;/li>
-&lt;li>&lt;strong>Federated Analytics&lt;/strong>: Perform analytics across multiple datasources simultaneously&lt;/li>
-&lt;li>&lt;strong>API Translation&lt;/strong>: Automatically translate SQL queries into REST APIs, GraphQL, and native protocols&lt;/li>
+&lt;li>&lt;strong>Query Multiple Datasources&lt;/strong>: Execute SQL across hundreds of connected
+datasources&lt;/li>
+&lt;li>&lt;strong>Cross-Datasource Joins&lt;/strong>: Perform joins between different databases, APIs,
+and file systems&lt;/li>
+&lt;li>&lt;strong>ML Model Predictions&lt;/strong>: Query ML models as virtual tables for real-time
+predictions&lt;/li>
+&lt;li>&lt;strong>Unstructured Data&lt;/strong>: Query documents, images, and other unstructured data as
+structured tables&lt;/li>
+&lt;li>&lt;strong>Federated Analytics&lt;/strong>: Perform analytics across multiple datasources
+simultaneously&lt;/li>
+&lt;li>&lt;strong>API Translation&lt;/strong>: Automatically translate SQL queries into REST APIs,
+GraphQL, and native protocols&lt;/li>
 &lt;/ul>
 &lt;h2 id="example-queries">Example Queries&lt;/h2>
 &lt;h3 id="cross-datasource-analytics">Cross-Datasource Analytics&lt;/h3>
@@ -6149,7 +6254,7 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p><
 &lt;p>A &lt;code>mindsdb-sql&lt;/code> tool executes a pre-defined SQL statement against a MindsDB
 federated database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;a href="../sources/mindsdb.md">mindsdb&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/mindsdb/">mindsdb&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>The specified SQL statement is executed as a &lt;a href="https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html">prepared statement&lt;/a>,
 and expects parameters in the SQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
@@ -6729,7 +6834,10 @@ form of placeholders &lt;code>?&lt;/code>.&lt;/p>
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
 names, or other parts of the query.&lt;/p></description></item><item><title>Oracle</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/oracle/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/oracle/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://www.oracle.com/database/">Oracle Database&lt;/a> is a multi-model database management system produced and marketed by Oracle Corporation. It is commonly used for running online transaction processing (OLTP), data warehousing (DW), and mixed (OLTP &amp;amp; DW) database workloads.&lt;/p>
+&lt;p>&lt;a href="https://www.oracle.com/database/">Oracle Database&lt;/a> is a multi-model database management system
+produced and marketed by Oracle Corporation. It is commonly used for running
+online transaction processing (OLTP), data warehousing (DW), and mixed (OLTP &amp;amp;
+DW) database workloads.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
@@ -6743,7 +6851,8 @@ Run parameterized SQL queries in Oracle.&lt;/p>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="database-user">Database User&lt;/h3>
-&lt;p>This source uses standard authentication. You will need to &lt;a href="https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/CREATE-USER.html">create an Oracle user&lt;/a> to log in to the database with the necessary permissions.&lt;/p></description></item><item><title>oracle-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/oracle/oracle-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/oracle/oracle-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>This source uses standard authentication. You will need to &lt;a href="https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/CREATE-USER.html">create an Oracle
+user&lt;/a> to log in to the database with the necessary permissions.&lt;/p></description></item><item><title>oracle-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/oracle/oracle-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/oracle/oracle-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>An &lt;code>oracle-execute-sql&lt;/code> tool executes a SQL statement against an Oracle
 database. It&amp;rsquo;s compatible with the following source:&lt;/p>
 &lt;ul>
@@ -6774,7 +6883,24 @@ to be in the native Oracle format (e.g., &lt;code>:1&lt;/code>, &lt;code>:2&lt;/
 &lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
 Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
-names, or other parts of the query.&lt;/p></description></item><item><title>postgres-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+names, or other parts of the query.&lt;/p></description></item><item><title>postgres-database-overview</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-database-overview/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-database-overview/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-database-overview&lt;/code> fetches the current state of the PostgreSQL
+server. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-database-overview&lt;/code> fetches the current state of the PostgreSQL server
+This tool does not take any input parameters.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">database_overview&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-database-overview&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloudsql-pg-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> fetches the current state of the PostgreSQL server. It returns the postgres version, whether it&amp;#39;s a replica, uptime duration, maximum connection limit, number of current connections, number of active connections and the percentage of connections in use.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a JSON object with the following elements:&lt;/p></description></item><item><title>postgres-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>postgres-execute-sql&lt;/code> tool executes a SQL statement against a Postgres
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
@@ -6823,7 +6949,31 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>postgres-list-active-queries</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-active-queries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-active-queries/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>postgres-get-column-cardinality</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-get-column-cardinality/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-get-column-cardinality/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-get-column-cardinality&lt;/code> tool estimates the number of unique values
+(cardinality) for one or all columns in a specific PostgreSQL table by using the
+database&amp;rsquo;s internal statistics. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-get-column-cardinality&lt;/code> returns detailed information as JSON about column
+cardinality values, ordered by estimated cardinality in descending order. The tool takes
+the following input parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>schema_name&lt;/code> (required): The schema name in which the table is present.&lt;/li>
+&lt;li>&lt;code>table_name&lt;/code> (required): The table name in which the column is present.&lt;/li>
+&lt;li>&lt;code>column_name&lt;/code> (optional): The column name for which the cardinality is to be found.
+If not provided, cardinality for all columns will be returned. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">get_column_cardinality&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-get-column-cardinality&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Estimates the number of unique values (cardinality) quickly for one or all columns in a specific PostgreSQL table by using the database&amp;#39;s internal statistics, returning the results in descending order of estimated cardinality. Please run ANALYZE on the table before using this tool to get accurate results. The tool returns the column_name and the estimated_cardinality. If the column_name is not provided, the tool returns all columns along with their estimated cardinality.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>postgres-list-active-queries</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-active-queries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-active-queries/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>postgres-list-active-queries&lt;/code> tool retrieves information about currently
 active queries in a Postgres database. It&amp;rsquo;s compatible with any of the following
 sources:&lt;/p>
@@ -6899,7 +7049,40 @@ not support any input parameter.&lt;/p>
  &lt;td>functions for autoincrementing fields&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>postgres-list-installed-extensions</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-installed-extensions/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-installed-extensions/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>postgres-list-indexes</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-indexes/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-indexes/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-indexes&lt;/code> tool lists available user indexes in the database
+excluding those in &lt;code>pg_catalog&lt;/code> and &lt;code>information_schema&lt;/code>. It&amp;rsquo;s compatible with
+any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-list-indexes&lt;/code> lists detailed information as JSON for indexes. The tool
+takes the following input parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>table_name&lt;/code> (optional): A text to filter results by table name. The input is
+used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>index_name&lt;/code> (optional): A text to filter results by index name. The input is
+used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>schema_name&lt;/code> (optional): A text to filter results by schema name. The input
+is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>limit&lt;/code> (optional): The maximum number of rows to return. Default: &lt;code>50&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_indexes&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-list-indexes&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Lists available user indexes in the database, excluding system schemas (pg_catalog, 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> information_schema). For each index, the following properties are returned: 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> schema name, table name, index name, index type (access method), a boolean 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> indicating if it&amp;#39;s a unique index, a boolean indicating if it&amp;#39;s for a primary key,
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> the index definition, index size in bytes, the number of index scans, the number of 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> index tuples read, the number of table tuples fetched via index scans, and a boolean 
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> indicating if the index has been used at least once. &lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>postgres-list-installed-extensions</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-installed-extensions/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-installed-extensions/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>postgres-list-installed-extensions&lt;/code> tool retrieves all PostgreSQL
 extensions installed on a Postgres database. It&amp;rsquo;s compatible with any of the
 following sources:&lt;/p>
@@ -6947,18 +7130,53 @@ support any input parameter.&lt;/p>
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>postgres-list-schemas</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-schemas/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-schemas/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>postgres-list-schemas&lt;/code> tool retrieves information about schemas in a database excluding system
-and temporary schemas. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;/table></description></item><item><title>postgres-list-locks</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-locks/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-locks/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-locks&lt;/code> tool displays information about active locks by joining pg_stat_activity with pg_locks. This is useful to find transactions holding or waiting for locks and to troubleshoot contention.&lt;/p>
+&lt;p>Compatible sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>postgres-list-schemas&lt;/code> lists detailed information as JSON for each schema. The tool takes the following
-input parameters:&lt;/p>
+&lt;p>This tool identifies all locks held by active processes showing the process ID, user, query text, and an aggregated list of all transactions and specific locks (relation, mode, grant status) associated with each process.&lt;/p>
+&lt;h2 id="query">Query&lt;/h2>
+&lt;p>The tool aggregates locks per backend (process) and returns the concatenated transaction ids and lock entries. The SQL used by the tool looks like:&lt;/p></description></item><item><title>postgres-list-query-stats</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-query-stats/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-query-stats/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-query-stats&lt;/code> tool retrieves query statistics from the
+&lt;code>pg_stat_statements&lt;/code> extension in a PostgreSQL database. It provides detailed
+performance metrics for executed queries. It&amp;rsquo;s compatible with any of the following
+sources:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>schema_name&lt;/code> (optional): A pattern to filter schema names using SQL LIKE operator.
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-list-query-stats&lt;/code> lists detailed query statistics as JSON, ordered by
+total execution time in descending order. The tool takes the following input parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>database_name&lt;/code> (optional): The database name to filter query stats for. The input is
+used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code> (all databases).&lt;/li>
+&lt;li>&lt;code>limit&lt;/code> (optional): The maximum number of results to return. Default: &lt;code>50&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_query_stats&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-list-query-stats&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">List query statistics from pg_stat_statements, showing performance metrics for queries including execution counts, timing information, and resource usage. Results are ordered by total execution time descending.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>postgres-list-schemas</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-schemas/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-schemas/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-schemas&lt;/code> tool retrieves information about schemas in a
+database excluding system and temporary schemas. It&amp;rsquo;s compatible with any of
+the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-list-schemas&lt;/code> lists detailed information as JSON for each schema. The
+tool takes the following input parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>schema_name&lt;/code> (optional): A pattern to filter schema names using SQL LIKE
+operator.
 If omitted, all user-defined schemas are returned.&lt;/li>
 &lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
@@ -6967,6 +7185,34 @@ If omitted, all user-defined schemas are returned.&lt;/li>
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-list-schemas&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s2">&amp;#34;Lists all schemas in the database ordered by schema name and excluding system and temporary schemas. It returns the schema name, schema owner, grants, number of functions, number of tables and number of views within each schema.&amp;#34;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>postgres-list-sequences</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-sequences/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-sequences/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-sequences&lt;/code> tool retrieves information about sequences in a
+Postgres database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-list-sequences&lt;/code> lists detailed information as JSON for all sequences.
+The tool takes the following input parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>sequencename&lt;/code> (optional): A text to filter results by sequence name. The
+input is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>schemaname&lt;/code> (optional): A text to filter results by schema name. The input is
+used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>limit&lt;/code> (optional): The maximum number of rows to return. Default: &lt;code>50&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_indexes&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-list-sequences&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Lists all the sequences in the database ordered by sequence name.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Returns sequence name, schema name, sequence owner, data type of the
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> sequence, starting value, minimum value, maximum value of the sequence,
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> the value by which the sequence is incremented, and the last value
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> generated by generated by the sequence in the current session.&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>postgres-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>postgres-list-tables&lt;/code> tool retrieves schema information for all or
 specified tables in a Postgres database. It&amp;rsquo;s compatible with any of the
@@ -6983,17 +7229,48 @@ constraints, indexes, triggers, owner, comment) as JSON for user-created tables
 default, it lists all tables in user schemas.* &lt;code>output_format&lt;/code> (optional):
 Indicate the output format of table schema. &lt;code>simple&lt;/code> will return only the
 table names, &lt;code>detailed&lt;/code> will return the full table information. Default:
-&lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-list-views</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-views/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-views/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>The &lt;code>postgres-list-views&lt;/code> tool retrieves a list of top N (default 50) views from a Postgres database, excluding those in system schemas (&lt;code>pg_catalog&lt;/code>, &lt;code>information_schema&lt;/code>). It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-list-triggers</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-triggers/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-triggers/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-triggers&lt;/code> tool lists available non-internal triggers in the
+database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>postgres-list-views&lt;/code> lists detailed view information (schemaname, viewname, ownername) as JSON for views in a database. The tool takes the following input parameters:&lt;/p>
+&lt;p>&lt;code>postgres-list-triggers&lt;/code> lists detailed information as JSON for triggers. The
+tool takes the following input parameters:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>viewname&lt;/code> (optional): A string pattern to filter view names. The search uses SQL
-LIKE operator to filter the views. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>trigger_name&lt;/code> (optional): A text to filter results by trigger name. The input
+is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>schema_name&lt;/code> (optional): A text to filter results by schema name. The input
+is used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>table_name&lt;/code> (optional): A text to filter results by table name. The input is
+used within a LIKE clause. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>limit&lt;/code> (optional): The maximum number of triggers to return. Default: &lt;code>50&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="l">```yaml&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_triggers&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-list-triggers&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Lists all non-internal triggers in a database. Returns trigger name, schema name, table name, wether its enabled or disabled, timing (e.g BEFORE/AFTER of the event), the events that cause the trigger to fire such as INSERT, UPDATE, or DELETE, whether the trigger activates per ROW or per STATEMENT, the handler function executed by the trigger and full definition.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>postgres-list-views</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-views/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-list-views/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-views&lt;/code> tool retrieves a list of top N (default 50) views from
+a Postgres database, excluding those in system schemas (&lt;code>pg_catalog&lt;/code>,
+&lt;code>information_schema&lt;/code>). It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-list-views&lt;/code> lists detailed view information (schemaname, viewname,
+ownername) as JSON for views in a database. The tool takes the following input
+parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>viewname&lt;/code> (optional): A string pattern to filter view names. The search uses
+SQL LIKE operator to filter the views. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
 &lt;li>&lt;code>limit&lt;/code> (optional): The maximum number of rows to return. Default: &lt;code>50&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;h2 id="example">Example&lt;/h2>
@@ -7031,7 +7308,30 @@ LIKE operator to filter the views. Default: &lt;code>&amp;quot;&amp;quot;&lt;/co
  &lt;td>Description of the tool that is passed to the agent.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>postgres-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;/table></description></item><item><title>postgres-long-running-transactions</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-long-running-transactions/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-long-running-transactions/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-long-running-transactions&lt;/code> tool reports transactions that exceed a configured duration threshold by scanning &lt;code>pg_stat_activity&lt;/code> for sessions where &lt;code>xact_start&lt;/code> is set and older than the configured interval.&lt;/p>
+&lt;p>Compatible sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>The tool returns a JSON array with one object per matching session (non-idle). Each object contains the process id, database and user, application name, client address, session state, several age intervals (connection, transaction, query, and last activity), wait event info, and the SQL text currently associated with the session.&lt;/p></description></item><item><title>postgres-replication-stats</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-replication-stats/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-replication-stats/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-replication-stats&lt;/code> tool queries pg_stat_replication to surface the status of connected replicas. It reports application_name, client address, connection and sync state, and human-readable lag sizes (sent, write, flush, replay, and total) computed using WAL LSN differences.&lt;/p>
+&lt;p>Compatible sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>This tool takes no parameters. It returns a JSON array; each element represents a replication connection on the primary and includes lag metrics formatted by pg_size_pretty.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">replication_stats&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-replication-stats&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s2">&amp;#34;Lists replication connections and readable WAL lag metrics.&amp;#34;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Example response element:&lt;/p></description></item><item><title>postgres-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/postgres/postgres-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>postgres-sql&lt;/code> tool executes a pre-defined SQL statement against a Postgres
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
@@ -7112,6 +7412,10 @@ database.&lt;/li>
 &lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
 limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
 &lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
+&lt;li>&lt;code>database_overview&lt;/code>: Fetches the current state of the PostgreSQL server.&lt;/li>
+&lt;li>&lt;code>list_triggers&lt;/code>: Lists triggers in the database.&lt;/li>
+&lt;li>&lt;code>list_indexes&lt;/code>: List available user indexes in a PostgreSQL database.&lt;/li>
+&lt;li>&lt;code>list_sequences&lt;/code>: List sequences in a PostgreSQL database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
@@ -7261,678 +7565,14 @@ PromQL query.&lt;/li>
 &lt;/ul>
 &lt;h2 id="cloud-sql-for-mysql-admin">Cloud SQL for MySQL Admin&lt;/h2>
 &lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mysql-admin&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>Cloud SQL Viewer&lt;/strong> (&lt;code>roles/cloudsql.viewer&lt;/code>): Provides read-only
-access to resources.
-&lt;ul>
-&lt;li>&lt;code>get_instance&lt;/code>&lt;/li>
-&lt;li>&lt;code>list_instances&lt;/code>&lt;/li>
-&lt;li>&lt;code>list_databases&lt;/code>&lt;/li>
-&lt;li>&lt;code>wait_for_operation&lt;/code>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Cloud SQL Editor&lt;/strong> (&lt;code>roles/cloudsql.editor&lt;/code>): Provides permissions to
-manage existing resources.
-&lt;ul>
-&lt;li>All &lt;code>viewer&lt;/code> tools&lt;/li>
-&lt;li>&lt;code>create_database&lt;/code>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Cloud SQL Admin&lt;/strong> (&lt;code>roles/cloudsql.admin&lt;/code>): Provides full control over
-all resources.
-&lt;ul>
-&lt;li>All &lt;code>editor&lt;/code> and &lt;code>viewer&lt;/code> tools&lt;/li>
-&lt;li>&lt;code>create_instance&lt;/code>&lt;/li>
-&lt;li>&lt;code>create_user&lt;/code>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>create_instance&lt;/code>: Creates a new Cloud SQL for MySQL instance.&lt;/li>
-&lt;li>&lt;code>get_instance&lt;/code>: Gets information about a Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>list_instances&lt;/code>: Lists Cloud SQL instances in a project.&lt;/li>
-&lt;li>&lt;code>create_database&lt;/code>: Creates a new database in a Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>list_databases&lt;/code>: Lists all databases for a Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>create_user&lt;/code>: Creates a new user in a Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>wait_for_operation&lt;/code>: Waits for a Cloud SQL operation to complete.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="cloud-sql-for-postgresql">Cloud SQL for PostgreSQL&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-postgres&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>CLOUD_SQL_POSTGRES_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_POSTGRES_REGION&lt;/code>: The region of your Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_POSTGRES_INSTANCE&lt;/code>: The ID of your Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_POSTGRES_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_POSTGRES_USER&lt;/code>: (Optional) The database username. Defaults to
-IAM authentication if unspecified.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_POSTGRES_PASSWORD&lt;/code>: (Optional) The password for the database
-user. Defaults to IAM authentication if unspecified.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_POSTGRES_IP_TYPE&lt;/code>: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or
-&amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>Cloud SQL Client&lt;/strong> (&lt;code>roles/cloudsql.client&lt;/code>) to connect to the
-instance.&lt;/li>
-&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to
-execute queries.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
-&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
-&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the
-database.&lt;/li>
-&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the
-database.&lt;/li>
-&lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
-&lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
-&lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
-&lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
-&lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
-limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
-&lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="cloud-sql-for-postgresql-observability">Cloud SQL for PostgreSQL Observability&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-postgres-observability&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>Monitoring Viewer&lt;/strong> (&lt;code>roles/monitoring.viewer&lt;/code>) is required on the
-project to view monitoring data.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>get_system_metrics&lt;/code>: Fetches system level cloud monitoring data
-(timeseries metrics) for a Postgres instance using a PromQL query.&lt;/li>
-&lt;li>&lt;code>get_query_metrics&lt;/code>: Fetches query level cloud monitoring data
-(timeseries metrics) for queries running in Postgres instance using a
-PromQL query.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="cloud-sql-for-postgresql-admin">Cloud SQL for PostgreSQL Admin&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-postgres-admin&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>Cloud SQL Viewer&lt;/strong> (&lt;code>roles/cloudsql.viewer&lt;/code>): Provides read-only
-access to resources.
-&lt;ul>
-&lt;li>&lt;code>get_instance&lt;/code>&lt;/li>
-&lt;li>&lt;code>list_instances&lt;/code>&lt;/li>
-&lt;li>&lt;code>list_databases&lt;/code>&lt;/li>
-&lt;li>&lt;code>wait_for_operation&lt;/code>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Cloud SQL Editor&lt;/strong> (&lt;code>roles/cloudsql.editor&lt;/code>): Provides permissions to
-manage existing resources.
-&lt;ul>
-&lt;li>All &lt;code>viewer&lt;/code> tools&lt;/li>
-&lt;li>&lt;code>create_database&lt;/code>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Cloud SQL Admin&lt;/strong> (&lt;code>roles/cloudsql.admin&lt;/code>): Provides full control over
-all resources.
-&lt;ul>
-&lt;li>All &lt;code>editor&lt;/code> and &lt;code>viewer&lt;/code> tools&lt;/li>
-&lt;li>&lt;code>create_instance&lt;/code>&lt;/li>
-&lt;li>&lt;code>create_user&lt;/code>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>create_instance&lt;/code>: Creates a new Cloud SQL for PostgreSQL instance.&lt;/li>
-&lt;li>&lt;code>get_instance&lt;/code>: Gets information about a Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>list_instances&lt;/code>: Lists Cloud SQL instances in a project.&lt;/li>
-&lt;li>&lt;code>create_database&lt;/code>: Creates a new database in a Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>list_databases&lt;/code>: Lists all databases for a Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>create_user&lt;/code>: Creates a new user in a Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>wait_for_operation&lt;/code>: Waits for a Cloud SQL operation to complete.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="cloud-sql-for-sql-server">Cloud SQL for SQL Server&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mssql&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>CLOUD_SQL_MSSQL_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_MSSQL_REGION&lt;/code>: The region of your Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_MSSQL_INSTANCE&lt;/code>: The ID of your Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_MSSQL_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_MSSQL_USER&lt;/code>: The database username.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_MSSQL_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_MSSQL_IP_TYPE&lt;/code>: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or
-&amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>Cloud SQL Client&lt;/strong> (&lt;code>roles/cloudsql.client&lt;/code>) to connect to the
-instance.&lt;/li>
-&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to
-execute queries.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
-&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="cloud-sql-for-sql-server-observability">Cloud SQL for SQL Server Observability&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mssql-observability&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>Monitoring Viewer&lt;/strong> (&lt;code>roles/monitoring.viewer&lt;/code>) is required on the
-project to view monitoring data.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>get_system_metrics&lt;/code>: Fetches system level cloud monitoring data
-(timeseries metrics) for a SQL Server instance using a PromQL query.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="cloud-sql-for-sql-server-admin">Cloud SQL for SQL Server Admin&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mssql-admin&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>Cloud SQL Viewer&lt;/strong> (&lt;code>roles/cloudsql.viewer&lt;/code>): Provides read-only
-access to resources.
-&lt;ul>
-&lt;li>&lt;code>get_instance&lt;/code>&lt;/li>
-&lt;li>&lt;code>list_instances&lt;/code>&lt;/li>
-&lt;li>&lt;code>list_databases&lt;/code>&lt;/li>
-&lt;li>&lt;code>wait_for_operation&lt;/code>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Cloud SQL Editor&lt;/strong> (&lt;code>roles/cloudsql.editor&lt;/code>): Provides permissions to
-manage existing resources.
-&lt;ul>
-&lt;li>All &lt;code>viewer&lt;/code> tools&lt;/li>
-&lt;li>&lt;code>create_database&lt;/code>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Cloud SQL Admin&lt;/strong> (&lt;code>roles/cloudsql.admin&lt;/code>): Provides full control over
-all resources.
-&lt;ul>
-&lt;li>All &lt;code>editor&lt;/code> and &lt;code>viewer&lt;/code> tools&lt;/li>
-&lt;li>&lt;code>create_instance&lt;/code>&lt;/li>
-&lt;li>&lt;code>create_user&lt;/code>&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>create_instance&lt;/code>: Creates a new Cloud SQL for SQL Server instance.&lt;/li>
-&lt;li>&lt;code>get_instance&lt;/code>: Gets information about a Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>list_instances&lt;/code>: Lists Cloud SQL instances in a project.&lt;/li>
-&lt;li>&lt;code>create_database&lt;/code>: Creates a new database in a Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>list_databases&lt;/code>: Lists all databases for a Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>create_user&lt;/code>: Creates a new user in a Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>wait_for_operation&lt;/code>: Waits for a Cloud SQL operation to complete.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="dataplex">Dataplex&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>dataplex&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>DATAPLEX_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>Dataplex Reader&lt;/strong> (&lt;code>roles/dataplex.viewer&lt;/code>) to search and look up
-entries.&lt;/li>
-&lt;li>&lt;strong>Dataplex Editor&lt;/strong> (&lt;code>roles/dataplex.editor&lt;/code>) to modify entries.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>dataplex_search_entries&lt;/code>: Searches for entries in Dataplex Catalog.&lt;/li>
-&lt;li>&lt;code>dataplex_lookup_entry&lt;/code>: Retrieves a specific entry from Dataplex
-Catalog.&lt;/li>
-&lt;li>&lt;code>dataplex_search_aspect_types&lt;/code>: Finds aspect types relevant to the
-query.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="firestore">Firestore&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>firestore&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>FIRESTORE_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
-&lt;li>&lt;code>FIRESTORE_DATABASE&lt;/code>: (Optional) The Firestore database ID. Defaults to
-&amp;ldquo;(default)&amp;rdquo;.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>Cloud Datastore User&lt;/strong> (&lt;code>roles/datastore.user&lt;/code>) to get documents, list
-collections, and query collections.&lt;/li>
-&lt;li>&lt;strong>Firebase Rules Viewer&lt;/strong> (&lt;code>roles/firebaserules.viewer&lt;/code>) to get and
-validate Firestore rules.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>get_documents&lt;/code>: Gets multiple documents from Firestore by their paths.&lt;/li>
-&lt;li>&lt;code>add_documents&lt;/code>: Adds a new document to a Firestore collection.&lt;/li>
-&lt;li>&lt;code>update_document&lt;/code>: Updates an existing document in Firestore.&lt;/li>
-&lt;li>&lt;code>list_collections&lt;/code>: Lists Firestore collections for a given parent path.&lt;/li>
-&lt;li>&lt;code>delete_documents&lt;/code>: Deletes multiple documents from Firestore.&lt;/li>
-&lt;li>&lt;code>query_collection&lt;/code>: Retrieves one or more Firestore documents from a
-collection.&lt;/li>
-&lt;li>&lt;code>get_rules&lt;/code>: Retrieves the active Firestore security rules.&lt;/li>
-&lt;li>&lt;code>validate_rules&lt;/code>: Checks the provided Firestore Rules source for syntax
-and validation errors.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="looker">Looker&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>looker&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>LOOKER_BASE_URL&lt;/code>: The URL of your Looker instance.&lt;/li>
-&lt;li>&lt;code>LOOKER_CLIENT_ID&lt;/code>: The client ID for the Looker API.&lt;/li>
-&lt;li>&lt;code>LOOKER_CLIENT_SECRET&lt;/code>: The client secret for the Looker API.&lt;/li>
-&lt;li>&lt;code>LOOKER_VERIFY_SSL&lt;/code>: Whether to verify SSL certificates.&lt;/li>
-&lt;li>&lt;code>LOOKER_USE_CLIENT_OAUTH&lt;/code>: Whether to use OAuth for authentication.&lt;/li>
-&lt;li>&lt;code>LOOKER_SHOW_HIDDEN_MODELS&lt;/code>: Whether to show hidden models.&lt;/li>
-&lt;li>&lt;code>LOOKER_SHOW_HIDDEN_EXPLORES&lt;/code>: Whether to show hidden explores.&lt;/li>
-&lt;li>&lt;code>LOOKER_SHOW_HIDDEN_FIELDS&lt;/code>: Whether to show hidden fields.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>A Looker account with permissions to access the desired models,
-explores, and data is required.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>get_models&lt;/code>: Retrieves the list of LookML models.&lt;/li>
-&lt;li>&lt;code>get_explores&lt;/code>: Retrieves the list of explores in a model.&lt;/li>
-&lt;li>&lt;code>get_dimensions&lt;/code>: Retrieves the list of dimensions in an explore.&lt;/li>
-&lt;li>&lt;code>get_measures&lt;/code>: Retrieves the list of measures in an explore.&lt;/li>
-&lt;li>&lt;code>get_filters&lt;/code>: Retrieves the list of filters in an explore.&lt;/li>
-&lt;li>&lt;code>get_parameters&lt;/code>: Retrieves the list of parameters in an explore.&lt;/li>
-&lt;li>&lt;code>query&lt;/code>: Runs a query against the LookML model.&lt;/li>
-&lt;li>&lt;code>query_sql&lt;/code>: Generates the SQL for a query.&lt;/li>
-&lt;li>&lt;code>query_url&lt;/code>: Generates a URL for a query in Looker.&lt;/li>
-&lt;li>&lt;code>get_looks&lt;/code>: Searches for saved looks.&lt;/li>
-&lt;li>&lt;code>run_look&lt;/code>: Runs the query associated with a look.&lt;/li>
-&lt;li>&lt;code>make_look&lt;/code>: Creates a new look.&lt;/li>
-&lt;li>&lt;code>get_dashboards&lt;/code>: Searches for saved dashboards.&lt;/li>
-&lt;li>&lt;code>run_dashboard&lt;/code>: Runs the queries associated with a dashboard.&lt;/li>
-&lt;li>&lt;code>make_dashboard&lt;/code>: Creates a new dashboard.&lt;/li>
-&lt;li>&lt;code>add_dashboard_element&lt;/code>: Adds a tile to a dashboard.&lt;/li>
-&lt;li>&lt;code>health_pulse&lt;/code>: Test the health of a Looker instance.&lt;/li>
-&lt;li>&lt;code>health_analyze&lt;/code>: Analyze the LookML usage of a Looker instance.&lt;/li>
-&lt;li>&lt;code>health_vacuum&lt;/code>: Suggest LookML elements that can be removed.&lt;/li>
-&lt;li>&lt;code>dev_mode&lt;/code>: Activate developer mode.&lt;/li>
-&lt;li>&lt;code>get_projects&lt;/code>: Get the LookML projects in a Looker instance.&lt;/li>
-&lt;li>&lt;code>get_project_files&lt;/code>: List the project files in a project.&lt;/li>
-&lt;li>&lt;code>get_project_file&lt;/code>: Get the content of a LookML file.&lt;/li>
-&lt;li>&lt;code>create_project_file&lt;/code>: Create a new LookML file.&lt;/li>
-&lt;li>&lt;code>update_project_file&lt;/code>: Update an existing LookML file.&lt;/li>
-&lt;li>&lt;code>delete_project_file&lt;/code>: Delete a LookML file.&lt;/li>
-&lt;li>&lt;code>get_connections&lt;/code>: Get the available connections in a Looker instance.&lt;/li>
-&lt;li>&lt;code>get_connection_schemas&lt;/code>: Get the available schemas in a connection.&lt;/li>
-&lt;li>&lt;code>get_connection_databases&lt;/code>: Get the available databases in a connection.&lt;/li>
-&lt;li>&lt;code>get_connection_tables&lt;/code>: Get the available tables in a connection.&lt;/li>
-&lt;li>&lt;code>get_connection_table_columns&lt;/code>: Get the available columns for a table.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="looker-conversational-analytics">Looker Conversational Analytics&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>looker-conversational-analytics&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>LOOKER_BASE_URL&lt;/code>: The URL of your Looker instance.&lt;/li>
-&lt;li>&lt;code>LOOKER_CLIENT_ID&lt;/code>: The client ID for the Looker API.&lt;/li>
-&lt;li>&lt;code>LOOKER_CLIENT_SECRET&lt;/code>: The client secret for the Looker API.&lt;/li>
-&lt;li>&lt;code>LOOKER_VERIFY_SSL&lt;/code>: Whether to verify SSL certificates.&lt;/li>
-&lt;li>&lt;code>LOOKER_USE_CLIENT_OAUTH&lt;/code>: Whether to use OAuth for authentication.&lt;/li>
-&lt;li>&lt;code>LOOKER_PROJECT&lt;/code>: The GCP Project to use for Conversational Analytics.&lt;/li>
-&lt;li>&lt;code>LOOKER_LOCATION&lt;/code>: The GCP Location to use for Conversational Analytics.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>A Looker account with permissions to access the desired models,
-explores, and data is required.&lt;/li>
-&lt;li>&lt;strong>Looker Instance User&lt;/strong> (&lt;code>roles/looker.instanceUser&lt;/code>): IAM role to
-access Looker.&lt;/li>
-&lt;li>&lt;strong>Gemini for Google Cloud User&lt;/strong> (&lt;code>roles/cloudaicompanion.user&lt;/code>): IAM
-role to access Conversational Analytics.&lt;/li>
-&lt;li>&lt;strong>Gemini Data Analytics Stateless Chat User (Beta)&lt;/strong>
-(&lt;code>roles/geminidataanalytics.dataAgentStatelessUser&lt;/code>): IAM role to
-access Conversational Analytics.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>ask_data_insights&lt;/code>: Ask a question of the data.&lt;/li>
-&lt;li>&lt;code>get_models&lt;/code>: Retrieves the list of LookML models.&lt;/li>
-&lt;li>&lt;code>get_explores&lt;/code>: Retrieves the list of explores in a model.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="microsoft-sql-server">Microsoft SQL Server&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>mssql&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>MSSQL_HOST&lt;/code>: The hostname or IP address of the SQL Server instance.&lt;/li>
-&lt;li>&lt;code>MSSQL_PORT&lt;/code>: The port number for the SQL Server instance.&lt;/li>
-&lt;li>&lt;code>MSSQL_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
-&lt;li>&lt;code>MSSQL_USER&lt;/code>: The database username.&lt;/li>
-&lt;li>&lt;code>MSSQL_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to
-execute queries.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
-&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="mysql">MySQL&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>mysql&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>MYSQL_HOST&lt;/code>: The hostname or IP address of the MySQL server.&lt;/li>
-&lt;li>&lt;code>MYSQL_PORT&lt;/code>: The port number for the MySQL server.&lt;/li>
-&lt;li>&lt;code>MYSQL_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
-&lt;li>&lt;code>MYSQL_USER&lt;/code>: The database username.&lt;/li>
-&lt;li>&lt;code>MYSQL_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to
-execute queries.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
-&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
-&lt;li>&lt;code>get_query_plan&lt;/code>: Provides information about how MySQL executes a SQL
-statement.&lt;/li>
-&lt;li>&lt;code>list_active_queries&lt;/code>: Lists ongoing queries.&lt;/li>
-&lt;li>&lt;code>list_tables_missing_unique_indexes&lt;/code>: Looks for tables that do not have
-primary or unique key contraint.&lt;/li>
-&lt;li>&lt;code>list_table_fragmentation&lt;/code>: Displays table fragmentation in MySQL.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="oceanbase">OceanBase&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>oceanbase&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>OCEANBASE_HOST&lt;/code>: The hostname or IP address of the OceanBase server.&lt;/li>
-&lt;li>&lt;code>OCEANBASE_PORT&lt;/code>: The port number for the OceanBase server.&lt;/li>
-&lt;li>&lt;code>OCEANBASE_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
-&lt;li>&lt;code>OCEANBASE_USER&lt;/code>: The database username.&lt;/li>
-&lt;li>&lt;code>OCEANBASE_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to
-execute queries.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
-&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="postgresql">PostgreSQL&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>postgres&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>POSTGRES_HOST&lt;/code>: The hostname or IP address of the PostgreSQL server.&lt;/li>
-&lt;li>&lt;code>POSTGRES_PORT&lt;/code>: The port number for the PostgreSQL server.&lt;/li>
-&lt;li>&lt;code>POSTGRES_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
-&lt;li>&lt;code>POSTGRES_USER&lt;/code>: The database username.&lt;/li>
-&lt;li>&lt;code>POSTGRES_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
-&lt;li>&lt;code>POSTGRES_QUERY_PARAMS&lt;/code>: (Optional) Raw query to be added to the db
-connection string.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to
-execute queries.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
-&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
-&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the
-database.&lt;/li>
-&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the
-database.&lt;/li>
-&lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
-&lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
-&lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
-&lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
-&lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
-limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
-&lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="google-cloud-serverless-for-apache-spark">Google Cloud Serverless for Apache Spark&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>serverless-spark&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>SERVERLESS_SPARK_PROJECT&lt;/code>: The GCP project ID&lt;/li>
-&lt;li>&lt;code>SERVERLESS_SPARK_LOCATION&lt;/code>: The GCP Location.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>Dataproc Serverless Viewer&lt;/strong> (&lt;code>roles/dataproc.serverlessViewer&lt;/code>) to
-view serverless batches.&lt;/li>
-&lt;li>&lt;strong>Dataproc Serverless Editor&lt;/strong> (&lt;code>roles/dataproc.serverlessEditor&lt;/code>) to
-view serverless batches.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>list_batches&lt;/code>: Lists Spark batches.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="spanner-googlesql-dialect">Spanner (GoogleSQL dialect)&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>spanner&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>SPANNER_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
-&lt;li>&lt;code>SPANNER_INSTANCE&lt;/code>: The Spanner instance ID.&lt;/li>
-&lt;li>&lt;code>SPANNER_DATABASE&lt;/code>: The Spanner database ID.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>Cloud Spanner Database Reader&lt;/strong> (&lt;code>roles/spanner.databaseReader&lt;/code>) to
-execute DQL queries and list tables.&lt;/li>
-&lt;li>&lt;strong>Cloud Spanner Database User&lt;/strong> (&lt;code>roles/spanner.databaseUser&lt;/code>) to
-execute DML queries.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>execute_sql&lt;/code>: Executes a DML SQL query.&lt;/li>
-&lt;li>&lt;code>execute_sql_dql&lt;/code>: Executes a DQL SQL query.&lt;/li>
-&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="spanner-postgresql-dialect">Spanner (PostgreSQL dialect)&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>spanner-postgres&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>SPANNER_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
-&lt;li>&lt;code>SPANNER_INSTANCE&lt;/code>: The Spanner instance ID.&lt;/li>
-&lt;li>&lt;code>SPANNER_DATABASE&lt;/code>: The Spanner database ID.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>Cloud Spanner Database Reader&lt;/strong> (&lt;code>roles/spanner.databaseReader&lt;/code>) to
-execute DQL queries and list tables.&lt;/li>
-&lt;li>&lt;strong>Cloud Spanner Database User&lt;/strong> (&lt;code>roles/spanner.databaseUser&lt;/code>) to
-execute DML queries.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>execute_sql&lt;/code>: Executes a DML SQL query using the PostgreSQL interface
-for Spanner.&lt;/li>
-&lt;li>&lt;code>execute_sql_dql&lt;/code>: Executes a DQL SQL query using the PostgreSQL
-interface for Spanner.&lt;/li>
-&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="sqlite">SQLite&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>sqlite&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>SQLITE_DATABASE&lt;/code>: The path to the SQLite database file (e.g.,
-&lt;code>./sample.db&lt;/code>).&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>File system read/write permissions for the specified database file.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
-&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="neo4j">Neo4j&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>neo4j&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>NEO4J_URI&lt;/code>: The URI of the Neo4j instance (e.g.,
-&lt;code>bolt://localhost:7687&lt;/code>).&lt;/li>
-&lt;li>&lt;code>NEO4J_DATABASE&lt;/code>: The name of the Neo4j database to connect to.&lt;/li>
-&lt;li>&lt;code>NEO4J_USERNAME&lt;/code>: The username for the Neo4j instance.&lt;/li>
-&lt;li>&lt;code>NEO4J_PASSWORD&lt;/code>: The password for the Neo4j instance.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>Database-level permissions&lt;/strong> are required to execute Cypher queries.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>execute_cypher&lt;/code>: Executes a Cypher query.&lt;/li>
-&lt;li>&lt;code>get_schema&lt;/code>: Retrieves the schema of the Neo4j database.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="google-cloud-healthcare-api">Google Cloud Healthcare API&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-healthcare&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>CLOUD_HEALTHCARE_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
-&lt;li>&lt;code>CLOUD_HEALTHCARE_REGION&lt;/code>: The Cloud Healthcare API dataset region.&lt;/li>
-&lt;li>&lt;code>CLOUD_HEALTHCARE_DATASET&lt;/code>: The Cloud Healthcare API dataset ID.&lt;/li>
-&lt;li>&lt;code>CLOUD_HEALTHCARE_USE_CLIENT_OAUTH&lt;/code>: (Optional) If &lt;code>true&lt;/code>, forwards the client&amp;rsquo;s
-OAuth access token for authentication. Defaults to &lt;code>false&lt;/code>.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>Healthcare FHIR Resource Reader&lt;/strong> (&lt;code>roles/healthcare.fhirResourceReader&lt;/code>) to read an
-search FHIR resources.&lt;/li>
-&lt;li>&lt;strong>Healthcare DICOM Viewer&lt;/strong> (&lt;code>roles/healthcare.dicomViewer&lt;/code>) to retrieve DICOM images from a
-DICOM store.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>get_dataset&lt;/code>: Gets information about a Cloud Healthcare API dataset.&lt;/li>
-&lt;li>&lt;code>list_dicom_stores&lt;/code>: Lists DICOM stores in a Cloud Healthcare API dataset.&lt;/li>
-&lt;li>&lt;code>list_fhir_stores&lt;/code>: Lists FHIR stores in a Cloud Healthcare API dataset.&lt;/li>
-&lt;li>&lt;code>get_fhir_store&lt;/code>: Gets information about a FHIR store.&lt;/li>
-&lt;li>&lt;code>get_fhir_store_metrics&lt;/code>: Gets metrics for a FHIR store.&lt;/li>
-&lt;li>&lt;code>get_fhir_resource&lt;/code>: Gets a FHIR resource from a FHIR store.&lt;/li>
-&lt;li>&lt;code>fhir_patient_search&lt;/code>: Searches for patient resource(s) based on a set of criteria.&lt;/li>
-&lt;li>&lt;code>fhir_patient_everything&lt;/code>: Retrieves resources related to a given patient.&lt;/li>
-&lt;li>&lt;code>fhir_fetch_page&lt;/code>: Fetches a page of FHIR resources.&lt;/li>
-&lt;li>&lt;code>get_dicom_store&lt;/code>: Gets information about a DICOM store.&lt;/li>
-&lt;li>&lt;code>get_dicom_store_metrics&lt;/code>: Gets metrics for a DICOM store.&lt;/li>
-&lt;li>&lt;code>search_dicom_studies&lt;/code>: Searches for DICOM studies.&lt;/li>
-&lt;li>&lt;code>search_dicom_series&lt;/code>: Searches for DICOM series.&lt;/li>
-&lt;li>&lt;code>search_dicom_instances&lt;/code>: Searches for DICOM instances.&lt;/li>
-&lt;li>&lt;code>retrieve_rendered_dicom_instance&lt;/code>: Retrieves a rendered DICOM instance.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul></description></item><item><title>Quickstart (Local with BigQuery)</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/samples/bigquery/local_quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/samples/bigquery/local_quickstart/</guid><description>&lt;p>&lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/bigquery/colab_quickstart_bigquery.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In
+&lt;li>
+&lt;p>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mysql-admin&lt;/code>&lt;/p></description></item><item><title>Quickstart (Local with BigQuery)</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/samples/bigquery/local_quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/samples/bigquery/local_quickstart/</guid><description>&lt;p>&lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/bigquery/colab_quickstart_bigquery.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In
 Colab">&lt;/a>&lt;/p>
 &lt;h2 id="before-you-begin">Before you begin&lt;/h2>
 &lt;p>This guide assumes you have already done the following:&lt;/p>
 &lt;ol>
 &lt;li>
-&lt;p>Installed &lt;a href="https://wiki.python.org/moin/BeginnersGuide/Download">Python 3.9+&lt;/a> (including &lt;a href="https://pip.pypa.io/en/stable/installation/">pip&lt;/a> and
+&lt;p>Installed &lt;a href="https://wiki.python.org/moin/BeginnersGuide/Download">Python 3.10+&lt;/a> (including &lt;a href="https://pip.pypa.io/en/stable/installation/">pip&lt;/a> and
 your preferred virtual environment tool for managing dependencies e.g.
 &lt;a href="https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments">venv&lt;/a>).&lt;/p>
 &lt;/li>
@@ -8054,16 +7694,20 @@ page.&lt;/li>
 retrieve the next page of results.&lt;/li>
 &lt;/ul>
 &lt;p>The tool gets the &lt;code>project&lt;/code> and &lt;code>location&lt;/code> from the source configuration.&lt;/p></description></item><item><title>SingleStore</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/singlestore/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/singlestore/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://docs.singlestore.com/">SingleStore&lt;/a> is a distributed SQL database built to power intelligent applications. It is both relational and multi-model, enabling developers to easily build and scale applications and workloads.&lt;/p>
-&lt;p>SingleStore is built around Universal Storage which combines in-memory rowstore and on-disk columnstore data formats to deliver a single table type that is optimized to handle both transactional and analytical workloads.&lt;/p>
+&lt;p>&lt;a href="https://docs.singlestore.com/">SingleStore&lt;/a> is a distributed SQL database built to power
+intelligent applications. It is both relational and multi-model, enabling
+developers to easily build and scale applications and workloads.&lt;/p>
+&lt;p>SingleStore is built around Universal Storage which combines in-memory rowstore
+and on-disk columnstore data formats to deliver a single table type that is
+optimized to handle both transactional and analytical workloads.&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/singlestore/singlestore-sql/">&lt;code>singlestore-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/singlestore/singlestore-sql/">&lt;code>singlestore-sql&lt;/code>&lt;/a>
 Execute pre-defined prepared SQL queries in SingleStore.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/singlestore/singlestore-execute-sql/">&lt;code>singlestore-execute-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/singlestore/singlestore-execute-sql/">&lt;code>singlestore-execute-sql&lt;/code>&lt;/a>
 Run parameterized SQL queries in SingleStore.&lt;/p></description></item><item><title>singlestore-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/singlestore/singlestore-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/singlestore/singlestore-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>singlestore-execute-sql&lt;/code> tool executes a SQL statement against a SingleStore
 database. It&amp;rsquo;s compatible with the following sources:&lt;/p>
@@ -8117,7 +7761,8 @@ database. It&amp;rsquo;s compatible with the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/singlestore/">singlestore&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>The specified SQL statement expects parameters in the SQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
+&lt;p>The specified SQL statement expects parameters in the SQL query to be in the
+form of placeholders &lt;code>?&lt;/code>.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;blockquote>
 &lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
@@ -8697,8 +8342,8 @@ compatibility.&lt;/p>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>yugabytedb-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/yuagbytedb/yugabytedb-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/yuagbytedb/yugabytedb-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>yugabytedb-sql&lt;/code> tool executes a pre-defined SQL statement against a YugabyteDB
-database.&lt;/p>
+&lt;p>A &lt;code>yugabytedb-sql&lt;/code> tool executes a pre-defined SQL statement against a
+YugabyteDB database.&lt;/p>
 &lt;p>The specified SQL statement is executed as a prepared statement,
 and specified parameters will inserted according to their position: e.g. &lt;code>1&lt;/code>
 will be the first parameter specified, &lt;code>$@&lt;/code> will be the second parameter, and so
@@ -8711,8 +8356,8 @@ Query parameters can be used as substitutes for arbitrary expressions.
 Parameters cannot be used as substitutes for identifiers, column names, table
 names, or other parts of the query.&lt;/p></description></item><item><title>AlloyDB Admin API using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/how-to/connect-ide/alloydb_pg_admin_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/how-to/connect-ide/alloydb_pg_admin_mcp/</guid><description>&lt;html>
  &lt;head>
- &lt;link rel="canonical" href="https://cloud.google.com/alloydb/docs/quickstart/create-and-connect"/>
- &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/quickstart/create-and-connect"/>
+ &lt;link rel="canonical" href="https://cloud.google.com/alloydb/docs/connect-ide-using-mcp-toolbox"/>
+ &lt;meta http-equiv="refresh" content="0;url=https://cloud.google.com/alloydb/docs/connect-ide-using-mcp-toolbox"/>
  &lt;/head>
 &lt;/html></description></item><item><title>AlloyDB using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/how-to/connect-ide/alloydb_pg_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/how-to/connect-ide/alloydb_pg_mcp/</guid><description>&lt;html>
  &lt;head>
@@ -8981,13 +8626,21 @@ instance in a specified Google Cloud project.&lt;/p>
 &lt;/svg>
 
  &lt;/span>Info&lt;/p></description></item><item><title>Connect via Gemini CLI Extensions</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/how-to/connect_via_geminicli/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/how-to/connect_via_geminicli/</guid><description>&lt;h2 id="gemini-cli-extensions">Gemini CLI Extensions&lt;/h2>
-&lt;p>&lt;a href="https://google-gemini.github.io/gemini-cli/">Gemini CLI&lt;/a> is an open-source AI agent designed to assist with development workflows by assisting with coding, debugging, data exploration, and content creation. Its mission is to provide an agentic interface for interacting with database and analytics services and popular open-source databases.&lt;/p>
+&lt;p>&lt;a href="https://google-gemini.github.io/gemini-cli/">Gemini CLI&lt;/a> is an open-source AI agent designed to assist with
+development workflows by assisting with coding, debugging, data exploration, and
+content creation. Its mission is to provide an agentic interface for interacting
+with database and analytics services and popular open-source databases.&lt;/p>
 &lt;h3 id="how-extensions-work">How extensions work&lt;/h3>
-&lt;p>Gemini CLI is highly extensible, allowing for the addition of new tools and capabilities through extensions. You can load the extensions from a GitHub URL, a local directory, or a configurable registry. They provide new tools, slash commands, and prompts to assist with your workflow.&lt;/p></description></item><item><title>elasticsearch-esql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/elasticsearch/elasticsearch-esql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/elasticsearch/elasticsearch-esql/</guid><description>&lt;h1 id="elasticsearch-esql">elasticsearch-esql&lt;/h1>
+&lt;p>Gemini CLI is highly extensible, allowing for the addition of new tools and
+capabilities through extensions. You can load the extensions from a GitHub URL,
+a local directory, or a configurable registry. They provide new tools, slash
+commands, and prompts to assist with your workflow.&lt;/p></description></item><item><title>elasticsearch-esql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/elasticsearch/elasticsearch-esql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/elasticsearch/elasticsearch-esql/</guid><description>&lt;h1 id="elasticsearch-esql">elasticsearch-esql&lt;/h1>
 &lt;p>Execute ES|QL queries.&lt;/p>
 &lt;p>This tool allows you to execute ES|QL queries against your Elasticsearch
 cluster. You can use this to perform complex searches and aggregations.&lt;/p>
-&lt;p>See the &lt;a href="https://www.elastic.co/docs/reference/query-languages/esql/esql-getting-started">official documentation&lt;/a> for more information.&lt;/p>
+&lt;p>See the &lt;a href="https://www.elastic.co/docs/reference/query-languages/esql/esql-getting-started">official
+documentation&lt;/a>
+for more information.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">query_my_index&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -9277,7 +8930,7 @@ to expose your developer assistant tools to a Postgres instance:&lt;/p>
 &lt;h2 id="before-you-begin">Before you begin&lt;/h2>
 &lt;p>This guide assumes you have already done the following:&lt;/p>
 &lt;ol>
-&lt;li>Installed &lt;a href="https://wiki.python.org/moin/BeginnersGuide/Download">Python 3.9+&lt;/a> (including &lt;a href="https://pip.pypa.io/en/stable/installation/">pip&lt;/a> and
+&lt;li>Installed &lt;a href="https://wiki.python.org/moin/BeginnersGuide/Download">Python 3.10+&lt;/a> (including &lt;a href="https://pip.pypa.io/en/stable/installation/">pip&lt;/a> and
 your preferred virtual environment tool for managing dependencies e.g.
 &lt;a href="https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments">venv&lt;/a>).&lt;/li>
 &lt;li>Installed &lt;a href="https://www.postgresql.org/download/">PostgreSQL 16+ and the &lt;code>psql&lt;/code> client&lt;/a>.&lt;/li>
@@ -9431,7 +9084,9 @@ returns; it can take a minute or so for the cancellation to be reflected.&lt;/p>
 &lt;/ul>
 &lt;p>&lt;code>serverless-spark-cancel-batch&lt;/code> accepts the following parameters:&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>&lt;code>operation&lt;/code>&lt;/strong> (required): The name of the operation to cancel. For example, for &lt;code>projects/my-project/locations/us-central1/operations/my-operation&lt;/code>, you would pass &lt;code>my-operation&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>&lt;code>operation&lt;/code>&lt;/strong> (required): The name of the operation to cancel. For example,
+for &lt;code>projects/my-project/locations/us-central1/operations/my-operation&lt;/code>, you
+would pass &lt;code>my-operation&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;p>The tool inherits the &lt;code>project&lt;/code> and &lt;code>location&lt;/code> from the source configuration.&lt;/p></description></item><item><title>Spanner using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/how-to/connect-ide/spanner_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/how-to/connect-ide/spanner_mcp/</guid><description>&lt;html>
  &lt;head>
@@ -9703,7 +9358,137 @@ local development:&lt;/p>
 (ADC)&lt;/a>&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Set your project and enable Vertex AI&lt;/p></description></item><item><title>spanner-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/spanner/spanner-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/spanner/spanner-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>Set your project and enable Vertex AI&lt;/p></description></item><item><title>spanner-list-graphs</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/spanner/spanner-list-graphs/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/spanner/spanner-list-graphs/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &lt;code>spanner-list-graphs&lt;/code> tool retrieves comprehensive schema information about
+graphs in a Cloud Spanner database. It returns detailed metadata including
+node tables, edge tables, labels and property declarations. It&amp;rsquo;s compatible with:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/spanner/">spanner&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>This tool is read-only and executes pre-defined SQL queries against the
+&lt;code>INFORMATION_SCHEMA&lt;/code> tables to gather metadata.
+&lt;style type="text/css">
+ 
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #6be;
+ --content-color: #444;
+ --content-background-color: #e7f2fa;
+ }
+
+ .notice.info {
+ --title-background-color: #fb7;
+ --content-background-color: #fec;
+ }
+
+ .notice.tip {
+ --title-background-color: #5a5;
+ --content-background-color: #efe;
+ }
+
+ .notice.warning {
+ --title-background-color: #c33;
+ --content-background-color: #fee;
+ }
+
+ 
+ @media (prefers-color-scheme:dark) {
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+ }
+
+ body.dark .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ body.dark .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ body.dark .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ body.dark .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+
+ 
+ .notice {
+ padding: 18px;
+ line-height: 24px;
+ margin-bottom: 24px;
+ border-radius: 4px;
+ color: var(--content-color);
+ background: var(--content-background-color);
+ }
+
+ .notice p:last-child {
+ margin-bottom: 0
+ }
+
+ 
+ .notice-title {
+ margin: -18px -18px 12px;
+ padding: 4px 18px;
+ border-radius: 4px 4px 0 0;
+ font-weight: 700;
+ color: var(--title-color);
+ background: var(--title-background-color);
+ }
+
+ 
+ .icon-notice {
+ display: inline-flex;
+ align-self: center;
+ margin-right: 8px;
+ }
+
+ .icon-notice img,
+ .icon-notice svg {
+ height: 1em;
+ width: 1em;
+ fill: currentColor;
+ }
+
+ .icon-notice img,
+ .icon-notice.baseline svg {
+ top: .125em;
+ position: relative;
+ }
+&lt;/style>&lt;div class="notice warning" >
+ &lt;p class="notice-title">
+ &lt;span class="icon-notice baseline">
+ &lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="126 76.5 300 300">
+ &lt;path d="M297.431 324.397v-34.255c0-3.245-2.344-5.95-5.358-5.95h-32.146c-3.014 0-5.358 2.705-5.358 5.95v34.255c0 3.245 2.344 5.95 5.358 5.95h32.146c3.014 0 5.358-2.705 5.358-5.95Zm-.335-67.428 3.014-82.753c0-1.081-.502-2.524-1.674-3.425-1.005-.902-2.512-1.983-4.019-1.983h-36.834c-1.507 0-3.014 1.081-4.019 1.983-1.172.901-1.674 2.704-1.674 3.786l2.846 82.392c0 2.344 2.512 4.146 5.693 4.146h30.975c3.013 0 5.525-1.803 5.692-4.146Zm-2.344-168.39L423.34 342.425c3.683 7.032 3.516 15.686-.335 22.717-3.85 7.031-10.883 11.358-18.417 11.358H147.413c-7.534 0-14.566-4.327-18.417-11.358-3.85-7.031-4.018-15.685-.335-22.716L257.248 88.578C260.93 81.188 268.13 76.5 276 76.5c7.87 0 15.069 4.688 18.752 12.08Z"/>
+&lt;/svg>
+
+ &lt;/span>Warning&lt;/p></description></item><item><title>spanner-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/spanner/spanner-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/spanner/spanner-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>spanner-list-tables&lt;/code> tool retrieves comprehensive schema information about
 tables in a Cloud Spanner database. It automatically adapts to the database
 dialect (GoogleSQL or PostgreSQL) and returns detailed metadata including
@@ -9716,7 +9501,8 @@ columns, constraints, and indexes. It&amp;rsquo;s compatible with:&lt;/p>
 the database dialect from the source configuration and uses the appropriate SQL
 syntax.&lt;/p></description></item><item><title>clickhouse-list-tables</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/clickhouse/clickhouse-list-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/clickhouse/clickhouse-list-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>clickhouse-list-tables&lt;/code> tool lists all available tables in a specified
-ClickHouse database. It&amp;rsquo;s compatible with the &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/clickhouse/">clickhouse&lt;/a> source.&lt;/p>
+ClickHouse database. It&amp;rsquo;s compatible with the
+&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/sources/clickhouse/">clickhouse&lt;/a> source.&lt;/p>
 &lt;p>This tool executes the &lt;code>SHOW TABLES FROM &amp;lt;database&amp;gt;&lt;/code> command and returns a list
 of all tables in the specified database that are accessible to the configured
 user, making it useful for schema exploration and table discovery tasks.&lt;/p>
@@ -9768,7 +9554,20 @@ select or create a Google Cloud project.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>&lt;a href="https://cloud.google.com/billing/docs/how-to/verify-billing-enabled#confirm_billing_is_enabled_on_a_project">Make sure that billing is enabled for your Google Cloud
-project&lt;/a>.&lt;/p></description></item><item><title>Deploy to Kubernetes</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/how-to/deploy_gke/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/how-to/deploy_gke/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+project&lt;/a>.&lt;/p></description></item><item><title>Deploy ADK Agent and MCP Toolbox</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/how-to/deploy_adk_agent/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/how-to/deploy_adk_agent/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+&lt;p>This guide assumes you have already done the following:&lt;/p>
+&lt;ol>
+&lt;li>Completed the &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/getting-started/local_quickstart/">Python Quickstart
+(Local)&lt;/a> and have a working ADK
+agent running locally.&lt;/li>
+&lt;li>Installed the &lt;a href="https://cloud.google.com/sdk/docs/install">Google Cloud CLI&lt;/a>.&lt;/li>
+&lt;li>A Google Cloud project with billing enabled.&lt;/li>
+&lt;/ol>
+&lt;h2 id="step-1-deploy-mcp-toolbox-to-cloud-run">Step 1: Deploy MCP Toolbox to Cloud Run&lt;/h2>
+&lt;p>Before deploying your agent, your MCP Toolbox server needs to be accessible from
+the cloud. We will deploy MCP Toolbox to Cloud Run.&lt;/p>
+&lt;p>Follow the &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1862/how-to/deploy_toolbox/">Deploy to Cloud Run&lt;/a> guide to deploy your MCP
+Toolbox instance.&lt;/p></description></item><item><title>Deploy to Kubernetes</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/how-to/deploy_gke/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/how-to/deploy_gke/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
 &lt;ol>
 &lt;li>
 &lt;p>Set the PROJECT_ID environment variable:&lt;/p>
@@ -9849,9 +9648,128 @@ section.&lt;/p>
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>- &lt;span class="l">tool-network&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="nt">networks&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">tool-network&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;ol>
-&lt;li>
-&lt;p>Run the following command to bring up the Toolbox and Postgres instance&lt;/p></description></item><item><title>Go Quickstart (Local)</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/getting-started/local_quickstart_go/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/getting-started/local_quickstart_go/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;pre>&lt;code>&lt;style type="text/css">
+ 
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #6be;
+ --content-color: #444;
+ --content-background-color: #e7f2fa;
+ }
+
+ .notice.info {
+ --title-background-color: #fb7;
+ --content-background-color: #fec;
+ }
+
+ .notice.tip {
+ --title-background-color: #5a5;
+ --content-background-color: #efe;
+ }
+
+ .notice.warning {
+ --title-background-color: #c33;
+ --content-background-color: #fee;
+ }
+
+ 
+ @media (prefers-color-scheme:dark) {
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+ }
+
+ body.dark .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ body.dark .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ body.dark .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ body.dark .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+
+ 
+ .notice {
+ padding: 18px;
+ line-height: 24px;
+ margin-bottom: 24px;
+ border-radius: 4px;
+ color: var(--content-color);
+ background: var(--content-background-color);
+ }
+
+ .notice p:last-child {
+ margin-bottom: 0
+ }
+
+ 
+ .notice-title {
+ margin: -18px -18px 12px;
+ padding: 4px 18px;
+ border-radius: 4px 4px 0 0;
+ font-weight: 700;
+ color: var(--title-color);
+ background: var(--title-background-color);
+ }
+
+ 
+ .icon-notice {
+ display: inline-flex;
+ align-self: center;
+ margin-right: 8px;
+ }
+
+ .icon-notice img,
+ .icon-notice svg {
+ height: 1em;
+ width: 1em;
+ fill: currentColor;
+ }
+
+ .icon-notice img,
+ .icon-notice.baseline svg {
+ top: .125em;
+ position: relative;
+ }
+&lt;/style>&lt;div class="notice tip" >
+ &lt;p class="notice-title">
+ &lt;span class="icon-notice baseline">
+ &lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="300.5 134 300 300">
+ &lt;path d="M551.281 252.36c0-3.32-1.172-6.641-3.515-8.985l-17.774-17.578c-2.344-2.344-5.469-3.711-8.789-3.711-3.32 0-6.445 1.367-8.789 3.71l-79.687 79.493-44.141-44.14c-2.344-2.344-5.469-3.712-8.79-3.712-3.32 0-6.444 1.368-8.788 3.711l-17.774 17.579c-2.343 2.343-3.515 5.664-3.515 8.984 0 3.32 1.172 6.445 3.515 8.789l70.704 70.703c2.343 2.344 5.664 3.711 8.789 3.711 3.32 0 6.64-1.367 8.984-3.71l106.055-106.056c2.343-2.343 3.515-5.468 3.515-8.789ZM600.5 284c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
+&lt;/svg>
+
+ &lt;/span>Tip&lt;/p></description></item><item><title>Go Quickstart (Local)</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/getting-started/local_quickstart_go/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/getting-started/local_quickstart_go/</guid><description>&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
 &lt;p>This guide assumes you have already done the following:&lt;/p>
 &lt;ol>
 &lt;li>Installed &lt;a href="https://go.dev/doc/install">Go (v1.24.2 or higher)&lt;/a>.&lt;/li>
@@ -10184,6 +10102,128 @@ exponential backoff. It is compatible with
  position: relative;
  }
 &lt;/style>&lt;div class="notice info" >
+ &lt;p class="notice-title">
+ &lt;span class="icon-notice baseline">
+ &lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="92 59.5 300 300">
+ &lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
+&lt;/svg>
+
+ &lt;/span>Info&lt;/p></description></item><item><title>cloud-sql-clone-instance</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudsql/cloudsqlcloneinstance/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudsql/cloudsqlcloneinstance/</guid><description>&lt;p>The &lt;code>cloud-sql-clone-instance&lt;/code> tool clones a Cloud SQL instance using the Cloud SQL Admin API.&lt;/p>
+&lt;style type="text/css">
+ 
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #6be;
+ --content-color: #444;
+ --content-background-color: #e7f2fa;
+ }
+
+ .notice.info {
+ --title-background-color: #fb7;
+ --content-background-color: #fec;
+ }
+
+ .notice.tip {
+ --title-background-color: #5a5;
+ --content-background-color: #efe;
+ }
+
+ .notice.warning {
+ --title-background-color: #c33;
+ --content-background-color: #fee;
+ }
+
+ 
+ @media (prefers-color-scheme:dark) {
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+ }
+
+ body.dark .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ body.dark .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ body.dark .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ body.dark .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+
+ 
+ .notice {
+ padding: 18px;
+ line-height: 24px;
+ margin-bottom: 24px;
+ border-radius: 4px;
+ color: var(--content-color);
+ background: var(--content-background-color);
+ }
+
+ .notice p:last-child {
+ margin-bottom: 0
+ }
+
+ 
+ .notice-title {
+ margin: -18px -18px 12px;
+ padding: 4px 18px;
+ border-radius: 4px 4px 0 0;
+ font-weight: 700;
+ color: var(--title-color);
+ background: var(--title-background-color);
+ }
+
+ 
+ .icon-notice {
+ display: inline-flex;
+ align-self: center;
+ margin-right: 8px;
+ }
+
+ .icon-notice img,
+ .icon-notice svg {
+ height: 1em;
+ width: 1em;
+ fill: currentColor;
+ }
+
+ .icon-notice img,
+ .icon-notice.baseline svg {
+ top: .125em;
+ position: relative;
+ }
+&lt;/style>&lt;div class="notice info" id="dd" >
  &lt;p class="notice-title">
  &lt;span class="icon-notice baseline">
  &lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="92 59.5 300 300">
@@ -10873,7 +10913,131 @@ exponential backoff.&lt;/p>
  &lt;td>The maximum number of polling attempts before giving up. Defaults to 10.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>Getting started with alloydb-ai-nl tool</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/samples/alloydb/ai-nl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/samples/alloydb/ai-nl/</guid><description>&lt;div class="notebook-markdown">
+&lt;/table></description></item><item><title>postgres-upgrade-precheck</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudsql/cloudsqlpgupgradeprecheck/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/resources/tools/cloudsql/cloudsqlpgupgradeprecheck/</guid><description>&lt;p>The &lt;code>postgres-upgrade-precheck&lt;/code> tool initiates a pre-check on a Cloud SQL for PostgreSQL
+instance to assess its readiness for a major version upgrade using the Cloud SQL Admin API.
+It helps identify potential incompatibilities or issues before starting the actual upgrade process.&lt;/p>
+&lt;style type="text/css">
+ 
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #6be;
+ --content-color: #444;
+ --content-background-color: #e7f2fa;
+ }
+
+ .notice.info {
+ --title-background-color: #fb7;
+ --content-background-color: #fec;
+ }
+
+ .notice.tip {
+ --title-background-color: #5a5;
+ --content-background-color: #efe;
+ }
+
+ .notice.warning {
+ --title-background-color: #c33;
+ --content-background-color: #fee;
+ }
+
+ 
+ @media (prefers-color-scheme:dark) {
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+ }
+
+ body.dark .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ body.dark .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ body.dark .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ body.dark .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+
+ 
+ .notice {
+ padding: 18px;
+ line-height: 24px;
+ margin-bottom: 24px;
+ border-radius: 4px;
+ color: var(--content-color);
+ background: var(--content-background-color);
+ }
+
+ .notice p:last-child {
+ margin-bottom: 0
+ }
+
+ 
+ .notice-title {
+ margin: -18px -18px 12px;
+ padding: 4px 18px;
+ border-radius: 4px 4px 0 0;
+ font-weight: 700;
+ color: var(--title-color);
+ background: var(--title-background-color);
+ }
+
+ 
+ .icon-notice {
+ display: inline-flex;
+ align-self: center;
+ margin-right: 8px;
+ }
+
+ .icon-notice img,
+ .icon-notice svg {
+ height: 1em;
+ width: 1em;
+ fill: currentColor;
+ }
+
+ .icon-notice img,
+ .icon-notice.baseline svg {
+ top: .125em;
+ position: relative;
+ }
+&lt;/style>&lt;div class="notice info" >
+ &lt;p class="notice-title">
+ &lt;span class="icon-notice baseline">
+ &lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="92 59.5 300 300">
+ &lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
+&lt;/svg>
+
+ &lt;/span>Info&lt;/p></description></item><item><title>Getting started with alloydb-ai-nl tool</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-1862/samples/alloydb/ai-nl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-1862/samples/alloydb/ai-nl/</guid><description>&lt;div class="notebook-markdown">
  
  
  &lt;p>&lt;a href="https://colab.research.google.com/github/googleapis/genai-toolbox/blob/main/docs/en/samples/alloydb/ai-nl/alloydb_ai_nl.ipynb">&lt;img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In
