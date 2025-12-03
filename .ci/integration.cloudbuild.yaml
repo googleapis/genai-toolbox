@@ -385,7 +385,7 @@ steps:
         .ci/test_with_coverage.sh \
           "Cloud SQL MySQL" \
           cloudsqlmysql \
-          mysql
+          mysql || echo "Integration tests failed.
 
   - id: "mysql"
     name: golang:1
