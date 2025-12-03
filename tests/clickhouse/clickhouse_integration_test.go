@@ -29,11 +29,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	clickhouseexecutesql "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouseexecutesql"
 	clickhouselistdatabases "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouselistdatabases"
 	clickhouselisttables "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouselisttables"
 	clickhousesql "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhousesql"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/googleapis/genai-toolbox/tests"
 	"go.opentelemetry.io/otel/trace/noop"
 )
@@ -194,9 +194,9 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "CREATE TABLE {{.tableName}} ({{array .columns}}) ORDER BY id",
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
-			tools.NewArrayParameter("columns", "The columns to create", tools.NewStringParameter("column", "A column name that will be created")),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
+			parameters.NewArrayParameter("columns", "The columns to create", parameters.NewStringParameter("column", "A column name that will be created")),
 		},
 	}
 	toolsMap["insert-table-templateParams-tool"] = map[string]any{
@@ -204,10 +204,10 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		"source":      "my-instance",
 		"description": "Insert table tool with template parameters",
 		"statement":   "INSERT INTO {{.tableName}} ({{array .columns}}) VALUES ({{.values}})",
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
-			tools.NewArrayParameter("columns", "The columns to insert into", tools.NewStringParameter("column", "A column name that will be returned from the query.")),
-			tools.NewStringParameter("values", "The values to insert as a comma separated string"),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
+			parameters.NewArrayParameter("columns", "The columns to insert into", parameters.NewStringParameter("column", "A column name that will be returned from the query.")),
+			parameters.NewStringParameter("values", "The values to insert as a comma separated string"),
 		},
 	}
 	toolsMap["select-templateParams-tool"] = map[string]any{
@@ -215,8 +215,8 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		"source":      "my-instance",
 		"description": "Select table tool with template parameters",
 		"statement":   "SELECT id AS \"id\", name AS \"name\", age AS \"age\" FROM {{.tableName}} ORDER BY id",
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
 		},
 	}
 	toolsMap["select-templateParams-combined-tool"] = map[string]any{
@@ -224,11 +224,11 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		"source":      "my-instance",
 		"description": "Select table tool with combined template parameters",
 		"statement":   tmplSelectCombined,
-		"parameters": []tools.Parameter{
-			tools.NewIntParameter("id", "the id of the user"),
+		"parameters": []parameters.Parameter{
+			parameters.NewIntParameter("id", "the id of the user"),
 		},
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
 		},
 	}
 	toolsMap["select-fields-templateParams-tool"] = map[string]any{
@@ -236,8 +236,8 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		"source":      "my-instance",
 		"description": "Select specific fields tool with template parameters",
 		"statement":   "SELECT name AS \"name\" FROM {{.tableName}} ORDER BY id",
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
 		},
 	}
 	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
@@ -245,12 +245,12 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		"source":      "my-instance",
 		"description": "Select table tool with filter template parameters",
 		"statement":   tmplSelectFilterCombined,
-		"parameters": []tools.Parameter{
-			tools.NewStringParameter("name", "the name to filter by"),
+		"parameters": []parameters.Parameter{
+			parameters.NewStringParameter("name", "the name to filter by"),
 		},
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
-			tools.NewStringParameter("columnFilter", "some description"),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
+			parameters.NewStringParameter("columnFilter", "some description"),
 		},
 	}
 	// Firebird uses simple DROP TABLE syntax without IF EXISTS
@@ -259,8 +259,8 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		"source":      "my-instance",
 		"description": "Drop table tool with template parameters",
 		"statement":   "DROP TABLE {{.tableName}}",
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
 		},
 	}
 	config["tools"] = toolsMap
@@ -403,7 +403,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 			t.Fatalf("Failed to initialize tool: %v", err)
 		}
 
-		result, err := tool.Invoke(ctx, tools.ParamValues{}, "")
+		result, err := tool.Invoke(ctx, nil, parameters.ParamValues{}, "")
 		if err != nil {
 			t.Fatalf("Failed to invoke tool: %v", err)
 		}
@@ -425,8 +425,8 @@ func TestClickHouseSQLTool(t *testing.T) {
 			Source:      "test-clickhouse",
 			Description: "Test parameterized query",
 			Statement:   fmt.Sprintf("SELECT * FROM %s WHERE age > ? ORDER BY id", tableName),
-			Parameters: tools.Parameters{
-				tools.NewIntParameter("min_age", "Minimum age"),
+			Parameters: parameters.Parameters{
+				parameters.NewIntParameter("min_age", "Minimum age"),
 			},
 		}
 
@@ -440,11 +440,11 @@ func TestClickHouseSQLTool(t *testing.T) {
 			t.Fatalf("Failed to initialize tool: %v", err)
 		}
 
-		params := tools.ParamValues{
+		params := parameters.ParamValues{
 			{Name: "min_age", Value: 28},
 		}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to invoke tool: %v", err)
 		}
@@ -466,8 +466,8 @@ func TestClickHouseSQLTool(t *testing.T) {
 			Source:      "test-clickhouse",
 			Description: "Test query with no results",
 			Statement:   fmt.Sprintf("SELECT * FROM %s WHERE id = ?", tableName),
-			Parameters: tools.Parameters{
-				tools.NewIntParameter("id", "Record ID"),
+			Parameters: parameters.Parameters{
+				parameters.NewIntParameter("id", "Record ID"),
 			},
 		}
 
@@ -481,11 +481,11 @@ func TestClickHouseSQLTool(t *testing.T) {
 			t.Fatalf("Failed to initialize tool: %v", err)
 		}
 
-		params := tools.ParamValues{
+		params := parameters.ParamValues{
 			{Name: "id", Value: 999}, // Non-existent ID
 		}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to invoke tool: %v", err)
 		}
@@ -519,7 +519,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 			t.Fatalf("Failed to initialize tool: %v", err)
 		}
 
-		_, err = tool.Invoke(ctx, tools.ParamValues{}, "")
+		_, err = tool.Invoke(ctx, nil, parameters.ParamValues{}, "")
 		if err == nil {
 			t.Error("Expected error for invalid SQL, got nil")
 		}
@@ -570,11 +570,11 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 			) ENGINE = Memory
 		`, tableName)
 
-		params := tools.ParamValues{
+		params := parameters.ParamValues{
 			{Name: "sql", Value: createSQL},
 		}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to create table: %v", err)
 		}
@@ -608,11 +608,11 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 		}
 
 		insertSQL := fmt.Sprintf("INSERT INTO %s (id, data) VALUES (1, 'test1'), (2, 'test2')", tableName)
-		params := tools.ParamValues{
+		params := parameters.ParamValues{
 			{Name: "sql", Value: insertSQL},
 		}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to insert data: %v", err)
 		}
@@ -646,11 +646,11 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 		}
 
 		selectSQL := fmt.Sprintf("SELECT * FROM %s ORDER BY id", tableName)
-		params := tools.ParamValues{
+		params := parameters.ParamValues{
 			{Name: "sql", Value: selectSQL},
 		}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to select data: %v", err)
 		}
@@ -684,11 +684,11 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 		}
 
 		dropSQL := fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName)
-		params := tools.ParamValues{
+		params := parameters.ParamValues{
 			{Name: "sql", Value: dropSQL},
 		}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to drop table: %v", err)
 		}
@@ -722,11 +722,11 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 		}
 
 		// Pass empty SQL parameter - this should cause an error
-		params := tools.ParamValues{
+		params := parameters.ParamValues{
 			{Name: "sql", Value: ""},
 		}
 
-		_, err = tool.Invoke(ctx, params, "")
+		_, err = tool.Invoke(ctx, nil, params, "")
 		if err == nil {
 			t.Error("Expected error for empty SQL parameter, got nil")
 		} else {
@@ -754,11 +754,11 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 
 		// Try to execute multiple statements (should fail or execute safely)
 		injectionSQL := "SELECT 1; DROP TABLE system.users; SELECT 2"
-		params := tools.ParamValues{
+		params := parameters.ParamValues{
 			{Name: "sql", Value: injectionSQL},
 		}
 
-		_, err = tool.Invoke(ctx, params, "")
+		_, err = tool.Invoke(ctx, nil, params, "")
 		// This should either fail or only execute the first statement
 		// dont check the specific error as behavior may vary
 		_ = err // We're not checking the error intentionally
@@ -803,11 +803,11 @@ func TestClickHouseEdgeCases(t *testing.T) {
 			t.Fatalf("Failed to initialize tool: %v", err)
 		}
 
-		params := tools.ParamValues{
+		params := parameters.ParamValues{
 			{Name: "sql", Value: longQuery},
 		}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to execute long query: %v", err)
 		}
@@ -862,7 +862,7 @@ func TestClickHouseEdgeCases(t *testing.T) {
 			t.Fatalf("Failed to initialize tool: %v", err)
 		}
 
-		result, err := tool.Invoke(ctx, tools.ParamValues{}, "")
+		result, err := tool.Invoke(ctx, nil, parameters.ParamValues{}, "")
 		if err != nil {
 			t.Fatalf("Failed to select null values: %v", err)
 		}
@@ -891,8 +891,8 @@ func TestClickHouseEdgeCases(t *testing.T) {
 			Source:      "test-clickhouse",
 			Description: "Test concurrent queries",
 			Statement:   "SELECT number FROM system.numbers LIMIT ?",
-			Parameters: tools.Parameters{
-				tools.NewIntParameter("limit", "Limit"),
+			Parameters: parameters.Parameters{
+				parameters.NewIntParameter("limit", "Limit"),
 			},
 		}
 
@@ -912,11 +912,11 @@ func TestClickHouseEdgeCases(t *testing.T) {
 			go func(n int) {
 				defer func() { done <- true }()
 
-				params := tools.ParamValues{
+				params := parameters.ParamValues{
 					{Name: "limit", Value: n + 1},
 				}
 
-				result, err := tool.Invoke(ctx, params, "")
+				result, err := tool.Invoke(ctx, nil, params, "")
 				if err != nil {
 					t.Errorf("Concurrent query %d failed: %v", n, err)
 					return
@@ -1054,9 +1054,9 @@ func TestClickHouseListDatabasesTool(t *testing.T) {
 			t.Fatalf("Failed to initialize tool: %v", err)
 		}
 
-		params := tools.ParamValues{}
+		params := parameters.ParamValues{}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to list databases: %v", err)
 		}
@@ -1166,11 +1166,11 @@ func TestClickHouseListTablesTool(t *testing.T) {
 			t.Fatalf("Failed to initialize tool: %v", err)
 		}
 
-		params := tools.ParamValues{
+		params := parameters.ParamValues{
 			{Name: "database", Value: testDBName},
 		}
 
-		result, err := tool.Invoke(ctx, params, "")
+		result, err := tool.Invoke(ctx, nil, params, "")
 		if err != nil {
 			t.Fatalf("Failed to list tables: %v", err)
 		}
@@ -1232,9 +1232,9 @@ func TestClickHouseListTablesTool(t *testing.T) {
 			t.Fatalf("Failed to initialize tool: %v", err)
 		}
 
-		params := tools.ParamValues{}
+		params := parameters.ParamValues{}
 
-		_, err = tool.Invoke(ctx, params, "")
+		_, err = tool.Invoke(ctx, nil, params, "")
 		if err == nil {
 			t.Error("Expected error for missing database parameter, got nil")
 		} else {

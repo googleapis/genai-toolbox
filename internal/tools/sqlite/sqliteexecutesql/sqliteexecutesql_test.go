@@ -27,6 +27,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/sqlite/sqliteexecutesql"
 	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	_ "modernc.org/sqlite"
 )
 
@@ -99,12 +100,12 @@ func TestTool_Invoke(t *testing.T) {
 		Name         string
 		Kind         string
 		AuthRequired []string
-		Parameters   tools.Parameters
+		Parameters   parameters.Parameters
 		DB           *sql.DB
 	}
 	type args struct {
 		ctx         context.Context
-		params      tools.ParamValues
+		params      parameters.ParamValues
 		accessToken tools.AccessToken
 	}
 	tests := []struct {
@@ -121,7 +122,7 @@ func TestTool_Invoke(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "sql", Value: "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER)"},
 				},
 			},
@@ -135,7 +136,7 @@ func TestTool_Invoke(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "sql", Value: "CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, age INTEGER); INSERT INTO users (id, name, age) VALUES (1, 'Alice', 30), (2, 'Bob', 25)"},
 				},
 			},
@@ -155,7 +156,7 @@ func TestTool_Invoke(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "sql", Value: "SELECT * FROM users"},
 				},
 			},
@@ -190,7 +191,7 @@ func TestTool_Invoke(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "sql", Value: "DROP TABLE users"},
 				},
 			},
@@ -204,7 +205,7 @@ func TestTool_Invoke(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "sql", Value: "SELECT * FROM non_existent_table"},
 				},
 			},
@@ -218,7 +219,7 @@ func TestTool_Invoke(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "sql", Value: ""},
 				},
 			},
@@ -241,7 +242,7 @@ func TestTool_Invoke(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "sql", Value: "SELECT * FROM data_types"},
 				},
 			},
@@ -278,7 +279,7 @@ func TestTool_Invoke(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				params: []tools.ParamValue{
+				params: []parameters.ParamValue{
 					{Name: "sql", Value: "SELECT u.name, o.item FROM users u JOIN orders o ON u.id = o.user_id"},
 				},
 			},
@@ -301,14 +302,16 @@ func TestTool_Invoke(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tr := &sqliteexecutesql.Tool{
-				Name:         tt.fields.Name,
-				Kind:         tt.fields.Kind,
-				AuthRequired: tt.fields.AuthRequired,
-				Parameters:   tt.fields.Parameters,
-				DB:           tt.fields.DB,
+			tr := sqliteexecutesql.Tool{
+				Config: sqliteexecutesql.Config{
+					Name:         tt.fields.Name,
+					Kind:         tt.fields.Kind,
+					AuthRequired: tt.fields.AuthRequired,
+				},
+				Parameters: tt.fields.Parameters,
+				DB:         tt.fields.DB,
 			}
-			got, err := tr.Invoke(tt.args.ctx, tt.args.params, tt.args.accessToken)
+			got, err := tr.Invoke(tt.args.ctx, nil, tt.args.params, tt.args.accessToken)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Tool.Invoke() error = %v, wantErr %v", err, tt.wantErr)
 				return

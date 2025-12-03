@@ -36,7 +36,6 @@ import (
 	mcputil "github.com/googleapis/genai-toolbox/internal/server/mcp/util"
 	v20241105 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20241105"
 	v20250326 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20250326"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -445,7 +444,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 		case jsonrpc.INVALID_REQUEST:
 			errStr := err.Error()
-			if errors.Is(err, tools.ErrUnauthorized) {
+			if errors.Is(err, util.ErrUnauthorized) {
 				w.WriteHeader(http.StatusUnauthorized)
 			} else if strings.Contains(errStr, "Error 401") {
 				w.WriteHeader(http.StatusUnauthorized)
@@ -520,7 +519,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 			err = fmt.Errorf("promptset does not exist")
 			return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 		}
-		res, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, s.ResourceMgr.GetToolsMap(), promptset, s.ResourceMgr.GetPromptsMap(), s.ResourceMgr.GetAuthServiceMap(), body, header)
+		res, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, promptset, s.ResourceMgr, body, header)
 		return "", res, err
 	}
 }

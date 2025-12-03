@@ -26,6 +26,7 @@ import (
 	healthcareds "github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/common"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/healthcare/v1"
 )
@@ -110,39 +111,37 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	parameters := tools.Parameters{
-		tools.NewStringParameterWithDefault(activeKey, "", "Whether the patient record is active. Use true or false"),
-		tools.NewStringParameterWithDefault(cityKey, "", "The city of the patient's address"),
-		tools.NewStringParameterWithDefault(countryKey, "", "The country of the patient's address"),
-		tools.NewStringParameterWithDefault(postalCodeKey, "", "The postal code of the patient's address"),
-		tools.NewStringParameterWithDefault(stateKey, "", "The state of the patient's address"),
-		tools.NewStringParameterWithDefault(addressSubstringKey, "", "A substring to search for in any address field"),
-		tools.NewStringParameterWithDefault(birthDateRangeKey, "", "A date range for the patient's birthdate in the format YYYY-MM-DD/YYYY-MM-DD. Omit the first or second date to indicate open-ended ranges (e.g. '/2000-01-01' or '1950-01-01/')"),
-		tools.NewStringParameterWithDefault(deathDateRangeKey, "", "A date range for the patient's death date in the format YYYY-MM-DD/YYYY-MM-DD. Omit the first or second date to indicate open-ended ranges (e.g. '/2000-01-01' or '1950-01-01/')"),
-		tools.NewStringParameterWithDefault(deceasedKey, "", "Whether the patient is deceased. Use true or false"),
-		tools.NewStringParameterWithDefault(emailKey, "", "The patient's email address"),
-		tools.NewStringParameterWithDefault(genderKey, "", "The patient's gender. Must be one of 'male', 'female', 'other', or 'unknown'"),
-		tools.NewStringParameterWithDefault(addressUseKey, "", "The use of the patient's address. Must be one of 'home', 'work', 'temp', 'old', or 'billing'"),
-		tools.NewStringParameterWithDefault(nameKey, "", "The patient's name. Can be a family name, given name, or both"),
-		tools.NewStringParameterWithDefault(givenNameKey, "", "A portion of the given name of the patient"),
-		tools.NewStringParameterWithDefault(familyNameKey, "", "A portion of the family name of the patient"),
-		tools.NewStringParameterWithDefault(phoneKey, "", "The patient's phone number"),
-		tools.NewStringParameterWithDefault(languageKey, "", "The patient's preferred language. Must be a valid BCP-47 code (e.g. 'en-US', 'es')"),
-		tools.NewStringParameterWithDefault(identifierKey, "", "An identifier for the patient"),
-		tools.NewBooleanParameterWithDefault(summaryKey, true, "Requests the server to return a subset of the resource. Return a limited subset of elements from the resource. Enabled by default to reduce response size. Use get-fhir-resource tool to get full resource details (preferred) or set to false to disable."),
+	params := parameters.Parameters{
+		parameters.NewStringParameterWithDefault(activeKey, "", "Whether the patient record is active. Use true or false"),
+		parameters.NewStringParameterWithDefault(cityKey, "", "The city of the patient's address"),
+		parameters.NewStringParameterWithDefault(countryKey, "", "The country of the patient's address"),
+		parameters.NewStringParameterWithDefault(postalCodeKey, "", "The postal code of the patient's address"),
+		parameters.NewStringParameterWithDefault(stateKey, "", "The state of the patient's address"),
+		parameters.NewStringParameterWithDefault(addressSubstringKey, "", "A substring to search for in any address field"),
+		parameters.NewStringParameterWithDefault(birthDateRangeKey, "", "A date range for the patient's birthdate in the format YYYY-MM-DD/YYYY-MM-DD. Omit the first or second date to indicate open-ended ranges (e.g. '/2000-01-01' or '1950-01-01/')"),
+		parameters.NewStringParameterWithDefault(deathDateRangeKey, "", "A date range for the patient's death date in the format YYYY-MM-DD/YYYY-MM-DD. Omit the first or second date to indicate open-ended ranges (e.g. '/2000-01-01' or '1950-01-01/')"),
+		parameters.NewStringParameterWithDefault(deceasedKey, "", "Whether the patient is deceased. Use true or false"),
+		parameters.NewStringParameterWithDefault(emailKey, "", "The patient's email address"),
+		parameters.NewStringParameterWithDefault(genderKey, "", "The patient's gender. Must be one of 'male', 'female', 'other', or 'unknown'"),
+		parameters.NewStringParameterWithDefault(addressUseKey, "", "The use of the patient's address. Must be one of 'home', 'work', 'temp', 'old', or 'billing'"),
+		parameters.NewStringParameterWithDefault(nameKey, "", "The patient's name. Can be a family name, given name, or both"),
+		parameters.NewStringParameterWithDefault(givenNameKey, "", "A portion of the given name of the patient"),
+		parameters.NewStringParameterWithDefault(familyNameKey, "", "A portion of the family name of the patient"),
+		parameters.NewStringParameterWithDefault(phoneKey, "", "The patient's phone number"),
+		parameters.NewStringParameterWithDefault(languageKey, "", "The patient's preferred language. Must be a valid BCP-47 code (e.g. 'en-US', 'es')"),
+		parameters.NewStringParameterWithDefault(identifierKey, "", "An identifier for the patient"),
+		parameters.NewBooleanParameterWithDefault(summaryKey, true, "Requests the server to return a subset of the resource. Return a limited subset of elements from the resource. Enabled by default to reduce response size. Use get-fhir-resource tool to get full resource details (preferred) or set to false to disable."),
 	}
 
 	if len(s.AllowedFHIRStores()) != 1 {
-		parameters = append(parameters, tools.NewStringParameter(common.StoreKey, "The FHIR store ID to retrieve the resource from."))
+		params = append(params, parameters.NewStringParameter(common.StoreKey, "The FHIR store ID to retrieve the resource from."))
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
 	// finish tool setup
 	t := Tool{
-		Name:           cfg.Name,
-		Kind:           kind,
-		Parameters:     parameters,
-		AuthRequired:   cfg.AuthRequired,
+		Config:         cfg,
+		Parameters:     params,
 		Project:        s.Project(),
 		Region:         s.Region(),
 		Dataset:        s.DatasetID(),
@@ -150,7 +149,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		UseClientOAuth: s.UseClientAuthorization(),
 		ServiceCreator: s.ServiceCreator(),
 		Service:        s.Service(),
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		manifest:       tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:    mcpManifest,
 	}
 	return t, nil
@@ -160,11 +159,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string           `yaml:"name"`
-	Kind           string           `yaml:"kind"`
-	AuthRequired   []string         `yaml:"authRequired"`
-	UseClientOAuth bool             `yaml:"useClientOAuth"`
-	Parameters     tools.Parameters `yaml:"parameters"`
+	Config
+	UseClientOAuth bool                  `yaml:"useClientOAuth"`
+	Parameters     parameters.Parameters `yaml:"parameters"`
 
 	Project, Region, Dataset string
 	AllowedStores            map[string]struct{}
@@ -174,7 +171,11 @@ type Tool struct {
 	mcpManifest              tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	storeID, err := common.ValidateAndFetchStoreID(params, t.AllowedStores)
 	if err != nil {
 		return nil, err
@@ -281,8 +282,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return jsonMap, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -297,6 +298,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return t.UseClientOAuth
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

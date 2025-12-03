@@ -21,7 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/prompts/custom"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestConfig(t *testing.T) {
@@ -29,11 +29,11 @@ func TestConfig(t *testing.T) {
 
 	// Setup a shared config for testing its methods
 	testArgs := prompts.Arguments{
-		{Parameter: tools.NewStringParameter("name", "The name to use.")},
-		{Parameter: tools.NewStringParameterWithRequired("location", "The location.", false)},
+		{Parameter: parameters.NewStringParameter("name", "The name to use.")},
+		{Parameter: parameters.NewStringParameterWithRequired("location", "The location.", false)},
 	}
 
-	cfg := &custom.Config{
+	cfg := custom.Config{
 		Name:        "TestConfig",
 		Description: "A test config.",
 		Messages: []custom.Message{
@@ -42,28 +42,27 @@ func TestConfig(t *testing.T) {
 		Arguments: testArgs,
 	}
 
-	t.Run("Initialize and Kind", func(t *testing.T) {
-		p, err := cfg.Initialize()
-		if err != nil {
-			t.Fatalf("Initialize() failed: %v", err)
-		}
-		if p == nil {
-			t.Fatal("Initialize() returned a nil prompt")
-		}
-		if cfg.PromptConfigKind() != "custom" {
-			t.Errorf("PromptConfigKind() = %q, want %q", cfg.PromptConfigKind(), "custom")
-		}
-	})
+	// initialize and check kind
+	p, err := cfg.Initialize()
+	if err != nil {
+		t.Fatalf("Initialize() failed: %v", err)
+	}
+	if p == nil {
+		t.Fatal("Initialize() returned a nil prompt")
+	}
+	if cfg.PromptConfigKind() != "custom" {
+		t.Errorf("PromptConfigKind() = %q, want %q", cfg.PromptConfigKind(), "custom")
+	}
 
 	t.Run("Manifest", func(t *testing.T) {
 		want := prompts.Manifest{
 			Description: "A test config.",
-			Arguments: []tools.ParameterManifest{
+			Arguments: []parameters.ParameterManifest{
 				{Name: "name", Type: "string", Required: true, Description: "The name to use.", AuthServices: []string{}},
 				{Name: "location", Type: "string", Required: false, Description: "The location.", AuthServices: []string{}},
 			},
 		}
-		got := cfg.Manifest()
+		got := p.Manifest()
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("Manifest() mismatch (-want +got):\n%s", diff)
 		}
@@ -78,14 +77,14 @@ func TestConfig(t *testing.T) {
 				{Name: "location", Description: "The location.", Required: false},
 			},
 		}
-		got := cfg.McpManifest()
+		got := p.McpManifest()
 		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("McpManifest() mismatch (-want +got):\n%s", diff)
 		}
 	})
 
 	t.Run("SubstituteParams", func(t *testing.T) {
-		argValues := tools.ParamValues{
+		argValues := parameters.ParamValues{
 			{Name: "name", Value: "Alice"},
 			{Name: "location", Value: "Wonderland"},
 		}
@@ -93,7 +92,7 @@ func TestConfig(t *testing.T) {
 			{Role: "user", Content: "Hello, my name is Alice and I am in Wonderland."},
 		}
 
-		got, err := cfg.SubstituteParams(argValues)
+		got, err := p.SubstituteParams(argValues)
 		if err != nil {
 			t.Fatalf("SubstituteParams() failed: %v", err)
 		}
@@ -114,11 +113,11 @@ func TestConfig(t *testing.T) {
 				"name":     "Bob",
 				"location": "the Builder",
 			}
-			want := tools.ParamValues{
+			want := parameters.ParamValues{
 				{Name: "name", Value: "Bob"},
 				{Name: "location", Value: "the Builder"},
 			}
-			got, err := cfg.ParseArgs(argsIn, nil)
+			got, err := p.ParseArgs(argsIn, nil)
 			if err != nil {
 				t.Fatalf("ParseArgs() failed: %v", err)
 			}
@@ -131,7 +130,7 @@ func TestConfig(t *testing.T) {
 			argsIn := map[string]any{
 				"location": "missing name",
 			}
-			_, err := cfg.ParseArgs(argsIn, nil)
+			_, err := p.ParseArgs(argsIn, nil)
 			if err == nil {
 				t.Fatal("expected an error for missing required arg, but got nil")
 			}

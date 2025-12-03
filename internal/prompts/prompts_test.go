@@ -24,7 +24,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	_ "github.com/googleapis/genai-toolbox/internal/prompts/custom"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 type mockPromptConfig struct {
@@ -136,8 +136,8 @@ func TestGetMcpManifest(t *testing.T) {
 			promptName:  "arg-prompt",
 			description: "Prompt with args.",
 			args: prompts.Arguments{
-				{Parameter: tools.NewStringParameter("param1", "First param")},
-				{Parameter: tools.NewIntParameterWithRequired("param2", "Second param", false)},
+				{Parameter: parameters.NewStringParameter("param1", "First param")},
+				{Parameter: parameters.NewIntParameterWithRequired("param2", "Second param", false)},
 			},
 			want: prompts.McpManifest{
 				Name:        "arg-prompt",
@@ -173,19 +173,19 @@ func TestGetManifest(t *testing.T) {
 			args:        prompts.Arguments{},
 			want: prompts.Manifest{
 				Description: "A simple prompt.",
-				Arguments:   []tools.ParameterManifest{},
+				Arguments:   []parameters.ParameterManifest{},
 			},
 		},
 		{
 			name:        "With arguments",
 			description: "Prompt with arguments.",
 			args: prompts.Arguments{
-				{Parameter: tools.NewStringParameter("param1", "First param")},
-				{Parameter: tools.NewBooleanParameterWithRequired("param2", "Second param", false)},
+				{Parameter: parameters.NewStringParameter("param1", "First param")},
+				{Parameter: parameters.NewBooleanParameterWithRequired("param2", "Second param", false)},
 			},
 			want: prompts.Manifest{
 				Description: "Prompt with arguments.",
-				Arguments: []tools.ParameterManifest{
+				Arguments: []parameters.ParameterManifest{
 					{Name: "param1", Type: "string", Required: true, Description: "First param", AuthServices: []string{}},
 					{Name: "param2", Type: "boolean", Required: false, Description: "Second param", AuthServices: []string{}},
 				},

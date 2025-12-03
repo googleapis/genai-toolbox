@@ -45,6 +45,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/http"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/spf13/cobra"
 )
 
@@ -61,6 +62,9 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	}
 	if c.TelemetryServiceName == "" {
 		c.TelemetryServiceName = "toolbox"
+	}
+	if c.AllowedOrigins == nil {
+		c.AllowedOrigins = []string{"*"}
 	}
 	return c
 }
@@ -191,6 +195,13 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--disable-reload"},
 			want: withDefaults(server.ServerConfig{
 				DisableReload: true,
+			}),
+		},
+		{
+			desc: "allowed origin",
+			args: []string{"--allowed-origins", "http://foo.com,http://bar.com"},
+			want: withDefaults(server.ServerConfig{
+				AllowedOrigins: []string{"http://foo.com", "http://bar.com"},
 			}),
 		},
 	}
@@ -515,8 +526,8 @@ func TestParseToolFile(t *testing.T) {
 						Source:      "my-pg-instance",
 						Description: "some description",
 						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
-						Parameters: []tools.Parameter{
-							tools.NewStringParameter("country", "some description"),
+						Parameters: []parameters.Parameter{
+							parameters.NewStringParameter("country", "some description"),
 						},
 						AuthRequired: []string{},
 					},
@@ -552,7 +563,7 @@ func TestParseToolFile(t *testing.T) {
 						Name:        "my-prompt",
 						Description: "A prompt template for data analysis.",
 						Arguments: prompts.Arguments{
-							{Parameter: tools.NewStringParameter("country", "The country to analyze.")},
+							{Parameter: parameters.NewStringParameter("country", "The country to analyze.")},
 						},
 						Messages: []prompts.Message{
 							{Role: "user", Content: "Analyze the data for {{.country}}."},
@@ -682,10 +693,10 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 						AuthRequired: []string{},
-						Parameters: []tools.Parameter{
-							tools.NewStringParameter("country", "some description"),
-							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							tools.NewStringParameterWithAuth("email", "user email", []tools.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+						Parameters: []parameters.Parameter{
+							parameters.NewStringParameter("country", "some description"),
+							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
+							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
 						},
 					},
 				},
@@ -782,10 +793,10 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 						AuthRequired: []string{},
-						Parameters: []tools.Parameter{
-							tools.NewStringParameter("country", "some description"),
-							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							tools.NewStringParameterWithAuth("email", "user email", []tools.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+						Parameters: []parameters.Parameter{
+							parameters.NewStringParameter("country", "some description"),
+							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
+							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
 						},
 					},
 				},
@@ -884,10 +895,10 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 						AuthRequired: []string{"my-google-service"},
-						Parameters: []tools.Parameter{
-							tools.NewStringParameter("country", "some description"),
-							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							tools.NewStringParameterWithAuth("email", "user email", []tools.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+						Parameters: []parameters.Parameter{
+							parameters.NewStringParameter("country", "some description"),
+							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
+							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
 						},
 					},
 				},
@@ -1053,9 +1064,9 @@ func TestEnvVarReplacement(t *testing.T) {
 						Path:         "search?name=alice&pet=cat",
 						Description:  "some description",
 						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-						QueryParams: []tools.Parameter{
-							tools.NewStringParameterWithAuth("country", "some description",
-								[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
+						QueryParams: []parameters.Parameter{
+							parameters.NewStringParameterWithAuth("country", "some description",
+								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
 									{Name: "other-auth-service", Field: "user_id"}}),
 						},
 						RequestBody: `{
@@ -1065,9 +1076,9 @@ func TestEnvVarReplacement(t *testing.T) {
   "other": "$OTHER"
 }
 `,
-						BodyParams:   []tools.Parameter{tools.NewIntParameter("age", "age num"), tools.NewStringParameter("city", "city string")},
+						BodyParams:   []parameters.Parameter{parameters.NewIntParameter("age", "age num"), parameters.NewStringParameter("city", "city string")},
 						Headers:      map[string]string{"Authorization": "API_KEY", "Content-Type": "application/json"},
-						HeaderParams: []tools.Parameter{tools.NewStringParameter("Language", "language string")},
+						HeaderParams: []parameters.Parameter{parameters.NewStringParameter("Language", "language string")},
 					},
 				},
 				Toolsets: server.ToolsetConfigs{
@@ -1447,7 +1458,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "postgres_upgrade_precheck", "clone_instance"},
 				},
 			},
 		},
@@ -1457,7 +1468,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_mysql_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mysql_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance"},
 				},
 			},
 		},
@@ -1467,7 +1478,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_mssql_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mssql_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance"},
 				},
 			},
 		},
@@ -1477,7 +1488,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"alloydb_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "alloydb_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality"},
 				},
 			},
 		},
@@ -1507,7 +1518,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality"},
 				},
 			},
 		},
@@ -1607,7 +1618,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"postgres_database_tools": tools.ToolsetConfig{
 					Name:      "postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality"},
 				},
 			},
 		},
@@ -1617,7 +1628,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"spanner-database-tools": tools.ToolsetConfig{
 					Name:      "spanner-database-tools",
-					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs"},
 				},
 			},
 		},
@@ -1805,4 +1816,89 @@ func TestFileLoadingErrors(t *testing.T) {
 			t.Errorf("expected error about accessing folder, but got: %v", err)
 		}
 	})
+}
+
+func TestMergeToolsFiles(t *testing.T) {
+	file1 := ToolsFile{
+		Sources:  server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
+		Tools:    server.ToolConfigs{"tool1": http.Config{Name: "tool1"}},
+		Toolsets: server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}},
+	}
+	file2 := ToolsFile{
+		AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
+		Tools:        server.ToolConfigs{"tool2": http.Config{Name: "tool2"}},
+		Toolsets:     server.ToolsetConfigs{"set2": tools.ToolsetConfig{Name: "set2"}},
+	}
+	fileWithConflicts := ToolsFile{
+		Sources: server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
+		Tools:   server.ToolConfigs{"tool2": http.Config{Name: "tool2"}},
+	}
+
+	testCases := []struct {
+		name    string
+		files   []ToolsFile
+		want    ToolsFile
+		wantErr bool
+	}{
+		{
+			name:  "merge two distinct files",
+			files: []ToolsFile{file1, file2},
+			want: ToolsFile{
+				Sources:      server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
+				AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
+				Tools:        server.ToolConfigs{"tool1": http.Config{Name: "tool1"}, "tool2": http.Config{Name: "tool2"}},
+				Toolsets:     server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}, "set2": tools.ToolsetConfig{Name: "set2"}},
+				Prompts:      server.PromptConfigs{},
+			},
+			wantErr: false,
+		},
+		{
+			name:    "merge with conflicts",
+			files:   []ToolsFile{file1, file2, fileWithConflicts},
+			wantErr: true,
+		},
+		{
+			name:  "merge single file",
+			files: []ToolsFile{file1},
+			want: ToolsFile{
+				Sources:      file1.Sources,
+				AuthServices: make(server.AuthServiceConfigs),
+				Tools:        file1.Tools,
+				Toolsets:     file1.Toolsets,
+				Prompts:      server.PromptConfigs{},
+			},
+		},
+		{
+			name:  "merge empty list",
+			files: []ToolsFile{},
+			want: ToolsFile{
+				Sources:      make(server.SourceConfigs),
+				AuthServices: make(server.AuthServiceConfigs),
+				Tools:        make(server.ToolConfigs),
+				Toolsets:     make(server.ToolsetConfigs),
+				Prompts:      server.PromptConfigs{},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := mergeToolsFiles(tc.files...)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("mergeToolsFiles() error = %v, wantErr %v", err, tc.wantErr)
+			}
+			if !tc.wantErr {
+				if diff := cmp.Diff(tc.want, got); diff != "" {
+					t.Errorf("mergeToolsFiles() mismatch (-want +got):\n%s", diff)
+				}
+			} else {
+				if err == nil {
+					t.Fatal("expected an error for conflicting files but got none")
+				}
+				if !strings.Contains(err.Error(), "resource conflicts detected") {
+					t.Errorf("expected conflict error, but got: %v", err)
+				}
+			}
+		})
+	}
 }

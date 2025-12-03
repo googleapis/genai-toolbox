@@ -21,8 +21,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/elastic/go-elasticsearch/v8/esapi"
+	"github.com/elastic/go-elasticsearch/v9/esapi"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -47,15 +48,15 @@ var _ compatibleSource = &es.Source{}
 var compatibleSources = [...]string{es.SourceKind}
 
 type Config struct {
-	Name         string           `yaml:"name" validate:"required"`
-	Kind         string           `yaml:"kind" validate:"required"`
-	Source       string           `yaml:"source" validate:"required"`
-	Description  string           `yaml:"description" validate:"required"`
-	AuthRequired []string         `yaml:"authRequired" validate:"required"`
-	Query        string           `yaml:"query"`
-	Format       string           `yaml:"format"`
-	Timeout      int              `yaml:"timeout"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Name         string                `yaml:"name" validate:"required"`
+	Kind         string                `yaml:"kind" validate:"required"`
+	Source       string                `yaml:"source" validate:"required"`
+	Description  string                `yaml:"description" validate:"required"`
+	AuthRequired []string              `yaml:"authRequired" validate:"required"`
+	Query        string                `yaml:"query"`
+	Format       string                `yaml:"format"`
+	Timeout      int                   `yaml:"timeout"`
+	Parameters   parameters.Parameters `yaml:"parameters"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -73,14 +74,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	Query        string           `yaml:"query"`
-	Format       string           `yaml:"format" default:"json"`
-	Timeout      int              `yaml:"timeout"`
-
+	Config
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 	EsClient    es.EsClient
@@ -101,20 +95,18 @@ func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, c.Parameters)
+	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, c.Parameters, nil)
 
 	return Tool{
-		Name:         c.Name,
-		Kind:         kind,
-		Parameters:   c.Parameters,
-		Query:        c.Query,
-		Format:       c.Format,
-		Timeout:      c.Timeout,
-		AuthRequired: c.AuthRequired,
-		EsClient:     s.ElasticsearchClient(),
-		manifest:     tools.Manifest{Description: c.Description, Parameters: c.Parameters.Manifest(), AuthRequired: c.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      c,
+		EsClient:    s.ElasticsearchClient(),
+		manifest:    tools.Manifest{Description: c.Description, Parameters: c.Parameters.Manifest(), AuthRequired: c.AuthRequired},
+		mcpManifest: mcpManifest,
 	}, nil
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 type esqlColumn struct {
@@ -127,7 +119,7 @@ type esqlResult struct {
 	Values  [][]any      `json:"values"`
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	var cancel context.CancelFunc
 	if t.Timeout > 0 {
 		ctx, cancel = context.WithTimeout(ctx, time.Duration(t.Timeout)*time.Second)
@@ -222,8 +214,8 @@ func (t Tool) esqlToMap(result esqlResult) []map[string]any {
 	return output
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -238,6 +230,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return false
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

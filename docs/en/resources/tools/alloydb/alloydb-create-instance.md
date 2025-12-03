@@ -22,7 +22,6 @@ This tool provisions a new instance with a **public IP address**.
 2.  The user or service account executing the tool has one of the following IAM
     roles:
 
-
     - `roles/alloydb.admin` (the AlloyDB Admin predefined IAM role)
     - `roles/owner` (the Owner basic IAM role)
     - `roles/editor` (the Editor basic IAM role)

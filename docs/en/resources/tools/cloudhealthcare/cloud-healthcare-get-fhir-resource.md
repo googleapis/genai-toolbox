@@ -11,12 +11,14 @@ aliases:
 
 ## About
 
-A `cloud-healthcare-get-fhir-resource` tool retrieves a specific FHIR resource from a FHIR store.
+A `cloud-healthcare-get-fhir-resource` tool retrieves a specific FHIR resource
+from a FHIR store.
 It's compatible with the following sources:
 
 - [cloud-healthcare](../../sources/cloud-healthcare.md)
 
-`cloud-healthcare-get-fhir-resource` returns a single FHIR resource, identified by its type and ID.
+`cloud-healthcare-get-fhir-resource` returns a single FHIR resource, identified
+by its type and ID.
 
 ## Example
 
@@ -44,4 +46,5 @@ tools:
 | resourceID   |  string  |     true     | The ID of the FHIR resource to retrieve.                         |
 | storeID      |  string  |    true*     | The FHIR store ID to retrieve the resource from.                 |
 
-*If the `allowedFHIRStores` in the source has length 1, then the `storeID` parameter is not needed.
+*If the `allowedFHIRStores` in the source has length 1, then the `storeID`
+parameter is not needed.

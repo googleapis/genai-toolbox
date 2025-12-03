@@ -12,7 +12,6 @@ aliases:
 
 A `looker-get-connection-table-columns` tool returns all the columnes for each table specified.
 
-
 It's compatible with the following sources:
 
 - [looker](../../sources/looker.md)

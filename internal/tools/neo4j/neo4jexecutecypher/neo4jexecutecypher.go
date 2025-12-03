@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jexecutecypher/classifier"
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/helpers"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
@@ -83,29 +84,26 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	cypherParameter := tools.NewStringParameter("cypher", "The cypher to execute.")
-	dryRunParameter := tools.NewBooleanParameterWithDefault(
+	cypherParameter := parameters.NewStringParameter("cypher", "The cypher to execute.")
+	dryRunParameter := parameters.NewBooleanParameterWithDefault(
 		"dry_run",
 		false,
 		"If set to true, the query will be validated and information about the execution "+
 			"will be returned without running the query. Defaults to false.",
 	)
-	parameters := tools.Parameters{cypherParameter, dryRunParameter}
+	params := parameters.Parameters{cypherParameter, dryRunParameter}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		ReadOnly:     cfg.ReadOnly,
-		Driver:       s.Neo4jDriver(),
-		Database:     s.Neo4jDatabase(),
-		classifier:   classifier.NewQueryClassifier(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		Parameters:  params,
+		Driver:      s.Neo4jDriver(),
+		Database:    s.Neo4jDatabase(),
+		classifier:  classifier.NewQueryClassifier(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -114,19 +112,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	AuthRequired []string         `yaml:"authRequired"`
-	ReadOnly     bool             `yaml:"readOnly"`
-	Database     string
-	Driver       neo4j.DriverWithContext
-	classifier   *classifier.QueryClassifier
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Config
+	Parameters  parameters.Parameters `yaml:"parameters"`
+	Database    string
+	Driver      neo4j.DriverWithContext
+	classifier  *classifier.QueryClassifier
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	cypherStr, ok := paramsMap["cypher"].(string)
 	if !ok {
@@ -197,8 +192,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return out, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claimsMap)
+func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claimsMap)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -213,7 +208,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return false
 }
 
@@ -233,4 +228,12 @@ func addPlanChildren(p neo4j.Plan) []map[string]any {
 		children = append(children, childMap)
 	}
 	return children
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }
