@@ -1,0 +1,2 @@
+dapr-agents==0.10.3
+requests==2.35.2
