@@ -21,8 +21,10 @@ import (
 	"time"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/sources"
+	_ "github.com/nakagami/firebirdsql"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/googleapis/genai-toolbox/internal/sources"
 )
 
 const SourceKind string = "firebird"

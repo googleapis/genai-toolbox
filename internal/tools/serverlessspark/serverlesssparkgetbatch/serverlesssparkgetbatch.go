@@ -110,7 +110,7 @@ type Tool struct {
 }
 
 // Invoke executes the tool's operation.
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	client := t.Source.GetBatchControllerClient()
 
 	paramMap := params.AsMap()
@@ -161,7 +161,7 @@ func (t Tool) Authorized(services []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, services)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	// Client OAuth not supported, rely on ADCs.
 	return false
 }
