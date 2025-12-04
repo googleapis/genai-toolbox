@@ -160,7 +160,7 @@ func TestCloudSQLMySQLToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 
 	// Run specific MySQL tool tests
-	const expectedOwner = "'toolbox-identity'@'%'";
+	const expectedOwner = "'toolbox-identity'@'%'"
 	tests.RunMySQLListTablesTest(t, CloudSQLMySQLDatabase, tableNameParam, tableNameAuth, expectedOwner)
 	tests.RunMySQLListActiveQueriesTest(t, ctx, pool)
 }

@@ -2100,10 +2100,10 @@ func RunPostgresListSequencesTest(t *testing.T, ctx context.Context, pool *pgxpo
 func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNameAuth, expectedOwner string) {
 	var ownerWant any
 	if expectedOwner == "" {
-        ownerWant = nil
-    } else {
-        ownerWant = expectedOwner
-    }
+		ownerWant = nil
+	} else {
+		ownerWant = expectedOwner
+	}
 
 	type tableInfo struct {
 		ObjectName    string `json:"object_name"`
