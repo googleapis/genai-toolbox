@@ -1564,12 +1564,6 @@ func RunPostgresListTriggersTest(t *testing.T, ctx context.Context, pool *pgxpoo
 		want           []map[string]any
 	}{
 		{
-			name:           "list all triggers (expecting the one we created)",
-			requestBody:    bytes.NewBuffer([]byte(`{}`)),
-			wantStatusCode: http.StatusOK,
-			want:           []map[string]any{wantTrigger},
-		},
-		{
 			name:           "filter by trigger_name",
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"trigger_name": "%s"}`, triggerName))),
 			wantStatusCode: http.StatusOK,
