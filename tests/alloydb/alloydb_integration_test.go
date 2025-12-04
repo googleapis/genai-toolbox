@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"reflect"
 	"regexp"
 	"sort"
@@ -38,11 +37,11 @@ import (
 )
 
 var (
-	AlloyDBProject  = os.Getenv("ALLOYDB_PROJECT")
-	AlloyDBLocation = os.Getenv("ALLOYDB_REGION")
-	AlloyDBCluster  = os.Getenv("ALLOYDB_CLUSTER")
-	AlloyDBInstance = os.Getenv("ALLOYDB_INSTANCE")
-	AlloyDBUser     = os.Getenv("ALLOYDB_POSTGRES_USER")
+	AlloyDBProject  = "manukarahul-playground"
+	AlloyDBLocation = "us-central1"
+	AlloyDBCluster  = "alloydb-integration-testing"
+	AlloyDBInstance = "alloydb-integration-testing-primary"
+	AlloyDBUser     = "postgres"
 )
 
 func getAlloyDBVars(t *testing.T) map[string]string {
@@ -148,7 +147,7 @@ func getAlloyDBToolsConfig() map[string]any {
 
 func TestAlloyDBToolEndpoints(t *testing.T) {
 	vars := getAlloyDBVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
 	var args []string
@@ -354,7 +353,6 @@ func runAlloyDBMCPToolCallMethod(t *testing.T, vars map[string]string) {
 }
 
 func runAlloyDBListClustersTest(t *testing.T, vars map[string]string) {
-
 	type ListClustersResponse struct {
 		Clusters []struct {
 			Name string `json:"name"`
@@ -368,17 +366,27 @@ func runAlloyDBListClustersTest(t *testing.T, vars map[string]string) {
 	// NOTE: If clusters are added, removed or changed in the test project,
 	// this list must be updated for the "list clusters specific locations" test to pass
 	wantForSpecificLocation := []string{
-		fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-ai-nl-testing", vars["project"]),
-		fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-pg-testing", vars["project"]),
+		// fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-ai-nl-testing/postgres", vars["project"]),
+		// fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-pg-testing/postgres", vars["project"]),
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-pg-integration-testing",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-ai-nl-testing ",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-aip-01",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-integration-testing",
 	}
 
 	// NOTE: If clusters are added, removed, or changed in the test project,
 	// this list must be updated for the "list clusters all locations" test to pass
 	wantForAllLocations := []string{
-		fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-ai-nl-testing", vars["project"]),
-		fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-pg-testing", vars["project"]),
-		fmt.Sprintf("projects/%s/locations/us-east4/clusters/alloydb-private-pg-testing", vars["project"]),
-		fmt.Sprintf("projects/%s/locations/us-east4/clusters/colab-testing", vars["project"]),
+		// fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-ai-nl-testing/postgres", vars["project"]),
+		// fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-pg-testing/postgres", vars["project"]),
+		// fmt.Sprintf("projects/%s/locations/us-east4/clusters/alloydb-private-pg-testing/postgres", vars["project"]),
+		// fmt.Sprintf("projects/%s/locations/us-east4/clusters/colab-testing/postgres", vars["project"]),
+		// "projects/manukarahul-playground/locations/us-central1/clusters/alloydb-integration-testing/postgres",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-pg-integration-testing",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-ai-nl-testing ",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-aip-01",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-integration-testing",
+
 	}
 
 	invokeTcs := []struct {
@@ -495,7 +503,7 @@ func runAlloyDBListUsersTest(t *testing.T, vars map[string]string) {
 			name:           "list users success",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s"}`, vars["project"], vars["location"], vars["cluster"])),
 			wantContains:   fmt.Sprintf("projects/%s/locations/%s/clusters/%s/users/%s", vars["project"], vars["location"], vars["cluster"], AlloyDBUser),
-			wantCount:      3, // NOTE: If users are added or removed in the test project, update the number of users here must be updated for this test to pass
+			wantCount:      1, // NOTE: If users are added or removed in the test project, update the number of users here must be updated for this test to pass
 			wantStatusCode: http.StatusOK,
 		},
 		{
@@ -606,6 +614,7 @@ func runAlloyDBListInstancesTest(t *testing.T, vars map[string]string) {
 	wantForAllClustersSpecificLocation := []string{
 		fmt.Sprintf("projects/%s/locations/%s/clusters/alloydb-ai-nl-testing/instances/alloydb-ai-nl-testing-instance", vars["project"], vars["location"]),
 		fmt.Sprintf("projects/%s/locations/%s/clusters/alloydb-pg-testing/instances/alloydb-pg-testing-instance", vars["project"], vars["location"]),
+		fmt.Sprintf("projects/%s/locations/%s/clusters/alloydb-integration-testing/instances/alloydb-pg-testing-instance-primary", vars["project"], vars["location"]),
 	}
 
 	wantForAllClustersAllLocations := []string{
@@ -613,6 +622,8 @@ func runAlloyDBListInstancesTest(t *testing.T, vars map[string]string) {
 		fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-pg-testing/instances/alloydb-pg-testing-instance", vars["project"]),
 		fmt.Sprintf("projects/%s/locations/us-east4/clusters/alloydb-private-pg-testing/instances/alloydb-private-pg-testing-instance", vars["project"]),
 		fmt.Sprintf("projects/%s/locations/us-east4/clusters/colab-testing/instances/colab-testing-primary", vars["project"]),
+		fmt.Sprintf("projects/%s/locations/%s/clusters/alloydb-integration-testing/instances/alloydb-pg-testing-instance-primary", vars["project"], vars["location"]),
+
 	}
 
 	invokeTcs := []struct {

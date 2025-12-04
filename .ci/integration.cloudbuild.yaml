@@ -370,12 +370,12 @@ steps:
     entrypoint: /bin/bash
     env:
       - "GOPATH=/gopath"
-      - "CLOUD_SQL_MYSQL_PROJECT=$PROJECT_ID"
-      - "CLOUD_SQL_MYSQL_INSTANCE=$_CLOUD_SQL_MYSQL_INSTANCE"
-      - "CLOUD_SQL_MYSQL_DATABASE=$_DATABASE_NAME"
-      - "CLOUD_SQL_MYSQL_REGION=$_REGION"
-      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLOUD_SQL_MYSQL_USER", "CLOUD_SQL_MYSQL_PASS", "CLIENT_ID"]
+      - "CLOUD_SQL_MYSQL_PROJECT=manukarahul-playground"
+      - "CLOUD_SQL_MYSQL_INSTANCE=quickstart-instance"
+      - "CLOUD_SQL_MYSQL_DATABASE=integration_test"
+      - "CLOUD_SQL_MYSQL_REGION=us-central1"
+      - "SERVICE_ACCOUNT_EMAIL=toolbox-identity@manukarahul-playground.iam.gserviceaccount.com"
+    secretEnv: ["postgres", "R@7075ahul", "573556258322-bdc30fafe1atq2pueddbcsrcf5q21k76.apps.googleusercontent.com"]
     volumes:
       - name: "go"
         path: "/gopath"

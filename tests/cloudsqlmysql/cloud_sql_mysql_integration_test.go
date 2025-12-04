@@ -18,7 +18,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
 	"regexp"
 	"slices"
 	"strings"
@@ -31,16 +30,21 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 )
-
+//  - "CLOUD_SQL_MYSQL_PROJECT=manukarahul-playground"
+    //   - "CLOUD_SQL_MYSQL_INSTANCE=quickstart-instance"
+    //   - "CLOUD_SQL_MYSQL_DATABASE=integration_test"
+    //   - "CLOUD_SQL_MYSQL_REGION=us-central1"
+    //   - "SERVICE_ACCOUNT_EMAIL=toolbox-identity@manukarahul-playground.iam.gserviceaccount.com"
+    // secretEnv: ["postgres", "R@7075ahul", "573556258322-bdc30fafe1atq2pueddbcsrcf5q21k76.apps.googleusercontent.com"]
 var (
 	CloudSQLMySQLSourceKind = "cloud-sql-mysql"
 	CloudSQLMySQLToolKind   = "mysql-sql"
-	CloudSQLMySQLProject    = os.Getenv("CLOUD_SQL_MYSQL_PROJECT")
-	CloudSQLMySQLRegion     = os.Getenv("CLOUD_SQL_MYSQL_REGION")
-	CloudSQLMySQLInstance   = os.Getenv("CLOUD_SQL_MYSQL_INSTANCE")
-	CloudSQLMySQLDatabase   = os.Getenv("CLOUD_SQL_MYSQL_DATABASE")
-	CloudSQLMySQLUser       = os.Getenv("CLOUD_SQL_MYSQL_USER")
-	CloudSQLMySQLPass       = os.Getenv("CLOUD_SQL_MYSQL_PASS")
+	CloudSQLMySQLProject    = "manukarahul-playground"
+	CloudSQLMySQLRegion     = "us-central1"
+	CloudSQLMySQLInstance   = "integration-testing"
+	CloudSQLMySQLDatabase   = "mysql"
+	CloudSQLMySQLUser       = "integration-testing"
+	CloudSQLMySQLPass       = "R@7075ahul"
 )
 
 func getCloudSQLMySQLVars(t *testing.T) map[string]any {
