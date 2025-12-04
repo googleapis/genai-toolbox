@@ -580,7 +580,6 @@ func runAlloyDBListUsersTest(t *testing.T, vars map[string]string) {
 	}
 }
 
-
 func runAlloyDBListInstancesTest(t *testing.T, vars map[string]string) {
 	type ListInstancesResponse struct {
 		Instances []struct {
