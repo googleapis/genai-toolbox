@@ -5,9 +5,9 @@
 
 ### Features
 
-* Add allowed-origins flag ([#1984](https://github.com/googleapis/genai-toolbox/issues/1984)) ([862868f](https://github.com/googleapis/genai-toolbox/commit/862868f28476ea981575ce412faa7d6a03138f31))
-* Add list-query-stats and get-column-cardinality functions ([#1976](https://github.com/googleapis/genai-toolbox/issues/1976)) ([9f76026](https://github.com/googleapis/genai-toolbox/commit/9f760269253a8cc92a357e995c6993ccc4a0fb7b))
-* Add spanner list graphs to prebuiltconfigs ([#2056](https://github.com/googleapis/genai-toolbox/issues/2056)) ([0e7fbf4](https://github.com/googleapis/genai-toolbox/commit/0e7fbf465c488397aa9d8cab2e55165fff4eb53c))
+* **tools/postgres:** Add allowed-origins flag ([#1984](https://github.com/googleapis/genai-toolbox/issues/1984)) ([862868f](https://github.com/googleapis/genai-toolbox/commit/862868f28476ea981575ce412faa7d6a03138f31))
+* **tools/postgres:** Add list-query-stats and get-column-cardinality functions ([#1976](https://github.com/googleapis/genai-toolbox/issues/1976)) ([9f76026](https://github.com/googleapis/genai-toolbox/commit/9f760269253a8cc92a357e995c6993ccc4a0fb7b))
+* **tools/spanner:** Add spanner list graphs to prebuiltconfigs ([#2056](https://github.com/googleapis/genai-toolbox/issues/2056)) ([0e7fbf4](https://github.com/googleapis/genai-toolbox/commit/0e7fbf465c488397aa9d8cab2e55165fff4eb53c))
 * **prebuilt/cloud-sql:** Add clone instance tool for cloud sql ([#1845](https://github.com/googleapis/genai-toolbox/issues/1845)) ([5e43630](https://github.com/googleapis/genai-toolbox/commit/5e43630907aa2d7bc6818142483a33272eab060b))
 * **serverless-spark:** Add create_pyspark_batch tool ([1bf0b51](https://github.com/googleapis/genai-toolbox/commit/1bf0b51f033c956790be1577bf5310d0b17e9c12))
 * **serverless-spark:** Add create_spark_batch tool ([17a9792](https://github.com/googleapis/genai-toolbox/commit/17a979207dbc4fe70acd0ebda164d1a8d34c1ed3))
@@ -29,11 +29,6 @@
 * **tools/alloydb-postgres-list-tables:** Exclude google_ml schema from list_tables ([#2046](https://github.com/googleapis/genai-toolbox/issues/2046)) ([a03984c](https://github.com/googleapis/genai-toolbox/commit/a03984cc15254c928f30085f8fa509ded6a79a0c))
 * **tools/alloydbcreateuser:** Remove duplication of project praram ([#2028](https://github.com/googleapis/genai-toolbox/issues/2028)) ([730ac6d](https://github.com/googleapis/genai-toolbox/commit/730ac6d22805fd50b4a675b74c1865f4e7689e7c))
 * **tools/mongodb:** Remove `required` tag from the `canonical` field ([#2099](https://github.com/googleapis/genai-toolbox/issues/2099)) ([744214e](https://github.com/googleapis/genai-toolbox/commit/744214e04cd12b11d166e6eb7da8ce4714904abc))
-
-
-### Miscellaneous Chores
-
-* Release 0.22.0 ([#2116](https://github.com/googleapis/genai-toolbox/issues/2116)) ([8a0eba9](https://github.com/googleapis/genai-toolbox/commit/8a0eba9d62051d1e00e6f9812d7f2f1bd9271226))
 
 ## [0.21.0](https://github.com/googleapis/genai-toolbox/compare/v0.20.0...v0.21.0) (2025-11-19)
 
