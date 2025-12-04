@@ -274,7 +274,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 		vMap := make(map[string]any)
 		for key, value := range row {
-			vMap[key] = value
+			vMap[key] = bqutil.NormalizeValue(value)
 		}
 		out = append(out, vMap)
 	}
