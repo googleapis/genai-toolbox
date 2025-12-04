@@ -353,7 +353,29 @@ constraints, indexes, triggers, owner, comment) as JSON for user-created tables
 default, it lists all tables in user schemas.* &lt;code>output_format&lt;/code> (optional):
 Indicate the output format of table schema. &lt;code>simple&lt;/code> will return only the
 table names, &lt;code>detailed&lt;/code> will return the full table information. Default:
-&lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-list-triggers</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-triggers/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-triggers/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;code>detailed&lt;/code>.&lt;/p></description></item><item><title>postgres-list-tablespaces</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-tablespaces/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-tablespaces/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-tablespaces&lt;/code> tool lists available tablespaces in the database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-list-tablespaces&lt;/code> lists detailed information as JSON for tablespaces. The tool takes the following input parameters:&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>tablespace_name&lt;/code> (optional): A text to filter results by tablespace name. Default: &lt;code>&amp;quot;&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>limit&lt;/code> (optional): The maximum number of tablespaces to return. Default: &lt;code>50&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">list_tablespaces&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-list-tablespaces&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">postgres-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Lists all tablespaces in the database. Returns the tablespace name,
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> owner name, size in bytes(if the current user has CREATE privileges on
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> the tablespace, otherwise NULL), internal object ID, the access control
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> list regarding permissions, and any specific tablespace options.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The response is a json array with the following elements:&lt;/p></description></item><item><title>postgres-list-triggers</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-triggers/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-triggers/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>postgres-list-triggers&lt;/code> tool lists available non-internal triggers in the
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
