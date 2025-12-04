@@ -2102,7 +2102,6 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 	if expectedOwner == "" {
         ownerWant = nil
     } else {
-        // If a specific owner is provided (e.g., CloudSQL), use the string.
         ownerWant = expectedOwner
     }
 
