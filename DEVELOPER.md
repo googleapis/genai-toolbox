@@ -151,31 +151,6 @@ go test -race -v ./cmd/... ./internal/...
 
    Be sure to set the timeout to a reasonable value for your tests.
 
-## Link Checking and Fixing with Lychee
-
-We use **[lychee](https://github.com/lycheeverse/lychee-action)** for repository link checks.
-
-* To run the checker **locally**, see the [command-line usage guide](https://github.com/lycheeverse/lychee?tab=readme-ov-file#commandline-usage).
-
-
-
-###  Fixing Broken Links
-
-1.  **Update the Link:** Correct the broken URL or update the content where it is used.
-2.  **Ignore the Link:** If you can't fix the link (e.g., due to **external rate-limits** or if it's a **local-only URL**), tell Lychee to **ignore** it.
-
-    * List **regular expressions** or **direct links** in the **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/main/.lycheeignore)** file, one entry per line.
-    * **Always add a comment** explaining **why** the link is being skipped to prevent link rot.
-
-    * **Example `.lycheeignore`:**
-       ```text
-       # These are email addresses, not standard web URLs, and usually cause check failures.
-       ^mailto:.*
-       ```
-    * Best practice for ignoring is to **permanently skip** specific links from checking, add them to the **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/link-checker-workflow/.lycheeignore)** file.
-
-> **Note:** Local links and directory changes work differently on GitHub than on the docsite, you must ensure fixes pass the **GitHub check** and also work with **`hugo server`**. If a link works locally but fails the GitHub check (e.g., a docsite-only relative path), you **must ignore it** in `.lycheeignore` and document the reason.
-
 #### Running on Pull Requests
 
 * **Internal Contributors:** Testing workflows should trigger automatically.
@@ -232,6 +207,27 @@ variables for each source.
 * SQLite -  setup in the integration test, where we create a temporary database
   file
 
+## Link Checking and Fixing with Lychee
+
+We use **[lychee](https://github.com/lycheeverse/lychee-action)** for repository link checks.
+
+* To run the checker **locally**, see the [command-line usage guide](https://github.com/lycheeverse/lychee?tab=readme-ov-file#commandline-usage).
+
+
+
+###  Fixing Broken Links
+
+1.  **Update the Link:** Correct the broken URL or update the content where it is used.
+2.  **Ignore the Link:** If you can't fix the link (e.g., due to **external rate-limits** or if it's a **local-only URL**), tell Lychee to **ignore** it.
+
+    * List **regular expressions** or **direct links** in the **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/main/.lycheeignore)** file, one entry per line.
+    * **Always add a comment** explaining **why** the link is being skipped to prevent link rot. **Example `.lycheeignore`:**
+       ```text
+       # These are email addresses, not standard web URLs, and usually cause check failures.
+       ^mailto:.*
+       ```
+
+> **Note:** Local links and directory changes work differently on GitHub than on the docsite, you must ensure fixes pass the **GitHub check** and also work with **`hugo server`**.
 ### Other GitHub Checks
 
 * License header check (`.github/header-checker-lint.yml`) - Ensures files have
