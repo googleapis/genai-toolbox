@@ -1188,7 +1188,7 @@ func RunPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth, user
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
 			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "non_existent_table"}`)),
 			wantStatusCode: http.StatusOK,
-			want:           `null`,
+			want:           `[]`,
 		},
 		{
 			name:           "invoke list_tables with one existing and one non-existent table",
@@ -2177,7 +2177,7 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 			name:           "invoke list_tables with non-existent table",
 			requestBody:    bytes.NewBufferString(`{"table_names": "non_existent_table"}`),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []objectDetails{},
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -2846,7 +2846,7 @@ func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
 			requestBody:    `{"table_names": "non_existent_table"}`,
 			wantStatusCode: http.StatusOK,
-			want:           `null`,
+			want:           `[]`,
 		},
 		{
 			name:           "invoke list_tables with one existing and one non-existent table",
