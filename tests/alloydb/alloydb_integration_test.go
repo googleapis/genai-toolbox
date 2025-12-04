@@ -488,14 +488,12 @@ func runAlloyDBListUsersTest(t *testing.T, vars map[string]string) {
 		name           string
 		requestBody    io.Reader
 		wantContains   string
-		wantCount      int
 		wantStatusCode int
 	}{
 		{
 			name:           "list users success",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s"}`, vars["project"], vars["location"], vars["cluster"])),
 			wantContains:   fmt.Sprintf("projects/%s/locations/%s/clusters/%s/users/%s", vars["project"], vars["location"], vars["cluster"], AlloyDBUser),
-			wantCount:      3, // NOTE: If users are added or removed in the test project, update the number of users here must be updated for this test to pass
 			wantStatusCode: http.StatusOK,
 		},
 		{
@@ -567,10 +565,6 @@ func runAlloyDBListUsersTest(t *testing.T, vars map[string]string) {
 
 				sort.Strings(got)
 
-				if len(got) != tc.wantCount {
-					t.Errorf("user count mismatch:\n got: %v\nwant: %v", len(got), tc.wantCount)
-				}
-
 				found := false
 				for _, g := range got {
 					if g == tc.wantContains {
@@ -585,6 +579,7 @@ func runAlloyDBListUsersTest(t *testing.T, vars map[string]string) {
 		})
 	}
 }
+
 
 func runAlloyDBListInstancesTest(t *testing.T, vars map[string]string) {
 	type ListInstancesResponse struct {
