@@ -1037,6 +1037,10 @@ List and filter Serverless Spark batches.&lt;/li>
 Get a Serverless Spark batch.&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/tools/serverless-spark/serverless-spark-cancel-batch/">&lt;code>serverless-spark-cancel-batch&lt;/code>&lt;/a>
 Cancel a running Serverless Spark batch operation.&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/tools/serverless-spark/serverless-spark-create-pyspark-batch/">&lt;code>serverless-spark-create-pyspark-batch&lt;/code>&lt;/a>
+Create a Serverless Spark PySpark batch operation.&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/tools/serverless-spark/serverless-spark-create-spark-batch/">&lt;code>serverless-spark-create-spark-batch&lt;/code>&lt;/a>
+Create a Serverless Spark Java batch operation.&lt;/li>
 &lt;/ul>
 &lt;h2 id="requirements">Requirements&lt;/h2>
 &lt;h3 id="iam-permissions">IAM Permissions&lt;/h3>
