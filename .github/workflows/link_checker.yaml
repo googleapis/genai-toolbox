@@ -47,7 +47,7 @@ jobs:
           debug: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-# This step only runs if the 'lychee_check' step fails, ensuring the 
+      # This step only runs if the 'lychee_check' step fails, ensuring the 
       # context note only appears when the developer needs to troubleshoot.
       - name: Display Link Context Note on Failure
         if: ${{ failure() }}
