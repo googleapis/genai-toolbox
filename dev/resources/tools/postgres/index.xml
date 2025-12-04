@@ -255,7 +255,16 @@ support any input parameter.&lt;/p>
 &lt;/ul>
 &lt;p>This tool identifies all locks held by active processes showing the process ID, user, query text, and an aggregated list of all transactions and specific locks (relation, mode, grant status) associated with each process.&lt;/p>
 &lt;h2 id="query">Query&lt;/h2>
-&lt;p>The tool aggregates locks per backend (process) and returns the concatenated transaction ids and lock entries. The SQL used by the tool looks like:&lt;/p></description></item><item><title>postgres-list-query-stats</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-query-stats/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-query-stats/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The tool aggregates locks per backend (process) and returns the concatenated transaction ids and lock entries. The SQL used by the tool looks like:&lt;/p></description></item><item><title>postgres-list-publication-tables</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-publication-tables/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-publication-tables/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>postgres-list-publication-tables&lt;/code> tool lists all publication tables in the database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/alloydb-pg/">alloydb-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/cloud-sql-pg/">cloud-sql-postgres&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/postgres/">postgres&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>postgres-list-publication-tables&lt;/code> lists detailed information as JSON for publication tables. A publication table in PostgreSQL is a
+table that is explicitly included as a source for replication within a publication (a set of changes generated from a table or group
+of tables) as part of the logical replication feature. The tool takes the following input parameters:&lt;/p></description></item><item><title>postgres-list-query-stats</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-query-stats/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/postgres/postgres-list-query-stats/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>postgres-list-query-stats&lt;/code> tool retrieves query statistics from the
 &lt;code>pg_stat_statements&lt;/code> extension in a PostgreSQL database. It provides detailed
 performance metrics for executed queries. It&amp;rsquo;s compatible with any of the following

@@ -6385,6 +6385,9 @@ cluster][alloydb-free-trial].
 - [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
   List cardinality of columns in a table in a PostgreSQL database.
 
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
@@ -7293,6 +7296,9 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
   List cardinality of columns in a table in a PostgreSQL database.
+
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -8966,6 +8972,9 @@ reputation for reliability, feature robustness, and performance.
 
 - [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
   List cardinality of columns in a table in a PostgreSQL database.
+
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -12415,6 +12424,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
 
 ## AlloyDB Postgres Admin
 
@@ -12592,6 +12602,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -12897,6 +12908,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
 
 ## Google Cloud Serverless for Apache Spark
 
