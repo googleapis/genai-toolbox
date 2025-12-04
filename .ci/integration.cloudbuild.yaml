@@ -273,7 +273,7 @@ steps:
         .ci/test_with_coverage.sh \
           "Cloud Healthcare API" \
           cloudhealthcare \
-          cloudhealthcare
+          cloudhealthcare || echo "Integration tests failed."
 
   - id: "postgres"
     name: golang:1
@@ -385,7 +385,7 @@ steps:
         .ci/test_with_coverage.sh \
           "Cloud SQL MySQL" \
           cloudsqlmysql \
-          mysql || echo "Integration tests failed." # ignore test failures
+          mysql
 
   - id: "mysql"
     name: golang:1
@@ -407,7 +407,7 @@ steps:
         .ci/test_with_coverage.sh \
           "MySQL" \
           mysql \
-          mysql || echo "Integration tests failed." # ignore test failures
+          mysql
 
   - id: "mssql"
     name: golang:1

@@ -9,63 +9,24 @@ An editor configured to use the Dataplex MCP server can use its AI capabilities 
 - **Search Catalog** - Search for entries in Dataplex Catalog
 - **Explore Metadata** - Lookup specific entries and search aspect types
 
-## Installation and Setup
+## Prerequisites
 
-### Prerequisites
-
-*   Download and install [MCP Toolbox](https://github.com/googleapis/genai-toolbox):
-  1.  **Download the Toolbox binary**:
-      Download the latest binary for your operating system and architecture from the storage bucket. Check the [releases page](https://github.com/googleapis/genai-toolbox/releases) for OS and CPU architecture support:
-      `https://storage.googleapis.com/genai-toolbox/v0.21.0/<os>/<arch>/toolbox`
-      *   Replace `<os>` with `linux`, `darwin` (macOS), or `windows`.
-      *   Replace `<arch>` with `amd64` (Intel) or `arm64` (Apple Silicon).
-      
-      <!-- {x-release-please-start-version} -->
-      ```
-      curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
-      ```
-      <!-- {x-release-please-end} -->
-  2.  **Make it executable**:
-      ```bash
-      chmod +x toolbox
-      ```
-
-  3.  **Add the binary to $PATH in `.~/bash_profile`**:
-      ```bash
-      export PATH=$PATH:/path/to/toolbox
-      ```
-    
-**Note:** You may need to restart Antigravity for changes to take effect. 
-Windows OS users will need to follow one of the Windows-specific methods.
-
+*   [Node.js](https://nodejs.org/) installed.
 *   A Google Cloud project with the **Dataplex API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
 *   IAM Permissions:
     *   Dataplex Viewer (`roles/dataplex.viewer`) or equivalent permissions to read catalog entries.
 
-### Configuration
+## Install & Configuration
 
-The MCP server is configured using environment variables.
+1. In the Antigravity MCP Store, click the "Install" button.
 
-```bash
-export DATAPLEX_PROJECT="<your-gcp-project-id>"
-```
+2. Add the required inputs in the configuration pop-up, then click "Save". You can update this configuration at any time in the "Configure" tab.
 
-Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
+You'll now be able to see all enabled tools in the "Tools" tab.
 
-```json
-{
-  "mcpServers": {
-    "dataplex": {
-      "command": "toolbox",
-      "args": ["--prebuilt", "dataplex", "--stdio"],
-      "env": {
-        "DATAPLEX_PROJECT": "your-project-id"
-      }
-    }
-  }
-}
-```
+> [!NOTE]
+> If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure exclusions for Microsoft Defender Antivirus](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-exclusions-microsoft-defender-antivirus?view=o365-worldwide) for more details.
 
 ## Usage
 
@@ -78,11 +39,35 @@ Once configured, the MCP server will automatically provide Dataplex capabilities
 
 The Dataplex MCP server provides the following tools:
 
-| Tool Name | Description |
-| :--- | :--- |
-| `search_entries` | Search for entries in Dataplex Catalog. |
-| `lookup_entry` | Retrieve a specific entry from Dataplex Catalog. |
-| `search_aspect_types` | Find aspect types relevant to the query. |
+| Tool Name             | Description                                      |
+|:----------------------|:-------------------------------------------------|
+| `search_entries`      | Search for entries in Dataplex Catalog.          |
+| `lookup_entry`        | Retrieve a specific entry from Dataplex Catalog. |
+| `search_aspect_types` | Find aspect types relevant to the query.         |
+
+## Custom MCP Server Configuration
+
+The MCP server is configured using environment variables.
+
+```bash
+export DATAPLEX_PROJECT="<your-gcp-project-id>"
+```
+
+Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI, `mcp_config.json` for Antigravity):
+
+```json
+{
+  "mcpServers": {
+    "dataplex": {
+      "command": "npx",
+      "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "dataplex", "--stdio"],
+      "env": {
+        "DATAPLEX_PROJECT": "your-project-id"
+      }
+    }
+  }
+}
+```
 
 ## Documentation
 

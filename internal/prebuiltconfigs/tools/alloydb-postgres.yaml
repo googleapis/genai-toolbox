@@ -192,6 +192,14 @@ tools:
         kind: postgres-list-triggers
         source: alloydb-pg-source
 
+    list_query_stats:
+        kind: postgres-list-query-stats
+        source: alloydb-pg-source
+
+    get_column_cardinality:
+        kind: postgres-get-column-cardinality
+        source: alloydb-pg-source
+
 toolsets:
     alloydb_postgres_database_tools:
         - execute_sql
@@ -214,4 +222,5 @@ toolsets:
         - long_running_transactions
         - list_locks
         - replication_stats
-        
+        - list_query_stats
+        - get_column_cardinality

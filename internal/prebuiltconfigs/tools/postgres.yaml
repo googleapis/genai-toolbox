@@ -193,6 +193,14 @@ tools:
         kind: postgres-list-sequences
         source: postgresql-source
 
+    list_query_stats:
+        kind: postgres-list-query-stats
+        source: postgresql-source
+
+    get_column_cardinality:
+        kind: postgres-get-column-cardinality
+        source: postgresql-source
+
 toolsets:
     postgres_database_tools:
         - execute_sql
@@ -215,3 +223,6 @@ toolsets:
         - long_running_transactions
         - list_locks
         - replication_stats
+        - list_query_stats
+        - get_column_cardinality
+

@@ -163,9 +163,9 @@ To install Toolbox as a binary:
 > To install Toolbox as a binary on Windows (AMD64):
 >
 > ```powershell
-> # see releases page for other versions
-> $VERSION = "0.21.0"
-> Invoke-WebRequest -Uri "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe" -OutFile "toolbox.exe"
+> :: see releases page for other versions
+> set VERSION=0.21.0
+> curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
 > ```
 >
 > </details>
@@ -513,6 +513,36 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     // Use these tools in your Genkit applications
     const tools = toolboxTools.map(getTool);
     ```
+
+  </details>
+  <details>
+    <summary>ADK</summary>
+
+1. Install [Toolbox ADK SDK][toolbox-adk-js]:
+
+    ```bash
+    npm install @toolbox-sdk/adk
+    ```
+
+2. Load tools:
+
+    ```javascript
+    import { ToolboxClient } from '@toolbox-sdk/adk';
+
+    // update the url to point to your server
+    const URL = 'http://127.0.0.1:5000';
+    let client = new ToolboxClient(URL);
+
+    // these tools can be passed to your application!
+    const tools = await client.loadToolset('toolsetName');
+    ```
+
+    For more detailed instructions on using the Toolbox ADK SDK, see the
+    [project's README][toolbox-adk-js-readme].
+
+    [toolbox-adk-js]: https://www.npmjs.com/package/@toolbox-sdk/adk
+    [toolbox-adk-js-readme]:
+       https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-adk/README.md
 
   </details>
 </details>

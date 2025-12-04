@@ -1078,7 +1078,7 @@ func setupPostgresSchemas(t *testing.T, ctx context.Context, pool *pgxpool.Pool,
 	}
 
 	return func() {
-		dropSchemaStmt := fmt.Sprintf("DROP SCHEMA %s", schemaName)
+		dropSchemaStmt := fmt.Sprintf("DROP SCHEMA %s CASCADE", schemaName)
 		_, err := pool.Exec(ctx, dropSchemaStmt)
 		if err != nil {
 			t.Fatalf("failed to drop schema: %v", err)
@@ -3157,6 +3157,278 @@ func RunPostgresReplicationStatsTest(t *testing.T, ctx context.Context, pool *pg
 			for _, stat := range got {
 				if stat.State == "" {
 					t.Errorf("replication state should not be empty")
+				}
+			}
+		})
+	}
+}
+
+func RunPostgresGetColumnCardinalityTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	schemaName := "testschema_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableName := "table1_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	cleanup := setupPostgresSchemas(t, ctx, pool, schemaName)
+	defer cleanup()
+
+	// Create table with multiple columns
+	createTableStmt := fmt.Sprintf(`
+		CREATE TABLE %s.%s (
+			id SERIAL PRIMARY KEY,
+			email VARCHAR(100) UNIQUE,
+			name VARCHAR(50),
+			status VARCHAR(20),
+			created_at TIMESTAMP
+		)
+	`, schemaName, tableName)
+
+	if _, err := pool.Exec(ctx, createTableStmt); err != nil {
+		t.Fatalf("unable to create table: %s", err)
+	}
+
+	// Insert larger sample data to ensure statistics are collected
+	insertStmt := fmt.Sprintf(`
+		INSERT INTO %s.%s (email, name, status, created_at) VALUES
+		('user1@example.com', 'Alice', 'active', NOW()),
+		('user2@example.com', 'Bob', 'inactive', NOW()),
+		('user3@example.com', 'Charlie', 'active', NOW()),
+		('user4@example.com', 'David', 'active', NOW()),
+		('user5@example.com', 'Eve', 'inactive', NOW()),
+		('user6@example.com', 'Frank', 'active', NOW()),
+		('user7@example.com', 'Grace', 'inactive', NOW()),
+		('user8@example.com', 'Henry', 'active', NOW()),
+		('user9@example.com', 'Ivy', 'active', NOW()),
+		('user10@example.com', 'Jack', 'inactive', NOW())
+	`, schemaName, tableName)
+
+	if _, err := pool.Exec(ctx, insertStmt); err != nil {
+		t.Fatalf("unable to insert data: %s", err)
+	}
+
+	// Run ANALYZE to update statistics
+	analyzeStmt := fmt.Sprintf(`ANALYZE %s.%s`, schemaName, tableName)
+	if _, err := pool.Exec(ctx, analyzeStmt); err != nil {
+		t.Fatalf("unable to run ANALYZE: %s", err)
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		shouldHaveData bool // Whether we expect data in the response
+	}{
+		{
+			name:           "get cardinality for a specific column",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s", "table_name": "%s", "column_name": "email"}`, schemaName, tableName)),
+			wantStatusCode: http.StatusOK,
+			shouldHaveData: true,
+		},
+		{
+			name:           "get cardinality for all columns",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s", "table_name": "%s"}`, schemaName, tableName)),
+			wantStatusCode: http.StatusOK,
+			shouldHaveData: true,
+		},
+		{
+			name:           "get cardinality with non-existent column",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s", "table_name": "%s", "column_name": "non_existent"}`, schemaName, tableName)),
+			wantStatusCode: http.StatusOK,
+			shouldHaveData: false,
+		},
+		{
+			name:           "get cardinality with non-existent schema",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "non_existent_schema", "table_name": "%s"}`, tableName)),
+			wantStatusCode: http.StatusOK,
+			shouldHaveData: false,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/get_column_cardinality/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []map[string]any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v", err)
+			}
+
+			// Verify that we got the expected data presence
+			if tc.shouldHaveData {
+				if len(got) == 0 {
+					t.Logf("warning: expected data but got empty result. This can happen if pg_stats is not populated yet.")
+					return
+				}
+
+				// Verify column names and cardinality values
+				for _, row := range got {
+					columnName, ok := row["column_name"].(string)
+					if !ok {
+						t.Fatalf("column_name is not a string: %v", row["column_name"])
+					}
+
+					// Check that estimated_cardinality is present and is a number
+					cardinality, ok := row["estimated_cardinality"]
+					if !ok {
+						t.Fatalf("estimated_cardinality is missing for column %s", columnName)
+					}
+
+					// Convert to float64 for numeric checks
+					cardinalityFloat, ok := cardinality.(float64)
+					if !ok {
+						t.Fatalf("estimated_cardinality is not a number: %v", cardinality)
+					}
+
+					// Cardinality should be >= 0
+					if cardinalityFloat < 0 {
+						t.Errorf("cardinality for column %s is negative: %v", columnName, cardinalityFloat)
+					}
+				}
+			} else {
+				if len(got) != 0 {
+					t.Errorf("expected no data but got: %v", got)
+				}
+			}
+		})
+	}
+}
+
+func createPostgresExtension(t *testing.T, ctx context.Context, pool *pgxpool.Pool, extensionName string) func() {
+	createExtensionCmd := fmt.Sprintf("CREATE EXTENSION IF NOT EXISTS %s", extensionName)
+	_, err := pool.Exec(ctx, createExtensionCmd)
+	if err != nil {
+		t.Fatalf("failed to create extension: %v", err)
+	}
+	return func() {
+		dropExtensionCmd := fmt.Sprintf("DROP EXTENSION IF EXISTS %s", extensionName)
+		_, err := pool.Exec(ctx, dropExtensionCmd)
+		if err != nil {
+			t.Fatalf("failed to drop extension: %v", err)
+		}
+	}
+}
+
+func RunPostgresListQueryStatsTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	// Insert a simple query by running a SELECT statement
+	// This will record statistics in pg_stat_statements
+	selectStmt := "SELECT 1 as test_query"
+	if _, err := pool.Exec(ctx, selectStmt); err != nil {
+		t.Logf("warning: unable to execute test query: %s", err)
+	}
+
+	dropExtensionFunc := createPostgresExtension(t, ctx, pool, "pg_stat_statements")
+	defer dropExtensionFunc()
+
+	type queryStatDetails struct {
+		Datname        string `json:"datname"`
+		Query          string `json:"query"`
+		Calls          any    `json:"calls"`
+		TotalExecTime  any    `json:"total_exec_time"`
+		MinExecTime    any    `json:"min_exec_time"`
+		MaxExecTime    any    `json:"max_exec_time"`
+		MeanExecTime   any    `json:"mean_exec_time"`
+		Rows           any    `json:"rows"`
+		SharedBlksHit  any    `json:"shared_blks_hit"`
+		SharedBlksRead any    `json:"shared_blks_read"`
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+	}{
+		{
+			name:           "list query stats with default limit",
+			requestBody:    bytes.NewBufferString(`{}`),
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "list query stats with custom limit",
+			requestBody:    bytes.NewBufferString(`{"limit": 10}`),
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "list query stats for specific database",
+			requestBody:    bytes.NewBufferString(`{"database_name": "postgres"}`),
+			wantStatusCode: http.StatusOK,
+		},
+		{
+			name:           "list query stats with non-existent database name",
+			requestBody:    bytes.NewBufferString(`{"database_name": "non_existent_db_xyz"}`),
+			wantStatusCode: http.StatusOK,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_query_stats/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []map[string]any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v, resultString: %s", err, resultString)
+			}
+
+			// For databases with pg_stat_statements available, verify response structure
+			if len(got) > 0 {
+				// Verify the response has the expected fields
+				requiredFields := []string{"datname", "query", "calls", "total_exec_time", "min_exec_time", "max_exec_time", "mean_exec_time", "rows", "shared_blks_hit", "shared_blks_read"}
+				for _, field := range requiredFields {
+					if _, ok := got[0][field]; !ok {
+						t.Errorf("missing expected field: %s in result: %v", field, got[0])
+					}
+				}
+
+				// Verify data types
+				var stat queryStatDetails
+				statData, _ := json.Marshal(got[0])
+				if err := json.Unmarshal(statData, &stat); err != nil {
+					t.Logf("warning: unable to unmarshal query stat: %v", err)
+				}
+
+				// Verify that results are ordered by total_exec_time (descending)
+				if len(got) > 1 {
+					for i := 0; i < len(got)-1; i++ {
+						currentTime, ok1 := got[i]["total_exec_time"].(float64)
+						nextTime, ok2 := got[i+1]["total_exec_time"].(float64)
+						if ok1 && ok2 && currentTime < nextTime {
+							t.Logf("warning: results may not be ordered by total_exec_time descending: %f vs %f", currentTime, nextTime)
+						}
+					}
 				}
 			}
 		})

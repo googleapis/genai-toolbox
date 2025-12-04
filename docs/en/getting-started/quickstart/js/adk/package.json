@@ -1,0 +1,17 @@
+{
+  "name": "adk",
+  "version": "1.0.0",
+  "description": "",
+  "main": "quickstart.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/adk": "^0.1.3",
+    "@toolbox-sdk/adk": "^0.1.5"
+  }
+}

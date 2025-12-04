@@ -15,7 +15,6 @@
 assign_issues:
   - Yuan325
   - duwenxin99
-  - averikitsch
   - anubhav756
   - twishabansal
   - dishaprakash
@@ -62,8 +61,7 @@ assign_issues_by:
     - 'googleapis/toolbox-spanner'
 assign_prs:
   - Yuan325
-  - duwenxin99     
-  - averikitsch 
+  - duwenxin99
 assign_prs_by:
   - labels:
     - 'product: alloydb'

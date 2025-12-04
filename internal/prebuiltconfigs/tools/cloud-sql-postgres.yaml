@@ -194,6 +194,14 @@ tools:
         kind: postgres-list-sequences
         source: cloudsql-pg-source
 
+    list_query_stats:
+        kind: postgres-list-query-stats
+        source: cloudsql-pg-source
+
+    get_column_cardinality:
+        kind: postgres-get-column-cardinality
+        source: cloudsql-pg-source
+
 toolsets:
     cloud_sql_postgres_database_tools:
         - execute_sql
@@ -216,3 +224,5 @@ toolsets:
         - long_running_transactions
         - list_locks
         - replication_stats
+        - list_query_stats
+        - get_column_cardinality
