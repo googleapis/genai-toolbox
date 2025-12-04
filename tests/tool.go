@@ -1562,14 +1562,14 @@ func RunPostgresListTriggersTest(t *testing.T, ctx context.Context, pool *pgxpoo
 		requestBody    io.Reader
 		wantStatusCode int
 		want           []map[string]any
-		compareSubset bool
+		compareSubset  bool
 	}{
 		{
 			name:           "list all triggers (expecting the one we created)",
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
 			wantStatusCode: http.StatusOK,
 			want:           []map[string]any{wantTrigger},
-			compareSubset: true, // avoid test flakiness in race condition
+			compareSubset:  true, // avoid test flakiness in race condition
 		},
 		{
 			name:           "filter by trigger_name",
