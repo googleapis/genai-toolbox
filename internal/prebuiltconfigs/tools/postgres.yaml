@@ -201,6 +201,10 @@ tools:
         kind: postgres-get-column-cardinality
         source: postgresql-source
 
+    list_table_stats:
+        kind: postgres-list-table-stats
+        source: postgresql-source
+
 toolsets:
     postgres_database_tools:
         - execute_sql
@@ -225,4 +229,5 @@ toolsets:
         - replication_stats
         - list_query_stats
         - get_column_cardinality
+        - list_table_stats
 

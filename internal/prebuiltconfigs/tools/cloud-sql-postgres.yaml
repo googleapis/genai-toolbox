@@ -201,6 +201,10 @@ tools:
     get_column_cardinality:
         kind: postgres-get-column-cardinality
         source: cloudsql-pg-source
+    
+    list_table_stats:
+        kind: postgres-list-table-stats
+        source: cloudsql-pg-source
 
 toolsets:
     cloud_sql_postgres_database_tools:
@@ -226,3 +230,4 @@ toolsets:
         - replication_stats
         - list_query_stats
         - get_column_cardinality
+        - list_table_stats
