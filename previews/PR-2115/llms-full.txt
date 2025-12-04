@@ -6385,6 +6385,12 @@ cluster][alloydb-free-trial].
 - [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
   List cardinality of columns in a table in a PostgreSQL database.
 
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
+
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
+  List tablespaces in an AlloyDB for PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
@@ -7293,6 +7299,12 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
   List cardinality of columns in a table in a PostgreSQL database.
+
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
+
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
+  List tablespaces in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -8967,6 +8979,12 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
   List cardinality of columns in a table in a PostgreSQL database.
 
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
+
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
+  List tablespaces in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)
@@ -9129,6 +9147,10 @@ Apache Spark.
   Get a Serverless Spark batch.
 - [`serverless-spark-cancel-batch`](../tools/serverless-spark/serverless-spark-cancel-batch.md)
   Cancel a running Serverless Spark batch operation.
+- [`serverless-spark-create-pyspark-batch`](../tools/serverless-spark/serverless-spark-create-pyspark-batch.md)
+  Create a Serverless Spark PySpark batch operation.
+- [`serverless-spark-create-spark-batch`](../tools/serverless-spark/serverless-spark-create-spark-batch.md)
+  Create a Serverless Spark Java batch operation.
 
 ## Requirements
 
@@ -10264,6 +10286,8 @@ Tools that work with Google Cloud Serverless for Apache Spark Sources.
 - [serverless-spark-get-batch](./serverless-spark-get-batch.md)
 - [serverless-spark-list-batches](./serverless-spark-list-batches.md)
 - [serverless-spark-cancel-batch](./serverless-spark-cancel-batch.md)
+- [serverless-spark-create-pyspark-batch](./serverless-spark-create-pyspark-batch.md)
+- [serverless-spark-create-spark-batch](./serverless-spark-create-spark-batch.md)
 
 
 # SingleStore
@@ -12409,6 +12433,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
+    *   `list_tablespaces`: Lists tablespaces in the database.
 
 ## AlloyDB Postgres Admin
 
@@ -12586,6 +12612,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
+    *   `list_tablespaces`: Lists tablespaces in the database.
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -12891,6 +12919,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
+    *   `list_tablespaces`: Lists tablespaces in the database.
 
 ## Google Cloud Serverless for Apache Spark
 
