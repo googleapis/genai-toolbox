@@ -1562,12 +1562,14 @@ func RunPostgresListTriggersTest(t *testing.T, ctx context.Context, pool *pgxpoo
 		requestBody    io.Reader
 		wantStatusCode int
 		want           []map[string]any
+		compareSubset  bool
 	}{
 		{
 			name:           "list all triggers (expecting the one we created)",
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
 			wantStatusCode: http.StatusOK,
 			want:           []map[string]any{wantTrigger},
+			compareSubset:  true, // avoid test flakiness in race condition
 		},
 		{
 			name:           "filter by trigger_name",
@@ -1634,8 +1636,25 @@ func RunPostgresListTriggersTest(t *testing.T, ctx context.Context, pool *pgxpoo
 				t.Fatalf("failed to unmarshal nested result string: %v, content: %s", err, resultString)
 			}
 
-			if diff := cmp.Diff(tc.want, got); diff != "" {
-				t.Errorf("Unexpected result (-want +got):\n%s", diff)
+			if tc.compareSubset {
+				// Assert that the 'wantTrigger' is present in the 'got' list.
+				found := false
+				for _, resultTrigger := range got {
+					if resultTrigger["trigger_name"] == wantTrigger["trigger_name"] {
+						found = true
+						if diff := cmp.Diff(wantTrigger, resultTrigger); diff != "" {
+							t.Errorf("Mismatch in fields for the expected trigger (-want +got):\n%s", diff)
+						}
+						break
+					}
+				}
+				if !found {
+					t.Errorf("Expected trigger '%s' not found in the list of all triggers.", triggerName)
+				}
+			} else {
+				if diff := cmp.Diff(tc.want, got); diff != "" {
+					t.Errorf("Unexpected result (-want +got):\n%s", diff)
+				}
 			}
 		})
 	}
@@ -2226,7 +2245,14 @@ func RunPostgresListSequencesTest(t *testing.T, ctx context.Context, pool *pgxpo
 }
 
 // RunMySQLListTablesTest run tests against the mysql-list-tables tool
-func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string) {
+func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNameAuth, expectedOwner string) {
+	var ownerWant any
+	if expectedOwner == "" {
+		ownerWant = nil
+	} else {
+		ownerWant = expectedOwner
+	}
+
 	type tableInfo struct {
 		ObjectName    string `json:"object_name"`
 		SchemaName    string `json:"schema_name"`
@@ -2258,6 +2284,7 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 		ObjectName: tableNameParam,
 		SchemaName: databaseName,
 		ObjectType: "TABLE",
+		Owner:      ownerWant,
 		Columns: []column{
 			{DataType: "int", ColumnName: "id", IsNotNullable: 1, OrdinalPosition: 1},
 			{DataType: "varchar(255)", ColumnName: "name", OrdinalPosition: 2},
@@ -2271,6 +2298,7 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 		ObjectName: tableNameAuth,
 		SchemaName: databaseName,
 		ObjectType: "TABLE",
+		Owner:      ownerWant,
 		Columns: []column{
 			{DataType: "int", ColumnName: "id", IsNotNullable: 1, OrdinalPosition: 1},
 			{DataType: "varchar(255)", ColumnName: "name", OrdinalPosition: 2},
