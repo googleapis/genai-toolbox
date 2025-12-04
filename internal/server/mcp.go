@@ -205,7 +205,7 @@ func (s *stdioSession) readLine(ctx context.Context) (string, error) {
 }
 
 // write writes to stdout with response to client
-func (s *stdioSession) write(ctx context.Context, response any) error {
+func (s *stdioSession) write(_ context.Context, response any) error {
 	res, _ := json.Marshal(response)
 
 	_, err := fmt.Fprintf(s.writer, "%s\n", res)
