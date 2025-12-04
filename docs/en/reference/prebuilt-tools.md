@@ -52,6 +52,9 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_sequences`: List sequences in a PostgreSQL database.
     *   `list_publication_tables`: List publication tables in a PostgreSQL database.
     *   `list_tablespaces`: Lists tablespaces in the database.
+    *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
+    *   `list_database_stats`: Lists the key performance and activity statistics for
+        each database in the AlloyDB instance.
 
 ## AlloyDB Postgres Admin
 
@@ -231,6 +234,9 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_sequences`: List sequences in a PostgreSQL database.
     *   `list_publication_tables`: List publication tables in a PostgreSQL database.
     *   `list_tablespaces`: Lists tablespaces in the database.
+    *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
+    *   `list_database_stats`: Lists the key performance and activity statistics for
+        each database in the postgreSQL instance.
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -538,6 +544,9 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_sequences`: List sequences in a PostgreSQL database.
     *   `list_publication_tables`: List publication tables in a PostgreSQL database.
     *   `list_tablespaces`: Lists tablespaces in the database.
+    *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
+    *   `list_database_stats`: Lists the key performance and activity statistics for
+        each database in the PostgreSQL server.
 
 ## Google Cloud Serverless for Apache Spark
 
