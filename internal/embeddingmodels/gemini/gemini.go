@@ -29,9 +29,9 @@ const EmbeddingModelKind = "gemini"
 var _ embeddingmodels.EmbeddingModelConfig = Config{}
 
 type Config struct {
-	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
-	Model 	 string `yaml:"model" validate:"required"`
+	Name   string `yaml:"name" validate:"required"`
+	Kind   string `yaml:"kind" validate:"required"`
+	Model  string `yaml:"model" validate:"required"`
 	ApiKey string `yaml:"apiKey" validate:"required"`
 }
 
@@ -45,10 +45,10 @@ func (cfg Config) Initialize() (embeddingmodels.EmbeddingModel, error) {
 	ctx := context.Background()
 
 	// Create new Gemini API client
-	client, err := genai.NewClient(ctx, nil)
-    if err != nil {
-        log.Fatal(err)
-    }
+	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: cfg.ApiKey})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	m := &EmbeddingModel{
 		Config: cfg,
@@ -74,27 +74,27 @@ func (m EmbeddingModel) ToConfig() embeddingmodels.EmbeddingModelConfig {
 }
 
 func (m EmbeddingModel) EmbedParameters(ctx context.Context, parameters []string) ([][]float32, error) {
-    logger, err := util.LoggerFromContext(ctx)
-    if err != nil {
-        panic(err)
-    }
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		panic(err)
+	}
 
 	contents := convertStringsToContents(parameters)
 
-    result, err := m.Client.Models.EmbedContent(ctx, m.Model, contents, &genai.EmbedContentConfig{TaskType: "SEMANTIC_SIMILARITY"},)
-    if err != nil {
-        logger.ErrorContext(ctx, "Error calling EmbedContent for model %s: %v", m.Model, err)
-        return nil, err
-    }
-    
-    embeddings := make([][]float32, 0, len(result.Embeddings))
-    for _, embedding := range result.Embeddings {
-        embeddings = append(embeddings, embedding.Values)
-    }
+	result, err := m.Client.Models.EmbedContent(ctx, m.Model, contents, &genai.EmbedContentConfig{TaskType: "SEMANTIC_SIMILARITY"})
+	if err != nil {
+		logger.ErrorContext(ctx, "Error calling EmbedContent for model %s: %v", m.Model, err)
+		return nil, err
+	}
 
-    logger.InfoContext(ctx, "Successfully embedded %d text parameters using model %s", len(parameters), m.Model)
+	embeddings := make([][]float32, 0, len(result.Embeddings))
+	for _, embedding := range result.Embeddings {
+		embeddings = append(embeddings, embedding.Values)
+	}
 
-    return embeddings, nil
+	logger.InfoContext(ctx, "Successfully embedded %d text parameters using model %s", len(parameters), m.Model)
+
+	return embeddings, nil
 }
 
 // convertStringsToContents takes a slice of strings and converts it into a slice of *genai.Content objects.

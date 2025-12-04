@@ -27,5 +27,3 @@ type EmbeddingModel interface {
 	ToConfig() EmbeddingModelConfig
 	EmbedParameters(context.Context, []string) ([][]float32, error)
 }
-
-
