@@ -495,7 +495,7 @@ func runAlloyDBListUsersTest(t *testing.T, vars map[string]string) {
 			name:           "list users success",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s"}`, vars["project"], vars["location"], vars["cluster"])),
 			wantContains:   fmt.Sprintf("projects/%s/locations/%s/clusters/%s/users/%s", vars["project"], vars["location"], vars["cluster"], AlloyDBUser),
-			wantCount:      3, // NOTE: If users are added or removed in the test project, update the number of users here must be updated for this test to pass
+			wantCount:      2, // NOTE: If users are added or removed in the test project, update the number of users here must be updated for this test to pass
 			wantStatusCode: http.StatusOK,
 		},
 		{
