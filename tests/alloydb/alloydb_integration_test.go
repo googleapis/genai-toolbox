@@ -369,7 +369,7 @@ func runAlloyDBListClustersTest(t *testing.T, vars map[string]string) {
 		// fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-ai-nl-testing/postgres", vars["project"]),
 		// fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-pg-testing/postgres", vars["project"]),
 		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-pg-integration-testing",
-		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-ai-nl-testing ",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-ai-nl-testing",
 		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-aip-01",
 		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-integration-testing",
 	}
@@ -383,7 +383,7 @@ func runAlloyDBListClustersTest(t *testing.T, vars map[string]string) {
 		// fmt.Sprintf("projects/%s/locations/us-east4/clusters/colab-testing/postgres", vars["project"]),
 		// "projects/manukarahul-playground/locations/us-central1/clusters/alloydb-integration-testing/postgres",
 		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-pg-integration-testing",
-		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-ai-nl-testing ",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-ai-nl-testing",
 		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-aip-01",
 		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-integration-testing",
 
