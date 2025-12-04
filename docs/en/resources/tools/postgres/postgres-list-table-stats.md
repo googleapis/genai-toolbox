@@ -20,16 +20,6 @@ Compatible sources:
 
 The tool returns a JSON array where each element represents statistics for a table, including scan metrics, row counts, and vacuum history. Results are sorted by sequential scans by default and limited to 50 rows.
 
-## Parameters
-
-| parameter   | type    | required | default | description |
-|-------------|---------|----------|---------|-------------|
-| schema_name | string  | false    | "public" | Optional: A specific schema name to filter by (supports partial matching) |
-| table_name  | string  | false    | null    | Optional: A specific table name to filter by (supports partial matching) |
-| owner       | string  | false    | null    | Optional: A specific owner to filter by (supports partial matching) |
-| sort_by     | string  | false    | null    | Optional: The column to sort by. Valid values: `size`, `dead_rows`, `seq_scan`, `idx_scan` (defaults to `seq_scan`) |
-| limit       | integer | false    | 50      | Optional: The maximum number of results to return |
-
 ## Example
 
 ```yaml
@@ -113,6 +103,16 @@ tools:
   }
 ]
 ```
+
+## Parameters
+
+| parameter   | type    | required | default | description |
+|-------------|---------|----------|---------|-------------|
+| schema_name | string  | false    | "public" | Optional: A specific schema name to filter by (supports partial matching) |
+| table_name  | string  | false    | null    | Optional: A specific table name to filter by (supports partial matching) |
+| owner       | string  | false    | null    | Optional: A specific owner to filter by (supports partial matching) |
+| sort_by     | string  | false    | null    | Optional: The column to sort by. Valid values: `size`, `dead_rows`, `seq_scan`, `idx_scan` (defaults to `seq_scan`) |
+| limit       | integer | false    | 50      | Optional: The maximum number of results to return |
 
 ## Output Fields Reference
 
