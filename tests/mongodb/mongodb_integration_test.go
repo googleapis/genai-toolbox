@@ -444,6 +444,10 @@ func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 func setupMongoDB(t *testing.T, ctx context.Context, database *mongo.Database) func(*testing.T) {
 	collectionName := "test_collection"
 
+	if err := database.Collection(collectionName).Drop(ctx); err != nil {
+		t.Logf("Warning: failed to drop collection before setup: %v", err)
+	}
+
 	documents := []map[string]any{
 		{"_id": 1, "id": 1, "name": "Alice", "email": ServiceAccountEmail},
 		{"_id": 14, "id": 2, "name": "FakeAlice", "email": "fakeAlice@gmail.com"},
