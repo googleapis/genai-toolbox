@@ -34,6 +34,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistdatabasestats"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -2268,6 +2269,302 @@ func RunPostgresListTableSpacesTest(t *testing.T) {
 			// Intentionally not adding the output check as output depends on the postgres instance used where the the functional test runs.
 			// Adding the check will make the test flaky.
 		})
+	}
+}
+
+func RunPostgresListPgSettingsTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	targetSetting := "maintenance_work_mem"
+	var name, setting, unit, shortDesc, source, contextVal string
+
+	// We query the raw pg_settings to get the data needed to reconstruct the logic
+	// defined in your listPgSettingQuery.
+	err := pool.QueryRow(ctx, `
+		SELECT name, setting, unit, short_desc, source, context 
+		FROM pg_settings 
+		WHERE name = $1
+	`, targetSetting).Scan(&name, &setting, &unit, &shortDesc, &source, &contextVal)
+
+	if err != nil {
+		t.Fatalf("Setup failed: could not fetch postgres setting '%s': %v", targetSetting, err)
+	}
+
+	// Replicate the SQL CASE logic for 'requires_restart' field
+	requiresRestart := "No"
+	switch contextVal {
+	case "postmaster":
+		requiresRestart = "Yes"
+	case "sighup":
+		requiresRestart = "No (Reload sufficient)"
+	}
+
+	expectedObject := map[string]interface{}{
+		"name":             name,
+		"current_value":    setting,
+		"unit":             unit,
+		"short_desc":       shortDesc,
+		"source":           source,
+		"requires_restart": requiresRestart,
+	}
+	expectedJSON, _ := json.Marshal([]interface{}{expectedObject})
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           string
+	}{
+		{
+			name:           "invoke list_pg_settings with specific setting",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"setting_name": "%s"}`, targetSetting))),
+			wantStatusCode: http.StatusOK,
+			want:           string(expectedJSON),
+		},
+		{
+			name:           "invoke list_pg_settings with non-existent setting",
+			requestBody:    bytes.NewBuffer([]byte(`{"setting_name": "non_existent_config_xyz"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           `null`,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_pg_settings/invoke"
+			resp, body := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(body, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got, want any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v", err)
+			}
+			if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
+				t.Fatalf("failed to unmarshal want string: %v", err)
+			}
+
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("Unexpected result (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+// RunPostgresDatabaseStatsTest tests the database_stats tool by comparing API results
+// against a direct query to the database.
+func RunPostgresListDatabaseStatsTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	dbName1 := "test_db_stats_1"
+	dbOwner1 := "test_user1"
+	dbName2 := "test_db_stats_2"
+	dbOwner2 := "test_user2"
+
+	cleanup1 := setUpDatabase(t, ctx, pool, dbName1, dbOwner1)
+	defer cleanup1()
+	cleanup2 := setUpDatabase(t, ctx, pool, dbName2, dbOwner2)
+	defer cleanup2()
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		generateWant   func(t *testing.T) interface{}
+	}{
+		{
+			name:           "invoke database_stats filtering by specific database name",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"database_name": "%s"}`, dbName1))),
+			wantStatusCode: http.StatusOK,
+			generateWant: func(t *testing.T) interface{} {
+				return fetchDatabaseStats(t, ctx, pool, &dbName1, false, nil, nil, nil, nil)
+			},
+		},
+		{
+			name:           "invoke database_stats filtering by specific owner",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"database_owner": "%s"}`, dbOwner2))),
+			wantStatusCode: http.StatusOK,
+			generateWant: func(t *testing.T) interface{} {
+				return fetchDatabaseStats(t, ctx, pool, nil, false, &dbOwner2, nil, nil, nil)
+			},
+		},
+		{
+			name:           "filter by tablespace",
+			requestBody:    bytes.NewBuffer([]byte(`{"default_tablespace": "pg_default"}`)),
+			wantStatusCode: http.StatusOK,
+			generateWant: func(t *testing.T) interface{} {
+				pgDefault := "pg_default"
+				return fetchDatabaseStats(t, ctx, pool, nil, false, nil, &pgDefault, nil, nil)
+			},
+		},
+		{
+			name:           "include templates",
+			requestBody:    bytes.NewBuffer([]byte(`{"include_templates": true}`)),
+			wantStatusCode: http.StatusOK,
+			generateWant: func(t *testing.T) interface{} {
+				return fetchDatabaseStats(t, ctx, pool, nil, true, nil, nil, nil, nil)
+			},
+		},
+		{
+			name:           "sort by size (desc)",
+			requestBody:    bytes.NewBuffer([]byte(`{"sort_by": "size"}`)),
+			wantStatusCode: http.StatusOK,
+			generateWant: func(t *testing.T) interface{} {
+				sortSize := "size"
+				return fetchDatabaseStats(t, ctx, pool, nil, false, nil, nil, &sortSize, nil)
+			},
+		},
+		{
+			name:           "sort by commit count (desc)",
+			requestBody:    bytes.NewBuffer([]byte(`{"sort_by": "commit", "limit": 5}`)),
+			wantStatusCode: http.StatusOK,
+			generateWant: func(t *testing.T) interface{} {
+				sortCommit := "commit"
+				limit5 := 5
+				return fetchDatabaseStats(t, ctx, pool, nil, false, nil, nil, &sortCommit, &limit5)
+			},
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_database_stats/invoke"
+			resp, body := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(body, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []map[string]interface{}
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v", err)
+			}
+
+			want := tc.generateWant(t)
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("Unexpected result (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+// fetchDatabaseStats runs the query directly against the DB to create the expected values.
+func fetchDatabaseStats(t *testing.T, ctx context.Context, pool *pgxpool.Pool,
+	filterName *string,
+	includeTemplates bool,
+	filterOwner *string,
+	filterTablespace *string,
+	sortBy *string,
+	limit *int) []map[string]interface{} {
+	rows, err := pool.Query(ctx, postgreslistdatabasestats.ListDatabaseStats, filterName, includeTemplates, filterOwner, filterTablespace, sortBy, limit)
+	if err != nil {
+		t.Fatalf("failed to fetch database stats: %v", err)
+	}
+	defer rows.Close()
+
+	var results []map[string]interface{}
+
+	for rows.Next() {
+		var (
+			rDatabaseName, rDatabaseOwner, rDefaultTablespace string
+			rIsConnectable                                    bool
+			rCacheHitRatio, rRollbackRatio                    float64
+			rBlksRead, rBlksHit, rXactCommit, rXactRollback   int64
+			rRowsReturned, rRowsFetched                       int64
+			rTupInserted, rTupUpdated, rTupDeleted            int64
+			rTempFiles, rTempBytes, rConflicts, rDeadlocks    int64
+			rActiveConnections                                int64
+			rStatsReset                                       any
+			rDatabaseSize                                     int64
+		)
+
+		err := rows.Scan(
+			&rDatabaseName, &rIsConnectable, &rDatabaseOwner, &rDefaultTablespace,
+			&rCacheHitRatio, &rBlksRead, &rBlksHit,
+			&rXactCommit, &rXactRollback, &rRollbackRatio,
+			&rRowsReturned, &rRowsFetched, &rTupInserted, &rTupUpdated, &rTupDeleted,
+			&rTempFiles, &rTempBytes, &rConflicts, &rDeadlocks,
+			&rActiveConnections, &rStatsReset, &rDatabaseSize,
+		)
+		if err != nil {
+			t.Fatalf("failed to scan database stats row: %v", err)
+		}
+
+		rowMap := map[string]interface{}{
+			"database_name":            rDatabaseName,
+			"is_connectable":           rIsConnectable,
+			"database_owner":           rDatabaseOwner,
+			"default_tablespace":       rDefaultTablespace,
+			"cache_hit_ratio_percent":  rCacheHitRatio,
+			"blocks_read_from_disk":    float64(rBlksRead),
+			"blocks_hit_in_cache":      float64(rBlksHit),
+			"xact_commit":              float64(rXactCommit),
+			"xact_rollback":            float64(rXactRollback),
+			"rollback_ratio_percent":   rRollbackRatio,
+			"rows_returned_by_queries": float64(rRowsReturned),
+			"rows_fetched_by_scans":    float64(rRowsFetched),
+			"tup_inserted":             float64(rTupInserted),
+			"tup_updated":              float64(rTupUpdated),
+			"tup_deleted":              float64(rTupDeleted),
+			"temp_files":               float64(rTempFiles),
+			"temp_size_bytes":          float64(rTempBytes),
+			"conflicts":                float64(rConflicts),
+			"deadlocks":                float64(rDeadlocks),
+			"active_connections":       float64(rActiveConnections),
+			"statistics_last_reset":    rStatsReset,
+			"database_size_bytes":      float64(rDatabaseSize),
+		}
+		results = append(results, rowMap)
+	}
+	tempBytes, _ := json.Marshal(results)
+	var normalized []map[string]interface{}
+	_ = json.Unmarshal(tempBytes, &normalized)
+
+	return normalized
+}
+
+func setUpDatabase(t *testing.T, ctx context.Context, pool *pgxpool.Pool, dbName, dbOwner string) func() {
+	_, err := pool.Exec(ctx, fmt.Sprintf("CREATE ROLE %s LOGIN PASSWORD 'password';", dbOwner))
+	if err != nil {
+		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP ROLE %s;", dbOwner))
+		t.Fatalf("failed to create %s: %v", dbOwner, err)
+	}
+	_, err = pool.Exec(ctx, fmt.Sprintf("GRANT %s TO current_user;", dbOwner))
+	if err != nil {
+		t.Fatalf("failed to grant %s to current_user: %v", dbOwner, err)
+	}
+	_, err = pool.Exec(ctx, fmt.Sprintf("CREATE DATABASE %s OWNER %s;", dbName, dbOwner))
+	if err != nil {
+		t.Fatalf("failed to create %s: %v", dbName, err)
+	}
+	return func() {
+		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP DATABASE IF EXISTS %s;", dbName))
+		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", dbOwner))
 	}
 }
 
