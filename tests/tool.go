@@ -2097,9 +2097,7 @@ func RunPostgresListSequencesTest(t *testing.T, ctx context.Context, pool *pgxpo
 }
 
 // RunMySQLListTablesTest run tests against the mysql-list-tables tool
-func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string) {
-	const expectedOwner = "'toolbox-identity'@'%'";
-
+func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNameAuth, expectedOwner string) {
 	type tableInfo struct {
 		ObjectName    string `json:"object_name"`
 		SchemaName    string `json:"schema_name"`
