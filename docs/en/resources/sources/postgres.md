@@ -71,6 +71,9 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
   List publication tables in a PostgreSQL database.
 
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
+  List tablespaces in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)
