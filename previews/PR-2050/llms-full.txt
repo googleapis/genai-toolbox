@@ -297,6 +297,10 @@ let client = new ToolboxClient(URL);
 const toolboxTools = await client.loadToolset('toolsetName');
 {{< /highlight >}}
 
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's
+README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
+
 {{% /tab %}}
 {{% tab header="LangChain/Langraph" lang="en" %}}
 
@@ -320,6 +324,10 @@ const getTool = (toolboxTool) => tool(currTool, {
 // Use these tools in your Langchain/Langraph applications
 const tools = toolboxTools.map(getTool);
 {{< /highlight >}}
+
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's
+README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
 
 {{% /tab %}}
 {{% tab header="Genkit" lang="en" %}}
@@ -356,6 +364,10 @@ const getTool = (toolboxTool) => ai.defineTool({
 const tools = toolboxTools.map(getTool);
 {{< /highlight >}}
 
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's
+README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
+
 {{% /tab %}}
 {{% tab header="LlamaIndex" lang="en" %}}
 
@@ -383,12 +395,32 @@ const tools = toolboxTools.map(getTool);
 
 {{< /highlight >}}
 
-{{% /tab %}}
-{{< /tabpane >}}
-
 For more detailed instructions on using the Toolbox Core SDK, see the
 [project's
 README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
+
+{{% /tab %}}
+{{% tab header="ADK TS" lang="en" %}}
+
+{{< highlight javascript >}}
+import { ToolboxClient } from '@toolbox-sdk/adk';
+
+// Replace with the actual URL where your Toolbox service is running
+const URL = 'http://127.0.0.1:5000';
+
+let client = new ToolboxClient(URL);
+const tools = await client.loadToolset();
+
+// Use the client and tools as per requirement
+
+{{< /highlight >}}
+
+For detailed samples on using the Toolbox JS SDK with ADK JS, see the [project's
+README.](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main/packages/toolbox-adk/README.md)
+
+{{% /tab %}}
+{{< /tabpane >}}
+
 
 #### Go
 
@@ -920,11 +952,24 @@ from Toolbox.
     ```
 
 1. In a new terminal, install the
-   [SDK](https://www.npmjs.com/package/@toolbox-sdk/core).
-
-    ```bash
-    npm install @toolbox-sdk/core
-    ```
+   SDK package.
+   {{< tabpane persist=header >}}
+{{< tab header="LangChain" lang="bash" >}}
+npm install @toolbox-sdk/core
+{{< /tab >}}
+{{< tab header="GenkitJS" lang="bash" >}}
+npm install @toolbox-sdk/core
+{{< /tab >}}
+{{< tab header="LlamaIndex" lang="bash" >}}
+npm install @toolbox-sdk/core
+{{< /tab >}}
+{{< tab header="GoogleGenAI" lang="bash" >}}
+npm install @toolbox-sdk/core
+{{< /tab >}}
+{{< tab header="ADK" lang="bash" >}}
+npm install @toolbox-sdk/adk
+{{< /tab >}}
+{{< /tabpane >}}
 
 1. Install other required dependencies
 
@@ -940,6 +985,9 @@ npm install llamaindex @llamaindex/google @llamaindex/workflow
 {{< /tab >}}
 {{< tab header="GoogleGenAI" lang="bash" >}}
 npm install @google/genai
+{{< /tab >}}
+{{< tab header="ADK" lang="bash" >}}
+npm install @google/adk
 {{< /tab >}}
 {{< /tabpane >}}
 
@@ -968,6 +1016,12 @@ npm install @google/genai
 {{< tab header="GoogleGenAI" lang="js" >}}
 
 {{< include "quickstart/js/genAI/quickstart.js" >}}
+
+{{< /tab >}}
+
+{{< tab header="ADK" lang="js" >}}
+
+{{< include "quickstart/js/adk/quickstart.js" >}}
 
 {{< /tab >}}
 
@@ -6331,6 +6385,12 @@ cluster][alloydb-free-trial].
 - [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
   List cardinality of columns in a table in a PostgreSQL database.
 
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
+
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
+  List tablespaces in an AlloyDB for PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
@@ -7266,6 +7326,12 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
   List cardinality of columns in a table in a PostgreSQL database.
+
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
+
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
+  List tablespaces in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -8940,6 +9006,12 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
   List cardinality of columns in a table in a PostgreSQL database.
 
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
+
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
+  List tablespaces in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)
@@ -9102,6 +9174,10 @@ Apache Spark.
   Get a Serverless Spark batch.
 - [`serverless-spark-cancel-batch`](../tools/serverless-spark/serverless-spark-cancel-batch.md)
   Cancel a running Serverless Spark batch operation.
+- [`serverless-spark-create-pyspark-batch`](../tools/serverless-spark/serverless-spark-create-pyspark-batch.md)
+  Create a Serverless Spark PySpark batch operation.
+- [`serverless-spark-create-spark-batch`](../tools/serverless-spark/serverless-spark-create-spark-batch.md)
+  Create a Serverless Spark Java batch operation.
 
 ## Requirements
 
@@ -10237,6 +10313,8 @@ Tools that work with Google Cloud Serverless for Apache Spark Sources.
 - [serverless-spark-get-batch](./serverless-spark-get-batch.md)
 - [serverless-spark-list-batches](./serverless-spark-list-batches.md)
 - [serverless-spark-cancel-batch](./serverless-spark-cancel-batch.md)
+- [serverless-spark-create-pyspark-batch](./serverless-spark-create-pyspark-batch.md)
+- [serverless-spark-create-spark-batch](./serverless-spark-create-spark-batch.md)
 
 
 # SingleStore
@@ -12382,6 +12460,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
+    *   `list_tablespaces`: Lists tablespaces in the database.
 
 ## AlloyDB Postgres Admin
 
@@ -12559,6 +12639,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
+    *   `list_tablespaces`: Lists tablespaces in the database.
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -12864,6 +12946,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
+    *   `list_tablespaces`: Lists tablespaces in the database.
 
 ## Google Cloud Serverless for Apache Spark
 
