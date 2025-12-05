@@ -54,8 +54,8 @@ type Config struct {
 	Region   string         `yaml:"region" validate:"required"`
 	Instance string         `yaml:"instance" validate:"required"`
 	IPType   sources.IPType `yaml:"ipType"`
-	User     string         `yaml:"user" validate:"required"`
-	Password string         `yaml:"password" validate:"required"`
+	User     string         `yaml:"user"`
+	Password string         `yaml:"password"`
 	Database string         `yaml:"database" validate:"required"`
 }
 
@@ -100,17 +100,49 @@ func (s *Source) MySQLPool() *sql.DB {
 	return s.Pool
 }
 
+func getConnectionConfig(ctx context.Context, user, pass string) (string, string, bool, error) {
+	useIAM := true
+
+	// If username and password both provided, use password authentication
+	if user != "" && pass != "" {
+		useIAM = false
+		return user, pass, useIAM, nil
+	}
+
+	// If username is empty, fetch email from ADC
+	// otherwise, use username as IAM email
+	if user == "" {
+		if pass != "" {
+			return "", "", useIAM, fmt.Errorf("password is provided without a username. Please provide both a username and password, or leave both fields empty")
+		}
+		email, err := sources.GetIAMPrincipalEmailFromADC(ctx, "mysql")
+		if err != nil {
+			return "", "", useIAM, fmt.Errorf("error getting email from ADC: %v", err)
+		}
+		user = email
+	}
+
+	// Pass the user, empty password and useIAM set to true
+	return user, pass, useIAM, nil
+}
+
 func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipType, user, pass, dbname string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
+
+	// Configure the driver to connect to the database
+	user, pass, useIAM, err := getConnectionConfig(ctx, user, pass)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get Cloud SQL connection config: %w", err)
+	}
 
 	// Create a new dialer with options
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-	opts, err := sources.GetCloudSQLOpts(ipType, userAgent, false)
+	opts, err := sources.GetCloudSQLOpts(ipType, userAgent, useIAM)
 	if err != nil {
 		return nil, err
 	}
@@ -121,8 +153,31 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 			return nil, fmt.Errorf("unable to register driver: %w", err)
 		}
 	}
+
+	var dsn string
 	// Tell the driver to use the Cloud SQL Go Connector to create connections
-	dsn := fmt.Sprintf("%s:%s@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s", user, pass, project, region, instance, dbname, url.QueryEscape(userAgent))
+	if useIAM {
+		// Set allowCleartextPasswords to true for IAM
+		dsn = fmt.Sprintf("%s@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s&allowCleartextPasswords=true",
+			user,
+			project,
+			region,
+			instance,
+			dbname,
+			url.QueryEscape(userAgent),
+		)
+	} else {
+		dsn = fmt.Sprintf("%s:%s@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s",
+			user,
+			pass,
+			project,
+			region,
+			instance,
+			dbname,
+			url.QueryEscape(userAgent),
+		)
+	}
+
 	db, err := sql.Open(
 		"cloudsql-mysql",
 		dsn,
