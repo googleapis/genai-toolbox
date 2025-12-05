@@ -24,7 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlgetqueryplan"
 )
 
-func TestParseFromYamlExecuteSql(t *testing.T) {
+func TestParseFromYamlGetQueryPlan(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
