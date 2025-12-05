@@ -542,6 +542,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				},
 				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
 				"database":       MongoDbDatabase,
+				"limit":          10,
 			},
 			"my-tool-by-name": map[string]any{
 				"kind":          toolKind,
@@ -606,6 +607,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				},
 				"projectPayload": `{ "_id": 0, "name" : 1 }`,
 				"database":       MongoDbDatabase,
+				"limit":          10,
 			},
 			"my-auth-required-tool": map[string]any{
 				"kind":        toolKind,
@@ -618,6 +620,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"filterPayload": `{ "_id": 3, "id": 3 }`,
 				"filterParams":  []any{},
 				"database":      MongoDbDatabase,
+				"limit":         10,
 			},
 			"my-fail-tool": map[string]any{
 				"kind":          toolKind,
