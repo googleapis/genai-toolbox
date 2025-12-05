@@ -147,8 +147,8 @@ func GetMcpManifest(name, desc string, authInvoke []string, params parameters.Pa
 // Helper function that returns if a tool invocation request is authorized
 func IsAuthorized(authRequiredSources []string, verifiedAuthServices []string) bool {
 	if len(authRequiredSources) == 0 {
-		// no authorization requirement
-		return true
+		// No auth services configured for this tool, so deny by default.
+		return false
 	}
 	for _, a := range authRequiredSources {
 		if slices.Contains(verifiedAuthServices, a) {
