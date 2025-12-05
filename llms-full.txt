@@ -90,7 +90,7 @@ To install Toolbox as a binary on Linux (AMD64):
 
 ```sh
 # see releases page for other versions
-export VERSION=0.21.0
+export VERSION=0.22.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -101,7 +101,7 @@ To install Toolbox as a binary on macOS (Apple Silicon):
 
 ```sh
 # see releases page for other versions
-export VERSION=0.21.0
+export VERSION=0.22.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
 chmod +x toolbox
 ```
@@ -112,7 +112,7 @@ To install Toolbox as a binary on macOS (Intel):
 
 ```sh
 # see releases page for other versions
-export VERSION=0.21.0
+export VERSION=0.22.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
 chmod +x toolbox
 ```
@@ -122,9 +122,9 @@ chmod +x toolbox
 To install Toolbox as a binary on Windows (AMD64):
 
 ```powershell
-# see releases page for other versions
-$VERSION = "0.21.0"
-Invoke-WebRequest -Uri "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe" -OutFile "toolbox.exe"
+:: see releases page for other versions
+set VERSION=0.22.0
+curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
 ```
 
 {{% /tab %}}
@@ -135,7 +135,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.21.0
+export VERSION=0.22.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -154,7 +154,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.21.0
+go install github.com/googleapis/genai-toolbox@v0.22.0
 ```
 
 {{% /tab %}}
@@ -297,6 +297,10 @@ let client = new ToolboxClient(URL);
 const toolboxTools = await client.loadToolset('toolsetName');
 {{< /highlight >}}
 
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's
+README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
+
 {{% /tab %}}
 {{% tab header="LangChain/Langraph" lang="en" %}}
 
@@ -320,6 +324,10 @@ const getTool = (toolboxTool) => tool(currTool, {
 // Use these tools in your Langchain/Langraph applications
 const tools = toolboxTools.map(getTool);
 {{< /highlight >}}
+
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's
+README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
 
 {{% /tab %}}
 {{% tab header="Genkit" lang="en" %}}
@@ -356,6 +364,10 @@ const getTool = (toolboxTool) => ai.defineTool({
 const tools = toolboxTools.map(getTool);
 {{< /highlight >}}
 
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's
+README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
+
 {{% /tab %}}
 {{% tab header="LlamaIndex" lang="en" %}}
 
@@ -383,12 +395,32 @@ const tools = toolboxTools.map(getTool);
 
 {{< /highlight >}}
 
-{{% /tab %}}
-{{< /tabpane >}}
-
 For more detailed instructions on using the Toolbox Core SDK, see the
 [project's
 README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
+
+{{% /tab %}}
+{{% tab header="ADK TS" lang="en" %}}
+
+{{< highlight javascript >}}
+import { ToolboxClient } from '@toolbox-sdk/adk';
+
+// Replace with the actual URL where your Toolbox service is running
+const URL = 'http://127.0.0.1:5000';
+
+let client = new ToolboxClient(URL);
+const tools = await client.loadToolset();
+
+// Use the client and tools as per requirement
+
+{{< /highlight >}}
+
+For detailed samples on using the Toolbox JS SDK with ADK JS, see the [project's
+README.](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main/packages/toolbox-adk/README.md)
+
+{{% /tab %}}
+{{< /tabpane >}}
+
 
 #### Go
 
@@ -692,7 +724,7 @@ How to get started running Toolbox locally with [Python](https://github.com/goog
 
 This guide assumes you have already done the following:
 
-1. Installed [Python 3.9+][install-python] (including [pip][install-pip] and
+1. Installed [Python 3.10+][install-python] (including [pip][install-pip] and
    your preferred virtual environment tool for managing dependencies e.g.
    [venv][install-venv]).
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
@@ -780,44 +812,62 @@ pip install google-genai
 {{< /tab >}}
 {{< /tabpane >}}
 
-1. Create a new file named `hotel_agent.py` and copy the following
-   code to create an agent:
-    {{< tabpane persist=header >}}
-{{< tab header="ADK" lang="python" >}}
+1. Create the agent:
+{{< tabpane persist=header >}}
+{{% tab header="ADK" text=true %}}
 
-{{< include "quickstart/python/adk/quickstart.py" >}}
+1. Create a new agent project. This will create a new directory named `my_agent`
+   with a file `agent.py`.
 
-{{< /tab >}}
-{{< tab header="LangChain" lang="python" >}}
+    ```bash
+    adk create my_agent
+    ```
+    <br/>
 
+1. Update `my_agent/agent.py` with the following content to connect to Toolbox:
+    ```py
+    {{< include "quickstart/python/adk/quickstart.py" >}}
+    ```
+    <br/>
+
+1. Create a `.env` file with your Google API key:
+    ```bash
+    echo 'GOOGLE_API_KEY="YOUR_API_KEY"' > my_agent/.env
+    ```
+{{% /tab %}}
+{{% tab header="LangChain" text=true %}}
+Create a new file named `agent.py` and copy the following code:
+```py
 {{< include "quickstart/python/langchain/quickstart.py" >}}
-
-{{< /tab >}}
-{{< tab header="LlamaIndex" lang="python" >}}
-
+```
+{{% /tab %}}
+{{% tab header="LlamaIndex" text=true %}}
+Create a new file named `agent.py` and copy the following code:
+```py
 {{< include "quickstart/python/llamaindex/quickstart.py" >}}
-
-{{< /tab >}}
-{{< tab header="Core" lang="python" >}}
-
+```
+{{% /tab %}}
+{{% tab header="Core" text=true %}}
+Create a new file named `agent.py` and copy the following code:
+```py
 {{< include "quickstart/python/core/quickstart.py" >}}
-
-{{< /tab >}}
+```
+{{% /tab %}}
 {{< /tabpane >}}
 
     {{< tabpane text=true persist=header >}}
 {{% tab header="ADK" lang="en" %}}
 To learn more about Agent Development Kit, check out the [ADK
-documentation.](https://google.github.io/adk-docs/)
+Documentation](https://google.github.io/adk-docs/get-started/python/).
 {{% /tab %}}
 {{% tab header="Langchain" lang="en" %}}
 To learn more about Agents in LangChain, check out the [LangGraph Agent
-documentation.](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent)
+Documentation](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent).
 {{% /tab %}}
 {{% tab header="LlamaIndex" lang="en" %}}
 To learn more about Agents in LlamaIndex, check out the [LlamaIndex
 AgentWorkflow
-documentation.](https://docs.llamaindex.ai/en/stable/examples/agent/agent_workflow_basic/)
+Documentation](https://docs.llamaindex.ai/en/stable/examples/agent/agent_workflow_basic/).
 {{% /tab %}}
 {{% tab header="Core" lang="en" %}}
 To learn more about tool calling with Google GenAI, check out the
@@ -826,11 +876,37 @@ Documentation](https://github.com/googleapis/python-genai?tab=readme-ov-file#man
 {{% /tab %}}
 {{< /tabpane >}}
 
-1. Run your agent, and observe the results:
+4. Run your agent, and observe the results:
 
-    ```sh
-    python hotel_agent.py
-    ```
+    {{< tabpane persist=header >}}
+{{% tab header="ADK" text=true %}}
+Run your agent locally for testing:
+```sh
+adk run my_agent
+```
+<br/>
+
+Alternatively, serve it via a web interface:
+```sh
+adk web --port 8000
+```
+<br/>
+
+For more information, refer to the ADK documentation on [Running
+Agents](https://google.github.io/adk-docs/get-started/python/#run-your-agent)
+and [Deploying to Cloud](https://google.github.io/adk-docs/deploy/).
+
+{{% /tab %}}
+{{< tab header="Langchain" lang="bash" >}}
+python agent.py
+{{< /tab >}}
+{{< tab header="LlamaIndex" lang="bash" >}}
+python agent.py
+{{< /tab >}}
+{{< tab header="Core" lang="bash" >}}
+python agent.py
+{{< /tab >}}
+    {{< /tabpane >}}
 
 {{< notice info >}}
 For more information, visit the [Python SDK
@@ -876,11 +952,24 @@ from Toolbox.
     ```
 
 1. In a new terminal, install the
-   [SDK](https://www.npmjs.com/package/@toolbox-sdk/core).
-
-    ```bash
-    npm install @toolbox-sdk/core
-    ```
+   SDK package.
+   {{< tabpane persist=header >}}
+{{< tab header="LangChain" lang="bash" >}}
+npm install @toolbox-sdk/core
+{{< /tab >}}
+{{< tab header="GenkitJS" lang="bash" >}}
+npm install @toolbox-sdk/core
+{{< /tab >}}
+{{< tab header="LlamaIndex" lang="bash" >}}
+npm install @toolbox-sdk/core
+{{< /tab >}}
+{{< tab header="GoogleGenAI" lang="bash" >}}
+npm install @toolbox-sdk/core
+{{< /tab >}}
+{{< tab header="ADK" lang="bash" >}}
+npm install @toolbox-sdk/adk
+{{< /tab >}}
+{{< /tabpane >}}
 
 1. Install other required dependencies
 
@@ -896,6 +985,9 @@ npm install llamaindex @llamaindex/google @llamaindex/workflow
 {{< /tab >}}
 {{< tab header="GoogleGenAI" lang="bash" >}}
 npm install @google/genai
+{{< /tab >}}
+{{< tab header="ADK" lang="bash" >}}
+npm install @google/adk
 {{< /tab >}}
 {{< /tabpane >}}
 
@@ -924,6 +1016,12 @@ npm install @google/genai
 {{< tab header="GoogleGenAI" lang="js" >}}
 
 {{< include "quickstart/js/genAI/quickstart.js" >}}
+
+{{< /tab >}}
+
+{{< tab header="ADK" lang="js" >}}
+
+{{< include "quickstart/js/adk/quickstart.js" >}}
 
 {{< /tab >}}
 
@@ -1141,7 +1239,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -1750,19 +1848,19 @@ to expose your developer assistant tools to a Looker instance:
 
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -2100,19 +2198,19 @@ expose your developer assistant tools to a MySQL instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -2419,19 +2517,19 @@ expose your developer assistant tools to a Neo4j instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -2745,19 +2843,19 @@ Omni](https://cloud.google.com/alloydb/omni/current/docs/overview).
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3078,19 +3176,19 @@ instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3397,19 +3495,19 @@ to expose your developer assistant tools to a SQLite instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3692,6 +3790,7 @@ instance, database and users:
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
 
 ## Install MCP Toolbox
 
@@ -3937,6 +4036,7 @@ instances and interacting with your database:
 * **list_databases**: Lists all databases for a Cloud SQL instance.
 * **create_user**: Creates a new user in a Cloud SQL instance.
 * **wait_for_operation**: Waits for a Cloud SQL operation to complete.
+* **clone_instance**: Creates a clone of an existing Cloud SQL for PostgreSQL instance.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
@@ -3994,6 +4094,7 @@ database and users:
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
 
 ## Install MCP Toolbox
 
@@ -4239,6 +4340,7 @@ instances and interacting with your database:
 * **list_databases**: Lists all databases for a Cloud SQL instance.
 * **create_user**: Creates a new user in a Cloud SQL instance.
 * **wait_for_operation**: Waits for a Cloud SQL operation to complete.
+* **clone_instance**: Creates a clone of an existing Cloud SQL for MySQL instance.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
@@ -4296,6 +4398,7 @@ instance, database and users:
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
 
 ## Install MCP Toolbox
 
@@ -4541,6 +4644,7 @@ instances and interacting with your database:
 * **list_databases**: Lists all databases for a Cloud SQL instance.
 * **create_user**: Creates a new user in a Cloud SQL instance.
 * **wait_for_operation**: Waits for a Cloud SQL operation to complete.
+* **clone_instance**: Creates a clone of an existing Cloud SQL for SQL Server instance.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
@@ -4994,7 +5098,7 @@ section.
     export IMAGE=us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
     ```
 
-{{< notice note >}}  
+   {{< notice note >}}  
 **The `$PORT` Environment Variable**  
 Google Cloud Run dictates the port your application must listen on by setting
 the `$PORT` environment variable inside your container. This value defaults to
@@ -5030,6 +5134,45 @@ deployment will time out.
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
     ```
 
+### Update deployed server to be secure
+
+To prevent DNS rebinding attack, use the `--allowed-origins` flag to specify a
+list of origins permitted to access the server. In order to do that, you will
+have to re-deploy the cloud run service with the new flag.
+
+1. Set an environment variable to the cloud run url: 
+
+    ```bash
+    export URL=<cloud run url>
+    ```
+
+2. Redeploy Toolbox:
+
+    ```bash
+    gcloud run deploy toolbox \
+        --image $IMAGE \
+        --service-account toolbox-identity \
+        --region us-central1 \
+        --set-secrets "/app/tools.yaml=tools:latest" \
+        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL"
+        # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
+    ```
+
+    If you are using a VPC network, use the command below:
+
+    ```bash
+    gcloud run deploy toolbox \
+        --image $IMAGE \
+        --service-account toolbox-identity \
+        --region us-central1 \
+        --set-secrets "/app/tools.yaml=tools:latest" \
+        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL" \
+        # TODO(dev): update the following to match your VPC if necessary
+        --network default \
+        --subnet default
+        # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
+    ```
+
 ## Connecting with Toolbox Client SDK
 
 You can connect to Toolbox Cloud Run instances directly through the SDK.
@@ -5052,18 +5195,23 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 
     {{< tabpane persist=header >}}
 {{< tab header="Python" lang="python" >}}
+import asyncio
 from toolbox_core import ToolboxClient, auth_methods
 
 # Replace with the Cloud Run service URL generated in the previous step
-
 URL = "https://cloud-run-url.app"
 
 auth_token_provider = auth_methods.aget_google_id_token(URL) # can also use sync method
 
-async with ToolboxClient(
-    URL,
-    client_headers={"Authorization": auth_token_provider},
-) as toolbox:
+async def main():
+  async with ToolboxClient(
+      URL,
+      client_headers={"Authorization": auth_token_provider},
+  ) as toolbox:
+    toolset = await toolbox.load_toolset()
+    # ...
+
+asyncio.run(main())
 {{< /tab >}}
 {{< tab header="Javascript" lang="javascript" >}}
 import { ToolboxClient } from '@toolbox-sdk/core';
@@ -5124,6 +5272,150 @@ contain the specific error message needed to diagnose the problem.
   - Ensure the `toolbox-identity` service account has the **Secret Manager
       Secret Accessor** (`roles/secretmanager.secretAccessor`) IAM role.
 
+
+# Deploy ADK Agent and MCP Toolbox
+How to deploy your ADK Agent to Vertex AI Agent Engine and connect it to an MCP Toolbox deployed on Cloud Run.
+
+
+## Before you begin
+
+This guide assumes you have already done the following:
+
+1.  Completed the [Python Quickstart
+    (Local)](../getting-started/local_quickstart.md) and have a working ADK
+    agent running locally.
+2.  Installed the [Google Cloud CLI](https://cloud.google.com/sdk/docs/install).
+3.  A Google Cloud project with billing enabled.
+
+## Step 1: Deploy MCP Toolbox to Cloud Run
+
+Before deploying your agent, your MCP Toolbox server needs to be accessible from
+the cloud. We will deploy MCP Toolbox to Cloud Run.
+
+Follow the [Deploy to Cloud Run](deploy_toolbox.md) guide to deploy your MCP
+Toolbox instance.
+
+{{% alert title="Important" %}}
+After deployment, note down the Service URL of your MCP Toolbox Cloud Run
+service. You will need this to configure your agent.
+{{% /alert %}}
+## Step 2: Prepare your Agent for Deployment
+
+We will use the `agent-starter-pack` tool to enhance your local agent project
+with the necessary configuration for deployment to Vertex AI Agent Engine.
+
+1.  Open a terminal and navigate to the **parent directory** of your agent
+    project (the directory containing the `my_agent` folder).
+
+2.  Run the following command to enhance your project:
+
+    ```bash
+    uvx agent-starter-pack enhance --adk -d agent_engine
+    ```
+
+3.  Follow the interactive prompts to configure your deployment settings. This
+    process will generate deployment configuration files (like a `Makefile` and
+    `Dockerfile`) in your project directory.
+
+4.  Add `toolbox-core` as a dependency to the new project:
+
+    ```bash
+    uv add toolbox-core
+    ```
+
+## Step 3: Configure Google Cloud Authentication
+
+Ensure your local environment is authenticated with Google Cloud to perform the
+deployment.
+
+1.  Login with Application Default Credentials (ADC):
+
+    ```bash
+    gcloud auth application-default login
+    ```
+
+2.  Set your active project:
+
+    ```bash
+    gcloud config set project <YOUR_PROJECT_ID>
+    ```
+
+## Step 4: Connect Agent to Deployed MCP Toolbox
+
+You need to update your agent's code to connect to the Cloud Run URL of your MCP
+Toolbox instead of the local address.
+
+1.  Recall that you can find the Cloud Run deployment URL of the MCP Toolbox
+    server using the following command:
+
+    ```bash
+    gcloud run services describe toolbox --format 'value(status.url)'
+    ```
+
+2.  Open your agent file (`my_agent/agent.py`).
+
+3.  Update the `ToolboxSyncClient` initialization to use your Cloud Run URL.
+
+    {{% alert color="info" %}}
+Since Cloud Run services are secured by default, you also need to provide an
+authentication token.
+    {{% /alert %}}
+
+    Replace your existing client initialization code with the following:
+
+    ```python
+    from google.adk import Agent
+    from google.adk.apps import App
+    from toolbox_core import ToolboxSyncClient, auth_methods
+
+    # TODO(developer): Replace with your Toolbox Cloud Run Service URL
+    TOOLBOX_URL = "https://your-toolbox-service-xyz.a.run.app"
+
+    # Initialize the client with the Cloud Run URL and Auth headers
+    client = ToolboxSyncClient(
+        TOOLBOX_URL, 
+        client_headers={"Authorization": auth_methods.get_google_id_token(TOOLBOX_URL)}
+    )
+
+    root_agent = Agent(
+        name='root_agent',
+        model='gemini-2.5-flash',
+        instruction="You are a helpful AI assistant designed to provide accurate and useful information.",
+        tools=client.load_toolset(),
+    )
+
+    app = App(root_agent=root_agent, name="my_agent")
+    ```
+
+    {{% alert title="Important" %}}
+Ensure that the `name` parameter in the `App` initialization matches the name of
+your agent's parent directory (e.g., `my_agent`).
+```python
+...
+
+app = App(root_agent=root_agent, name="my_agent")
+```
+    {{% /alert %}}
+
+## Step 5: Deploy to Agent Engine
+
+Run the deployment command:
+
+```bash
+make backend
+```
+
+This command will build your agent's container image and deploy it to Vertex AI.
+
+## Step 6: Test your Deployment
+
+Once the deployment command (`make backend`) completes, it will output the URL
+for the Agent Engine Playground. You can click on this URL to open the
+Playground in your browser and start chatting with your agent to test the tools.
+
+For additional test scenarios, refer to the [Test deployed
+agent](https://google.github.io/adk-docs/deploy/agent-engine/#test-deployment)
+section in the ADK documentation.
 
 # Deploy to Kubernetes
 How to set up and configure Toolbox to deploy on Kubernetes with Google Kubernetes Engine (GKE).
@@ -5311,6 +5603,12 @@ How to set up and configure Toolbox to deploy on Kubernetes with Google Kubernet
                   path: tools.yaml
     ```
 
+    {{< notice tip >}}  
+To prevent DNS rebinding attack, use the `--allowed-origins` flag to specify a
+list of origins permitted to access the server. E.g. `args: ["--address",
+"0.0.0.0", "--allowed-origins", "https://foo.bar"]`
+{{< /notice >}}
+
 1. Create the deployment.
 
     ```bash
@@ -5466,6 +5764,13 @@ networks:
   tool-network:
 
 ```
+
+    {{< notice tip >}}  
+To prevent DNS rebinding attack, use the `--allowed-origins` flag to specify a
+list of origins permitted to access the server. E.g. `command: [ "toolbox",
+"--tools-file", "/config/tools.yaml", "--address", "0.0.0.0",
+"--allowed-origins", "https://foo.bar"]`
+{{< /notice >}}
 
 1. Run the following command to bring up the Toolbox and Postgres instance
 
@@ -6073,6 +6378,18 @@ cluster][alloydb-free-trial].
 
 - [`postgres-replication-stats`](../tools/postgres/postgres-replication-stats.md)
   List replication stats in a PostgreSQL database.
+
+- [`postgres-list-query-stats`](../tools/postgres/postgres-list-query-stats.md)
+  List query statistics in a PostgreSQL database.
+
+- [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
+  List cardinality of columns in a table in a PostgreSQL database.
+
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
+
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
+  List tablespaces in an AlloyDB for PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -6976,6 +7293,18 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-replication-stats`](../tools/postgres/postgres-replication-stats.md)
   List replication stats in a PostgreSQL database.
+
+- [`postgres-list-query-stats`](../tools/postgres/postgres-list-query-stats.md)
+  List query statistics in a PostgreSQL database.
+
+- [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
+  List cardinality of columns in a table in a PostgreSQL database.
+
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
+
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
+  List tablespaces in a PostgreSQL database.
 
 ### Pre-built Configurations
 
@@ -8030,20 +8359,20 @@ instead of hardcoding your secrets into the configuration file.
 ## Reference
 
 | **field**            | **type** | **required** | **description**                                                                           |
-| -------------------- | :------: | :----------: | ----------------------------------------------------------------------------------------- |
+|----------------------|:--------:|:------------:|-------------------------------------------------------------------------------------------|
 | kind                 |  string  |     true     | Must be "looker".                                                                         |
-| base_url             |  string  |     true     | The URL of your Looker server with no trailing /).                                        |
+| base_url             |  string  |     true     | The URL of your Looker server with no trailing /.                                         |
 | client_id            |  string  |    false     | The client id assigned by Looker.                                                         |
 | client_secret        |  string  |    false     | The client secret assigned by Looker.                                                     |
 | verify_ssl           |  string  |    false     | Whether to check the ssl certificate of the server.                                       |
 | project              |  string  |    false     | The project id to use in Google Cloud.                                                    |
 | location             |  string  |    false     | The location to use in Google Cloud. (default: us)                                        |
 | timeout              |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, 120s is applied. |
-| use_client_oauth     |  string  |    false     | Use OAuth tokens instead of client_id and client_secret. (default: false)                 |
+| use_client_oauth     |  string  |    false     | Use OAuth tokens instead of client_id and client_secret. (default: false) If a header     |
+|                      |          |              | name is provided, it will be used instead of "Authorization".                             |
 | show_hidden_models   |  string  |    false     | Show or hide hidden models. (default: true)                                               |
 | show_hidden_explores |  string  |    false     | Show or hide hidden explores. (default: true)                                             |
 | show_hidden_fields   |  string  |    false     | Show or hide hidden fields. (default: true)                                               |
-
 
 # MindsDB
 MindsDB is an AI federated database that enables SQL queries across hundreds of datasources and ML models.
@@ -8644,6 +8973,18 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-replication-stats`](../tools/postgres/postgres-replication-stats.md)
   List replication stats in a PostgreSQL database.
 
+- [`postgres-list-query-stats`](../tools/postgres/postgres-list-query-stats.md)
+  List query statistics in a PostgreSQL database.
+
+- [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
+  List cardinality of columns in a table in a PostgreSQL database.
+
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
+
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
+  List tablespaces in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)
@@ -8806,6 +9147,10 @@ Apache Spark.
   Get a Serverless Spark batch.
 - [`serverless-spark-cancel-batch`](../tools/serverless-spark/serverless-spark-cancel-batch.md)
   Cancel a running Serverless Spark batch operation.
+- [`serverless-spark-create-pyspark-batch`](../tools/serverless-spark/serverless-spark-create-pyspark-batch.md)
+  Create a Serverless Spark PySpark batch operation.
+- [`serverless-spark-create-spark-batch`](../tools/serverless-spark/serverless-spark-create-spark-batch.md)
+  Create a Serverless Spark Java batch operation.
 
 ## Requirements
 
@@ -8941,6 +9286,9 @@ the Google Cloud console][spanner-quickstart].
 
 - [`spanner-list-tables`](../tools/spanner/spanner-list-tables.md)  
   Retrieve schema information about tables in a Spanner database.
+
+- [`spanner-list-graphs`](../tools/spanner/spanner-list-graphs.md)  
+  Retrieve schema information about graphs in a Spanner database.
 
 ### Pre-built Configurations
 
@@ -9938,6 +10286,8 @@ Tools that work with Google Cloud Serverless for Apache Spark Sources.
 - [serverless-spark-get-batch](./serverless-spark-get-batch.md)
 - [serverless-spark-list-batches](./serverless-spark-list-batches.md)
 - [serverless-spark-cancel-batch](./serverless-spark-cancel-batch.md)
+- [serverless-spark-create-pyspark-batch](./serverless-spark-create-pyspark-batch.md)
+- [serverless-spark-create-spark-batch](./serverless-spark-create-spark-batch.md)
 
 
 # SingleStore
@@ -10260,7 +10610,7 @@ In this section, we will download and install the Toolbox binary.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    export VERSION="0.21.0"
+    export VERSION="0.22.0"
     curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -10525,7 +10875,7 @@ Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.
 
 This guide assumes you have already done the following:
 
-1. Installed [Python 3.9+][install-python] (including [pip][install-pip] and
+1. Installed [Python 3.10+][install-python] (including [pip][install-pip] and
     your preferred virtual environment tool for managing dependencies e.g.
     [venv][install-venv]).
 1. Installed and configured the [Google Cloud SDK (gcloud CLI)][install-gcloud].
@@ -10690,7 +11040,7 @@ to use BigQuery, and then run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -11324,7 +11674,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -11518,7 +11868,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -11643,7 +11993,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -11753,7 +12103,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.22.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -11868,15 +12218,11 @@ most popular issues, so make sure to +1 ones you are the most interested in.
 
 ## Can Toolbox be used for non-database tools?
 
-Currently, Toolbox is primarily focused on making it easier to create and
-develop tools focused on interacting with Databases. We believe that there are a
-lot of unique problems when interacting with Databases for Gen AI use cases, and
-want to prioritize solving those first.  
+**Yes!** While Toolbox is primarily focused on databases, it also supports generic 
+**HTTP tools** (`kind: http`). These allow you to connect your agents to REST APIs 
+and other web services, enabling workflows that extend beyond database interactions.
 
-However, we've also received feedback that supporting more generic HTTP or
-GRPC tools might be helpful in assisting with migrating to Toolbox or in
-accomplishing more complicated workflows. We're looking into what that might
-best look like in Toolbox.
+For configuration details, see the [HTTP Tools documentation](../resources/tools/http/http.md).
 
 ## Can I use _$BAR_ orchestration framework to use tools from Toolbox?
 
@@ -11975,6 +12321,7 @@ This page describes the `toolbox` command-line options.
 |              | `--tools-files`            | Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --prebuilt, --tools-file, or --tools-folder.                                                    |             |
 |              | `--tools-folder`           | Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --prebuilt, --tools-file, or --tools-files. |             |
 |              | `--ui`                     | Launches the Toolbox UI web server.                                                                                                                                                           |             |
+|              | `--allowed-origins`        | Specifies a list of origins permitted to access this server.                                                                                                                                  | `*`         |
 | `-v`         | `--version`                | version for toolbox                                                                                                                                                                           |             |
 
 ## Examples
@@ -12086,6 +12433,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
+    *   `list_tablespaces`: Lists tablespaces in the database.
 
 ## AlloyDB Postgres Admin
 
@@ -12214,6 +12563,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
+
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for MySQL instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -12222,6 +12573,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_databases`: Lists all databases for a Cloud SQL instance.
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
+    *   `clone_instance`: Creates a clone for an existing Cloud SQL for MySQL instance.
 
 ## Cloud SQL for PostgreSQL
 
@@ -12260,6 +12612,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
+    *   `list_tablespaces`: Lists tablespaces in the database.
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -12293,6 +12647,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for PostgreSQL instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -12301,6 +12656,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_databases`: Lists all databases for a Cloud SQL instance.
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
+    *   `clone_instance`: Creates a clone for an existing Cloud SQL for PostgreSQL instance.
 
 ## Cloud SQL for SQL Server
 
@@ -12352,6 +12708,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for SQL Server instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -12360,6 +12717,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_databases`: Lists all databases for a Cloud SQL instance.
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
+    *   `clone_instance`: Creates a clone for an existing Cloud SQL for SQL Server instance.
 
 ## Dataplex
 
@@ -12479,8 +12837,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 
 *   `--prebuilt` value: `mssql`
 *   **Environment Variables:**
-    *   `MSSQL_HOST`: The hostname or IP address of the SQL Server instance.
-    *   `MSSQL_PORT`: The port number for the SQL Server instance.
+    *   `MSSQL_HOST`: (Optional) The hostname or IP address of the SQL Server instance.
+    *   `MSSQL_PORT`: (Optional) The port number for the SQL Server instance.
     *   `MSSQL_DATABASE`: The name of the database to connect to.
     *   `MSSQL_USER`: The database username.
     *   `MSSQL_PASSWORD`: The password for the database user.
@@ -12561,6 +12919,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
+    *   `list_tablespaces`: Lists tablespaces in the database.
 
 ## Google Cloud Serverless for Apache Spark
 
@@ -12592,6 +12952,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `execute_sql`: Executes a DML SQL query.
     *   `execute_sql_dql`: Executes a DQL SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_graphs`: Lists graphs in the database.
 
 ## Spanner (PostgreSQL dialect)
 
