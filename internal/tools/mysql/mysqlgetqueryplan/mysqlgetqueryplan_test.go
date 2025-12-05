@@ -47,7 +47,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 						- other-auth-service
 			`,
 			want: server.ToolConfigs{
-				"example_tool": &mysqlgetqueryplan.Config{
+				"example_tool": mysqlgetqueryplan.Config{
 					Name:         "example_tool",
 					Kind:         "mysql-get-query-plan",
 					Source:       "my-instance",
