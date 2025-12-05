@@ -158,14 +158,26 @@ To install Toolbox as a binary:
 >
 > </details>
 > <details>
-> <summary>Windows (AMD64)</summary>
+> <summary>Windows (Command Prompt)</summary>
 >
-> To install Toolbox as a binary on Windows (AMD64):
+> To install Toolbox as a binary on Windows (Command Prompt):
 >
-> ```powershell
+> ```cmd
 > :: see releases page for other versions
 > set VERSION=0.22.0
 > curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
+> ```
+>
+> </details>
+> <details>
+> <summary>Windows (PowerShell)</summary>
+>
+> To install Toolbox as a binary on Windows (PowerShell):
+>
+> ```powershell
+> # see releases page for other versions
+> $VERSION = "0.21.0"
+> curl.exe -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe"
 > ```
 >
 > </details>

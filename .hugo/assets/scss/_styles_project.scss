@@ -1,1 +1,9 @@
 @import 'td/code-dark';
+
+// Make tabs scrollable horizontally instead of wrapping
+.nav-tabs {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
