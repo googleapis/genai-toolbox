@@ -560,6 +560,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				},
 				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
 				"database":       MongoDbDatabase,
+				"limit":          10,
 			},
 			"my-array-tool": map[string]any{
 				"kind":          toolKind,
