@@ -31,6 +31,9 @@ to a database by following these instructions][csql-mysql-quickstart].
 - [`mysql-list-active-queries`](../tools/mysql/mysql-list-active-queries.md)
   List active queries in Cloud SQL for MySQL.
 
+- [`mysql-get-query-plan`](../tools/mysql/mysql-get-query-plan.md)
+  Provide information about how MySQL executes a SQL statement (EXPLAIN).
+
 - [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)
   List tables in a Cloud SQL for MySQL database.
 

@@ -162,6 +162,7 @@ func TestCloudSQLMySQLToolEndpoints(t *testing.T) {
 	// Run specific MySQL tool tests
 	tests.RunMySQLListTablesTest(t, CloudSQLMySQLDatabase, tableNameParam, tableNameAuth)
 	tests.RunMySQLListActiveQueriesTest(t, ctx, pool)
+	tests.RunMySQLGetQueryPlanTest(t, ctx, pool, CloudSQLMySQLDatabase, tableNameParam)
 }
 
 // Test connection with different IP type

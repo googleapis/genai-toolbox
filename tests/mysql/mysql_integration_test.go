@@ -142,4 +142,5 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	tests.RunMySQLListActiveQueriesTest(t, ctx, pool)
 	tests.RunMySQLListTablesMissingUniqueIndexes(t, ctx, pool, MySQLDatabase)
 	tests.RunMySQLListTableFragmentationTest(t, MySQLDatabase, tableNameParam, tableNameAuth)
+	tests.RunMySQLGetQueryPlanTest(t, ctx, pool, MySQLDatabase, tableNameParam)
 }
