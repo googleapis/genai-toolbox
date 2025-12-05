@@ -106,7 +106,6 @@ pip install google-genai
 {{< /tab >}}
 
 {{< tab header="Dapr Agents" lang="bash" >}}
-pip install dapr-agents
 curl -fsSL https://raw.githubusercontent.com/dapr/cli/master/install/install.sh | /bin/bash
 # TODO(developer): Make sure to install the correct version: https://docs.dapr.io/getting-started/install-dapr-cli/
 {{< /tab >}}
