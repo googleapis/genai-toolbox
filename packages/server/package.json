@@ -1,6 +1,6 @@
 {
   "name": "@toolbox-sdk/server",
-  "version": "0.21.3",
+  "version": "0.22.0",
   "bin": {
     "toolbox": "./bin/run.js"
   },
@@ -9,9 +9,9 @@
   ],
   "repository": "googleapis/genai-toolbox",
   "optionalDependencies": {
-    "@toolbox-sdk/server-darwin-arm64": "0.21.1",
-    "@toolbox-sdk/server-darwin-x64": "0.21.1",
-    "@toolbox-sdk/server-linux-x64": "0.21.1",
-    "@toolbox-sdk/server-win32-x64": "0.21.1"
+    "@toolbox-sdk/server-darwin-arm64": "0.22.0",
+    "@toolbox-sdk/server-darwin-x64": "0.22.0",
+    "@toolbox-sdk/server-linux-x64": "0.22.0",
+    "@toolbox-sdk/server-win32-x64": "0.22.0"
   }
 }
