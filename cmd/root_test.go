@@ -63,6 +63,9 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	if c.TelemetryServiceName == "" {
 		c.TelemetryServiceName = "toolbox"
 	}
+	if c.AllowedOrigins == nil {
+		c.AllowedOrigins = []string{"*"}
+	}
 	return c
 }
 
@@ -192,6 +195,13 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--disable-reload"},
 			want: withDefaults(server.ServerConfig{
 				DisableReload: true,
+			}),
+		},
+		{
+			desc: "allowed origin",
+			args: []string{"--allowed-origins", "http://foo.com,http://bar.com"},
+			want: withDefaults(server.ServerConfig{
+				AllowedOrigins: []string{"http://foo.com", "http://bar.com"},
 			}),
 		},
 	}
@@ -1448,7 +1458,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "postgres_upgrade_precheck"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "postgres_upgrade_precheck", "clone_instance"},
 				},
 			},
 		},
@@ -1458,7 +1468,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_mysql_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mysql_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance"},
 				},
 			},
 		},
@@ -1468,7 +1478,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_mssql_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mssql_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance"},
 				},
 			},
 		},
@@ -1478,7 +1488,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"alloydb_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "alloydb_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces"},
 				},
 			},
 		},
@@ -1508,7 +1518,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces"},
 				},
 			},
 		},
@@ -1548,7 +1558,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"serverless_spark_tools": tools.ToolsetConfig{
 					Name:      "serverless_spark_tools",
-					ToolNames: []string{"list_batches", "get_batch", "cancel_batch"},
+					ToolNames: []string{"list_batches", "get_batch", "cancel_batch", "create_pyspark_batch", "create_spark_batch"},
 				},
 			},
 		},
@@ -1608,7 +1618,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"postgres_database_tools": tools.ToolsetConfig{
 					Name:      "postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces"},
 				},
 			},
 		},
@@ -1618,7 +1628,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"spanner-database-tools": tools.ToolsetConfig{
 					Name:      "spanner-database-tools",
-					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs"},
 				},
 			},
 		},

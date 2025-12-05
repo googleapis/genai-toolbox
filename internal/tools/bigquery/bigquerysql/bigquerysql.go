@@ -98,7 +98,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, err
 	}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
 	// finish tool setup
 	t := Tool{
@@ -135,7 +135,7 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	highLevelParams := make([]bigqueryapi.QueryParameter, 0, len(t.Parameters))
 	lowLevelParams := make([]*bigqueryrestapi.QueryParameter, 0, len(t.Parameters))
 
@@ -274,7 +274,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		}
 		vMap := make(map[string]any)
 		for key, value := range row {
-			vMap[key] = value
+			vMap[key] = bqutil.NormalizeValue(value)
 		}
 		out = append(out, vMap)
 	}
@@ -311,7 +311,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return t.UseClientOAuth
 }
 

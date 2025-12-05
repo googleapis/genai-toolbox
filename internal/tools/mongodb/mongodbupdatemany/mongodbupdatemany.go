@@ -56,7 +56,7 @@ type Config struct {
 	FilterParams  parameters.Parameters `yaml:"filterParams"`
 	UpdatePayload string                `yaml:"updatePayload" validate:"required"`
 	UpdateParams  parameters.Parameters `yaml:"updateParams" validate:"required"`
-	Canonical     bool                  `yaml:"canonical" validate:"required"`
+	Canonical     bool                  `yaml:"canonical"`
 	Upsert        bool                  `yaml:"upsert"`
 }
 
@@ -97,7 +97,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Create MCP manifest
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
 	// finish tool setup
 	return Tool{
@@ -121,7 +121,7 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
 	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBUpdateManyFilter", t.FilterPayload, paramsMap)
@@ -170,7 +170,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return false
 }
 

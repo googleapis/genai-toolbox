@@ -62,6 +62,18 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-replication-stats`](../tools/postgres/postgres-replication-stats.md)
   List replication stats in a PostgreSQL database.
 
+- [`postgres-list-query-stats`](../tools/postgres/postgres-list-query-stats.md)
+  List query statistics in a PostgreSQL database.
+
+- [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
+  List cardinality of columns in a table in a PostgreSQL database.
+
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
+
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
+  List tablespaces in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)

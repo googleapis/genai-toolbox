@@ -177,7 +177,7 @@ tools:
     list_schemas:
         kind: postgres-list-schemas
         source: cloudsql-pg-source
-
+    
     database_overview:
         kind: postgres-database-overview
         source: cloudsql-pg-source
@@ -192,6 +192,22 @@ tools:
 
     list_sequences:
         kind: postgres-list-sequences
+        source: cloudsql-pg-source
+
+    list_query_stats:
+        kind: postgres-list-query-stats
+        source: cloudsql-pg-source
+
+    get_column_cardinality:
+        kind: postgres-get-column-cardinality
+        source: cloudsql-pg-source
+
+    list_publication_tables:
+        kind: postgres-list-publication-tables
+        source: cloudsql-pg-source
+
+    list_tablespaces:
+        kind: postgres-list-tablespaces
         source: cloudsql-pg-source
 
 toolsets:
@@ -216,3 +232,7 @@ toolsets:
         - long_running_transactions
         - list_locks
         - replication_stats
+        - list_query_stats
+        - get_column_cardinality
+        - list_publication_tables
+        - list_tablespaces

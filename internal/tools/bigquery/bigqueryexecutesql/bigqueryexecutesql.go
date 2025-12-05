@@ -132,7 +132,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			"without running the query. Defaults to false.",
 	)
 	params := parameters.Parameters{sqlParameter, dryRunParameter}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
 	// finish tool setup
 	t := Tool{
@@ -175,7 +175,7 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	sql, ok := paramsMap["sql"].(string)
 	if !ok {
@@ -337,7 +337,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		schema := it.Schema
 		row := orderedmap.Row{}
 		for i, field := range schema {
-			row.Add(field.Name, val[i])
+			row.Add(field.Name, bqutil.NormalizeValue(val[i]))
 		}
 		out = append(out, row)
 	}
@@ -374,7 +374,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return t.UseClientOAuth
 }
 
