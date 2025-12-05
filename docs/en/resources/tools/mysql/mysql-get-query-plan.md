@@ -17,7 +17,7 @@ database. It's compatible with any of the following sources:
 - [cloud-sql-mysql](../../sources/cloud-sql-mysql.md)
 - [mysql](../../sources/mysql.md)
 
-`mysql-get-query-plan` takes one input parameter `sql_statement` and gets the execution plan for the sql
+`mysql-get-query-plan` takes one input parameter `sql_statement` and gets the execution plan for the SQL
 statement against the `source`.
 
 ## Example
