@@ -121,7 +121,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 	defer results.Close()
 
-	var tables []map[string]any
+	tables := []map[string]any{}
 	for results.Next() {
 		var tableName string
 		err := results.Scan(&tableName)
