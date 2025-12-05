@@ -217,7 +217,7 @@ python agent.py
 python agent.py
 {{< /tab >}}
 {{< tab header="Dapr Agents" lang="bash" >}}
-dapr run --resources-path components python hotel_agent.py
+dapr run --resources-path components python agent.py
 {{< /tab >}}
 {{< /tabpane >}}
 
