@@ -12,7 +12,7 @@ require (
 	cloud.google.com/go/dataplex v1.28.0
 	cloud.google.com/go/dataproc/v2 v2.15.0
 	cloud.google.com/go/firestore v1.20.0
-	cloud.google.com/go/geminidataanalytics v0.2.1
+	cloud.google.com/go/geminidataanalytics v0.3.0
 	cloud.google.com/go/longrunning v0.7.0
 	cloud.google.com/go/spanner v1.86.1
 	github.com/ClickHouse/clickhouse-go/v2 v2.40.3
@@ -181,7 +181,7 @@ require (
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/tools v0.38.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20251014184007-4626949a642f // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20251111163417-95abcf5c77ba // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251103181224-f26f9409b101 // indirect
 	google.golang.org/grpc v1.76.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
