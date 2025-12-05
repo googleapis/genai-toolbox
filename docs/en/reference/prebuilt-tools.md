@@ -52,6 +52,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_sequences`: List sequences in a PostgreSQL database.
     *   `list_publication_tables`: List publication tables in a PostgreSQL database.
     *   `list_tablespaces`: Lists tablespaces in the database.
+    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.  
 
 ## AlloyDB Postgres Admin
 
@@ -231,6 +232,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_sequences`: List sequences in a PostgreSQL database.
     *   `list_publication_tables`: List publication tables in a PostgreSQL database.
     *   `list_tablespaces`: Lists tablespaces in the database.
+    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.  
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -538,6 +540,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_sequences`: List sequences in a PostgreSQL database.
     *   `list_publication_tables`: List publication tables in a PostgreSQL database.
     *   `list_tablespaces`: Lists tablespaces in the database.
+    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.  
 
 ## Google Cloud Serverless for Apache Spark
 

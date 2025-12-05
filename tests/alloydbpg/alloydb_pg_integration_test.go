@@ -197,6 +197,7 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	tests.RunPostgresGetColumnCardinalityTest(t, ctx, pool)
 	tests.RunPostgresListPublicationTablesTest(t, ctx, pool)
 	tests.RunPostgresListTableSpacesTest(t)
+	tests.RunPostgresListRolesTest(t, ctx, pool)
 }
 
 // Test connection with different IP type

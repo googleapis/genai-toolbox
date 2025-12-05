@@ -210,6 +210,10 @@ tools:
         kind: postgres-list-tablespaces
         source: cloudsql-pg-source
 
+    list_roles:
+        kind: postgres-list-roles
+        source: cloudsql-pg-source
+
 toolsets:
     cloud_sql_postgres_database_tools:
         - execute_sql
@@ -236,3 +240,4 @@ toolsets:
         - get_column_cardinality
         - list_publication_tables
         - list_tablespaces
+        - list_roles

@@ -79,6 +79,9 @@ to a database by following these instructions][csql-pg-quickstart].
 - [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
   List tablespaces in a PostgreSQL database.
 
+- [`postgres-list-roles`](../tools/postgres/postgres-list-roles.md)
+  Lists all the user-created roles in PostgreSQL database..
+
 ### Pre-built Configurations
 
 - [Cloud SQL for Postgres using
