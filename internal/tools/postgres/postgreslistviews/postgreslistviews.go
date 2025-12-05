@@ -31,13 +31,24 @@ import (
 const kind string = "postgres-list-views"
 
 const listViewsStatement = `
-			SELECT schemaname, viewname, viewowner
-			FROM pg_views
-			WHERE
-				schemaname NOT IN ('pg_catalog', 'information_schema')
-				AND ($1::text IS NULL OR viewname LIKE '%' || $1::text || '%')
-			ORDER BY viewname
-			LIMIT COALESCE($2::int, 50);
+	WITH list_views AS (
+		SELECT
+			schemaname AS schema_name,
+			viewname AS view_name,
+			viewowner AS owner_name,
+			definition
+		FROM pg_views
+	)
+	SELECT *
+	FROM list_views
+	WHERE
+		schema_name NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+		AND schema_name NOT LIKE 'pg_temp_%'
+		AND ($1::text IS NULL OR view_name ILIKE '%' || $1::text || '%')
+		AND ($2::text IS NULL OR schema_name ILIKE '%' || $2::text || '%')
+	ORDER BY
+		schema_name, view_name
+	LIMIT COALESCE($3::int, 50);
 `
 
 func init() {
@@ -94,15 +105,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("viewname", "", "Optional: A specific view name to search for."),
+		parameters.NewStringParameterWithDefault("view_name", "", "Optional: A specific view name to search for."),
+		parameters.NewStringParameterWithDefault("schema_name", "", "Optional: A specific schema name to search for."),
 		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return."),
 	}
 	paramManifest := allParameters.Manifest()
-	description := cfg.Description
-	if description == "" {
-		description = "Lists views in the database from pg_views with a default limit of 50 rows. Returns schemaname, viewname and the ownername."
+	if cfg.Description == "" {
+		cfg.Description = "Lists views in the database from pg_views with a default limit of 50 rows. Returns schemaname, viewname, ownername and the definition."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
 	// finish tool setup
 	return Tool{
