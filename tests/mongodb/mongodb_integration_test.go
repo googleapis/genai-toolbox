@@ -566,7 +566,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"description":   "Tool to test invocation with array.",
 				"authRequired":  []string{},
 				"collection":    "test_collection",
-				"filterPayload": `{ "name": { "$in": {{json .nameArray}} }, "_id": 5 })`,
+				"filterPayload": `{ "name": { "$in": {{json .nameArray}} }, "_id": 5 }`,
 				"filterParams": []map[string]any{
 					{
 						"name":        "nameArray",
@@ -580,6 +580,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				},
 				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
 				"database":       MongoDbDatabase,
+				"limit":          10,
 			},
 			"my-auth-tool": map[string]any{
 				"kind":          toolKind,
