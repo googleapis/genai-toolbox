@@ -81,12 +81,14 @@ def main() -> None:
                         status = status_response.json()
                         workflow_status = status.get("status") or status.get("runtime_status")
                         
-                        if workflow_status in ["COMPLETED", "Completed", "completed", "FINISHED"]:
-                            logging.info(f"Workflow result: {status.get('result') or status.get('output')}")
-                            break
-                        elif workflow_status in ["FAILED", "Failed", "failed", "ERROR"]:
-                            logging.info(f"Workflow failed: {status}")
-                            raise Exception("Workflow execution failed")
+                        if workflow_status:
+                            status_lower = workflow_status.lower()
+                            if status_lower in ["completed", "finished"]:
+                                logging.info(f"Workflow result: {status.get('result') or status.get('output')}")
+                                break
+                            elif status_lower in ["failed", "error"]:
+                                logging.info(f"Workflow failed: {status}")
+                                raise Exception(f"Workflow execution failed with status: {workflow_status}")
                         
                         time.sleep(2)
         finally:
