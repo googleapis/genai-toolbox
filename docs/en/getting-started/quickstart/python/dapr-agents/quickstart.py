@@ -43,11 +43,11 @@ def main() -> None:
                 "If at any point your tools return an error, correct the error based on the error message and try again.",
             ],
             tools=AgentTool.from_toolbox_many(toolbox_client.load_toolset("my-toolset")), # TODO(developer): Replace "my-toolset" with your actual toolset name.
-            llm = OpenAIChatClient(model="gpt-4.1-2025-04-14", api_key=os.environ.get("OPENAI_API_KEY", "")),
-            state = AgentStateConfig(
+            llm=OpenAIChatClient(model="gpt-4.1-2025-04-14", api_key=os.environ.get("OPENAI_API_KEY", "")),
+            state=AgentStateConfig(
                 store=StateStoreService(store_name="statestore"),
             ),
-            memory = AgentMemoryConfig(
+            memory=AgentMemoryConfig(
                 store=ConversationDaprStateMemory(
                     store_name="statestore",
                     session_id="travel-buddy-session-001",
