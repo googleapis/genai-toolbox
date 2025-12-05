@@ -38,7 +38,7 @@ def main() -> None:
                 "Always mention hotel id while performing any searches.",
                 "This is very important for any operations.",
                 "For any bookings or cancellations, please provide the appropriate confirmation.",
-                "Be sure to update checkin or checkout dates if mentioned by the user.",  
+                "Be sure to update checkin or checkout dates if mentioned by the user.",
                 "Don't ask for confirmations from the user.",
                 "If at any point your tools return an error, correct the error based on the error message and try again.",
             ],
