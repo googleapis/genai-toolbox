@@ -48,11 +48,11 @@ in the `data` parameter, like this:
 
 ## Reference
 
-| **field**   | **type** | **required** | **description**                                                                                    |
-|:------------|:---------|:-------------|:---------------------------------------------------------------------------------------------------|
-| kind        | string   | true         | Must be `mongodb-insert-many`.                                                                     |
-| source      | string   | true         | The name of the `mongodb` source to use.                                                           |
-| description | string   | true         | A description of the tool that is passed to the LLM.                                               |
-| database    | string   | true         | The name of the MongoDB database containing the collection.                                        |
-| collection  | string   | true         | The name of the MongoDB collection into which the documents will be inserted.                      |
-| canonical   | bool     | true         | Determines if the data string is parsed using MongoDB's Canonical or Relaxed Extended JSON format. |
+| **field**   | **type** | **required** | **description**                                                                                                         |
+|:------------|:---------|:-------------|:------------------------------------------------------------------------------------------------------------------------|
+| kind        | string   | true         | Must be `mongodb-insert-many`.                                                                                          |
+| source      | string   | true         | The name of the `mongodb` source to use.                                                                                |
+| description | string   | true         | A description of the tool that is passed to the LLM.                                                                    |
+| database    | string   | true         | The name of the MongoDB database containing the collection.                                                             |
+| collection  | string   | true         | The name of the MongoDB collection into which the documents will be inserted.                                           |
+| canonical   | bool     | false        | Determines if the data string is parsed using MongoDB's Canonical or Relaxed Extended JSON format. Defaults to `false`. |
