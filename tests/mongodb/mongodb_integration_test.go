@@ -627,6 +627,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"filterPayload": `{ "id" ; 1 }"}`,
 				"filterParams":  []any{},
 				"database":      MongoDbDatabase,
+				"limit":         10,
 			},
 			"my-delete-one-tool": map[string]any{
 				"kind":          "mongodb-delete-one",
