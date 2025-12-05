@@ -53,7 +53,7 @@ database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2123/resources/sources/cloud-sql-mysql/">cloud-sql-mysql&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2123/resources/sources/mysql/">mysql&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>mysql-get-query-plan&lt;/code> takes one input parameter &lt;code>sql_statement&lt;/code> and gets the execution plan for the sql
+&lt;p>&lt;code>mysql-get-query-plan&lt;/code> takes one input parameter &lt;code>sql_statement&lt;/code> and gets the execution plan for the SQL
 statement against the &lt;code>source&lt;/code>.&lt;/p>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
