@@ -175,7 +175,7 @@ tools:
     list_schemas:
         kind: postgres-list-schemas
         source: alloydb-pg-source
-    
+
     list_indexes:
         kind: postgres-list-indexes
         source: alloydb-pg-source
@@ -198,6 +198,14 @@ tools:
 
     get_column_cardinality:
         kind: postgres-get-column-cardinality
+        source: alloydb-pg-source
+
+    list_publication_tables:
+        kind: postgres-list-publication-tables
+        source: alloydb-pg-source
+
+    list_tablespaces:
+        kind: postgres-list-tablespaces
         source: alloydb-pg-source
 
 toolsets:
@@ -224,3 +232,5 @@ toolsets:
         - replication_stats
         - list_query_stats
         - get_column_cardinality
+        - list_publication_tables
+        - list_tablespaces
