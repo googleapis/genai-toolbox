@@ -69,7 +69,7 @@ pip install toolbox-core
 
 {{< tab header="Dapr Agents" lang="bash" >}}
 
-pip install toolbox-core
+pip install dapr-agents
 {{< /tab >}}
 {{< /tabpane >}}
 
