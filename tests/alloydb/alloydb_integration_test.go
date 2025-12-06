@@ -603,6 +603,7 @@ func runAlloyDBListInstancesTest(t *testing.T, vars map[string]string) {
 
 	// NOTE: If clusters or instances are added, removed or changed in the test project,
 	// the below lists must be updated for the tests to pass.
+	
 	wantForAllClustersSpecificLocation := []string{
 		fmt.Sprintf("projects/%s/locations/%s/clusters/alloydb-ai-nl-testing/instances/alloydb-ai-nl-testing-instance", vars["project"], vars["location"]),
 		fmt.Sprintf("projects/%s/locations/%s/clusters/alloydb-pg-testing/instances/alloydb-pg-testing-instance", vars["project"], vars["location"]),
