@@ -104,7 +104,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	myToolId3NameAliceWant := `[{"_id":5,"id":3,"name":"Alice"}]`
 	myToolById4Want := `[{"_id":4,"id":4,"name":null}]`
 	mcpMyFailToolWant := `invalid JSON input: missing colon after key `
-	mcpMyToolId3NameAliceWant := `{"jsonrpc":"2.0","id":"my-simple-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
+	mcpMyToolId3NameAliceWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
 
 	// Run tests
 	tests.RunToolGetTest(t)
@@ -121,7 +121,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	deleteManyWant := "2"
 	runToolDeleteInvokeTest(t, delete1Want, deleteManyWant)
 
-	insert1Want := `["68666e1035bb36bf1b4d47fb"]`
+	insert1Want := `"68666e1035bb36bf1b4d47fb"`
 	insertManyWant := `["68667a6436ec7d0363668db7","68667a6436ec7d0363668db8","68667a6436ec7d0363668db9"]`
 	runToolInsertInvokeTest(t, insert1Want, insertManyWant)
 
@@ -444,9 +444,13 @@ func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 func setupMongoDB(t *testing.T, ctx context.Context, database *mongo.Database) func(*testing.T) {
 	collectionName := "test_collection"
 
+	if err := database.Collection(collectionName).Drop(ctx); err != nil {
+		t.Logf("Warning: failed to drop collection before setup: %v", err)
+	}
+
 	documents := []map[string]any{
 		{"_id": 1, "id": 1, "name": "Alice", "email": ServiceAccountEmail},
-		{"_id": 1, "id": 2, "name": "FakeAlice", "email": "fakeAlice@gmail.com"},
+		{"_id": 14, "id": 2, "name": "FakeAlice", "email": "fakeAlice@gmail.com"},
 		{"_id": 2, "id": 2, "name": "Jane"},
 		{"_id": 3, "id": 3, "name": "Sid"},
 		{"_id": 4, "id": 4, "name": nil},
@@ -498,8 +502,6 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"filterParams":   []any{},
 				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
 				"database":       MongoDbDatabase,
-				"limit":          1,
-				"sort":           `{ "id": 1 }`,
 			},
 			"my-tool": map[string]any{
 				"kind":          toolKind,
@@ -522,6 +524,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				},
 				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
 				"database":       MongoDbDatabase,
+				"limit":          10,
 			},
 			"my-tool-by-id": map[string]any{
 				"kind":          toolKind,
@@ -539,6 +542,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				},
 				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
 				"database":       MongoDbDatabase,
+				"limit":          10,
 			},
 			"my-tool-by-name": map[string]any{
 				"kind":          toolKind,
@@ -546,7 +550,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"description":   "Tool to test invocation with params.",
 				"authRequired":  []string{},
 				"collection":    "test_collection",
-				"filterPayload": `{ "name" : {{ .name }} }`,
+				"filterPayload": `{ "name" : {{json .name }} }`,
 				"filterParams": []map[string]any{
 					{
 						"name":        "name",
@@ -557,6 +561,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				},
 				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
 				"database":       MongoDbDatabase,
+				"limit":          10,
 			},
 			"my-array-tool": map[string]any{
 				"kind":          toolKind,
@@ -564,7 +569,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"description":   "Tool to test invocation with array.",
 				"authRequired":  []string{},
 				"collection":    "test_collection",
-				"filterPayload": `{ "name": { "$in": {{json .nameArray}} }, "_id": 5 })`,
+				"filterPayload": `{ "name": { "$in": {{json .nameArray}} }, "_id": 5 }`,
 				"filterParams": []map[string]any{
 					{
 						"name":        "nameArray",
@@ -578,6 +583,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				},
 				"projectPayload": `{ "_id": 1, "id": 1, "name" : 1 }`,
 				"database":       MongoDbDatabase,
+				"limit":          10,
 			},
 			"my-auth-tool": map[string]any{
 				"kind":          toolKind,
@@ -601,6 +607,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				},
 				"projectPayload": `{ "_id": 0, "name" : 1 }`,
 				"database":       MongoDbDatabase,
+				"limit":          10,
 			},
 			"my-auth-required-tool": map[string]any{
 				"kind":        toolKind,
@@ -613,6 +620,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"filterPayload": `{ "_id": 3, "id": 3 }`,
 				"filterParams":  []any{},
 				"database":      MongoDbDatabase,
+				"limit":         10,
 			},
 			"my-fail-tool": map[string]any{
 				"kind":          toolKind,
@@ -623,6 +631,7 @@ func getMongoDBToolsConfig(sourceConfig map[string]any, toolKind string) map[str
 				"filterPayload": `{ "id" ; 1 }"}`,
 				"filterParams":  []any{},
 				"database":      MongoDbDatabase,
+				"limit":         10,
 			},
 			"my-delete-one-tool": map[string]any{
 				"kind":          "mongodb-delete-one",
