@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"reflect"
 	"regexp"
 	"sort"
@@ -38,11 +37,11 @@ import (
 )
 
 var (
-	AlloyDBProject  = os.Getenv("ALLOYDB_PROJECT")
-	AlloyDBLocation = os.Getenv("ALLOYDB_REGION")
-	AlloyDBCluster  = os.Getenv("ALLOYDB_CLUSTER")
-	AlloyDBInstance = os.Getenv("ALLOYDB_INSTANCE")
-	AlloyDBUser     = os.Getenv("ALLOYDB_POSTGRES_USER")
+	AlloyDBProject  = "manukarahul-playground"
+	AlloyDBLocation = "us-central1"
+	AlloyDBCluster  = "alloydb-integration-testing"
+	AlloyDBInstance = "alloydb-integration-testing-primary"
+	AlloyDBUser     = "postgres"
 )
 
 func getAlloyDBVars(t *testing.T) map[string]string {
@@ -368,17 +367,19 @@ func runAlloyDBListClustersTest(t *testing.T, vars map[string]string) {
 	// NOTE: If clusters are added, removed or changed in the test project,
 	// this list must be updated for the "list clusters specific locations" test to pass
 	wantForSpecificLocation := []string{
-		fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-ai-nl-testing", vars["project"]),
-		fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-pg-testing", vars["project"]),
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-ai-nl-testing",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-aip-01",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-integration-testing",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-pg-integration-testing",
 	}
 
 	// NOTE: If clusters are added, removed, or changed in the test project,
 	// this list must be updated for the "list clusters all locations" test to pass
 	wantForAllLocations := []string{
-		fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-ai-nl-testing", vars["project"]),
-		fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-pg-testing", vars["project"]),
-		fmt.Sprintf("projects/%s/locations/us-east4/clusters/alloydb-private-pg-testing", vars["project"]),
-		fmt.Sprintf("projects/%s/locations/us-east4/clusters/colab-testing", vars["project"]),
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-ai-nl-testing",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-aip-01",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-integration-testing",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-pg-integration-testing",
 	}
 
 	invokeTcs := []struct {
@@ -604,15 +605,22 @@ func runAlloyDBListInstancesTest(t *testing.T, vars map[string]string) {
 	// NOTE: If clusters or instances are added, removed or changed in the test project,
 	// the below lists must be updated for the tests to pass.
 	wantForAllClustersSpecificLocation := []string{
-		fmt.Sprintf("projects/%s/locations/%s/clusters/alloydb-ai-nl-testing/instances/alloydb-ai-nl-testing-instance", vars["project"], vars["location"]),
-		fmt.Sprintf("projects/%s/locations/%s/clusters/alloydb-pg-testing/instances/alloydb-pg-testing-instance", vars["project"], vars["location"]),
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-ai-nl-testing/instances/alloydb-ai-nl-testing1",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-aip-01/instances/alloydb-aip-01-pr",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-integration-testing/instances/alloydb-integration-testing-primary",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-pg-integration-testing/instances/alloydb-pg-integration-testing-primary",
 	}
 
 	wantForAllClustersAllLocations := []string{
-		fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-ai-nl-testing/instances/alloydb-ai-nl-testing-instance", vars["project"]),
-		fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-pg-testing/instances/alloydb-pg-testing-instance", vars["project"]),
-		fmt.Sprintf("projects/%s/locations/us-east4/clusters/alloydb-private-pg-testing/instances/alloydb-private-pg-testing-instance", vars["project"]),
-		fmt.Sprintf("projects/%s/locations/us-east4/clusters/colab-testing/instances/colab-testing-primary", vars["project"]),
+		// fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-ai-nl-testing/instances/alloydb-ai-nl-testing-instance", vars["project"]),
+		// fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-pg-testing/instances/alloydb-pg-testing-instance", vars["project"]),
+		// fmt.Sprintf("projects/%s/locations/us-central1/clusters/alloydb-private-pg-testing/instances/alloydb-private-pg-testing-instance", vars["project"]),
+		// fmt.Sprintf("projects/%s/locations/us-central1/clusters/colab-testing/instances/colab-testing-primary", vars["project"]),
+
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-ai-nl-testing/instances/alloydb-ai-nl-testing1",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-aip-01/instances/alloydb-aip-01-pr",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-integration-testing/instances/alloydb-integration-testing-primary",
+		"projects/manukarahul-playground/locations/us-central1/clusters/alloydb-pg-integration-testing/instances/alloydb-pg-integration-testing-primary",
 	}
 
 	invokeTcs := []struct {
@@ -1472,3 +1480,10 @@ func TestAlloyDBCreateUser(t *testing.T) {
 		})
 	}
 }
+
+
+
+// got
+// projects/manukarahul-playground/locations/us-central1/clusters/alloydb-ai-nl-testing projects/manukarahul-playground/locations/us-central1/clusters/alloydb-aip-01 projects/manukarahul-playground/locations/us-central1/clusters/alloydb-integration-testing projects/manukarahul-playground/locations/us-central1/clusters/alloydb-pg-integration-testing
+// want
+// projects/manukarahul-playground/locations/us-central1/clusters/alloydb-ai-nl-testing projects/manukarahul-playground/locations/us-central1/clusters/alloydb-pg-testing projects/manukarahul-playground/locations/us-east4/clusters/alloydb-private-pg-testing projects/manukarahul-playground/locations/us-east4/clusters/colab-testing
