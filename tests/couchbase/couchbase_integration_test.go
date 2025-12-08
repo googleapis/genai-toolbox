@@ -188,6 +188,7 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 	// --- END FIX ---
 	
 	
+	
 	// Create scope if it doesn't exist
 	err = bucketMgr.CreateScope(scopeName, nil)
 	if err != nil && !strings.Contains(err.Error(), "already exists") {
