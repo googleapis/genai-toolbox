@@ -29,11 +29,18 @@ tools:
         description: |
           create_project_file Tool
 
-          Given a project_id and a file path within the project, as well as the content
-          of a LookML file, this tool will create a new file within the project.
+          This tool creates a new LookML file within a specified project, populating
+          it with the provided content.
 
-          This tool must be called after the dev_mode tool has changed the session to
-          dev mode.
+          Prerequisite: The Looker session must be in Development Mode. Use `dev_mode: true` first.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+          - file_path (required): The desired path and filename for the new file within the project.
+          - content (required): The full LookML content to write into the new file.
+
+          Output:
+          A confirmation message upon successful file creation.
 ```
 
 ## Reference

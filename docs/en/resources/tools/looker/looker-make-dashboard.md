@@ -32,16 +32,19 @@ tools:
         description: |
           make_dashboard Tool
 
-          This tool creates a new dashboard in Looker. The dashboard is
-          initially empty and the add_dashboard_element tool is used to
-          add content to the dashboard.
+          This tool creates a new, empty dashboard in Looker. Dashboards are stored
+          in the user's personal folder, and the dashboard name must be unique.
+          After creation, use `add_dashboard_filter` to add filters and
+          `add_dashboard_element` to add content tiles.
 
-          The newly created dashboard will be created in the user's
-          personal folder in looker. The dashboard name must be unique.
+          Required Parameters:
+          - title (required): A unique title for the new dashboard.
+          - description (required): A brief description of the dashboard's purpose.
 
-          The result is a json document with a link to the newly
-          created dashboard and the id of the dashboard. Use the id
-          when calling add_dashboard_filter and add_dashboard_element.
+          Output:
+          A JSON object containing a link (`url`) to the newly created dashboard and
+          its unique `id`. This `dashboard_id` is crucial for subsequent calls to
+          `add_dashboard_filter` and `add_dashboard_element`.
 ```
 
 ## Reference

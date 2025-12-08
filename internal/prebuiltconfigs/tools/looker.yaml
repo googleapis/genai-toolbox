@@ -30,136 +30,169 @@ tools:
         kind: looker-get-models
         source: looker-source
         description: |
-          The get_models tool retrieves the list of LookML models in the Looker system.
+          get_models Tool
 
-          It takes no parameters.
+          This tool retrieves a list of available LookML models in the Looker instance.
+          LookML models define the data structure and relationships that users can query.
+          The output includes details like the model's `name` and `label`, which are
+          essential for subsequent calls to tools like `get_explores` or `query`.
+
+          This tool takes no parameters.
 
     get_explores:
         kind: looker-get-explores
         source: looker-source
         description: |
-          The get_explores tool retrieves the list of explores defined in a LookML model
-          in the Looker system.
+          get_explores Tool
 
-          It takes one parameter, the model_name looked up from get_models.
+          This tool retrieves a list of explores defined within a specific LookML model.
+          Explores represent a curated view of your data, typically joining several
+          tables together to allow for focused analysis on a particular subject area.
+          The output provides details like the explore's `name` and `label`.
+
+          Parameters:
+          - model_name (required): The name of the LookML model, obtained from `get_models`.
 
     get_dimensions:
         kind: looker-get-dimensions
         source: looker-source
         description: |
-          The get_dimensions tool retrieves the list of dimensions defined in
-          an explore.
+          get_dimensions Tool
 
-          It takes two parameters, the model_name looked up from get_models and the
-          explore_name looked up from get_explores.
+          This tool retrieves a list of dimensions defined within a specific Looker explore.
+          Dimensions are non-aggregatable attributes or characteristics of your data
+          (e.g., product name, order date, customer city) that can be used for grouping,
+          filtering, or segmenting query results.
 
-          If this returns a suggestions field for a dimension, the contents of suggestions
-          can be used as filters for this field. If this returns a suggest_explore and
-          suggest_dimension, a query against that explore and dimension can be used to find
-          valid filters for this field.
+          Parameters:
+          - model_name (required): The name of the LookML model, obtained from `get_models`.
+          - explore_name (required): The name of the explore within the model, obtained from `get_explores`.
+
+          Output Details:
+          - If a dimension includes a `suggestions` field, its contents are valid values
+            that can be used directly as filters for that dimension.
+          - If a `suggest_explore` and `suggest_dimension` are provided, you can query
+            that specified explore and dimension to retrieve a list of valid filter values.
 
     get_measures:
         kind: looker-get-measures
         source: looker-source
         description: |
-          The get_measures tool retrieves the list of measures defined in
-          an explore.
+          get_measures Tool
 
-          It takes two parameters, the model_name looked up from get_models and the
-          explore_name looked up from get_explores.
+          This tool retrieves a list of measures defined within a specific Looker explore.
+          Measures are aggregatable metrics (e.g., total sales, average price, count of users)
+          that are used for calculations and quantitative analysis in your queries.
 
-          If this returns a suggestions field for a measure, the contents of suggestions
-          can be used as filters for this field. If this returns a suggest_explore and
-          suggest_dimension, a query against that explore and dimension can be used to find
-          valid filters for this field.
+          Parameters:
+          - model_name (required): The name of the LookML model, obtained from `get_models`.
+          - explore_name (required): The name of the explore within the model, obtained from `get_explores`.
+
+          Output Details:
+          - If a measure includes a `suggestions` field, its contents are valid values
+            that can be used directly as filters for that measure.
+          - If a `suggest_explore` and `suggest_dimension` are provided, you can query
+            that specified explore and dimension to retrieve a list of valid filter values.
 
     get_filters:
         kind: looker-get-filters
         source: looker-source
         description: |
-          The get_filters tool retrieves the list of filters defined in
-          an explore.
+          get_filters Tool
 
-          It takes two parameters, the model_name looked up from get_models and the
-          explore_name looked up from get_explores.
+          This tool retrieves a list of "filter-only fields" defined within a specific
+          Looker explore. These are special fields defined in LookML specifically to
+          create user-facing filter controls that do not directly affect the `GROUP BY`
+          clause of the SQL query. They are often used in conjunction with liquid templating
+          to create dynamic queries.
+
+          Note: Regular dimensions and measures can also be used as filters in a query.
+          This tool *only* returns fields explicitly defined as `filter:` in LookML.
+
+          Parameters:
+          - model_name (required): The name of the LookML model, obtained from `get_models`.
+          - explore_name (required): The name of the explore within the model, obtained from `get_explores`.
 
     get_parameters:
         kind: looker-get-parameters
         source: looker-source
         description: |
-          The get_parameters tool retrieves the list of parameters defined in
-          an explore.
+          get_parameters Tool
 
-          It takes two parameters, the model_name looked up from get_models and the
-          explore_name looked up from get_explores.
+          This tool retrieves a list of parameters defined within a specific Looker explore.
+          LookML parameters are dynamic input fields that allow users to influence query
+          behavior without directly modifying the underlying LookML. They are often used
+          with `liquid` templating to create flexible dashboards and reports, enabling
+          users to choose dimensions, measures, or other query components at runtime.
+
+          Parameters:
+          - model_name (required): The name of the LookML model, obtained from `get_models`.
+          - explore_name (required): The name of the explore within the model, obtained from `get_explores`.
 
     query:
         kind: looker-query
         source: looker-source
         description: |
-          Query Tool
+          query Tool
 
-          This tool is used to run a query against the LookML model. The
-          model, explore, and fields list must be specified. Pivots,
-          filters and sorts are optional.
+          This tool runs a query against a LookML model and returns the results in JSON format.
 
-          The model can be found from the get_models tool. The explore
-          can be found from the get_explores tool passing in the model.
-          The fields can be found from the get_dimensions, get_measures,
-          get_filters, and get_parameters tools, passing in the model
-          and the explore.
+          Required Parameters:
+          - model_name: The name of the LookML model (from `get_models`).
+          - explore_name: The name of the explore (from `get_explores`).
+          - fields: A list of field names (dimensions, measures, filters, or parameters) to include in the query.
 
-          Provide a model_id and explore_name, then a list
-          of fields. Optionally a list of pivots can be provided.
-          The pivots must also be included in the fields list.
+          Optional Parameters:
+          - pivots: A list of fields to pivot the results by. These fields must also be included in the `fields` list.
+          - filters: A map of filter expressions, e.g., `{"view.field": "value", "view.date": "7 days"}`.
+            - Do not quote field names.
+            - Use `not null` instead of `-NULL`.
+            - If a value contains a comma, enclose it in single quotes (e.g., "'New York, NY'").
+          - sorts: A list of fields to sort by, optionally including direction (e.g., `["view.field desc"]`).
+          - limit: Row limit (default 500). Use "-1" for unlimited.
+          - query_timezone: specific timezone for the query (e.g. `America/Los_Angeles`).
 
-          Filters are provided as a map of {"field.id": "condition",
-          "field.id2": "condition2", ...}. Do not put the field.id in
-          quotes. Filter expressions can be found at
-          https://cloud.google.com/looker/docs/filter-expressions. There
-          is one mistake in that, however, Use `not null` instead of `-NULL`.
-          If the condition is a string that contains a comma, use a second
-          set of quotes. For example, {"user.city": "'New York, NY'"}.
-
-          Sorts can be specified like [ "field.id desc 0" ].
-
-          An optional row limit can be added. If not provided the limit
-          will default to 500. "-1" can be specified for unlimited.
-
-          An optional query timezone can be added. The query_timezone to
-          will default to that of the workstation where this MCP server
-          is running, or Etc/UTC if that can't be determined. Not all
-          models support custom timezones.
-
-          The result of the query tool is JSON
+          Note: Use `get_dimensions`, `get_measures`, `get_filters`, and `get_parameters` to find valid fields.
 
     query_sql:
         kind: looker-query-sql
         source: looker-source
         description: |
-          Query SQL Tool
+          query_sql Tool
 
-          This tool is used to generate the SQL that Looker would
-          run against the underlying database. The parameters are
-          the same as the query tool.
+          This tool generates the underlying SQL query that Looker would execute
+          against the database for a given set of parameters. It is useful for
+          understanding how Looker translates a request into SQL.
 
-          The result of the query sql tool is SQL text.
+          Parameters:
+          All parameters for this tool are identical to those of the `query` tool.
+          This includes `model_name`, `explore_name`, `fields` (required),
+          and optional parameters like `pivots`, `filters`, `sorts`, `limit`, and `query_timezone`.
+
+          Output:
+          The result of this tool is the raw SQL text.
 
     query_url:
         kind: looker-query-url
         source: looker-source
         description: |
-          Query URL Tool
+          query_url Tool
 
-          This tool is used to generate the URL of a query in Looker.
-          The user can then explore the query further inside Looker.
-          The tool also returns the query_id and slug. The parameters
-          are the same as the query tool with an additional vis_config
-          parameter.
+          This tool generates a shareable URL for a Looker query, allowing users to
+          explore the query further within the Looker UI. It returns the generated URL,
+          along with the `query_id` and `slug`.
 
-          The vis_config is optional. If provided, it will be used to
-          control the default visualization for the query. Here are
-          some notes on making visualizations.
+          Parameters:
+          All query parameters (e.g., `model_name`, `explore_name`, `fields`, `pivots`,
+          `filters`, `sorts`, `limit`, `query_timezone`) are the same as the `query` tool.
+
+          Additionally, it accepts an optional `vis_config` parameter:
+          - vis_config (optional): A JSON object that controls the default visualization
+            settings for the generated query.
+
+          vis_config Details:
+          The `vis_config` object supports a wide range of properties for various chart types.
+          Here are some notes on making visualizations.
 
           ### Cartesian Charts (Area, Bar, Column, Line, Scatter)
 
@@ -601,19 +634,26 @@ tools:
         description: |
           get_looks Tool
 
-          This tool is used to search for saved looks in a Looker instance.
-          String search params use case-insensitive matching. String search
-          params can contain % and '_' as SQL LIKE pattern match wildcard
-          expressions. example="dan%" will match "danger" and "Danzig" but
-          not "David" example="D_m%" will match "Damage" and "dump".
+          This tool searches for saved Looks (pre-defined queries and visualizations)
+          in a Looker instance. It returns a list of JSON objects, each representing a Look.
 
-          Most search params can accept "IS NULL" and "NOT NULL" as special
-          expressions to match or exclude (respectively) rows where the
-          column is null.
+          Search Parameters:
+          - title (optional): Filter by Look title (supports wildcards).
+          - folder_id (optional): Filter by the ID of the folder where the Look is saved.
+          - user_id (optional): Filter by the ID of the user who created the Look.
+          - description (optional): Filter by description content (supports wildcards).
+          - id (optional): Filter by specific Look ID.
+          - limit (optional): Maximum number of results to return. Defaults to a system limit.
+          - offset (optional): Starting point for pagination.
 
-          The limit and offset are used to paginate the results.
-
-          The result of the get_looks tool is a list of json objects.
+          String Search Behavior:
+          - Case-insensitive matching.
+          - Supports SQL LIKE pattern match wildcards:
+            - `%`: Matches any sequence of zero or more characters. (e.g., `"dan%"` matches "danger", "Danzig")
+            - `_`: Matches any single character. (e.g., `"D_m%"` matches "Damage", "dump")
+          - Special expressions for null checks:
+            - `"IS NULL"`: Matches Looks where the field is null.
+            - `"NOT NULL"`: Excludes Looks where the field is null.
 
     run_look:
         kind: looker-run-look
@@ -621,9 +661,15 @@ tools:
         description: |
           run_look Tool
 
-          This tool runs the query associated with a look and returns
-          the data in a JSON structure. It accepts the look_id as the
-          parameter.
+          This tool executes the query associated with a saved Look and
+          returns the resulting data in a JSON structure.
+
+          Parameters:
+          - look_id (required): The unique identifier of the Look to run,
+            typically obtained from the `get_looks` tool.
+
+          Output:
+          The query results are returned as a JSON object.
 
     make_look:
         kind: looker-make-look
@@ -631,18 +677,24 @@ tools:
         description: |
           make_look Tool
 
-          This tool creates a new look in Looker, using the query
-          parameters and the vis_config specified.
+          This tool creates a new Look (saved query with visualization) in Looker.
+          The Look will be saved in the user's personal folder, and its name must be unique.
 
-          Most of the parameters are the same as the query_url
-          tool. In addition, there is a title and a description
-          that must be provided.
+          Required Parameters:
+          - title: A unique title for the new Look.
+          - description: A brief description of the Look's purpose.
+          - model_name: The name of the LookML model (from `get_models`).
+          - explore_name: The name of the explore (from `get_explores`).
+          - fields: A list of field names (dimensions, measures, filters, or parameters) to include in the query.
 
-          The newly created look will be created in the user's
-          personal folder in looker. The look name must be unique.
+          Optional Parameters:
+          - pivots, filters, sorts, limit, query_timezone: These parameters are identical
+            to those described for the `query` tool.
+          - vis_config: A JSON object defining the visualization settings for the Look.
+            The structure and options are the same as for the `query_url` tool's `vis_config`.
 
-          The result is a json document with a link to the newly
-          created look.
+          Output:
+          A JSON object containing a link (`url`) to the newly created Look, along with its `id` and `slug`.
 
     get_dashboards:
         kind: looker-get-dashboards
@@ -650,18 +702,25 @@ tools:
         description: |
           get_dashboards Tool
 
-          This tool is used to search for saved dashboards in a Looker instance.
-          String search params use case-insensitive matching. String search
-          params can contain % and '_' as SQL LIKE pattern match wildcard
-          expressions. example="dan%" will match "danger" and "Danzig" but
-          not "David" example="D_m%" will match "Damage" and "dump".
-          Most search params can accept "IS NULL" and "NOT NULL" as special
-          expressions to match or exclude (respectively) rows where the
-          column is null.
+          This tool searches for saved dashboards in a Looker instance. It returns a list of JSON objects, each representing a dashboard.
 
-          The limit and offset are used to paginate the results.
+          Search Parameters:
+          - title (optional): Filter by dashboard title (supports wildcards).
+          - folder_id (optional): Filter by the ID of the folder where the dashboard is saved.
+          - user_id (optional): Filter by the ID of the user who created the dashboard.
+          - description (optional): Filter by description content (supports wildcards).
+          - id (optional): Filter by specific dashboard ID.
+          - limit (optional): Maximum number of results to return. Defaults to a system limit.
+          - offset (optional): Starting point for pagination.
 
-          The result of the get_dashboards tool is a list of json objects.
+          String Search Behavior:
+          - Case-insensitive matching.
+          - Supports SQL LIKE pattern match wildcards:
+            - `%`: Matches any sequence of zero or more characters. (e.g., `"finan%"` matches "financial", "finance")
+            - `_`: Matches any single character. (e.g., `"s_les"` matches "sales")
+          - Special expressions for null checks:
+            - `"IS NULL"`: Matches dashboards where the field is null.
+            - `"NOT NULL"`: Excludes dashboards where the field is null.
 
     run_dashboard:
         kind: looker-run-dashboard
@@ -669,9 +728,15 @@ tools:
         description: |
           run_dashboard Tool
 
-          This tools runs the query associated with each tile in a dashboard
-          and returns the data in a JSON structure. It accepts the dashboard_id
-          as the parameter.
+          This tool executes the queries associated with each tile in a specified dashboard
+          and returns the aggregated data in a JSON structure.
+
+          Parameters:
+          - dashboard_id (required): The unique identifier of the dashboard to run,
+            typically obtained from the `get_dashboards` tool.
+
+          Output:
+          The data from all dashboard tiles is returned as a JSON object.
 
     make_dashboard:
         kind: looker-make-dashboard
@@ -679,16 +744,19 @@ tools:
         description: |
           make_dashboard Tool
 
-          This tool creates a new dashboard in Looker. The dashboard is
-          initially empty and the add_dashboard_element tool is used to
-          add content to the dashboard.
+          This tool creates a new, empty dashboard in Looker. Dashboards are stored
+          in the user's personal folder, and the dashboard name must be unique.
+          After creation, use `add_dashboard_filter` to add filters and
+          `add_dashboard_element` to add content tiles.
 
-          The newly created dashboard will be created in the user's
-          personal folder in looker. The dashboard name must be unique.
+          Required Parameters:
+          - title (required): A unique title for the new dashboard.
+          - description (required): A brief description of the dashboard's purpose.
 
-          The result is a json document with a link to the newly
-          created dashboard and the id of the dashboard. Use the id
-          when calling add_dashboard_filter and add_dashboard_element.
+          Output:
+          A JSON object containing a link (`url`) to the newly created dashboard and
+          its unique `id`. This `dashboard_id` is crucial for subsequent calls to
+          `add_dashboard_filter` and `add_dashboard_element`.
 
     add_dashboard_element:
         kind: looker-add-dashboard-element
@@ -696,21 +764,31 @@ tools:
         description: |
           add_dashboard_element Tool
 
-          This tool creates a new tile in a Looker dashboard using
-          the query parameters and the vis_config specified.
+          This tool creates a new tile (element) within an existing Looker dashboard.
+          Tiles are added in the order this tool is called for a given `dashboard_id`.
 
-          Most of the parameters are the same as the query_url
-          tool. In addition, there is a title that may be provided.
-          The dashboard_id must be specified. That is obtained
-          from calling make_dashboard.
+          CRITICAL ORDER OF OPERATIONS:
+          1. Create the dashboard using `make_dashboard`.
+          2. Add any dashboard-level filters using `add_dashboard_filter`.
+          3. Then, add elements (tiles) using this tool.
 
-          This tool can be called many times for one dashboard_id
-          and the resulting tiles will be added in order.
+          Required Parameters:
+          - dashboard_id: The ID of the target dashboard, obtained from `make_dashboard`.
+          - model_name, explore_name, fields: These query parameters are inherited
+            from the `query` tool and are required to define the data for the tile.
 
-          A dashboard element can be connected to one or more
-          dashboard filters by specifying the filter name and the
-          field to which the filter should apply formatted as
-          `view_name.field_name`.
+          Optional Parameters:
+          - title: An optional title for the dashboard tile.
+          - pivots, filters, sorts, limit, query_timezone: These query parameters are
+            inherited from the `query` tool and can be used to customize the tile's query.
+          - vis_config: A JSON object defining the visualization settings for this tile.
+            The structure and options are the same as for the `query_url` tool's `vis_config`.
+
+          Connecting to Dashboard Filters:
+          A dashboard element can be connected to one or more dashboard filters (created with
+          `add_dashboard_filter`). To do this, specify the `name` of the dashboard filter
+          and the `field` from the element's query that the filter should apply to.
+          The format for specifying the field is `view_name.field_name`.
 
     add_dashboard_filter:
         kind: looker-add-dashboard-filter
@@ -718,80 +796,106 @@ tools:
         description: |
           add_dashboard_filter Tool
 
-          This tool will add a filter to a dashboard. The name of the
-          filter will be used to refer to the filter when creating
-          dashboard elements. The title will be displayed with the
-          filter in the Looker UI.
+          This tool adds a filter to a Looker dashboard.
 
-          The type of the filter is the datatype. If it is `field_filter` then
-          the type will be inherited from a field in the model, and that
-          field will be used to suggest filter values. Otherwise the value
-          of type can be `date_filter`, `number_filter`, or `string_filter`.
+          CRITICAL ORDER OF OPERATIONS:
+          1. Create a dashboard using `make_dashboard`.
+          2. Add all desired filters using this tool (`add_dashboard_filter`).
+          3. Finally, add dashboard elements (tiles) using `add_dashboard_element`.
 
-          The default value is optional.
+          Parameters:
+          - dashboard_id (required): The ID from `make_dashboard`.
+          - name (required): A unique internal identifier for the filter. You will use this `name` later in `add_dashboard_element` to bind tiles to this filter.
+          - title (required): The label displayed to users in the UI.
+          - type (required): One of `date_filter`, `number_filter`, `string_filter`, or `field_filter`.
+          - default_value (optional): The initial value for the filter.
 
-          The parameters model, explore, and dimension should only be
-          specified if the type is `field_filter`.
+          Field Filters (`type: field_filter`):
+          If creating a field filter, you must also provide:
+          - model
+          - explore
+          - dimension
+          The filter will inherit suggestions and type information from this LookML field.
 
-          Add any dashboard filters after creating the dashboard but
-          before adding any dashboard elements. When adding dashboard
-          elements specify the name of the dashboad filter and the
-          field of that element's query to which the filter should
-          apply.
+    generate_embed_url:
+        kind: looker-generate-embed-url
+        source: looker-source
+        description: |
+          generate_embed_url Tool
 
+          This tool generates a signed, private embed URL for specific Looker content,
+          allowing users to access it directly.
+
+          Parameters:
+          - type (required): The type of content to embed. Common values include:
+            - `dashboards`
+            - `looks`
+            - `explore`
+          - id (required): The unique identifier for the content.
+            - For dashboards and looks, use the numeric ID (e.g., "123").
+            - For explores, use the format "model_name/explore_name".
+      
     health_pulse:
         kind: looker-health-pulse
         source: looker-source
         description: |
-          health-pulse Tool
+          health_pulse Tool
 
-          This tool takes the pulse of a Looker instance by taking
-          one of the following actions:
-            1. `check_db_connections`,
-            2. `check_dashboard_performance`,
-            3. `check_dashboard_errors`,
-            4. `check_explore_performance`,
-            5. `check_schedule_failures`, or
-            6. `check_legacy_features`
-      
-          The `check_legacy_features` action is only available in Looker Core. If
-          it is called on a Looker Core instance, you will get a notice. That notice
-          should not be reported as an error.
+          This tool performs various health checks on a Looker instance.
+
+          Parameters:
+          - action (required): Specifies the type of health check to perform.
+            Choose one of the following:
+            - `check_db_connections`: Verifies database connectivity.
+            - `check_dashboard_performance`: Assesses dashboard loading performance.
+            - `check_dashboard_errors`: Identifies errors within dashboards.
+            - `check_explore_performance`: Evaluates explore query performance.
+            - `check_schedule_failures`: Reports on failed scheduled deliveries.
+            - `check_legacy_features`: Checks for the usage of legacy features.
+
+          Note on `check_legacy_features`:
+          This action is exclusively available in Looker Core instances. If invoked
+          on a non-Looker Core instance, it will return a notice rather than an error.
+          This notice should be considered normal behavior and not an indication of an issue.
 
     health_analyze:
         kind: looker-health-analyze
         source: looker-source
         description: |
-          health-analyze Tool
+          health_analyze Tool
 
-          This tool calculates the usage of projects, models and explores.
+          This tool calculates the usage statistics for Looker projects, models, and explores.
 
-          It accepts 6 parameters:
-            1. `action`: can be "projects", "models", or "explores"
-            2. `project`: the project to analyze (optional)
-            3. `model`: the model to analyze (optional)
-            4. `explore`: the explore to analyze (optional)
-            5. `timeframe`: the lookback period in days, default is 90
-            6. `min_queries`: the minimum number of queries to consider a resource as active, default is 1
+          Parameters:
+          - action (required): The type of resource to analyze. Can be `"projects"`, `"models"`, or `"explores"`.
+          - project (optional): The specific project ID to analyze.
+          - model (optional): The specific model name to analyze. Requires `project` if used without `explore`.
+          - explore (optional): The specific explore name to analyze. Requires `model` if used.
+          - timeframe (optional): The lookback period in days for usage data. Defaults to `90` days.
+          - min_queries (optional): The minimum number of queries for a resource to be considered active. Defaults to `1`.
+
+          Output:
+          The result is a JSON object containing usage metrics for the specified resources.
 
     health_vacuum:
         kind: looker-health-vacuum
         source: looker-source
         description: |
-          health-vacuum Tool
+          health_vacuum Tool
 
-          This tool suggests models or explores that can removed
-          because they are unused.
+          This tool identifies and suggests LookML models or explores that can be
+          safely removed due to inactivity or low usage.
 
-          It accepts 6 parameters:
-            1. `action`: can be "models" or "explores"
-            2. `project`: the project to vacuum (optional)
-            3. `model`: the model to vacuum (optional)
-            4. `explore`: the explore to vacuum (optional)
-            5. `timeframe`: the lookback period in days, default is 90
-            6. `min_queries`: the minimum number of queries to consider a resource as active, default is 1
+          Parameters:
+          - action (required): The type of resource to analyze for removal candidates. Can be `"models"` or `"explores"`.
+          - project (optional): The specific project ID to consider.
+          - model (optional): The specific model name to consider. Requires `project` if used without `explore`.
+          - explore (optional): The specific explore name to consider. Requires `model` if used.
+          - timeframe (optional): The lookback period in days to assess usage. Defaults to `90` days.
+          - min_queries (optional): The minimum number of queries for a resource to be considered active. Defaults to `1`.
 
-          The result is a list of objects that are candidates for deletion.
+          Output:
+          A JSON array of objects, each representing a model or explore that is a candidate for deletion due to low usage.
 
     dev_mode:
         kind: looker-dev-mode
@@ -799,8 +903,13 @@ tools:
         description: |
           dev_mode Tool
 
-          Passing true to this tool switches the session to dev mode. Passing false to this tool switches the
-          session to production mode.
+          This tool allows toggling the Looker IDE session between Development Mode and Production Mode.
+          Development Mode enables making and testing changes to LookML projects.
+
+          Parameters:
+          - enable (required): A boolean value.
+            - `true`: Switches the current session to Development Mode.
+            - `false`: Switches the current session to Production Mode.
 
     get_projects:
         kind: looker-get-projects
@@ -808,8 +917,16 @@ tools:
         description: |
           get_projects Tool
 
-          This tool returns the project_id and project_name for
-          all the LookML projects on the looker instance.
+          This tool retrieves a list of all LookML projects available on the Looker instance.
+          It is useful for identifying projects before performing actions like retrieving
+          project files or making modifications.
+
+          Parameters:
+          This tool takes no parameters.
+
+          Output:
+          A JSON array of objects, each containing the `project_id` and `project_name`
+          for a LookML project.
 
     get_project_files:
         kind: looker-get-project-files
@@ -817,8 +934,15 @@ tools:
         description: |
           get_project_files Tool
 
-          Given a project_id this tool returns the details about
-          the LookML files that make up that project.
+          This tool retrieves a list of all LookML files within a specified project,
+          providing details about each file.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project, obtained from `get_projects`.
+
+          Output:
+          A JSON array of objects, each representing a LookML file and containing
+          details such as `path`, `id`, `type`, and `git_status`.
 
     get_project_file:
         kind: looker-get-project-file
@@ -826,8 +950,15 @@ tools:
         description: |
           get_project_file Tool
 
-          Given a project_id and a file path within the project, this tool returns
-          the contents of the LookML file.
+          This tool retrieves the raw content of a specific LookML file from within a project.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project, obtained from `get_projects`.
+          - file_path (required): The path to the LookML file within the project,
+            typically obtained from `get_project_files`.
+
+          Output:
+          The raw text content of the specified LookML file.
 
     create_project_file:
         kind: looker-create-project-file
@@ -835,11 +966,18 @@ tools:
         description: |
           create_project_file Tool
 
-          Given a project_id and a file path within the project, as well as the content
-          of a LookML file, this tool will create a new file within the project.
+          This tool creates a new LookML file within a specified project, populating
+          it with the provided content.
 
-          This tool must be called after the dev_mode tool has changed the session to
-          dev mode.
+          Prerequisite: The Looker session must be in Development Mode. Use `dev_mode: true` first.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+          - file_path (required): The desired path and filename for the new file within the project.
+          - content (required): The full LookML content to write into the new file.
+
+          Output:
+          A confirmation message upon successful file creation.
 
     update_project_file:
         kind: looker-update-project-file
@@ -847,11 +985,17 @@ tools:
         description: |
           update_project_file Tool
 
-          Given a project_id and a file path within the project, as well as the content
-          of a LookML file, this tool will modify the file within the project.
+          This tool modifies the content of an existing LookML file within a specified project.
 
-          This tool must be called after the dev_mode tool has changed the session to
-          dev mode.
+          Prerequisite: The Looker session must be in Development Mode. Use `dev_mode: true` first.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+          - file_path (required): The exact path to the LookML file to modify within the project.
+          - content (required): The new, complete LookML content to overwrite the existing file.
+
+          Output:
+          A confirmation message upon successful file modification.
 
     delete_project_file:
         kind: looker-delete-project-file
@@ -859,11 +1003,17 @@ tools:
         description: |
           delete_project_file Tool
 
-          Given a project_id and a file path within the project, this tool will delete
-          the file from the project.
+          This tool permanently deletes a specified LookML file from within a project.
+          Use with caution, as this action cannot be undone through the API.
 
-          This tool must be called after the dev_mode tool has changed the session to
-          dev mode.
+          Prerequisite: The Looker session must be in Development Mode. Use `dev_mode: true` first.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+          - file_path (required): The exact path to the LookML file to delete within the project.
+
+          Output:
+          A confirmation message upon successful file deletion.
 
     get_connections:
         kind: looker-get-connections
@@ -871,9 +1021,18 @@ tools:
         description: |
           get_connections Tool
 
-          This tool will list all the connections available in the Looker system, as
-          well as the dialect name, the default schema, the database if applicable,
-          and whether the connection supports multiple databases.
+          This tool retrieves a list of all database connections configured in the Looker system.
+
+          Parameters:
+          This tool takes no parameters.
+
+          Output:
+          A JSON array of objects, each representing a database connection and including details such as:
+          - `name`: The connection's unique identifier.
+          - `dialect`: The database dialect (e.g., "mysql", "postgresql", "bigquery").
+          - `default_schema`: The default schema for the connection.
+          - `database`: The associated database name (if applicable).
+          - `supports_multiple_databases`: A boolean indicating if the connection can access multiple databases.
 
     get_connection_schemas:
         kind: looker-get-connection-schemas
@@ -881,8 +1040,16 @@ tools:
         description: |
           get_connection_schemas Tool
 
-          This tool will list the schemas available from a connection, filtered by
-          an optional database name.
+          This tool retrieves a list of database schemas available through a specified
+          Looker connection.
+
+          Parameters:
+          - connection_name (required): The name of the database connection, obtained from `get_connections`.
+          - database (optional): An optional database name to filter the schemas.
+            Only applicable for connections that support multiple databases.
+
+          Output:
+          A JSON array of strings, where each string is the name of an available schema.
 
     get_connection_databases:
         kind: looker-get-connection-databases
@@ -890,8 +1057,16 @@ tools:
         description: |
           get_connection_databases Tool
 
-          This tool will list the databases available from a connection if the connection
-          supports multiple databases.
+          This tool retrieves a list of databases available through a specified Looker connection.
+          This is only applicable for connections that support multiple databases.
+          Use `get_connections` to check if a connection supports multiple databases.
+
+          Parameters:
+          - connection_name (required): The name of the database connection, obtained from `get_connections`.
+
+          Output:
+          A JSON array of strings, where each string is the name of an available database.
+          If the connection does not support multiple databases, an empty list or an error will be returned.
 
     get_connection_tables:
         kind: looker-get-connection-tables
@@ -899,8 +1074,17 @@ tools:
         description: |
           get_connection_tables Tool
 
-          This tool will list the tables available from a connection, filtered by the 
-          schema name and optional database name.
+          This tool retrieves a list of tables available within a specified database schema
+          through a Looker connection.
+
+          Parameters:
+          - connection_name (required): The name of the database connection, obtained from `get_connections`.
+          - schema (required): The name of the schema to list tables from, obtained from `get_connection_schemas`.
+          - database (optional): The name of the database to filter by. Only applicable for connections
+            that support multiple databases (check with `get_connections`).
+
+          Output:
+          A JSON array of strings, where each string is the name of an available table.
 
     get_connection_table_columns:
         kind: looker-get-connection-table-columns
@@ -908,9 +1092,20 @@ tools:
         description: |
           get_connection_table_columns Tool
 
-          This tool will list the columns available from a connection, for all the tables
-          given in a comma separated list of table names, filtered by the 
-          schema name and optional database name.
+          This tool retrieves a list of columns for one or more specified tables within a
+          given database schema and connection.
+
+          Parameters:
+          - connection_name (required): The name of the database connection, obtained from `get_connections`.
+          - schema (required): The name of the schema where the tables reside, obtained from `get_connection_schemas`.
+          - tables (required): A comma-separated string of table names for which to retrieve columns
+            (e.g., "users,orders,products"), obtained from `get_connection_tables`.
+          - database (optional): The name of the database to filter by. Only applicable for connections
+            that support multiple databases (check with `get_connections`).
+
+          Output:
+          A JSON array of objects, where each object represents a column and contains details
+          such as `table_name`, `column_name`, `data_type`, and `is_nullable`.
 
 
 toolsets:
@@ -932,6 +1127,7 @@ toolsets:
         - make_dashboard
         - add_dashboard_element
         - add_dashboard_filter
+        - generate_embed_url
         - health_pulse
         - health_analyze
         - health_vacuum

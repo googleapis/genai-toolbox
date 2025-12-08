@@ -28,9 +28,18 @@ tools:
         description: |
           get_connections Tool
 
-          This tool will list all the connections available in the Looker system, as
-          well as the dialect name, the default schema, the database if applicable,
-          and whether the connection supports multiple databases.
+          This tool retrieves a list of all database connections configured in the Looker system.
+
+          Parameters:
+          This tool takes no parameters.
+
+          Output:
+          A JSON array of objects, each representing a database connection and including details such as:
+          - `name`: The connection's unique identifier.
+          - `dialect`: The database dialect (e.g., "mysql", "postgresql", "bigquery").
+          - `default_schema`: The default schema for the connection.
+          - `database`: The associated database name (if applicable).
+          - `supports_multiple_databases`: A boolean indicating if the connection can access multiple databases.
 ```
 
 ## Reference

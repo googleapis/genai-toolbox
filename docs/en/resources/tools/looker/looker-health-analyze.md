@@ -42,17 +42,20 @@ tools:
     kind: looker-health-analyze
     source: looker-source
     description: |
-      health-analyze Tool
+      health_analyze Tool
 
-      This tool calculates the usage of projects, models and explores.
+      This tool calculates the usage statistics for Looker projects, models, and explores.
 
-      It accepts 6 parameters:
-        1. `action`: can be "projects", "models", or "explores"
-        2. `project`: the project to analyze (optional)
-        3. `model`: the model to analyze (optional)
-        4. `explore`: the explore to analyze (optional)
-        5. `timeframe`: the lookback period in days, default is 90
-        6. `min_queries`: the minimum number of queries to consider a resource as active, default is 1
+      Parameters:
+      - action (required): The type of resource to analyze. Can be `"projects"`, `"models"`, or `"explores"`.
+      - project (optional): The specific project ID to analyze.
+      - model (optional): The specific model name to analyze. Requires `project` if used without `explore`.
+      - explore (optional): The specific explore name to analyze. Requires `model` if used.
+      - timeframe (optional): The lookback period in days for usage data. Defaults to `90` days.
+      - min_queries (optional): The minimum number of queries for a resource to be considered active. Defaults to `1`.
+
+      Output:
+      The result is a JSON object containing usage metrics for the specified resources.
 ```
 
 ## Reference

@@ -29,8 +29,17 @@ tools:
         description: |
           get_connection_tables Tool
 
-          This tool will list the tables available from a connection, filtered by the 
-          schema name and optional database name.
+          This tool retrieves a list of tables available within a specified database schema
+          through a Looker connection.
+
+          Parameters:
+          - connection_name (required): The name of the database connection, obtained from `get_connections`.
+          - schema (required): The name of the schema to list tables from, obtained from `get_connection_schemas`.
+          - database (optional): The name of the database to filter by. Only applicable for connections
+            that support multiple databases (check with `get_connections`).
+
+          Output:
+          A JSON array of strings, where each string is the name of an available table.
 ```
 
 ## Reference

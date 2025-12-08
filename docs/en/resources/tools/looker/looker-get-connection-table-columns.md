@@ -28,9 +28,20 @@ tools:
         description: |
           get_connection_table_columns Tool
 
-          This tool will list the columns available from a connection, for all the tables
-          given in a comma separated list of table names, filtered by the 
-          schema name and optional database name.
+          This tool retrieves a list of columns for one or more specified tables within a
+          given database schema and connection.
+
+          Parameters:
+          - connection_name (required): The name of the database connection, obtained from `get_connections`.
+          - schema (required): The name of the schema where the tables reside, obtained from `get_connection_schemas`.
+          - tables (required): A comma-separated string of table names for which to retrieve columns
+            (e.g., "users,orders,products"), obtained from `get_connection_tables`.
+          - database (optional): The name of the database to filter by. Only applicable for connections
+            that support multiple databases (check with `get_connections`).
+
+          Output:
+          A JSON array of objects, where each object represents a column and contains details
+          such as `table_name`, `column_name`, `data_type`, and `is_nullable`.
 ```
 
 ## Reference

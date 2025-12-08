@@ -29,9 +29,15 @@ tools:
         description: |
           run_look Tool
 
-          This tool runs the query associated with a look and returns
-          the data in a JSON structure. It accepts the look_id as the
-          parameter.
+          This tool executes the query associated with a saved Look and
+          returns the resulting data in a JSON structure.
+
+          Parameters:
+          - look_id (required): The unique identifier of the Look to run,
+            typically obtained from the `get_looks` tool.
+
+          Output:
+          The query results are returned as a JSON object.
 ```
 
 ## Reference

@@ -29,25 +29,31 @@ default to 100 and 0.
 
 ```yaml
 tools:
-    get_dashboards:
-        kind: looker-get-dashboards
-        source: looker-source
-        description: |
-          get_dashboards Tool
-
-          This tool is used to search for saved dashboards in a Looker instance.
-          String search params use case-insensitive matching. String search
-          params can contain % and '_' as SQL LIKE pattern match wildcard
-          expressions. example="dan%" will match "danger" and "Danzig" but
-          not "David" example="D_m%" will match "Damage" and "dump".
-
-          Most search params can accept "IS NULL" and "NOT NULL" as special
-          expressions to match or exclude (respectively) rows where the
-          column is null.
-
-          The limit and offset are used to paginate the results.
-
-          The result of the get_dashboards tool is a list of json objects.
+        get_dashboards:
+            kind: looker-get-dashboards
+            source: looker-source
+            description: |
+              get_dashboards Tool
+    
+              This tool searches for saved dashboards in a Looker instance. It returns a list of JSON objects, each representing a dashboard.
+    
+              Search Parameters:
+              - title (optional): Filter by dashboard title (supports wildcards).
+              - folder_id (optional): Filter by the ID of the folder where the dashboard is saved.
+              - user_id (optional): Filter by the ID of the user who created the dashboard.
+              - description (optional): Filter by description content (supports wildcards).
+              - id (optional): Filter by specific dashboard ID.
+              - limit (optional): Maximum number of results to return. Defaults to a system limit.
+              - offset (optional): Starting point for pagination.
+    
+              String Search Behavior:
+              - Case-insensitive matching.
+              - Supports SQL LIKE pattern match wildcards:
+                - `%`: Matches any sequence of zero or more characters. (e.g., `"finan%"` matches "financial", "finance")
+                - `_`: Matches any single character. (e.g., `"s_les"` matches "sales")
+              - Special expressions for null checks:
+                - `"IS NULL"`: Matches dashboards where the field is null.
+                - `"NOT NULL"`: Excludes dashboards where the field is null.
 ```
 
 ## Reference

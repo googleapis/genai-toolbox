@@ -28,11 +28,17 @@ tools:
         kind: looker-get-parameters
         source: looker-source
         description: |
-          The get_parameters tool retrieves the list of parameters defined in
-          an explore.
+          get_parameters Tool
 
-          It takes two parameters, the model_name looked up from get_models and the
-          explore_name looked up from get_explores.
+          This tool retrieves a list of parameters defined within a specific Looker explore.
+          LookML parameters are dynamic input fields that allow users to influence query
+          behavior without directly modifying the underlying LookML. They are often used
+          with `liquid` templating to create flexible dashboards and reports, enabling
+          users to choose dimensions, measures, or other query components at runtime.
+
+          Parameters:
+          - model_name (required): The name of the LookML model, obtained from `get_models`.
+          - explore_name (required): The name of the explore within the model, obtained from `get_explores`.
 ```
 
 The response is a json array with the following elements:

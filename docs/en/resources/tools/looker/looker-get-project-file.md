@@ -28,8 +28,15 @@ tools:
         description: |
           get_project_file Tool
 
-          Given a project_id and a file path within the project, this tool returns
-          the contents of the LookML file.
+          This tool retrieves the raw content of a specific LookML file from within a project.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project, obtained from `get_projects`.
+          - file_path (required): The path to the LookML file within the project,
+            typically obtained from `get_project_files`.
+
+          Output:
+          The raw text content of the specified LookML file.
 ```
 
 ## Reference

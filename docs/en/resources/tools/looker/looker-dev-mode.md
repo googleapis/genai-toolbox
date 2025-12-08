@@ -29,8 +29,13 @@ tools:
         description: |
           dev_mode Tool
 
-          Passing true to this tool switches the session to dev mode. Passing false to this tool switches the
-          session to production mode.
+          This tool allows toggling the Looker IDE session between Development Mode and Production Mode.
+          Development Mode enables making and testing changes to LookML projects.
+
+          Parameters:
+          - enable (required): A boolean value.
+            - `true`: Switches the current session to Development Mode.
+            - `false`: Switches the current session to Production Mode.
 ```
 
 ## Reference

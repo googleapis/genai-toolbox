@@ -49,20 +49,24 @@ tools:
     kind: looker-health-pulse
     source: looker-source
     description: |
-      health-pulse Tool
+      health_pulse Tool
 
-      This tool takes the pulse of a Looker instance by taking
-      one of the following actions:
-        1. `check_db_connections`,
-        2. `check_dashboard_performance`,
-        3. `check_dashboard_errors`,
-        4. `check_explore_performance`,
-        5. `check_schedule_failures`, or
-        6. `check_legacy_features`
-      
-      The `check_legacy_features` action is only available in Looker Core. If
-      it is called on a Looker Core instance, you will get a notice. That notice
-      should not be reported as an error.
+      This tool performs various health checks on a Looker instance.
+
+      Parameters:
+      - action (required): Specifies the type of health check to perform.
+        Choose one of the following:
+        - `check_db_connections`: Verifies database connectivity.
+        - `check_dashboard_performance`: Assesses dashboard loading performance.
+        - `check_dashboard_errors`: Identifies errors within dashboards.
+        - `check_explore_performance`: Evaluates explore query performance.
+        - `check_schedule_failures`: Reports on failed scheduled deliveries.
+        - `check_legacy_features`: Checks for the usage of legacy features.
+
+      Note on `check_legacy_features`:
+      This action is exclusively available in Looker Core instances. If invoked
+      on a non-Looker Core instance, it will return a notice rather than an error.
+      This notice should be considered normal behavior and not an indication of an issue.
 ```
 
 ## Reference
