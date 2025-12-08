@@ -167,8 +167,28 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 		t.Fatalf("failed to connect to bucket: %v", err)
 	}
 
-	// Create scope if it doesn't exist
 	bucketMgr := bucket.CollectionsV2()
+	
+	// --- FIX: PRE-EMPTIVE CLEANUP ---
+	// If the test failed before, the collection might still exist.
+	// We drop it here to start clean and prevent collection count bloat.
+    // Use a short context for this administrative operation.
+	dropCtx, dropCancel := context.WithTimeout(ctx, 10*time.Second)
+	defer dropCancel()
+	
+	// Attempt to drop the collection (ignore "not found" error, which is expected sometimes)
+	err = bucketMgr.DropCollection(scopeName, collectionName, &gocb.DropCollectionOptions{
+		Context: dropCtx,
+    })
+    
+    // Log a warning if drop failed but isn't due to "not found"
+	if err != nil && !strings.Contains(err.Error(), "not found") {
+		t.Logf("WARN: Pre-emptive drop of %s.%s failed: %v", scopeName, collectionName, err)
+	}
+	// --- END FIX ---
+	
+	
+	// Create scope if it doesn't exist
 	err = bucketMgr.CreateScope(scopeName, nil)
 	if err != nil && !strings.Contains(err.Error(), "already exists") {
 		t.Logf("failed to create scope (might already exist): %v", err)
@@ -223,10 +243,24 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 
 	// Return a cleanup function
 	return func(t *testing.T) {
+		// --- FIX: ROBUST TEARDOWN ---
+        // Use a dedicated context for cleanup.
+        cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 10*time.Second)
+        defer cleanupCancel()
+		
 		// Drop the collection
-		err := bucketMgr.DropCollection(scopeName, collectionName, nil)
+		// err := bucketMgr.DropCollection(scopeName, collectionName, nil)
+		err := bucketMgr.DropCollection(scopeName, collectionName, &gocb.DropCollectionOptions{
+            Context: cleanupCtx,
+        })
+		// if err != nil {
+		// 	t.Logf("failed to drop collection: %v", err)
+		// }
 		if err != nil {
-			t.Logf("failed to drop collection: %v", err)
+            // Only log if it's not a "not found" error (which is fine during teardown)
+			if !strings.Contains(err.Error(), "not found") {
+                t.Logf("ERROR: Teardown failed to drop collection %s.%s: %v", scopeName, collectionName, err)
+            }
 		}
 	}
 }
