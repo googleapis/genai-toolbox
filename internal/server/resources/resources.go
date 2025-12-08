@@ -18,6 +18,7 @@ import (
 	"sync"
 
 	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -25,30 +26,33 @@ import (
 
 // ResourceManager contains available resources for the server. Should be initialized with NewResourceManager().
 type ResourceManager struct {
-	mu           sync.RWMutex
-	sources      map[string]sources.Source
-	authServices map[string]auth.AuthService
-	tools        map[string]tools.Tool
-	toolsets     map[string]tools.Toolset
-	prompts      map[string]prompts.Prompt
-	promptsets   map[string]prompts.Promptset
+	mu              sync.RWMutex
+	sources         map[string]sources.Source
+	authServices    map[string]auth.AuthService
+	embeddingModels map[string]embeddingmodels.EmbeddingModel
+	tools           map[string]tools.Tool
+	toolsets        map[string]tools.Toolset
+	prompts         map[string]prompts.Prompt
+	promptsets      map[string]prompts.Promptset
 }
 
 func NewResourceManager(
 	sourcesMap map[string]sources.Source,
 	authServicesMap map[string]auth.AuthService,
+	embeddingModelsMap map[string]embeddingmodels.EmbeddingModel,
 	toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset,
 	promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset,
 
 ) *ResourceManager {
 	resourceMgr := &ResourceManager{
-		mu:           sync.RWMutex{},
-		sources:      sourcesMap,
-		authServices: authServicesMap,
-		tools:        toolsMap,
-		toolsets:     toolsetsMap,
-		prompts:      promptsMap,
-		promptsets:   promptsetsMap,
+		mu:              sync.RWMutex{},
+		sources:         sourcesMap,
+		authServices:    authServicesMap,
+		embeddingModels: embeddingModelsMap,
+		tools:           toolsMap,
+		toolsets:        toolsetsMap,
+		prompts:         promptsMap,
+		promptsets:      promptsetsMap,
 	}
 
 	return resourceMgr
@@ -96,11 +100,12 @@ func (r *ResourceManager) GetPromptset(promptsetName string) (prompts.Promptset,
 	return promptset, ok
 }
 
-func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset, promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset) {
+func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset, promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.sources = sourcesMap
 	r.authServices = authServicesMap
+	r.embeddingModels = embeddingModelsMap
 	r.tools = toolsMap
 	r.toolsets = toolsetsMap
 	r.prompts = promptsMap
