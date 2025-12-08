@@ -484,11 +484,11 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 		}
 
 		// Check for conflicts and merge embeddingModels
-		for name, model := range file.EmbeddingModels {
+		for name, em := range file.EmbeddingModels {
 			if _, exists := merged.EmbeddingModels[name]; exists {
 				conflicts = append(conflicts, fmt.Sprintf("embedding model '%s' (file #%d)", name, fileIndex+1))
 			} else {
-				merged.EmbeddingModels[name] = model
+				merged.EmbeddingModels[name] = em
 			}
 		}
 
