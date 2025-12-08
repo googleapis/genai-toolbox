@@ -187,25 +187,16 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	if filterType == "field_filter" {
-		if _, ok := paramsMap["model"]; !ok {
+		model, ok := paramsMap["model"].(string)
+		if !ok || model == "" {
 			return nil, fmt.Errorf("model must be specified for field_filter type")
 		}
-		model := paramsMap["model"].(string)
-		if _, ok := paramsMap["explore"]; !ok {
+		explore, ok := paramsMap["explore"].(string)
+		if !ok || explore == "" {
 			return nil, fmt.Errorf("explore must be specified for field_filter type")
 		}
-		explore := paramsMap["explore"].(string)
-		if _, ok := paramsMap["dimension"]; !ok {
-			return nil, fmt.Errorf("dimension must be specified for field_filter type")
-		}
-		dimension := paramsMap["dimension"].(string)
-
-		switch "" {
-		case model:
-			return nil, fmt.Errorf("model must be specified for field_filter type")
-		case explore:
-			return nil, fmt.Errorf("explore must be specified for field_filter type")
-		case dimension:
+		dimension, ok := paramsMap["dimension"].(string)
+		if !ok || dimension == "" {
 			return nil, fmt.Errorf("dimension must be specified for field_filter type")
 		}
 

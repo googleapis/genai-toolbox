@@ -48,7 +48,7 @@ tools:
             - `explore`
           - id (required): The unique identifier for the content.
             - For dashboards and looks, use the numeric ID (e.g., "123").
-            - For explores, use the format "model_name/explore_name".    generate_embed_url:
+            - For explores, use the format "model_name/explore_name".
 ```
 
 ## Reference

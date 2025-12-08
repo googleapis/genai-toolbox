@@ -155,7 +155,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	logger.DebugContext(ctx, "params = ", params)
 
-	ptr_wq, err := lookercommon.ProcessQueryArgs(ctx, params)
+	wq, err := lookercommon.ProcessQueryArgs(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("error building query request: %w", err)
 	}
@@ -165,14 +165,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	title := paramsMap["title"].(string)
 
 	visConfig := paramsMap["vis_config"].(map[string]any)
-	ptr_wq.VisConfig = &visConfig
+	wq.VisConfig = &visConfig
 
 	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
 	if err != nil {
 		return nil, fmt.Errorf("error getting sdk: %w", err)
 	}
 
-	qresp, err := sdk.CreateQuery(*ptr_wq, "id", t.ApiSettings)
+	qresp, err := sdk.CreateQuery(*wq, "id", t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making create query request: %w", err)
 	}
@@ -213,7 +213,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	wrm := v4.WriteResultMakerWithIdVisConfigAndDynamicFields{
-		Query:       ptr_wq,
+		Query:       wq,
 		VisConfig:   &visConfig,
 		Filterables: &filterables,
 	}
@@ -221,7 +221,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		DashboardId: &dashboard_id,
 		Title:       &title,
 		ResultMaker: &wrm,
-		Query:       ptr_wq,
+		Query:       wq,
 		QueryId:     qresp.Id,
 	}
 
