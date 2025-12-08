@@ -176,7 +176,7 @@ tools:
     list_schemas:
         kind: postgres-list-schemas
         source: postgresql-source
-
+    
     database_overview:
         kind: postgres-database-overview
         source: postgresql-source
@@ -203,6 +203,13 @@ tools:
 
     list_table_stats:
         kind: postgres-list-table-stats
+
+    list_publication_tables:
+        kind: postgres-list-publication-tables
+        source: postgresql-source
+
+    list_tablespaces:
+        kind: postgres-list-tablespaces
         source: postgresql-source
 
 toolsets:
@@ -230,4 +237,5 @@ toolsets:
         - list_query_stats
         - get_column_cardinality
         - list_table_stats
-
+        - list_publication_tables
+        - list_tablespaces

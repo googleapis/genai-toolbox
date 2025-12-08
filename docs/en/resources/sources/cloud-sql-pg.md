@@ -77,6 +77,12 @@ to a database by following these instructions][csql-pg-quickstart].
 - [`postgres-list-table-stats`](../tools/postgres/postgres-list-table-stats.md)
   List statistics of a table in a PostgreSQL database.
 
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
+
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
+  List tablespaces in a PostgreSQL database.
+
 ### Pre-built Configurations
 
 - [Cloud SQL for Postgres using
