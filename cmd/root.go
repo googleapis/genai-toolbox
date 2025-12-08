@@ -386,13 +386,13 @@ func NewCommand(opts ...Option) *Command {
 }
 
 type ToolsFile struct {
-	Sources               server.SourceConfigs         `yaml:"sources"`
-	AuthSources           server.AuthServiceConfigs    `yaml:"authSources"` // Deprecated: Kept for compatibility.
-	AuthServices          server.AuthServiceConfigs    `yaml:"authServices"`
-	EmbeddingModelConfigs server.EmbeddingModelConfigs `yaml:"embeddingModels"`
-	Tools                 server.ToolConfigs           `yaml:"tools"`
-	Toolsets              server.ToolsetConfigs        `yaml:"toolsets"`
-	Prompts               server.PromptConfigs         `yaml:"prompts"`
+	Sources         server.SourceConfigs         `yaml:"sources"`
+	AuthSources     server.AuthServiceConfigs    `yaml:"authSources"` // Deprecated: Kept for compatibility.
+	AuthServices    server.AuthServiceConfigs    `yaml:"authServices"`
+	EmbeddingModels server.EmbeddingModelConfigs `yaml:"embeddingModels"`
+	Tools           server.ToolConfigs           `yaml:"tools"`
+	Toolsets        server.ToolsetConfigs        `yaml:"toolsets"`
+	Prompts         server.PromptConfigs         `yaml:"prompts"`
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
@@ -441,12 +441,12 @@ func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 // All resource names (sources, authServices, tools, toolsets) must be unique across all files.
 func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 	merged := ToolsFile{
-		Sources:               make(server.SourceConfigs),
-		AuthServices:          make(server.AuthServiceConfigs),
-		EmbeddingModelConfigs: make(server.EmbeddingModelConfigs),
-		Tools:                 make(server.ToolConfigs),
-		Toolsets:              make(server.ToolsetConfigs),
-		Prompts:               make(server.PromptConfigs),
+		Sources:         make(server.SourceConfigs),
+		AuthServices:    make(server.AuthServiceConfigs),
+		EmbeddingModels: make(server.EmbeddingModelConfigs),
+		Tools:           make(server.ToolConfigs),
+		Toolsets:        make(server.ToolsetConfigs),
+		Prompts:         make(server.PromptConfigs),
 	}
 
 	var conflicts []string
@@ -482,12 +482,12 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 			}
 		}
 
-		// Check for conflicts and merge
-		for name, cfg := range file.EmbeddingModelConfigs {
-			if _, exists := merged.EmbeddingModelConfigs[name]; exists {
+		// Check for conflicts and merge embeddingModels
+		for name, cfg := range file.EmbeddingModels {
+			if _, exists := merged.EmbeddingModels[name]; exists {
 				conflicts = append(conflicts, fmt.Sprintf("embedding model '%s' (file #%d)", name, fileIndex+1))
 			} else {
-				merged.EmbeddingModelConfigs[name] = cfg
+				merged.EmbeddingModels[name] = cfg
 			}
 		}
 
@@ -631,7 +631,7 @@ func validateReloadEdits(
 		Version:               versionString,
 		SourceConfigs:         toolsFile.Sources,
 		AuthServiceConfigs:    toolsFile.AuthServices,
-		EmbeddingModelConfigs: toolsFile.EmbeddingModelConfigs,
+		EmbeddingModelConfigs: toolsFile.EmbeddingModels,
 		ToolConfigs:           toolsFile.Tools,
 		ToolsetConfigs:        toolsFile.Toolsets,
 		PromptConfigs:         toolsFile.Prompts,
