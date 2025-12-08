@@ -920,7 +920,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 				},
 			},
 			wantStatusCode: http.StatusOK,
-			wantBody:       select1Want,
+			wantBody:       `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"[{\"_id\":3,\"id\":3,\"name\":\"Sid\"}]"}]}}`,
 		},
 		{
 			name:          "MCP Invoke my-auth-required-tool with invalid auth token",

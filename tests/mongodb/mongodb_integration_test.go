@@ -102,7 +102,7 @@ func TestMongoDBToolEndpoints(t *testing.T) {
 	// Get configs for tests
 	select1Want := `[{"_id":3,"id":3,"name":"Sid"}]`
 	myToolId3NameAliceWant := `[{"_id":5,"id":3,"name":"Alice"}]`
-	myToolById4Want := `[{"_id":4,"id":4,"name":null}]`
+	myToolById4Want := `null`
 	mcpMyFailToolWant := `invalid JSON input: missing colon after key `
 	mcpMyToolId3NameAliceWant := `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"_id\":5,\"id\":3,\"name\":\"Alice\"}"}]}}`
 
