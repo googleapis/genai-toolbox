@@ -86,6 +86,9 @@ to a database by following these instructions][csql-pg-quickstart].
   Lists the key performance and activity statistics for each database in the postgreSQL
   instance.
 
+- [`postgres-list-roles`](../tools/postgres/postgres-list-roles.md)
+  Lists all the user-created roles in PostgreSQL database..
+
 ### Pre-built Configurations
 
 - [Cloud SQL for Postgres using

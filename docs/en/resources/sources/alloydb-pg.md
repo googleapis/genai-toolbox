@@ -90,6 +90,9 @@ cluster][alloydb-free-trial].
   Lists the key performance and activity statistics for each database in the AlloyDB
   instance.
 
+- [`postgres-list-roles`](../tools/postgres/postgres-list-roles.md)
+  Lists all the user-created roles in PostgreSQL database..
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)

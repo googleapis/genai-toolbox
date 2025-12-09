@@ -162,4 +162,5 @@ func TestPostgres(t *testing.T) {
 	tests.RunPostgresListTableSpacesTest(t)
 	tests.RunPostgresListPgSettingsTest(t, ctx, pool)
 	tests.RunPostgresListDatabaseStatsTest(t, ctx, pool)
+	tests.RunPostgresListRolesTest(t, ctx, pool)
 }

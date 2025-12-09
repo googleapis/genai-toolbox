@@ -81,6 +81,9 @@ reputation for reliability, feature robustness, and performance.
   Lists the key performance and activity statistics for each database in the postgreSQL
   server.
 
+- [`postgres-list-roles`](../tools/postgres/postgres-list-roles.md)
+  Lists all the user-created roles in PostgreSQL database..
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)

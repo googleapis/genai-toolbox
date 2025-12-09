@@ -191,6 +191,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistpgsettings"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistpublicationtables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistquerystats"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistroles"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistschemas"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistsequences"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttables"
