@@ -20,9 +20,9 @@ Postgres database. It's compatible with any of the following sources:
 `postgres-list-sequences` lists detailed information as JSON for all sequences.
 The tool takes the following input parameters:
 
-- `sequencename` (optional): A text to filter results by sequence name. The
+- `sequence_name` (optional): A text to filter results by sequence name. The
   input is used within a LIKE clause. Default: `""`
-- `schemaname` (optional): A text to filter results by schema name. The input is
+- `schema_name` (optional): A text to filter results by schema name. The input is
   used within a LIKE clause. Default: `""`
 - `limit` (optional): The maximum number of rows to return. Default: `50`.
 
@@ -45,9 +45,9 @@ The response is a json array with the following elements:
 
 ```json
 {
-    "sequencename": "sequence name",
-    "schemaname": "schema name",
-    "sequenceowner": "owner of the sequence",
+    "sequence_name": "sequence name",
+    "schema_name": "schema name",
+    "sequence_owner": "owner of the sequence",
     "data_type": "data type of the sequence",
     "start_value": "starting value of the sequence",
     "min_value": "minimum value of the sequence",
