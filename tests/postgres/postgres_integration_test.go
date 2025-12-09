@@ -160,4 +160,6 @@ func TestPostgres(t *testing.T) {
 	tests.RunPostgresGetColumnCardinalityTest(t, ctx, pool)
 	tests.RunPostgresListPublicationTablesTest(t, ctx, pool)
 	tests.RunPostgresListTableSpacesTest(t)
+	tests.RunPostgresListPgSettingsTest(t, ctx, pool)
+	tests.RunPostgresListDatabaseStatsTest(t, ctx, pool)
 }
