@@ -2304,6 +2304,241 @@ func RunPostgresListTableSpacesTest(t *testing.T) {
 	}
 }
 
+func RunPostgresListPgSettingsTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	targetSetting := "maintenance_work_mem"
+	var name, setting, unit, shortDesc, source, contextVal string
+
+	// We query the raw pg_settings to get the data needed to reconstruct the logic
+	// defined in your listPgSettingQuery.
+	err := pool.QueryRow(ctx, `
+		SELECT name, setting, unit, short_desc, source, context 
+		FROM pg_settings 
+		WHERE name = $1
+	`, targetSetting).Scan(&name, &setting, &unit, &shortDesc, &source, &contextVal)
+
+	if err != nil {
+		t.Fatalf("Setup failed: could not fetch postgres setting '%s': %v", targetSetting, err)
+	}
+
+	// Replicate the SQL CASE logic for 'requires_restart' field
+	requiresRestart := "No"
+	switch contextVal {
+	case "postmaster":
+		requiresRestart = "Yes"
+	case "sighup":
+		requiresRestart = "No (Reload sufficient)"
+	}
+
+	expectedObject := map[string]interface{}{
+		"name":             name,
+		"current_value":    setting,
+		"unit":             unit,
+		"short_desc":       shortDesc,
+		"source":           source,
+		"requires_restart": requiresRestart,
+	}
+	expectedJSON, _ := json.Marshal([]interface{}{expectedObject})
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           string
+	}{
+		{
+			name:           "invoke list_pg_settings with specific setting",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"setting_name": "%s"}`, targetSetting))),
+			wantStatusCode: http.StatusOK,
+			want:           string(expectedJSON),
+		},
+		{
+			name:           "invoke list_pg_settings with non-existent setting",
+			requestBody:    bytes.NewBuffer([]byte(`{"setting_name": "non_existent_config_xyz"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           `null`,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_pg_settings/invoke"
+			resp, body := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(body, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got, want any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v", err)
+			}
+			if err := json.Unmarshal([]byte(tc.want), &want); err != nil {
+				t.Fatalf("failed to unmarshal want string: %v", err)
+			}
+
+			if diff := cmp.Diff(want, got); diff != "" {
+				t.Errorf("Unexpected result (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+// RunPostgresDatabaseStatsTest tests the database_stats tool by comparing API results
+// against a direct query to the database.
+func RunPostgresListDatabaseStatsTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	dbName1 := "test_db_stats_1"
+	dbOwner1 := "test_user1"
+	dbName2 := "test_db_stats_2"
+	dbOwner2 := "test_user2"
+
+	cleanup1 := setUpDatabase(t, ctx, pool, dbName1, dbOwner1)
+	defer cleanup1()
+	cleanup2 := setUpDatabase(t, ctx, pool, dbName2, dbOwner2)
+	defer cleanup2()
+
+	requiredKeys := map[string]bool{
+		"database_name":      true,
+		"database_owner":     true,
+		"default_tablespace": true,
+		"is_connectable":     true,
+	}
+
+	db1Want := map[string]interface{}{
+		"database_name":      dbName1,
+		"database_owner":     dbOwner1,
+		"default_tablespace": "pg_default",
+		"is_connectable":     true,
+	}
+
+	db2Want := map[string]interface{}{
+		"database_name":      dbName2,
+		"database_owner":     dbOwner2,
+		"default_tablespace": "pg_default",
+		"is_connectable":     true,
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           []map[string]interface{}
+	}{
+		{
+			name:           "invoke database_stats filtering by specific database name",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"database_name": "%s"}`, dbName1))),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]interface{}{db1Want},
+		},
+		{
+			name:           "invoke database_stats filtering by specific owner",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"database_owner": "%s"}`, dbOwner2))),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]interface{}{db2Want},
+		},
+		{
+			name:           "filter by tablespace",
+			requestBody:    bytes.NewBuffer([]byte(`{"default_tablespace": "pg_default"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]interface{}{db1Want, db2Want},
+		},
+		{
+			name:           "sort by size (desc)",
+			requestBody:    bytes.NewBuffer([]byte(`{"sort_by": "size"}`)),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]interface{}{db1Want, db2Want},
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_database_stats/invoke"
+			resp, body := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(body, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []map[string]interface{}
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v", err)
+			}
+
+			// Configuration for comparison
+			opts := []cmp.Option{
+				// Ensure consistent order based on name for comparison
+				cmpopts.SortSlices(func(a, b map[string]interface{}) bool {
+					return a["database_name"].(string) < b["database_name"].(string)
+				}),
+
+				// Ignore Volatile Keys which change in every run and only compare the keys in 'requiredKeys'
+				cmpopts.IgnoreMapEntries(func(key string, _ interface{}) bool {
+					return !requiredKeys[key]
+				}),
+
+				// Ignore Irrelevant Databases
+				cmpopts.IgnoreSliceElements(func(v map[string]interface{}) bool {
+					name, ok := v["database_name"].(string)
+					if !ok {
+						return true
+					}
+					return name != dbName1 && name != dbName2
+				}),
+			}
+
+			if diff := cmp.Diff(tc.want, got, opts...); diff != "" {
+				t.Errorf("Unexpected result (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func setUpDatabase(t *testing.T, ctx context.Context, pool *pgxpool.Pool, dbName, dbOwner string) func() {
+	_, err := pool.Exec(ctx, fmt.Sprintf("CREATE ROLE %s LOGIN PASSWORD 'password';", dbOwner))
+	if err != nil {
+		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP ROLE %s;", dbOwner))
+		t.Fatalf("failed to create %s: %v", dbOwner, err)
+	}
+	_, err = pool.Exec(ctx, fmt.Sprintf("GRANT %s TO current_user;", dbOwner))
+	if err != nil {
+		t.Fatalf("failed to grant %s to current_user: %v", dbOwner, err)
+	}
+	_, err = pool.Exec(ctx, fmt.Sprintf("CREATE DATABASE %s OWNER %s;", dbName, dbOwner))
+	if err != nil {
+		t.Fatalf("failed to create %s: %v", dbName, err)
+	}
+	return func() {
+		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP DATABASE IF EXISTS %s;", dbName))
+		_, _ = pool.Exec(ctx, fmt.Sprintf("DROP ROLE IF EXISTS %s;", dbOwner))
+	}
+}
+
 // RunMySQLListTablesTest run tests against the mysql-list-tables tool
 func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNameAuth, expectedOwner string) {
 	var ownerWant any
