@@ -903,10 +903,7 @@ steps:
     args:
       - -c
       - |
-        .ci/test_with_coverage.sh \
-          "MariaDB" \
-          mariadb \
-          mariadb
+        go test ./tests/mariadb
 
 
 availableSecrets:
