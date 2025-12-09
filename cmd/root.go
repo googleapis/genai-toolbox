@@ -95,6 +95,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlcreatedatabase"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlcreateusers"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlgetinstances"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlinsertbackup"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqllistdatabases"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqllistinstances"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlwaitforoperation"
