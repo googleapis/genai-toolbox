@@ -12,7 +12,7 @@ aliases:
 The `cloud-logging-admin-list-log-names` tool lists the log names available in the Google Cloud project.
 It's compatible with the following sources:
 
-- [cloud-logging-admin](../../sources/cloud-log-admin.md)
+- [cloud-logging-admin](../../sources/cloud-logging-admin.md)
 
 ## Example
 

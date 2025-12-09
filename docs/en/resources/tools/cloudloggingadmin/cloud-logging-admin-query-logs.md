@@ -12,7 +12,7 @@ aliases:
 The `cloud-logging-admin-query-logs` tool allows you to query log entries from Google Cloud Logging using the advanced logs filter syntax.
 It's compatible with the following sources:
 
-- [cloud-logging-admin](../../sources/cloud-log-admin.md)
+- [cloud-logging-admin](../../sources/cloud-logging-admin.md)
 
 ## Example
 

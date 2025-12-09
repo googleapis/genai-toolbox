@@ -151,10 +151,6 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		logNames = append(logNames, logName)
 	}
 
-	if len(logNames) == 0 {
-		return nil, fmt.Errorf("no log names found")
-	}
-
 	return logNames, nil
 }
 

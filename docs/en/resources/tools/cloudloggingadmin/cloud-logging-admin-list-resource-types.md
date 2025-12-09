@@ -12,7 +12,7 @@ aliases:
 The `cloud-logging-admin-list-resource-types` tool lists the monitored resource types available in Google Cloud Logging.
 It's compatible with the following sources:
 
-- [cloud-logging-admin](../../sources/cloud-log-admin.md)
+- [cloud-logging-admin](../../sources/cloud-logging-admin.md)
 
 ## Example
 

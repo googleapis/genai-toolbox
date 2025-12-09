@@ -231,14 +231,17 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 			}
 
 			if entry.HTTPRequest != nil {
-				result["httpRequest"] = map[string]any{
-					"requestMethod": entry.HTTPRequest.Request.Method,
-					"requestUrl":    entry.HTTPRequest.Request.URL.String(),
-					"status":        entry.HTTPRequest.Status,
-					"latency":       entry.HTTPRequest.Latency.String(),
-					"remoteIp":      entry.HTTPRequest.RemoteIP,
-					"userAgent":     entry.HTTPRequest.Request.UserAgent(),
+				httpRequestMap := map[string]any{
+					"status":   entry.HTTPRequest.Status,
+					"latency":  entry.HTTPRequest.Latency.String(),
+					"remoteIp": entry.HTTPRequest.RemoteIP,
 				}
+				if req := entry.HTTPRequest.Request; req != nil {
+					httpRequestMap["requestMethod"] = req.Method
+					httpRequestMap["requestUrl"] = req.URL.String()
+					httpRequestMap["userAgent"] = req.UserAgent()
+				}
+				result["httpRequest"] = httpRequestMap
 			}
 
 			if entry.Trace != "" {
