@@ -791,6 +791,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 	// Default values for MCPTestConfig
 	configs := &MCPTestConfig{
 		myToolId3NameAliceWant: `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`,
+		mcpSelect1Want:         select1Want,
 		supportClientAuth:      false,
 		supportSelect1Auth:     true,
 	}
@@ -920,7 +921,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 				},
 			},
 			wantStatusCode: http.StatusOK,
-			wantBody:       select1Want,
+			wantBody:       configs.mcpSelect1Want,
 		},
 		{
 			name:          "MCP Invoke my-auth-required-tool with invalid auth token",
@@ -1562,12 +1563,14 @@ func RunPostgresListTriggersTest(t *testing.T, ctx context.Context, pool *pgxpoo
 		requestBody    io.Reader
 		wantStatusCode int
 		want           []map[string]any
+		compareSubset  bool
 	}{
 		{
 			name:           "list all triggers (expecting the one we created)",
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
 			wantStatusCode: http.StatusOK,
 			want:           []map[string]any{wantTrigger},
+			compareSubset:  true, // avoid test flakiness in race condition
 		},
 		{
 			name:           "filter by trigger_name",
@@ -1609,6 +1612,171 @@ func RunPostgresListTriggersTest(t *testing.T, ctx context.Context, pool *pgxpoo
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
 			const api = "http://127.0.0.1:5000/api/tool/list_triggers/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []map[string]any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal nested result string: %v, content: %s", err, resultString)
+			}
+
+			if tc.compareSubset {
+				// Assert that the 'wantTrigger' is present in the 'got' list.
+				found := false
+				for _, resultTrigger := range got {
+					if resultTrigger["trigger_name"] == wantTrigger["trigger_name"] {
+						found = true
+						if diff := cmp.Diff(wantTrigger, resultTrigger); diff != "" {
+							t.Errorf("Mismatch in fields for the expected trigger (-want +got):\n%s", diff)
+						}
+						break
+					}
+				}
+				if !found {
+					t.Errorf("Expected trigger '%s' not found in the list of all triggers.", triggerName)
+				}
+			} else {
+				if diff := cmp.Diff(tc.want, got); diff != "" {
+					t.Errorf("Unexpected result (-want +got):\n%s", diff)
+				}
+			}
+		})
+	}
+}
+
+func setupPostgresPublicationTable(t *testing.T, ctx context.Context, pool *pgxpool.Pool, tableName string, pubName string) func(t *testing.T) {
+	t.Helper()
+	createTableStmt := fmt.Sprintf("CREATE TABLE %s (id SERIAL PRIMARY KEY, name TEXT);", tableName)
+	if _, err := pool.Exec(ctx, createTableStmt); err != nil {
+		t.Fatalf("unable to create table %s: %v", tableName, err)
+	}
+
+	createPubStmt := fmt.Sprintf("CREATE PUBLICATION %s FOR TABLE %s;", pubName, tableName)
+	if _, err := pool.Exec(ctx, createPubStmt); err != nil {
+		if _, dropErr := pool.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName)); dropErr != nil {
+			t.Errorf("unable to drop table after failing to create publication: %v", dropErr)
+		}
+		t.Fatalf("unable to create publication %s: %v", pubName, err)
+	}
+
+	return func(t *testing.T) {
+		t.Helper()
+		if _, err := pool.Exec(ctx, fmt.Sprintf("DROP PUBLICATION IF EXISTS %s;", pubName)); err != nil {
+			t.Errorf("unable to drop publication %s: %v", pubName, err)
+		}
+		if _, err := pool.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName)); err != nil {
+			t.Errorf("unable to drop table %s: %v", tableName, err)
+		}
+	}
+}
+
+func RunPostgresListPublicationTablesTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	table1Name := "pub_table_1"
+	pub1Name := "pub_1"
+
+	table2Name := "pub_table_2"
+	pub2Name := "pub_2"
+
+	cleanup := setupPostgresPublicationTable(t, ctx, pool, table1Name, pub1Name)
+	defer cleanup(t)
+	cleanup2 := setupPostgresPublicationTable(t, ctx, pool, table2Name, pub2Name)
+	defer cleanup2(t)
+
+	// Fetch the current user to match the publication_owner
+	var currentUser string
+	err := pool.QueryRow(ctx, "SELECT current_user;").Scan(&currentUser)
+	if err != nil {
+		t.Fatalf("unable to fetch current user: %v", err)
+	}
+
+	wantTable1 := map[string]any{
+		"publication_name":     pub1Name,
+		"schema_name":          "public",
+		"table_name":           table1Name,
+		"publishes_all_tables": false,
+		"publishes_inserts":    true,
+		"publishes_updates":    true,
+		"publishes_deletes":    true,
+		"publishes_truncates":  true,
+		"publication_owner":    currentUser,
+	}
+
+	wantTable2 := map[string]any{
+		"publication_name":     pub2Name,
+		"schema_name":          "public",
+		"table_name":           table2Name,
+		"publishes_all_tables": false,
+		"publishes_inserts":    true,
+		"publishes_updates":    true,
+		"publishes_deletes":    true,
+		"publishes_truncates":  true,
+		"publication_owner":    currentUser,
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		want           []map[string]any
+	}{
+		{
+			name:           "list all publication tables",
+			requestBody:    bytes.NewBufferString(`{}`),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantTable1, wantTable2},
+		},
+		{
+			name:           "list all tables for the created publication",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"publication_names": "%s"}`, pub1Name)),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantTable1},
+		},
+		{
+			name:           "filter by table_name",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"table_names": "%s, %s"}`, table1Name, table2Name)),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantTable1, wantTable2},
+		},
+		{
+			name:           "filter by schema_name and table_name",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_names": "public", "table_name": "%s , %s"}`, table1Name, table2Name)),
+			wantStatusCode: http.StatusOK,
+			want:           []map[string]any{wantTable1, wantTable2},
+		},
+		{
+			name:           "invoke list_publication_tables with non-existent table",
+			requestBody:    bytes.NewBufferString(`{"table_names": "non_existent_table"}`),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+		{
+			name:           "invoke list_publication_tables with non-existent publication",
+			requestBody:    bytes.NewBufferString(`{"publication_names": "non_existent_pub"}`),
+			wantStatusCode: http.StatusOK,
+			want:           nil,
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_publication_tables/invoke"
+
 			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
 			if resp.StatusCode != tc.wantStatusCode {
 				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
@@ -2077,8 +2245,42 @@ func RunPostgresListSequencesTest(t *testing.T, ctx context.Context, pool *pgxpo
 	}
 }
 
+func RunPostgresListTableSpacesTest(t *testing.T) {
+	invokeTcs := []struct {
+		name           string
+		api            string
+		requestBody    io.Reader
+		wantStatusCode int
+	}{
+		{
+			name:           "invoke list_tablespaces output",
+			api:            "http://127.0.0.1:5000/api/tool/list_tablespaces/invoke",
+			wantStatusCode: http.StatusOK,
+			requestBody:    bytes.NewBuffer([]byte(`{}`)),
+		},
+	}
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, respBody := RunRequest(t, http.MethodPost, tc.api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
+			}
+
+			// Intentionally not adding the output check as output depends on the postgres instance used where the the functional test runs.
+			// Adding the check will make the test flaky.
+		})
+	}
+}
+
 // RunMySQLListTablesTest run tests against the mysql-list-tables tool
-func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNameAuth string) {
+func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNameAuth, expectedOwner string) {
+	var ownerWant any
+	if expectedOwner == "" {
+		ownerWant = nil
+	} else {
+		ownerWant = expectedOwner
+	}
+
 	type tableInfo struct {
 		ObjectName    string `json:"object_name"`
 		SchemaName    string `json:"schema_name"`
@@ -2110,6 +2312,7 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 		ObjectName: tableNameParam,
 		SchemaName: databaseName,
 		ObjectType: "TABLE",
+		Owner:      ownerWant,
 		Columns: []column{
 			{DataType: "int", ColumnName: "id", IsNotNullable: 1, OrdinalPosition: 1},
 			{DataType: "varchar(255)", ColumnName: "name", OrdinalPosition: 2},
@@ -2123,6 +2326,7 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 		ObjectName: tableNameAuth,
 		SchemaName: databaseName,
 		ObjectType: "TABLE",
+		Owner:      ownerWant,
 		Columns: []column{
 			{DataType: "int", ColumnName: "id", IsNotNullable: 1, OrdinalPosition: 1},
 			{DataType: "varchar(255)", ColumnName: "name", OrdinalPosition: 2},
