@@ -59,7 +59,8 @@ const listIndexesStatement = `
 			ON i.oid = s.indexrelid
 		WHERE
 			t.relkind = 'r'
-			AND s.schemaname NOT IN ('pg_catalog', 'information_schema')
+			AND s.schemaname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+			AND s.schemaname NOT LIKE 'pg_temp_%'
 	)
 	SELECT *
 	FROM IndexDetails
@@ -67,11 +68,12 @@ const listIndexesStatement = `
 		($1::text IS NULL OR schema_name LIKE '%' || $1 || '%')
 		AND ($2::text IS NULL OR table_name LIKE '%' || $2 || '%')
 		AND ($3::text IS NULL OR index_name LIKE '%' || $3 || '%')
+		AND ($4::boolean IS NOT TRUE OR is_used IS FALSE)
 	ORDER BY
 		schema_name,
 		table_name,
 		index_name
-	LIMIT COALESCE($4::int, 50);
+	LIMIT COALESCE($5::int, 50);
 `
 
 func init() {
@@ -131,13 +133,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		parameters.NewStringParameterWithDefault("schema_name", "", "Optional: a text to filter results by schema name. The input is used within a LIKE clause."),
 		parameters.NewStringParameterWithDefault("table_name", "", "Optional: a text to filter results by table name. The input is used within a LIKE clause."),
 		parameters.NewStringParameterWithDefault("index_name", "", "Optional: a text to filter results by index name. The input is used within a LIKE clause."),
+		parameters.NewBooleanParameterWithDefault("only_unused", false, "Optional: If true, only returns indexes that have never been used."),
 		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return. Default is 50"),
 	}
-	description := cfg.Description
-	if description == "" {
-		description = "Lists available user indexes in the database, excluding system schemas (pg_catalog, information_schema). For each index, the following properties are returned: schema name, table name, index name, index type (access method), a boolean indicating if it's a unique index, a boolean indicating if it's for a primary key, the index definition, index size in bytes, the number of index scans, the number of index tuples read, the number of table tuples fetched via index scans, and a boolean indicating if the index has been used at least once."
+
+	if cfg.Description == "" {
+		cfg.Description = "Lists available user indexes in the database, excluding system schemas (pg_catalog, information_schema). For each index, the following properties are returned: schema name, table name, index name, index type (access method), a boolean indicating if it's a unique index, a boolean indicating if it's for a primary key, the index definition, index size in bytes, the number of index scans, the number of index tuples read, the number of table tuples fetched via index scans, and a boolean indicating if the index has been used at least once."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
 	// finish tool setup
 	return Tool{
@@ -169,7 +172,13 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	sliceParams := params.AsSlice()
+	paramsMap := params.AsMap()
+
+	newParams, err := parameters.GetParams(t.allParams, paramsMap)
+	if err != nil {
+		return nil, fmt.Errorf("unable to extract standard params %w", err)
+	}
+	sliceParams := newParams.AsSlice()
 
 	results, err := t.pool.Query(ctx, listIndexesStatement, sliceParams...)
 	if err != nil {
