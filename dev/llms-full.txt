@@ -6398,6 +6398,9 @@ cluster][alloydb-free-trial].
   Lists the key performance and activity statistics for each database in the AlloyDB
   instance.
 
+- [`postgres-list-roles`](../tools/postgres/postgres-list-roles.md)
+  Lists all the user-created roles in PostgreSQL database..
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
@@ -7319,6 +7322,9 @@ to a database by following these instructions][csql-pg-quickstart].
 - [`postgres-list-database-stats`](../tools/postgres/postgres-list-database-stats.md)
   Lists the key performance and activity statistics for each database in the postgreSQL
   instance.
+
+- [`postgres-list-roles`](../tools/postgres/postgres-list-roles.md)
+  Lists all the user-created roles in PostgreSQL database..
 
 ### Pre-built Configurations
 
@@ -9080,6 +9086,9 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-list-database-stats`](../tools/postgres/postgres-list-database-stats.md)
   Lists the key performance and activity statistics for each database in the postgreSQL
   server.
+
+- [`postgres-list-roles`](../tools/postgres/postgres-list-roles.md)
+  Lists all the user-created roles in PostgreSQL database..
 
 ### Pre-built Configurations
 
@@ -12534,6 +12543,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
     *   `list_database_stats`: Lists the key performance and activity statistics for
         each database in the AlloyDB instance.
+    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.  
 
 ## AlloyDB Postgres Admin
 
@@ -12716,6 +12726,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
     *   `list_database_stats`: Lists the key performance and activity statistics for
         each database in the postgreSQL instance.
+    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.  
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -13026,6 +13037,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
     *   `list_database_stats`: Lists the key performance and activity statistics for
         each database in the PostgreSQL server.
+    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.  
 
 ## Google Cloud Serverless for Apache Spark
 
