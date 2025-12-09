@@ -6391,6 +6391,13 @@ cluster][alloydb-free-trial].
 - [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
   List tablespaces in an AlloyDB for PostgreSQL database.
 
+- [`postgres-list-pg-settings`](../tools/postgres/postgres-list-pg-settings.md)
+  List configuration parameters for the PostgreSQL server.
+
+- [`postgres-list-database-stats`](../tools/postgres/postgres-list-database-stats.md)
+  Lists the key performance and activity statistics for each database in the AlloyDB
+  instance.
+
 ### Pre-built Configurations
 
 - [AlloyDB using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/alloydb_pg_mcp/)
@@ -7305,6 +7312,13 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
   List tablespaces in a PostgreSQL database.
+
+- [`postgres-list-pg-settings`](../tools/postgres/postgres-list-pg-settings.md)
+  List configuration parameters for the PostgreSQL server.
+
+- [`postgres-list-database-stats`](../tools/postgres/postgres-list-database-stats.md)
+  Lists the key performance and activity statistics for each database in the postgreSQL
+  instance.
 
 ### Pre-built Configurations
 
@@ -9059,6 +9073,13 @@ reputation for reliability, feature robustness, and performance.
 
 - [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
   List tablespaces in a PostgreSQL database.
+
+- [`postgres-list-pg-settings`](../tools/postgres/postgres-list-pg-settings.md)
+  List configuration parameters for the PostgreSQL server.
+
+- [`postgres-list-database-stats`](../tools/postgres/postgres-list-database-stats.md)
+  Lists the key performance and activity statistics for each database in the postgreSQL
+  server.
 
 ### Pre-built Configurations
 
@@ -12510,6 +12531,9 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_sequences`: List sequences in a PostgreSQL database.
     *   `list_publication_tables`: List publication tables in a PostgreSQL database.
     *   `list_tablespaces`: Lists tablespaces in the database.
+    *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
+    *   `list_database_stats`: Lists the key performance and activity statistics for
+        each database in the AlloyDB instance.
 
 ## AlloyDB Postgres Admin
 
@@ -12689,6 +12713,9 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_sequences`: List sequences in a PostgreSQL database.
     *   `list_publication_tables`: List publication tables in a PostgreSQL database.
     *   `list_tablespaces`: Lists tablespaces in the database.
+    *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
+    *   `list_database_stats`: Lists the key performance and activity statistics for
+        each database in the postgreSQL instance.
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -12996,6 +13023,9 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_sequences`: List sequences in a PostgreSQL database.
     *   `list_publication_tables`: List publication tables in a PostgreSQL database.
     *   `list_tablespaces`: Lists tablespaces in the database.
+    *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
+    *   `list_database_stats`: Lists the key performance and activity statistics for
+        each database in the PostgreSQL server.
 
 ## Google Cloud Serverless for Apache Spark
 
