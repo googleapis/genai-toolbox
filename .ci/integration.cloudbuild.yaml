@@ -903,7 +903,7 @@ steps:
     args:
       - -c
       - |
-        go test ./tests/mariadb
+        go test ./tests/mariadb //skip coverage check as it re-uses current MySQL implementation
 
 
 availableSecrets:
