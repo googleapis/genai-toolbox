@@ -181,7 +181,7 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 
 	// Run Postgres prebuilt tool tests
 	tests.RunPostgresListTablesTest(t, tableNameParam, tableNameAuth, AlloyDBPostgresUser)
-	tests.RunPostgresListViewsTest(t, ctx, pool, tableNameParam)
+	tests.RunPostgresListViewsTest(t, ctx, pool)
 	tests.RunPostgresListSchemasTest(t, ctx, pool)
 	tests.RunPostgresListActiveQueriesTest(t, ctx, pool)
 	tests.RunPostgresListAvailableExtensionsTest(t)
@@ -197,6 +197,9 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	tests.RunPostgresGetColumnCardinalityTest(t, ctx, pool)
 	tests.RunPostgresListPublicationTablesTest(t, ctx, pool)
 	tests.RunPostgresListTableSpacesTest(t)
+	tests.RunPostgresListPgSettingsTest(t, ctx, pool)
+	tests.RunPostgresListDatabaseStatsTest(t, ctx, pool)
+	tests.RunPostgresListRolesTest(t, ctx, pool)
 }
 
 // Test connection with different IP type

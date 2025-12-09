@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package postgreslistindexes
+package postgreslistroles
 
 import (
 	"context"
@@ -28,52 +28,48 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const kind string = "postgres-list-indexes"
+const kind string = "postgres-list-roles"
 
-const listIndexesStatement = `
-	WITH IndexDetails AS (
+const listRolesStatement = `
+	WITH RoleDetails AS (
 		SELECT
-			s.schemaname AS schema_name,
-			t.relname AS table_name,
-			i.relname AS index_name,
-			am.amname AS index_type,
-			ix.indisunique AS is_unique,
-			ix.indisprimary AS is_primary,
-			pg_get_indexdef(i.oid) AS index_definition,
-			pg_relation_size(i.oid) AS index_size_bytes,
-			s.idx_scan AS index_scans,
-			s.idx_tup_read AS tuples_read,
-			s.idx_tup_fetch AS tuples_fetched,
-			CASE 
-				WHEN s.idx_scan > 0 THEN true 
-				ELSE false 
-			END AS is_used
-		FROM pg_catalog.pg_class t
-		JOIN pg_catalog.pg_index ix
-			ON t.oid = ix.indrelid
-		JOIN pg_catalog.pg_class i
-			ON i.oid = ix.indexrelid
-		JOIN pg_catalog.pg_am am
-			ON i.relam = am.oid
-		JOIN pg_catalog.pg_stat_all_indexes s
-			ON i.oid = s.indexrelid
-		WHERE
-			t.relkind = 'r'
-			AND s.schemaname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
-			AND s.schemaname NOT LIKE 'pg_temp_%'
+			r.rolname AS role_name,
+			r.oid AS oid,
+			r.rolconnlimit AS connection_limit,
+			r.rolsuper AS is_superuser,
+			r.rolinherit AS inherits_privileges,
+			r.rolcreaterole AS can_create_roles,
+			r.rolcreatedb AS can_create_db,
+			r.rolcanlogin AS can_login,
+			r.rolreplication AS is_replication_role, 
+			r.rolbypassrls AS bypass_rls,          
+			r.rolvaliduntil AS valid_until,         
+			-- List of roles that belong to this role (Direct Members)
+			ARRAY(
+				SELECT m_r.rolname
+				FROM pg_auth_members pam
+				JOIN pg_roles m_r ON pam.member = m_r.oid
+				WHERE pam.roleid = r.oid
+			) AS direct_members,
+			-- List of roles that this role belongs to (Member Of)
+			ARRAY(
+				SELECT g_r.rolname
+				FROM pg_auth_members pam
+				JOIN pg_roles g_r ON pam.roleid = g_r.oid
+				WHERE pam.member = r.oid
+			) AS member_of
+		FROM pg_roles r
+	-- Exclude system and internal roles
+		WHERE r.rolname NOT LIKE 'cloudsql%' 
+		AND r.rolname NOT LIKE 'alloydb_%'
+		AND r.rolname NOT LIKE 'pg_%'
 	)
 	SELECT *
-	FROM IndexDetails
+	FROM RoleDetails
 	WHERE
-		($1::text IS NULL OR schema_name LIKE '%' || $1 || '%')
-		AND ($2::text IS NULL OR table_name LIKE '%' || $2 || '%')
-		AND ($3::text IS NULL OR index_name LIKE '%' || $3 || '%')
-		AND ($4::boolean IS NOT TRUE OR is_used IS FALSE)
-	ORDER BY
-		schema_name,
-		table_name,
-		index_name
-	LIMIT COALESCE($5::int, 50);
+		($1::text IS NULL OR role_name LIKE '%' || $1 || '%')
+	ORDER BY role_name
+	LIMIT COALESCE($2::int, 50);
 `
 
 func init() {
@@ -130,17 +126,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("schema_name", "", "Optional: a text to filter results by schema name. The input is used within a LIKE clause."),
-		parameters.NewStringParameterWithDefault("table_name", "", "Optional: a text to filter results by table name. The input is used within a LIKE clause."),
-		parameters.NewStringParameterWithDefault("index_name", "", "Optional: a text to filter results by index name. The input is used within a LIKE clause."),
-		parameters.NewBooleanParameterWithDefault("only_unused", false, "Optional: If true, only returns indexes that have never been used."),
-		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return. Default is 50"),
+		parameters.NewStringParameterWithDefault("role_name", "", "Optional: a text to filter results by role name. The input is used within a LIKE clause."),
+		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return. Default is 10"),
 	}
 
-	if cfg.Description == "" {
-		cfg.Description = "Lists available user indexes in the database, excluding system schemas (pg_catalog, information_schema). For each index, the following properties are returned: schema name, table name, index name, index type (access method), a boolean indicating if it's a unique index, a boolean indicating if it's for a primary key, the index definition, index size in bytes, the number of index scans, the number of index tuples read, the number of table tuples fetched via index scans, and a boolean indicating if the index has been used at least once."
+	description := cfg.Description
+	if description == "" {
+		description = "Lists all the user-created roles in the instance . It returns the role name, Object ID, the maximum number of concurrent connections the role can make, along with boolean indicators for: superuser status, privilege inheritance from member roles, ability to create roles, ability to create databases, ability to log in, replication privilege, and the ability to bypass row-level security, the password expiration timestamp, a list of direct members belonging to this role, and a list of other roles/groups that this role is a member of."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
 
 	// finish tool setup
 	return Tool{
@@ -148,7 +142,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		allParams: allParameters,
 		pool:      s.PostgresPool(),
 		manifest: tools.Manifest{
-			Description:  cfg.Description,
+			Description:  description,
 			Parameters:   allParameters.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
@@ -180,7 +174,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 	sliceParams := newParams.AsSlice()
 
-	results, err := t.pool.Query(ctx, listIndexesStatement, sliceParams...)
+	results, err := t.pool.Query(ctx, listRolesStatement, sliceParams...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}

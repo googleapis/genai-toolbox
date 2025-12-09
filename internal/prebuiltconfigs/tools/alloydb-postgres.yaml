@@ -208,6 +208,18 @@ tools:
         kind: postgres-list-tablespaces
         source: alloydb-pg-source
 
+    list_pg_settings:
+        kind: postgres-list-pg-settings
+        source: alloydb-pg-source
+
+    list_database_stats:
+        kind: postgres-list-database-stats
+        source: alloydb-pg-source
+
+    list_roles:
+        kind: postgres-list-roles
+        source: alloydb-pg-source
+
 toolsets:
     alloydb_postgres_database_tools:
         - execute_sql
@@ -234,3 +246,6 @@ toolsets:
         - get_column_cardinality
         - list_publication_tables
         - list_tablespaces
+        - list_pg_settings
+        - list_database_stats
+        - list_roles
