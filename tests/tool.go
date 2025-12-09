@@ -791,6 +791,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 	// Default values for MCPTestConfig
 	configs := &MCPTestConfig{
 		myToolId3NameAliceWant: `{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"id\":1,\"name\":\"Alice\"}"},{"type":"text","text":"{\"id\":3,\"name\":\"Sid\"}"}]}}`,
+		mcpSelect1Want:         select1Want,
 		supportClientAuth:      false,
 		supportSelect1Auth:     true,
 	}
@@ -920,7 +921,7 @@ func RunMCPToolCallMethod(t *testing.T, myFailToolWant, select1Want string, opti
 				},
 			},
 			wantStatusCode: http.StatusOK,
-			wantBody:       select1Want,
+			wantBody:       configs.mcpSelect1Want,
 		},
 		{
 			name:          "MCP Invoke my-auth-required-tool with invalid auth token",
