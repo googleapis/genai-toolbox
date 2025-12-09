@@ -96,7 +96,7 @@ func TestParseFromYamlOracle(t *testing.T) {
 			got := struct {
 				Sources server.SourceConfigs `yaml:"sources"`
 			}{}
-			
+
 			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
@@ -107,7 +107,6 @@ func TestParseFromYamlOracle(t *testing.T) {
 		})
 	}
 }
-
 
 func TestFailParseFromYamlOracle(t *testing.T) {
 	tcs := []struct {

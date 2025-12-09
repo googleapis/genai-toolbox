@@ -56,11 +56,11 @@ func TestParseFromYamlOracleSql(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"get_orders": oraclesql.Config{
-					Name:        "get_orders",
-					Kind:        "oracle-sql",
-					Source:      "db-prod",
-					Description: "Gets orders for a customer with optional filtering.",
-					Statement:   "SELECT * FROM ${SCHEMA}.ORDERS WHERE customer_id = :customer_id AND status = :status",
+					Name:         "get_orders",
+					Kind:         "oracle-sql",
+					Source:       "db-prod",
+					Description:  "Gets orders for a customer with optional filtering.",
+					Statement:    "SELECT * FROM ${SCHEMA}.ORDERS WHERE customer_id = :customer_id AND status = :status",
 					AuthRequired: []string{},
 				},
 			},
@@ -71,7 +71,7 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 			got := struct {
 				Tools server.ToolConfigs `yaml:"tools"`
 			}{}
-			
+
 			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)

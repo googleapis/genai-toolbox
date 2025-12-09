@@ -68,7 +68,7 @@ func TestParseFromYamlOracleExecuteSql(t *testing.T) {
 			got := struct {
 				Tools server.ToolConfigs `yaml:"tools"`
 			}{}
-			
+
 			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
