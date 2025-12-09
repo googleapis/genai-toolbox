@@ -455,7 +455,6 @@ func setupMongoDB(t *testing.T, ctx context.Context, database *mongo.Database) f
 		{"_id": 14, "id": 2, "name": "FakeAlice", "email": "fakeAlice@gmail.com"},
 		{"_id": 2, "id": 2, "name": "Jane"},
 		{"_id": 3, "id": 3, "name": "Sid"},
-		// {"_id": 4, "id": 4, "name": nil},
 		{"_id": 5, "id": 3, "name": "Alice", "email": "alice@gmail.com"},
 		{"_id": 6, "id": 100, "name": "ToBeDeleted", "email": "bob@gmail.com"},
 		{"_id": 7, "id": 101, "name": "ToBeDeleted", "email": "bob1@gmail.com"},
