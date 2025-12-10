@@ -247,6 +247,12 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	s.logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
 	params, err = tool.EmbedParams(ctx, params, s.ResourceMgr.GetEmbeddingModelMap())
+	if err != nil {
+		err = fmt.Errorf("error embedding parameters: %w", err)
+		s.logger.DebugContext(ctx, err.Error())
+		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
+		return
+	}
 
 	res, err := tool.Invoke(ctx, s.ResourceMgr, params, accessToken)
 
