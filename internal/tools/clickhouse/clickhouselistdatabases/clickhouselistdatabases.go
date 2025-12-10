@@ -28,12 +28,12 @@ import (
 const listDatabasesKind string = "clickhouse-list-databases"
 
 func init() {
-	if !tools.Register(listDatabasesKind, newConfig) {
+	if !tools.Register(listDatabasesKind, newListDatabasesConfig) {
 		panic(fmt.Sprintf("tool kind %q already registered", listDatabasesKind))
 	}
 }
 
-func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
+func newListDatabasesConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
 	actual := Config{Name: name}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err

@@ -28,12 +28,12 @@ import (
 const executeSQLKind string = "clickhouse-execute-sql"
 
 func init() {
-	if !tools.Register(executeSQLKind, newConfig) {
+	if !tools.Register(executeSQLKind, newExecuteSQLConfig) {
 		panic(fmt.Sprintf("tool kind %q already registered", executeSQLKind))
 	}
 }
 
-func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
+func newExecuteSQLConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
 	actual := Config{Name: name}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err

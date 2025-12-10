@@ -29,12 +29,12 @@ const listTablesKind string = "clickhouse-list-tables"
 const databaseKey string = "database"
 
 func init() {
-	if !tools.Register(listTablesKind, newConfig) {
+	if !tools.Register(listTablesKind, newListTablesConfig) {
 		panic(fmt.Sprintf("tool kind %q already registered", listTablesKind))
 	}
 }
 
-func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
+func newListTablesConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.ToolConfig, error) {
 	actual := Config{Name: name}
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
