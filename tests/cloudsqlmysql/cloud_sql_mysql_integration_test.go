@@ -165,34 +165,6 @@ func TestCloudSQLMySQLToolEndpoints(t *testing.T) {
 	tests.RunMySQLListActiveQueriesTest(t, ctx, pool)
 }
 
-// Test connection with different IP type
-func TestCloudSQLMySQLIpConnection(t *testing.T) {
-	sourceConfig := getCloudSQLMySQLVars(t)
-
-	tcs := []struct {
-		name   string
-		ipType string
-	}{
-		{
-			name:   "public ip",
-			ipType: "public",
-		},
-		{
-			name:   "private ip",
-			ipType: "private",
-		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			sourceConfig["ipType"] = tc.ipType
-			err := tests.RunSourceConnectionTest(t, sourceConfig, CloudSQLMySQLToolKind)
-			if err != nil {
-				t.Fatalf("Connection test failure: %s", err)
-			}
-		})
-	}
-}
-
 func TestCloudSQLMySQLIAMConnection(t *testing.T) {
 	getCloudSQLMySQLVars(t)
 	// service account email used for IAM should trim the suffix
@@ -255,6 +227,34 @@ func TestCloudSQLMySQLIAMConnection(t *testing.T) {
 			}
 			if tc.isErr {
 				t.Fatalf("Expected error but test passed.")
+			}
+		})
+	}
+}
+
+// Test connection with different IP type
+func TestCloudSQLMySQLIpConnection(t *testing.T) {
+	sourceConfig := getCloudSQLMySQLVars(t)
+
+	tcs := []struct {
+		name   string
+		ipType string
+	}{
+		{
+			name:   "public ip",
+			ipType: "public",
+		},
+		{
+			name:   "private ip",
+			ipType: "private",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			sourceConfig["ipType"] = tc.ipType
+			err := tests.RunSourceConnectionTest(t, sourceConfig, CloudSQLMySQLToolKind)
+			if err != nil {
+				t.Fatalf("Connection test failure: %s", err)
 			}
 		})
 	}
