@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package postgreslistindexes
+package postgreslistpgsettings
 
 import (
 	"context"
@@ -28,52 +28,25 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const kind string = "postgres-list-indexes"
+const kind string = "postgres-list-pg-settings"
 
-const listIndexesStatement = `
-	WITH IndexDetails AS (
-		SELECT
-			s.schemaname AS schema_name,
-			t.relname AS table_name,
-			i.relname AS index_name,
-			am.amname AS index_type,
-			ix.indisunique AS is_unique,
-			ix.indisprimary AS is_primary,
-			pg_get_indexdef(i.oid) AS index_definition,
-			pg_relation_size(i.oid) AS index_size_bytes,
-			s.idx_scan AS index_scans,
-			s.idx_tup_read AS tuples_read,
-			s.idx_tup_fetch AS tuples_fetched,
-			CASE 
-				WHEN s.idx_scan > 0 THEN true 
-				ELSE false 
-			END AS is_used
-		FROM pg_catalog.pg_class t
-		JOIN pg_catalog.pg_index ix
-			ON t.oid = ix.indrelid
-		JOIN pg_catalog.pg_class i
-			ON i.oid = ix.indexrelid
-		JOIN pg_catalog.pg_am am
-			ON i.relam = am.oid
-		JOIN pg_catalog.pg_stat_all_indexes s
-			ON i.oid = s.indexrelid
-		WHERE
-			t.relkind = 'r'
-			AND s.schemaname NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
-			AND s.schemaname NOT LIKE 'pg_temp_%'
-	)
-	SELECT *
-	FROM IndexDetails
-	WHERE
-		($1::text IS NULL OR schema_name LIKE '%' || $1 || '%')
-		AND ($2::text IS NULL OR table_name LIKE '%' || $2 || '%')
-		AND ($3::text IS NULL OR index_name LIKE '%' || $3 || '%')
-		AND ($4::boolean IS NOT TRUE OR is_used IS FALSE)
-	ORDER BY
-		schema_name,
-		table_name,
-		index_name
-	LIMIT COALESCE($5::int, 50);
+const listPgSettingsStatement = `
+	SELECT
+        name,
+        setting AS current_value,
+        unit,
+        short_desc,
+        source,
+        CASE context
+          WHEN 'postmaster' THEN 'Yes'
+          WHEN 'sighup' THEN 'No (Reload sufficient)'
+          ELSE 'No'
+          END
+          AS requires_restart
+	FROM pg_settings
+	WHERE ($1::text IS NULL OR name LIKE '%' || $1::text || '%')
+	ORDER BY name
+	LIMIT COALESCE($2::int, 50);
 `
 
 func init() {
@@ -130,17 +103,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("schema_name", "", "Optional: a text to filter results by schema name. The input is used within a LIKE clause."),
-		parameters.NewStringParameterWithDefault("table_name", "", "Optional: a text to filter results by table name. The input is used within a LIKE clause."),
-		parameters.NewStringParameterWithDefault("index_name", "", "Optional: a text to filter results by index name. The input is used within a LIKE clause."),
-		parameters.NewBooleanParameterWithDefault("only_unused", false, "Optional: If true, only returns indexes that have never been used."),
-		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return. Default is 50"),
+		parameters.NewStringParameterWithDefault("setting_name", "", "Optional: A specific configuration parameter name pattern to search for."),
+		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return."),
 	}
-
-	if cfg.Description == "" {
-		cfg.Description = "Lists available user indexes in the database, excluding system schemas (pg_catalog, information_schema). For each index, the following properties are returned: schema name, table name, index name, index type (access method), a boolean indicating if it's a unique index, a boolean indicating if it's for a primary key, the index definition, index size in bytes, the number of index scans, the number of index tuples read, the number of table tuples fetched via index scans, and a boolean indicating if the index has been used at least once."
+	description := cfg.Description
+	if description == "" {
+		description = "Lists configuration parameters for the postgres server ordered lexicographically, with a default limit of 50 rows. It returns the parameter name, its current setting, unit of measurement, a short description, the source of the current setting (e.g., default, configuration file, session), and whether a restart is required when the parameter value is changed."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
 
 	// finish tool setup
 	return Tool{
@@ -167,10 +137,6 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) ToConfig() tools.ToolConfig {
-	return t.Config
-}
-
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
@@ -180,7 +146,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 	sliceParams := newParams.AsSlice()
 
-	results, err := t.pool.Query(ctx, listIndexesStatement, sliceParams...)
+	results, err := t.pool.Query(ctx, listPgSettingsStatement, sliceParams...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
@@ -227,6 +193,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
 func (t Tool) GetAuthTokenHeaderName() string {
