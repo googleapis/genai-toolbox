@@ -72,6 +72,13 @@ func (r *ResourceManager) GetAuthService(authServiceName string) (auth.AuthServi
 	return authService, ok
 }
 
+func (r *ResourceManager) GetEmbeddingModel(embeddingModelName string) (embeddingmodels.EmbeddingModel, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	model, ok := r.embeddingModels[embeddingModelName]
+	return model, ok
+}
+
 func (r *ResourceManager) GetTool(toolName string) (tools.Tool, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -117,6 +124,16 @@ func (r *ResourceManager) GetAuthServiceMap() map[string]auth.AuthService {
 	defer r.mu.RUnlock()
 	copiedMap := make(map[string]auth.AuthService, len(r.authServices))
 	for k, v := range r.authServices {
+		copiedMap[k] = v
+	}
+	return copiedMap
+}
+
+func (r *ResourceManager) GetEmbeddingModelMap() map[string]embeddingmodels.EmbeddingModel {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	copiedMap := make(map[string]embeddingmodels.EmbeddingModel, len(r.embeddingModels))
+	for k, v := range r.embeddingModels {
 		copiedMap[k] = v
 	}
 	return copiedMap
