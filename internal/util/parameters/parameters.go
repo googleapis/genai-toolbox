@@ -377,6 +377,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
 		}
+		if a.GetEmbeddedBy() != "" {
+			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
+		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
 			a.AuthServices = append(a.AuthServices, a.AuthSources...)
@@ -399,6 +402,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
 		}
+		if a.GetEmbeddedBy() != "" {
+			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
+		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
 			a.AuthServices = append(a.AuthServices, a.AuthSources...)
@@ -410,6 +416,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
 		}
+		if a.GetEmbeddedBy() != "" {
+			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
+		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
 			a.AuthServices = append(a.AuthServices, a.AuthSources...)
@@ -420,6 +429,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		a := &MapParameter{}
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
+		}
+		if a.GetEmbeddedBy() != "" {
+			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
 		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
