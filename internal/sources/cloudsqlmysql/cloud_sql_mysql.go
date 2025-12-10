@@ -19,7 +19,6 @@ import (
 	"database/sql"
 	"fmt"
 	"net/url"
-	"slices"
 
 	"cloud.google.com/go/cloudsqlconn/mysql/mysql"
 	"github.com/goccy/go-yaml"
@@ -147,19 +146,18 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 		return nil, err
 	}
 
-	if !slices.Contains(sql.Drivers(), "cloudsql-mysql") {
-		_, err = mysql.RegisterDriver("cloudsql-mysql", opts...)
-		if err != nil {
-			return nil, fmt.Errorf("unable to register driver: %w", err)
-		}
+	driverName := fmt.Sprintf("cloudsql-mysql-%s", name)
+
+	if _, err := mysql.RegisterDriver(driverName, opts...); err != nil {
+		return nil, fmt.Errorf("unable to register driver: %w", err)
 	}
 
 	var dsn string
 	// Tell the driver to use the Cloud SQL Go Connector to create connections
 	if useIAM {
-		// Set allowCleartextPasswords to true for IAM
-		dsn = fmt.Sprintf("%s@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s&allowCleartextPasswords=true",
+		dsn = fmt.Sprintf("%s@%s(%s:%s:%s)/%s?connectionAttributes=program_name:%s",
 			user,
+			driverName,
 			project,
 			region,
 			instance,
@@ -167,9 +165,10 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 			url.QueryEscape(userAgent),
 		)
 	} else {
-		dsn = fmt.Sprintf("%s:%s@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s",
+		dsn = fmt.Sprintf("%s:%s@%s(%s:%s:%s)/%s?connectionAttributes=program_name:%s",
 			user,
 			pass,
+			driverName,
 			project,
 			region,
 			instance,
@@ -179,7 +178,7 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 	}
 
 	db, err := sql.Open(
-		"cloudsql-mysql",
+		driverName,
 		dsn,
 	)
 	if err != nil {
