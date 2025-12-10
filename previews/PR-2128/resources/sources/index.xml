@@ -877,7 +877,32 @@ in the cloud, on GCP, or on premises.&lt;/p>
  &lt;path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/>
 &lt;/svg>
 
- &lt;/span>Note&lt;/p></description></item><item><title>MindsDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2128/resources/sources/mindsdb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2128/resources/sources/mindsdb/</guid><description>&lt;h2 id="about">About&lt;/h2>
+ &lt;/span>Note&lt;/p></description></item><item><title>MariaDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2128/resources/sources/mariadb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2128/resources/sources/mariadb/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>MariaDB is a relational database management system derived from MySQL. It
+implements the MySQL protocol and client libraries and supports modern SQL
+features with a focus on performance and reliability.&lt;/p>
+&lt;p>&lt;strong>Note&lt;/strong>: MariaDB is supported using the MySQL source.&lt;/p>
+&lt;h2 id="available-tools">Available Tools&lt;/h2>
+&lt;ul>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2128/resources/tools/mysql/mysql-sql/">&lt;code>mysql-sql&lt;/code>&lt;/a>
+Execute pre-defined prepared SQL queries in MariaDB.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2128/resources/tools/mysql/mysql-execute-sql/">&lt;code>mysql-execute-sql&lt;/code>&lt;/a>
+Run parameterized SQL queries in MariaDB.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2128/resources/tools/mysql/mysql-list-active-queries/">&lt;code>mysql-list-active-queries&lt;/code>&lt;/a>
+List active queries in MariaDB.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2128/resources/tools/mysql/mysql-list-tables/">&lt;code>mysql-list-tables&lt;/code>&lt;/a>
+List tables in a MariaDB database.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2128/resources/tools/mysql/mysql-list-tables-missing-unique-indexes/">&lt;code>mysql-list-tables-missing-unique-indexes&lt;/code>&lt;/a>
+List tables in a MariaDB database that do not have primary or unique indices.&lt;/p></description></item><item><title>MindsDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2128/resources/sources/mindsdb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2128/resources/sources/mindsdb/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://docs.mindsdb.com/">MindsDB&lt;/a> is an AI federated database in the world. It allows you
 to combine information from hundreds of datasources as if they were SQL,
 supporting joins across datasources and enabling you to query all unstructured
