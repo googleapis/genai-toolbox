@@ -4208,7 +4208,7 @@ Tiles are added in the order this tool is called for a given &lt;code>dashboard_
  &lt;td>The label displayed to users in the Looker UI.&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">type&lt;/td>
+ &lt;td style="text-align: left">flter_type&lt;/td>
  &lt;td style="text-align: center">string&lt;/td>
  &lt;td style="text-align: center">true&lt;/td>
  &lt;td style="text-align: center">none&lt;/td>
@@ -4226,21 +4226,21 @@ Tiles are added in the order this tool is called for a given &lt;code>dashboard_
  &lt;td style="text-align: center">string&lt;/td>
  &lt;td style="text-align: center">false&lt;/td>
  &lt;td style="text-align: center">none&lt;/td>
- &lt;td>Required if filter &lt;code>type&lt;/code> is &lt;code>field_filter&lt;/code>. The name of the LookML model, obtained from &lt;code>get_models&lt;/code>.&lt;/td>
+ &lt;td>Required if &lt;code>filter_type&lt;/code> is &lt;code>field_filter&lt;/code>. The name of the LookML model, obtained from &lt;code>get_models&lt;/code>.&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td style="text-align: left">explore&lt;/td>
  &lt;td style="text-align: center">string&lt;/td>
  &lt;td style="text-align: center">false&lt;/td>
  &lt;td style="text-align: center">none&lt;/td>
- &lt;td>Required if filter &lt;code>type&lt;/code> is &lt;code>field_filter&lt;/code>. The name of the explore within the model, obtained from &lt;code>get_explores&lt;/code>.&lt;/td>
+ &lt;td>Required if &lt;code>filter_type&lt;/code> is &lt;code>field_filter&lt;/code>. The name of the explore within the model, obtained from &lt;code>get_explores&lt;/code>.&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td style="text-align: left">dimension&lt;/td>
  &lt;td style="text-align: center">string&lt;/td>
  &lt;td style="text-align: center">false&lt;/td>
  &lt;td style="text-align: center">none&lt;/td>
- &lt;td>Required if filter &lt;code>type&lt;/code> is &lt;code>field_filter&lt;/code>. The name of the field (e.g., &lt;code>view_name.field_name&lt;/code>) to base the filter on, obtained from &lt;code>get_dimensions&lt;/code>.&lt;/td>
+ &lt;td>Required if &lt;code>filter_type&lt;/code> is &lt;code>field_filter&lt;/code>. The name of the field (e.g., &lt;code>view_name.field_name&lt;/code>) to base the filter on, obtained from &lt;code>get_dimensions&lt;/code>.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
@@ -4261,10 +4261,10 @@ Tiles are added in the order this tool is called for a given &lt;code>dashboard_
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> - dashboard_id (required): The ID from `make_dashboard`.
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> - name (required): A unique internal identifier for the filter. You will use this `name` later in `add_dashboard_element` to bind tiles to this filter.
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> - title (required): The label displayed to users in the UI.
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> - type (required): One of `date_filter`, `number_filter`, `string_filter`, or `field_filter`.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> - filter_type (required): One of `date_filter`, `number_filter`, `string_filter`, or `field_filter`.
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> - default_value (optional): The initial value for the filter.
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Field Filters (`type: field_filter`):
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Field Filters (`flter_type: field_filter`):
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> If creating a field filter, you must also provide:
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> - model
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> - explore
