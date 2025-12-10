@@ -23,16 +23,18 @@ It's compatible with the following sources:
 
 ## Parameters
 
-| **parameter** | **type** | **required** | **default** | **description**                                                                                                                                          |
-|:--------------|:--------:|:------------:|:-----------:|----------------------------------------------------------------------------------------------------------------------------------------------------------|
-| dashboard_id  |  string  |     true     |    none     | The ID of the dashboard to add the filter to, obtained from `make_dashboard`.                                                                            |
-| name          |  string  |     true     |    none     | A unique internal identifier for the filter. This name is used later in `add_dashboard_element` to bind tiles to this filter.                            |
-| title         |  string  |     true     |    none     | The label displayed to users in the Looker UI.                                                                                                           |
-| flter_type    |  string  |     true     |    none     | The filter type of filter. Can be `date_filter`, `number_filter`, `string_filter`, or `field_filter`.                                                    |
-| default_value |  string  |    false     |    none     | The initial value for the filter.                                                                                                                        |
-| model         |  string  |    false     |    none     | Required if `filter_type` is `field_filter`. The name of the LookML model, obtained from `get_models`.                                                   |
-| explore       |  string  |    false     |    none     | Required if `filter_type` is `field_filter`. The name of the explore within the model, obtained from `get_explores`.                                     |
-| dimension     |  string  |    false     |    none     | Required if `filter_type` is `field_filter`. The name of the field (e.g., `view_name.field_name`) to base the filter on, obtained from `get_dimensions`. |
+| **parameter**         | **type** |   **required**    |  **default**   | **description**                                                                                                               |
+|:----------------------|:--------:|:-----------------:|:--------------:|-------------------------------------------------------------------------------------------------------------------------------|
+| dashboard_id          |  string  |       true        |      none      | The ID of the dashboard to add the filter to, obtained from `make_dashboard`.                                                 |
+| name                  |  string  |       true        |      none      | A unique internal identifier for the filter. This name is used later in `add_dashboard_element` to bind tiles to this filter. |
+| title                 |  string  |       true        |      none      | The label displayed to users in the Looker UI.                                                                                |
+| filter_type           |  string  |       true        | `field_filter` | The filter type of filter. Can be `date_filter`, `number_filter`, `string_filter`, or `field_filter`.                         |
+| default_value         |  string  |       false       |      none      | The initial value for the filter.                                                                                             |
+| model                 |  string  | if `field_filter` |      none      | The name of the LookML model, obtained from `get_models`.                                                                     |
+| explore               |  string  | if `field_filter` |      none      | The name of the explore within the model, obtained from `get_explores`.                                                       |
+| dimension             |  string  | if `field_filter` |      none      | The name of the field (e.g., `view_name.field_name`) to base the filter on, obtained from `get_dimensions`.                   |
+| allow_multiple_values | boolean  |       false       |      true      | The Dashboard Filter should allow multiple values                                                                             |
+| required              | boolean  |       false       |     false      | The Dashboard Filter is required to run dashboard                                                                             |
 
 ## Example
 
