@@ -165,6 +165,15 @@ go install github.com/googleapis/genai-toolbox@v0.22.0
 ```
 
 {{% /tab %}}
+{{% tab header="Npm" lang="en" %}}
+
+To run Toolbox directly without manually downloading the binary (requires Node.js):
+
+```sh
+npx @toolbox-sdk/server --tools-file tools.yaml
+```
+
+{{% /tab %}}
 {{< /tabpane >}}
 <!-- {x-release-please-end} -->
 
