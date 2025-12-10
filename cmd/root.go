@@ -196,6 +196,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistsequences"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttablespaces"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttablestats"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttriggers"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistviews"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslongrunningtransactions"
