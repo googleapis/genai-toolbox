@@ -125,7 +125,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.21.0
+> export VERSION=0.22.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 > chmod +x toolbox
 > ```
@@ -138,7 +138,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.21.0
+> export VERSION=0.22.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
 > chmod +x toolbox
 > ```
@@ -151,21 +151,33 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.21.0
+> export VERSION=0.22.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
 > chmod +x toolbox
 > ```
 >
 > </details>
 > <details>
-> <summary>Windows (AMD64)</summary>
+> <summary>Windows (Command Prompt)</summary>
 >
-> To install Toolbox as a binary on Windows (AMD64):
+> To install Toolbox as a binary on Windows (Command Prompt):
+>
+> ```cmd
+> :: see releases page for other versions
+> set VERSION=0.22.0
+> curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
+> ```
+>
+> </details>
+> <details>
+> <summary>Windows (PowerShell)</summary>
+>
+> To install Toolbox as a binary on Windows (PowerShell):
 >
 > ```powershell
-> :: see releases page for other versions
-> set VERSION=0.21.0
-> curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
+> # see releases page for other versions
+> $VERSION = "0.21.0"
+> curl.exe -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe"
 > ```
 >
 > </details>
@@ -177,7 +189,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.21.0
+export VERSION=0.22.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -201,7 +213,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.21.0
+go install github.com/googleapis/genai-toolbox@v0.22.0
 ```
 <!-- {x-release-please-end} -->
 
@@ -513,6 +525,36 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     // Use these tools in your Genkit applications
     const tools = toolboxTools.map(getTool);
     ```
+
+  </details>
+  <details>
+    <summary>ADK</summary>
+
+1. Install [Toolbox ADK SDK][toolbox-adk-js]:
+
+    ```bash
+    npm install @toolbox-sdk/adk
+    ```
+
+2. Load tools:
+
+    ```javascript
+    import { ToolboxClient } from '@toolbox-sdk/adk';
+
+    // update the url to point to your server
+    const URL = 'http://127.0.0.1:5000';
+    let client = new ToolboxClient(URL);
+
+    // these tools can be passed to your application!
+    const tools = await client.loadToolset('toolsetName');
+    ```
+
+    For more detailed instructions on using the Toolbox ADK SDK, see the
+    [project's README][toolbox-adk-js-readme].
+
+    [toolbox-adk-js]: https://www.npmjs.com/package/@toolbox-sdk/adk
+    [toolbox-adk-js-readme]:
+       https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-adk/README.md
 
   </details>
 </details>
