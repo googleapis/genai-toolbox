@@ -20287,4 +20287,10 @@ div.drawioframe {
   [data-bs-theme="dark"] .chroma {
     background-color: var(--td-pre-bg); }
 
+.nav-tabs {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden; }
+
 /*# sourceMappingURL=main.css.map */
