@@ -182,7 +182,7 @@ func EmbedParams(ctx context.Context, ps Parameters, paramValues ParamValues, em
 		// Get parameter's value to be embedded
 		valueStr, ok := paramValues[i].Value.(string)
 		if !ok {
-			return nil, fmt.Errorf("parameter '%s' is marked for embedding but has a non-string value (type: %T)", p.GetName(), paramValues[i])
+			return nil, fmt.Errorf("parameter '%s' is marked for embedding but has a non-string value (type: %T)", p.GetName(), paramValues[i].Value)
 		}
 
 		parametersToEmbed[modelName] = append(parametersToEmbed[modelName], ParamToEmbed{
