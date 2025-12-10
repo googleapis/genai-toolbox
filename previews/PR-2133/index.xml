@@ -4208,10 +4208,10 @@ Tiles are added in the order this tool is called for a given &lt;code>dashboard_
  &lt;td>The label displayed to users in the Looker UI.&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td style="text-align: left">flter_type&lt;/td>
+ &lt;td style="text-align: left">filter_type&lt;/td>
  &lt;td style="text-align: center">string&lt;/td>
  &lt;td style="text-align: center">true&lt;/td>
- &lt;td style="text-align: center">none&lt;/td>
+ &lt;td style="text-align: center">&lt;code>field_filter&lt;/code>&lt;/td>
  &lt;td>The filter type of filter. Can be &lt;code>date_filter&lt;/code>, &lt;code>number_filter&lt;/code>, &lt;code>string_filter&lt;/code>, or &lt;code>field_filter&lt;/code>.&lt;/td>
  &lt;/tr>
  &lt;tr>
@@ -4224,23 +4224,37 @@ Tiles are added in the order this tool is called for a given &lt;code>dashboard_
  &lt;tr>
  &lt;td style="text-align: left">model&lt;/td>
  &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">false&lt;/td>
+ &lt;td style="text-align: center">if &lt;code>field_filter&lt;/code>&lt;/td>
  &lt;td style="text-align: center">none&lt;/td>
- &lt;td>Required if &lt;code>filter_type&lt;/code> is &lt;code>field_filter&lt;/code>. The name of the LookML model, obtained from &lt;code>get_models&lt;/code>.&lt;/td>
+ &lt;td>The name of the LookML model, obtained from &lt;code>get_models&lt;/code>.&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td style="text-align: left">explore&lt;/td>
  &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">false&lt;/td>
+ &lt;td style="text-align: center">if &lt;code>field_filter&lt;/code>&lt;/td>
  &lt;td style="text-align: center">none&lt;/td>
- &lt;td>Required if &lt;code>filter_type&lt;/code> is &lt;code>field_filter&lt;/code>. The name of the explore within the model, obtained from &lt;code>get_explores&lt;/code>.&lt;/td>
+ &lt;td>The name of the explore within the model, obtained from &lt;code>get_explores&lt;/code>.&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td style="text-align: left">dimension&lt;/td>
  &lt;td style="text-align: center">string&lt;/td>
- &lt;td style="text-align: center">false&lt;/td>
+ &lt;td style="text-align: center">if &lt;code>field_filter&lt;/code>&lt;/td>
  &lt;td style="text-align: center">none&lt;/td>
- &lt;td>Required if &lt;code>filter_type&lt;/code> is &lt;code>field_filter&lt;/code>. The name of the field (e.g., &lt;code>view_name.field_name&lt;/code>) to base the filter on, obtained from &lt;code>get_dimensions&lt;/code>.&lt;/td>
+ &lt;td>The name of the field (e.g., &lt;code>view_name.field_name&lt;/code>) to base the filter on, obtained from &lt;code>get_dimensions&lt;/code>.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">allow_multiple_values&lt;/td>
+ &lt;td style="text-align: center">boolean&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The Dashboard Filter should allow multiple values&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td style="text-align: left">required&lt;/td>
+ &lt;td style="text-align: center">boolean&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>The Dashboard Filter is required to run dashboard&lt;/td>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table>
