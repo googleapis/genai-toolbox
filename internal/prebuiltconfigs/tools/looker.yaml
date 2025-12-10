@@ -773,10 +773,10 @@ tools:
           - dashboard_id (required): The ID from `make_dashboard`.
           - name (required): A unique internal identifier for the filter. You will use this `name` later in `add_dashboard_element` to bind tiles to this filter.
           - title (required): The label displayed to users in the UI.
-          - type (required): One of `date_filter`, `number_filter`, `string_filter`, or `field_filter`.
+          - flter_type (required): One of `date_filter`, `number_filter`, `string_filter`, or `field_filter`.
           - default_value (optional): The initial value for the filter.
 
-          Field Filters (`type: field_filter`):
+          Field Filters (`flter_type: field_filter`):
           If creating a field filter, you must also provide:
           - model
           - explore

@@ -82,8 +82,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	params = append(params, nameParameter)
 	titleParameter := parameters.NewStringParameter("title", "The title of the Dashboard Filter")
 	params = append(params, titleParameter)
-	typeParameter := parameters.NewStringParameterWithDefault("type", "field", "The type of the Dashboard Filter: date_filter, number_filter, string_filter, field_filter (default field_filter)")
-	params = append(params, typeParameter)
+	filterTypeParameter := parameters.NewStringParameterWithDefault("filter_type", "field_filter", "The filter_type of the Dashboard Filter: date_filter, number_filter, string_filter, field_filter (default field_filter)")
+	params = append(params, filterTypeParameter)
 	defaultParameter := parameters.NewStringParameterWithRequired("default_value", "The default_value of the Dashboard Filter (optional)", false)
 	params = append(params, defaultParameter)
 	modelParameter := parameters.NewStringParameterWithRequired("model", "The model of a field type Dashboard Filter (required if type field)", false)
@@ -158,7 +158,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	dashboard_id := paramsMap["dashboard_id"].(string)
 	name := paramsMap["name"].(string)
 	title := paramsMap["title"].(string)
-	filterType := paramsMap["type"].(string)
+	filterType := paramsMap["flter_type"].(string)
 	switch filterType {
 	case "date_filter":
 	case "number_filter":
