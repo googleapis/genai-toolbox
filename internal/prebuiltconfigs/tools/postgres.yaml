@@ -212,6 +212,18 @@ tools:
         kind: postgres-list-tablespaces
         source: postgresql-source
 
+    list_pg_settings:
+        kind: postgres-list-pg-settings
+        source: postgresql-source
+    
+    list_database_stats:
+        kind: postgres-list-database-stats
+        source: postgresql-source
+
+    list_roles:
+        kind: postgres-list-roles
+        source: postgresql-source
+
 toolsets:
     postgres_database_tools:
         - execute_sql
@@ -236,6 +248,9 @@ toolsets:
         - replication_stats
         - list_query_stats
         - get_column_cardinality
-        - list_table_stats
         - list_publication_tables
         - list_tablespaces
+        - list_pg_settings
+        - list_database_stats
+        - list_roles
+        - list_table_stats
