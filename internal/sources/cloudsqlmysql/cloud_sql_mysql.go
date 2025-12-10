@@ -158,7 +158,7 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 	// Tell the driver to use the Cloud SQL Go Connector to create connections
 	if useIAM {
 		// Set allowCleartextPasswords to true for IAM
-		dsn = fmt.Sprintf("%s@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s&allowCleartextPasswords=true",
+		dsn = fmt.Sprintf("%s:password@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s&allowCleartextPasswords=true",
 			user,
 			project,
 			region,
