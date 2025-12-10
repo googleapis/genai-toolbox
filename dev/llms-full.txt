@@ -2132,6 +2132,8 @@ instance and create new saved content.
    data
 1. **make_dashboard**: Create a saved dashboard in Looker and return the URL
 1. **add_dashboard_element**: Add a tile to a dashboard
+1. **add_dashboard_filter**: Add a filter to a dashboard
+1. **generate_embed_url**: Generate an embed url for content
 
 ### Looker Instance Health Tools
 
@@ -8395,21 +8397,20 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field**            | **type** | **required** | **description**                                                                           |
-|----------------------|:--------:|:------------:|-------------------------------------------------------------------------------------------|
-| kind                 |  string  |     true     | Must be "looker".                                                                         |
-| base_url             |  string  |     true     | The URL of your Looker server with no trailing /.                                         |
-| client_id            |  string  |    false     | The client id assigned by Looker.                                                         |
-| client_secret        |  string  |    false     | The client secret assigned by Looker.                                                     |
-| verify_ssl           |  string  |    false     | Whether to check the ssl certificate of the server.                                       |
-| project              |  string  |    false     | The project id to use in Google Cloud.                                                    |
-| location             |  string  |    false     | The location to use in Google Cloud. (default: us)                                        |
-| timeout              |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, 120s is applied. |
-| use_client_oauth     |  string  |    false     | Use OAuth tokens instead of client_id and client_secret. (default: false) If a header     |
-|                      |          |              | name is provided, it will be used instead of "Authorization".                             |
-| show_hidden_models   |  string  |    false     | Show or hide hidden models. (default: true)                                               |
-| show_hidden_explores |  string  |    false     | Show or hide hidden explores. (default: true)                                             |
-| show_hidden_fields   |  string  |    false     | Show or hide hidden fields. (default: true)                                               |
+| **field**            | **type** | **required** | **description**                                                                                                                                     |
+|----------------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind                 |  string  |     true     | Must be "looker".                                                                                                                                   |
+| base_url             |  string  |     true     | The URL of your Looker server with no trailing /.                                                                                                   |
+| client_id            |  string  |    false     | The client id assigned by Looker.                                                                                                                   |
+| client_secret        |  string  |    false     | The client secret assigned by Looker.                                                                                                               |
+| verify_ssl           |  string  |    false     | Whether to check the ssl certificate of the server.                                                                                                 |
+| project              |  string  |    false     | The project id to use in Google Cloud.                                                                                                              |
+| location             |  string  |    false     | The location to use in Google Cloud. (default: us)                                                                                                  |
+| timeout              |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, 120s is applied.                                                           |
+| use_client_oauth     |  string  |    false     | Use OAuth tokens instead of client_id and client_secret. (default: false) If a header name is provided, it will be used instead of "Authorization". |
+| show_hidden_models   |  string  |    false     | Show or hide hidden models. (default: true)                                                                                                         |
+| show_hidden_explores |  string  |    false     | Show or hide hidden explores. (default: true)                                                                                                       |
+| show_hidden_fields   |  string  |    false     | Show or hide hidden fields. (default: true)                                                                                                         |
 
 # MariaDB
 MariaDB is an open-source relational database compatible with MySQL.
@@ -12924,6 +12925,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `run_dashboard`: Runs the queries associated with a dashboard.
     *   `make_dashboard`: Creates a new dashboard.
     *   `add_dashboard_element`: Adds a tile to a dashboard.
+    *   `add_dashboard_filter`: Adds a filter to a dashboard.
+    *   `generate_embed_url`: Generate an embed url for content.
     *   `health_pulse`: Test the health of a Looker instance.
     *   `health_analyze`: Analyze the LookML usage of a Looker instance.
     *   `health_vacuum`: Suggest LookML elements that can be removed.
