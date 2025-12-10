@@ -28,8 +28,6 @@ tools:
         kind: looker-get-parameters
         source: looker-source
         description: |
-          get_parameters Tool
-
           This tool retrieves a list of parameters defined within a specific Looker explore.
           LookML parameters are dynamic input fields that allow users to influence query
           behavior without directly modifying the underlying LookML. They are often used

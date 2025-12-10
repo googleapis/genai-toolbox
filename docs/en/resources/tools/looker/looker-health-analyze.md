@@ -42,8 +42,6 @@ tools:
     kind: looker-health-analyze
     source: looker-source
     description: |
-      health_analyze Tool
-
       This tool calculates the usage statistics for Looker projects, models, and explores.
 
       Parameters:

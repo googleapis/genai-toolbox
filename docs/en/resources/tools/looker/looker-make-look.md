@@ -40,8 +40,6 @@ tools:
         kind: looker-make-look
         source: looker-source
         description: |
-          make_look Tool
-
           This tool creates a new Look (saved query with visualization) in Looker.
           The Look will be saved in the user's personal folder, and its name must be unique.
 

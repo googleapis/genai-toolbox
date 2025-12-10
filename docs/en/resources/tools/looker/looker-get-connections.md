@@ -26,8 +26,6 @@ tools:
         kind: looker-get-connections
         source: looker-source
         description: |
-          get_connections Tool
-
           This tool retrieves a list of all database connections configured in the Looker system.
 
           Parameters:

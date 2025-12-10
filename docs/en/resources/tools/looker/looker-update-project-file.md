@@ -27,8 +27,6 @@ tools:
         kind: looker-update-project-file
         source: looker-source
         description: |
-          update_project_file Tool
-
           This tool modifies the content of an existing LookML file within a specified project.
 
           Prerequisite: The Looker session must be in Development Mode. Use `dev_mode: true` first.

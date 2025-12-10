@@ -27,8 +27,6 @@ tools:
         kind: looker-run-dashboard
         source: looker-source
         description: |
-          run_dashboard Tool
-
           This tool executes the queries associated with each tile in a specified dashboard
           and returns the aggregated data in a JSON structure.
 

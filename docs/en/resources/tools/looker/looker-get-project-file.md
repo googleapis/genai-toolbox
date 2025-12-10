@@ -26,8 +26,6 @@ tools:
         kind: looker-get-project-file
         source: looker-source
         description: |
-          get_project_file Tool
-
           This tool retrieves the raw content of a specific LookML file from within a project.
 
           Parameters:

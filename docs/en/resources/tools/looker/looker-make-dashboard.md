@@ -30,8 +30,6 @@ tools:
         kind: looker-make-dashboard
         source: looker-source
         description: |
-          make_dashboard Tool
-
           This tool creates a new, empty dashboard in Looker. Dashboards are stored
           in the user's personal folder, and the dashboard name must be unique.
           After creation, use `add_dashboard_filter` to add filters and

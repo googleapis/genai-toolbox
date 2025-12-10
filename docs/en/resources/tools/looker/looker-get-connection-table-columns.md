@@ -26,8 +26,6 @@ tools:
         kind: looker-get-connection-table-columns
         source: looker-source
         description: |
-          get_connection_table_columns Tool
-
           This tool retrieves a list of columns for one or more specified tables within a
           given database schema and connection.
 

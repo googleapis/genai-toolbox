@@ -41,8 +41,6 @@ tools:
         kind: looker-query-sql
         source: looker-source
         description: |
-          query_sql Tool
-
           This tool generates the underlying SQL query that Looker would execute
           against the database for a given set of parameters. It is useful for
           understanding how Looker translates a request into SQL.

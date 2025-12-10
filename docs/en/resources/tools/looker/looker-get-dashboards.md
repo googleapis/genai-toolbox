@@ -33,8 +33,6 @@ tools:
             kind: looker-get-dashboards
             source: looker-source
             description: |
-              get_dashboards Tool
-    
               This tool searches for saved dashboards in a Looker instance. It returns a list of JSON objects, each representing a dashboard.
     
               Search Parameters:

@@ -34,8 +34,6 @@ tools:
         kind: looker-get-looks
         source: looker-source
         description: |
-          get_looks Tool
-
           This tool searches for saved Looks (pre-defined queries and visualizations)
           in a Looker instance. It returns a list of JSON objects, each representing a Look.
 

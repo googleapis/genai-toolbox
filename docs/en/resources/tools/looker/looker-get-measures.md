@@ -28,8 +28,6 @@ tools:
         kind: looker-get-measures
         source: looker-source
         description: |
-          get_measures Tool
-
           This tool retrieves a list of measures defined within a specific Looker explore.
           Measures are aggregatable metrics (e.g., total sales, average price, count of users)
           that are used for calculations and quantitative analysis in your queries.

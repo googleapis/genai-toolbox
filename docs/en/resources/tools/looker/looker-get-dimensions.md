@@ -28,8 +28,6 @@ tools:
         kind: looker-get-dimensions
         source: looker-source
         description: |
-          get_dimensions Tool
-
           This tool retrieves a list of dimensions defined within a specific Looker explore.
           Dimensions are non-aggregatable attributes or characteristics of your data
           (e.g., product name, order date, customer city) that can be used for grouping,

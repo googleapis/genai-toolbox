@@ -30,8 +30,6 @@ tools:
         kind: looker-get-models
         source: looker-source
         description: |
-          get_models Tool
-
           This tool retrieves a list of available LookML models in the Looker instance.
           LookML models define the data structure and relationships that users can query.
           The output includes details like the model's `name` and `label`, which are
@@ -43,8 +41,6 @@ tools:
         kind: looker-get-explores
         source: looker-source
         description: |
-          get_explores Tool
-
           This tool retrieves a list of explores defined within a specific LookML model.
           Explores represent a curated view of your data, typically joining several
           tables together to allow for focused analysis on a particular subject area.
@@ -57,8 +53,6 @@ tools:
         kind: looker-get-dimensions
         source: looker-source
         description: |
-          get_dimensions Tool
-
           This tool retrieves a list of dimensions defined within a specific Looker explore.
           Dimensions are non-aggregatable attributes or characteristics of your data
           (e.g., product name, order date, customer city) that can be used for grouping,
@@ -78,8 +72,6 @@ tools:
         kind: looker-get-measures
         source: looker-source
         description: |
-          get_measures Tool
-
           This tool retrieves a list of measures defined within a specific Looker explore.
           Measures are aggregatable metrics (e.g., total sales, average price, count of users)
           that are used for calculations and quantitative analysis in your queries.
@@ -98,8 +90,6 @@ tools:
         kind: looker-get-filters
         source: looker-source
         description: |
-          get_filters Tool
-
           This tool retrieves a list of "filter-only fields" defined within a specific
           Looker explore. These are special fields defined in LookML specifically to
           create user-facing filter controls that do not directly affect the `GROUP BY`
@@ -117,8 +107,6 @@ tools:
         kind: looker-get-parameters
         source: looker-source
         description: |
-          get_parameters Tool
-
           This tool retrieves a list of parameters defined within a specific Looker explore.
           LookML parameters are dynamic input fields that allow users to influence query
           behavior without directly modifying the underlying LookML. They are often used
@@ -133,8 +121,6 @@ tools:
         kind: looker-query
         source: looker-source
         description: |
-          query Tool
-
           This tool runs a query against a LookML model and returns the results in JSON format.
 
           Required Parameters:
@@ -158,8 +144,6 @@ tools:
         kind: looker-query-sql
         source: looker-source
         description: |
-          query_sql Tool
-
           This tool generates the underlying SQL query that Looker would execute
           against the database for a given set of parameters. It is useful for
           understanding how Looker translates a request into SQL.
@@ -176,8 +160,6 @@ tools:
         kind: looker-query-url
         source: looker-source
         description: |
-          query_url Tool
-
           This tool generates a shareable URL for a Looker query, allowing users to
           explore the query further within the Looker UI. It returns the generated URL,
           along with the `query_id` and `slug`.
@@ -632,8 +614,6 @@ tools:
         kind: looker-get-looks
         source: looker-source
         description: |
-          get_looks Tool
-
           This tool searches for saved Looks (pre-defined queries and visualizations)
           in a Looker instance. It returns a list of JSON objects, each representing a Look.
 
@@ -659,8 +639,6 @@ tools:
         kind: looker-run-look
         source: looker-source
         description: |
-          run_look Tool
-
           This tool executes the query associated with a saved Look and
           returns the resulting data in a JSON structure.
 
@@ -675,8 +653,6 @@ tools:
         kind: looker-make-look
         source: looker-source
         description: |
-          make_look Tool
-
           This tool creates a new Look (saved query with visualization) in Looker.
           The Look will be saved in the user's personal folder, and its name must be unique.
 
@@ -700,8 +676,6 @@ tools:
         kind: looker-get-dashboards
         source: looker-source
         description: |
-          get_dashboards Tool
-
           This tool searches for saved dashboards in a Looker instance. It returns a list of JSON objects, each representing a dashboard.
 
           Search Parameters:
@@ -726,8 +700,6 @@ tools:
         kind: looker-run-dashboard
         source: looker-source
         description: |
-          run_dashboard Tool
-
           This tool executes the queries associated with each tile in a specified dashboard
           and returns the aggregated data in a JSON structure.
 
@@ -742,8 +714,6 @@ tools:
         kind: looker-make-dashboard
         source: looker-source
         description: |
-          make_dashboard Tool
-
           This tool creates a new, empty dashboard in Looker. Dashboards are stored
           in the user's personal folder, and the dashboard name must be unique.
           After creation, use `add_dashboard_filter` to add filters and
@@ -762,8 +732,6 @@ tools:
         kind: looker-add-dashboard-element
         source: looker-source
         description: |
-          add_dashboard_element Tool
-
           This tool creates a new tile (element) within an existing Looker dashboard.
           Tiles are added in the order this tool is called for a given `dashboard_id`.
 
@@ -794,8 +762,6 @@ tools:
         kind: looker-add-dashboard-filter
         source: looker-source
         description: |
-          add_dashboard_filter Tool
-
           This tool adds a filter to a Looker dashboard.
 
           CRITICAL ORDER OF OPERATIONS:
@@ -821,8 +787,6 @@ tools:
         kind: looker-generate-embed-url
         source: looker-source
         description: |
-          generate_embed_url Tool
-
           This tool generates a signed, private embed URL for specific Looker content,
           allowing users to access it directly.
 
@@ -839,8 +803,6 @@ tools:
         kind: looker-health-pulse
         source: looker-source
         description: |
-          health_pulse Tool
-
           This tool performs various health checks on a Looker instance.
 
           Parameters:
@@ -862,8 +824,6 @@ tools:
         kind: looker-health-analyze
         source: looker-source
         description: |
-          health_analyze Tool
-
           This tool calculates the usage statistics for Looker projects, models, and explores.
 
           Parameters:
@@ -881,8 +841,6 @@ tools:
         kind: looker-health-vacuum
         source: looker-source
         description: |
-          health_vacuum Tool
-
           This tool identifies and suggests LookML models or explores that can be
           safely removed due to inactivity or low usage.
 
@@ -901,8 +859,6 @@ tools:
         kind: looker-dev-mode
         source: looker-source
         description: |
-          dev_mode Tool
-
           This tool allows toggling the Looker IDE session between Development Mode and Production Mode.
           Development Mode enables making and testing changes to LookML projects.
 
@@ -915,8 +871,6 @@ tools:
         kind: looker-get-projects
         source: looker-source
         description: |
-          get_projects Tool
-
           This tool retrieves a list of all LookML projects available on the Looker instance.
           It is useful for identifying projects before performing actions like retrieving
           project files or making modifications.
@@ -932,8 +886,6 @@ tools:
         kind: looker-get-project-files
         source: looker-source
         description: |
-          get_project_files Tool
-
           This tool retrieves a list of all LookML files within a specified project,
           providing details about each file.
 
@@ -948,8 +900,6 @@ tools:
         kind: looker-get-project-file
         source: looker-source
         description: |
-          get_project_file Tool
-
           This tool retrieves the raw content of a specific LookML file from within a project.
 
           Parameters:
@@ -964,8 +914,6 @@ tools:
         kind: looker-create-project-file
         source: looker-source
         description: |
-          create_project_file Tool
-
           This tool creates a new LookML file within a specified project, populating
           it with the provided content.
 
@@ -983,8 +931,6 @@ tools:
         kind: looker-update-project-file
         source: looker-source
         description: |
-          update_project_file Tool
-
           This tool modifies the content of an existing LookML file within a specified project.
 
           Prerequisite: The Looker session must be in Development Mode. Use `dev_mode: true` first.
@@ -1001,8 +947,6 @@ tools:
         kind: looker-delete-project-file
         source: looker-source
         description: |
-          delete_project_file Tool
-
           This tool permanently deletes a specified LookML file from within a project.
           Use with caution, as this action cannot be undone through the API.
 
@@ -1019,8 +963,6 @@ tools:
         kind: looker-get-connections
         source: looker-source
         description: |
-          get_connections Tool
-
           This tool retrieves a list of all database connections configured in the Looker system.
 
           Parameters:
@@ -1038,8 +980,6 @@ tools:
         kind: looker-get-connection-schemas
         source: looker-source
         description: |
-          get_connection_schemas Tool
-
           This tool retrieves a list of database schemas available through a specified
           Looker connection.
 
@@ -1055,8 +995,6 @@ tools:
         kind: looker-get-connection-databases
         source: looker-source
         description: |
-          get_connection_databases Tool
-
           This tool retrieves a list of databases available through a specified Looker connection.
           This is only applicable for connections that support multiple databases.
           Use `get_connections` to check if a connection supports multiple databases.
@@ -1072,8 +1010,6 @@ tools:
         kind: looker-get-connection-tables
         source: looker-source
         description: |
-          get_connection_tables Tool
-
           This tool retrieves a list of tables available within a specified database schema
           through a Looker connection.
 
@@ -1090,8 +1026,6 @@ tools:
         kind: looker-get-connection-table-columns
         source: looker-source
         description: |
-          get_connection_table_columns Tool
-
           This tool retrieves a list of columns for one or more specified tables within a
           given database schema and connection.
 

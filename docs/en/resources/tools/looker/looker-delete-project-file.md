@@ -26,8 +26,6 @@ tools:
         kind: looker-delete-project-file
         source: looker-source
         description: |
-          delete_project_file Tool
-
           This tool permanently deletes a specified LookML file from within a project.
           Use with caution, as this action cannot be undone through the API.
 

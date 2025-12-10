@@ -26,8 +26,6 @@ tools:
         kind: looker-get-models
         source: looker-source
         description: |
-          get_models Tool
-
           This tool retrieves a list of available LookML models in the Looker instance.
           LookML models define the data structure and relationships that users can query.
           The output includes details like the model's `name` and `label`, which are

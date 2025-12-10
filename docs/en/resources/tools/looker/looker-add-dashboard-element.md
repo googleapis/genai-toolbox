@@ -30,8 +30,6 @@ tools:
         kind: looker-add-dashboard-element
         source: looker-source
         description: |
-          add_dashboard_element Tool
-
           This tool creates a new tile (element) within an existing Looker dashboard.
           Tiles are added in the order this tool is called for a given `dashboard_id`.
 

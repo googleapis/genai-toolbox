@@ -26,8 +26,6 @@ tools:
         kind: looker-get-connection-schemas
         source: looker-source
         description: |
-          get_connection_schemas Tool
-
           This tool retrieves a list of database schemas available through a specified
           Looker connection.
 

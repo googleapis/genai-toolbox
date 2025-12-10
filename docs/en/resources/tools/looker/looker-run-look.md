@@ -27,8 +27,6 @@ tools:
         kind: looker-run-look
         source: looker-source
         description: |
-          run_look Tool
-
           This tool executes the query associated with a saved Look and
           returns the resulting data in a JSON structure.
 

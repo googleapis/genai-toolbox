@@ -41,8 +41,6 @@ tools:
         kind: looker-query
         source: looker-source
         description: |
-          query Tool
-
           This tool runs a query against a LookML model and returns the results in JSON format.
 
           Required Parameters:

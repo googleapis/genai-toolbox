@@ -26,8 +26,6 @@ tools:
         kind: looker-get-project-files
         source: looker-source
         description: |
-          get_project_files Tool
-
           This tool retrieves a list of all LookML files within a specified project,
           providing details about each file.
 

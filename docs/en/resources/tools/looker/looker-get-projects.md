@@ -26,8 +26,6 @@ tools:
         kind: looker-get-projects
         source: looker-source
         description: |
-          get_projects Tool
-
           This tool retrieves a list of all LookML projects available on the Looker instance.
           It is useful for identifying projects before performing actions like retrieving
           project files or making modifications.

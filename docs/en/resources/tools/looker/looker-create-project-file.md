@@ -27,8 +27,6 @@ tools:
         kind: looker-create-project-file
         source: looker-source
         description: |
-          create_project_file Tool
-
           This tool creates a new LookML file within a specified project, populating
           it with the provided content.
 

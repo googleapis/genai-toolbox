@@ -37,8 +37,6 @@ tools:
         kind: looker-query-url
         source: looker-source
         description: |
-          query_url Tool
-
           This tool generates a shareable URL for a Looker query, allowing users to
           explore the query further within the Looker UI. It returns the generated URL,
           along with the `query_id` and `slug`.

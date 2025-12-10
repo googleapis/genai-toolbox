@@ -39,8 +39,6 @@ tools:
     kind: looker-health-vacuum
     source: looker-source
     description: |
-      health_vacuum Tool
-
       This tool identifies and suggests LookML models or explores that can be
       safely removed due to inactivity or low usage.
 

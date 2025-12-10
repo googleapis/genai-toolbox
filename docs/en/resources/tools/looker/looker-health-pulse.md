@@ -49,8 +49,6 @@ tools:
     kind: looker-health-pulse
     source: looker-source
     description: |
-      health_pulse Tool
-
       This tool performs various health checks on a Looker instance.
 
       Parameters:

@@ -36,8 +36,6 @@ tools:
         kind: looker-generate-embed-url
         source: looker-source
         description: |
-          generate_embed_url Tool
-
           This tool generates a signed, private embed URL for specific Looker content,
           allowing users to access it directly.
 

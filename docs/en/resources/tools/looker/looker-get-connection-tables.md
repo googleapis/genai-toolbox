@@ -27,8 +27,6 @@ tools:
         kind: looker-get-connection-tables
         source: looker-source
         description: |
-          get_connection_tables Tool
-
           This tool retrieves a list of tables available within a specified database schema
           through a Looker connection.
 

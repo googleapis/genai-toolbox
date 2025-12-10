@@ -28,8 +28,6 @@ tools:
         kind: looker-get-filters
         source: looker-source
         description: |
-          get_filters Tool
-
           This tool retrieves a list of "filter-only fields" defined within a specific
           Looker explore. These are special fields defined in LookML specifically to
           create user-facing filter controls that do not directly affect the `GROUP BY`
