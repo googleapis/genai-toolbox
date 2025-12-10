@@ -58,6 +58,13 @@ func getKDBVars(t *testing.T) map[string]any {
 	}
 }
 
+func getServiceAccountEmail() string {
+	if tests.ServiceAccountEmail != "" {
+		return tests.ServiceAccountEmail
+	}
+	return "test@example.com"
+}
+
 func initKDBConnection(host, port, user, pass string) (*kdbgo.KDBConn, error) {
 	var portInt, err = strconv.Atoi(port)
 	if err != nil {
@@ -164,7 +171,7 @@ func getKDBParamToolInfo(tableName string) (string, string, string, string, stri
 // getKDBAuthToolInfo returns statements and param of my-auth-tool for kdb kind
 func getKDBAuthToolInfo(tableName string) (string, string, string, *kdbgo.K) {
 	createStatement := fmt.Sprintf("%s:([] id:`int$(); name:`symbol$(); email:`symbol$())", tableName)
-	insertStatement := fmt.Sprintf("`%s insert(1; `Alice; `%s); `%s insert(2; `Jane; `janedoe@gmail.com)", tableName, tests.ServiceAccountEmail, tableName)
+	insertStatement := fmt.Sprintf("`%s insert(1; `Alice; `%s); `%s insert(2; `Jane; `janedoe@gmail.com)", tableName, getServiceAccountEmail(), tableName)
 	toolStatement := fmt.Sprintf("select name from %s where email = ?", tableName)
 	params := &kdbgo.K{}
 	return createStatement, insertStatement, toolStatement, params
