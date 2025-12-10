@@ -203,6 +203,7 @@ tools:
 
     list_table_stats:
         kind: postgres-list-table-stats
+        source: postgresql-source
 
     list_publication_tables:
         kind: postgres-list-publication-tables

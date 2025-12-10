@@ -202,6 +202,7 @@ tools:
 
     list_table_stats:
         kind: postgres-list-table-stats
+        source: alloydb-pg-source
 
     list_publication_tables:
         kind: postgres-list-publication-tables
