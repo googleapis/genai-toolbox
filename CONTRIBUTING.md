@@ -48,6 +48,17 @@ squashed when merged.
 author for more than 10 days, maintainers may mark that PR as Draft. PRs that
 are inactive for more than 30 days may be closed.
 
+### Automated Code Reviews
+
+This repository uses **Gemini Code Assist** to provide automated code reviews on Pull Requests. While this does not replace human review, it provides immediate feedback on code quality and potential issues.
+
+You can manually trigger the bot by commenting on your Pull Request:
+
+*   `/gemini`: Manually invokes Gemini Code Assist in comments
+*   `/gemini review`: Posts a code review of the changes in the pull request
+*   `/gemini summary`: Posts a summary of the changes in the pull request.
+*   `/gemini help`: Overview of the available commands
+
 ## Adding a New Database Source or Tool
 
 Please create an
@@ -93,13 +104,13 @@ implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/s
 ### Adding a New Tool
 
 > [!NOTE]
-> Please follow the tool naming convention detailed [here](./DEVELOPER.md#tool-naming-conventions).
+> Please follow the tool naming convention detailed
+> [here](./DEVELOPER.md#tool-naming-conventions).
 
 We recommend looking at an [example tool
 implementation](https://github.com/googleapis/genai-toolbox/tree/main/internal/tools/postgres/postgressql).
 
-* **Create a new directory** under `internal/tools` for your tool type (e.g.,
-  `internal/tools/newdb` or `internal/tools/newdb<tool_name>`).
+* **Create a new directory** under `internal/tools` for your tool type (e.g., `internal/tools/newdb/newdbtool`).
 * **Define a configuration struct** for your tool in a file named `newdbtool.go`.
 Create a `Config` struct and a `Tool` struct to store necessary parameters for
 tools.
@@ -107,7 +118,7 @@ tools.
   [`ToolConfig`](https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/tools/tools.go#L61)
   interface**. This interface requires one method:
   * `ToolConfigKind() string`: Returns a unique string identifier for your tool
-    (e.g., `"newdb"`).
+    (e.g., `"newdb-tool"`).
   * `Initialize(sources map[string]Source) (Tool, error)`: Creates a new
     instance of your tool and validates that it can connect to the specified
     data source.
@@ -124,16 +135,16 @@ tools.
   * `Authorized(services []string) bool`: Checks if the tool is authorized to
     run based on the provided authentication services.
 * **Implement `init()`** to register the new Tool.
-* **Implement Unit Tests** in a file named `newdb_test.go`.
+* **Implement Unit Tests** in a file named `newdbtool_test.go`.
 
 ### Adding Integration Tests
 
 * **Add a test file** under a new directory `tests/newdb`.
 * **Add pre-defined integration test suites** in the
-  `/tests/newdb/newdb_test.go` that are **required** to be run as long as your
-  code contains related features. Please check each test suites for the config
-  defaults, if your source require test suites config updates, please refer to
-  [config option](./tests/option.go):
+  `/tests/newdb/newdb_integration_test.go` that are **required** to be run as
+  long as your code contains related features. Please check each test suites for
+  the config defaults, if your source require test suites config updates, please
+  refer to [config option](./tests/option.go):
 
      1. [RunToolGetTest][tool-get]: tests for the `GET` endpoint that returns the
             tool's manifest.

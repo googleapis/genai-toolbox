@@ -25,37 +25,47 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/googleapis/genai-toolbox/internal/log"
+	"github.com/googleapis/genai-toolbox/internal/prompts"
+	"github.com/googleapis/genai-toolbox/internal/server/resources"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 // fakeVersionString is used as a temporary version string in tests
 const fakeVersionString = "0.0.0"
 
-var _ tools.Tool = &MockTool{}
+var (
+	_ tools.Tool     = MockTool{}
+	_ prompts.Prompt = MockPrompt{}
+)
 
 // MockTool is used to mock tools in tests
 type MockTool struct {
 	Name                         string
 	Description                  string
-	Params                       []tools.Parameter
+	Params                       []parameters.Parameter
 	manifest                     tools.Manifest
 	unauthorized                 bool
 	requiresClientAuthrorization bool
 }
 
-func (t MockTool) Invoke(context.Context, tools.ParamValues, tools.AccessToken) (any, error) {
+func (t MockTool) Invoke(context.Context, tools.SourceProvider, parameters.ParamValues, tools.AccessToken) (any, error) {
 	mock := []any{t.Name}
 	return mock, nil
 }
 
+func (t MockTool) ToConfig() tools.ToolConfig {
+	return nil
+}
+
 // claims is a map of user info decoded from an auth token
-func (t MockTool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Params, data, claimsMap)
+func (t MockTool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Params, data, claimsMap)
 }
 
 func (t MockTool) Manifest() tools.Manifest {
-	pMs := make([]tools.ParameterManifest, 0, len(t.Params))
+	pMs := make([]parameters.ParameterManifest, 0, len(t.Params))
 	for _, p := range t.Params {
 		pMs = append(pMs, p.Manifest())
 	}
@@ -67,13 +77,13 @@ func (t MockTool) Authorized(verifiedAuthServices []string) bool {
 	return !t.unauthorized
 }
 
-func (t MockTool) RequiresClientAuthorization() bool {
+func (t MockTool) RequiresClientAuthorization(tools.SourceProvider) bool {
 	// defaulted to false
 	return t.requiresClientAuthrorization
 }
 
 func (t MockTool) McpManifest() tools.McpManifest {
-	properties := make(map[string]tools.ParameterMcpManifest)
+	properties := make(map[string]parameters.ParameterMcpManifest)
 	required := make([]string, 0)
 	authParams := make(map[string][]string)
 
@@ -88,7 +98,7 @@ func (t MockTool) McpManifest() tools.McpManifest {
 		}
 	}
 
-	toolsSchema := tools.McpToolsSchema{
+	toolsSchema := parameters.McpToolsSchema{
 		Type:       "object",
 		Properties: properties,
 		Required:   required,
@@ -109,41 +119,100 @@ func (t MockTool) McpManifest() tools.McpManifest {
 	return mcpManifest
 }
 
+func (t MockTool) GetAuthTokenHeaderName() string {
+	return "Authorization"
+}
+
+// MockPrompt is used to mock prompts in tests
+type MockPrompt struct {
+	Name        string
+	Description string
+	Args        prompts.Arguments
+}
+
+func (p MockPrompt) SubstituteParams(vals parameters.ParamValues) (any, error) {
+	return []prompts.Message{
+		{
+			Role:    "user",
+			Content: fmt.Sprintf("substituted %s", p.Name),
+		},
+	}, nil
+}
+
+func (p MockPrompt) ParseArgs(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
+	var params parameters.Parameters
+	for _, arg := range p.Args {
+		params = append(params, arg.Parameter)
+	}
+	return parameters.ParseParams(params, data, claimsMap)
+}
+
+func (p MockPrompt) Manifest() prompts.Manifest {
+	var argManifests []parameters.ParameterManifest
+	for _, arg := range p.Args {
+		argManifests = append(argManifests, arg.Manifest())
+	}
+	return prompts.Manifest{
+		Description: p.Description,
+		Arguments:   argManifests,
+	}
+}
+
+func (p MockPrompt) McpManifest() prompts.McpManifest {
+	return prompts.GetMcpManifest(p.Name, p.Description, p.Args)
+}
+
+func (p MockPrompt) ToConfig() prompts.PromptConfig {
+	return nil
+}
+
 var tool1 = MockTool{
 	Name:   "no_params",
-	Params: []tools.Parameter{},
+	Params: []parameters.Parameter{},
 }
 
 var tool2 = MockTool{
 	Name: "some_params",
-	Params: tools.Parameters{
-		tools.NewIntParameter("param1", "This is the first parameter."),
-		tools.NewIntParameter("param2", "This is the second parameter."),
+	Params: parameters.Parameters{
+		parameters.NewIntParameter("param1", "This is the first parameter."),
+		parameters.NewIntParameter("param2", "This is the second parameter."),
 	},
 }
 
 var tool3 = MockTool{
 	Name:        "array_param",
 	Description: "some description",
-	Params: tools.Parameters{
-		tools.NewArrayParameter("my_array", "this param is an array of strings", tools.NewStringParameter("my_string", "string item")),
+	Params: parameters.Parameters{
+		parameters.NewArrayParameter("my_array", "this param is an array of strings", parameters.NewStringParameter("my_string", "string item")),
 	},
 }
 
 var tool4 = MockTool{
 	Name:         "unauthorized_tool",
-	Params:       []tools.Parameter{},
+	Params:       []parameters.Parameter{},
 	unauthorized: true,
 }
 
 var tool5 = MockTool{
 	Name:                         "require_client_auth_tool",
-	Params:                       []tools.Parameter{},
+	Params:                       []parameters.Parameter{},
 	requiresClientAuthrorization: true,
 }
 
+var prompt1 = MockPrompt{
+	Name: "prompt1",
+	Args: prompts.Arguments{},
+}
+
+var prompt2 = MockPrompt{
+	Name: "prompt2",
+	Args: prompts.Arguments{
+		{Parameter: parameters.NewStringParameter("arg1", "This is the first argument.")},
+	},
+}
+
 // setUpResources setups resources to test against
-func setUpResources(t *testing.T, mockTools []MockTool) (map[string]tools.Tool, map[string]tools.Toolset) {
+func setUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt) (map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset) {
 	toolsMap := make(map[string]tools.Tool)
 	var allTools []string
 	for _, tool := range mockTools {
@@ -165,11 +234,29 @@ func setUpResources(t *testing.T, mockTools []MockTool) (map[string]tools.Tool, 
 		}
 		toolsets[name] = m
 	}
-	return toolsMap, toolsets
+
+	promptsMap := make(map[string]prompts.Prompt)
+	var allPrompts []string
+	for _, prompt := range mockPrompts {
+		promptsMap[prompt.Name] = prompt
+		allPrompts = append(allPrompts, prompt.Name)
+	}
+
+	promptsets := make(map[string]prompts.Promptset)
+	if len(allPrompts) > 0 {
+		psc := prompts.PromptsetConfig{Name: "", PromptNames: allPrompts}
+		ps, err := psc.Initialize(fakeVersionString, promptsMap)
+		if err != nil {
+			t.Fatalf("unable to initialize default promptset: %s", err)
+		}
+		promptsets[""] = ps
+	}
+
+	return toolsMap, toolsets, promptsMap, promptsets
 }
 
-// setUpServer create a new server with tools and toolsets that are given
-func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset) (chi.Router, func()) {
+// setUpServer create a new server with tools, toolsets, prompts, and promptsets.
+func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset, prompts map[string]prompts.Prompt, promptsets map[string]prompts.Promptset) (chi.Router, func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
@@ -189,7 +276,7 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := NewResourceManager(nil, nil, tools, toolsets)
+	resourceManager := resources.NewResourceManager(nil, nil, tools, toolsets, prompts, promptsets)
 
 	server := Server{
 		version:         fakeVersionString,

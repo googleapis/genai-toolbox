@@ -71,7 +71,7 @@ func getLookerVars(t *testing.T) map[string]any {
 
 func TestLooker(t *testing.T) {
 	sourceConfig := getLookerVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
@@ -196,6 +196,11 @@ func TestLooker(t *testing.T) {
 			},
 			"delete_project_file": map[string]any{
 				"kind":        "looker-delete-project-file",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"generate_embed_url": map[string]any{
+				"kind":        "looker-generate-embed-url",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
@@ -1017,6 +1022,30 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "generate_embed_url",
+		map[string]any{
+			"generate_embed_url": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "Type of Looker content to embed (ie. dashboards, looks, query-visualization)",
+						"name":        "type",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The ID of the content to embed.",
+						"name":        "id",
+						"required":    false,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
 	tests.RunToolGetTestByName(t, "get_connections",
 		map[string]any{
 			"get_connections": map[string]any{
@@ -1229,6 +1258,9 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "{\"column_name\":\"EmpID\",\"data_type_database\":\"int\",\"data_type_looker\":\"number\",\"sql_escaped_column_name\":\"EmpID\"}"
 	tests.RunToolInvokeParametersTest(t, "get_connection_table_columns", []byte(`{"conn": "thelook", "schema": "demo_db", "tables": "Employees"}`), wantResult)
+
+	wantResult = "/login/embed?t=" // testing for specific substring, since url is dynamic
+	tests.RunToolInvokeParametersTest(t, "generate_embed_url", []byte(`{"type": "dashboards", "id": "1"}`), wantResult)
 }
 
 func runConversationalAnalytics(t *testing.T, modelName, exploreName string) {

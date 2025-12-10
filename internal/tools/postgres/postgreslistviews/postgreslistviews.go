@@ -24,19 +24,31 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const kind string = "postgres-list-views"
 
 const listViewsStatement = `
-			SELECT schemaname, viewname, viewowner
-			FROM pg_views
-			WHERE
-				schemaname NOT IN ('pg_catalog', 'information_schema')
-				AND ($1::text IS NULL OR viewname LIKE '%' || $1::text || '%')
-			ORDER BY viewname
-			LIMIT COALESCE($2::int, 50);
+	WITH list_views AS (
+		SELECT
+			schemaname AS schema_name,
+			viewname AS view_name,
+			viewowner AS owner_name,
+			definition
+		FROM pg_views
+	)
+	SELECT *
+	FROM list_views
+	WHERE
+		schema_name NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+		AND schema_name NOT LIKE 'pg_temp_%'
+		AND ($1::text IS NULL OR view_name ILIKE '%' || $1::text || '%')
+		AND ($2::text IS NULL OR schema_name ILIKE '%' || $2::text || '%')
+	ORDER BY
+		schema_name, view_name
+	LIMIT COALESCE($3::int, 50);
 `
 
 func init() {
@@ -92,24 +104,22 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	allParameters := tools.Parameters{
-		tools.NewStringParameterWithDefault("viewname", "", "Optional: A specific view name to search for."),
-		tools.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return."),
+	allParameters := parameters.Parameters{
+		parameters.NewStringParameterWithDefault("view_name", "", "Optional: A specific view name to search for."),
+		parameters.NewStringParameterWithDefault("schema_name", "", "Optional: A specific schema name to search for."),
+		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return."),
 	}
 	paramManifest := allParameters.Manifest()
-	description := cfg.Description
-	if description == "" {
-		description = "Lists views in the database from pg_views with a default limit of 50 rows. Returns schemaname, viewname and the ownername."
+	if cfg.Description == "" {
+		cfg.Description = "Lists views in the database from pg_views with a default limit of 50 rows. Returns schemaname, viewname, ownername and the definition."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
 	// finish tool setup
 	return Tool{
-		name:         cfg.Name,
-		kind:         kind,
-		authRequired: cfg.AuthRequired,
-		allParams:    allParameters,
-		pool:         s.PostgresPool(),
+		Config:    cfg,
+		allParams: allParameters,
+		pool:      s.PostgresPool(),
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   paramManifest,
@@ -123,19 +133,17 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	name         string           `yaml:"name"`
-	kind         string           `yaml:"kind"`
-	authRequired []string         `yaml:"authRequired"`
-	allParams    tools.Parameters `yaml:"allParams"`
-	pool         *pgxpool.Pool
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Config
+	allParams   parameters.Parameters `yaml:"allParams"`
+	pool        *pgxpool.Pool
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	newParams, err := tools.GetParams(t.allParams, paramsMap)
+	newParams, err := parameters.GetParams(t.allParams, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
@@ -162,11 +170,16 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		out = append(out, rowMap)
 	}
 
+	// this will catch actual query execution errors
+	if err := results.Err(); err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+
 	return out, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.allParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.allParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -178,9 +191,17 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.authRequired, verifiedAuthServices)
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

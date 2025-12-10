@@ -18,6 +18,7 @@ package tests
 
 // InvokeTestConfig represents the various configuration options for RunToolInvokeTest()
 type InvokeTestConfig struct {
+	myAuthToolWant           string
 	myToolId3NameAliceWant   string
 	myToolById4Want          string
 	nullWant                 string
@@ -30,6 +31,14 @@ type InvokeTestConfig struct {
 }
 
 type InvokeTestOption func(*InvokeTestConfig)
+
+// WithMyAuthToolWant represents the response value for my-auth-tool.
+// e.g. tests.RunToolInvokeTest(t, select1Want, tests.WithMyAuthToolWant("custom"))
+func WithMyAuthToolWant(s string) InvokeTestOption {
+	return func(c *InvokeTestConfig) {
+		c.myAuthToolWant = s
+	}
+}
 
 // WithMyToolId3NameAliceWant represents the response value for my-tool with id=3 and name=Alice.
 // e.g. tests.RunToolInvokeTest(t, select1Want, tests.WithMyToolId3NameAliceWant("custom"))
@@ -110,6 +119,7 @@ func EnableClientAuthTest() InvokeTestOption {
 // MCPTestConfig represents the various configuration options for mcp tool call tests.
 type MCPTestConfig struct {
 	myToolId3NameAliceWant string
+	mcpSelect1Want         string
 	supportClientAuth      bool
 	supportSelect1Auth     bool
 }
@@ -137,6 +147,12 @@ func EnableMcpClientAuthTest() McpTestOption {
 func DisableMcpSelect1AuthTest() McpTestOption {
 	return func(c *MCPTestConfig) {
 		c.supportSelect1Auth = false
+	}
+}
+
+func WithMcpSelect1Want(want string) McpTestOption {
+	return func(c *MCPTestConfig) {
+		c.mcpSelect1Want = want
 	}
 }
 

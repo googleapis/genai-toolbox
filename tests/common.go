@@ -29,7 +29,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -190,6 +190,130 @@ func AddExecuteSqlConfig(t *testing.T, config map[string]any, toolKind string) m
 	return config
 }
 
+func AddPostgresPrebuiltConfig(t *testing.T, config map[string]any) map[string]any {
+	var (
+		PostgresListSchemasToolKind             = "postgres-list-schemas"
+		PostgresListTablesToolKind              = "postgres-list-tables"
+		PostgresListActiveQueriesToolKind       = "postgres-list-active-queries"
+		PostgresListInstalledExtensionsToolKind = "postgres-list-installed-extensions"
+		PostgresListAvailableExtensionsToolKind = "postgres-list-available-extensions"
+		PostgresListViewsToolKind               = "postgres-list-views"
+		PostgresDatabaseOverviewToolKind        = "postgres-database-overview"
+		PostgresListTriggersToolKind            = "postgres-list-triggers"
+		PostgresListIndexesToolKind             = "postgres-list-indexes"
+		PostgresListSequencesToolKind           = "postgres-list-sequences"
+		PostgresLongRunningTransactionsToolKind = "postgres-long-running-transactions"
+		PostgresListLocksToolKind               = "postgres-list-locks"
+		PostgresReplicationStatsToolKind        = "postgres-replication-stats"
+		PostgresListQueryStatsToolKind          = "postgres-list-query-stats"
+		PostgresGetColumnCardinalityToolKind    = "postgres-get-column-cardinality"
+		PostgresListTableStats                  = "postgres-list-table-stats"
+		PostgresListPublicationTablesToolKind   = "postgres-list-publication-tables"
+		PostgresListTablespacesToolKind         = "postgres-list-tablespaces"
+		PostgresListPGSettingsToolKind          = "postgres-list-pg-settings"
+		PostgresListDatabaseStatsToolKind       = "postgres-list-database-stats"
+		PostgresListRolesToolKind               = "postgres-list-roles"
+	)
+
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+	tools["list_tables"] = map[string]any{
+		"kind":        PostgresListTablesToolKind,
+		"source":      "my-instance",
+		"description": "Lists tables in the database.",
+	}
+	tools["list_active_queries"] = map[string]any{
+		"kind":        PostgresListActiveQueriesToolKind,
+		"source":      "my-instance",
+		"description": "Lists active queries in the database.",
+	}
+	tools["list_installed_extensions"] = map[string]any{
+		"kind":        PostgresListInstalledExtensionsToolKind,
+		"source":      "my-instance",
+		"description": "Lists installed extensions in the database.",
+	}
+	tools["list_available_extensions"] = map[string]any{
+		"kind":        PostgresListAvailableExtensionsToolKind,
+		"source":      "my-instance",
+		"description": "Lists available extensions in the database.",
+	}
+	tools["list_views"] = map[string]any{
+		"kind":   PostgresListViewsToolKind,
+		"source": "my-instance",
+	}
+	tools["list_schemas"] = map[string]any{
+		"kind":   PostgresListSchemasToolKind,
+		"source": "my-instance",
+	}
+	tools["database_overview"] = map[string]any{
+		"kind":   PostgresDatabaseOverviewToolKind,
+		"source": "my-instance",
+	}
+	tools["list_triggers"] = map[string]any{
+		"kind":   PostgresListTriggersToolKind,
+		"source": "my-instance",
+	}
+	tools["list_indexes"] = map[string]any{
+		"kind":   PostgresListIndexesToolKind,
+		"source": "my-instance",
+	}
+	tools["list_sequences"] = map[string]any{
+		"kind":   PostgresListSequencesToolKind,
+		"source": "my-instance",
+	}
+	tools["list_publication_tables"] = map[string]any{
+		"kind":   PostgresListPublicationTablesToolKind,
+		"source": "my-instance",
+	}
+	tools["long_running_transactions"] = map[string]any{
+		"kind":   PostgresLongRunningTransactionsToolKind,
+		"source": "my-instance",
+	}
+	tools["list_locks"] = map[string]any{
+		"kind":   PostgresListLocksToolKind,
+		"source": "my-instance",
+	}
+	tools["replication_stats"] = map[string]any{
+		"kind":   PostgresReplicationStatsToolKind,
+		"source": "my-instance",
+	}
+	tools["list_query_stats"] = map[string]any{
+		"kind":   PostgresListQueryStatsToolKind,
+		"source": "my-instance",
+	}
+	tools["get_column_cardinality"] = map[string]any{
+		"kind":   PostgresGetColumnCardinalityToolKind,
+		"source": "my-instance",
+	}
+
+	tools["list_table_stats"] = map[string]any{
+		"kind":   PostgresListTableStats,
+		"source": "my-instance",
+	}
+
+	tools["list_tablespaces"] = map[string]any{
+		"kind":   PostgresListTablespacesToolKind,
+		"source": "my-instance",
+	}
+	tools["list_pg_settings"] = map[string]any{
+		"kind":   PostgresListPGSettingsToolKind,
+		"source": "my-instance",
+	}
+	tools["list_database_stats"] = map[string]any{
+		"kind":   PostgresListDatabaseStatsToolKind,
+		"source": "my-instance",
+	}
+
+	tools["list_roles"] = map[string]any{
+		"kind":   PostgresListRolesToolKind,
+		"source": "my-instance",
+	}
+	config["tools"] = tools
+	return config
+}
+
 func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplSelectCombined, tmplSelectFilterCombined string, tmplSelectAll string) map[string]any {
 	toolsMap, ok := config["tools"].(map[string]any)
 	if !ok {
@@ -206,9 +330,9 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "CREATE TABLE {{.tableName}} ({{array .columns}})",
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
-			tools.NewArrayParameter("columns", "The columns to create", tools.NewStringParameter("column", "A column name that will be created")),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
+			parameters.NewArrayParameter("columns", "The columns to create", parameters.NewStringParameter("column", "A column name that will be created")),
 		},
 	}
 	toolsMap["insert-table-templateParams-tool"] = map[string]any{
@@ -216,10 +340,10 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		"source":      "my-instance",
 		"description": "Insert tool with template parameters",
 		"statement":   "INSERT INTO {{.tableName}} ({{array .columns}}) VALUES ({{.values}})",
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
-			tools.NewArrayParameter("columns", "The columns to insert into", tools.NewStringParameter("column", "A column name that will be returned from the query.")),
-			tools.NewStringParameter("values", "The values to insert as a comma separated string"),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
+			parameters.NewArrayParameter("columns", "The columns to insert into", parameters.NewStringParameter("column", "A column name that will be returned from the query.")),
+			parameters.NewStringParameter("values", "The values to insert as a comma separated string"),
 		},
 	}
 	toolsMap["select-templateParams-tool"] = map[string]any{
@@ -227,8 +351,8 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   selectAll,
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
 		},
 	}
 	toolsMap["select-templateParams-combined-tool"] = map[string]any{
@@ -236,9 +360,9 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   tmplSelectCombined,
-		"parameters":  []tools.Parameter{tools.NewIntParameter("id", "the id of the user")},
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
+		"parameters":  []parameters.Parameter{parameters.NewIntParameter("id", "the id of the user")},
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
 		},
 	}
 	toolsMap["select-fields-templateParams-tool"] = map[string]any{
@@ -246,9 +370,9 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "SELECT {{array .fields}} FROM {{.tableName}} ORDER BY id",
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
-			tools.NewArrayParameter("fields", "The fields to select from", tools.NewStringParameter("field", "A field that will be returned from the query.")),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
+			parameters.NewArrayParameter("fields", "The fields to select from", parameters.NewStringParameter("field", "A field that will be returned from the query.")),
 		},
 	}
 	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
@@ -256,10 +380,10 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   tmplSelectFilterCombined,
-		"parameters":  []tools.Parameter{tools.NewStringParameter("name", "the name of the user")},
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
-			tools.NewStringParameter("columnFilter", "some description"),
+		"parameters":  []parameters.Parameter{parameters.NewStringParameter("name", "the name of the user")},
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
+			parameters.NewStringParameter("columnFilter", "some description"),
 		},
 	}
 	toolsMap["drop-table-templateParams-tool"] = map[string]any{
@@ -267,8 +391,8 @@ func AddTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplS
 		"source":      "my-instance",
 		"description": "Drop table tool with template parameters",
 		"statement":   "DROP TABLE IF EXISTS {{.tableName}}",
-		"templateParameters": []tools.Parameter{
-			tools.NewStringParameter("tableName", "some description"),
+		"templateParameters": []parameters.Parameter{
+			parameters.NewStringParameter("tableName", "some description"),
 		},
 	}
 	config["tools"] = toolsMap
@@ -769,7 +893,7 @@ func TestCloudSQLMySQL_IPTypeParsingFromYAML(t *testing.T) {
 					project: my-project
 					region: my-region
 					instance: my-instance
-					ipType: private 
+					ipType: private
 					database: my_db
 					user: my_user
 					password: my_pass
@@ -809,7 +933,7 @@ func TestCloudSQLMySQL_IPTypeParsingFromYAML(t *testing.T) {
 // Finds and drops all tables in a postgres database.
 func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
 	query := `
-	SELECT table_name FROM information_schema.tables 
+	SELECT table_name FROM information_schema.tables
 	WHERE table_schema = 'public' AND table_type = 'BASE TABLE';`
 
 	rows, err := pool.Query(ctx, query)
@@ -842,7 +966,7 @@ func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool
 // Finds and drops all tables in a mysql database.
 func CleanupMySQLTables(t *testing.T, ctx context.Context, pool *sql.DB) {
 	query := `
-	SELECT table_name FROM information_schema.tables 
+	SELECT table_name FROM information_schema.tables
 	WHERE table_schema = DATABASE() AND table_type = 'BASE TABLE';`
 
 	rows, err := pool.QueryContext(ctx, query)

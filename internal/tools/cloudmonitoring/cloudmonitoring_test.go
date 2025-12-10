@@ -21,9 +21,109 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
+	cloudmonitoringsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudmonitoring"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
+
+// mockIncompatibleSource is a source of a different kind to test error paths.
+type mockIncompatibleSource struct{ sources.Source }
+
+func TestInitialize(t *testing.T) {
+	t.Parallel()
+	testSource := &cloudmonitoringsrc.Source{Config: cloudmonitoringsrc.Config{Kind: "cloud-monitoring"}}
+	srcs := map[string]sources.Source{
+		"my-monitoring-source": testSource,
+		"incompatible-source":  &mockIncompatibleSource{},
+	}
+
+	wantParams := parameters.Parameters{
+		parameters.NewStringParameterWithRequired("projectId", "The Id of the Google Cloud project.", true),
+		parameters.NewStringParameterWithRequired("query", "The promql query to execute.", true),
+	}
+
+	testCases := []struct {
+		desc    string
+		cfg     cloudmonitoring.Config
+		want    *tools.Manifest
+		wantErr string
+	}{
+		{
+			desc: "Success case with nil authRequired",
+			cfg: cloudmonitoring.Config{
+				Name:         "test-tool",
+				Kind:         "cloud-monitoring-query-prometheus",
+				Source:       "my-monitoring-source",
+				Description:  "A test description.",
+				AuthRequired: nil,
+			},
+			want: &tools.Manifest{
+				Description:  "A test description.",
+				Parameters:   wantParams.Manifest(),
+				AuthRequired: nil,
+			},
+		},
+		{
+			desc: "Success case with specified authRequired",
+			cfg: cloudmonitoring.Config{
+				Name:         "test-tool-with-auth",
+				Kind:         "cloud-monitoring-query-prometheus",
+				Source:       "my-monitoring-source",
+				Description:  "Another test description.",
+				AuthRequired: []string{"google-auth-service"},
+			},
+			want: &tools.Manifest{
+				Description:  "Another test description.",
+				Parameters:   wantParams.Manifest(),
+				AuthRequired: []string{"google-auth-service"},
+			},
+		},
+		{
+			desc: "Error: source not found",
+			cfg: cloudmonitoring.Config{
+				Name:   "test-tool",
+				Source: "non-existent-source",
+			},
+			wantErr: `no source named "non-existent-source" configured`,
+		},
+		{
+			desc: "Error: incompatible source kind",
+			cfg: cloudmonitoring.Config{
+				Name:   "test-tool",
+				Source: "incompatible-source",
+			},
+			wantErr: "invalid source for \"cloud-monitoring-query-prometheus\" tool",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			tool, err := tc.cfg.Initialize(srcs)
+
+			if tc.wantErr != "" {
+				if err == nil {
+					t.Fatalf("Initialize() succeeded, want error containing %q", tc.wantErr)
+				}
+				if !strings.Contains(err.Error(), tc.wantErr) {
+					t.Errorf("Initialize() error = %q, want error containing %q", err, tc.wantErr)
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("Initialize() failed: %v", err)
+			}
+
+			got := tool.Manifest()
+			if diff := cmp.Diff(tc.want, &got); diff != "" {
+				t.Errorf("Initialize() manifest mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
 
 func TestParseFromYamlCloudMonitoring(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
@@ -87,7 +187,7 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got.Tools, cmp.AllowUnexported(cloudmonitoring.Config{})); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

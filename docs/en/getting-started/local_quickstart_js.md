@@ -40,11 +40,24 @@ from Toolbox.
     ```
 
 1. In a new terminal, install the
-   [SDK](https://www.npmjs.com/package/@toolbox-sdk/core).
-
-    ```bash
-    npm install @toolbox-sdk/core
-    ```
+   SDK package.
+   {{< tabpane persist=header >}}
+{{< tab header="LangChain" lang="bash" >}}
+npm install @toolbox-sdk/core
+{{< /tab >}}
+{{< tab header="GenkitJS" lang="bash" >}}
+npm install @toolbox-sdk/core
+{{< /tab >}}
+{{< tab header="LlamaIndex" lang="bash" >}}
+npm install @toolbox-sdk/core
+{{< /tab >}}
+{{< tab header="GoogleGenAI" lang="bash" >}}
+npm install @toolbox-sdk/core
+{{< /tab >}}
+{{< tab header="ADK" lang="bash" >}}
+npm install @toolbox-sdk/adk
+{{< /tab >}}
+{{< /tabpane >}}
 
 1. Install other required dependencies
 
@@ -59,7 +72,10 @@ npm install genkit @genkit-ai/googleai
 npm install llamaindex @llamaindex/google @llamaindex/workflow
 {{< /tab >}}
 {{< tab header="GoogleGenAI" lang="bash" >}}
-npm install @google/genai 
+npm install @google/genai
+{{< /tab >}}
+{{< tab header="ADK" lang="bash" >}}
+npm install @google/adk
 {{< /tab >}}
 {{< /tabpane >}}
 
@@ -88,6 +104,12 @@ npm install @google/genai
 {{< tab header="GoogleGenAI" lang="js" >}}
 
 {{< include "quickstart/js/genAI/quickstart.js" >}}
+
+{{< /tab >}}
+
+{{< tab header="ADK" lang="js" >}}
+
+{{< include "quickstart/js/adk/quickstart.js" >}}
 
 {{< /tab >}}
 

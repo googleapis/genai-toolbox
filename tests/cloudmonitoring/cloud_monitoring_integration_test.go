@@ -22,8 +22,8 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestTool_Invoke(t *testing.T) {
@@ -46,23 +46,25 @@ func TestTool_Invoke(t *testing.T) {
 	defer server.Close()
 
 	// Create a new observability tool
-	tool := &cloudmonitoring.Tool{
-		Name:        "test-cloudmonitoring",
-		Kind:        "cloud-monitoring-query-prometheus",
-		Description: "Test Cloudmonitoring Tool",
-		AllParams:   tools.Parameters{},
-		BaseURL:     server.URL,
-		Client:      &http.Client{},
+	tool := cloudmonitoring.Tool{
+		Config: cloudmonitoring.Config{
+			Name:        "test-cloudmonitoring",
+			Kind:        "cloud-monitoring-query-prometheus",
+			Description: "Test Cloudmonitoring Tool",
+		},
+		AllParams: parameters.Parameters{},
+		BaseURL:   server.URL,
+		Client:    &http.Client{},
 	}
 
 	// Define the test parameters
-	params := tools.ParamValues{
+	params := parameters.ParamValues{
 		{Name: "projectId", Value: "test-project"},
 		{Name: "query", Value: "up"},
 	}
 
 	// Invoke the tool
-	result, err := tool.Invoke(context.Background(), params, "")
+	result, err := tool.Invoke(context.Background(), nil, params, "")
 	if err != nil {
 		t.Fatalf("Invoke() error = %v", err)
 	}
@@ -90,23 +92,25 @@ func TestTool_Invoke_Error(t *testing.T) {
 	defer server.Close()
 
 	// Create a new observability tool
-	tool := &cloudmonitoring.Tool{
-		Name:        "test-cloudmonitoring",
-		Kind:        "clou-monitoring-query-prometheus",
-		Description: "Test Cloudmonitoring Tool",
-		AllParams:   tools.Parameters{},
-		BaseURL:     server.URL,
-		Client:      &http.Client{},
+	tool := cloudmonitoring.Tool{
+		Config: cloudmonitoring.Config{
+			Name:        "test-cloudmonitoring",
+			Kind:        "clou-monitoring-query-prometheus",
+			Description: "Test Cloudmonitoring Tool",
+		},
+		AllParams: parameters.Parameters{},
+		BaseURL:   server.URL,
+		Client:    &http.Client{},
 	}
 
 	// Define the test parameters
-	params := tools.ParamValues{
+	params := parameters.ParamValues{
 		{Name: "projectId", Value: "test-project"},
 		{Name: "query", Value: "up"},
 	}
 
 	// Invoke the tool
-	_, err := tool.Invoke(context.Background(), params, "")
+	_, err := tool.Invoke(context.Background(), nil, params, "")
 	if err == nil {
 		t.Fatal("Invoke() error = nil, want error")
 	}

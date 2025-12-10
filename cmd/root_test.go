@@ -34,6 +34,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
+	"github.com/googleapis/genai-toolbox/internal/prompts"
+	"github.com/googleapis/genai-toolbox/internal/prompts/custom"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	cloudsqlpgsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
@@ -43,6 +45,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/http"
 	"github.com/googleapis/genai-toolbox/internal/tools/postgres/postgressql"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/spf13/cobra"
 )
 
@@ -59,6 +62,9 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	}
 	if c.TelemetryServiceName == "" {
 		c.TelemetryServiceName = "toolbox"
+	}
+	if c.AllowedOrigins == nil {
+		c.AllowedOrigins = []string{"*"}
 	}
 	return c
 }
@@ -189,6 +195,13 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--disable-reload"},
 			want: withDefaults(server.ServerConfig{
 				DisableReload: true,
+			}),
+		},
+		{
+			desc: "allowed origin",
+			args: []string{"--allowed-origins", "http://foo.com,http://bar.com"},
+			want: withDefaults(server.ServerConfig{
+				AllowedOrigins: []string{"http://foo.com", "http://bar.com"},
 			}),
 		},
 	}
@@ -513,8 +526,8 @@ func TestParseToolFile(t *testing.T) {
 						Source:      "my-pg-instance",
 						Description: "some description",
 						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
-						Parameters: []tools.Parameter{
-							tools.NewStringParameter("country", "some description"),
+						Parameters: []parameters.Parameter{
+							parameters.NewStringParameter("country", "some description"),
 						},
 						AuthRequired: []string{},
 					},
@@ -523,6 +536,38 @@ func TestParseToolFile(t *testing.T) {
 					"example_toolset": tools.ToolsetConfig{
 						Name:      "example_toolset",
 						ToolNames: []string{"example_tool"},
+					},
+				},
+				Prompts: nil,
+			},
+		},
+		{
+			description: "with prompts example",
+			in: `
+            prompts:
+                my-prompt:
+                    description: A prompt template for data analysis.
+                    arguments:
+                        - name: country
+                          description: The country to analyze.
+                    messages:
+                        - content: Analyze the data for {{.country}}.
+            `,
+			wantToolsFile: ToolsFile{
+				Sources:      nil,
+				AuthServices: nil,
+				Tools:        nil,
+				Toolsets:     nil,
+				Prompts: server.PromptConfigs{
+					"my-prompt": &custom.Config{
+						Name:        "my-prompt",
+						Description: "A prompt template for data analysis.",
+						Arguments: prompts.Arguments{
+							{Parameter: parameters.NewStringParameter("country", "The country to analyze.")},
+						},
+						Messages: []prompts.Message{
+							{Role: "user", Content: "Analyze the data for {{.country}}."},
+						},
 					},
 				},
 			},
@@ -544,7 +589,10 @@ func TestParseToolFile(t *testing.T) {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
-				t.Fatalf("incorrect tools parse: diff %v", diff)
+				t.Fatalf("incorrect toolsets parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
+				t.Fatalf("incorrect prompts parse: diff %v", diff)
 			}
 		})
 	}
@@ -645,10 +693,10 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 						AuthRequired: []string{},
-						Parameters: []tools.Parameter{
-							tools.NewStringParameter("country", "some description"),
-							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							tools.NewStringParameterWithAuth("email", "user email", []tools.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+						Parameters: []parameters.Parameter{
+							parameters.NewStringParameter("country", "some description"),
+							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
+							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
 						},
 					},
 				},
@@ -658,6 +706,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts: nil,
 			},
 		},
 		{
@@ -744,10 +793,10 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 						AuthRequired: []string{},
-						Parameters: []tools.Parameter{
-							tools.NewStringParameter("country", "some description"),
-							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							tools.NewStringParameterWithAuth("email", "user email", []tools.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+						Parameters: []parameters.Parameter{
+							parameters.NewStringParameter("country", "some description"),
+							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
+							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
 						},
 					},
 				},
@@ -757,6 +806,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts: nil,
 			},
 		},
 		{
@@ -845,10 +895,10 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 						AuthRequired: []string{"my-google-service"},
-						Parameters: []tools.Parameter{
-							tools.NewStringParameter("country", "some description"),
-							tools.NewIntParameterWithAuth("id", "user id", []tools.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
-							tools.NewStringParameterWithAuth("email", "user email", []tools.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
+						Parameters: []parameters.Parameter{
+							parameters.NewStringParameter("country", "some description"),
+							parameters.NewIntParameterWithAuth("id", "user id", []parameters.ParamAuthService{{Name: "my-google-service", Field: "user_id"}}),
+							parameters.NewStringParameterWithAuth("email", "user email", []parameters.ParamAuthService{{Name: "my-google-service", Field: "email"}, {Name: "other-google-service", Field: "other_email"}}),
 						},
 					},
 				},
@@ -858,6 +908,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
+				Prompts: nil,
 			},
 		},
 	}
@@ -877,7 +928,10 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
-				t.Fatalf("incorrect tools parse: diff %v", diff)
+				t.Fatalf("incorrect toolsets parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
+				t.Fatalf("incorrect prompts parse: diff %v", diff)
 			}
 		})
 	}
@@ -894,6 +948,8 @@ func TestEnvVarReplacement(t *testing.T) {
 	t.Setenv("cat_string", "cat")
 	t.Setenv("food_string", "food")
 	t.Setenv("TestHeader", "ACTUAL_HEADER")
+	t.Setenv("prompt_name", "ACTUAL_PROMPT_NAME")
+	t.Setenv("prompt_content", "ACTUAL_CONTENT")
 
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -967,6 +1023,14 @@ func TestEnvVarReplacement(t *testing.T) {
 			toolsets:
 				${toolset_name}:
 					- example_tool
+
+						
+			prompts:
+				${prompt_name}:
+					description: A test prompt for {{.name}}.
+					messages:
+						- role: user
+						  content: ${prompt_content}
 			`,
 			wantToolsFile: ToolsFile{
 				Sources: server.SourceConfigs{
@@ -1000,9 +1064,9 @@ func TestEnvVarReplacement(t *testing.T) {
 						Path:         "search?name=alice&pet=cat",
 						Description:  "some description",
 						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
-						QueryParams: []tools.Parameter{
-							tools.NewStringParameterWithAuth("country", "some description",
-								[]tools.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
+						QueryParams: []parameters.Parameter{
+							parameters.NewStringParameterWithAuth("country", "some description",
+								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
 									{Name: "other-auth-service", Field: "user_id"}}),
 						},
 						RequestBody: `{
@@ -1012,15 +1076,28 @@ func TestEnvVarReplacement(t *testing.T) {
   "other": "$OTHER"
 }
 `,
-						BodyParams:   []tools.Parameter{tools.NewIntParameter("age", "age num"), tools.NewStringParameter("city", "city string")},
+						BodyParams:   []parameters.Parameter{parameters.NewIntParameter("age", "age num"), parameters.NewStringParameter("city", "city string")},
 						Headers:      map[string]string{"Authorization": "API_KEY", "Content-Type": "application/json"},
-						HeaderParams: []tools.Parameter{tools.NewStringParameter("Language", "language string")},
+						HeaderParams: []parameters.Parameter{parameters.NewStringParameter("Language", "language string")},
 					},
 				},
 				Toolsets: server.ToolsetConfigs{
 					"ACTUAL_TOOLSET_NAME": tools.ToolsetConfig{
 						Name:      "ACTUAL_TOOLSET_NAME",
 						ToolNames: []string{"example_tool"},
+					},
+				},
+				Prompts: server.PromptConfigs{
+					"ACTUAL_PROMPT_NAME": &custom.Config{
+						Name:        "ACTUAL_PROMPT_NAME",
+						Description: "A test prompt for {{.name}}.",
+						Messages: []prompts.Message{
+							{
+								Role:    "user",
+								Content: "ACTUAL_CONTENT",
+							},
+						},
+						Arguments: nil,
 					},
 				},
 			},
@@ -1042,11 +1119,13 @@ func TestEnvVarReplacement(t *testing.T) {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
 			}
 			if diff := cmp.Diff(tc.wantToolsFile.Toolsets, toolsFile.Toolsets); diff != "" {
-				t.Fatalf("incorrect tools parse: diff %v", diff)
+				t.Fatalf("incorrect toolsets parse: diff %v", diff)
+			}
+			if diff := cmp.Diff(tc.wantToolsFile.Prompts, toolsFile.Prompts); diff != "" {
+				t.Fatalf("incorrect prompts parse: diff %v", diff)
 			}
 		})
 	}
-
 }
 
 // normalizeFilepaths is a helper function to allow same filepath formats for Mac and Windows.
@@ -1248,6 +1327,7 @@ func TestPrebuiltTools(t *testing.T) {
 	postgresconfig, _ := prebuiltconfigs.Get("postgres")
 	spanner_config, _ := prebuiltconfigs.Get("spanner")
 	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
+	mindsdb_config, _ := prebuiltconfigs.Get("mindsdb")
 	sqlite_config, _ := prebuiltconfigs.Get("sqlite")
 	neo4jconfig, _ := prebuiltconfigs.Get("neo4j")
 	alloydbobsvconfig, _ := prebuiltconfigs.Get("alloydb-postgres-observability")
@@ -1255,6 +1335,7 @@ func TestPrebuiltTools(t *testing.T) {
 	cloudsqlmysqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mysql-observability")
 	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
 	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
+	cloudhealthcare_config, _ := prebuiltconfigs.Get("cloud-healthcare")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1327,6 +1408,12 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("MSSQL_USER", "your_mssql_user")
 	t.Setenv("MSSQL_PASSWORD", "your_mssql_password")
 
+	t.Setenv("MINDSDB_HOST", "localhost")
+	t.Setenv("MINDSDB_PORT", "47334")
+	t.Setenv("MINDSDB_DATABASE", "your_mindsdb_db")
+	t.Setenv("MINDSDB_USER", "your_mindsdb_user")
+	t.Setenv("MINDSDB_PASS", "your_mindsdb_password")
+
 	t.Setenv("LOOKER_BASE_URL", "https://your_company.looker.com")
 	t.Setenv("LOOKER_CLIENT_ID", "your_looker_client_id")
 	t.Setenv("LOOKER_CLIENT_SECRET", "your_looker_client_secret")
@@ -1341,6 +1428,10 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("NEO4J_DATABASE", "neo4j")
 	t.Setenv("NEO4J_USERNAME", "your_neo4j_user")
 	t.Setenv("NEO4J_PASSWORD", "your_neo4j_password")
+
+	t.Setenv("CLOUD_HEALTHCARE_PROJECT", "your_gcp_project_id")
+	t.Setenv("CLOUD_HEALTHCARE_REGION", "your_gcp_region")
+	t.Setenv("CLOUD_HEALTHCARE_DATASET", "your_healthcare_dataset")
 
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -1367,7 +1458,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "postgres_upgrade_precheck", "clone_instance"},
 				},
 			},
 		},
@@ -1377,7 +1468,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_mysql_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mysql_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance"},
 				},
 			},
 		},
@@ -1387,7 +1478,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_mssql_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mssql_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance"},
 				},
 			},
 		},
@@ -1397,7 +1488,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"alloydb_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "alloydb_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats"},
 				},
 			},
 		},
@@ -1427,7 +1518,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats"},
 				},
 			},
 		},
@@ -1467,7 +1558,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"serverless_spark_tools": tools.ToolsetConfig{
 					Name:      "serverless_spark_tools",
-					ToolNames: []string{"list_batches", "get_batch"},
+					ToolNames: []string{"list_batches", "get_batch", "cancel_batch", "create_pyspark_batch", "create_spark_batch"},
 				},
 			},
 		},
@@ -1507,7 +1598,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"looker_tools": tools.ToolsetConfig{
 					Name:      "looker_tools",
-					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "make_dashboard", "add_dashboard_element", "health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns"},
+					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "run_dashboard", "make_dashboard", "add_dashboard_element", "health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns"},
 				},
 			},
 		},
@@ -1527,7 +1618,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"postgres_database_tools": tools.ToolsetConfig{
 					Name:      "postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats"},
 				},
 			},
 		},
@@ -1537,7 +1628,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"spanner-database-tools": tools.ToolsetConfig{
 					Name:      "spanner-database-tools",
-					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs"},
 				},
 			},
 		},
@@ -1548,6 +1639,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"spanner_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "spanner_postgres_database_tools",
 					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "mindsdb prebuilt tools",
+			in:   mindsdb_config,
+			wantToolset: server.ToolsetConfigs{
+				"mindsdb-tools": tools.ToolsetConfig{
+					Name:      "mindsdb-tools",
+					ToolNames: []string{"mindsdb-execute-sql", "mindsdb-sql"},
 				},
 			},
 		},
@@ -1611,6 +1712,24 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "cloud healthcare prebuilt tools",
+			in:   cloudhealthcare_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_healthcare_dataset_tools": tools.ToolsetConfig{
+					Name:      "cloud_healthcare_dataset_tools",
+					ToolNames: []string{"get_dataset", "list_dicom_stores", "list_fhir_stores"},
+				},
+				"cloud_healthcare_fhir_tools": tools.ToolsetConfig{
+					Name:      "cloud_healthcare_fhir_tools",
+					ToolNames: []string{"get_fhir_store", "get_fhir_store_metrics", "get_fhir_resource", "fhir_patient_search", "fhir_patient_everything", "fhir_fetch_page"},
+				},
+				"cloud_healthcare_dicom_tools": tools.ToolsetConfig{
+					Name:      "cloud_healthcare_dicom_tools",
+					ToolNames: []string{"get_dicom_store", "get_dicom_store_metrics", "search_dicom_studies", "search_dicom_series", "search_dicom_instances", "retrieve_rendered_dicom_instance"},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tcs {
@@ -1621,6 +1740,10 @@ func TestPrebuiltTools(t *testing.T) {
 			}
 			if diff := cmp.Diff(tc.wantToolset, toolsFile.Toolsets); diff != "" {
 				t.Fatalf("incorrect tools parse: diff %v", diff)
+			}
+			// Prebuilt configs do not have prompts, so assert empty maps.
+			if len(toolsFile.Prompts) != 0 {
+				t.Fatalf("expected empty prompts map for prebuilt config, got: %v", toolsFile.Prompts)
 			}
 		})
 	}
@@ -1693,4 +1816,89 @@ func TestFileLoadingErrors(t *testing.T) {
 			t.Errorf("expected error about accessing folder, but got: %v", err)
 		}
 	})
+}
+
+func TestMergeToolsFiles(t *testing.T) {
+	file1 := ToolsFile{
+		Sources:  server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
+		Tools:    server.ToolConfigs{"tool1": http.Config{Name: "tool1"}},
+		Toolsets: server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}},
+	}
+	file2 := ToolsFile{
+		AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
+		Tools:        server.ToolConfigs{"tool2": http.Config{Name: "tool2"}},
+		Toolsets:     server.ToolsetConfigs{"set2": tools.ToolsetConfig{Name: "set2"}},
+	}
+	fileWithConflicts := ToolsFile{
+		Sources: server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
+		Tools:   server.ToolConfigs{"tool2": http.Config{Name: "tool2"}},
+	}
+
+	testCases := []struct {
+		name    string
+		files   []ToolsFile
+		want    ToolsFile
+		wantErr bool
+	}{
+		{
+			name:  "merge two distinct files",
+			files: []ToolsFile{file1, file2},
+			want: ToolsFile{
+				Sources:      server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
+				AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
+				Tools:        server.ToolConfigs{"tool1": http.Config{Name: "tool1"}, "tool2": http.Config{Name: "tool2"}},
+				Toolsets:     server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}, "set2": tools.ToolsetConfig{Name: "set2"}},
+				Prompts:      server.PromptConfigs{},
+			},
+			wantErr: false,
+		},
+		{
+			name:    "merge with conflicts",
+			files:   []ToolsFile{file1, file2, fileWithConflicts},
+			wantErr: true,
+		},
+		{
+			name:  "merge single file",
+			files: []ToolsFile{file1},
+			want: ToolsFile{
+				Sources:      file1.Sources,
+				AuthServices: make(server.AuthServiceConfigs),
+				Tools:        file1.Tools,
+				Toolsets:     file1.Toolsets,
+				Prompts:      server.PromptConfigs{},
+			},
+		},
+		{
+			name:  "merge empty list",
+			files: []ToolsFile{},
+			want: ToolsFile{
+				Sources:      make(server.SourceConfigs),
+				AuthServices: make(server.AuthServiceConfigs),
+				Tools:        make(server.ToolConfigs),
+				Toolsets:     make(server.ToolsetConfigs),
+				Prompts:      server.PromptConfigs{},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := mergeToolsFiles(tc.files...)
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("mergeToolsFiles() error = %v, wantErr %v", err, tc.wantErr)
+			}
+			if !tc.wantErr {
+				if diff := cmp.Diff(tc.want, got); diff != "" {
+					t.Errorf("mergeToolsFiles() mismatch (-want +got):\n%s", diff)
+				}
+			} else {
+				if err == nil {
+					t.Fatal("expected an error for conflicting files but got none")
+				}
+				if !strings.Contains(err.Error(), "resource conflicts detected") {
+					t.Errorf("expected conflict error, but got: %v", err)
+				}
+			}
+		})
+	}
 }

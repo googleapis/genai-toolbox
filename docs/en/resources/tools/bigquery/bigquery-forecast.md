@@ -33,19 +33,27 @@ query based on the provided parameters:
 - **horizon** (integer, optional): The number of future time steps you want to
   predict. It defaults to 10 if not specified.
 
-The behavior of this tool is influenced by the `writeMode` setting on its `bigquery` source:
+The behavior of this tool is influenced by the `writeMode` setting on its
+`bigquery` source:
 
-- **`allowed` (default) and `blocked`:** These modes do not impose any special restrictions on the `bigquery-forecast` tool.
-- **`protected`:** This mode enables session-based execution. The tool will operate within the same BigQuery session as other
-  tools using the same source. This allows the `history_data` parameter to be a query that references temporary resources (e.g., 
-  `TEMP` tables) created within that session.
+- **`allowed` (default) and `blocked`:** These modes do not impose any special
+  restrictions on the `bigquery-forecast` tool.
+- **`protected`:** This mode enables session-based execution. The tool will
+  operate within the same BigQuery session as other tools using the same source.
+  This allows the `history_data` parameter to be a query that references
+  temporary resources (e.g., `TEMP` tables) created within that session.
 
-The tool's behavior is also influenced by the `allowedDatasets` restriction on the `bigquery` source:
+The tool's behavior is also influenced by the `allowedDatasets` restriction on
+the `bigquery` source:
 
-- **Without `allowedDatasets` restriction:** The tool can use any table or query for the `history_data` parameter.
-- **With `allowedDatasets` restriction:** The tool verifies that the `history_data` parameter only accesses tables within the allowed datasets.
-  - If `history_data` is a table ID, the tool checks if the table's dataset is in the allowed list.
-  - If `history_data` is a query, the tool performs a dry run to analyze the query and rejects it if it accesses any table outside the allowed list.
+- **Without `allowedDatasets` restriction:** The tool can use any table or query
+  for the `history_data` parameter.
+- **With `allowedDatasets` restriction:** The tool verifies that the
+  `history_data` parameter only accesses tables within the allowed datasets.
+  - If `history_data` is a table ID, the tool checks if the table's dataset is
+    in the allowed list.
+  - If `history_data` is a query, the tool performs a dry run to analyze the
+    query and rejects it if it accesses any table outside the allowed list.
 
 ## Example
 
@@ -58,11 +66,13 @@ tools:
 ```
 
 ## Sample Prompt
+
 You can use the following sample prompts to call this tool:
 
-- Can you forecast the history time series data in bigquery table `bqml_tutorial.google_analytic`? Use project_id `myproject`.
-- What are the future `total_visits` in bigquery table `bqml_tutorial.google_analytic`?
-
+- Can you forecast the history time series data in bigquery table
+  `bqml_tutorial.google_analytic`? Use project_id `myproject`.
+- What are the future `total_visits` in bigquery table
+  `bqml_tutorial.google_analytic`?
 
 ## Reference
 

@@ -34,10 +34,12 @@ documentation](https://googleapis.github.io/genai-toolbox/).
   - [Installing the server](#installing-the-server)
   - [Running the server](#running-the-server)
   - [Integrating your application](#integrating-your-application)
+  - [Using Toolbox with Gemini CLI Extensions](#using-toolbox-with-gemini-cli-extensions)
 - [Configuration](#configuration)
   - [Sources](#sources)
   - [Tools](#tools)
   - [Toolsets](#toolsets)
+  - [Prompts](#prompts)
 - [Versioning](#versioning)
   - [Pre-1.0.0 Versioning](#pre-100-versioning)
   - [Post-1.0.0 Versioning](#post-100-versioning)
@@ -97,7 +99,9 @@ centralized location to store and update tools, allowing you to share tools
 between agents and applications and update those tools without necessarily
 redeploying your application.
 
-![architecture](./docs/en/getting-started/introduction/architecture.png)
+<p align="center">
+<img src="./docs/en/getting-started/introduction/architecture.png" alt="architecture" width="50%"/>
+</p>
 
 ## Getting Started
 
@@ -121,7 +125,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.18.0
+> export VERSION=0.22.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 > chmod +x toolbox
 > ```
@@ -134,7 +138,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.18.0
+> export VERSION=0.22.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
 > chmod +x toolbox
 > ```
@@ -147,21 +151,33 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.18.0
+> export VERSION=0.22.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
 > chmod +x toolbox
 > ```
 >
 > </details>
 > <details>
-> <summary>Windows (AMD64)</summary>
+> <summary>Windows (Command Prompt)</summary>
 >
-> To install Toolbox as a binary on Windows (AMD64):
+> To install Toolbox as a binary on Windows (Command Prompt):
+>
+> ```cmd
+> :: see releases page for other versions
+> set VERSION=0.22.0
+> curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
+> ```
+>
+> </details>
+> <details>
+> <summary>Windows (PowerShell)</summary>
+>
+> To install Toolbox as a binary on Windows (PowerShell):
 >
 > ```powershell
 > # see releases page for other versions
-> $VERSION = "0.18.0"
-> Invoke-WebRequest -Uri "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe" -OutFile "toolbox.exe"
+> $VERSION = "0.21.0"
+> curl.exe -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe"
 > ```
 >
 > </details>
@@ -173,7 +189,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.18.0
+export VERSION=0.22.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -197,7 +213,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.18.0
+go install github.com/googleapis/genai-toolbox@v0.22.0
 ```
 <!-- {x-release-please-end} -->
 
@@ -511,6 +527,36 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     ```
 
   </details>
+  <details>
+    <summary>ADK</summary>
+
+1. Install [Toolbox ADK SDK][toolbox-adk-js]:
+
+    ```bash
+    npm install @toolbox-sdk/adk
+    ```
+
+2. Load tools:
+
+    ```javascript
+    import { ToolboxClient } from '@toolbox-sdk/adk';
+
+    // update the url to point to your server
+    const URL = 'http://127.0.0.1:5000';
+    let client = new ToolboxClient(URL);
+
+    // these tools can be passed to your application!
+    const tools = await client.loadToolset('toolsetName');
+    ```
+
+    For more detailed instructions on using the Toolbox ADK SDK, see the
+    [project's README][toolbox-adk-js-readme].
+
+    [toolbox-adk-js]: https://www.npmjs.com/package/@toolbox-sdk/adk
+    [toolbox-adk-js-readme]:
+       https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-adk/README.md
+
+  </details>
 </details>
 </blockquote>
 <details>
@@ -518,7 +564,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
   <br>
   <blockquote>
 
-  <details open>
+  <details>
     <summary>Core</summary>
 
 1. Install [Toolbox Go SDK][toolbox-go]:
@@ -527,7 +573,7 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     go get github.com/googleapis/mcp-toolbox-sdk-go
     ```
 
-1. Load tools:
+2. Load tools:
 
     ```go
     package main
@@ -760,9 +806,96 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     ```
 
   </details>
+  <details open>
+    <summary>ADK Go</summary>
+
+1. Install [Toolbox Go SDK][toolbox-go]:
+
+    ```bash
+    go get github.com/googleapis/mcp-toolbox-sdk-go
+    ```
+
+1. Load tools:
+
+    ```go
+    package main
+
+    import (
+      "github.com/googleapis/mcp-toolbox-sdk-go/tbadk"
+      "context"
+    )
+
+    func main() {
+      // Make sure to add the error checks
+      // Update the url to point to your server
+      URL := "http://127.0.0.1:5000"
+      ctx := context.Background()
+      client, err := tbadk.NewToolboxClient(URL)
+      if err != nil {
+        return fmt.Sprintln("Could not start Toolbox Client", err)
+      }
+
+      // Use this tool with ADK Go
+      tool, err := client.LoadTool("toolName", ctx)
+      if err != nil {
+        return fmt.Sprintln("Could not load Toolbox Tool", err)
+      }
+    }
+    ```
+
+    For more detailed instructions on using the Toolbox Go SDK, see the
+    [project's README][toolbox-core-go-readme].
+
+
+  </details>
 </details>
 </blockquote>
 </details>
+
+### Using Toolbox with Gemini CLI Extensions
+
+[Gemini CLI extensions][gemini-cli-extensions] provide tools to interact
+directly with your data sources from command line. Below is a list of Gemini CLI
+extensions that are built on top of **Toolbox**. They allow you to interact with
+your data sources through pre-defined or custom tools with natural language.
+Click into the link to see detailed instructions on their usage.
+
+To use **custom** tools with Gemini CLI:
+
+- [MCP Toolbox](https://github.com/gemini-cli-extensions/mcp-toolbox)
+
+To use [prebuilt tools][prebuilt] with Gemini CLI:
+
+- [AlloyDB for PostgreSQL](https://github.com/gemini-cli-extensions/alloydb)
+- [AlloyDB for PostgreSQL
+  Observability](https://github.com/gemini-cli-extensions/alloydb-observability)
+- [BigQuery Data
+  Analytics](https://github.com/gemini-cli-extensions/bigquery-data-analytics)
+- [BigQuery Conversational
+  Analytics](https://github.com/gemini-cli-extensions/bigquery-conversational-analytics)
+- [Cloud SQL for
+  MySQL](https://github.com/gemini-cli-extensions/cloud-sql-mysql)
+- [Cloud SQL for MySQL
+  Observability](https://github.com/gemini-cli-extensions/cloud-sql-mysql-observability)
+- [Cloud SQL for
+  PostgreSQL](https://github.com/gemini-cli-extensions/cloud-sql-postgresql)
+- [Cloud SQL for PostgreSQL
+  Observability](https://github.com/gemini-cli-extensions/cloud-sql-postgresql-observability)
+- [Cloud SQL for SQL
+  Server](https://github.com/gemini-cli-extensions/cloud-sql-sqlserver)
+- [Cloud SQL for SQL Server
+  Observability](https://github.com/gemini-cli-extensions/cloud-sql-sqlserver-observability)
+- [Looker](https://github.com/gemini-cli-extensions/looker)
+- [Dataplex](https://github.com/gemini-cli-extensions/dataplex)
+- [MySQL](https://github.com/gemini-cli-extensions/mysql)
+- [PostgreSQL](https://github.com/gemini-cli-extensions/postgres)
+- [Spanner](https://github.com/gemini-cli-extensions/spanner)
+- [Firestore](https://github.com/gemini-cli-extensions/firestore-native)
+- [SQL Server](https://github.com/gemini-cli-extensions/sql-server)
+
+[prebuilt]: https://googleapis.github.io/genai-toolbox/reference/prebuilt-tools/
+[gemini-cli-extensions]:
+    https://github.com/google-gemini/gemini-cli/blob/main/docs/extensions/index.md
 
 ## Configuration
 
@@ -839,6 +972,25 @@ all_tools = client.load_toolset()
 # This will only load the tools listed in 'my_second_toolset'
 my_second_toolset = client.load_toolset("my_second_toolset")
 ```
+
+### Prompts
+
+The `prompts` section of a `tools.yaml` defines prompts that can be used for
+interactions with LLMs.
+
+```yaml
+prompts:
+  code_review:
+    description: "Asks the LLM to analyze code quality and suggest improvements."
+    messages:
+      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+    arguments:
+      - name: "code"
+        description: "The code to review"
+```
+
+For more details on configuring prompts, see the
+[Prompts](https://googleapis.github.io/genai-toolbox/resources/prompts).
 
 ## Versioning
 

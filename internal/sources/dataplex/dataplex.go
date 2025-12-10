@@ -65,10 +65,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, err
 	}
 	s := &Source{
-		Name:    r.Name,
-		Kind:    SourceKind,
-		Client:  client,
-		Project: r.Project,
+		Config: r,
+		Client: client,
 	}
 
 	return s, nil
@@ -77,17 +75,17 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	// Source struct with Dataplex client
-	Name     string `yaml:"name"`
-	Kind     string `yaml:"kind"`
-	Client   *dataplexapi.CatalogClient
-	Project  string `yaml:"project"`
-	Location string `yaml:"location"`
+	Config
+	Client *dataplexapi.CatalogClient
 }
 
 func (s *Source) SourceKind() string {
 	// Returns Dataplex source kind
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 func (s *Source) ProjectID() string {
