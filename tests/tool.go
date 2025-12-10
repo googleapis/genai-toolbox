@@ -2877,9 +2877,6 @@ func RunMySQLListTablesTest(t *testing.T, databaseName, tableNameParam, tableNam
 						if err := json.Unmarshal([]byte(table.ObjectDetails), &d); err != nil {
 							t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
 						}
-						// Set Owner to nil for verification purposes because
-						// standard MySQL returns nil while Cloud SQL returns the user.
-						d.Owner = nil
 						details = append(details, d)
 					}
 					got = details
