@@ -108,7 +108,8 @@ func (s *Source) TrinoDB() *sql.DB {
 }
 
 func initTrinoConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, password, catalog, schema, queryTimeout, accessToken string, kerberosEnabled, sslEnabled bool, sslCertPath, sslCert string, disableSslVerification bool) (*sql.DB, error) {
-	_, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	//nolint:all // Reassigned ctx
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
 	// Build Trino DSN
@@ -118,6 +119,7 @@ func initTrinoConnectionPool(ctx context.Context, tracer trace.Tracer, name, hos
 	}
 
 	if disableSslVerification {
+		fmt.Printf("WARNING: SSL verification is disabled for trino source %q. This is an insecure setting and should not be used in production.", name)
 		tr := &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
