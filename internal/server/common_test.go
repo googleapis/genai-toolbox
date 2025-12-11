@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/server/resources"
@@ -62,6 +63,10 @@ func (t MockTool) ToConfig() tools.ToolConfig {
 // claims is a map of user info decoded from an auth token
 func (t MockTool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Params, data, claimsMap)
+}
+
+func (t MockTool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Params, paramValues, embeddingModelsMap, nil)
 }
 
 func (t MockTool) Manifest() tools.Manifest {
