@@ -109,7 +109,7 @@ golangci-lint run --fix
 Execute unit tests locally:
 
 ```bash
-go test -race -v ./...
+go test -race -v ./cmd/... ./internal/...
 ```
 
 ### Integration Tests

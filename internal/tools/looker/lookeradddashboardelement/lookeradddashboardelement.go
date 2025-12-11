@@ -86,6 +86,16 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		"",
 	)
 	params = append(params, vizParameter)
+	dashFilters := parameters.NewArrayParameterWithRequired("dashboard_filters",
+		`An array of dashboard filters like [{"dashboard_filter_name": "name", "field": "view_name.field_name"}, ...]`,
+		false,
+		parameters.NewMapParameterWithDefault("dashboard_filter",
+			map[string]any{},
+			`A dashboard filter like {"dashboard_filter_name": "name", "field": "view_name.field_name"}`,
+			"",
+		),
+	)
+	params = append(params, dashFilters)
 
 	annotations := cfg.Annotations
 	if annotations == nil {
@@ -142,7 +152,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
 	}
+
 	logger.DebugContext(ctx, "params = ", params)
+
 	wq, err := lookercommon.ProcessQueryArgs(ctx, params)
 	if err != nil {
 		return nil, fmt.Errorf("error building query request: %w", err)
@@ -155,23 +167,64 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	visConfig := paramsMap["vis_config"].(map[string]any)
 	wq.VisConfig = &visConfig
 
-	qrespFields := "id"
-
 	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
 	if err != nil {
 		return nil, fmt.Errorf("error getting sdk: %w", err)
 	}
 
-	qresp, err := sdk.CreateQuery(*wq, qrespFields, t.ApiSettings)
+	qresp, err := sdk.CreateQuery(*wq, "id", t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making create query request: %w", err)
 	}
 
+	dashFilters := []any{}
+	if v, ok := paramsMap["dashboard_filters"]; ok {
+		if v != nil {
+			dashFilters = paramsMap["dashboard_filters"].([]any)
+		}
+	}
+
+	var filterables []v4.ResultMakerFilterables
+	for _, m := range dashFilters {
+		f := m.(map[string]any)
+		name, ok := f["dashboard_filter_name"].(string)
+		if !ok {
+			return nil, fmt.Errorf("error processing dashboard filter: %w", err)
+		}
+		field, ok := f["field"].(string)
+		if !ok {
+			return nil, fmt.Errorf("error processing dashboard filter: %w", err)
+		}
+		listener := v4.ResultMakerFilterablesListen{
+			DashboardFilterName: &name,
+			Field:               &field,
+		}
+		listeners := []v4.ResultMakerFilterablesListen{listener}
+
+		filter := v4.ResultMakerFilterables{
+			Listen: &listeners,
+		}
+
+		filterables = append(filterables, filter)
+	}
+
+	if len(filterables) == 0 {
+		filterables = nil
+	}
+
+	wrm := v4.WriteResultMakerWithIdVisConfigAndDynamicFields{
+		Query:       wq,
+		VisConfig:   &visConfig,
+		Filterables: &filterables,
+	}
 	wde := v4.WriteDashboardElement{
 		DashboardId: &dashboard_id,
 		Title:       &title,
+		ResultMaker: &wrm,
+		Query:       wq,
 		QueryId:     qresp.Id,
 	}
+
 	switch len(visConfig) {
 	case 0:
 		wde.Type = &dataType
