@@ -225,6 +225,10 @@ tools:
         kind: postgres-list-roles
         source: postgresql-source
 
+    list_stored_procedure:
+        kind: postgres-list-stored-procedure
+        source: postgresql-source
+
 toolsets:
     postgres_database_tools:
         - execute_sql
@@ -255,3 +259,4 @@ toolsets:
         - list_database_stats
         - list_roles
         - list_table_stats
+        - list_stored_procedure

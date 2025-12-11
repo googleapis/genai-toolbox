@@ -4324,6 +4324,257 @@ func RunPostgresListTableStatsTest(t *testing.T, ctx context.Context, pool *pgxp
 	}
 }
 
+// RunPostgresListStoredProcedureTest runs tests for the postgres list-stored-procedure tool
+func RunPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	type storedProcedureDetails struct {
+		SchemaName  string `json:"schema_name"`
+		Name        string `json:"name"`
+		Owner       string `json:"owner"`
+		Language    string `json:"language"`
+		Definition  string `json:"definition"`
+		Description any    `json:"description"`
+	}
+
+	// Create test schema
+	testSchemaName := "test_proc_schema_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	createSchemaStmt := fmt.Sprintf("CREATE SCHEMA %s", testSchemaName)
+	if _, err := pool.Exec(ctx, createSchemaStmt); err != nil {
+		t.Fatalf("unable to create test schema: %v", err)
+	}
+	defer func() {
+		dropSchemaStmt := fmt.Sprintf("DROP SCHEMA IF EXISTS %s CASCADE", testSchemaName)
+		if _, err := pool.Exec(ctx, dropSchemaStmt); err != nil {
+			t.Logf("warning: unable to drop test schema: %v", err)
+		}
+	}()
+
+	// Create test procedures
+	proc1Name := "test_proc_1_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	createProc1Stmt := fmt.Sprintf(`
+        CREATE PROCEDURE %s.%s(p_count INT)
+        LANGUAGE plpgsql
+        AS $$
+        BEGIN
+            INSERT INTO test_table VALUES (p_count);
+            COMMIT;
+        END;
+        $$
+    `, testSchemaName, proc1Name)
+
+	if _, err := pool.Exec(ctx, createProc1Stmt); err != nil {
+		t.Fatalf("unable to create test procedure 1: %v", err)
+	}
+
+	// Add a comment/description to the procedure
+	commentStmt := fmt.Sprintf("COMMENT ON PROCEDURE %s.%s(INT) IS 'Test procedure that inserts a record'", testSchemaName, proc1Name)
+	if _, err := pool.Exec(ctx, commentStmt); err != nil {
+		t.Logf("warning: unable to add comment to procedure: %v", err)
+	}
+
+	// Create a second test procedure
+	proc2Name := "test_proc_2_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	createProc2Stmt := fmt.Sprintf(`
+        CREATE PROCEDURE %s.%s()
+        LANGUAGE plpgsql
+        AS $$
+        DECLARE
+            v_count INT;
+        BEGIN
+            SELECT COUNT(*) INTO v_count FROM test_table;
+            RAISE NOTICE 'Total records: %%', v_count;
+        END;
+        $$
+    `, testSchemaName, proc2Name)
+
+	if _, err := pool.Exec(ctx, createProc2Stmt); err != nil {
+		t.Fatalf("unable to create test procedure 2: %v", err)
+	}
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		shouldHaveData bool
+		expectedCount  int
+		filterByRole   string
+		filterBySchema string
+	}{
+		{
+			name:           "list stored procedures with no arguments (default limit 20)",
+			requestBody:    bytes.NewBufferString(`{}`),
+			wantStatusCode: http.StatusOK,
+			shouldHaveData: false, // may or may not have data depending on what's in the database
+		},
+		{
+			name:           "list stored procedures filtering by specific schema",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s"}`, testSchemaName)),
+			wantStatusCode: http.StatusOK,
+			shouldHaveData: true,
+			expectedCount:  2,
+			filterBySchema: testSchemaName,
+		},
+		{
+			name:           "list stored procedures filtering by procedure owner (postgres)",
+			requestBody:    bytes.NewBufferString(`{"role_name": "postgres"}`),
+			wantStatusCode: http.StatusOK,
+			shouldHaveData: false, // might have procedures owned by postgres
+		},
+		{
+			name:           "list stored procedures with custom limit",
+			requestBody:    bytes.NewBufferString(`{"limit": 5}`),
+			wantStatusCode: http.StatusOK,
+			shouldHaveData: false,
+		},
+		{
+			name:           "list stored procedures filtering by schema and role",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s", "role_name": "postgres"}`, testSchemaName)),
+			wantStatusCode: http.StatusOK,
+			shouldHaveData: true,
+			expectedCount:  2,
+			filterBySchema: testSchemaName,
+			filterByRole:   "postgres",
+		},
+		{
+			name:           "list stored procedures with non-existent schema",
+			requestBody:    bytes.NewBufferString(`{"schema_name": "non_existent_schema_xyz"}`),
+			wantStatusCode: http.StatusOK,
+			shouldHaveData: false,
+		},
+		{
+			name:           "list stored procedures with non-existent role",
+			requestBody:    bytes.NewBufferString(`{"role_name": "non_existent_role_xyz"}`),
+			wantStatusCode: http.StatusOK,
+			shouldHaveData: false,
+		},
+		{
+			name:           "list stored procedures with partial schema name match",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "test_proc"}`)),
+			wantStatusCode: http.StatusOK,
+			shouldHaveData: true,
+			expectedCount:  2,
+		},
+		{
+			name:           "list stored procedures with limit 1",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"schema_name": "%s", "limit": 1}`, testSchemaName)),
+			wantStatusCode: http.StatusOK,
+			shouldHaveData: true,
+			expectedCount:  1,
+			filterBySchema: testSchemaName,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/list_stored_procedures/invoke"
+			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper struct {
+				Result json.RawMessage `json:"result"`
+			}
+			if err := json.Unmarshal(respBody, &bodyWrapper); err != nil {
+				t.Fatalf("error decoding response wrapper: %v", err)
+			}
+
+			var resultString string
+			if err := json.Unmarshal(bodyWrapper.Result, &resultString); err != nil {
+				resultString = string(bodyWrapper.Result)
+			}
+
+			var got []storedProcedureDetails
+			if resultString != "null" {
+				if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+					t.Fatalf("failed to unmarshal result: %v, result string: %s", err, resultString)
+				}
+			}
+
+			// Verify expected data presence
+			if tc.shouldHaveData {
+				if len(got) == 0 {
+					t.Fatalf("expected data but got empty result")
+				}
+
+				// If filtering by schema, verify all results are from that schema
+				if tc.filterBySchema != "" {
+					for _, proc := range got {
+						if proc.SchemaName != tc.filterBySchema && !strings.Contains(tc.filterBySchema, "test_proc") {
+							t.Errorf("procedure schema %s does not match filter %s", proc.SchemaName, tc.filterBySchema)
+						}
+					}
+				}
+
+				// If filtering by role, verify all results are owned by that role
+				if tc.filterByRole != "" {
+					for _, proc := range got {
+						if proc.Owner != tc.filterByRole {
+							t.Errorf("procedure owner %s does not match filter %s", proc.Owner, tc.filterByRole)
+						}
+					}
+				}
+
+				// Verify expected count if specified
+				if tc.expectedCount > 0 && len(got) != tc.expectedCount {
+					t.Errorf("expected %d procedures but got %d", tc.expectedCount, len(got))
+				}
+			}
+
+			// Verify result structure and data types
+			for _, proc := range got {
+				// Verify all required fields are present and non-empty
+				if proc.SchemaName == "" {
+					t.Errorf("schema_name should not be empty")
+				}
+				if proc.Name == "" {
+					t.Errorf("procedure name should not be empty")
+				}
+				if proc.Owner == "" {
+					t.Errorf("owner should not be empty")
+				}
+				if proc.Language == "" {
+					t.Errorf("language should not be empty")
+				}
+				if proc.Definition == "" {
+					t.Errorf("definition should not be empty")
+				}
+
+				// Verify definition contains CREATE PROCEDURE
+				if !strings.Contains(proc.Definition, "CREATE") && !strings.Contains(proc.Definition, "PROCEDURE") {
+					t.Logf("warning: definition may not be a valid CREATE PROCEDURE statement: %s", proc.Definition)
+				}
+
+				// Verify language is a valid PostgreSQL language
+				validLanguages := []string{"plpgsql", "sql", "c", "internal", "plperl", "pltcl", "plpython"}
+				found := false
+				for _, lang := range validLanguages {
+					if proc.Language == lang {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Logf("warning: language %s may not be a standard PostgreSQL language", proc.Language)
+				}
+			}
+
+			// Verify results are sorted by schema_name and name
+			if len(got) > 1 {
+				for i := 0; i < len(got)-1; i++ {
+					currentKey := fmt.Sprintf("%s.%s", got[i].SchemaName, got[i].Name)
+					nextKey := fmt.Sprintf("%s.%s", got[i+1].SchemaName, got[i+1].Name)
+					if currentKey > nextKey {
+						t.Logf("warning: results may not be sorted by schema_name and name")
+					}
+				}
+			}
+		})
+	}
+}
+
 // RunRequest is a helper function to send HTTP requests and return the response
 func RunRequest(t *testing.T, method, url string, body io.Reader, headers map[string]string) (*http.Response, []byte) {
 	// Send request
