@@ -66,7 +66,7 @@ func (t MockTool) ParseParams(data map[string]any, claimsMap map[string]map[stri
 }
 
 func (t MockTool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.Params, paramValues, embeddingModelsMap)
+	return parameters.EmbedParams(ctx, t.Params, paramValues, embeddingModelsMap, nil)
 }
 
 func (t MockTool) Manifest() tools.Manifest {
