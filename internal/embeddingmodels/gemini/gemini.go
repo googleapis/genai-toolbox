@@ -82,10 +82,15 @@ func (m EmbeddingModel) EmbedParameters(ctx context.Context, parameters []string
 
 	contents := convertStringsToContents(parameters)
 
-	result, err := m.Client.Models.EmbedContent(ctx, m.Model, contents, &genai.EmbedContentConfig{
-		TaskType:             "SEMANTIC_SIMILARITY",
-		OutputDimensionality: genai.Ptr(m.Config.Dimension),
-	})
+	embedConfig := &genai.EmbedContentConfig{
+		TaskType: "SEMANTIC_SIMILARITY",
+	}
+
+	if m.Dimension > 0 {
+		embedConfig.OutputDimensionality = genai.Ptr(m.Dimension)
+	}
+
+	result, err := m.Client.Models.EmbedContent(ctx, m.Model, contents, embedConfig)
 	if err != nil {
 		logger.ErrorContext(ctx, "Error calling EmbedContent for model %s: %v", m.Model, err)
 		return nil, err
