@@ -1,5 +1,39 @@
 # Changelog
 
+## [0.23.0](https://github.com/googleapis/genai-toolbox/compare/v0.22.0...v0.23.0) (2025-12-11)
+
+
+### ⚠ BREAKING CHANGES
+
+* **serverless-spark:** add URLs to create batch tool outputs
+* **serverless-spark:** add URLs to list_batches output
+* **serverless-spark:** add Cloud Console and Logging URLs to get_batch
+* **tools/postgres:** Add additional filter params for existing postgres tools ([#2033](https://github.com/googleapis/genai-toolbox/issues/2033))
+
+### Features
+
+* Add list-table-stats-tool to list table statistics. ([#2055](https://github.com/googleapis/genai-toolbox/issues/2055)) ([78b02f0](https://github.com/googleapis/genai-toolbox/commit/78b02f08c3cc3062943bb2f91cf60d5149c8d28d))
+* **looker/tools:** Enhance dashboard creation with dashboard filters ([#2133](https://github.com/googleapis/genai-toolbox/issues/2133)) ([285aa46](https://github.com/googleapis/genai-toolbox/commit/285aa46b887d9acb2da8766e107bbf1ab75b8812))
+* **serverless-spark:** Add Cloud Console and Logging URLs to get_batch ([e29c061](https://github.com/googleapis/genai-toolbox/commit/e29c0616d6b9ecda2badcaf7b69614e511ac031b))
+* **serverless-spark:** Add URLs to create batch tool outputs ([c6ccf4b](https://github.com/googleapis/genai-toolbox/commit/c6ccf4bd87026484143a2d0f5527b2edab03b54a))
+* **serverless-spark:** Add URLs to list_batches output ([5605eab](https://github.com/googleapis/genai-toolbox/commit/5605eabd696696ade07f52431a28ef65c0fb1f77))
+* **sources/mariadb:** Add MariaDB source and MySQL tools integration ([#1908](https://github.com/googleapis/genai-toolbox/issues/1908)) ([3b40fea](https://github.com/googleapis/genai-toolbox/commit/3b40fea25edae607e02c1e8fc2b0c957fa2c8e9a))
+* **tools/postgres:** Add additional filter params for existing postgres tools ([#2033](https://github.com/googleapis/genai-toolbox/issues/2033)) ([489117d](https://github.com/googleapis/genai-toolbox/commit/489117d74711ac9260e7547163ca463eb45eeaa2))
+* **tools/postgres:** Add list_pg_settings, list_database_stats tools for postgres ([#2030](https://github.com/googleapis/genai-toolbox/issues/2030)) ([32367a4](https://github.com/googleapis/genai-toolbox/commit/32367a472fae9653fed7f126428eba0252978bd5))
+* **tools/postgres:** Add new postgres-list-roles tool ([#2038](https://github.com/googleapis/genai-toolbox/issues/2038)) ([bea9705](https://github.com/googleapis/genai-toolbox/commit/bea97054502cfa236aa10e2ebc8ff58eb00ad035))
+
+
+### Bug Fixes
+
+* List tables tools null fix ([#2107](https://github.com/googleapis/genai-toolbox/issues/2107)) ([2b45266](https://github.com/googleapis/genai-toolbox/commit/2b452665983154041d4cd0ed7d82532e4af682eb))
+* **looker:** Upgrade to latest go sdk ([#2159](https://github.com/googleapis/genai-toolbox/issues/2159)) ([78e015d](https://github.com/googleapis/genai-toolbox/commit/78e015d7dfd9cce7e2b444ed934da17eb355bc86))
+* Removed sortPayload and sortParams from the reference ([#1238](https://github.com/googleapis/genai-toolbox/issues/1238)) ([c5a6daa](https://github.com/googleapis/genai-toolbox/commit/c5a6daa7683d2f9be654300d977692c368e55e31))
+
+
+### Miscellaneous Chores
+
+* Release 0.23.0 ([#2160](https://github.com/googleapis/genai-toolbox/issues/2160)) ([a683074](https://github.com/googleapis/genai-toolbox/commit/a6830744fcda56ae6733e6624535a913c7ac703a))
+
 ## [0.22.0](https://github.com/googleapis/genai-toolbox/compare/v0.21.0...v0.22.0) (2025-12-04)
 
 
