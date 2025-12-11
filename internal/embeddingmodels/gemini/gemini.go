@@ -29,10 +29,11 @@ const EmbeddingModelKind = "gemini"
 var _ embeddingmodels.EmbeddingModelConfig = Config{}
 
 type Config struct {
-	Name   string `yaml:"name" validate:"required"`
-	Kind   string `yaml:"kind" validate:"required"`
-	Model  string `yaml:"model" validate:"required"`
-	ApiKey string `yaml:"apiKey" validate:"required"`
+	Name      string `yaml:"name" validate:"required"`
+	Kind      string `yaml:"kind" validate:"required"`
+	Model     string `yaml:"model" validate:"required"`
+	ApiKey    string `yaml:"apiKey" validate:"required"`
+	Dimension int32  `yaml:"dimension"`
 }
 
 // Returns the embedding model kind
@@ -81,7 +82,10 @@ func (m EmbeddingModel) EmbedParameters(ctx context.Context, parameters []string
 
 	contents := convertStringsToContents(parameters)
 
-	result, err := m.Client.Models.EmbedContent(ctx, m.Model, contents, &genai.EmbedContentConfig{TaskType: "SEMANTIC_SIMILARITY"})
+	result, err := m.Client.Models.EmbedContent(ctx, m.Model, contents, &genai.EmbedContentConfig{
+		TaskType:             "SEMANTIC_SIMILARITY",
+		OutputDimensionality: genai.Ptr(m.Config.Dimension),
+	})
 	if err != nil {
 		logger.ErrorContext(ctx, "Error calling EmbedContent for model %s: %v", m.Model, err)
 		return nil, err
