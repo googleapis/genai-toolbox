@@ -105,6 +105,17 @@ redeploying your application.
 
 ## Getting Started
 
+### (Non-production) Running Toolbox
+You can run Toolbox directly with a [configuration file](#configuration):
+
+```sh
+npx @toolbox-sdk/server --tools-file tools.yaml
+```
+
+This runs the latest version of the toolbox server with your configuration file.
+
+> Note: This method should only be used for non-production use cases such as experimentation. For any production use-cases, please consider [Installing the server](#installing-the-server) and then [running it](#running-the-server).
+
 ### Installing the server
 
 For the latest version, check the [releases page][releases] and use the
