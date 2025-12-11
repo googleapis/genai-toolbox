@@ -1297,7 +1297,8 @@ postgres` and a password next time.
 
 ## Step 2: Configure Toolbox
 
-Create a file named `tools.yaml`. This file defines the database connection, the SQL tools available, and the prompts the agents will use.
+Create a file named `tools.yaml`. This file defines the database connection, the
+SQL tools available, and the prompts the agents will use.
 
 ```yaml
 sources:
