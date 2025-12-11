@@ -90,10 +90,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		name:         cfg.Name,
-		kind:         cfg.Kind,
-		authRequired: cfg.AuthRequired,
-		allParams:    allParameters,
+		Config:    cfg,
+		allParams: allParameters,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   paramManifest,
@@ -108,12 +106,9 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	name         string                `yaml:"name"`
-	kind         string                `yaml:"kind"`
-	authRequired []string              `yaml:"authRequired"`
-	allParams    parameters.Parameters `yaml:"allParams"`
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	allParams   parameters.Parameters `yaml:"allParams"`
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {

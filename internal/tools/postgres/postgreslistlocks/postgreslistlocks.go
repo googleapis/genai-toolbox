@@ -93,6 +93,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
+		Config:    cfg,
 		allParams: allParameters,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
