@@ -14,7 +14,11 @@
 
 package embeddingmodels
 
-import "context"
+import (
+	"context"
+	"fmt"
+	"strings"
+)
 
 // EmbeddingModelConfig is the interface for configuring embedding models.
 type EmbeddingModelConfig interface {
@@ -27,3 +31,17 @@ type EmbeddingModel interface {
 	ToConfig() EmbeddingModelConfig
 	EmbedParameters(context.Context, []string) ([][]float32, error)
 }
+
+type VectorFormatter func(vectorFloats []float32) any
+
+// formatVectorForPgvector converts a slice of floats into a PostgreSQL vector literal string: '[x, y, z]'
+func FormatVectorForPgvector(vectorFloats []float32) any {
+	str := make([]string, len(vectorFloats))
+	for i, f := range vectorFloats {
+		str[i] = fmt.Sprintf("%g", f)
+	}
+	// Join with comma and enclose in square brackets '[]'
+	return fmt.Sprintf("[%s]", strings.Join(str, ", "))
+}
+
+var _ VectorFormatter = FormatVectorForPgvector

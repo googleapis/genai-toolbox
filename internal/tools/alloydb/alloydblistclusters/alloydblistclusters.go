@@ -144,7 +144,7 @@ func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
-	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap)
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
 }
 
 // Manifest returns the tool's manifest.

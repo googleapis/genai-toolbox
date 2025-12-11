@@ -163,7 +163,7 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 	return params, nil
 }
 
-func EmbedParams(ctx context.Context, ps Parameters, paramValues ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (ParamValues, error) {
+func EmbedParams(ctx context.Context, ps Parameters, paramValues ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, formatter embeddingmodels.VectorFormatter) (ParamValues, error) {
 
 	type ParamToEmbed struct {
 		OriginalValue string
@@ -193,7 +193,10 @@ func EmbedParams(ctx context.Context, ps Parameters, paramValues ParamValues, em
 
 	// Batch embedding request sent to each model
 	for modelName, params := range parametersToEmbed {
-		model := embeddingModelsMap[modelName]
+		model, ok := embeddingModelsMap[modelName]
+		if !ok {
+			return nil, fmt.Errorf("embedding model does not exist: %s", modelName)
+		}
 
 		// Extract only the string values for the API call
 		stringBatch := make([]string, len(params))
@@ -210,8 +213,27 @@ func EmbedParams(ctx context.Context, ps Parameters, paramValues ParamValues, em
 			return nil, fmt.Errorf("model %s returned %d embeddings for %d inputs", modelName, len(embeddings), len(stringBatch))
 		}
 
-		for i, p := range params {
-			paramValues[p.Index].Value = embeddings[i] // Replace string with [][]float32 vector
+		for i, rawVector := range embeddings {
+
+			item := params[i]
+
+			// Call vector formatter
+			var finalValue any = rawVector
+
+			if formatter == nil {
+				paramValues[item.Index].Value = finalValue
+				continue
+			}
+			if formatter != nil {
+				formattedVector := formatter(rawVector)
+
+				if err != nil {
+					return nil, fmt.Errorf("error formatting vector for parameter index %d: %w", item.Index, err)
+				}
+				finalValue = formattedVector
+			}
+
+			paramValues[item.Index].Value = finalValue
 		}
 	}
 	return paramValues, nil
