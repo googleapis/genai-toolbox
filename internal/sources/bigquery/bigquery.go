@@ -52,7 +52,7 @@ var _ sources.SourceConfig = Config{}
 
 type BigqueryClientCreator func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 
-type BigQuerySessionProvider func(ctx context.Context) (*Session, error)
+type BigQuerySessionProvider func(ctx context.Context, toolName string) (*Session, error)
 
 type DataplexClientCreator func(tokenString string) (*dataplexapi.CatalogClient, error)
 
@@ -287,7 +287,7 @@ func (s *Source) BigQuerySession() BigQuerySessionProvider {
 }
 
 func (s *Source) newBigQuerySessionProvider() BigQuerySessionProvider {
-	return func(ctx context.Context) (*Session, error) {
+	return func(ctx context.Context, toolName string) (*Session, error) {
 		if s.WriteMode != WriteModeProtected {
 			return nil, nil
 		}
@@ -300,6 +300,8 @@ func (s *Source) newBigQuerySessionProvider() BigQuerySessionProvider {
 			return nil, fmt.Errorf("failed to get logger from context: %w", err)
 		}
 
+		labels := map[string]string{"genai-toolbox-tool": toolName}
+
 		if s.Session != nil {
 			// Absolute 7-day lifetime check.
 			const sessionMaxLifetime = 7 * 24 * time.Hour
@@ -310,6 +312,7 @@ func (s *Source) newBigQuerySessionProvider() BigQuerySessionProvider {
 			} else {
 				job := &bigqueryrestapi.Job{
 					Configuration: &bigqueryrestapi.JobConfiguration{
+						Labels: labels,
 						DryRun: true,
 						Query: &bigqueryrestapi.JobConfigurationQuery{
 							Query:                "SELECT 1",
@@ -337,6 +340,7 @@ func (s *Source) newBigQuerySessionProvider() BigQuerySessionProvider {
 				Location:  s.Location,
 			},
 			Configuration: &bigqueryrestapi.JobConfiguration{
+				Labels: labels,
 				DryRun: true,
 				Query: &bigqueryrestapi.JobConfigurationQuery{
 					Query:         "SELECT 1",
