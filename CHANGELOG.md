@@ -26,13 +26,11 @@
 ### Bug Fixes
 
 * List tables tools null fix ([#2107](https://github.com/googleapis/genai-toolbox/issues/2107)) ([2b45266](https://github.com/googleapis/genai-toolbox/commit/2b452665983154041d4cd0ed7d82532e4af682eb))
-* **looker:** Upgrade to latest go sdk ([#2159](https://github.com/googleapis/genai-toolbox/issues/2159)) ([78e015d](https://github.com/googleapis/genai-toolbox/commit/78e015d7dfd9cce7e2b444ed934da17eb355bc86))
-* Removed sortPayload and sortParams from the reference ([#1238](https://github.com/googleapis/genai-toolbox/issues/1238)) ([c5a6daa](https://github.com/googleapis/genai-toolbox/commit/c5a6daa7683d2f9be654300d977692c368e55e31))
+* **tools/mongodb:** Removed sortPayload and sortParams ([#1238](https://github.com/googleapis/genai-toolbox/issues/1238)) ([c5a6daa](https://github.com/googleapis/genai-toolbox/commit/c5a6daa7683d2f9be654300d977692c368e55e31))
 
 
 ### Miscellaneous Chores
-
-* Release 0.23.0 ([#2160](https://github.com/googleapis/genai-toolbox/issues/2160)) ([a683074](https://github.com/googleapis/genai-toolbox/commit/a6830744fcda56ae6733e6624535a913c7ac703a))
+* **looker:** Upgrade to latest go sdk ([#2159](https://github.com/googleapis/genai-toolbox/issues/2159)) ([78e015d](https://github.com/googleapis/genai-toolbox/commit/78e015d7dfd9cce7e2b444ed934da17eb355bc86))
 
 ## [0.22.0](https://github.com/googleapis/genai-toolbox/compare/v0.21.0...v0.22.0) (2025-12-04)
 
