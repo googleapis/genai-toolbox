@@ -16,11 +16,7 @@ database. It's compatible with any of the following sources:
 
 - [trino](../../sources/trino.md)
 
-The specified SQL statement is executed as a [prepared statement][trino-prepare],
-and specified parameters will be inserted according to their position: e.g. `$1`
-will be the first parameter specified, `$2` will be the second parameter, and so
-on. If template parameters are included, they will be resolved before execution
-of the prepared statement.
+The specified SQL statement is executed as a [prepared statement][trino-prepare], and expects parameters in the SQL query to be in the form of placeholders `?`.
 
 [trino-prepare]: https://trino.io/docs/current/sql/prepare.html
 
@@ -38,8 +34,8 @@ tools:
     source: my-trino-instance
     statement: |
       SELECT * FROM hive.sales.orders
-      WHERE region = $1
-      AND order_date >= DATE($2)
+      WHERE region = ?
+      AND order_date >= DATE(?)
       LIMIT 10
     description: |
       Use this tool to get information for orders in a specific region.
