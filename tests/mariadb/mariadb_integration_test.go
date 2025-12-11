@@ -250,7 +250,7 @@ func RunMariDBListTablesTest(t *testing.T, databaseName, tableNameParam, tableNa
 			name:           "invoke list_tables with non-existent table",
 			requestBody:    bytes.NewBufferString(`{"table_names": "non_existent_table"}`),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []objectDetails{},
 		},
 	}
 	for _, tc := range invokeTcs {
