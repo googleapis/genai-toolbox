@@ -17,9 +17,10 @@ Serverless Spark batch job. It&amp;rsquo;s compatible with the following sources
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-serverless-spark-source&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">Use this tool to get a serverless spark batch.&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="response-format">Response Format&lt;/h2>
-&lt;p>The response is a full Batch JSON object as defined in the &lt;a href="https://cloud.google.com/dataproc-serverless/docs/reference/rest/v1/projects.locations.batches#Batch">API
-spec&lt;/a>.
-Example with a reduced set of fields:&lt;/p></description></item><item><title>serverless-spark-list-batches</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/serverless-spark/serverless-spark-list-batches/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/serverless-spark/serverless-spark-list-batches/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The response contains the full Batch object as defined in the &lt;a href="https://cloud.google.com/dataproc-serverless/docs/reference/rest/v1/projects.locations.batches#Batch">API
+spec&lt;/a>,
+plus additional fields &lt;code>consoleUrl&lt;/code> and &lt;code>logsUrl&lt;/code> where a human can go for more
+detailed information.&lt;/p></description></item><item><title>serverless-spark-list-batches</title><link>https://googleapis.github.io/genai-toolbox/resources/tools/serverless-spark/serverless-spark-list-batches/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/resources/tools/serverless-spark/serverless-spark-list-batches/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>serverless-spark-list-batches&lt;/code> tool returns a list of Spark batches from a
 Google Cloud Serverless for Apache Spark source. It&amp;rsquo;s compatible with the
 following sources:&lt;/p>
