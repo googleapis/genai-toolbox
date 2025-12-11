@@ -159,7 +159,7 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 	var dsn string
 	// Tell the driver to use the Cloud SQL Go Connector to create connections
 	if useIAM {
-		dsn = fmt.Sprintf("%s@%s(%s:%s:%s)/%s?connectionAttributes=program_name:%s&allowCleartextPasswords=true",
+		dsn = fmt.Sprintf("%s@%s(%s:%s:%s)/%s?connectionAttributes=program_name:%s",
 			user,
 			driverName,
 			project,
@@ -169,7 +169,7 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 			url.QueryEscape(userAgent),
 		)
 	} else {
-		dsn = fmt.Sprintf("%s:%s@%s(%s:%s:%s)/%s?connectionAttributes=program_name:%s&allowCleartextPasswords=true",
+		dsn = fmt.Sprintf("%s:%s@%s(%s:%s:%s)/%s?connectionAttributes=program_name:%s",
 			user,
 			pass,
 			driverName,
