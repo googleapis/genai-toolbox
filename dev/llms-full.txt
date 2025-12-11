@@ -7474,12 +7474,39 @@ mTLS.
 [public-ip]: https://cloud.google.com/sql/docs/mysql/configure-ip
 [conn-overview]: https://cloud.google.com/sql/docs/mysql/connect-overview
 
-### Database User
+### Authentication
 
-Currently, this source only uses standard authentication. You will need to [create
-a MySQL user][cloud-sql-users] to login to the database with.
+This source supports both password-based authentication and IAM
+authentication (using your [Application Default Credentials][adc]).
+
+#### Standard Authentication
+
+To connect using user/password, [create
+a MySQL user][cloud-sql-users] and input your credentials in the `user` and
+`password` fields.
+
+```yaml
+user: ${USER_NAME}
+password: ${PASSWORD}
+```
 
 [cloud-sql-users]: https://cloud.google.com/sql/docs/mysql/create-manage-users
+
+#### IAM Authentication
+
+To connect using IAM authentication:
+
+1. Prepare your database instance and user following this [guide][iam-guide].
+2. You could choose one of the two ways to log in:
+    - Specify your IAM email as the `user`.
+    - Leave your `user` field blank. Toolbox will fetch the [ADC][adc]
+      automatically and log in using the email associated with it.
+
+3. Leave the `password` field blank.
+
+[iam-guide]: https://cloud.google.com/sql/docs/mysql/iam-logins
+[cloudsql-users]: https://cloud.google.com/sql/docs/mysql/create-manage-users
+
 
 ## Example
 
@@ -7510,8 +7537,8 @@ instead of hardcoding your secrets into the configuration file.
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                         |
 | instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                              |
 | database  |  string  |     true     | Name of the MySQL database to connect to (e.g. "my_db").                                             |
-| user      |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-pg-user").                                            |
-| password  |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                                     |
+| user      |  string  |     false     | Name of the MySQL user to connect as (e.g "my-mysql-user"). Defaults to IAM auth using [ADC][adc] email if unspecified.                                            |
+| password  |  string  |     false     | Password of the MySQL user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.                                                    |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public`,  `private`, or `psc`. Default: `public`. |
 
 
