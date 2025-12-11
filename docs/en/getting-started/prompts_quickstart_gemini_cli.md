@@ -217,7 +217,7 @@ prompts:
 
 Configure the Gemini CLI to talk to your local Toolbox MCP server.
 
-1. Open or create your Gemini settings file: `~/.gemini/settings.json.`
+1. Open or create your Gemini settings file: `~/.gemini/settings.json`.
 2. Add the following configuration to the file:
 
     ```json
