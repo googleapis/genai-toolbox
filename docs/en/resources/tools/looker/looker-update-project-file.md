@@ -27,13 +27,17 @@ tools:
         kind: looker-update-project-file
         source: looker-source
         description: |
-          update_project_file Tool
+          This tool modifies the content of an existing LookML file within a specified project.
 
-          Given a project_id and a file path within the project, as well as the content
-          of a LookML file, this tool will modify the file within the project.
+          Prerequisite: The Looker session must be in Development Mode. Use `dev_mode: true` first.
 
-          This tool must be called after the dev_mode tool has changed the session to
-          dev mode.
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+          - file_path (required): The exact path to the LookML file to modify within the project.
+          - content (required): The new, complete LookML content to overwrite the existing file.
+
+          Output:
+          A confirmation message upon successful file modification.
 ```
 
 ## Reference
