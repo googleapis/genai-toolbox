@@ -12,22 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mongodbfindone_test
+package lookeradddashboardfilter_test
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbfindone"
-	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	lkr "github.com/googleapis/genai-toolbox/internal/tools/looker/lookeradddashboardfilter"
 )
 
-func TestParseFromYamlMongoQuery(t *testing.T) {
+func TestParseFromYamlLookerAddDashboardFilter(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -42,42 +40,17 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-find-one
+					kind: looker-add-dashboard-filter
 					source: my-instance
 					description: some description
-					database: test_db
-					collection: test_coll
-					filterPayload: |
-					    { name: {{json .name}} }
-					filterParams:
-                        - name: name 
-                          type: string
-                          description: small description
-					projectPayload: |
-					  { name: 1, age: 1 }
-					projectParams: []
-			`,
+				`,
 			want: server.ToolConfigs{
-				"example_tool": mongodbfindone.Config{
-					Name:          "example_tool",
-					Kind:          "mongodb-find-one",
-					Source:        "my-instance",
-					AuthRequired:  []string{},
-					Database:      "test_db",
-					Collection:    "test_coll",
-					Description:   "some description",
-					FilterPayload: "{ name: {{json .name}} }\n",
-					FilterParams: parameters.Parameters{
-						&parameters.StringParameter{
-							CommonParameter: parameters.CommonParameter{
-								Name: "name",
-								Type: "string",
-								Desc: "small description",
-							},
-						},
-					},
-					ProjectPayload: "{ name: 1, age: 1 }\n",
-					ProjectParams:  parameters.Parameters{},
+				"example_tool": lkr.Config{
+					Name:         "example_tool",
+					Kind:         "looker-add-dashboard-filter",
+					Source:       "my-instance",
+					Description:  "some description",
+					AuthRequired: []string{},
 				},
 			},
 		},
@@ -100,7 +73,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 
 }
 
-func TestFailParseFromYamlMongoQuery(t *testing.T) {
+func TestFailParseFromYamlLookerAddDashboardFilter(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -115,14 +88,12 @@ func TestFailParseFromYamlMongoQuery(t *testing.T) {
 			in: `
 			tools:
 				example_tool:
-					kind: mongodb-find-one
+					kind: looker-add-dashboard-filter
 					source: my-instance
+					method: GOT
 					description: some description
-					collection: test_coll
-					filterPayload: |
-					  { name : {{json .name}} }
 			`,
-			err: `unable to parse tool "example_tool" as kind "mongodb-find-one"`,
+			err: "unable to parse tool \"example_tool\" as kind \"looker-add-dashboard-filter\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | kind: looker-add-dashboard-filter\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
 		},
 	}
 	for _, tc := range tcs {

@@ -34,43 +34,50 @@ tools:
 
 ## Response Format
 
-The response is a full Batch JSON object as defined in the [API
-spec](https://cloud.google.com/dataproc-serverless/docs/reference/rest/v1/projects.locations.batches#Batch).
-Example with a reduced set of fields:
+The response contains the full Batch object as defined in the [API
+spec](https://cloud.google.com/dataproc-serverless/docs/reference/rest/v1/projects.locations.batches#Batch),
+plus additional fields `consoleUrl` and `logsUrl` where a human can go for more
+detailed information.
 
 ```json
 {
-  "createTime": "2025-10-10T15:15:21.303146Z",
-  "creator": "alice@example.com",
-  "labels": {
-    "goog-dataproc-batch-uuid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-    "goog-dataproc-location": "us-central1"
-  },
-  "name": "projects/google.com:hadoop-cloud-dev/locations/us-central1/batches/alice-20251010-abcd",
-  "operation": "projects/google.com:hadoop-cloud-dev/regions/us-central1/operations/11111111-2222-3333-4444-555555555555",
-  "runtimeConfig": {
-    "properties": {
-      "spark:spark.driver.cores": "4",
-      "spark:spark.driver.memory": "12200m"
-    }
-  },
-  "sparkBatch": {
-    "jarFileUris": ["file:///usr/lib/spark/examples/jars/spark-examples.jar"],
-    "mainClass": "org.apache.spark.examples.SparkPi"
-  },
-  "state": "SUCCEEDED",
-  "stateHistory": [
-    {
-      "state": "PENDING",
-      "stateStartTime": "2025-10-10T15:15:21.303146Z"
+  "batch": {
+    "createTime": "2025-10-10T15:15:21.303146Z",
+    "creator": "alice@example.com",
+    "labels": {
+      "goog-dataproc-batch-uuid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+      "goog-dataproc-location": "us-central1"
     },
-    {
-      "state": "RUNNING",
-      "stateStartTime": "2025-10-10T15:16:41.291747Z"
-    }
-  ],
-  "stateTime": "2025-10-10T15:17:21.265493Z",
-  "uuid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+    "name": "projects/google.com:hadoop-cloud-dev/locations/us-central1/batches/alice-20251010-abcd",
+    "operation": "projects/google.com:hadoop-cloud-dev/regions/us-central1/operations/11111111-2222-3333-4444-555555555555",
+    "runtimeConfig": {
+      "properties": {
+        "spark:spark.driver.cores": "4",
+        "spark:spark.driver.memory": "12200m"
+      }
+    },
+    "sparkBatch": {
+      "jarFileUris": [
+        "file:///usr/lib/spark/examples/jars/spark-examples.jar"
+      ],
+      "mainClass": "org.apache.spark.examples.SparkPi"
+    },
+    "state": "SUCCEEDED",
+    "stateHistory": [
+      {
+        "state": "PENDING",
+        "stateStartTime": "2025-10-10T15:15:21.303146Z"
+      },
+      {
+        "state": "RUNNING",
+        "stateStartTime": "2025-10-10T15:16:41.291747Z"
+      }
+    ],
+    "stateTime": "2025-10-10T15:17:21.265493Z",
+    "uuid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+  },
+  "consoleUrl": "https://console.cloud.google.com/dataproc/batches/...",
+  "logsUrl": "https://console.cloud.google.com/logs/viewer?..."
 }
 ```
 

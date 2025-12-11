@@ -36,11 +36,17 @@ tools:
         kind: looker-generate-embed-url
         source: looker-source
         description: |
-          generate_embed_url Tool
+          This tool generates a signed, private embed URL for specific Looker content,
+          allowing users to access it directly.
 
-          This tool generates an embeddable URL for Looker content.
-          You need to provide the type of content (e.g., 'dashboards', 'looks', 'query-visualization')
-          and the ID of the content.
+          Parameters:
+          - type (required): The type of content to embed. Common values include:
+            - `dashboards`
+            - `looks`
+            - `explore`
+          - id (required): The unique identifier for the content.
+            - For dashboards and looks, use the numeric ID (e.g., "123").
+            - For explores, use the format "model_name/explore_name".
 ```
 
 ## Reference
