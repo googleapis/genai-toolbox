@@ -21,7 +21,6 @@ import (
 	gocql "github.com/apache/cassandra-gocql-driver/v2"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/cassandra"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
@@ -46,10 +45,6 @@ type compatibleSource interface {
 	CassandraSession() *gocql.Session
 }
 
-var _ compatibleSource = &cassandra.Source{}
-
-var compatibleSources = [...]string{cassandra.SourceKind}
-
 type Config struct {
 	Name               string                `yaml:"name" validate:"required"`
 	Kind               string                `yaml:"kind" validate:"required"`
@@ -61,20 +56,15 @@ type Config struct {
 	TemplateParameters parameters.Parameters `yaml:"templateParameters"`
 }
 
+var _ tools.ToolConfig = Config{}
+
+// ToolConfigKind implements tools.ToolConfig.
+func (c Config) ToolConfigKind() string {
+	return kind
+}
+
 // Initialize implements tools.ToolConfig.
 func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[c.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", c.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	allParameters, paramManifest, err := parameters.ProcessParameters(c.TemplateParameters, c.Parameters)
 	if err != nil {
 		return nil, err
@@ -85,25 +75,17 @@ func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	t := Tool{
 		Config:      c,
 		AllParams:   allParameters,
-		Session:     s.CassandraSession(),
 		manifest:    tools.Manifest{Description: c.Description, Parameters: paramManifest, AuthRequired: c.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
 
-// ToolConfigKind implements tools.ToolConfig.
-func (c Config) ToolConfigKind() string {
-	return kind
-}
-
-var _ tools.ToolConfig = Config{}
+var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	AllParams parameters.Parameters `yaml:"allParams"`
-
-	Session     *gocql.Session
+	AllParams   parameters.Parameters `yaml:"allParams"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -113,8 +95,8 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 // RequiresClientAuthorization implements tools.Tool.
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
 // Authorized implements tools.Tool.
@@ -124,6 +106,15 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 // Invoke implements tools.Tool.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+
 	paramsMap := params.AsMap()
 	newStatement, err := parameters.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
@@ -135,7 +126,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
 	sliceParams := newParams.AsSlice()
-	iter := t.Session.Query(newStatement, sliceParams...).IterContext(ctx)
+	iter := source.CassandraSession().Query(newStatement, sliceParams...).IterContext(ctx)
 
 	// Create a slice to store the out
 	var out []map[string]interface{}
@@ -169,8 +160,6 @@ func (t Tool) McpManifest() tools.McpManifest {
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.AllParams, data, claims)
 }
-
-var _ tools.Tool = Tool{}
 
 func (t Tool) GetAuthTokenHeaderName() string {
 	return "Authorization"
