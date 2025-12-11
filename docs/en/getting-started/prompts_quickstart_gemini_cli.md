@@ -161,7 +161,7 @@ sources:
     kind: postgres
     host: 127.0.0.1
     port: 5432
-    database: foodiefind_db
+    database: toolbox_db
     user: toolbox_user
     password: my-password
 tools:
