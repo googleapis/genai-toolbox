@@ -12,7 +12,7 @@
 
 ### Features
 
-* Add list-table-stats-tool to list table statistics. ([#2055](https://github.com/googleapis/genai-toolbox/issues/2055)) ([78b02f0](https://github.com/googleapis/genai-toolbox/commit/78b02f08c3cc3062943bb2f91cf60d5149c8d28d))
+* **tools/postgres:** Add list-table-stats-tool to list table statistics. ([#2055](https://github.com/googleapis/genai-toolbox/issues/2055)) ([78b02f0](https://github.com/googleapis/genai-toolbox/commit/78b02f08c3cc3062943bb2f91cf60d5149c8d28d))
 * **looker/tools:** Enhance dashboard creation with dashboard filters ([#2133](https://github.com/googleapis/genai-toolbox/issues/2133)) ([285aa46](https://github.com/googleapis/genai-toolbox/commit/285aa46b887d9acb2da8766e107bbf1ab75b8812))
 * **serverless-spark:** Add Cloud Console and Logging URLs to get_batch ([e29c061](https://github.com/googleapis/genai-toolbox/commit/e29c0616d6b9ecda2badcaf7b69614e511ac031b))
 * **serverless-spark:** Add URLs to create batch tool outputs ([c6ccf4b](https://github.com/googleapis/genai-toolbox/commit/c6ccf4bd87026484143a2d0f5527b2edab03b54a))
