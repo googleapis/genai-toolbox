@@ -25,12 +25,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-type compatibleSource interface {
-	ClickHousePool() *sql.DB
-}
-
-var compatibleSources = []string{"clickhouse"}
-
 const executeSQLKind string = "clickhouse-execute-sql"
 
 func init() {
@@ -45,6 +39,10 @@ func newExecuteSQLConfig(ctx context.Context, name string, decoder *yaml.Decoder
 		return nil, err
 	}
 	return actual, nil
+}
+
+type compatibleSource interface {
+	ClickHousePool() *sql.DB
 }
 
 type Config struct {
@@ -62,16 +60,6 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", executeSQLKind, compatibleSources)
-	}
-
 	sqlParameter := parameters.NewStringParameter("sql", "The SQL statement to execute.")
 	params := parameters.Parameters{sqlParameter}
 
@@ -80,7 +68,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	t := Tool{
 		Config:      cfg,
 		Parameters:  params,
-		Pool:        s.ClickHousePool(),
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
@@ -91,9 +78,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	Parameters parameters.Parameters `yaml:"parameters"`
-
-	Pool        *sql.DB
+	Parameters  parameters.Parameters `yaml:"parameters"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -103,13 +88,22 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", executeSQLKind, t.Source)
+	}
+
 	paramsMap := params.AsMap()
 	sql, ok := paramsMap["sql"].(string)
 	if !ok {
 		return nil, fmt.Errorf("unable to cast sql parameter %s", paramsMap["sql"])
 	}
 
-	results, err := t.Pool.QueryContext(ctx, sql)
+	results, err := source.ClickHousePool().QueryContext(ctx, sql)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
@@ -183,8 +177,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
 func (t Tool) GetAuthTokenHeaderName() string {
