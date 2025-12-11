@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>EmbeddingModels on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/embeddingmodels/</link><description>Recent content in EmbeddingModels on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/embeddingmodels/index.xml" rel="self" type="application/rss+xml"/><item><title>Gemini Embedding</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/embeddingmodels/gemini/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/embeddingmodels/gemini/</guid><description>&lt;h2 id="getting-started">Getting Started&lt;/h2>
+&lt;p>Google Gemini provides state-of-the-art embedding models that convert text into
+high-dimensional vectors. To use Gemini embeddings, you must first obtain an API
+Key from the &lt;a href="https://aistudio.google.com/app/apikey">Google AI Studio&lt;/a>.&lt;/p>
+&lt;p>Once you have your key, configure the &lt;code>embeddingModels&lt;/code> section in your
+&lt;code>tools.yaml&lt;/code> with the model identifier (e.g., &lt;code>gemini-embedding-001&lt;/code>) and the
+dimensionality of the vector output.&lt;/p>
+&lt;h2 id="behavior">Behavior&lt;/h2>
+&lt;h3 id="automatic-vectorization">Automatic Vectorization&lt;/h3>
+&lt;p>When a tool parameter is configured with &lt;code>embeddedBy: &amp;lt;your-gemini-model-name&amp;gt;&lt;/code>,
+the Toolbox intercepts the raw text input from the client and sends it to the
+Gemini API. The resulting numerical array is then formatted before being passed
+to your database source.&lt;/p></description></item></channel></rss>
