@@ -304,7 +304,7 @@ toolbox --tools-file "tools.yaml"
 </details>
 
 <details>
-<summary>Node.js (npx)</summary>
+<summary>NPM</summary>
 
 To run Toolbox directly without manually downloading the binary (requires Node.js):
 ```sh
