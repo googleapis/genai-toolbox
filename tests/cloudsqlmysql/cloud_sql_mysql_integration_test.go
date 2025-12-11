@@ -19,7 +19,6 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
-	"os/exec"
 	"regexp"
 	"slices"
 	"strings"
@@ -195,54 +194,10 @@ func TestCloudSQLMySQLIpConnection(t *testing.T) {
 }
 
 func TestCloudSQLMySQLIAMConnection(t *testing.T) {
-	if os.Getenv("TEST_SUBPROCESS_IAM") == "1" {
-		runIAMTestLogic(t)
-		return
-	}
-
-	tcs := []struct {
-		name  string
-		isErr bool
-	}{
-		{name: "no user no pass", isErr: false},
-		{name: "no password", isErr: false},
-		{name: "no user", isErr: true},
-	}
-
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
-			// Spawn a new test process that runs THIS specific function again
-			cmd := exec.Command(os.Args[0], "-test.run=TestCloudSQLMySQLIAMConnection")
-
-			// Set environment variables to tell the subprocess what to do
-			cmd.Env = append(os.Environ(),
-				"TEST_SUBPROCESS_IAM=1",
-				"TEST_CASE_NAME="+tc.name,
-			)
-
-			// Capture output to see logs if it fails
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-
-			err := cmd.Run()
-
-			// If the subprocess exits with non-zero, the test failed
-			if err != nil {
-				t.Fatalf("Test case %q failed in subprocess: %v", tc.name, err)
-			}
-		})
-	}
-}
-
-// runIAMTestLogic is the helper that runs inside the fresh process
-func runIAMTestLogic(t *testing.T) {
-	testCaseName := os.Getenv("TEST_CASE_NAME")
-
-	// Setup variables freshly
 	getCloudSQLMySQLVars(t)
+	// service account email used for IAM should trim the suffix
 	serviceAccountEmail, _, _ := strings.Cut(tests.ServiceAccountEmail, "@")
 
-	// Define the configs
 	noPassSourceConfig := map[string]any{
 		"kind":     CloudSQLMySQLSourceKind,
 		"project":  CloudSQLMySQLProject,
@@ -266,34 +221,39 @@ func runIAMTestLogic(t *testing.T) {
 		"region":   CloudSQLMySQLRegion,
 		"database": CloudSQLMySQLDatabase,
 	}
-
-	var sourceConfig map[string]any
-	var expectErr bool
-
-	// Select the config based on the env var passed from parent
-	switch testCaseName {
-	case "no user no pass":
-		sourceConfig = noUserNoPassSourceConfig
-		expectErr = false
-	case "no password":
-		sourceConfig = noPassSourceConfig
-		expectErr = false
-	case "no user":
-		sourceConfig = noUserSourceConfig
-		expectErr = true
-	default:
-		t.Skipf("Unknown test case: %s", testCaseName)
+	tcs := []struct {
+		name         string
+		sourceConfig map[string]any
+		isErr        bool
+	}{
+		{
+			name:         "no user no pass",
+			sourceConfig: noUserNoPassSourceConfig,
+			isErr:        false,
+		},
+		{
+			name:         "no password",
+			sourceConfig: noPassSourceConfig,
+			isErr:        false,
+		},
+		{
+			name:         "no user",
+			sourceConfig: noUserSourceConfig,
+			isErr:        true,
+		},
 	}
-
-	err := tests.RunSourceConnectionTest(t, sourceConfig, CloudSQLMySQLToolKind)
-
-	if err != nil {
-		if expectErr {
-			return
-		}
-		t.Fatalf("Connection test failure: %s", err)
-	}
-	if expectErr {
-		t.Fatalf("Expected error but test passed.")
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tests.RunSourceConnectionTest(t, tc.sourceConfig, CloudSQLMySQLToolKind)
+			if err != nil {
+				if tc.isErr {
+					return
+				}
+				t.Fatalf("Connection test failure: %s", err)
+			}
+			if tc.isErr {
+				t.Fatalf("Expected error but test passed.")
+			}
+		})
 	}
 }

@@ -147,9 +147,11 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 		return nil, err
 	}
 
-	if !slices.Contains(sql.Drivers(), "cloudsql-mysql") {
-		_, err = mysql.RegisterDriver("cloudsql-mysql", opts...)
-		if err != nil {
+	// Use a unique driver name based on the source name.
+	driverName := fmt.Sprintf("cloudsql-mysql-%s", name)
+
+	if !slices.Contains(sql.Drivers(), driverName) {
+		if _, err := mysql.RegisterDriver(driverName, opts...); err != nil {
 			return nil, fmt.Errorf("unable to register driver: %w", err)
 		}
 	}
@@ -157,9 +159,9 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 	var dsn string
 	// Tell the driver to use the Cloud SQL Go Connector to create connections
 	if useIAM {
-		// Set allowCleartextPasswords to true for IAM
-		dsn = fmt.Sprintf("%s:password@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s&allowCleartextPasswords=true",
+		dsn = fmt.Sprintf("%s@%s(%s:%s:%s)/%s?connectionAttributes=program_name:%s&allowCleartextPasswords=true",
 			user,
+			driverName,
 			project,
 			region,
 			instance,
@@ -167,9 +169,10 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 			url.QueryEscape(userAgent),
 		)
 	} else {
-		dsn = fmt.Sprintf("%s:%s@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s",
+		dsn = fmt.Sprintf("%s:%s@%s(%s:%s:%s)/%s?connectionAttributes=program_name:%s&allowCleartextPasswords=true",
 			user,
 			pass,
+			driverName,
 			project,
 			region,
 			instance,
@@ -179,7 +182,7 @@ func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, n
 	}
 
 	db, err := sql.Open(
-		"cloudsql-mysql",
+		driverName,
 		dsn,
 	)
 	if err != nil {
