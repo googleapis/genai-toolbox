@@ -337,7 +337,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		schema := it.Schema
 		row := orderedmap.Row{}
 		for i, field := range schema {
-			row.Add(field.Name, val[i])
+			row.Add(field.Name, bqutil.NormalizeValue(val[i]))
 		}
 		out = append(out, row)
 	}
