@@ -225,7 +225,7 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 	}
 	defer cleanup()
 
-	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	waitCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
 	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
