@@ -15,8 +15,8 @@
 sources:
     postgresql-source:
         kind: postgres
-        host: ${POSTGRES_HOST}
-        port: ${POSTGRES_PORT}
+        host: ${POSTGRES_HOST:localhost}
+        port: ${POSTGRES_PORT:5432}
         database: ${POSTGRES_DATABASE}
         user: ${POSTGRES_USER}
         password: ${POSTGRES_PASSWORD}
@@ -47,6 +47,21 @@ tools:
         kind: postgres-list-installed-extensions
         source: postgresql-source
         description: "List all installed PostgreSQL extensions with their name, version, schema, owner, and description."
+
+    long_running_transactions:
+        kind: postgres-long-running-transactions
+        source: postgresql-source
+        description: "Identifies and lists database transactions that exceed a specified time limit. For each of the long running transactions, the output contains the process id, database name, user name, application name, client address, state, connection age, transaction age, query age, last activity age, wait event type, wait event, and query string."
+
+    list_locks:
+        kind: postgres-list-locks
+        source: postgresql-source
+        description: "Identifies all locks held by active processes showing the process ID, user, query text, and an aggregated list of all transactions and specific locks (relation, mode, grant status) associated with each process."
+
+    replication_stats:
+        kind: postgres-replication-stats
+        source: postgresql-source
+        description: "Lists each replica's process ID, user name, application name, backend_xmin (standby's xmin horizon reported by hot_standby_feedback), client IP address, connection state, and sync_state, along with lag sizes in bytes for sent_lag (primary to sent), write_lag (sent to written), flush_lag (written to flushed), replay_lag (flushed to replayed), and the overall total_lag (primary to replayed)."
 
     list_autovacuum_configurations:
         kind: postgres-sql
@@ -154,6 +169,62 @@ tools:
               description: "The SQL statement for which you want to generate plan (omit the EXPLAIN keyword)."
               required: true
 
+    list_views:
+        kind: postgres-list-views
+        source: postgresql-source
+
+    list_schemas:
+        kind: postgres-list-schemas
+        source: postgresql-source
+    
+    database_overview:
+        kind: postgres-database-overview
+        source: postgresql-source
+
+    list_triggers:
+        kind: postgres-list-triggers
+        source: postgresql-source 
+
+    list_indexes:
+        kind: postgres-list-indexes
+        source: postgresql-source
+
+    list_sequences:
+        kind: postgres-list-sequences
+        source: postgresql-source
+
+    list_query_stats:
+        kind: postgres-list-query-stats
+        source: postgresql-source
+
+    get_column_cardinality:
+        kind: postgres-get-column-cardinality
+        source: postgresql-source
+
+    list_table_stats:
+        kind: postgres-list-table-stats
+        source: postgresql-source
+
+    list_publication_tables:
+        kind: postgres-list-publication-tables
+        source: postgresql-source
+
+    list_tablespaces:
+        kind: postgres-list-tablespaces
+        source: postgresql-source
+
+    list_pg_settings:
+        kind: postgres-list-pg-settings
+        source: postgresql-source
+    
+    list_database_stats:
+        kind: postgres-list-database-stats
+        source: postgresql-source
+
+    list_roles:
+        kind: postgres-list-roles
+        source: postgresql-source
+
 toolsets:
     postgres_database_tools:
         - execute_sql
@@ -167,3 +238,20 @@ toolsets:
         - list_replication_slots
         - list_invalid_indexes
         - get_query_plan
+        - list_views
+        - list_schemas
+        - database_overview
+        - list_triggers
+        - list_indexes
+        - list_sequences
+        - long_running_transactions
+        - list_locks
+        - replication_stats
+        - list_query_stats
+        - get_column_cardinality
+        - list_publication_tables
+        - list_tablespaces
+        - list_pg_settings
+        - list_database_stats
+        - list_roles
+        - list_table_stats

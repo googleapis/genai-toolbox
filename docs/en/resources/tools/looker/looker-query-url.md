@@ -37,17 +37,21 @@ tools:
         kind: looker-query-url
         source: looker-source
         description: |
-          Query URL Tool
+          This tool generates a shareable URL for a Looker query, allowing users to
+          explore the query further within the Looker UI. It returns the generated URL,
+          along with the `query_id` and `slug`.
 
-          This tool is used to generate the URL of a query in Looker.
-          The user can then explore the query further inside Looker.
-          The tool also returns the query_id and slug. The parameters
-          are the same as the query tool with an additional vis_config
-          parameter.
+          Parameters:
+          All query parameters (e.g., `model_name`, `explore_name`, `fields`, `pivots`,
+          `filters`, `sorts`, `limit`, `query_timezone`) are the same as the `query` tool.
 
-          The vis_config is optional. If provided, it will be used to
-          control the default visualization for the query. Here are
-          some notes on making visualizations.
+          Additionally, it accepts an optional `vis_config` parameter:
+          - vis_config (optional): A JSON object that controls the default visualization
+            settings for the generated query.
+
+          vis_config Details:
+          The `vis_config` object supports a wide range of properties for various chart types.
+          Here are some notes on making visualizations.
 
           ### Cartesian Charts (Area, Bar, Column, Line, Scatter)
 
@@ -485,8 +489,8 @@ tools:
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker-query-url"                                                                       |
-| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "looker-query-url"                         |
+| source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

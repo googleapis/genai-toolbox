@@ -38,6 +38,7 @@ The tool requires Firestore's native JSON format for document data. Each field
 must be wrapped with its type indicator:
 
 ### Basic Types
+
 - **String**: `{"stringValue": "your string"}`
 - **Integer**: `{"integerValue": "123"}` or `{"integerValue": 123}`
 - **Double**: `{"doubleValue": 123.45}`
@@ -47,6 +48,7 @@ must be wrapped with its type indicator:
 - **Timestamp**: `{"timestampValue": "2025-01-07T10:00:00Z"}` (RFC3339 format)
 
 ### Complex Types
+
 - **GeoPoint**: `{"geoPointValue": {"latitude": 34.052235, "longitude": -118.243683}}`
 - **Array**: `{"arrayValue": {"values": [{"stringValue": "item1"}, {"integerValue": "2"}]}}`
 - **Map**: `{"mapValue": {"fields": {"key1": {"stringValue": "value1"}, "key2": {"booleanValue": true}}}}`
@@ -65,6 +67,7 @@ tools:
 ```
 
 Usage:
+
 ```json
 {
   "collectionPath": "companies",
@@ -256,6 +259,7 @@ tools:
 ## Error Handling
 
 Common errors include:
+
 - Invalid collection path
 - Missing or invalid document data
 - Permission denied (if Firestore security rules block the operation)

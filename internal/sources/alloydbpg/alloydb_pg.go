@@ -76,9 +76,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name: r.Name,
-		Kind: SourceKind,
-		Pool: pool,
+		Config: r,
+		Pool:   pool,
 	}
 	return s, nil
 }
@@ -86,13 +85,16 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name string `yaml:"name"`
-	Kind string `yaml:"kind"`
+	Config
 	Pool *pgxpool.Pool
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 func (s *Source) PostgresPool() *pgxpool.Pool {
@@ -106,6 +108,8 @@ func getOpts(ipType, userAgent string, useIAM bool) ([]alloydbconn.Option, error
 		opts = append(opts, alloydbconn.WithDefaultDialOptions(alloydbconn.WithPrivateIP()))
 	case "public":
 		opts = append(opts, alloydbconn.WithDefaultDialOptions(alloydbconn.WithPublicIP()))
+	case "psc":
+		opts = append(opts, alloydbconn.WithDefaultDialOptions(alloydbconn.WithPSC()))
 	default:
 		return nil, fmt.Errorf("invalid ipType %s", ipType)
 	}
@@ -137,7 +141,7 @@ func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string
 			// If password is provided without an username, raise an error
 			return "", useIAM, fmt.Errorf("password is provided without a username. Please provide both a username and password, or leave both fields empty")
 		}
-		email, err := sources.GetIAMPrincipalEmailFromADC(ctx)
+		email, err := sources.GetIAMPrincipalEmailFromADC(ctx, "postgres")
 		if err != nil {
 			return "", useIAM, fmt.Errorf("error getting email from ADC: %v", err)
 		}

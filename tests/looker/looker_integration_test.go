@@ -71,7 +71,7 @@ func getLookerVars(t *testing.T) map[string]any {
 
 func TestLooker(t *testing.T) {
 	sourceConfig := getLookerVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
@@ -163,6 +163,71 @@ func TestLooker(t *testing.T) {
 				"kind":        "looker-health-vacuum",
 				"source":      "my-instance",
 				"description": "Vacuums unused content from a Looker instance.",
+			},
+			"dev_mode": map[string]any{
+				"kind":        "looker-dev-mode",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_projects": map[string]any{
+				"kind":        "looker-get-projects",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_project_files": map[string]any{
+				"kind":        "looker-get-project-files",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_project_file": map[string]any{
+				"kind":        "looker-get-project-file",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"create_project_file": map[string]any{
+				"kind":        "looker-create-project-file",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"update_project_file": map[string]any{
+				"kind":        "looker-update-project-file",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"delete_project_file": map[string]any{
+				"kind":        "looker-delete-project-file",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"generate_embed_url": map[string]any{
+				"kind":        "looker-generate-embed-url",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_connections": map[string]any{
+				"kind":        "looker-get-connections",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_connection_schemas": map[string]any{
+				"kind":        "looker-get-connection-schemas",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_connection_databases": map[string]any{
+				"kind":        "looker-get-connection-databases",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_connection_tables": map[string]any{
+				"kind":        "looker-get-connection-tables",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"get_connection_table_columns": map[string]any{
+				"kind":        "looker-get-connection-table-columns",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
 			},
 		},
 	}
@@ -651,7 +716,6 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
-
 	tests.RunToolGetTestByName(t, "conversational_analytics",
 		map[string]any{
 			"conversational_analytics": map[string]any{
@@ -805,8 +869,304 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "dev_mode",
+		map[string]any{
+			"dev_mode": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "Whether to set Dev Mode.",
+						"name":        "devMode",
+						"required":    false,
+						"type":        "boolean",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_projects",
+		map[string]any{
+			"get_projects": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters":   []any{},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_project_files",
+		map[string]any{
+			"get_project_files": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The id of the project containing the files",
+						"name":        "project_id",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_project_file",
+		map[string]any{
+			"get_project_file": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The id of the project containing the files",
+						"name":        "project_id",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The path of the file within the project",
+						"name":        "file_path",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "create_project_file",
+		map[string]any{
+			"create_project_file": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The id of the project containing the files",
+						"name":        "project_id",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The path of the file within the project",
+						"name":        "file_path",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The content of the file",
+						"name":        "file_content",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "update_project_file",
+		map[string]any{
+			"update_project_file": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The id of the project containing the files",
+						"name":        "project_id",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The path of the file within the project",
+						"name":        "file_path",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The content of the file",
+						"name":        "file_content",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "delete_project_file",
+		map[string]any{
+			"delete_project_file": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The id of the project containing the files",
+						"name":        "project_id",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The path of the file within the project",
+						"name":        "file_path",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "generate_embed_url",
+		map[string]any{
+			"generate_embed_url": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "Type of Looker content to embed (ie. dashboards, looks, query-visualization)",
+						"name":        "type",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The ID of the content to embed.",
+						"name":        "id",
+						"required":    false,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_connections",
+		map[string]any{
+			"get_connections": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters":   []any{},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_connection_schemas",
+		map[string]any{
+			"get_connection_schemas": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The connection containing the schemas.",
+						"name":        "conn",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The optional database to search",
+						"name":        "db",
+						"required":    false,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_connection_databases",
+		map[string]any{
+			"get_connection_databases": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The connection containing the databases.",
+						"name":        "conn",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_connection_tables",
+		map[string]any{
+			"get_connection_tables": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The connection containing the tables.",
+						"name":        "conn",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The optional database to search",
+						"name":        "db",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The schema containing the tables.",
+						"name":        "schema",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_connection_table_columns",
+		map[string]any{
+			"get_connection_table_columns": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The connection containing the tables.",
+						"name":        "conn",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The optional database to search",
+						"name":        "db",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The schema containing the tables.",
+						"name":        "schema",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "A comma separated list of tables containing the columns.",
+						"name":        "tables",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
 
-	wantResult := "{\"label\":\"System Activity\",\"name\":\"system__activity\",\"project_name\":\"system__activity\"}"
+	wantResult := "{\"connections\":[],\"label\":\"System Activity\",\"name\":\"system__activity\",\"project_name\":\"system__activity\"}"
 	tests.RunToolInvokeSimpleTest(t, "get_models", wantResult)
 
 	wantResult = "{\"description\":\"Data about Look and dashboard usage, including frequency of views, favoriting, scheduling, embedding, and access via the API. Also includes details about individual Looks and dashboards.\",\"group_label\":\"System Activity\",\"label\":\"Content Usage\",\"name\":\"content_usage\"}"
@@ -859,6 +1219,48 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "\"Model\":\"the_look\""
 	tests.RunToolInvokeParametersTest(t, "health_vacuum", []byte(`{"action": "models"}`), wantResult)
+
+	wantResult = "the_look"
+	tests.RunToolInvokeSimpleTest(t, "get_projects", wantResult)
+
+	wantResult = "order_items.view"
+	tests.RunToolInvokeParametersTest(t, "get_project_files", []byte(`{"project_id": "the_look"}`), wantResult)
+
+	wantResult = "view"
+	tests.RunToolInvokeParametersTest(t, "get_project_file", []byte(`{"project_id": "the_look", "file_path": "order_items.view.lkml"}`), wantResult)
+
+	wantResult = "dev"
+	tests.RunToolInvokeParametersTest(t, "dev_mode", []byte(`{"devMode": true}`), wantResult)
+
+	wantResult = "created"
+	tests.RunToolInvokeParametersTest(t, "create_project_file", []byte(`{"project_id": "the_look", "file_path": "foo.view.lkml", "file_content": "view"}`), wantResult)
+
+	wantResult = "updated"
+	tests.RunToolInvokeParametersTest(t, "update_project_file", []byte(`{"project_id": "the_look", "file_path": "foo.view.lkml", "file_content": "model"}`), wantResult)
+
+	wantResult = "deleted"
+	tests.RunToolInvokeParametersTest(t, "delete_project_file", []byte(`{"project_id": "the_look", "file_path": "foo.view.lkml"}`), wantResult)
+
+	wantResult = "production"
+	tests.RunToolInvokeParametersTest(t, "dev_mode", []byte(`{"devMode": false}`), wantResult)
+
+	wantResult = "thelook"
+	tests.RunToolInvokeSimpleTest(t, "get_connections", wantResult)
+
+	wantResult = "{\"name\":\"demo_db\",\"is_default\":true}"
+	tests.RunToolInvokeParametersTest(t, "get_connection_schemas", []byte(`{"conn": "thelook"}`), wantResult)
+
+	wantResult = "[]"
+	tests.RunToolInvokeParametersTest(t, "get_connection_databases", []byte(`{"conn": "thelook"}`), wantResult)
+
+	wantResult = "Employees"
+	tests.RunToolInvokeParametersTest(t, "get_connection_tables", []byte(`{"conn": "thelook", "schema": "demo_db"}`), wantResult)
+
+	wantResult = "{\"column_name\":\"EmpID\",\"data_type_database\":\"int\",\"data_type_looker\":\"number\",\"sql_escaped_column_name\":\"EmpID\"}"
+	tests.RunToolInvokeParametersTest(t, "get_connection_table_columns", []byte(`{"conn": "thelook", "schema": "demo_db", "tables": "Employees"}`), wantResult)
+
+	wantResult = "/login/embed?t=" // testing for specific substring, since url is dynamic
+	tests.RunToolInvokeParametersTest(t, "generate_embed_url", []byte(`{"type": "dashboards", "id": "1"}`), wantResult)
 }
 
 func runConversationalAnalytics(t *testing.T, modelName, exploreName string) {

@@ -22,6 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	alloydbadmin "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/alloydb/v1"
 )
 
@@ -70,13 +71,21 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `alloydb-admin`", kind)
 	}
 
-	allParameters := tools.Parameters{
-		tools.NewStringParameter("project", "The GCP project ID."),
-		tools.NewStringParameterWithDefault("location", "us-central1", "The location to create the cluster in. The default value is us-central1. If quota is exhausted then use other regions."),
-		tools.NewStringParameter("cluster", "A unique ID for the AlloyDB cluster."),
-		tools.NewStringParameter("password", "A secure password for the initial user."),
-		tools.NewStringParameterWithDefault("network", "default", "The name of the VPC network to connect the cluster to (e.g., 'default')."),
-		tools.NewStringParameterWithDefault("user", "postgres", "The name for the initial superuser. Defaults to 'postgres' if not provided."),
+	project := s.DefaultProject
+	var projectParam parameters.Parameter
+	if project != "" {
+		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
+	} else {
+		projectParam = parameters.NewStringParameter("project", "The GCP project ID.")
+	}
+
+	allParameters := parameters.Parameters{
+		projectParam,
+		parameters.NewStringParameterWithDefault("location", "us-central1", "The location to create the cluster in. The default value is us-central1. If quota is exhausted then use other regions."),
+		parameters.NewStringParameter("cluster", "A unique ID for the AlloyDB cluster."),
+		parameters.NewStringParameter("password", "A secure password for the initial user."),
+		parameters.NewStringParameterWithDefault("network", "default", "The name of the VPC network to connect the cluster to (e.g., 'default')."),
+		parameters.NewStringParameterWithDefault("user", "postgres", "The name for the initial superuser. Defaults to 'postgres' if not provided."),
 	}
 	paramManifest := allParameters.Manifest()
 
@@ -84,11 +93,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if description == "" {
 		description = "Creates a new AlloyDB cluster. This is a long-running operation, but the API call returns quickly. This will return operation id to be used by get operations tool. Take all parameters from user in one go."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
 
 	return Tool{
-		Name:        cfg.Name,
-		Kind:        kind,
+		Config:      cfg,
 		Source:      s,
 		AllParams:   allParameters,
 		manifest:    tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
@@ -98,19 +106,20 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 // Tool represents the create-cluster tool.
 type Tool struct {
-	Name        string `yaml:"name"`
-	Kind        string `yaml:"kind"`
-	Description string `yaml:"description"`
-
+	Config
 	Source    *alloydbadmin.Source
-	AllParams tools.Parameters `yaml:"allParams"`
+	AllParams parameters.Parameters `yaml:"allParams"`
 
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
 // Invoke executes the tool's logic.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	project, ok := paramsMap["project"].(string)
 	if !ok || project == "" {
@@ -170,8 +179,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 }
 
 // ParseParams parses the parameters for the tool.
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.AllParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.AllParams, data, claims)
 }
 
 // Manifest returns the tool's manifest.
@@ -189,6 +198,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return true
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return t.Source.UseClientAuthorization()
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

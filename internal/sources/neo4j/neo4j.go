@@ -20,7 +20,9 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	neo4jconf "github.com/neo4j/neo4j-go-driver/v5/neo4j/config"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -71,10 +73,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		r.Database = "neo4j"
 	}
 	s := &Source{
-		Name:     r.Name,
-		Kind:     SourceKind,
-		Database: r.Database,
-		Driver:   driver,
+		Config: r,
+		Driver: driver,
 	}
 	return s, nil
 }
@@ -82,14 +82,16 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name     string `yaml:"name"`
-	Kind     string `yaml:"kind"`
-	Database string `yaml:"database"`
-	Driver   neo4j.DriverWithContext
+	Config
+	Driver neo4j.DriverWithContext
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 func (s *Source) Neo4jDriver() neo4j.DriverWithContext {
@@ -106,7 +108,13 @@ func initNeo4jDriver(ctx context.Context, tracer trace.Tracer, uri, user, passwo
 	defer span.End()
 
 	auth := neo4j.BasicAuth(user, password, "")
-	driver, err := neo4j.NewDriverWithContext(uri, auth)
+	userAgent, err := util.UserAgentFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	driver, err := neo4j.NewDriverWithContext(uri, auth, func(config *neo4jconf.Config) {
+		config.UserAgent = userAgent
+	})
 	if err != nil {
 		return nil, fmt.Errorf("unable to create connection driver: %w", err)
 	}

@@ -14,7 +14,7 @@ aliases:
 A `tidb-sql` tool executes a pre-defined SQL statement against a TiDB
 database. It's compatible with the following source:
 
-- [tidb](../sources/tidb.md)
+- [tidb](../../sources/tidb.md)
 
 The specified SQL statement is executed as a [prepared statement][tidb-prepare],
 and expects parameters in the SQL query to be in the form of placeholders `?`.
@@ -72,7 +72,7 @@ tools:
 > including identifiers, column names, and table names. **This makes it more
 > vulnerable to SQL injections**. Using basic parameters only (see above) is
 > recommended for performance and safety reasons. For more details, please check
-> [templateParameters](_index#template-parameters).
+> [templateParameters](..#template-parameters).
 
 ```yaml
 tools:
@@ -95,11 +95,11 @@ tools:
 
 ## Reference
 
-| **field**          |                  **type**                        | **required** | **description**                                                                                                                            |
-|--------------------|:------------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
-| kind               |                   string                         |     true     | Must be "tidb-sql".                                                                                                                       |
-| source             |                   string                         |     true     | Name of the source the SQL should execute on.                                                                                              |
-| description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
-| statement          |                   string                         |     true     | SQL statement to execute on.                                                                                                               |
-| parameters         | [parameters](_index#specifying-parameters)       |    false     | List of [parameters](_index#specifying-parameters) that will be inserted into the SQL statement.                                           |
-| templateParameters | [templateParameters](_index#template-parameters) |    false     | List of [templateParameters](_index#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| **field**          |                   **type**                   | **required** | **description**                                                                                                                        |
+|--------------------|:--------------------------------------------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------|
+| kind               |                    string                    |     true     | Must be "tidb-sql".                                                                                                                    |
+| source             |                    string                    |     true     | Name of the source the SQL should execute on.                                                                                          |
+| description        |                    string                    |     true     | Description of the tool that is passed to the LLM.                                                                                     |
+| statement          |                    string                    |     true     | SQL statement to execute on.                                                                                                           |
+| parameters         |    [parameters](..#specifying-parameters)    |    false     | List of [parameters](..#specifying-parameters) that will be inserted into the SQL statement.                                           |
+| templateParameters | [templateParameters](..#template-parameters) |    false     | List of [templateParameters](..#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |

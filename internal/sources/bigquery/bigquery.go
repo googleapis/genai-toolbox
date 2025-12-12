@@ -32,6 +32,7 @@ import (
 	"golang.org/x/oauth2/google"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/googleapi"
+	"google.golang.org/api/impersonate"
 	"google.golang.org/api/option"
 )
 
@@ -71,27 +72,35 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// BigQuery configs
-	Name            string   `yaml:"name" validate:"required"`
-	Kind            string   `yaml:"kind" validate:"required"`
-	Project         string   `yaml:"project" validate:"required"`
-	Location        string   `yaml:"location"`
-	WriteMode       string   `yaml:"writeMode"`
-	AllowedDatasets []string `yaml:"allowedDatasets"`
-	UseClientOAuth  bool     `yaml:"useClientOAuth"`
+	Name                      string   `yaml:"name" validate:"required"`
+	Kind                      string   `yaml:"kind" validate:"required"`
+	Project                   string   `yaml:"project" validate:"required"`
+	Location                  string   `yaml:"location"`
+	WriteMode                 string   `yaml:"writeMode"`
+	AllowedDatasets           []string `yaml:"allowedDatasets"`
+	UseClientOAuth            bool     `yaml:"useClientOAuth"`
+	ImpersonateServiceAccount string   `yaml:"impersonateServiceAccount"`
 }
 
 func (r Config) SourceConfigKind() string {
 	// Returns BigQuery source kind
 	return SourceKind
 }
-
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	if r.WriteMode == "" {
 		r.WriteMode = WriteModeAllowed
 	}
 
 	if r.WriteMode == WriteModeProtected && r.UseClientOAuth {
+		// The protected mode only allows write operations to the session's temporary datasets.
+		// when using client OAuth, a new session is created every
+		// time a BigQuery tool is invoked. Therefore, no session data can
+		// be preserved as needed by the protected mode.
 		return nil, fmt.Errorf("writeMode 'protected' cannot be used with useClientOAuth 'true'")
+	}
+
+	if r.UseClientOAuth && r.ImpersonateServiceAccount != "" {
+		return nil, fmt.Errorf("useClientOAuth cannot be used with impersonateServiceAccount")
 	}
 
 	var client *bigqueryapi.Client
@@ -100,17 +109,32 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	var clientCreator BigqueryClientCreator
 	var err error
 
+	s := &Source{
+		Config:             r,
+		Client:             client,
+		RestService:        restService,
+		TokenSource:        tokenSource,
+		MaxQueryResultRows: 50,
+		ClientCreator:      clientCreator,
+	}
+
 	if r.UseClientOAuth {
-		clientCreator, err = newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.Name)
+		// use client OAuth
+		baseClientCreator, err := newBigQueryClientCreator(ctx, tracer, r.Project, r.Location, r.Name)
 		if err != nil {
 			return nil, fmt.Errorf("error constructing client creator: %w", err)
 		}
+		setupClientCaching(s, baseClientCreator)
+
 	} else {
 		// Initializes a BigQuery Google SQL source
-		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location)
+		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.ImpersonateServiceAccount)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from ADC: %w", err)
 		}
+		s.Client = client
+		s.RestService = restService
+		s.TokenSource = tokenSource
 	}
 
 	allowedDatasets := make(map[string]struct{})
@@ -127,37 +151,26 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 				datasetID = parts[1]
 				allowedFullID = allowed
 			} else {
-				projectID = client.Project()
+				projectID = r.Project
 				datasetID = allowed
 				allowedFullID = fmt.Sprintf("%s.%s", projectID, datasetID)
 			}
 
-			dataset := client.DatasetInProject(projectID, datasetID)
-			_, err := dataset.Metadata(ctx)
-			if err != nil {
-				if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
-					return nil, fmt.Errorf("allowedDataset '%s' not found in project '%s'", datasetID, projectID)
+			if s.Client != nil {
+				dataset := s.Client.DatasetInProject(projectID, datasetID)
+				_, err := dataset.Metadata(ctx)
+				if err != nil {
+					if gerr, ok := err.(*googleapi.Error); ok && gerr.Code == http.StatusNotFound {
+						return nil, fmt.Errorf("allowedDataset '%s' not found in project '%s'", datasetID, projectID)
+					}
+					return nil, fmt.Errorf("failed to verify allowedDataset '%s' in project '%s': %w", datasetID, projectID, err)
 				}
-				return nil, fmt.Errorf("failed to verify allowedDataset '%s' in project '%s': %w", datasetID, projectID, err)
 			}
 			allowedDatasets[allowedFullID] = struct{}{}
 		}
 	}
 
-	s := &Source{
-		Name:               r.Name,
-		Kind:               SourceKind,
-		Project:            r.Project,
-		Location:           r.Location,
-		Client:             client,
-		RestService:        restService,
-		TokenSource:        tokenSource,
-		MaxQueryResultRows: 50,
-		ClientCreator:      clientCreator,
-		WriteMode:          r.WriteMode,
-		AllowedDatasets:    allowedDatasets,
-		UseClientOAuth:     r.UseClientOAuth,
-	}
+	s.AllowedDatasets = allowedDatasets
 	s.SessionProvider = s.newBigQuerySessionProvider()
 
 	if r.WriteMode != WriteModeAllowed && r.WriteMode != WriteModeBlocked && r.WriteMode != WriteModeProtected {
@@ -165,29 +178,79 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 	s.makeDataplexCatalogClient = s.lazyInitDataplexClient(ctx, tracer)
 	return s, nil
+}
 
+// setupClientCaching initializes caches and wraps the base client creator with caching logic.
+func setupClientCaching(s *Source, baseCreator BigqueryClientCreator) {
+	// Define eviction handlers
+	onBqEvict := func(key string, value interface{}) {
+		if client, ok := value.(*bigqueryapi.Client); ok && client != nil {
+			client.Close()
+		}
+	}
+	onDataplexEvict := func(key string, value interface{}) {
+		if client, ok := value.(*dataplexapi.CatalogClient); ok && client != nil {
+			client.Close()
+		}
+	}
+
+	// Initialize caches
+	s.bqClientCache = NewCache(onBqEvict)
+	s.bqRestCache = NewCache(nil)
+	s.dataplexCache = NewCache(onDataplexEvict)
+
+	// Create the caching wrapper for the client creator
+	s.ClientCreator = func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+		// Check cache
+		bqClientVal, bqFound := s.bqClientCache.Get(tokenString)
+
+		if wantRestService {
+			restServiceVal, restFound := s.bqRestCache.Get(tokenString)
+			if bqFound && restFound {
+				// Cache hit for both
+				return bqClientVal.(*bigqueryapi.Client), restServiceVal.(*bigqueryrestapi.Service), nil
+			}
+		} else {
+			if bqFound {
+				return bqClientVal.(*bigqueryapi.Client), nil, nil
+			}
+		}
+
+		// Cache miss - call the client creator
+		client, restService, err := baseCreator(tokenString, wantRestService)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		// Set in cache
+		s.bqClientCache.Set(tokenString, client)
+		if wantRestService && restService != nil {
+			s.bqRestCache.Set(tokenString, restService)
+		}
+
+		return client, restService, nil
+	}
 }
 
 var _ sources.Source = &Source{}
 
 type Source struct {
-	// BigQuery Google SQL struct with client
-	Name                      string `yaml:"name"`
-	Kind                      string `yaml:"kind"`
-	Project                   string
-	Location                  string
+	Config
 	Client                    *bigqueryapi.Client
 	RestService               *bigqueryrestapi.Service
 	TokenSource               oauth2.TokenSource
 	MaxQueryResultRows        int
 	ClientCreator             BigqueryClientCreator
 	AllowedDatasets           map[string]struct{}
-	UseClientOAuth            bool
-	WriteMode                 string
 	sessionMutex              sync.Mutex
 	makeDataplexCatalogClient func() (*dataplexapi.CatalogClient, DataplexClientCreator, error)
 	SessionProvider           BigQuerySessionProvider
 	Session                   *Session
+
+	// Caches for OAuth clients
+	bqClientCache *Cache
+	bqRestCache   *Cache
+	dataplexCache *Cache
 }
 
 type Session struct {
@@ -201,6 +264,10 @@ type Session struct {
 func (s *Source) SourceKind() string {
 	// Returns BigQuery Google SQL source kind
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 func (s *Source) BigQueryClient() *bigqueryapi.Client {
@@ -325,6 +392,17 @@ func (s *Source) BigQueryTokenSource() oauth2.TokenSource {
 }
 
 func (s *Source) BigQueryTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error) {
+	if s.ImpersonateServiceAccount != "" {
+		// Create impersonated credentials token source with the requested scope
+		ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
+			TargetPrincipal: s.ImpersonateServiceAccount,
+			Scopes:          []string{scope},
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create impersonated credentials for %q with scope %q: %w", s.ImpersonateServiceAccount, scope, err)
+		}
+		return ts, nil
+	}
 	return google.DefaultTokenSource(ctx, scope)
 }
 
@@ -371,13 +449,35 @@ func (s *Source) lazyInitDataplexClient(ctx context.Context, tracer trace.Tracer
 
 	return func() (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
 		once.Do(func() {
-			c, cc, e := initDataplexConnection(ctx, tracer, s.Name, s.Project, s.UseClientOAuth)
+			c, cc, e := initDataplexConnection(ctx, tracer, s.Name, s.Project, s.UseClientOAuth, s.ImpersonateServiceAccount)
 			if e != nil {
 				err = fmt.Errorf("failed to initialize dataplex client: %w", e)
 				return
 			}
 			client = c
-			clientCreator = cc
+
+			// If using OAuth, wrap the provided client creator (cc) with caching logic
+			if s.UseClientOAuth && cc != nil {
+				clientCreator = func(tokenString string) (*dataplexapi.CatalogClient, error) {
+					// Check cache
+					if val, found := s.dataplexCache.Get(tokenString); found {
+						return val.(*dataplexapi.CatalogClient), nil
+					}
+
+					// Cache miss - call client creator
+					dpClient, err := cc(tokenString)
+					if err != nil {
+						return nil, err
+					}
+
+					// Set in cache
+					s.dataplexCache.Set(tokenString, dpClient)
+					return dpClient, nil
+				}
+			} else {
+				// Not using OAuth or no creator was returned
+				clientCreator = cc
+			}
 		})
 		return client, clientCreator, err
 	}
@@ -389,34 +489,61 @@ func initBigQueryConnection(
 	name string,
 	project string,
 	location string,
+	impersonateServiceAccount string,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
-
-	cred, err := google.FindDefaultCredentials(ctx, "https://www.googleapis.com/auth/cloud-platform")
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
-	}
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
+	var tokenSource oauth2.TokenSource
+	var opts []option.ClientOption
+
+	if impersonateServiceAccount != "" {
+		// Create impersonated credentials token source with cloud-platform scope
+		// This broader scope is needed for tools like conversational analytics
+		cloudPlatformTokenSource, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
+			TargetPrincipal: impersonateServiceAccount,
+			Scopes:          []string{"https://www.googleapis.com/auth/cloud-platform"},
+		})
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("failed to create impersonated credentials for %q: %w", impersonateServiceAccount, err)
+		}
+		tokenSource = cloudPlatformTokenSource
+		opts = []option.ClientOption{
+			option.WithUserAgent(userAgent),
+			option.WithTokenSource(cloudPlatformTokenSource),
+		}
+	} else {
+		// Use default credentials
+		cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
+		}
+		tokenSource = cred.TokenSource
+		opts = []option.ClientOption{
+			option.WithUserAgent(userAgent),
+			option.WithCredentials(cred),
+		}
+	}
+
 	// Initialize the high-level BigQuery client
-	client, err := bigqueryapi.NewClient(ctx, project, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+	client, err := bigqueryapi.NewClient(ctx, project, opts...)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to create BigQuery client for project %q: %w", project, err)
 	}
 	client.Location = location
 
 	// Initialize the low-level BigQuery REST service using the same credentials
-	restService, err := bigqueryrestapi.NewService(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+	restService, err := bigqueryrestapi.NewService(ctx, opts...)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("failed to create BigQuery v2 service: %w", err)
 	}
 
-	return client, restService, cred.TokenSource, nil
+	return client, restService, tokenSource, nil
 }
 
 // initBigQueryConnectionWithOAuthToken initialize a BigQuery client with an
@@ -484,6 +611,7 @@ func initDataplexConnection(
 	name string,
 	project string,
 	useClientOAuth bool,
+	impersonateServiceAccount string,
 ) (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
 	var client *dataplexapi.CatalogClient
 	var clientCreator DataplexClientCreator
@@ -491,11 +619,6 @@ func initDataplexConnection(
 
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
-
-	cred, err := google.FindDefaultCredentials(ctx)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
-	}
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
@@ -505,7 +628,34 @@ func initDataplexConnection(
 	if useClientOAuth {
 		clientCreator = newDataplexClientCreator(ctx, project, userAgent)
 	} else {
-		client, err = dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+		var opts []option.ClientOption
+
+		if impersonateServiceAccount != "" {
+			// Create impersonated credentials token source
+			ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
+				TargetPrincipal: impersonateServiceAccount,
+				Scopes:          []string{"https://www.googleapis.com/auth/cloud-platform"},
+			})
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to create impersonated credentials for %q: %w", impersonateServiceAccount, err)
+			}
+			opts = []option.ClientOption{
+				option.WithUserAgent(userAgent),
+				option.WithTokenSource(ts),
+			}
+		} else {
+			// Use default credentials
+			cred, err := google.FindDefaultCredentials(ctx)
+			if err != nil {
+				return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
+			}
+			opts = []option.ClientOption{
+				option.WithUserAgent(userAgent),
+				option.WithCredentials(cred),
+			}
+		}
+
+		client, err = dataplexapi.NewCatalogClient(ctx, opts...)
 		if err != nil {
 			return nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
 		}

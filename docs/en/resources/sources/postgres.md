@@ -35,6 +35,58 @@ reputation for reliability, feature robustness, and performance.
 - [`postgres-list-installed-extensions`](../tools/postgres/postgres-list-installed-extensions.md)
   List installed extensions in a PostgreSQL database.
 
+- [`postgres-list-views`](../tools/postgres/postgres-list-views.md)
+  List views in a PostgreSQL database.
+
+- [`postgres-list-schemas`](../tools/postgres/postgres-list-views.md)
+  List schemas in a PostgreSQL database.
+
+- [`postgres-database-overview`](../tools/postgres/postgres-database-overview.md)
+  Fetches the current state of the PostgreSQL server.
+
+- [`postgres-list-triggers`](../tools/postgres/postgres-list-triggers.md)
+  List triggers in a PostgreSQL database.
+
+- [`postgres-list-indexes`](../tools/postgres/postgres-list-indexes.md)
+  List available user indexes in a PostgreSQL database.
+
+- [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
+  List sequences in a PostgreSQL database.
+
+- [`postgres-long-running-transactions`](../tools/postgres/postgres-long-running-transactions.md)
+  List long running transactions in a PostgreSQL database.
+
+- [`postgres-list-locks`](../tools/postgres/postgres-list-locks.md)
+  List lock stats in a PostgreSQL database.
+
+- [`postgres-replication-stats`](../tools/postgres/postgres-replication-stats.md)
+  List replication stats in a PostgreSQL database.
+
+- [`postgres-list-query-stats`](../tools/postgres/postgres-list-query-stats.md)
+  List query statistics in a PostgreSQL database.
+
+- [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
+  List cardinality of columns in a table in a PostgreSQL database.
+
+- [`postgres-list-table-stats`](../tools/postgres/postgres-list-table-stats.md)
+  List statistics of a table in a PostgreSQL database.
+
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
+
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
+  List tablespaces in a PostgreSQL database.
+
+- [`postgres-list-pg-settings`](../tools/postgres/postgres-list-pg-settings.md)
+  List configuration parameters for the PostgreSQL server.
+
+- [`postgres-list-database-stats`](../tools/postgres/postgres-list-database-stats.md)
+  Lists the key performance and activity statistics for each database in the postgreSQL
+  server.
+
+- [`postgres-list-roles`](../tools/postgres/postgres-list-roles.md)
+  Lists all the user-created roles in PostgreSQL database..
+
 ### Pre-built Configurations
 
 - [PostgreSQL using MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/postgres_mcp/)

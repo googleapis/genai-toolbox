@@ -41,44 +41,32 @@ tools:
         kind: looker-query
         source: looker-source
         description: |
-          Query Tool
+          This tool runs a query against a LookML model and returns the results in JSON format.
 
-          This tool is used to run a query against the LookML model. The
-          model, explore, and fields list must be specified. Pivots,
-          filters and sorts are optional.
+          Required Parameters:
+          - model_name: The name of the LookML model (from `get_models`).
+          - explore_name: The name of the explore (from `get_explores`).
+          - fields: A list of field names (dimensions, measures, filters, or parameters) to include in the query.
 
-          The model can be found from the get_models tool. The explore
-          can be found from the get_explores tool passing in the model.
-          The fields can be found from the get_dimensions, get_measures,
-          get_filters, and get_parameters tools, passing in the model
-          and the explore.
+          Optional Parameters:
+          - pivots: A list of fields to pivot the results by. These fields must also be included in the `fields` list.
+          - filters: A map of filter expressions, e.g., `{"view.field": "value", "view.date": "7 days"}`.
+            - Do not quote field names.
+            - Use `not null` instead of `-NULL`.
+            - If a value contains a comma, enclose it in single quotes (e.g., "'New York, NY'").
+          - sorts: A list of fields to sort by, optionally including direction (e.g., `["view.field desc"]`).
+          - limit: Row limit (default 500). Use "-1" for unlimited.
+          - query_timezone: specific timezone for the query (e.g. `America/Los_Angeles`).
 
-          Provide a model_id and explore_name, then a list
-          of fields. Optionally a list of pivots can be provided.
-          The pivots must also be included in the fields list.
-
-          Filters are provided as a map of {"field.id": "condition",
-          "field.id2": "condition2", ...}. Do not put the field.id in
-          quotes. Filter expressions can be found at
-          https://cloud.google.com/looker/docs/filter-expressions.
-
-          Sorts can be specified like [ "field.id desc 0" ].
-
-          An optional row limit can be added. If not provided the limit
-          will default to 500. "-1" can be specified for unlimited.
-
-          An optional query timezone can be added. The query_timezone to
-          will default to that of the workstation where this MCP server
-          is running, or Etc/UTC if that can't be determined. Not all
-          models support custom timezones.
+          Note: Use `get_dimensions`, `get_measures`, `get_filters`, and `get_parameters` to find valid fields.
 
           The result of the query tool is JSON
 ```
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker-query"                                                                           |
-| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "looker-query"                             |
+| source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

@@ -15,6 +15,7 @@
 sources:
   cloud-sql-admin-source:
     kind: cloud-sql-admin
+    defaultProject: ${CLOUD_SQL_POSTGRES_PROJECT:}
 
 tools:
   create_instance:
@@ -38,6 +39,13 @@ tools:
   wait_for_operation:
     kind: cloud-sql-wait-for-operation
     source: cloud-sql-admin-source
+    multiplier: 4
+  clone_instance:
+    kind: cloud-sql-clone-instance
+    source: cloud-sql-admin-source
+  postgres_upgrade_precheck:
+    kind: postgres-upgrade-precheck
+    source: cloud-sql-admin-source
 
 toolsets:
   cloud_sql_postgres_admin_tools:
@@ -48,3 +56,5 @@ toolsets:
     - list_databases
     - create_user
     - wait_for_operation
+    - postgres_upgrade_precheck
+    - clone_instance

@@ -40,26 +40,30 @@ tools:
         kind: looker-make-look
         source: looker-source
         description: |
-          make_look Tool
+          This tool creates a new Look (saved query with visualization) in Looker.
+          The Look will be saved in the user's personal folder, and its name must be unique.
 
-          This tool creates a new look in Looker, using the query
-          parameters and the vis_config specified.
+          Required Parameters:
+          - title: A unique title for the new Look.
+          - description: A brief description of the Look's purpose.
+          - model_name: The name of the LookML model (from `get_models`).
+          - explore_name: The name of the explore (from `get_explores`).
+          - fields: A list of field names (dimensions, measures, filters, or parameters) to include in the query.
 
-          Most of the parameters are the same as the query_url
-          tool. In addition, there is a title and a description
-          that must be provided.
+          Optional Parameters:
+          - pivots, filters, sorts, limit, query_timezone: These parameters are identical
+            to those described for the `query` tool.
+          - vis_config: A JSON object defining the visualization settings for the Look.
+            The structure and options are the same as for the `query_url` tool's `vis_config`.
 
-          The newly created look will be created in the user's
-          personal folder in looker. The look name must be unique.
-
-          The result is a json document with a link to the newly
-          created look.
+          Output:
+          A JSON object containing a link (`url`) to the newly created Look, along with its `id` and `slug`.
 ```
 
 ## Reference
 
-| **field**   |                  **type**                  | **required** | **description**                                                                                  |
-|-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "looker-make-look"                                                                       |
-| source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
-| description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| kind        |  string  |     true     | Must be "looker-make-look"                         |
+| source      |  string  |     true     | Name of the source the SQL should execute on.      |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |

@@ -48,8 +48,8 @@ permissions):
 - `roles/cloudaicompanion.user`
 - `roles/geminidataanalytics.dataAgentStatelessUser`
 
-To initialize the application default credential run `gcloud auth login --update-adc`
-in your environment before starting MCP Toolbox.
+To initialize the application default credential run `gcloud auth login
+--update-adc` in your environment before starting MCP Toolbox.
 
 [set-adc]: https://cloud.google.com/docs/authentication/provide-credentials-adc
 
@@ -81,7 +81,8 @@ The client id and client secret are seemingly random character sequences
 assigned by the looker server. If you are using Looker OAuth you don't need
 these settings
 
-The `project` and `location` fields are utilized **only** when using the conversational analytics tool.
+The `project` and `location` fields are utilized **only** when using the
+conversational analytics tool.
 
 {{< notice tip >}}
 Use environment variable replacement with the format ${ENV_NAME}
@@ -90,17 +91,17 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field**            | **type** | **required** | **description**                                                                           |
-| -------------------- | :------: | :----------: | ----------------------------------------------------------------------------------------- |
-| kind                 |  string  |     true     | Must be "looker".                                                                         |
-| base_url             |  string  |     true     | The URL of your Looker server with no trailing /).                                        |
-| client_id            |  string  |    false     | The client id assigned by Looker.                                                         |
-| client_secret        |  string  |    false     | The client secret assigned by Looker.                                                     |
-| verify_ssl           |  string  |    false     | Whether to check the ssl certificate of the server.                                       |
-| project              |  string  |    false     | The project id to use in Google Cloud.                                                    |
-| location             |  string  |    false     | The location to use in Google Cloud. (default: us)                                        |
-| timeout              |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, 120s is applied. |
-| use_client_oauth     |  string  |    false     | Use OAuth tokens instead of client_id and client_secret. (default: false)                 |
-| show_hidden_models   |  string  |    false     | Show or hide hidden models. (default: true)                                               |
-| show_hidden_explores |  string  |    false     | Show or hide hidden explores. (default: true)                                             |
-| show_hidden_fields   |  string  |    false     | Show or hide hidden fields. (default: true)                                               |
+| **field**            | **type** | **required** | **description**                                                                                                                                     |
+|----------------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind                 |  string  |     true     | Must be "looker".                                                                                                                                   |
+| base_url             |  string  |     true     | The URL of your Looker server with no trailing /.                                                                                                   |
+| client_id            |  string  |    false     | The client id assigned by Looker.                                                                                                                   |
+| client_secret        |  string  |    false     | The client secret assigned by Looker.                                                                                                               |
+| verify_ssl           |  string  |    false     | Whether to check the ssl certificate of the server.                                                                                                 |
+| project              |  string  |    false     | The project id to use in Google Cloud.                                                                                                              |
+| location             |  string  |    false     | The location to use in Google Cloud. (default: us)                                                                                                  |
+| timeout              |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, 120s is applied.                                                           |
+| use_client_oauth     |  string  |    false     | Use OAuth tokens instead of client_id and client_secret. (default: false) If a header name is provided, it will be used instead of "Authorization". |
+| show_hidden_models   |  string  |    false     | Show or hide hidden models. (default: true)                                                                                                         |
+| show_hidden_explores |  string  |    false     | Show or hide hidden explores. (default: true)                                                                                                       |
+| show_hidden_fields   |  string  |    false     | Show or hide hidden fields. (default: true)                                                                                                         |

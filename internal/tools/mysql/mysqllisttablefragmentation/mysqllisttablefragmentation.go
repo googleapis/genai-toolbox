@@ -26,6 +26,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 const kind string = "mysql-list-table-fragmentation"
@@ -104,23 +105,21 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	allParameters := tools.Parameters{
-		tools.NewStringParameterWithDefault("table_schema", "", "(Optional) The database where fragmentation check is to be executed. Check all tables visible to the current user if not specified"),
-		tools.NewStringParameterWithDefault("table_name", "", "(Optional) Name of the table to be checked. Check all tables visible to the current user if not specified."),
-		tools.NewIntParameterWithDefault("data_free_threshold_bytes", 1, "(Optional) Only show tables with at least this much free space in bytes. Default is 1"),
-		tools.NewIntParameterWithDefault("limit", 10, "(Optional) Max rows to return, default is 10"),
+	allParameters := parameters.Parameters{
+		parameters.NewStringParameterWithDefault("table_schema", "", "(Optional) The database where fragmentation check is to be executed. Check all tables visible to the current user if not specified"),
+		parameters.NewStringParameterWithDefault("table_name", "", "(Optional) Name of the table to be checked. Check all tables visible to the current user if not specified."),
+		parameters.NewIntParameterWithDefault("data_free_threshold_bytes", 1, "(Optional) Only show tables with at least this much free space in bytes. Default is 1"),
+		parameters.NewIntParameterWithDefault("limit", 10, "(Optional) Max rows to return, default is 10"),
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		AuthRequired: cfg.AuthRequired,
-		Pool:         s.MySQLPool(),
-		allParams:    allParameters,
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		Pool:        s.MySQLPool(),
+		allParams:   allParameters,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -129,16 +128,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	allParams    tools.Parameters `yaml:"parameters"`
-	Pool         *sql.DB
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Config
+	allParams   parameters.Parameters `yaml:"parameters"`
+	Pool        *sql.DB
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
 	table_schema, ok := paramsMap["table_schema"].(string)
@@ -163,7 +160,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, listTableFragmentationStatement)
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, listTableFragmentationStatement))
 
 	results, err := t.Pool.QueryContext(ctx, listTableFragmentationStatement, table_schema, table_schema, table_name, table_name, data_free_threshold_bytes, limit)
 	if err != nil {
@@ -217,8 +214,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return out, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.allParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.allParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -233,6 +230,14 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

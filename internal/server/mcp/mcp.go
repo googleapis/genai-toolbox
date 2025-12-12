@@ -21,12 +21,13 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
 	mcputil "github.com/googleapis/genai-toolbox/internal/server/mcp/util"
 	v20241105 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20241105"
 	v20250326 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20250326"
 	v20250618 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20250618"
+	"github.com/googleapis/genai-toolbox/internal/server/resources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
@@ -60,11 +61,15 @@ func InitializeResponse(ctx context.Context, id jsonrpc.RequestId, body []byte, 
 	}
 
 	toolsListChanged := false
+	promptsListChanged := false
 	result := mcputil.InitializeResult{
 		ProtocolVersion: protocolVersion,
 		Capabilities: mcputil.ServerCapabilities{
 			Tools: &mcputil.ListChanged{
 				ListChanged: &toolsListChanged,
+			},
+			Prompts: &mcputil.ListChanged{
+				ListChanged: &promptsListChanged,
 			},
 		},
 		ServerInfo: mcputil.Implementation{
@@ -95,14 +100,14 @@ func NotificationHandler(ctx context.Context, body []byte) error {
 
 // ProcessMethod returns a response for the request.
 // This is the Operation phase of the lifecycle for MCP client-server connections.
-func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId, method string, toolset tools.Toolset, tools map[string]tools.Tool, authServices map[string]auth.AuthService, body []byte, header http.Header) (any, error) {
+func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
 	switch mcpVersion {
 	case v20250618.PROTOCOL_VERSION:
-		return v20250618.ProcessMethod(ctx, id, method, toolset, tools, authServices, body, header)
+		return v20250618.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
 	case v20250326.PROTOCOL_VERSION:
-		return v20250326.ProcessMethod(ctx, id, method, toolset, tools, authServices, body, header)
+		return v20250326.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
 	default:
-		return v20241105.ProcessMethod(ctx, id, method, toolset, tools, authServices, body, header)
+		return v20241105.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
 	}
 }
 

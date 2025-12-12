@@ -26,6 +26,7 @@ import (
 	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 // Constants for tool configuration
@@ -128,26 +129,28 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Create parameters
-	parameters := createParameters()
+	params := createParameters()
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.FirestoreClient(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		Parameters:  params,
+		Client:      s.FirestoreClient(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
 
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
 // createParameters creates the parameter definitions for the tool
-func createParameters() tools.Parameters {
-	collectionPathParameter := tools.NewStringParameter(
+func createParameters() parameters.Parameters {
+	collectionPathParameter := parameters.NewStringParameter(
 		collectionPathKey,
 		"The relative path to the Firestore collection to query (e.g., 'users' or 'users/userId/posts'). Note: This is a relative path, NOT an absolute path like 'projects/{project_id}/databases/{database_id}/documents/...'",
 	)
@@ -158,30 +161,30 @@ func createParameters() tools.Parameters {
 - value: The value to compare against (can be string, number, boolean, or array)
 Example: {"field": "age", "op": ">", "value": 18}`
 
-	filtersParameter := tools.NewArrayParameter(
+	filtersParameter := parameters.NewArrayParameter(
 		filtersKey,
 		filtersDescription,
-		tools.NewStringParameter("item", "JSON string representation of a filter object"),
+		parameters.NewStringParameter("item", "JSON string representation of a filter object"),
 	)
 
-	orderByParameter := tools.NewStringParameter(
+	orderByParameter := parameters.NewStringParameter(
 		orderByKey,
 		"JSON string specifying the field and direction to order by (e.g., {\"field\": \"name\", \"direction\": \"ASCENDING\"}). Leave empty if not specified",
 	)
 
-	limitParameter := tools.NewIntParameterWithDefault(
+	limitParameter := parameters.NewIntParameterWithDefault(
 		limitKey,
 		defaultLimit,
 		"The maximum number of documents to return",
 	)
 
-	analyzeQueryParameter := tools.NewBooleanParameterWithDefault(
+	analyzeQueryParameter := parameters.NewBooleanParameterWithDefault(
 		analyzeQueryKey,
 		defaultAnalyze,
 		"If true, returns query explain metrics including execution statistics",
 	)
 
-	return tools.Parameters{
+	return parameters.Parameters{
 		collectionPathParameter,
 		filtersParameter,
 		orderByParameter,
@@ -195,10 +198,8 @@ var _ tools.Tool = Tool{}
 
 // Tool represents the Firestore query collection tool
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Config
+	Parameters parameters.Parameters `yaml:"parameters"`
 
 	Client      *firestoreapi.Client
 	manifest    tools.Manifest
@@ -264,7 +265,7 @@ type QueryResponse struct {
 }
 
 // Invoke executes the Firestore query based on the provided parameters
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	// Parse parameters
 	queryParams, err := t.parseQueryParameters(params)
 	if err != nil {
@@ -291,7 +292,7 @@ type queryParameters struct {
 }
 
 // parseQueryParameters extracts and validates parameters from the input
-func (t Tool) parseQueryParameters(params tools.ParamValues) (*queryParameters, error) {
+func (t Tool) parseQueryParameters(params parameters.ParamValues) (*queryParameters, error) {
 	mapParams := params.AsMap()
 
 	// Get collection path
@@ -511,8 +512,8 @@ func (t Tool) getExplainMetrics(docIterator *firestoreapi.DocumentIterator) (map
 }
 
 // ParseParams parses and validates input parameters
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 // Manifest returns the tool manifest
@@ -530,6 +531,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return false
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

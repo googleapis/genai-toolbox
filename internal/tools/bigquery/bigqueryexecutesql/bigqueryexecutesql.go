@@ -27,6 +27,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	bqutil "github.com/googleapis/genai-toolbox/internal/tools/bigquery/bigquerycommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
@@ -122,22 +124,20 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		}
 	}
 
-	sqlParameter := tools.NewStringParameter("sql", sqlDescriptionBuilder.String())
-	dryRunParameter := tools.NewBooleanParameterWithDefault(
+	sqlParameter := parameters.NewStringParameter("sql", sqlDescriptionBuilder.String())
+	dryRunParameter := parameters.NewBooleanParameterWithDefault(
 		"dry_run",
 		false,
 		"If set to true, the query will be validated and information about the execution will be returned "+
 			"without running the query. Defaults to false.",
 	)
-	parameters := tools.Parameters{sqlParameter, dryRunParameter}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, parameters)
+	params := parameters.Parameters{sqlParameter, dryRunParameter}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
 	// finish tool setup
 	t := Tool{
-		Name:             cfg.Name,
-		Kind:             kind,
-		Parameters:       parameters,
-		AuthRequired:     cfg.AuthRequired,
+		Config:           cfg,
+		Parameters:       params,
 		UseClientOAuth:   s.UseClientAuthorization(),
 		ClientCreator:    s.BigQueryClientCreator(),
 		Client:           s.BigQueryClient(),
@@ -146,7 +146,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		SessionProvider:  s.BigQuerySession(),
 		IsDatasetAllowed: s.IsDatasetAllowed,
 		AllowedDatasets:  allowedDatasets,
-		manifest:         tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		manifest:         tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest:      mcpManifest,
 	}
 	return t, nil
@@ -156,11 +156,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name           string           `yaml:"name"`
-	Kind           string           `yaml:"kind"`
-	AuthRequired   []string         `yaml:"authRequired"`
-	UseClientOAuth bool             `yaml:"useClientOAuth"`
-	Parameters     tools.Parameters `yaml:"parameters"`
+	Config
+	UseClientOAuth bool                  `yaml:"useClientOAuth"`
+	Parameters     parameters.Parameters `yaml:"parameters"`
 
 	Client           *bigqueryapi.Client
 	RestService      *bigqueryrestapi.Service
@@ -173,7 +171,11 @@ type Tool struct {
 	mcpManifest      tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	sql, ok := paramsMap["sql"].(string)
 	if !ok {
@@ -309,7 +311,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
 
 	// This block handles SELECT statements, which return a row set.
 	// We iterate through the results, convert each row into a map of
@@ -324,19 +326,20 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 		return nil, fmt.Errorf("unable to read query results: %w", err)
 	}
 	for {
-		var row map[string]bigqueryapi.Value
-		err = it.Next(&row)
+		var val []bigqueryapi.Value
+		err = it.Next(&val)
 		if err == iterator.Done {
 			break
 		}
 		if err != nil {
 			return nil, fmt.Errorf("unable to iterate through query results: %w", err)
 		}
-		vMap := make(map[string]any)
-		for key, value := range row {
-			vMap[key] = value
+		schema := it.Schema
+		row := orderedmap.Row{}
+		for i, field := range schema {
+			row.Add(field.Name, bqutil.NormalizeValue(val[i]))
 		}
-		out = append(out, vMap)
+		out = append(out, row)
 	}
 	// If the query returned any rows, return them directly.
 	if len(out) > 0 {
@@ -355,8 +358,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return "Query executed successfully and returned no content.", nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -371,6 +374,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return t.UseClientOAuth
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

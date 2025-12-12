@@ -28,16 +28,19 @@ tools:
         kind: looker-get-measures
         source: looker-source
         description: |
-          The get_measures tool retrieves the list of measures defined in
-          an explore.
+          This tool retrieves a list of measures defined within a specific Looker explore.
+          Measures are aggregatable metrics (e.g., total sales, average price, count of users)
+          that are used for calculations and quantitative analysis in your queries.
 
-          It takes two parameters, the model_name looked up from get_models and the
-          explore_name looked up from get_explores.
+          Parameters:
+          - model_name (required): The name of the LookML model, obtained from `get_models`.
+          - explore_name (required): The name of the explore within the model, obtained from `get_explores`.
 
-          If this returns a suggestions field for a measure, the contents of suggestions
-          can be used as filters for this field. If this returns a suggest_explore and
-          suggest_dimension, a query against that explore and dimension can be used to find
-          valid filters for this field.
+          Output Details:
+          - If a measure includes a `suggestions` field, its contents are valid values
+            that can be used directly as filters for that measure.
+          - If a `suggest_explore` and `suggest_dimension` are provided, you can query
+            that specified explore and dimension to retrieve a list of valid filter values.
 
 ```
 
@@ -57,7 +60,6 @@ The response is a json array with the following elements:
   "suggest_dimension": "dimension"
 }
 ```
-
 
 ## Reference
 

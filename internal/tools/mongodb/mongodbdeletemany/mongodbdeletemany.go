@@ -21,6 +21,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	mongosrc "github.com/googleapis/genai-toolbox/internal/sources/mongodb"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -46,15 +47,15 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name          string           `yaml:"name" validate:"required"`
-	Kind          string           `yaml:"kind" validate:"required"`
-	Source        string           `yaml:"source" validate:"required"`
-	AuthRequired  []string         `yaml:"authRequired" validate:"required"`
-	Description   string           `yaml:"description" validate:"required"`
-	Database      string           `yaml:"database" validate:"required"`
-	Collection    string           `yaml:"collection" validate:"required"`
-	FilterPayload string           `yaml:"filterPayload" validate:"required"`
-	FilterParams  tools.Parameters `yaml:"filterParams" validate:"required"`
+	Name          string                `yaml:"name" validate:"required"`
+	Kind          string                `yaml:"kind" validate:"required"`
+	Source        string                `yaml:"source" validate:"required"`
+	AuthRequired  []string              `yaml:"authRequired" validate:"required"`
+	Description   string                `yaml:"description" validate:"required"`
+	Database      string                `yaml:"database" validate:"required"`
+	Collection    string                `yaml:"collection" validate:"required"`
+	FilterPayload string                `yaml:"filterPayload" validate:"required"`
+	FilterParams  parameters.Parameters `yaml:"filterParams"`
 }
 
 // validate interface
@@ -81,7 +82,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	allParameters := slices.Concat(cfg.FilterParams)
 
 	// Verify no duplicate parameter names
-	err := tools.CheckDuplicateParameters(allParameters)
+	err := parameters.CheckDuplicateParameters(allParameters)
 	if err != nil {
 		return nil, err
 	}
@@ -90,24 +91,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	paramManifest := allParameters.Manifest()
 
 	if paramManifest == nil {
-		paramManifest = make([]tools.ParameterManifest, 0)
+		paramManifest = make([]parameters.ParameterManifest, 0)
 	}
 
 	// Create MCP manifest
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
 	// finish tool setup
 	return Tool{
-		Name:          cfg.Name,
-		Kind:          kind,
-		AuthRequired:  cfg.AuthRequired,
-		Collection:    cfg.Collection,
-		FilterPayload: cfg.FilterPayload,
-		FilterParams:  cfg.FilterParams,
-		AllParams:     allParameters,
-		database:      s.Client.Database(cfg.Database),
-		manifest:      tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:   mcpManifest,
+		Config:      cfg,
+		AllParams:   allParameters,
+		database:    s.Client.Database(cfg.Database),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}, nil
 }
 
@@ -115,24 +111,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name          string           `yaml:"name"`
-	Kind          string           `yaml:"kind"`
-	AuthRequired  []string         `yaml:"authRequired"`
-	Description   string           `yaml:"description"`
-	Collection    string           `yaml:"collection"`
-	FilterPayload string           `yaml:"filterPayload"`
-	FilterParams  tools.Parameters `yaml:"filterParams"`
-	AllParams     tools.Parameters `yaml:"allParams"`
+	Config
+	AllParams parameters.Parameters `yaml:"allParams"`
 
 	database    *mongo.Database
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
-	filterString, err := tools.PopulateTemplateWithJSON("MongoDBDeleteManyFilter", t.FilterPayload, paramsMap)
+	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBDeleteManyFilter", t.FilterPayload, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error populating filter: %s", err)
 	}
@@ -158,8 +148,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues, accessToken 
 	return res.DeletedCount, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.AllParams, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.AllParams, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -174,6 +164,14 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

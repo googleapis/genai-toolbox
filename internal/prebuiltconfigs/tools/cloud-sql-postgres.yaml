@@ -49,6 +49,21 @@ tools:
         source: cloudsql-pg-source
         description: "List all installed PostgreSQL extensions with their name, version, schema, owner, and description."
 
+    long_running_transactions:
+        kind: postgres-long-running-transactions
+        source: cloudsql-pg-source
+        description: "Identifies and lists database transactions that exceed a specified time limit. For each of the long running transactions, the output contains the process id, database name, user name, application name, client address, state, connection age, transaction age, query age, last activity age, wait event type, wait event, and query string."
+
+    list_locks:
+        kind: postgres-list-locks
+        source: cloudsql-pg-source
+        description: "Identifies all locks held by active processes showing the process ID, user, query text, and an aggregated list of all transactions and specific locks (relation, mode, grant status) associated with each process."
+
+    replication_stats:
+        kind: postgres-replication-stats
+        source: cloudsql-pg-source
+        description: "Lists each replica's process ID, user name, application name, backend_xmin (standby's xmin horizon reported by hot_standby_feedback), client IP address, connection state, and sync_state, along with lag sizes in bytes for sent_lag (primary to sent), write_lag (sent to written), flush_lag (written to flushed), replay_lag (flushed to replayed), and the overall total_lag (primary to replayed)."
+
     list_autovacuum_configurations:
         kind: postgres-sql
         source: cloudsql-pg-source
@@ -155,6 +170,62 @@ tools:
               description: "The SQL statement for which you want to generate plan (omit the EXPLAIN keyword)."
               required: true
 
+    list_views:
+        kind: postgres-list-views
+        source: cloudsql-pg-source
+
+    list_schemas:
+        kind: postgres-list-schemas
+        source: cloudsql-pg-source
+    
+    database_overview:
+        kind: postgres-database-overview
+        source: cloudsql-pg-source
+    
+    list_triggers:
+        kind: postgres-list-triggers
+        source: cloudsql-pg-source
+    
+    list_indexes:
+        kind: postgres-list-indexes
+        source: cloudsql-pg-source
+
+    list_sequences:
+        kind: postgres-list-sequences
+        source: cloudsql-pg-source
+
+    list_query_stats:
+        kind: postgres-list-query-stats
+        source: cloudsql-pg-source
+
+    get_column_cardinality:
+        kind: postgres-get-column-cardinality
+        source: cloudsql-pg-source
+    
+    list_table_stats:
+        kind: postgres-list-table-stats
+        source: cloudsql-pg-source
+
+    list_publication_tables:
+        kind: postgres-list-publication-tables
+        source: cloudsql-pg-source
+
+    list_tablespaces:
+        kind: postgres-list-tablespaces
+        source: cloudsql-pg-source
+
+    list_pg_settings:
+        kind: postgres-list-pg-settings
+        source: cloudsql-pg-source
+
+    list_database_stats:
+        kind: postgres-list-database-stats
+        source: cloudsql-pg-source
+
+    list_roles:
+        kind: postgres-list-roles
+        source: cloudsql-pg-source
+
 toolsets:
     cloud_sql_postgres_database_tools:
         - execute_sql
@@ -168,3 +239,20 @@ toolsets:
         - list_replication_slots
         - list_invalid_indexes
         - get_query_plan
+        - list_views
+        - list_schemas
+        - database_overview
+        - list_triggers
+        - list_indexes
+        - list_sequences
+        - long_running_transactions
+        - list_locks
+        - replication_stats
+        - list_query_stats
+        - get_column_cardinality
+        - list_publication_tables
+        - list_tablespaces
+        - list_pg_settings
+        - list_database_stats
+        - list_roles
+        - list_table_stats

@@ -52,6 +52,7 @@ instance, database and users:
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
 
 ## Install MCP Toolbox
 
@@ -254,6 +255,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
       }
     }
     ```
+
 {{% /tab %}}
 
 {{% tab header="Gemini Code Assist" lang="en" %}}
@@ -278,6 +280,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.15.0/windows/amd64/toolb
       }
     }
     ```
+
 {{% /tab %}}
 {{< /tabpane >}}
 
@@ -287,6 +290,7 @@ Your AI tool is now connected to Cloud SQL for SQL Server using MCP.
 
 The `cloud-sql-mssql-admin` server provides tools for managing your Cloud SQL
 instances and interacting with your database:
+
 * **create_instance**: Creates a new Cloud SQL for SQL Server instance.
 * **get_instance**: Gets information about a Cloud SQL instance.
 * **list_instances**: Lists Cloud SQL instances in a project.
@@ -294,6 +298,7 @@ instances and interacting with your database:
 * **list_databases**: Lists all databases for a Cloud SQL instance.
 * **create_user**: Creates a new user in a Cloud SQL instance.
 * **wait_for_operation**: Waits for a Cloud SQL operation to complete.
+* **clone_instance**: Creates a clone of an existing Cloud SQL for SQL Server instance.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
