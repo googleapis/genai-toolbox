@@ -105,6 +105,21 @@ redeploying your application.
 
 ## Getting Started
 
+### (Non-production) Running Toolbox
+
+You can run Toolbox directly with a [configuration file](#configuration):
+
+```sh
+npx @toolbox-sdk/server --tools-file tools.yaml
+```
+
+This runs the latest version of the toolbox server with your configuration file.
+
+> [!NOTE]
+> This method should only be used for non-production use cases such as
+> experimentation. For any production use-cases, please consider [Installing the
+> server](#installing-the-server) and then [running it](#running-the-server).
+
 ### Installing the server
 
 For the latest version, check the [releases page][releases] and use the
@@ -125,7 +140,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.22.0
+> export VERSION=0.23.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 > chmod +x toolbox
 > ```
@@ -138,7 +153,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.22.0
+> export VERSION=0.23.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
 > chmod +x toolbox
 > ```
@@ -151,7 +166,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.22.0
+> export VERSION=0.23.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
 > chmod +x toolbox
 > ```
@@ -164,7 +179,7 @@ To install Toolbox as a binary:
 >
 > ```cmd
 > :: see releases page for other versions
-> set VERSION=0.22.0
+> set VERSION=0.23.0
 > curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
 > ```
 >
@@ -176,7 +191,7 @@ To install Toolbox as a binary:
 >
 > ```powershell
 > # see releases page for other versions
-> $VERSION = "0.21.0"
+> $VERSION = "0.23.0"
 > curl.exe -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe"
 > ```
 >
@@ -189,7 +204,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.22.0
+export VERSION=0.23.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -213,7 +228,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.22.0
+go install github.com/googleapis/genai-toolbox@v0.23.0
 ```
 <!-- {x-release-please-end} -->
 
@@ -299,6 +314,16 @@ command:
 
 ```sh
 toolbox --tools-file "tools.yaml"
+```
+
+</details>
+
+<details>
+<summary>NPM</summary>
+
+To run Toolbox directly without manually downloading the binary (requires Node.js):
+```sh
+npx @toolbox-sdk/server --tools-file tools.yaml
 ```
 
 </details>
