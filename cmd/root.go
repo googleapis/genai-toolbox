@@ -374,6 +374,8 @@ func NewCommand(opts ...Option) *Command {
 	flags.BoolVar(&cmd.cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
 	flags.BoolVar(&cmd.cfg.UI, "ui", false, "Launches the Toolbox UI web server.")
 	flags.StringSliceVar(&cmd.cfg.AllowedOrigins, "allowed-origins", []string{"*"}, "Specifies a list of origins permitted to access this server. Defaults to '*'.")
+	flags.StringVar(&cmd.cfg.OAuthProtectedResource, "oauth-protected-resource", "", "Specifies a yaml file that contains what should be returned from /.well-known/oauth-protected-resource")
+	flags.StringVar(&cmd.cfg.OAuthAuthorizationServer, "oauth-authorization-server", "", "Specifies a yaml file that contains what should be returned from /.well-known/oauth-authorization-server")
 
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }
