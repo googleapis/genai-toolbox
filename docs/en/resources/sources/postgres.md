@@ -88,7 +88,7 @@ reputation for reliability, feature robustness, and performance.
   Lists all the user-created roles in PostgreSQL database.
 
 - [`postgres-list-stored-procedure`](../tools/postgres/postgres-list-stored-procedure.md)
-  Lists all the stored procedure in PostgreSQL database..
+  Lists all the stored procedure in PostgreSQL database.
 
 ### Pre-built Configurations
 
