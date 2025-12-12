@@ -26,12 +26,12 @@ within your Python applications or AI orchestration frameworks.
 
 Choosing the right package depends on how you are building your application:
 
-* [`toolbox-langchain`](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main/packages/toolbox-langchain):
+* [`toolbox-langchain`](langchain):
   Use this package if you are building your application using the LangChain or
   LangGraph frameworks. It provides tools that are directly compatible with the
   LangChain ecosystem (`BaseTool` interface), simplifying integration.
-* [`toolbox-llamaindex`](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main/packages/toolbox-llamaindex):
-  Use this package if you are building your application using the LlamaIndex framework. 
+* [`toolbox-llamaindex`](llamaindex):
+  Use this package if you are building your application using the LlamaIndex framework.
   It provides tools that are directly compatible with the
   LlamaIndex ecosystem (`BaseTool` interface), simplifying integration.
 * [`toolbox-core`](core):
@@ -49,7 +49,7 @@ README for detailed installation and usage instructions:
 | :------ | :---------- | :---------- | :---------------------- | :---------- | :--------- 
 | `toolbox-core` | Framework-agnostic / Custom applications | Use directly / Custom | `packages/toolbox-core/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-core/README.md) | ![pypi version](https://img.shields.io/pypi/v/toolbox-core.svg) |
 | `toolbox-langchain` | LangChain / LangGraph applications | LangChain / LangGraph | `packages/toolbox-langchain/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-langchain/README.md) | ![pypi version](https://img.shields.io/pypi/v/toolbox-langchain.svg) |
-| `toolbox-llamaindex` | LlamaIndex  applications                 | LlamaIndex            | `packages/toolbox-llamaindex/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-llamaindex/README.md) | ![pypi version](https://img.shields.io/pypi/v/toolbox-llamaindex.svg) |
+| `toolbox-llamaindex` | LlamaIndex applications | LlamaIndex | `packages/toolbox-llamaindex/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-llamaindex/README.md) | ![pypi version](https://img.shields.io/pypi/v/toolbox-llamaindex.svg) |
 
 
 [Github](https://github.com/googleapis/mcp-toolbox-sdk-python)
