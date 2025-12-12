@@ -65,7 +65,7 @@ type Source interface {
 	ToConfig() SourceConfig
 }
 
-// InitConnectionSpan adds a span for database pool connection initialization
+// InitConnectionSpan adds a span for source connection initialization.
 func InitConnectionSpan(ctx context.Context, tracer trace.Tracer, sourceKind, sourceName string) (context.Context, trace.Span) {
 	ctx, span := tracer.Start(
 		ctx,
