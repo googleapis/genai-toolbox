@@ -50,16 +50,19 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field**       | **type** | **required** | **description**                                                              |
-|-----------------|:--------:|:------------:|------------------------------------------------------------------------------|
-| kind            |  string  |     true     | Must be "trino".                                                             |
-| host            |  string  |     true     | Trino coordinator hostname (e.g. "trino.example.com")                        |
-| port            |  string  |     true     | Trino coordinator port (e.g. "8080", "8443")                                 |
-| user            |  string  |    false     | Username for authentication (e.g. "analyst"). Optional for anonymous access. |
-| password        |  string  |    false     | Password for basic authentication                                            |
-| catalog         |  string  |     true     | Default catalog to use for queries (e.g. "hive")                             |
-| schema          |  string  |     true     | Default schema to use for queries (e.g. "default")                           |
-| queryTimeout    |  string  |    false     | Query timeout duration (e.g. "30m", "1h")                                    |
-| accessToken     |  string  |    false     | JWT access token for authentication                                          |
-| kerberosEnabled | boolean  |    false     | Enable Kerberos authentication (default: false)                              |
-| sslEnabled      | boolean  |    false     | Enable SSL/TLS (default: false)                                              |
+| **field**              | **type** | **required** | **description**                                                              |
+| ---------------------- | :------: | :----------: | ---------------------------------------------------------------------------- |
+| kind                   |  string  |     true     | Must be "trino".                                                             |
+| host                   |  string  |     true     | Trino coordinator hostname (e.g. "trino.example.com")                        |
+| port                   |  string  |     true     | Trino coordinator port (e.g. "8080", "8443")                                 |
+| user                   |  string  |    false     | Username for authentication (e.g. "analyst"). Optional for anonymous access. |
+| password               |  string  |    false     | Password for basic authentication                                            |
+| catalog                |  string  |     true     | Default catalog to use for queries (e.g. "hive")                             |
+| schema                 |  string  |     true     | Default schema to use for queries (e.g. "default")                           |
+| queryTimeout           |  string  |    false     | Query timeout duration (e.g. "30m", "1h")                                    |
+| accessToken            |  string  |    false     | JWT access token for authentication                                          |
+| kerberosEnabled        | boolean  |    false     | Enable Kerberos authentication (default: false)                              |
+| sslEnabled             | boolean  |    false     | Enable SSL/TLS (default: false)                                              |
+| disableSslVerification | boolean  |    false     | Skip SSL/TLS certificate verification (default: false)                       |
+| sslCertPath            |  string  |    false     | Path to a custom SSL/TLS certificate file                                    |
+| sslCert                |  string  |    false     | Custom SSL/TLS certificate content                                           |
