@@ -229,22 +229,38 @@ Finds resources that were created within, before, or after a given date or time.
 ### Aspect Search
 To search for entries based on their attached aspects, use the following query syntax.
 
-aspect:x	Matches x as a substring of the full path to the aspect type of an aspect that is attached to the entry, in the format projectid.location.ASPECT_TYPE_ID
-aspect=x	Matches x as the full path to the aspect type of an aspect that is attached to the entry, in the format projectid.location.ASPECT_TYPE_ID
-aspect:xOPERATORvalue	
+`has:x`
+Matches `x` as a substring of the full path to the aspect type of an aspect that is attached to the entry, in the format `projectid.location.ASPECT_TYPE_ID`
+
+`has=x`
+Matches `x` as the full path to the aspect type of an aspect that is attached to the entry, in the format `projectid.location.ASPECT_TYPE_ID`
+
+`xOPERATORvalue`
 Searches for aspect field values. Matches x as a substring of the full path to the aspect type and field name of an aspect that is attached to the entry, in the format projectid.location.ASPECT_TYPE_ID.FIELD_NAME
 
-The list of supported {OPERATOR}s depends on the type of field in the aspect, as follows:
-- String: = (exact match) and : (substring)
-- All number types: =, :, <, >, <=, >=, =>, =<
-- Enum: =
-- Datetime: same as for numbers, but the values to compare are treated as datetimes instead of numbers
-- Boolean: =
+The list of supported operators depends on the type of field in the aspect, as follows:
+* **String**: `=` (exact match)
+* **All number types**: `=`, `:`, `<`, `>`, `<=`, `>=`, `=>`, `=<`
+* **Enum**: `=` (exact match only)
+* **Datetime**: same as for numbers, but the values to compare are treated as datetimes instead of numbers
+* **Boolean**: `=`
 
-Only top-level fields of the aspect are searchable. For example, all of the following queries match entries where the value of the is-enrolled field in the employee-info aspect type is true. Other entries that match on the substring are also returned.
-- aspect:example-project.us-central1.employee-info.is-enrolled=true
-- aspect:example-project.us-central1.employee=true
-- aspect:employee=true
+Only top-level fields of the aspect are searchable.
+
+* Syntax for system aspect types:
+    * `ASPECT_TYPE_ID.FIELD_NAME`
+    * `dataplex-types.ASPECT_TYPE_ID.FIELD_NAME`
+    * `dataplex-types.LOCATION.ASPECT_TYPE_ID.FIELD_NAME`
+For example, the following queries match entries where the value of the `type` field in the `bigquery-dataset` aspect is `default`:
+    * `bigquery-dataset.type=default`
+    * `dataplex-types.bigquery-dataset.type=default`
+    * `dataplex-types.global.bigquery-dataset.type=default`
+* Syntax for custom aspect types:
+    * If the aspect is created in the global region: `PROJECT_ID.ASPECT_TYPE_ID.FIELD_NAME`
+    * If the aspect is created in a specific region: `PROJECT_ID.REGION.ASPECT_TYPE_ID.FIELD_NAME`
+For example, the following queries match entries where the value of the `is-enrolled` field in the `employee-info` aspect is `true`.
+    * `example-project.us-central1.employee-info.is-enrolled=true`
+    * `example-project.employee-info.is-enrolled=true`
 
 Example:-
 You can use following filters
@@ -257,6 +273,25 @@ Logical AND and logical OR are supported. For example, foo OR bar.
 
 You can negate a predicate with a - (hyphen) or NOT prefix. For example, -name:foo returns resources with names that don't match the predicate foo.
 Logical operators are case-sensitive. `OR` and `AND` are acceptable whereas `or` and `and` are not.
+
+### Abbreviated syntax
+
+An abbreviated search syntax is also available, using `|` (vertical bar) for `OR` operators and `,` (comma) for `AND` operators.
+
+For example, to search for entries inside one of many projects using the `OR` operator, you can use the following abbreviated syntax:
+
+`projectid:(id1|id2|id3|id4)`
+
+The same search without using abbreviated syntax looks like the following:
+
+`projectid:id1 OR projectid:id2 OR projectid:id3 OR projectid:id4`
+
+To search for entries with matching column names, use the following:
+
+*   **AND**: `column:(name1,name2,name3)`
+*   **OR**: `column:(name1|name2|name3)`
+
+This abbreviated syntax works for the qualified predicates except for `label` in keyword search.
 
 ### Request
 1. Always try to rewrite the prompt using search syntax.
