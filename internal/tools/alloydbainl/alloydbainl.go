@@ -21,7 +21,6 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -47,11 +46,6 @@ type compatibleSource interface {
 	PostgresPool() *pgxpool.Pool
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &alloydbpg.Source{}
-
-var compatibleSources = [...]string{alloydbpg.SourceKind}
-
 type Config struct {
 	Name               string                `yaml:"name" validate:"required"`
 	Kind               string                `yaml:"kind" validate:"required"`
@@ -70,18 +64,6 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	numParams := len(cfg.NLConfigParameters)
 	quotedNameParts := make([]string, 0, numParams)
 	placeholderParts := make([]string, 0, numParams)
@@ -126,7 +108,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		Config:      cfg,
 		Parameters:  cfg.NLConfigParameters,
 		Statement:   stmt,
-		Pool:        s.PostgresPool(),
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: cfg.NLConfigParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
@@ -139,9 +120,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	Parameters parameters.Parameters `yaml:"parameters"`
-
-	Pool        *pgxpool.Pool
+	Parameters  parameters.Parameters `yaml:"parameters"`
 	Statement   string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
@@ -152,6 +131,16 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+	pool := source.PostgresPool()
+
 	sliceParams := params.AsSlice()
 	allParamValues := make([]any, len(sliceParams)+1)
 	allParamValues[0] = fmt.Sprintf("%s", sliceParams[0]) // nl_question
@@ -160,7 +149,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		allParamValues[i+2] = fmt.Sprintf("%s", param)
 	}
 
-	results, err := t.Pool.Query(ctx, t.Statement, allParamValues...)
+	results, err := pool.Query(ctx, t.Statement, allParamValues...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w. Query: %v , Values: %v. Toolbox v0.19.0+ is only compatible with AlloyDB AI NL v1.0.3+. Please ensure that you are using the latest AlloyDB AI NL extension", err, t.Statement, allParamValues)
 	}
@@ -203,8 +192,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
 func (t Tool) GetAuthTokenHeaderName() string {

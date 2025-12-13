@@ -50,7 +50,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	Name           string `yaml:"name" validate:"required"`
 	Kind           string `yaml:"kind" validate:"required"`
-	DefaultProject string `yaml:"defaultProject"`
+	defaultProject string `yaml:"defaultProject"`
 	UseClientOAuth bool   `yaml:"useClientOAuth"`
 }
 
@@ -108,6 +108,10 @@ func (s *Source) SourceKind() string {
 
 func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
+}
+
+func (s *Source) DefaultProject() string {
+	return s.defaultProject
 }
 
 func (s *Source) GetService(ctx context.Context, accessToken string) (*alloydbrestapi.Service, error) {
