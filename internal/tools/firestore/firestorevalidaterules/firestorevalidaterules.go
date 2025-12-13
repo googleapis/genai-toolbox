@@ -21,7 +21,6 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/firebaserules/v1"
@@ -53,11 +52,6 @@ type compatibleSource interface {
 	GetProjectId() string
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &firestoreds.Source{}
-
-var compatibleSources = [...]string{firestoreds.SourceKind}
-
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
@@ -74,18 +68,6 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	// Create parameters
 	params := createParameters()
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
@@ -94,8 +76,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	t := Tool{
 		Config:      cfg,
 		Parameters:  params,
-		RulesClient: s.FirebaseRulesClient(),
-		ProjectId:   s.GetProjectId(),
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
@@ -117,10 +97,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	Parameters parameters.Parameters `yaml:"parameters"`
-
-	RulesClient *firebaserules.Service
-	ProjectId   string
+	Parameters  parameters.Parameters `yaml:"parameters"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -154,11 +131,20 @@ type ValidationResult struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+
 	mapParams := params.AsMap()
 
 	// Get source parameter
-	source, ok := mapParams[sourceKey].(string)
-	if !ok || source == "" {
+	sourceParam, ok := mapParams[sourceKey].(string)
+	if !ok || sourceParam == "" {
 		return nil, fmt.Errorf("invalid or missing '%s' parameter", sourceKey)
 	}
 
@@ -168,7 +154,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			Files: []*firebaserules.File{
 				{
 					Name:    "firestore.rules",
-					Content: source,
+					Content: sourceParam,
 				},
 			},
 		},
@@ -179,14 +165,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	// Call the test API
-	projectName := fmt.Sprintf("projects/%s", t.ProjectId)
-	response, err := t.RulesClient.Projects.Test(projectName, testRequest).Context(ctx).Do()
+	projectName := fmt.Sprintf("projects/%s", source.GetProjectId())
+	response, err := source.FirebaseRulesClient().Projects.Test(projectName, testRequest).Context(ctx).Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate rules: %w", err)
 	}
 
 	// Process the response
-	result := t.processValidationResponse(response, source)
+	result := t.processValidationResponse(response, sourceParam)
 
 	return result, nil
 }
@@ -287,8 +273,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
 func (t Tool) GetAuthTokenHeaderName() string {
