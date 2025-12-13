@@ -147,22 +147,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	params := parameters.Parameters{userQueryParameter, tableRefsParameter}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
-	// Get cloud-platform token source for Gemini Data Analytics API during initialization
-	var bigQueryTokenSourceWithScope oauth2.TokenSource
-	if !s.UseClientAuthorization() {
-		ctx := context.Background()
-		ts, err := s.BigQueryTokenSourceWithScope(ctx, "https://www.googleapis.com/auth/cloud-platform")
-		if err != nil {
-			return nil, fmt.Errorf("failed to get cloud-platform token source: %w", err)
-		}
-		bigQueryTokenSourceWithScope = ts
-	}
-
 	// finish tool setup
 	t := Tool{
 		Config:      cfg,
 		Parameters:  params,
-		TokenSource: bigQueryTokenSourceWithScope,
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
@@ -175,7 +163,6 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Config
 	Parameters  parameters.Parameters `yaml:"parameters"`
-	TokenSource oauth2.TokenSource
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -208,11 +195,17 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			return nil, fmt.Errorf("error parsing access token: %w", err)
 		}
 	} else {
+		// Get cloud-platform token source for Gemini Data Analytics API during initialization
+		tokenSource, err := source.BigQueryTokenSourceWithScope(ctx, "https://www.googleapis.com/auth/cloud-platform")
+		if err != nil {
+			return nil, fmt.Errorf("failed to get cloud-platform token source: %w", err)
+		}
+
 		// Use cloud-platform token source for Gemini Data Analytics API
-		if t.TokenSource == nil {
+		if tokenSource == nil {
 			return nil, fmt.Errorf("cloud-platform token source is missing")
 		}
-		token, err := t.TokenSource.Token()
+		token, err := tokenSource.Token()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get token from cloud-platform token source: %w", err)
 		}
