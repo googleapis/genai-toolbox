@@ -23,7 +23,6 @@ import (
 	"github.com/cenkalti/backoff/v5"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	dataplexds "github.com/googleapis/genai-toolbox/internal/sources/dataplex"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
@@ -49,11 +48,6 @@ type compatibleSource interface {
 	ProjectID() string
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &dataplexds.Source{}
-
-var compatibleSources = [...]string{dataplexds.SourceKind}
-
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
@@ -70,17 +64,6 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// Initialize the search configuration with the provided sources
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	query := parameters.NewStringParameter("query", "The query against which aspect type should be matched.")
 	pageSize := parameters.NewIntParameterWithDefault("pageSize", 5, "Number of returned aspect types in the search page.")
 	orderBy := parameters.NewStringParameterWithDefault("orderBy", "relevance", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
@@ -89,10 +72,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
 	t := Tool{
-		Config:        cfg,
-		Parameters:    params,
-		CatalogClient: s.CatalogClient(),
-		ProjectID:     s.ProjectID(),
+		Config:     cfg,
+		Parameters: params,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   params.Manifest(),
@@ -105,11 +86,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 type Tool struct {
 	Config
-	Parameters    parameters.Parameters
-	CatalogClient *dataplexapi.CatalogClient
-	ProjectID     string
-	manifest      tools.Manifest
-	mcpManifest   tools.McpManifest
+	Parameters  parameters.Parameters
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -117,6 +96,15 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+
 	// Invoke the tool with the provided parameters
 	paramsMap := params.AsMap()
 	query, _ := paramsMap["query"].(string)
@@ -126,16 +114,16 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// Create SearchEntriesRequest with the provided parameters
 	req := &dataplexpb.SearchEntriesRequest{
 		Query:          query + " type=projects/dataplex-types/locations/global/entryTypes/aspecttype",
-		Name:           fmt.Sprintf("projects/%s/locations/global", t.ProjectID),
+		Name:           fmt.Sprintf("projects/%s/locations/global", source.ProjectID()),
 		PageSize:       pageSize,
 		OrderBy:        orderBy,
 		SemanticSearch: true,
 	}
 
 	// Perform the search using the CatalogClient - this will return an iterator
-	it := t.CatalogClient.SearchEntries(ctx, req)
+	it := source.CatalogClient().SearchEntries(ctx, req)
 	if it == nil {
-		return nil, fmt.Errorf("failed to create search entries iterator for project %q", t.ProjectID)
+		return nil, fmt.Errorf("failed to create search entries iterator for project %q", source.ProjectID())
 	}
 
 	// Create an instance of exponential backoff with default values for retrying GetAspectType calls
@@ -155,7 +143,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 
 		operation := func() (*dataplexpb.AspectType, error) {
-			aspectType, err := t.CatalogClient.GetAspectType(ctx, getAspectTypeReq)
+			aspectType, err := source.CatalogClient().GetAspectType(ctx, getAspectTypeReq)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get aspect type for entry %q: %w", resourceName, err)
 			}
@@ -192,8 +180,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
 func (t Tool) GetAuthTokenHeaderName() string {
