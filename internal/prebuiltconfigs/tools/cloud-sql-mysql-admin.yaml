@@ -46,6 +46,9 @@ tools:
   create_backup:
     kind: cloud-sql-create-backup
     source: cloud-sql-admin-source
+  restore_backup:
+    kind: cloud-sql-restore-backup
+    source: cloud-sql-admin-source
 
 toolsets:
   cloud_sql_mysql_admin_tools:
@@ -58,3 +61,4 @@ toolsets:
     - wait_for_operation
     - clone_instance
     - create_backup
+    - restore_backup
