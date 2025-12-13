@@ -107,9 +107,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Config:    r,
-		BaseURL:   "https://monitoring.googleapis.com",
-		Client:    client,
-		UserAgent: ua,
+		baseURL:   "https://monitoring.googleapis.com",
+		client:    client,
+		userAgent: ua,
 	}
 	return s, nil
 }
@@ -118,9 +118,9 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Config
-	BaseURL   string `yaml:"baseUrl"`
-	Client    *http.Client
-	UserAgent string
+	baseURL   string
+	client    *http.Client
+	userAgent string
 }
 
 func (s *Source) SourceKind() string {
@@ -131,6 +131,18 @@ func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
 }
 
+func (s *Source) BaseURL() string {
+	return s.baseURL
+}
+
+func (s *Source) Client() *http.Client {
+	return s.client
+}
+
+func (s *Source) UserAgent() string {
+	return s.userAgent
+}
+
 func (s *Source) GetClient(ctx context.Context, accessToken string) (*http.Client, error) {
 	if s.UseClientOAuth {
 		if accessToken == "" {
@@ -139,7 +151,7 @@ func (s *Source) GetClient(ctx context.Context, accessToken string) (*http.Clien
 		token := &oauth2.Token{AccessToken: accessToken}
 		return oauth2.NewClient(ctx, oauth2.StaticTokenSource(token)), nil
 	}
-	return s.Client, nil
+	return s.client, nil
 }
 
 func (s *Source) UseClientAuthorization() bool {

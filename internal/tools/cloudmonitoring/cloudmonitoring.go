@@ -23,7 +23,6 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	cloudmonitoringsrc "github.com/googleapis/genai-toolbox/internal/sources/cloudmonitoring"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
@@ -44,6 +43,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
+type compatibleSource interface {
+	BaseURL() string
+	Client() *http.Client
+	UserAgent() string
+}
+
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
@@ -60,18 +65,6 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(*cloudmonitoringsrc.Source)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloudmonitoring`", kind)
-	}
-
 	// Define the parameters internally instead of from the config file.
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameterWithRequired("projectId", "The Id of the Google Cloud project.", true),
@@ -83,9 +76,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return Tool{
 		Config:      cfg,
 		AllParams:   allParameters,
-		BaseURL:     s.BaseURL,
-		UserAgent:   s.UserAgent,
-		Client:      s.Client,
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}, nil
@@ -97,9 +87,6 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Config
 	AllParams   parameters.Parameters `yaml:"allParams"`
-	BaseURL     string                `yaml:"baseURL"`
-	UserAgent   string
-	Client      *http.Client
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -109,6 +96,15 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+
 	paramsMap := params.AsMap()
 	projectID, ok := paramsMap["projectId"].(string)
 	if !ok {
@@ -119,7 +115,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("query parameter not found or not a string")
 	}
 
-	url := fmt.Sprintf("%s/v1/projects/%s/location/global/prometheus/api/v1/query", t.BaseURL, projectID)
+	url := fmt.Sprintf("%s/v1/projects/%s/location/global/prometheus/api/v1/query", source.BaseURL(), projectID)
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -130,9 +126,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	q.Add("query", query)
 	req.URL.RawQuery = q.Encode()
 
-	req.Header.Set("User-Agent", t.UserAgent)
+	req.Header.Set("User-Agent", source.UserAgent())
 
-	resp, err := t.Client.Do(req)
+	resp, err := source.Client().Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -175,8 +171,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return true
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
 func (t Tool) GetAuthTokenHeaderName() string {
