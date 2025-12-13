@@ -84,7 +84,7 @@ type Tool interface {
 	Authorized([]string) bool
 	RequiresClientAuthorization(SourceProvider) (bool, error)
 	ToConfig() ToolConfig
-	GetAuthTokenHeaderName() string
+	GetAuthTokenHeaderName(SourceProvider) (string, error)
 }
 
 // SourceProvider defines the minimal view of the server.ResourceManager
