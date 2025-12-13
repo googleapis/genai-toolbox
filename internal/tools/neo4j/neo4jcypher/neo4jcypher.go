@@ -19,7 +19,6 @@ import (
 	"fmt"
 
 	"github.com/goccy/go-yaml"
-	neo4jsc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/helpers"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 
@@ -49,11 +48,6 @@ type compatibleSource interface {
 	Neo4jDatabase() string
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &neo4jsc.Source{}
-
-var compatibleSources = [...]string{neo4jsc.SourceKind}
-
 type Config struct {
 	Name         string                `yaml:"name" validate:"required"`
 	Kind         string                `yaml:"kind" validate:"required"`
@@ -72,25 +66,11 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, cfg.Parameters)
 
 	// finish tool setup
 	t := Tool{
 		Config:      cfg,
-		Driver:      s.Neo4jDriver(),
-		Database:    s.Neo4jDatabase(),
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
@@ -102,18 +82,24 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-
-	Driver      neo4j.DriverWithContext
-	Database    string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+
 	paramsMap := params.AsMap()
 
-	config := neo4j.ExecuteQueryWithDatabase(t.Database)
-	results, err := neo4j.ExecuteQuery[*neo4j.EagerResult](ctx, t.Driver, t.Statement, paramsMap,
+	config := neo4j.ExecuteQueryWithDatabase(source.Neo4jDatabase())
+	results, err := neo4j.ExecuteQuery[*neo4j.EagerResult](ctx, source.Neo4jDriver(), t.Statement, paramsMap,
 		neo4j.EagerResultTransformer, config)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
@@ -149,8 +135,8 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {

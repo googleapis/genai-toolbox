@@ -22,7 +22,6 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	neo4jsc "github.com/googleapis/genai-toolbox/internal/sources/neo4j"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/cache"
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/helpers"
@@ -58,12 +57,6 @@ type compatibleSource interface {
 	Neo4jDatabase() string
 }
 
-// Statically verify that our compatible source implementation is valid.
-var _ compatibleSource = &neo4jsc.Source{}
-
-// compatibleSources lists the kinds of sources that are compatible with this tool.
-var compatibleSources = [...]string{neo4jsc.SourceKind}
-
 // Config holds the configuration settings for the Neo4j schema tool.
 // These settings are typically read from a YAML file.
 type Config struct {
@@ -85,17 +78,6 @@ func (cfg Config) ToolConfigKind() string {
 
 // Initialize sets up the tool with its dependencies and returns a ready-to-use Tool instance.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// Verify that the specified source exists.
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// Verify the source is of a compatible kind.
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
 
 	params := parameters.Parameters{}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
@@ -109,8 +91,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Finish tool setup by creating the Tool instance.
 	t := Tool{
 		Config:      cfg,
-		Driver:      s.Neo4jDriver(),
-		Database:    s.Neo4jDatabase(),
 		cache:       cache.NewCache(),
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
@@ -125,10 +105,7 @@ var _ tools.Tool = Tool{}
 // It holds the Neo4j driver, database information, and a cache for the schema.
 type Tool struct {
 	Config
-	Driver   neo4j.DriverWithContext
-	Database string
-	cache    *cache.Cache
-
+	cache       *cache.Cache
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -136,6 +113,15 @@ type Tool struct {
 // Invoke executes the tool's main logic: fetching the Neo4j schema.
 // It first checks the cache for a valid schema before extracting it from the database.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+
 	// Check if a valid schema is already in the cache.
 	if cachedSchema, ok := t.cache.Get("schema"); ok {
 		if schema, ok := cachedSchema.(*types.SchemaInfo); ok {
@@ -144,7 +130,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	// If not cached, extract the schema from the database.
-	schema, err := t.extractSchema(ctx)
+	schema, err := t.extractSchema(ctx, source)
 	if err != nil {
 		return nil, fmt.Errorf("failed to extract database schema: %w", err)
 	}
@@ -176,16 +162,16 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
 // checkAPOCProcedures verifies if essential APOC procedures are available in the database.
 // It returns true only if all required procedures are found.
-func (t Tool) checkAPOCProcedures(ctx context.Context) (bool, error) {
+func (t Tool) checkAPOCProcedures(ctx context.Context, source compatibleSource) (bool, error) {
 	proceduresToCheck := []string{"apoc.meta.schema", "apoc.meta.cypher.types"}
 
-	session := t.Driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: t.Database})
+	session := source.Neo4jDriver().NewSession(ctx, neo4j.SessionConfig{DatabaseName: source.Neo4jDatabase()})
 	defer session.Close(ctx)
 
 	// This query efficiently counts how many of the specified procedures exist.
@@ -218,7 +204,7 @@ func (t Tool) checkAPOCProcedures(ctx context.Context) (bool, error) {
 
 // extractSchema orchestrates the concurrent extraction of different parts of the database schema.
 // It runs several extraction tasks in parallel for efficiency.
-func (t Tool) extractSchema(ctx context.Context) (*types.SchemaInfo, error) {
+func (t Tool) extractSchema(ctx context.Context, source compatibleSource) (*types.SchemaInfo, error) {
 	schema := &types.SchemaInfo{}
 	var mu sync.Mutex
 
@@ -230,7 +216,7 @@ func (t Tool) extractSchema(ctx context.Context) (*types.SchemaInfo, error) {
 		{
 			name: "database-info",
 			fn: func() error {
-				dbInfo, err := t.extractDatabaseInfo(ctx)
+				dbInfo, err := t.extractDatabaseInfo(ctx, source)
 				if err != nil {
 					return fmt.Errorf("failed to extract database info: %w", err)
 				}
@@ -244,7 +230,7 @@ func (t Tool) extractSchema(ctx context.Context) (*types.SchemaInfo, error) {
 			name: "schema-extraction",
 			fn: func() error {
 				// Check if APOC procedures are available.
-				hasAPOC, err := t.checkAPOCProcedures(ctx)
+				hasAPOC, err := t.checkAPOCProcedures(ctx, source)
 				if err != nil {
 					return fmt.Errorf("failed to check APOC procedures: %w", err)
 				}
@@ -255,9 +241,9 @@ func (t Tool) extractSchema(ctx context.Context) (*types.SchemaInfo, error) {
 
 				// Use APOC if available for a more detailed schema; otherwise, use native queries.
 				if hasAPOC {
-					nodeLabels, relationships, stats, err = t.GetAPOCSchema(ctx)
+					nodeLabels, relationships, stats, err = t.GetAPOCSchema(ctx, source)
 				} else {
-					nodeLabels, relationships, stats, err = t.GetSchemaWithoutAPOC(ctx, 100)
+					nodeLabels, relationships, stats, err = t.GetSchemaWithoutAPOC(ctx, source, 100)
 				}
 				if err != nil {
 					return fmt.Errorf("failed to get schema: %w", err)
@@ -274,7 +260,7 @@ func (t Tool) extractSchema(ctx context.Context) (*types.SchemaInfo, error) {
 		{
 			name: "constraints",
 			fn: func() error {
-				constraints, err := t.extractConstraints(ctx)
+				constraints, err := t.extractConstraints(ctx, source)
 				if err != nil {
 					return fmt.Errorf("failed to extract constraints: %w", err)
 				}
@@ -287,7 +273,7 @@ func (t Tool) extractSchema(ctx context.Context) (*types.SchemaInfo, error) {
 		{
 			name: "indexes",
 			fn: func() error {
-				indexes, err := t.extractIndexes(ctx)
+				indexes, err := t.extractIndexes(ctx, source)
 				if err != nil {
 					return fmt.Errorf("failed to extract indexes: %w", err)
 				}
@@ -329,7 +315,7 @@ func (t Tool) extractSchema(ctx context.Context) (*types.SchemaInfo, error) {
 }
 
 // GetAPOCSchema extracts schema information using the APOC library, which provides detailed metadata.
-func (t Tool) GetAPOCSchema(ctx context.Context) ([]types.NodeLabel, []types.Relationship, *types.Statistics, error) {
+func (t Tool) GetAPOCSchema(ctx context.Context, source compatibleSource) ([]types.NodeLabel, []types.Relationship, *types.Statistics, error) {
 	var nodeLabels []types.NodeLabel
 	var relationships []types.Relationship
 	stats := &types.Statistics{
@@ -444,7 +430,7 @@ func (t Tool) GetAPOCSchema(ctx context.Context) ([]types.NodeLabel, []types.Rel
 			fn   func(session neo4j.SessionWithContext) error
 		}) {
 			defer wg.Done()
-			session := t.Driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: t.Database})
+			session := source.Neo4jDriver().NewSession(ctx, neo4j.SessionConfig{DatabaseName: source.Neo4jDatabase()})
 			defer session.Close(ctx)
 			if err := task.fn(session); err != nil {
 				handleError(fmt.Errorf("task %s failed: %w", task.name, err))
@@ -461,7 +447,7 @@ func (t Tool) GetAPOCSchema(ctx context.Context) ([]types.NodeLabel, []types.Rel
 
 // GetSchemaWithoutAPOC extracts schema information using native Cypher queries.
 // This serves as a fallback for databases without APOC installed.
-func (t Tool) GetSchemaWithoutAPOC(ctx context.Context, sampleSize int) ([]types.NodeLabel, []types.Relationship, *types.Statistics, error) {
+func (t Tool) GetSchemaWithoutAPOC(ctx context.Context, source compatibleSource, sampleSize int) ([]types.NodeLabel, []types.Relationship, *types.Statistics, error) {
 	nodePropsMap := make(map[string]map[string]map[string]bool)
 	relPropsMap := make(map[string]map[string]map[string]bool)
 	nodeCounts := make(map[string]int64)
@@ -609,7 +595,7 @@ func (t Tool) GetSchemaWithoutAPOC(ctx context.Context, sampleSize int) ([]types
 			fn   func(session neo4j.SessionWithContext) error
 		}) {
 			defer wg.Done()
-			session := t.Driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: t.Database})
+			session := source.Neo4jDriver().NewSession(ctx, neo4j.SessionConfig{DatabaseName: source.Neo4jDatabase()})
 			defer session.Close(ctx)
 			if err := task.fn(session); err != nil {
 				handleError(fmt.Errorf("task %s failed: %w", task.name, err))
@@ -627,8 +613,8 @@ func (t Tool) GetSchemaWithoutAPOC(ctx context.Context, sampleSize int) ([]types
 }
 
 // extractDatabaseInfo retrieves general information about the Neo4j database instance.
-func (t Tool) extractDatabaseInfo(ctx context.Context) (*types.DatabaseInfo, error) {
-	session := t.Driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: t.Database})
+func (t Tool) extractDatabaseInfo(ctx context.Context, source compatibleSource) (*types.DatabaseInfo, error) {
+	session := source.Neo4jDriver().NewSession(ctx, neo4j.SessionConfig{DatabaseName: source.Neo4jDatabase()})
 	defer session.Close(ctx)
 
 	result, err := session.Run(ctx, "CALL dbms.components() YIELD name, versions, edition", nil)
@@ -649,8 +635,8 @@ func (t Tool) extractDatabaseInfo(ctx context.Context) (*types.DatabaseInfo, err
 }
 
 // extractConstraints fetches all schema constraints from the database.
-func (t Tool) extractConstraints(ctx context.Context) ([]types.Constraint, error) {
-	session := t.Driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: t.Database})
+func (t Tool) extractConstraints(ctx context.Context, source compatibleSource) ([]types.Constraint, error) {
+	session := source.Neo4jDriver().NewSession(ctx, neo4j.SessionConfig{DatabaseName: source.Neo4jDatabase()})
 	defer session.Close(ctx)
 
 	result, err := session.Run(ctx, "SHOW CONSTRAINTS", nil)
@@ -678,8 +664,8 @@ func (t Tool) extractConstraints(ctx context.Context) ([]types.Constraint, error
 }
 
 // extractIndexes fetches all schema indexes from the database.
-func (t Tool) extractIndexes(ctx context.Context) ([]types.Index, error) {
-	session := t.Driver.NewSession(ctx, neo4j.SessionConfig{DatabaseName: t.Database})
+func (t Tool) extractIndexes(ctx context.Context, source compatibleSource) ([]types.Index, error) {
+	session := source.Neo4jDriver().NewSession(ctx, neo4j.SessionConfig{DatabaseName: source.Neo4jDatabase()})
 	defer session.Close(ctx)
 
 	result, err := session.Run(ctx, "SHOW INDEXES", nil)
