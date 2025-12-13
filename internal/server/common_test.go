@@ -119,8 +119,8 @@ func (t MockTool) McpManifest() tools.McpManifest {
 	return mcpManifest
 }
 
-func (t MockTool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t MockTool) GetAuthTokenHeaderName(tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }
 
 // MockPrompt is used to mock prompts in tests
