@@ -24,5 +24,23 @@
       ],
       pinDigests: true,
     },
+    {
+      groupName: 'Go',
+      matchManagers: [
+        'gomod',
+      ],
+    },
+    {
+      groupName: 'Node',
+      matchManagers: [
+        'npm',
+      ],
+    },
+    {
+      groupName: 'Pip',
+      matchManagers: [
+        'pip_requirements',
+      ],
+    },
   ],
 }
