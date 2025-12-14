@@ -46,6 +46,11 @@ func ContextWithNewLogger() (context.Context, error) {
 	return util.WithLogger(ctx, logger), nil
 }
 
+// ContextWithUserAgent creates a new context with a specified user agent string.
+func ContextWithUserAgent(ctx context.Context, userAgent string) context.Context {
+	return util.WithUserAgent(ctx, userAgent)
+}
+
 // WaitForString waits until the server logs a single line that matches the provided regex.
 // returns the output of whatever the server sent so far.
 func WaitForString(ctx context.Context, re *regexp.Regexp, pr io.ReadCloser) (string, error) {
