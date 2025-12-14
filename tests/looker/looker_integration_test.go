@@ -229,6 +229,11 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
+			"search_permission_sets": map[string]any{
+				"kind":        "looker-search-permission-sets",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 		},
 	}
 
@@ -1258,6 +1263,9 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "{\"column_name\":\"EmpID\",\"data_type_database\":\"int\",\"data_type_looker\":\"number\",\"sql_escaped_column_name\":\"EmpID\"}"
 	tests.RunToolInvokeParametersTest(t, "get_connection_table_columns", []byte(`{"conn": "thelook", "schema": "demo_db", "tables": "Employees"}`), wantResult)
+
+	wantResult = "Admin"
+	tests.RunToolInvokeParametersTest(t, "search_permission_sets", []byte(`{"name": "Admin"}`), wantResult)
 
 	wantResult = "/login/embed?t=" // testing for specific substring, since url is dynamic
 	tests.RunToolInvokeParametersTest(t, "generate_embed_url", []byte(`{"type": "dashboards", "id": "1"}`), wantResult)

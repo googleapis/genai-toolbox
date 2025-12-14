@@ -152,6 +152,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerqueryurl"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerrundashboard"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerrunlook"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookersearchpermissionsets"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerupdateprojectfile"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mindsdb/mindsdbexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mindsdb/mindsdbsql"

@@ -1042,6 +1042,25 @@ tools:
           such as `table_name`, `column_name`, `data_type`, and `is_nullable`.
 
 
+    search_permission_sets:
+        kind: looker-search-permission-sets
+        source: looker-source
+        description: |
+          This tool searches for permission sets in the Looker instance.
+          Permission sets define what actions a user or group can perform.
+          The output includes details like the permission set's `id`, `name`, `permissions`, and `all_access`.
+
+          Parameters:
+          - name (optional): The name of the permission set.
+          - id (optional): The unique id of the permission set.
+          - limit (optional): The number of results to return.
+          - offset (optional): The number of results to skip before returning.
+
+          Output:
+          A JSON array of objects, where each object represents a permission set and contains details
+          such as `id`, `name`, `permissions` (list of permission strings) and `all_access` (boolean).
+          
+
 toolsets:
     looker_tools:
         - get_models
@@ -1077,3 +1096,4 @@ toolsets:
         - get_connection_databases
         - get_connection_tables
         - get_connection_table_columns
+        - search_permission_sets
