@@ -288,8 +288,8 @@ The same search without using abbreviated syntax looks like the following:
 
 To search for entries with matching column names, use the following:
 
-*   **AND**: `column:(name1,name2,name3)`
-*   **OR**: `column:(name1|name2|name3)`
+* **AND**: `column:(name1,name2,name3)`
+* **OR**: `column:(name1|name2|name3)`
 
 This abbreviated syntax works for the qualified predicates except for `label` in keyword search.
 
