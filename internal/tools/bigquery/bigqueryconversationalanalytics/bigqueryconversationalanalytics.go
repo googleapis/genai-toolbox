@@ -570,6 +570,6 @@ func appendMessage(messages []map[string]any, newMessage map[string]any) []map[s
 	return append(messages, newMessage)
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }
