@@ -108,9 +108,10 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Config:  r,
-		Client:  client,
-		BaseURL: Endpoint,
+		Config:    r,
+		Client:    client,
+		BaseURL:   Endpoint,
+		userAgent: ua,
 	}
 	return s, nil
 }
@@ -119,8 +120,9 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Config
-	Client  *http.Client
-	BaseURL string
+	Client    *http.Client
+	BaseURL   string
+	userAgent string
 }
 
 func (s *Source) SourceKind() string {
@@ -138,9 +140,8 @@ func (s *Source) GetClient(ctx context.Context, accessToken string) (*http.Clien
 		}
 		token := &oauth2.Token{AccessToken: accessToken}
 		baseClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
-		ua, _ := util.UserAgentFromContext(ctx)
 		baseClient.Transport = &userAgentRoundTripper{
-			userAgent: ua,
+			userAgent: s.userAgent,
 			next:      baseClient.Transport,
 		}
 		return baseClient, nil

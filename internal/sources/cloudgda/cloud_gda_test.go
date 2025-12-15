@@ -16,6 +16,8 @@ package cloudgda_test
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"testing"
 
 	yaml "github.com/goccy/go-yaml"
@@ -127,7 +129,19 @@ func TestFailParseFromYaml(t *testing.T) {
 }
 
 func TestInitialize(t *testing.T) {
-	t.Parallel()
+	// Create a dummy credentials file for testing ADC
+	credFile := filepath.Join(t.TempDir(), "application_default_credentials.json")
+	dummyCreds := `{
+		"client_id": "foo",
+		"client_secret": "bar",
+		"refresh_token": "baz",
+		"type": "authorized_user"
+	}`
+	if err := os.WriteFile(credFile, []byte(dummyCreds), 0644); err != nil {
+		t.Fatalf("failed to write dummy credentials file: %v", err)
+	}
+	t.Setenv("GOOGLE_APPLICATION_CREDENTIALS", credFile)
+
 	// Use ContextWithUserAgent to avoid "unable to retrieve user agent" error
 	ctx := testutils.ContextWithUserAgent(context.Background(), "test-user-agent")
 	tracer := noop.NewTracerProvider().Tracer("test")
