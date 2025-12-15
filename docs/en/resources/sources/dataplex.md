@@ -236,7 +236,7 @@ Matches `x` as a substring of the full path to the aspect type of an aspect that
 Matches `x` as the full path to the aspect type of an aspect that is attached to the entry, in the format `projectid.location.ASPECT_TYPE_ID`
 
 `xOPERATORvalue`
-Searches for aspect field values. Matches x as a substring of the full path to the aspect type and field name of an aspect that is attached to the entry, in the format projectid.location.ASPECT_TYPE_ID.FIELD_NAME
+Searches for aspect field values. Matches x as a substring of the full path to the aspect type and field name of an aspect that is attached to the entry, in the format `projectid.location.ASPECT_TYPE_ID.FIELD_NAME`
 
 The list of supported operators depends on the type of field in the aspect, as follows:
 * **String**: `=` (exact match)
