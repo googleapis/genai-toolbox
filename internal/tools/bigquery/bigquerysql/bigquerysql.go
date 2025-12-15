@@ -57,11 +57,6 @@ type compatibleSource interface {
 	UseClientAuthorization() bool
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &bigqueryds.Source{}
-
-var compatibleSources = [...]string{bigqueryds.SourceKind}
-
 type Config struct {
 	Name               string                `yaml:"name" validate:"required"`
 	Kind               string                `yaml:"kind" validate:"required"`
@@ -81,18 +76,6 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	allParameters, paramManifest, err := parameters.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
 	if err != nil {
 		return nil, err
@@ -102,15 +85,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Config:          cfg,
-		AllParams:       allParameters,
-		UseClientOAuth:  s.UseClientAuthorization(),
-		Client:          s.BigQueryClient(),
-		RestService:     s.BigQueryRestService(),
-		SessionProvider: s.BigQuerySession(),
-		ClientCreator:   s.BigQueryClientCreator(),
-		manifest:        tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:     mcpManifest,
+		Config:      cfg,
+		AllParams:   allParameters,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -120,15 +98,9 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	UseClientOAuth bool                  `yaml:"useClientOAuth"`
-	AllParams      parameters.Parameters `yaml:"allParams"`
-
-	Client          *bigqueryapi.Client
-	RestService     *bigqueryrestapi.Service
-	SessionProvider bigqueryds.BigQuerySessionProvider
-	ClientCreator   bigqueryds.BigqueryClientCreator
-	manifest        tools.Manifest
-	mcpManifest     tools.McpManifest
+	AllParams   parameters.Parameters `yaml:"allParams"`
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -136,6 +108,15 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+
 	highLevelParams := make([]bigqueryapi.QueryParameter, 0, len(t.Parameters))
 	lowLevelParams := make([]*bigqueryrestapi.QueryParameter, 0, len(t.Parameters))
 
@@ -212,16 +193,16 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		lowLevelParams = append(lowLevelParams, lowLevelParam)
 	}
 
-	bqClient := t.Client
-	restService := t.RestService
+	bqClient := source.BigQueryClient()
+	restService := source.BigQueryRestService()
 
 	// Initialize new client if using user OAuth token
-	if t.UseClientOAuth {
+	if source.UseClientAuthorization() {
 		tokenStr, err := accessToken.ParseBearerToken()
 		if err != nil {
 			return nil, fmt.Errorf("error parsing access token: %w", err)
 		}
-		bqClient, restService, err = t.ClientCreator(tokenStr, true)
+		bqClient, restService, err = source.BigQueryClientCreator()(tokenStr, true)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
 		}
@@ -232,8 +213,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	query.Location = bqClient.Location
 
 	connProps := []*bigqueryapi.ConnectionProperty{}
-	if t.SessionProvider != nil {
-		session, err := t.SessionProvider(ctx)
+	if source.BigQuerySession() != nil {
+		session, err := source.BigQuerySession()(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get BigQuery session: %w", err)
 		}
@@ -311,8 +292,17 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return t.UseClientOAuth
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return false, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return false, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+	return source.UseClientAuthorization(), nil
 }
 
 func (t Tool) GetAuthTokenHeaderName() string {
