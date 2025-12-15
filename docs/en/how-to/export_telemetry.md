@@ -79,11 +79,15 @@ There are a couple of steps to run and use a Collector.
     ```
 
 1. Run toolbox with the `--telemetry-otlp` flag. Configure it to send them to
-   `http://127.0.0.1:4553` (for HTTP) or the Collector's URL.
+   `127.0.0.1:4553` (for HTTP) or the Collector's URL.
 
     ```bash
-    ./toolbox --telemetry-otlp=http://127.0.0.1:4553
+    ./toolbox --telemetry-otlp=127.0.0.1:4553
     ```
+
+    {{< tip note >}}
+    To pass an insecure endpoint, set environment variable `OTEL_EXPORTER_OTLP_INSECURE=true`.
+    {{< /tip >}}
 
 1. Once telemetry datas are collected, you can view them in your telemetry
    backend. If you are using GCP exporters, telemetry will be visible in GCP
