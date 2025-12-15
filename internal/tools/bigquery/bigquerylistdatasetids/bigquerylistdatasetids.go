@@ -52,11 +52,6 @@ type compatibleSource interface {
 	BigQueryAllowedDatasets() []string
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &bigqueryds.Source{}
-
-var compatibleSources = [...]string{bigqueryds.SourceKind}
-
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
@@ -82,7 +77,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, cfg.Source)
 	}
 
 	var projectParameter parameters.Parameter
@@ -103,14 +98,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Config:          cfg,
-		Parameters:      params,
-		UseClientOAuth:  s.UseClientAuthorization(),
-		ClientCreator:   s.BigQueryClientCreator(),
-		Client:          s.BigQueryClient(),
-		AllowedDatasets: allowedDatasets,
-		manifest:        tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:     mcpManifest,
+		Config:      cfg,
+		Parameters:  params,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -120,15 +111,9 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	UseClientOAuth bool                  `yaml:"useClientOAuth"`
-	Parameters     parameters.Parameters `yaml:"parameters"`
-
-	Client          *bigqueryapi.Client
-	ClientCreator   bigqueryds.BigqueryClientCreator
-	Statement       string
-	AllowedDatasets []string
-	manifest        tools.Manifest
-	mcpManifest     tools.McpManifest
+	Parameters  parameters.Parameters `yaml:"parameters"`
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -136,8 +121,17 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	if len(t.AllowedDatasets) > 0 {
-		return t.AllowedDatasets, nil
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+
+	if len(source.BigQueryAllowedDatasets()) > 0 {
+		return source.BigQueryAllowedDatasets(), nil
 	}
 	mapParams := params.AsMap()
 	projectId, ok := mapParams[projectKey].(string)
@@ -145,14 +139,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", projectKey)
 	}
 
-	bqClient := t.Client
+	bqClient := source.BigQueryClient()
 	// Initialize new client if using user OAuth token
-	if t.UseClientOAuth {
+	if source.UseClientAuthorization() {
 		tokenStr, err := accessToken.ParseBearerToken()
 		if err != nil {
 			return nil, fmt.Errorf("error parsing access token: %w", err)
 		}
-		bqClient, _, err = t.ClientCreator(tokenStr, false)
+		bqClient, _, err = source.BigQueryClientCreator()(tokenStr, false)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
 		}
@@ -197,8 +191,17 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return t.UseClientOAuth
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return false, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return false, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+	return source.UseClientAuthorization(), nil
 }
 
 func (t Tool) GetAuthTokenHeaderName() string {

@@ -26,7 +26,6 @@ import (
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -105,11 +104,6 @@ type CAPayload struct {
 	ClientIdEnum  string        `json:"clientIdEnum"`
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &bigqueryds.Source{}
-
-var compatibleSources = [...]string{bigqueryds.SourceKind}
-
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
@@ -135,7 +129,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, cfg.Source)
 	}
 
 	allowedDatasets := s.BigQueryAllowedDatasets()
@@ -153,31 +147,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	params := parameters.Parameters{userQueryParameter, tableRefsParameter}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
 
-	// Get cloud-platform token source for Gemini Data Analytics API during initialization
-	var bigQueryTokenSourceWithScope oauth2.TokenSource
-	if !s.UseClientAuthorization() {
-		ctx := context.Background()
-		ts, err := s.BigQueryTokenSourceWithScope(ctx, "https://www.googleapis.com/auth/cloud-platform")
-		if err != nil {
-			return nil, fmt.Errorf("failed to get cloud-platform token source: %w", err)
-		}
-		bigQueryTokenSourceWithScope = ts
-	}
-
 	// finish tool setup
 	t := Tool{
-		Config:             cfg,
-		Project:            s.BigQueryProject(),
-		Location:           s.BigQueryLocation(),
-		Parameters:         params,
-		Client:             s.BigQueryClient(),
-		UseClientOAuth:     s.UseClientAuthorization(),
-		TokenSource:        bigQueryTokenSourceWithScope,
-		manifest:           tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:        mcpManifest,
-		MaxQueryResultRows: s.GetMaxQueryResultRows(),
-		IsDatasetAllowed:   s.IsDatasetAllowed,
-		AllowedDatasets:    allowedDatasets,
+		Config:      cfg,
+		Parameters:  params,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -187,18 +162,9 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	UseClientOAuth bool                  `yaml:"useClientOAuth"`
-	Parameters     parameters.Parameters `yaml:"parameters"`
-
-	Project            string
-	Location           string
-	Client             *bigqueryapi.Client
-	TokenSource        oauth2.TokenSource
-	manifest           tools.Manifest
-	mcpManifest        tools.McpManifest
-	MaxQueryResultRows int
-	IsDatasetAllowed   func(projectID, datasetID string) bool
-	AllowedDatasets    []string
+	Parameters  parameters.Parameters `yaml:"parameters"`
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -206,11 +172,20 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+
 	var tokenStr string
 	var err error
 
 	// Get credentials for the API call
-	if t.UseClientOAuth {
+	if source.UseClientAuthorization() {
 		// Use client-side access token
 		if accessToken == "" {
 			return nil, fmt.Errorf("tool is configured for client OAuth but no token was provided in the request header: %w", util.ErrUnauthorized)
@@ -220,11 +195,17 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			return nil, fmt.Errorf("error parsing access token: %w", err)
 		}
 	} else {
+		// Get cloud-platform token source for Gemini Data Analytics API during initialization
+		tokenSource, err := source.BigQueryTokenSourceWithScope(ctx, "https://www.googleapis.com/auth/cloud-platform")
+		if err != nil {
+			return nil, fmt.Errorf("failed to get cloud-platform token source: %w", err)
+		}
+
 		// Use cloud-platform token source for Gemini Data Analytics API
-		if t.TokenSource == nil {
+		if tokenSource == nil {
 			return nil, fmt.Errorf("cloud-platform token source is missing")
 		}
-		token, err := t.TokenSource.Token()
+		token, err := tokenSource.Token()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get token from cloud-platform token source: %w", err)
 		}
@@ -245,17 +226,17 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
-	if len(t.AllowedDatasets) > 0 {
+	if len(source.BigQueryAllowedDatasets()) > 0 {
 		for _, tableRef := range tableRefs {
-			if !t.IsDatasetAllowed(tableRef.ProjectID, tableRef.DatasetID) {
+			if !source.IsDatasetAllowed(tableRef.ProjectID, tableRef.DatasetID) {
 				return nil, fmt.Errorf("access to dataset '%s.%s' (from table '%s') is not allowed", tableRef.ProjectID, tableRef.DatasetID, tableRef.TableID)
 			}
 		}
 	}
 
 	// Construct URL, headers, and payload
-	projectID := t.Project
-	location := t.Location
+	projectID := source.BigQueryProject()
+	location := source.BigQueryLocation()
 	if location == "" {
 		location = "us"
 	}
@@ -279,7 +260,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	// Call the streaming API
-	response, err := getStream(caURL, payload, headers, t.MaxQueryResultRows)
+	response, err := getStream(caURL, payload, headers, source.GetMaxQueryResultRows())
 	if err != nil {
 		return nil, fmt.Errorf("failed to get response from conversational analytics API: %w", err)
 	}
@@ -303,8 +284,17 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return t.UseClientOAuth
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	s, ok := resourceMgr.GetSource(t.Source)
+	if !ok {
+		return false, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
+	}
+
+	source, ok := s.(compatibleSource)
+	if !ok {
+		return false, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	}
+	return source.UseClientAuthorization(), nil
 }
 
 // StreamMessage represents a single message object from the streaming API response.
