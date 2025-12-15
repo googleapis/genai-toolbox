@@ -100,13 +100,9 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	s, ok := resourceMgr.GetSource(t.Source)
-	if !ok {
-		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
-	}
-	source, ok := s.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
 	}
 
 	logger, err := util.LoggerFromContext(ctx)
@@ -152,14 +148,9 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	s, ok := resourceMgr.GetSource(t.Source)
-	if !ok {
-		return false, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
-	}
-
-	source, ok := s.(compatibleSource)
-	if !ok {
-		return false, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return false, err
 	}
 	return source.UseClientAuthorization(), nil
 }
@@ -169,14 +160,9 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
-	s, ok := resourceMgr.GetSource(t.Source)
-	if !ok {
-		return "", fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
-	}
-
-	source, ok := s.(compatibleSource)
-	if !ok {
-		return "", fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return "", err
 	}
 	return source.GetAuthTokenHeaderName(), nil
 }

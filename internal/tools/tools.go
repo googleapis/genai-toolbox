@@ -147,3 +147,16 @@ func IsAuthorized(authRequiredSources []string, verifiedAuthServices []string) b
 	}
 	return false
 }
+
+func GetCompatibleSource[T any](resourceMgr SourceProvider, sourceName, toolName, toolKind string) (T, error) {
+	var zero T
+	s, ok := resourceMgr.GetSource(sourceName)
+	if !ok {
+		return zero, fmt.Errorf("unable to retrieve source %q for tool %q", sourceName, toolName)
+	}
+	source, ok := s.(T)
+	if !ok {
+		return zero, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", toolKind, sourceName)
+	}
+	return source, nil
+}

@@ -113,13 +113,9 @@ type Tool struct {
 // Invoke executes the tool's main logic: fetching the Neo4j schema.
 // It first checks the cache for a valid schema before extracting it from the database.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	s, ok := resourceMgr.GetSource(t.Source)
-	if !ok {
-		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
-	}
-	source, ok := s.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
 	}
 
 	// Check if a valid schema is already in the cache.
