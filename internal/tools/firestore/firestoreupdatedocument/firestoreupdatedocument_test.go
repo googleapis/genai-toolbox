@@ -132,32 +132,6 @@ func TestConfig_Initialize(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "source not found",
-			config: Config{
-				Name:        "test-update-document",
-				Kind:        "firestore-update-document",
-				Source:      "missing-source",
-				Description: "Update a document",
-			},
-			sources: map[string]sources.Source{},
-			wantErr: true,
-			errMsg:  "no source named \"missing-source\" configured",
-		},
-		{
-			name: "incompatible source",
-			config: Config{
-				Name:        "test-update-document",
-				Kind:        "firestore-update-document",
-				Source:      "wrong-source",
-				Description: "Update a document",
-			},
-			sources: map[string]sources.Source{
-				"wrong-source": &mockIncompatibleSource{},
-			},
-			wantErr: true,
-			errMsg:  "invalid source for \"firestore-update-document\" tool",
-		},
 	}
 
 	for _, tt := range tests {
@@ -463,15 +437,4 @@ func TestGetFieldValue(t *testing.T) {
 			}
 		})
 	}
-}
-
-// mockIncompatibleSource is a mock source that doesn't implement compatibleSource
-type mockIncompatibleSource struct{}
-
-func (m *mockIncompatibleSource) SourceKind() string {
-	return "mock"
-}
-
-func (m *mockIncompatibleSource) ToConfig() sources.SourceConfig {
-	return nil
 }

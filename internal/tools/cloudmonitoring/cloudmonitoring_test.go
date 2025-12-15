@@ -81,22 +81,6 @@ func TestInitialize(t *testing.T) {
 				AuthRequired: []string{"google-auth-service"},
 			},
 		},
-		{
-			desc: "Error: source not found",
-			cfg: cloudmonitoring.Config{
-				Name:   "test-tool",
-				Source: "non-existent-source",
-			},
-			wantErr: `no source named "non-existent-source" configured`,
-		},
-		{
-			desc: "Error: incompatible source kind",
-			cfg: cloudmonitoring.Config{
-				Name:   "test-tool",
-				Source: "incompatible-source",
-			},
-			wantErr: "invalid source for \"cloud-monitoring-query-prometheus\" tool",
-		},
 	}
 
 	for _, tc := range testCases {

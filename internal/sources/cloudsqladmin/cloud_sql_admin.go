@@ -70,7 +70,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	Name           string `yaml:"name" validate:"required"`
 	Kind           string `yaml:"kind" validate:"required"`
-	defaultProject string `yaml:"defaultProject"`
+	DefaultProject string `yaml:"defaultProject"`
 	UseClientOAuth bool   `yaml:"useClientOAuth"`
 }
 
@@ -136,8 +136,8 @@ func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
 }
 
-func (s *Source) DefaultProject() string {
-	return s.defaultProject
+func (s *Source) GetDefaultProject() string {
+	return s.DefaultProject
 }
 
 func (s *Source) GetService(ctx context.Context, accessToken string) (*sqladmin.Service, error) {

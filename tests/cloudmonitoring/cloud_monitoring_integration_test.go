@@ -53,8 +53,6 @@ func TestTool_Invoke(t *testing.T) {
 			Description: "Test Cloudmonitoring Tool",
 		},
 		AllParams: parameters.Parameters{},
-		BaseURL:   server.URL,
-		Client:    &http.Client{},
 	}
 
 	// Define the test parameters
@@ -99,8 +97,6 @@ func TestTool_Invoke_Error(t *testing.T) {
 			Description: "Test Cloudmonitoring Tool",
 		},
 		AllParams: parameters.Parameters{},
-		BaseURL:   server.URL,
-		Client:    &http.Client{},
 	}
 
 	// Define the test parameters
