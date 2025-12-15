@@ -26,13 +26,17 @@ tools:
         kind: looker-delete-project-file
         source: looker-source
         description: |
-          delete_project_file Tool
+          This tool permanently deletes a specified LookML file from within a project.
+          Use with caution, as this action cannot be undone through the API.
 
-          Given a project_id and a file path within the project, this tool will delete
-          the file from the project.
+          Prerequisite: The Looker session must be in Development Mode. Use `dev_mode: true` first.
 
-          This tool must be called after the dev_mode tool has changed the session to
-          dev mode.
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+          - file_path (required): The exact path to the LookML file to delete within the project.
+
+          Output:
+          A confirmation message upon successful file deletion.
 ```
 
 ## Reference

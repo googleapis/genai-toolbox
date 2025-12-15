@@ -391,7 +391,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		values[i] = &rawValues[i]
 	}
 
-	var out []any
+	out := []any{}
 	for rows.Next() {
 		err = rows.Scan(values...)
 		if err != nil {

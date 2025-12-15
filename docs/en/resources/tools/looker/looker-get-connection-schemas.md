@@ -26,10 +26,16 @@ tools:
         kind: looker-get-connection-schemas
         source: looker-source
         description: |
-          get_connection_schemas Tool
+          This tool retrieves a list of database schemas available through a specified
+          Looker connection.
 
-          This tool will list the schemas available from a connection, filtered by
-          an optional database name.
+          Parameters:
+          - connection_name (required): The name of the database connection, obtained from `get_connections`.
+          - database (optional): An optional database name to filter the schemas.
+            Only applicable for connections that support multiple databases.
+
+          Output:
+          A JSON array of strings, where each string is the name of an available schema.
 ```
 
 ## Reference

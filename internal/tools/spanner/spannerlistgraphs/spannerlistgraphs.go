@@ -83,11 +83,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	// verify the dialect is GoogleSQL
-	if strings.ToLower(s.DatabaseDialect()) != "googlesql" {
-		return nil, fmt.Errorf("invalid source dialect for %q tool: source dialect must be GoogleSQL", kind)
-	}
-
 	// Define parameters for the tool
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameterWithDefault(
@@ -166,6 +161,10 @@ func processRows(iter *spanner.RowIterator) ([]any, error) {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	// Check dialect here at RUNTIME instead of startup
+	if strings.ToLower(t.dialect) != "googlesql" {
+		return nil, fmt.Errorf("operation not supported: The 'spanner-list-graphs' tool is only available for GoogleSQL dialect databases. Your current database dialect is '%s'", t.dialect)
+	}
 	paramsMap := params.AsMap()
 
 	graphNames, _ := paramsMap["graph_names"].(string)

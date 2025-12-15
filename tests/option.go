@@ -119,6 +119,7 @@ func EnableClientAuthTest() InvokeTestOption {
 // MCPTestConfig represents the various configuration options for mcp tool call tests.
 type MCPTestConfig struct {
 	myToolId3NameAliceWant string
+	mcpSelect1Want         string
 	supportClientAuth      bool
 	supportSelect1Auth     bool
 }
@@ -146,6 +147,12 @@ func EnableMcpClientAuthTest() McpTestOption {
 func DisableMcpSelect1AuthTest() McpTestOption {
 	return func(c *MCPTestConfig) {
 		c.supportSelect1Auth = false
+	}
+}
+
+func WithMcpSelect1Want(want string) McpTestOption {
+	return func(c *MCPTestConfig) {
+		c.mcpSelect1Want = want
 	}
 }
 

@@ -27,11 +27,15 @@ tools:
         kind: looker-run-dashboard
         source: looker-source
         description: |
-          run_dashboard Tool
+          This tool executes the queries associated with each tile in a specified dashboard
+          and returns the aggregated data in a JSON structure.
 
-          This tools runs the query associated with each tile in a dashboard
-          and returns the data in a JSON structure. It accepts the dashboard_id
-          as the parameter.
+          Parameters:
+          - dashboard_id (required): The unique identifier of the dashboard to run,
+            typically obtained from the `get_dashboards` tool.
+
+          Output:
+          The data from all dashboard tiles is returned as a JSON object.
 ```
 
 ## Reference

@@ -11,11 +11,11 @@ The MCP Toolbox for Databases Server gives AI-powered development tools the abil
 
 ## Install & Configuration
 
-1.  In the Antigravity MCP Store, click the "Install" button.
+1.  In the Antigravity MCP Store, click the **Install** button. A configuration window will appear.
 
 2.  Create your [`tools.yaml` configuration file](https://googleapis.github.io/genai-toolbox/getting-started/configure/).
 
-3.  Click "View raw config" and update the `tools.yaml` path with the full absolute path to your file.
+3.  In the configuration window, enter the full absolute path to your `tools.yaml` file and click **Save**.
 
 > [!NOTE]
 > If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure exclusions for Microsoft Defender Antivirus](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-exclusions-microsoft-defender-antivirus?view=o365-worldwide) for more details.

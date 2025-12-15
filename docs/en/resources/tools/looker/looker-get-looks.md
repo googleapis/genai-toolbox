@@ -34,21 +34,26 @@ tools:
         kind: looker-get-looks
         source: looker-source
         description: |
-          get_looks Tool
+          This tool searches for saved Looks (pre-defined queries and visualizations)
+          in a Looker instance. It returns a list of JSON objects, each representing a Look.
 
-          This tool is used to search for saved looks in a Looker instance.
-          String search params use case-insensitive matching. String search
-          params can contain % and '_' as SQL LIKE pattern match wildcard
-          expressions. example="dan%" will match "danger" and "Danzig" but
-          not "David" example="D_m%" will match "Damage" and "dump".
+          Search Parameters:
+          - title (optional): Filter by Look title (supports wildcards).
+          - folder_id (optional): Filter by the ID of the folder where the Look is saved.
+          - user_id (optional): Filter by the ID of the user who created the Look.
+          - description (optional): Filter by description content (supports wildcards).
+          - id (optional): Filter by specific Look ID.
+          - limit (optional): Maximum number of results to return. Defaults to a system limit.
+          - offset (optional): Starting point for pagination.
 
-          Most search params can accept "IS NULL" and "NOT NULL" as special
-          expressions to match or exclude (respectively) rows where the
-          column is null.
-
-          The limit and offset are used to paginate the results.
-
-          The result of the get_looks tool is a list of json objects.
+          String Search Behavior:
+          - Case-insensitive matching.
+          - Supports SQL LIKE pattern match wildcards:
+            - `%`: Matches any sequence of zero or more characters. (e.g., `"dan%"` matches "danger", "Danzig")
+            - `_`: Matches any single character. (e.g., `"D_m%"` matches "Damage", "dump")
+          - Special expressions for null checks:
+            - `"IS NULL"`: Matches Looks where the field is null.
+            - `"NOT NULL"`: Excludes Looks where the field is null.
 ```
 
 ## Reference

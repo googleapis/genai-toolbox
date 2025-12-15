@@ -210,7 +210,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	defer results.Close()
 
 	fields := results.FieldDescriptions()
-	var out []map[string]any
+	out := []map[string]any{}
 
 	for results.Next() {
 		values, err := results.Values()

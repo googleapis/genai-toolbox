@@ -24,15 +24,22 @@ It's compatible with the following sources:
 
 ```yaml
 tools:
-    get_dimensions:
+    get_filters:
         kind: looker-get-filters
         source: looker-source
         description: |
-          The get_filters tool retrieves the list of filters defined in
-          an explore.
+          This tool retrieves a list of "filter-only fields" defined within a specific
+          Looker explore. These are special fields defined in LookML specifically to
+          create user-facing filter controls that do not directly affect the `GROUP BY`
+          clause of the SQL query. They are often used in conjunction with liquid templating
+          to create dynamic queries.
 
-          It takes two parameters, the model_name looked up from get_models and the
-          explore_name looked up from get_explores.
+          Note: Regular dimensions and measures can also be used as filters in a query.
+          This tool *only* returns fields explicitly defined as `filter:` in LookML.
+
+          Parameters:
+          - model_name (required): The name of the LookML model, obtained from `get_models`.
+          - explore_name (required): The name of the explore within the model, obtained from `get_explores`.
 ```
 
 The response is a json array with the following elements:

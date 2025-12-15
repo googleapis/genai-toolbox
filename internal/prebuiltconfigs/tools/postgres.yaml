@@ -201,12 +201,28 @@ tools:
         kind: postgres-get-column-cardinality
         source: postgresql-source
 
+    list_table_stats:
+        kind: postgres-list-table-stats
+        source: postgresql-source
+
     list_publication_tables:
         kind: postgres-list-publication-tables
         source: postgresql-source
 
     list_tablespaces:
         kind: postgres-list-tablespaces
+        source: postgresql-source
+
+    list_pg_settings:
+        kind: postgres-list-pg-settings
+        source: postgresql-source
+    
+    list_database_stats:
+        kind: postgres-list-database-stats
+        source: postgresql-source
+
+    list_roles:
+        kind: postgres-list-roles
         source: postgresql-source
 
 toolsets:
@@ -235,3 +251,7 @@ toolsets:
         - get_column_cardinality
         - list_publication_tables
         - list_tablespaces
+        - list_pg_settings
+        - list_database_stats
+        - list_roles
+        - list_table_stats
