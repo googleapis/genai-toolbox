@@ -136,10 +136,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("failed to marshal request payload: %w", err)
 	}
 
-	// Debugging output
-	fmt.Printf("API URL: %s\n", apiURL)
-	fmt.Printf("Request Body: %s\n", string(bodyBytes))
-
 	client, err := t.Source.GetClient(ctx, string(accessToken))
 	if err != nil {
 		return nil, fmt.Errorf("failed to get HTTP client: %w", err)
