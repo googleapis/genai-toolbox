@@ -60,7 +60,7 @@ require (
 	golang.org/x/oauth2 v0.33.0
 	google.golang.org/api v0.256.0
 	google.golang.org/genproto v0.0.0-20251022142026-3a174f9686a8
-	google.golang.org/protobuf v1.36.10
+	google.golang.org/protobuf v1.36.11
 	modernc.org/sqlite v1.40.0
 )
 
