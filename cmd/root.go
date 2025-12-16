@@ -906,9 +906,7 @@ func run(cmd *Command) error {
 			}
 			customTools, err = parseToolsFile(ctx, buf)
 			if err != nil {
-				errMsg := fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
-				cmd.logger.ErrorContext(ctx, errMsg.Error())
-				return errMsg
+				err = fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
 			}
 		}
 
