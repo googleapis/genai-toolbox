@@ -158,7 +158,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	dashboard_id := paramsMap["dashboard_id"].(string)
 	name := paramsMap["name"].(string)
 	title := paramsMap["title"].(string)
-	filterType := paramsMap["filter_type"].(string)
+	filterType, ok := paramsMap["filter_type"].(string)
+	if !ok {
+		return nil, fmt.Errorf("unable to cast string: %v", paramsMap["filter_type"])
+	}
 	switch filterType {
 	case "date_filter":
 	case "number_filter":
