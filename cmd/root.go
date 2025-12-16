@@ -353,12 +353,12 @@ func NewCommand(opts ...Option) *Command {
 	flags.StringVarP(&cmd.cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
 	flags.IntVarP(&cmd.cfg.Port, "port", "p", 5000, "Port the server will listen on.")
 
-	flags.StringVar(&cmd.tools_file, "tools_file", "", "File path specifying the tool configuration. Cannot be used with --prebuilt.")
+	flags.StringVar(&cmd.tools_file, "tools_file", "", "File path specifying the tool configuration. Cannot be used with --tools-files, or --tools-folder.")
 	// deprecate tools_file
 	_ = flags.MarkDeprecated("tools_file", "please use --tools-file instead")
-	flags.StringVar(&cmd.tools_file, "tools-file", "", "File path specifying the tool configuration. Cannot be used with --prebuilt, --tools-files, or --tools-folder.")
-	flags.StringSliceVar(&cmd.tools_files, "tools-files", []string{}, "Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --prebuilt, --tools-file, or --tools-folder.")
-	flags.StringVar(&cmd.tools_folder, "tools-folder", "", "Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --prebuilt, --tools-file, or --tools-files.")
+	flags.StringVar(&cmd.tools_file, "tools-file", "", "File path specifying the tool configuration. Cannot be used with --tools-files, or --tools-folder.")
+	flags.StringSliceVar(&cmd.tools_files, "tools-files", []string{}, "Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --tools-file, or --tools-folder.")
+	flags.StringVar(&cmd.tools_folder, "tools-folder", "", "Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --tools-file, or --tools-files.")
 	flags.Var(&cmd.cfg.LogLevel, "log-level", "Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.")
 	flags.Var(&cmd.cfg.LoggingFormat, "logging-format", "Specify logging format to use. Allowed: 'standard' or 'JSON'.")
 	flags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
@@ -366,7 +366,7 @@ func NewCommand(opts ...Option) *Command {
 	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
 	// Fetch prebuilt tools sources to customize the help description
 	prebuiltHelp := fmt.Sprintf(
-		"Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. Allowed: '%s'.",
+		"Use a prebuilt tool configuration by source type. Allowed: '%s'.",
 		strings.Join(prebuiltconfigs.GetPrebuiltSources(), "', '"),
 	)
 	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", prebuiltHelp)
@@ -836,16 +836,10 @@ func run(cmd *Command) error {
 		}
 	}()
 
-	var toolsFile ToolsFile
+	var allToolsFiles []ToolsFile
 
+	// Load Prebuilt Configuration
 	if cmd.prebuiltConfig != "" {
-		// Make sure --prebuilt and --tools-file/--tools-files/--tools-folder flags are mutually exclusive
-		if cmd.tools_file != "" || len(cmd.tools_files) > 0 || cmd.tools_folder != "" {
-			errMsg := fmt.Errorf("--prebuilt and --tools-file/--tools-files/--tools-folder flags cannot be used simultaneously")
-			cmd.logger.ErrorContext(ctx, errMsg.Error())
-			return errMsg
-		}
-		// Use prebuilt tools
 		buf, err := prebuiltconfigs.Get(cmd.prebuiltConfig)
 		if err != nil {
 			cmd.logger.ErrorContext(ctx, err.Error())
@@ -856,72 +850,101 @@ func run(cmd *Command) error {
 		// Append prebuilt.source to Version string for the User Agent
 		cmd.cfg.Version += "+prebuilt." + cmd.prebuiltConfig
 
-		toolsFile, err = parseToolsFile(ctx, buf)
+		parsed, err := parseToolsFile(ctx, buf)
 		if err != nil {
 			errMsg := fmt.Errorf("unable to parse prebuilt tool configuration: %w", err)
 			cmd.logger.ErrorContext(ctx, errMsg.Error())
 			return errMsg
 		}
-	} else if len(cmd.tools_files) > 0 {
-		// Make sure --tools-file, --tools-files, and --tools-folder flags are mutually exclusive
-		if cmd.tools_file != "" || cmd.tools_folder != "" {
-			errMsg := fmt.Errorf("--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously")
-			cmd.logger.ErrorContext(ctx, errMsg.Error())
-			return errMsg
-		}
-
-		// Use multiple tools files
-		cmd.logger.InfoContext(ctx, fmt.Sprintf("Loading and merging %d tool configuration files", len(cmd.tools_files)))
-		var err error
-		toolsFile, err = loadAndMergeToolsFiles(ctx, cmd.tools_files)
-		if err != nil {
-			cmd.logger.ErrorContext(ctx, err.Error())
-			return err
-		}
-	} else if cmd.tools_folder != "" {
-		// Make sure --tools-folder and other flags are mutually exclusive
-		if cmd.tools_file != "" || len(cmd.tools_files) > 0 {
-			errMsg := fmt.Errorf("--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously")
-			cmd.logger.ErrorContext(ctx, errMsg.Error())
-			return errMsg
-		}
-
-		// Use tools folder
-		cmd.logger.InfoContext(ctx, fmt.Sprintf("Loading and merging all YAML files from directory: %s", cmd.tools_folder))
-		var err error
-		toolsFile, err = loadAndMergeToolsFolder(ctx, cmd.tools_folder)
-		if err != nil {
-			cmd.logger.ErrorContext(ctx, err.Error())
-			return err
-		}
-	} else {
-		// Set default value of tools-file flag to tools.yaml
-		if cmd.tools_file == "" {
-			cmd.tools_file = "tools.yaml"
-		}
-
-		// Read single tool file contents
-		buf, err := os.ReadFile(cmd.tools_file)
-		if err != nil {
-			errMsg := fmt.Errorf("unable to read tool file at %q: %w", cmd.tools_file, err)
-			cmd.logger.ErrorContext(ctx, errMsg.Error())
-			return errMsg
-		}
-
-		toolsFile, err = parseToolsFile(ctx, buf)
-		if err != nil {
-			errMsg := fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
-			cmd.logger.ErrorContext(ctx, errMsg.Error())
-			return errMsg
-		}
+		allToolsFiles = append(allToolsFiles, parsed)
 	}
 
-	cmd.cfg.SourceConfigs, cmd.cfg.AuthServiceConfigs, cmd.cfg.ToolConfigs, cmd.cfg.ToolsetConfigs, cmd.cfg.PromptConfigs = toolsFile.Sources, toolsFile.AuthServices, toolsFile.Tools, toolsFile.Toolsets, toolsFile.Prompts
+	// Determine if Custom Files should be loaded
+	// Check for explicit custom flags
+	isCustomConfigured := cmd.tools_file != "" || len(cmd.tools_files) > 0 || cmd.tools_folder != ""
 
-	authSourceConfigs := toolsFile.AuthSources
+	// Determine if default 'tools.yaml' should be used (No prebuilt AND No custom flags)
+	useDefaultToolsFile := cmd.prebuiltConfig == "" && !isCustomConfigured
+
+	if useDefaultToolsFile {
+		cmd.tools_file = "tools.yaml"
+		isCustomConfigured = true
+	}
+
+	// Load Custom Configurations
+	if isCustomConfigured {
+		// Enforce exclusivity among custom flags (tools-file vs tools-files vs tools-folder)
+		if (cmd.tools_file != "" && len(cmd.tools_files) > 0) ||
+			(cmd.tools_file != "" && cmd.tools_folder != "") ||
+			(len(cmd.tools_files) > 0 && cmd.tools_folder != "") {
+			errMsg := fmt.Errorf("--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously")
+			cmd.logger.ErrorContext(ctx, errMsg.Error())
+			return errMsg
+		}
+
+		var customTools ToolsFile
+		var err error
+
+		if len(cmd.tools_files) > 0 {
+			// Use tools-files
+			cmd.logger.InfoContext(ctx, fmt.Sprintf("Loading and merging %d tool configuration files", len(cmd.tools_files)))
+			customTools, err = loadAndMergeToolsFiles(ctx, cmd.tools_files)
+		} else if cmd.tools_folder != "" {
+			// Use tools-folder
+			cmd.logger.InfoContext(ctx, fmt.Sprintf("Loading and merging all YAML files from directory: %s", cmd.tools_folder))
+			customTools, err = loadAndMergeToolsFolder(ctx, cmd.tools_folder)
+		} else {
+			// Use single file (tools-file or default `tools.yaml`)
+			buf, readFileErr := os.ReadFile(cmd.tools_file)
+			if readFileErr != nil {
+				errMsg := fmt.Errorf("unable to read tool file at %q: %w", cmd.tools_file, readFileErr)
+				cmd.logger.ErrorContext(ctx, errMsg.Error())
+				return errMsg
+			}
+			customTools, err = parseToolsFile(ctx, buf)
+			if err != nil {
+				errMsg := fmt.Errorf("unable to parse tool file at %q: %w", cmd.tools_file, err)
+				cmd.logger.ErrorContext(ctx, errMsg.Error())
+				return errMsg
+			}
+		}
+
+		if err != nil {
+			cmd.logger.ErrorContext(ctx, err.Error())
+			return err
+		}
+		allToolsFiles = append(allToolsFiles, customTools)
+	}
+
+	// Merge Everything
+	// This will error if custom tools collide with prebuilt tools
+	finalToolsFile, err := mergeToolsFiles(allToolsFiles...)
+	if err != nil {
+		cmd.logger.ErrorContext(ctx, err.Error())
+		return err
+	}
+
+	cmd.cfg.SourceConfigs = finalToolsFile.Sources
+	cmd.cfg.AuthServiceConfigs = finalToolsFile.AuthServices
+	cmd.cfg.ToolConfigs = finalToolsFile.Tools
+	cmd.cfg.ToolsetConfigs = finalToolsFile.Toolsets
+	cmd.cfg.PromptConfigs = finalToolsFile.Prompts
+
+	authSourceConfigs := finalToolsFile.AuthSources
 	if authSourceConfigs != nil {
 		cmd.logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")
-		cmd.cfg.AuthServiceConfigs = authSourceConfigs
+		if cmd.cfg.AuthServiceConfigs == nil {
+			cmd.cfg.AuthServiceConfigs = make(server.AuthServiceConfigs)
+		}
+
+		for k, v := range authSourceConfigs {
+			if _, exists := cmd.cfg.AuthServiceConfigs[k]; exists {
+				errMsg := fmt.Errorf("resource conflict detected: authSource '%s' has the same name as an existing authService. Please rename your authSource", k)
+				cmd.logger.ErrorContext(ctx, errMsg.Error())
+				return errMsg
+			}
+			cmd.cfg.AuthServiceConfigs[k] = v
+		}
 	}
 
 	instrumentation, err := telemetry.CreateTelemetryInstrumentation(versionString)
@@ -972,9 +995,8 @@ func run(cmd *Command) error {
 		}()
 	}
 
-	watchDirs, watchedFiles := resolveWatcherInputs(cmd.tools_file, cmd.tools_files, cmd.tools_folder)
-
-	if !cmd.cfg.DisableReload {
+	if isCustomConfigured && !cmd.cfg.DisableReload {
+		watchDirs, watchedFiles := resolveWatcherInputs(cmd.tools_file, cmd.tools_files, cmd.tools_folder)
 		// start watching the file(s) or folder for changes to trigger dynamic reloading
 		go watchChanges(ctx, watchDirs, watchedFiles, s)
 	}

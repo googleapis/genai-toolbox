@@ -1756,11 +1756,6 @@ func TestMutuallyExclusiveFlags(t *testing.T) {
 		errString string
 	}{
 		{
-			desc:      "--prebuilt and --tools-file",
-			args:      []string{"--prebuilt", "alloydb", "--tools-file", "my.yaml"},
-			errString: "--prebuilt and --tools-file/--tools-files/--tools-folder flags cannot be used simultaneously",
-		},
-		{
 			desc:      "--tools-file and --tools-files",
 			args:      []string{"--tools-file", "my.yaml", "--tools-files", "a.yaml,b.yaml"},
 			errString: "--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously",
@@ -1897,6 +1892,166 @@ func TestMergeToolsFiles(t *testing.T) {
 				}
 				if !strings.Contains(err.Error(), "resource conflicts detected") {
 					t.Errorf("expected conflict error, but got: %v", err)
+				}
+			}
+		})
+	}
+}
+
+func TestPrebuiltAndCustomTools(t *testing.T) {
+	// Setup custom tools file
+	customContent := `
+tools:
+  custom_tool:
+    kind: http
+    source: my-http
+    method: GET
+    path: /
+sources:
+  my-http:
+    kind: http
+    baseUrl: http://example.com
+`
+	customFile := filepath.Join(t.TempDir(), "custom.yaml")
+	if err := os.WriteFile(customFile, []byte(customContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Setup conflict file (BigQuery has 'execute_sql')
+	conflictContent := `
+tools:
+  execute_sql:
+    kind: http
+    source: my-http
+    method: GET
+    path: /
+sources:
+  my-http:
+    kind: http
+    baseUrl: http://example.com
+`
+	conflictFile := filepath.Join(t.TempDir(), "conflict.yaml")
+	if err := os.WriteFile(conflictFile, []byte(conflictContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Setup Legacy Auth file
+	authContent := `
+authSources:
+  legacy-auth:
+    kind: google
+    projectId: test
+`
+	authFile := filepath.Join(t.TempDir(), "auth.yaml")
+	if err := os.WriteFile(authFile, []byte(authContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	testCases := []struct {
+		desc      string
+		args      []string
+		wantErr   bool
+		errString string
+		cfgCheck  func(server.ServerConfig) error
+	}{
+		{
+			desc:    "success mixed",
+			args:    []string{"--prebuilt", "bigquery", "--tools-file", customFile},
+			wantErr: false,
+			cfgCheck: func(cfg server.ServerConfig) error {
+				if _, ok := cfg.ToolConfigs["custom_tool"]; !ok {
+					return fmt.Errorf("custom tool not found")
+				}
+				if _, ok := cfg.ToolConfigs["execute_sql"]; !ok {
+					return fmt.Errorf("prebuilt tool not found")
+				}
+				return nil
+			},
+		},
+		{
+			desc:      "conflict error",
+			args:      []string{"--prebuilt", "bigquery", "--tools-file", conflictFile},
+			wantErr:   true,
+			errString: "resource conflicts detected",
+		},
+		{
+			desc:    "legacy auth additive",
+			args:    []string{"--prebuilt", "bigquery", "--tools-file", authFile},
+			wantErr: false,
+			cfgCheck: func(cfg server.ServerConfig) error {
+				if _, ok := cfg.AuthServiceConfigs["legacy-auth"]; !ok {
+					return fmt.Errorf("legacy auth source not merged into auth services")
+				}
+				return nil
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+
+			cmd := NewCommand()
+			cmd.SetArgs(tc.args)
+
+			err := cmd.Execute()
+
+			if tc.wantErr {
+				if err == nil {
+					t.Fatalf("expected an error but got none")
+				}
+				if !strings.Contains(err.Error(), tc.errString) {
+					t.Errorf("expected error message to contain %q, but got %q", tc.errString, err.Error())
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if tc.cfgCheck != nil {
+					if err := tc.cfgCheck(cmd.cfg); err != nil {
+						t.Errorf("config check failed: %v", err)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestDefaultToolsFileBehavior(t *testing.T) {
+	testCases := []struct {
+		desc      string
+		args      []string
+		expectRun bool
+		errString string
+	}{
+		{
+			desc:      "no flags (defaults to tools.yaml)",
+			args:      []string{},
+			expectRun: false,
+			errString: "tools.yaml", // Expect error because tools.yaml doesn't exist in test env
+		},
+		{
+			desc:      "prebuilt only (skips tools.yaml)",
+			args:      []string{"--prebuilt", "bigquery"},
+			expectRun: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			cmd := NewCommand()
+			cmd.SetArgs(tc.args)
+			err := cmd.Execute()
+
+			if tc.expectRun {
+				if err != nil && err != context.DeadlineExceeded && err != context.Canceled {
+					t.Fatalf("expected server start, got error: %v", err)
+				}
+			} else {
+				if err == nil {
+					t.Fatalf("expected error reading default file, got nil")
+				}
+				if !strings.Contains(err.Error(), tc.errString) {
+					t.Errorf("expected error message to contain %q, but got %q", tc.errString, err.Error())
 				}
 			}
 		})
