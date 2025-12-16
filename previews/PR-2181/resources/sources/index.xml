@@ -609,8 +609,8 @@ with &lt;a href="https://cloud.google.com/firestore/docs">Firestore&lt;/a>.&lt;/
 &lt;p>The &lt;code>cloud-gemini-data-analytics&lt;/code> source provides a client to interact with the &lt;a href="https://docs.cloud.google.com/gemini/docs/conversational-analytics-api/reference/rest">Gemini Data Analytics API&lt;/a>. This allows tools to send natural language queries to the API.&lt;/p>
 &lt;p>Authentication can be handled in two ways:&lt;/p>
 &lt;ol>
-&lt;li>&lt;strong>Application Default Credentials (ADC):&lt;/strong> By default, the source uses ADC to authenticate with the API.&lt;/li>
-&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source will expect an OAuth 2.0 access token to be provided by the client (e.g., a web browser) for each request.&lt;/li>
+&lt;li>&lt;strong>Application Default Credentials (ADC) (Recommended):&lt;/strong> By default, the source uses ADC to authenticate with the API. The Toolbox server will fetch the credentials from its running environment (server-side authentication). This is the recommended method.&lt;/li>
+&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source expects the authentication token to be provided by the caller when making a request to the Toolbox server (typically via an HTTP Bearer token). The Toolbox server will then forward this token to the underlying Gemini Data Analytics API calls.&lt;/li>
 &lt;/ol>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -649,7 +649,7 @@ with &lt;a href="https://cloud.google.com/firestore/docs">Firestore&lt;/a>.&lt;/
  &lt;td>useClientOAuth&lt;/td>
  &lt;td style="text-align: center">boolean&lt;/td>
  &lt;td style="text-align: center">false&lt;/td>
- &lt;td>If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to &lt;code>false&lt;/code>.&lt;/td>
+ &lt;td>If true, the source uses the token provided by the caller (forwarded to the API). Otherwise, it uses server-side Application Default Credentials (ADC). Defaults to &lt;code>false&lt;/code>.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>HTTP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2181/resources/sources/http/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2181/resources/sources/http/</guid><description>&lt;h2 id="about">About&lt;/h2>
