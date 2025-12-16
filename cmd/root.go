@@ -460,6 +460,9 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 			if _, exists := merged.AuthSources[name]; exists {
 				conflicts = append(conflicts, fmt.Sprintf("authSource '%s' (file #%d)", name, fileIndex+1))
 			} else {
+				if merged.AuthSources == nil {
+					merged.AuthSources = make(server.AuthServiceConfigs)
+				}
 				merged.AuthSources[name] = authSource
 			}
 		}

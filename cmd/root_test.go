@@ -92,6 +92,21 @@ func invokeCommand(args []string) (*Command, string, error) {
 	return c, buf.String(), err
 }
 
+// invokeCommandWithContext executes the command with a context and returns the captured output.
+func invokeCommandWithContext(ctx context.Context, args []string) (*Command, string, error) {
+	// Capture output using a buffer
+	buf := new(bytes.Buffer)
+	c := NewCommand(WithStreams(buf, buf))
+
+	c.SetArgs(args)
+	c.SilenceUsage = true
+	c.SilenceErrors = true
+	c.SetContext(ctx)
+
+	err := c.Execute()
+	return c, buf.String(), err
+}
+
 func TestVersion(t *testing.T) {
 	data, err := os.ReadFile("version.txt")
 	if err != nil {
@@ -1899,6 +1914,7 @@ func TestMergeToolsFiles(t *testing.T) {
 }
 
 func TestPrebuiltAndCustomTools(t *testing.T) {
+	t.Setenv("SQLITE_DATABASE", "test.db")
 	// Setup custom tools file
 	customContent := `
 tools:
@@ -1907,6 +1923,7 @@ tools:
     source: my-http
     method: GET
     path: /
+    description: "A custom tool for testing"
 sources:
   my-http:
     kind: http
@@ -1917,14 +1934,15 @@ sources:
 		t.Fatal(err)
 	}
 
-	// Setup conflict file (BigQuery has 'execute_sql')
+	// Setup conflict file (SQLite has 'list_tables')
 	conflictContent := `
 tools:
-  execute_sql:
+  list_tables:
     kind: http
     source: my-http
     method: GET
     path: /
+    description: "Conflicting tool"
 sources:
   my-http:
     kind: http
@@ -1940,7 +1958,7 @@ sources:
 authSources:
   legacy-auth:
     kind: google
-    projectId: test
+    clientId: "test-client-id"
 `
 	authFile := filepath.Join(t.TempDir(), "auth.yaml")
 	if err := os.WriteFile(authFile, []byte(authContent), 0644); err != nil {
@@ -1956,27 +1974,27 @@ authSources:
 	}{
 		{
 			desc:    "success mixed",
-			args:    []string{"--prebuilt", "bigquery", "--tools-file", customFile},
+			args:    []string{"--prebuilt", "sqlite", "--tools-file", customFile},
 			wantErr: false,
 			cfgCheck: func(cfg server.ServerConfig) error {
 				if _, ok := cfg.ToolConfigs["custom_tool"]; !ok {
 					return fmt.Errorf("custom tool not found")
 				}
-				if _, ok := cfg.ToolConfigs["execute_sql"]; !ok {
-					return fmt.Errorf("prebuilt tool not found")
+				if _, ok := cfg.ToolConfigs["list_tables"]; !ok {
+					return fmt.Errorf("prebuilt tool 'list_tables' not found")
 				}
 				return nil
 			},
 		},
 		{
 			desc:      "conflict error",
-			args:      []string{"--prebuilt", "bigquery", "--tools-file", conflictFile},
+			args:      []string{"--prebuilt", "sqlite", "--tools-file", conflictFile},
 			wantErr:   true,
 			errString: "resource conflicts detected",
 		},
 		{
 			desc:    "legacy auth additive",
-			args:    []string{"--prebuilt", "bigquery", "--tools-file", authFile},
+			args:    []string{"--prebuilt", "sqlite", "--tools-file", authFile},
 			wantErr: false,
 			cfgCheck: func(cfg server.ServerConfig) error {
 				if _, ok := cfg.AuthServiceConfigs["legacy-auth"]; !ok {
@@ -1990,10 +2008,10 @@ authSources:
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
 
-			cmd := NewCommand()
-			cmd.SetArgs(tc.args)
+			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+			defer cancel()
 
-			err := cmd.Execute()
+			cmd, output, err := invokeCommandWithContext(ctx, tc.args)
 
 			if tc.wantErr {
 				if err == nil {
@@ -2003,8 +2021,11 @@ authSources:
 					t.Errorf("expected error message to contain %q, but got %q", tc.errString, err.Error())
 				}
 			} else {
-				if err != nil {
+				if err != nil && err != context.DeadlineExceeded && err != context.Canceled {
 					t.Fatalf("unexpected error: %v", err)
+				}
+				if !strings.Contains(output, "Server ready to serve!") {
+					t.Errorf("server did not start successfully (no ready message found). Output:\n%s", output)
 				}
 				if tc.cfgCheck != nil {
 					if err := tc.cfgCheck(cmd.cfg); err != nil {
@@ -2017,6 +2038,7 @@ authSources:
 }
 
 func TestDefaultToolsFileBehavior(t *testing.T) {
+	t.Setenv("SQLITE_DATABASE", "test.db")
 	testCases := []struct {
 		desc      string
 		args      []string
@@ -2031,20 +2053,24 @@ func TestDefaultToolsFileBehavior(t *testing.T) {
 		},
 		{
 			desc:      "prebuilt only (skips tools.yaml)",
-			args:      []string{"--prebuilt", "bigquery"},
+			args:      []string{"--prebuilt", "sqlite"},
 			expectRun: true,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			cmd := NewCommand()
-			cmd.SetArgs(tc.args)
-			err := cmd.Execute()
+			ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+			defer cancel()
+			_, output, err := invokeCommandWithContext(ctx, tc.args)
 
 			if tc.expectRun {
 				if err != nil && err != context.DeadlineExceeded && err != context.Canceled {
 					t.Fatalf("expected server start, got error: %v", err)
+				}
+				// Verify it actually started
+				if !strings.Contains(output, "Server ready to serve!") {
+					t.Errorf("server did not start successfully (no ready message found). Output:\n%s", output)
 				}
 			} else {
 				if err == nil {
