@@ -1696,6 +1696,19 @@ func runConversationalAnalytics(t *testing.T, modelName, exploreName string) {
 	}
 }
 
+func newLookerTestSDK(t *testing.T) *v4.LookerSDK {
+	t.Helper()
+	cfg := rtl.ApiSettings{
+		BaseUrl:      LookerBaseUrl,
+		ApiVersion:   "4.0",
+		VerifySsl:    LookerVerifySsl == "true",
+		Timeout:      120,
+		ClientId:     LookerClientId,
+		ClientSecret: LookerClientSecret,
+	}
+	return v4.NewLookerSDK(rtl.NewAuthSession(cfg))
+}
+
 func testMakeLook(t *testing.T) func() {
 	var id string
 	t.Run("TestMakeLook", func(t *testing.T) {
@@ -1720,21 +1733,12 @@ func testMakeLook(t *testing.T) func() {
 
 		var ok bool
 		if id, ok = respBody["id"].(string); !ok || id == "" {
-			t.Errorf("didn't get TestLook id, got %s", string(bodyBytes))
+			t.Fatalf("didn't get TestLook id, got %s", string(bodyBytes))
 		}
 	})
 
 	return func() {
-		cfg := rtl.ApiSettings{
-			BaseUrl:      LookerBaseUrl,
-			ApiVersion:   "4.0",
-			VerifySsl:    LookerVerifySsl == "true",
-			Timeout:      120,
-			ClientId:     LookerClientId,
-			ClientSecret: LookerClientSecret,
-		}
-
-		sdk := v4.NewLookerSDK(rtl.NewAuthSession(cfg))
+		sdk := newLookerTestSDK(t)
 
 		if _, err := sdk.DeleteLook(id, nil); err != nil {
 			t.Fatalf("error deleting look: %v", err)
@@ -1797,21 +1801,12 @@ func testMakeDashboard(t *testing.T) (string, func()) {
 
 		var ok bool
 		if id, ok = respBody["id"].(string); !ok || id == "" {
-			t.Errorf("didn't get TestDashboard id, got %s", string(bodyBytes))
+			t.Fatalf("didn't get TestDashboard id, got %s", string(bodyBytes))
 		}
 	})
 
 	return id, func() {
-		cfg := rtl.ApiSettings{
-			BaseUrl:      LookerBaseUrl,
-			ApiVersion:   "4.0",
-			VerifySsl:    LookerVerifySsl == "true",
-			Timeout:      120,
-			ClientId:     LookerClientId,
-			ClientSecret: LookerClientSecret,
-		}
-
-		sdk := v4.NewLookerSDK(rtl.NewAuthSession(cfg))
+		sdk := newLookerTestSDK(t)
 
 		if _, err := sdk.DeleteDashboard(id, nil); err != nil {
 			t.Fatalf("error deleting dashboard: %v", err)
