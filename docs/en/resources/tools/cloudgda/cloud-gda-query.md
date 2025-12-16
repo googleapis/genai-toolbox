@@ -5,7 +5,7 @@ weight: 1
 description: >
   A tool to convert natural language queries into SQL statements using the Gemini Data Analytics QueryData API.
 aliases:
-- /resources/tools/cloud-gemini-data-analytics-query
+  - /resources/tools/cloud-gemini-data-analytics-query
 ---
 
 ## About
@@ -31,7 +31,7 @@ tools:
             databaseId: "${your_database_name}"
             engine: "POSTGRESQL"
           agentContextReference:
-            contextSetId: "${your_context_set_id}"  # E.g. projects/${project_id}/locations/${context_set_location}/contextSets/${context_set_id}
+            contextSetId: "${your_context_set_id}" # E.g. projects/${project_id}/locations/${context_set_location}/contextSets/${context_set_id}
     generationOptions:
       generateQueryResult: true
       generateNaturalLanguageAnswer: true
@@ -43,7 +43,7 @@ tools:
 
 When using this tool, a `prompt` parameter containing a natural language query is provided to the tool (typically by an agent). The tool then interacts with the Gemini Data Analytics API using the context defined in your configuration.
 
-The structure of the response depends on the `generationOptions` configured in your tool definition (e.g., enabling `generateQueryResult` will include the SQL query results). 
+The structure of the response depends on the `generationOptions` configured in your tool definition (e.g., enabling `generateQueryResult` will include the SQL query results).
 
 See https://docs.cloud.google.com/gemini/docs/conversational-analytics-api/reference/rest for details.
 
@@ -82,11 +82,11 @@ How many accounts who have region in Prague are eligible for loans? A3 contains 
 
 ## Reference
 
-| **field**         | **type** | **required** | **description**                                                                                                                                                                                                       |
-| ----------------- | :------: | :----------: | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| kind              |  string  |     true     | Must be "cloud-gemini-data-analytics-query".                                                                                                                                                                          |
-| source            |  string  |     true     | The name of the `cloud-gemini-data-analytics` source to use.                                                                                                                                                          |
-| description       |  string  |     true     | A description of the tool's purpose.                                                                                                                                                                                  |
-| location          |  string  |     true     | The Google Cloud location of the target database resource (e.g., "us-central1"). This is used to construct the parent resource name in the API call.                                                                  |
+| **field**         | **type** | **required** | **description**                                                                                                                                                                                                                                              |
+| ----------------- | :------: | :----------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| kind              |  string  |     true     | Must be "cloud-gemini-data-analytics-query".                                                                                                                                                                                                                 |
+| source            |  string  |     true     | The name of the `cloud-gemini-data-analytics` source to use.                                                                                                                                                                                                 |
+| description       |  string  |     true     | A description of the tool's purpose.                                                                                                                                                                                                                         |
+| location          |  string  |     true     | The Google Cloud location of the target database resource (e.g., "us-central1"). This is used to construct the parent resource name in the API call.                                                                                                         |
 | context           |  object  |     true     | The context for the query, including datasource references. See [QueryDataContext](https://github.com/googleapis/googleapis/blob/b32495a713a68dd0dff90cf0b24021debfca048a/google/cloud/geminidataanalytics/v1beta/data_chat_service.proto#L156) for details. |
-| generationOptions |  object  |    false     | Options for generating the response. See [GenerationOptions](https://github.com/googleapis/googleapis/blob/b32495a713a68dd0dff90cf0b24021debfca048a/google/cloud/geminidataanalytics/v1beta/data_chat_service.proto#L135) for details. |
+| generationOptions |  object  |    false     | Options for generating the response. See [GenerationOptions](https://github.com/googleapis/googleapis/blob/b32495a713a68dd0dff90cf0b24021debfca048a/google/cloud/geminidataanalytics/v1beta/data_chat_service.proto#L135) for details.                       |

@@ -136,7 +136,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("failed to marshal request payload: %w", err)
 	}
 
-	client, err := t.Source.GetClient(ctx, string(accessToken))
+	// Parse the access token if provided
+	tokenStr := string(accessToken)
+	if parsedToken, err := accessToken.ParseBearerToken(); err == nil {
+		tokenStr = parsedToken
+	}
+
+	client, err := t.Source.GetClient(ctx, tokenStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get HTTP client: %w", err)
 	}
