@@ -1,16 +1,16 @@
 ---
-title: "Gemini Data Analytics Query"
+title: "Gemini Data Analytics QueryData"
 type: docs
 weight: 1
 description: >
-  A tool to query the Gemini Data Analytics API.
+  A tool to convert natural language queries into SQL statements using the Gemini Data Analytics QueryData API.
 aliases:
 - /resources/tools/cloud-gemini-data-analytics-query
 ---
 
 ## About
 
-The `cloud-gemini-data-analytics-query` tool allows you to send natural language questions to the Gemini Data Analytics API and receive structured responses containing SQL queries, natural language answers, and explanations. This tool currently supports querying **AlloyDB, Spanner, and CloudSQL** databases.
+The `cloud-gemini-data-analytics-query` tool allows you to send natural language questions to the Gemini Data Analytics API and receive structured responses containing SQL queries, natural language answers, and explanations. See https://docs.cloud.google.com/gemini/docs/conversational-analytics-api/data-agent-authored-context-databases for details.
 
 ## Example
 
@@ -19,19 +19,19 @@ tools:
   my-gda-query-tool:
     kind: cloud-gemini-data-analytics-query
     source: my-gda-source
-    description: "Ask questions about your data."
-    location: us-central1
+    description: "Use this tool to send natural language queries to the Gemini Data Analytics API and receive SQL, natural language answers, and explanations."
+    location: ${your_database_location}
     context:
       datasourceReferences:
-        spannerReference:
+        cloudSqlReference:
           databaseReference:
-            projectId: "cloud-db-nl2sql"
-            region: "us-central1"
-            instanceId: "evalbench"
-            databaseId: "financial"
-            engine: "GOOGLE_SQL"
+            projectId: "${your_project_id}"
+            region: "${your_database_instance_region}"
+            instanceId: "${your_database_instance_id}"
+            databaseId: "${your_database_name}"
+            engine: "POSTGRESQL"
           agentContextReference:
-            contextSetId: "projects/cloud-db-nl2sql/locations/us-east1/contextSets/bdf_gsql_gemini_all_templates"
+            contextSetId: "${your_context_set_id}"  # E.g. projects/${project_id}/locations/${context_set_location}/contextSets/${context_set_id}
     generationOptions:
       generateQueryResult: true
       generateNaturalLanguageAnswer: true
@@ -43,7 +43,9 @@ tools:
 
 When using this tool, a `prompt` parameter containing a natural language query is provided to the tool (typically by an agent). The tool then interacts with the Gemini Data Analytics API using the context defined in your configuration.
 
-The structure of the response depends on the `generationOptions` configured in your tool definition (e.g., enabling `generateQueryResult` will include the SQL query results).
+The structure of the response depends on the `generationOptions` configured in your tool definition (e.g., enabling `generateQueryResult` will include the SQL query results). 
+
+See https://docs.cloud.google.com/gemini/docs/conversational-analytics-api/reference/rest for details.
 
 **Example Input Prompt:**
 
