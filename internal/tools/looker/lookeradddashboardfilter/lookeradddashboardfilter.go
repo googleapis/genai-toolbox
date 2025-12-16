@@ -158,7 +158,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	dashboard_id := paramsMap["dashboard_id"].(string)
 	name := paramsMap["name"].(string)
 	title := paramsMap["title"].(string)
-	filterType := paramsMap["flter_type"].(string)
+	filterType := paramsMap["filter_type"].(string)
 	switch filterType {
 	case "date_filter":
 	case "number_filter":

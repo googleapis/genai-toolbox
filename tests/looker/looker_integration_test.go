@@ -30,6 +30,9 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/tests"
+
+	"github.com/looker-open-source/sdk-codegen/go/rtl"
+	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
 var (
@@ -139,8 +142,28 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
+			"make_look": map[string]any{
+				"kind":        "looker-make-look",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 			"get_dashboards": map[string]any{
 				"kind":        "looker-get-dashboards",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"make_dashboard": map[string]any{
+				"kind":        "looker-make-dashboard",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"add_dashboard_filter": map[string]any{
+				"kind":        "looker-add-dashboard-filter",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
+			"add_dashboard_element": map[string]any{
+				"kind":        "looker-add-dashboard-element",
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
@@ -678,6 +701,116 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "make_look",
+		map[string]any{
+			"make_look": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The model containing the explore.",
+						"name":        "model",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The explore to be queried.",
+						"name":        "explore",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The fields to be retrieved.",
+						"items": map[string]any{
+							"authSources": []any{},
+							"description": "A field to be returned in the query",
+							"name":        "field",
+							"required":    true,
+							"type":        "string",
+						},
+						"name":     "fields",
+						"required": true,
+						"type":     "array",
+					},
+					map[string]any{
+						"additionalProperties": true,
+						"authSources":          []any{},
+						"description":          "The filters for the query",
+						"name":                 "filters",
+						"required":             false,
+						"type":                 "object",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The query pivots (must be included in fields as well).",
+						"items": map[string]any{
+							"authSources": []any{},
+							"description": "A field to be used as a pivot in the query",
+							"name":        "pivot_field",
+							"required":    false,
+							"type":        "string",
+						},
+						"name":     "pivots",
+						"required": false,
+						"type":     "array",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The sorts like \"field.id desc 0\".",
+						"items": map[string]any{
+							"authSources": []any{},
+							"description": "A field to be used as a sort in the query",
+							"name":        "sort_field",
+							"required":    false,
+							"type":        "string",
+						},
+						"name":     "sorts",
+						"required": false,
+						"type":     "array",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The row limit.",
+						"name":        "limit",
+						"required":    false,
+						"type":        "integer",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The query timezone.",
+						"name":        "tz",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The title of the Look",
+						"name":        "title",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The description of the Look",
+						"name":        "description",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"additionalProperties": true,
+						"authSources":          []any{},
+						"description":          "The visualization config for the query",
+						"name":                 "vis_config",
+						"required":             false,
+						"type":                 "object",
+					},
+				},
+			},
+		},
+	)
 	tests.RunToolGetTestByName(t, "get_dashboards",
 		map[string]any{
 			"get_dashboards": map[string]any{
@@ -711,6 +844,235 @@ func TestLooker(t *testing.T) {
 						"name":        "offset",
 						"required":    false,
 						"type":        "integer",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "make_dashboard",
+		map[string]any{
+			"make_dashboard": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The title of the Dashboard",
+						"name":        "title",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The description of the Dashboard",
+						"name":        "description",
+						"required":    false,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "add_dashboard_filter",
+		map[string]any{
+			"add_dashboard_filter": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The id of the dashboard where this filter will exist",
+						"name":        "dashboard_id",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The name of the Dashboard Filter",
+						"name":        "name",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The title of the Dashboard Filter",
+						"name":        "title",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The filter_type of the Dashboard Filter: date_filter, number_filter, string_filter, field_filter (default field_filter)",
+						"name":        "filter_type",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The default_value of the Dashboard Filter (optional)",
+						"name":        "default_value",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The model of a field type Dashboard Filter (required if type field)",
+						"name":        "model",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The explore of a field type Dashboard Filter (required if type field)",
+						"name":        "explore",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The dimension of a field type Dashboard Filter (required if type field)",
+						"name":        "dimension",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The Dashboard Filter should allow multiple values (default true)",
+						"name":        "allow_multiple_values",
+						"required":    false,
+						"type":        "boolean",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The Dashboard Filter is required to run dashboard (default false)",
+						"name":        "required",
+						"required":    false,
+						"type":        "boolean",
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "add_dashboard_element",
+		map[string]any{
+			"add_dashboard_element": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The model containing the explore.",
+						"name":        "model",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The explore to be queried.",
+						"name":        "explore",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The fields to be retrieved.",
+						"items": map[string]any{
+							"authSources": []any{},
+							"description": "A field to be returned in the query",
+							"name":        "field",
+							"required":    true,
+							"type":        "string",
+						},
+						"name":     "fields",
+						"required": true,
+						"type":     "array",
+					},
+					map[string]any{
+						"additionalProperties": true,
+						"authSources":          []any{},
+						"description":          "The filters for the query",
+						"name":                 "filters",
+						"required":             false,
+						"type":                 "object",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The query pivots (must be included in fields as well).",
+						"items": map[string]any{
+							"authSources": []any{},
+							"description": "A field to be used as a pivot in the query",
+							"name":        "pivot_field",
+							"required":    false,
+							"type":        "string",
+						},
+						"name":     "pivots",
+						"required": false,
+						"type":     "array",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The sorts like \"field.id desc 0\".",
+						"items": map[string]any{
+							"authSources": []any{},
+							"description": "A field to be used as a sort in the query",
+							"name":        "sort_field",
+							"required":    false,
+							"type":        "string",
+						},
+						"name":     "sorts",
+						"required": false,
+						"type":     "array",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The row limit.",
+						"name":        "limit",
+						"required":    false,
+						"type":        "integer",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The query timezone.",
+						"name":        "tz",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The id of the dashboard where this tile will exist",
+						"name":        "dashboard_id",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The title of the Dashboard Element",
+						"name":        "title",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"additionalProperties": true,
+						"authSources":          []any{},
+						"description":          "The visualization config for the query",
+						"name":                 "vis_config",
+						"required":             false,
+						"type":                 "object",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": `An array of dashboard filters like [{"dashboard_filter_name": "name", "field": "view_name.field_name"}, ...]`,
+						"items": map[string]any{
+							"additionalProperties": true,
+							"authSources":          []any{},
+							"description":          `A dashboard filter like {"dashboard_filter_name": "name", "field": "view_name.field_name"}`,
+							"name":                 "dashboard_filter",
+							"required":             false,
+							"type":                 "object",
+						},
+						"name":     "dashboard_filters",
+						"required": false,
+						"type":     "array",
 					},
 				},
 			},
@@ -1200,8 +1562,6 @@ func TestLooker(t *testing.T) {
 	wantResult = "null"
 	tests.RunToolInvokeParametersTest(t, "get_dashboards", []byte(`{"title": "FOO", "desc": "BAR"}`), wantResult)
 
-	runConversationalAnalytics(t, "system__activity", "content_usage")
-
 	wantResult = "\"Connection\":\"thelook\""
 	tests.RunToolInvokeParametersTest(t, "health_pulse", []byte(`{"action": "check_db_connections"}`), wantResult)
 
@@ -1261,6 +1621,16 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "/login/embed?t=" // testing for specific substring, since url is dynamic
 	tests.RunToolInvokeParametersTest(t, "generate_embed_url", []byte(`{"type": "dashboards", "id": "1"}`), wantResult)
+
+	runConversationalAnalytics(t, "system__activity", "content_usage")
+
+	deleteLook := testMakeLook(t)
+	defer deleteLook()
+
+	dashboardId, deleteDashboard := testMakeDashboard(t)
+	defer deleteDashboard()
+	testAddDashboardFilter(t, dashboardId)
+	testAddDashboardElement(t, dashboardId)
 }
 
 func runConversationalAnalytics(t *testing.T, modelName, exploreName string) {
@@ -1323,5 +1693,129 @@ func runConversationalAnalytics(t *testing.T, modelName, exploreName string) {
 				}
 			}
 		})
+	}
+}
+
+func testMakeLook(t *testing.T) func() {
+	var id string
+	t.Run("TestMakeLook", func(t *testing.T) {
+		reqBody := []byte(`{"model": "system__activity", "explore": "look", "fields": ["look.count"], "title": "TestLook"}`)
+
+		url := "http://127.0.0.1:5000/api/tool/make_look/invoke"
+		resp, bodyBytes := tests.RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqBody), nil)
+
+		if resp.StatusCode != 200 {
+			t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, 200, string(bodyBytes))
+		}
+
+		var respBody map[string]interface{}
+		if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
+			t.Fatalf("error parsing response body: %v", err)
+		}
+
+		result := respBody["result"].(string)
+		if err := json.Unmarshal([]byte(result), &respBody); err != nil {
+			t.Fatalf("error parsing result body: %v", err)
+		}
+
+		var ok bool
+		if id, ok = respBody["id"].(string); !ok || id == "" {
+			t.Errorf("didn't get TestLook id, got %s", string(bodyBytes))
+		}
+	})
+
+	return func() {
+		cfg := rtl.ApiSettings{
+			BaseUrl:      LookerBaseUrl,
+			ApiVersion:   "4.0",
+			VerifySsl:    LookerVerifySsl == "true",
+			Timeout:      120,
+			ClientId:     LookerClientId,
+			ClientSecret: LookerClientSecret,
+		}
+
+		sdk := v4.NewLookerSDK(rtl.NewAuthSession(cfg))
+
+		if _, err := sdk.DeleteLook(id, nil); err != nil {
+			t.Fatalf("error deleting look: %v", err)
+		}
+		t.Logf("deleted Look %s", id)
+	}
+}
+
+func testAddDashboardFilter(t *testing.T, dashboardId string) {
+	t.Run("TestAddDashboardFilter", func(t *testing.T) {
+		reqBody := []byte(fmt.Sprintf(`{"dashboard_id": "%s", "model": "system__activity", "explore": "look", "dimension": "look.created_year", "name": "test_filter", "title": "TestDashboardFilter"}`, dashboardId))
+
+		url := "http://127.0.0.1:5000/api/tool/add_dashboard_filter/invoke"
+		resp, bodyBytes := tests.RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqBody), nil)
+
+		if resp.StatusCode != 200 {
+			t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, 200, string(bodyBytes))
+		}
+
+		t.Logf("got %s", string(bodyBytes))
+	})
+}
+
+func testAddDashboardElement(t *testing.T, dashboardId string) {
+	t.Run("TestAddDashboardElement", func(t *testing.T) {
+		reqBody := []byte(fmt.Sprintf(`{"dashboard_id": "%s", "model": "system__activity", "explore": "look", "fields": ["look.count"], "title": "TestDashboardElement"}`, dashboardId))
+
+		url := "http://127.0.0.1:5000/api/tool/add_dashboard_element/invoke"
+		resp, bodyBytes := tests.RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqBody), nil)
+
+		if resp.StatusCode != 200 {
+			t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, 200, string(bodyBytes))
+		}
+
+		t.Logf("got %s", string(bodyBytes))
+	})
+}
+
+func testMakeDashboard(t *testing.T) (string, func()) {
+	var id string
+	t.Run("TestMakeDashboard", func(t *testing.T) {
+		reqBody := []byte(`{"title": "TestDashboard"}`)
+
+		url := "http://127.0.0.1:5000/api/tool/make_dashboard/invoke"
+		resp, bodyBytes := tests.RunRequest(t, http.MethodPost, url, bytes.NewBuffer(reqBody), nil)
+
+		if resp.StatusCode != 200 {
+			t.Fatalf("unexpected status code: got %d, want %d. Body: %s", resp.StatusCode, 200, string(bodyBytes))
+		}
+
+		var respBody map[string]interface{}
+		if err := json.Unmarshal(bodyBytes, &respBody); err != nil {
+			t.Fatalf("error parsing response body: %v", err)
+		}
+
+		result := respBody["result"].(string)
+		if err := json.Unmarshal([]byte(result), &respBody); err != nil {
+			t.Fatalf("error parsing result body: %v", err)
+		}
+
+		var ok bool
+		if id, ok = respBody["id"].(string); !ok || id == "" {
+			t.Errorf("didn't get TestDashboard id, got %s", string(bodyBytes))
+		}
+	})
+
+	return id, func() {
+		cfg := rtl.ApiSettings{
+			BaseUrl:      LookerBaseUrl,
+			ApiVersion:   "4.0",
+			VerifySsl:    LookerVerifySsl == "true",
+			Timeout:      120,
+			ClientId:     LookerClientId,
+			ClientSecret: LookerClientSecret,
+		}
+
+		sdk := v4.NewLookerSDK(rtl.NewAuthSession(cfg))
+
+		if _, err := sdk.DeleteDashboard(id, nil); err != nil {
+			t.Fatalf("error deleting dashboard: %v", err)
+		}
+		t.Logf("deleted Dashboard %s", id)
 	}
 }
