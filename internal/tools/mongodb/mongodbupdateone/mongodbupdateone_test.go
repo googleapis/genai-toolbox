@@ -59,6 +59,123 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
                         - name: item
                           type: string
                           description: small description
+					upsert: true
+			`,
+			want: server.ToolConfigs{
+				"example_tool": mongodbupdateone.Config{
+					Name:          "example_tool",
+					Kind:          "mongodb-update-one",
+					Source:        "my-instance",
+					AuthRequired:  []string{},
+					Database:      "test_db",
+					Collection:    "test_coll",
+					Canonical:     false,
+					FilterPayload: "{ name: {{json .name}} }\n",
+					FilterParams: parameters.Parameters{
+						&parameters.StringParameter{
+							CommonParameter: parameters.CommonParameter{
+								Name: "name",
+								Type: "string",
+								Desc: "small description",
+							},
+						},
+					},
+					UpdatePayload: "{ $set : { item: {{json .item}} } }\n",
+					UpdateParams: parameters.Parameters{
+						&parameters.StringParameter{
+							CommonParameter: parameters.CommonParameter{
+								Name: "item",
+								Type: "string",
+								Desc: "small description",
+							},
+						},
+					},
+					Upsert:      true,
+					Description: "some description",
+				},
+			},
+		},
+		{
+			desc: "false canonical",
+			in: `
+			tools:
+				example_tool:
+					kind: mongodb-update-one
+					source: my-instance
+					description: some description
+					database: test_db
+					collection: test_coll
+					filterPayload: |
+					    { name: {{json .name}} }
+					filterParams:
+                        - name: name 
+                          type: string
+                          description: small description
+					updatePayload: |
+					    { $set : { item: {{json .item}} } }
+					updateParams:
+                        - name: item
+                          type: string
+                          description: small description
+					canonical: false
+					upsert: true
+			`,
+			want: server.ToolConfigs{
+				"example_tool": mongodbupdateone.Config{
+					Name:          "example_tool",
+					Kind:          "mongodb-update-one",
+					Source:        "my-instance",
+					AuthRequired:  []string{},
+					Database:      "test_db",
+					Collection:    "test_coll",
+					Canonical:     false,
+					FilterPayload: "{ name: {{json .name}} }\n",
+					FilterParams: parameters.Parameters{
+						&parameters.StringParameter{
+							CommonParameter: parameters.CommonParameter{
+								Name: "name",
+								Type: "string",
+								Desc: "small description",
+							},
+						},
+					},
+					UpdatePayload: "{ $set : { item: {{json .item}} } }\n",
+					UpdateParams: parameters.Parameters{
+						&parameters.StringParameter{
+							CommonParameter: parameters.CommonParameter{
+								Name: "item",
+								Type: "string",
+								Desc: "small description",
+							},
+						},
+					},
+					Upsert:      true,
+					Description: "some description",
+				},
+			},
+		},
+		{
+			desc: "true canonical",
+			in: `
+			tools:
+				example_tool:
+					kind: mongodb-update-one
+					source: my-instance
+					description: some description
+					database: test_db
+					collection: test_coll
+					filterPayload: |
+					    { name: {{json .name}} }
+					filterParams:
+                        - name: name 
+                          type: string
+                          description: small description
+					updatePayload: |
+					    { $set : { item: {{json .item}} } }
+					updateParams:
+                        - name: item
+                          type: string
+                          description: small description
 					canonical: true
 					upsert: true
 			`,

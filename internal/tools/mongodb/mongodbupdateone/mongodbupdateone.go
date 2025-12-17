@@ -57,7 +57,7 @@ type Config struct {
 	UpdatePayload string                `yaml:"updatePayload" validate:"required"`
 	UpdateParams  parameters.Parameters `yaml:"updateParams" validate:"required"`
 
-	Canonical bool `yaml:"canonical" validate:"required"`
+	Canonical bool `yaml:"canonical"`
 	Upsert    bool `yaml:"upsert"`
 }
 

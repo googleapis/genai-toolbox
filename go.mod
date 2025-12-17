@@ -2,7 +2,7 @@ module github.com/googleapis/genai-toolbox
 
 go 1.24.7
 
-toolchain go1.25.3
+toolchain go1.25.5
 
 require (
 	cloud.google.com/go/alloydbconn v1.15.5
@@ -37,7 +37,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/json-iterator/go v1.1.12
-	github.com/looker-open-source/sdk-codegen/go v0.25.18
+	github.com/looker-open-source/sdk-codegen/go v0.25.21
 	github.com/microsoft/go-mssqldb v1.9.3
 	github.com/nakagami/firebirdsql v0.9.15
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.4

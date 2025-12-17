@@ -300,7 +300,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("unable to get column types: %w", err)
 	}
 
-	var out []any
+	out := []any{}
 	for results.Next() {
 		err := results.Scan(values...)
 		if err != nil {

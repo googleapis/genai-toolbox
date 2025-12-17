@@ -54,7 +54,7 @@ type Config struct {
 	Description  string   `yaml:"description" validate:"required"`
 	Database     string   `yaml:"database" validate:"required"`
 	Collection   string   `yaml:"collection" validate:"required"`
-	Canonical    bool     `yaml:"canonical" validate:"required"` //i want to force the user to choose
+	Canonical    bool     `yaml:"canonical"`
 }
 
 // validate interface
