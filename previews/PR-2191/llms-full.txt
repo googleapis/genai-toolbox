@@ -1171,7 +1171,7 @@ How to get started using Toolbox prompts locally with PostgreSQL and [Antigravit
 This guide assumes you have already done the following:
 
 1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
- 
+
 [install-postgres]: https://www.postgresql.org/download/
 
 ## Step 1: Set up your database
@@ -1181,22 +1181,22 @@ accessed by our agent, and create a database user for Toolbox to connect with.
 
 1. Connect to postgres using the `psql` command:
 
-    ```bash
-    psql -h 127.0.0.1 -U postgres
-    ```
+   ```bash
+   psql -h 127.0.0.1 -U postgres
+   ```
 
-    Here, `postgres` denotes the default postgres superuser.
+   Here, `postgres` denotes the default postgres superuser.
 
-    {{< notice info >}}
+   {{< notice info >}}
 
 #### **Having trouble connecting?**
 
-* **Password Prompt:** If you are prompted for a password for the `postgres`
+- **Password Prompt:** If you are prompted for a password for the `postgres`
   user and do not know it (or a blank password doesn't work), your PostgreSQL
   installation might require a password or a different authentication method.
-* **`FATAL: role "postgres" does not exist`:** This error means the default
+- **`FATAL: role "postgres" does not exist`:** This error means the default
   `postgres` superuser role isn't available under that name on your system.
-* **`Connection refused`:** Ensure your PostgreSQL server is actually running.
+- **`Connection refused`:** Ensure your PostgreSQL server is actually running.
   You can typically check with `sudo systemctl status postgresql` and start it
   with `sudo systemctl start postgresql` on Linux systems.
 
@@ -1219,97 +1219,97 @@ database creation steps below. Afterwards, type `\q` to exit `psql`, and then
 `exit` to return to your normal user shell.
 
 If desired, once connected to `psql` as the `postgres` OS user, you can set a
-password for the `postgres` *database* user using: `ALTER USER postgres WITH
+password for the `postgres` _database_ user using: `ALTER USER postgres WITH
 PASSWORD 'your_chosen_password';`. This would allow direct connection with `-U
 postgres` and a password next time.
-    {{< /notice >}}
+{{< /notice >}}
 
 1. Create a new database and a new user:
 
-    {{< notice tip >}}
-  For a real application, it's best to follow the principle of least permission
-  and only grant the privileges your application needs.
-    {{< /notice >}}
+   {{< notice tip >}}
+   For a real application, it's best to follow the principle of least permission
+   and only grant the privileges your application needs.
+   {{< /notice >}}
 
-    ```sql
-      CREATE USER toolbox_user WITH PASSWORD 'my-password';
+   ```sql
+     CREATE USER toolbox_user WITH PASSWORD 'my-password';
 
-      CREATE DATABASE toolbox_db;
-      GRANT ALL PRIVILEGES ON DATABASE toolbox_db TO toolbox_user;
+     CREATE DATABASE toolbox_db;
+     GRANT ALL PRIVILEGES ON DATABASE toolbox_db TO toolbox_user;
 
-      ALTER DATABASE toolbox_db OWNER TO toolbox_user;
-    ```
+     ALTER DATABASE toolbox_db OWNER TO toolbox_user;
+   ```
 
 1. End the database session:
 
-    ```bash
-    \q
-    ```
+   ```bash
+   \q
+   ```
 
-    (If you used `sudo -i -u postgres` and then `psql`, remember you might also
-    need to type `exit` after `\q` to leave the `postgres` user's shell
-    session.)
+   (If you used `sudo -i -u postgres` and then `psql`, remember you might also
+   need to type `exit` after `\q` to leave the `postgres` user's shell
+   session.)
 
 1. Connect to your database with your new user:
 
-    ```bash
-    psql -h 127.0.0.1 -U toolbox_user -d toolbox_db
-    ```
+   ```bash
+   psql -h 127.0.0.1 -U toolbox_user -d toolbox_db
+   ```
 
 1. Create the required tables using the following commands:
 
-    ```sql
-    CREATE TABLE users (
-      id SERIAL PRIMARY KEY,
-      username VARCHAR(50) NOT NULL,
-      email VARCHAR(100) UNIQUE NOT NULL,
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    );
+   ```sql
+   CREATE TABLE users (
+     id SERIAL PRIMARY KEY,
+     username VARCHAR(50) NOT NULL,
+     email VARCHAR(100) UNIQUE NOT NULL,
+     created_at TIMESTAMPTZ DEFAULT NOW()
+   );
 
-    CREATE TABLE restaurants (
-      id SERIAL PRIMARY KEY,
-      name VARCHAR(100) NOT NULL,
-      location VARCHAR(100)
-    );
+   CREATE TABLE restaurants (
+     id SERIAL PRIMARY KEY,
+     name VARCHAR(100) NOT NULL,
+     location VARCHAR(100)
+   );
 
-    CREATE TABLE reviews (
-      id SERIAL PRIMARY KEY,
-      user_id INT REFERENCES users(id),
-      restaurant_id INT REFERENCES restaurants(id),
-      rating INT CHECK (rating >= 1 AND rating <= 5),
-      review_text TEXT,
-      is_published BOOLEAN DEFAULT false,
-      moderation_status VARCHAR(50) DEFAULT 'pending_manual_review',
-      created_at TIMESTAMPTZ DEFAULT NOW()
-    );
-    ```
+   CREATE TABLE reviews (
+     id SERIAL PRIMARY KEY,
+     user_id INT REFERENCES users(id),
+     restaurant_id INT REFERENCES restaurants(id),
+     rating INT CHECK (rating >= 1 AND rating <= 5),
+     review_text TEXT,
+     is_published BOOLEAN DEFAULT false,
+     moderation_status VARCHAR(50) DEFAULT 'pending_manual_review',
+     created_at TIMESTAMPTZ DEFAULT NOW()
+   );
+   ```
 
 1. Insert dummy data into the tables.
 
-    ```sql
-    INSERT INTO users (id, username, email) VALUES
-    (123, 'jane_d', 'jane.d@example.com'),
-    (124, 'john_s', 'john.s@example.com'),
-    (125, 'sam_b', 'sam.b@example.com');
+   ```sql
+   INSERT INTO users (id, username, email) VALUES
+   (123, 'jane_d', 'jane.d@example.com'),
+   (124, 'john_s', 'john.s@example.com'),
+   (125, 'sam_b', 'sam.b@example.com');
 
-    INSERT INTO restaurants (id, name, location) VALUES
-    (455, 'Pizza Palace', '123 Main St'),
-    (456, 'The Corner Bistro', '456 Oak Ave'),
-    (457, 'Sushi Spot', '789 Pine Ln');
+   INSERT INTO restaurants (id, name, location) VALUES
+   (455, 'Pizza Palace', '123 Main St'),
+   (456, 'The Corner Bistro', '456 Oak Ave'),
+   (457, 'Sushi Spot', '789 Pine Ln');
 
-    INSERT INTO reviews (user_id, restaurant_id, rating, review_text, is_published, moderation_status) VALUES
-    (124, 455, 5, 'Best pizza in town! The crust was perfect.', true, 'approved'),
-    (125, 457, 4, 'Great sushi, very fresh. A bit pricey but worth it.', true, 'approved'),
-    (123, 457, 5, 'Absolutely loved the dragon roll. Will be back!', true, 'approved'),
-    (123, 456, 4, 'The atmosphere was lovely and the food was great. My photo upload might have been weird though.', false, 'pending_manual_review'),
-    (125, 456, 1, 'This review contains inappropriate language.', false, 'rejected');
-    ```
+   INSERT INTO reviews (user_id, restaurant_id, rating, review_text, is_published, moderation_status) VALUES
+   (124, 455, 5, 'Best pizza in town! The crust was perfect.', true, 'approved'),
+   (125, 457, 4, 'Great sushi, very fresh. A bit pricey but worth it.', true, 'approved'),
+   (123, 457, 5, 'Absolutely loved the dragon roll. Will be back!', true, 'approved'),
+   (123, 456, 4, 'The atmosphere was lovely and the food was great. My photo upload might have been weird though.', false, 'pending_manual_review'),
+   (125, 456, 1, 'This review contains inappropriate language.', false, 'rejected');
+   ```
 
 1. End the database session:
 
-    ```bash
-    \q
-    ```
+   ```bash
+   \q
+   ```
 
 ## Step 2: Configure Toolbox
 
@@ -1379,24 +1379,25 @@ prompts:
 Configure the Antigravity to talk to your local Toolbox MCP server.
 
 1. Click on "MCP Servers" in the Agent Manager.
-![agent_panel](./assets/antigravity/agent_panel.png)
+   ![agent_panel](./agent_panel.png)
 
 2. Search for and click on MCP Toolbox for Databases.
-![search_toolbox](./assets/antigravity/search.png)
+   ![search_toolbox](./search.png)
 
 3. Click the install button and enter the correct path to the `tools.yaml` file.
-![install_toolbox](./assets/antigravity/install.png)
+   ![install_toolbox](./install.png)
 
 4. You should be able to see your tools in the tools tab.
-![tools](./assets/antigravity/tools.png)
+   ![tools](./tools.png)
 
 5. Now you can type your query into the agent panel.
 
-    ```
-    Investigate the missing review from jane.d@example.com for The Corner Bistro
-    ```
+   ```
+   Investigate the missing review from jane.d@example.com for The corner bistro
+   ```
 
-    ![quickstart_result](./assets/antigravity/quickstart_result.png)
+   ![quickstart_result](./quickstart_result.png)
+
 
 # Prompts using Gemini CLI
 How to get started using Toolbox prompts locally with PostgreSQL and [Gemini CLI](https://pypi.org/project/gemini-cli/).
