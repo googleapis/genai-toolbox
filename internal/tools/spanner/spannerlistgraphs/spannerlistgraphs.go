@@ -83,11 +83,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	// verify the dialect is GoogleSQL
-	if strings.ToLower(s.DatabaseDialect()) != "googlesql" {
-		return nil, fmt.Errorf("invalid source dialect for %q tool: source dialect must be GoogleSQL", kind)
-	}
-
 	// Define parameters for the tool
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameterWithDefault(
@@ -104,9 +99,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	description := cfg.Description
 	if description == "" {
-		description = "Lists detailed graph schema information (node tables, edge tables, labels and property declarations) as JSON for user-created graphs. Filters by a comma-separated list of names. If names are omitted, lists all graphs in user schemas."
+		description = "Lists detailed graph schema information (node tables, edge tables, labels and property declarations) as JSON for user-created graphs. Filters by a comma-separated list of graph names. If names are omitted, lists all graphs. The output can be 'simple' (graph names only) or 'detailed' (full schema)."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
 
 	// finish tool setup
 	t := Tool{
@@ -165,7 +160,11 @@ func processRows(iter *spanner.RowIterator) ([]any, error) {
 	return out, nil
 }
 
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	// Check dialect here at RUNTIME instead of startup
+	if strings.ToLower(t.dialect) != "googlesql" {
+		return nil, fmt.Errorf("operation not supported: The 'spanner-list-graphs' tool is only available for GoogleSQL dialect databases. Your current database dialect is '%s'", t.dialect)
+	}
 	paramsMap := params.AsMap()
 
 	graphNames, _ := paramsMap["graph_names"].(string)
@@ -210,7 +209,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return false
 }
 

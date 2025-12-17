@@ -138,7 +138,8 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 
 	// Run specific MySQL tool tests
-	tests.RunMySQLListTablesTest(t, MySQLDatabase, tableNameParam, tableNameAuth)
+	const expectedOwner = ""
+	tests.RunMySQLListTablesTest(t, MySQLDatabase, tableNameParam, tableNameAuth, expectedOwner)
 	tests.RunMySQLListActiveQueriesTest(t, ctx, pool)
 	tests.RunMySQLListTablesMissingUniqueIndexes(t, ctx, pool, MySQLDatabase)
 	tests.RunMySQLListTableFragmentationTest(t, MySQLDatabase, tableNameParam, tableNameAuth)

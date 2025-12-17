@@ -25,6 +25,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/common"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/protobuf/encoding/protojson"
 )
@@ -110,7 +111,7 @@ type Tool struct {
 }
 
 // Invoke executes the tool's operation.
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	client := t.Source.GetBatchControllerClient()
 
 	paramMap := params.AsMap()
@@ -142,9 +143,23 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		return nil, fmt.Errorf("failed to unmarshal batch JSON: %w", err)
 	}
 
-	return result, nil
-}
+	consoleUrl, err := common.BatchConsoleURLFromProto(batchPb)
+	if err != nil {
+		return nil, fmt.Errorf("error generating console url: %v", err)
+	}
+	logsUrl, err := common.BatchLogsURLFromProto(batchPb)
+	if err != nil {
+		return nil, fmt.Errorf("error generating logs url: %v", err)
+	}
 
+	wrappedResult := map[string]any{
+		"consoleUrl": consoleUrl,
+		"logsUrl":    logsUrl,
+		"batch":      result,
+	}
+
+	return wrappedResult, nil
+}
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claims)
 }
@@ -161,7 +176,7 @@ func (t Tool) Authorized(services []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, services)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	// Client OAuth not supported, rely on ADCs.
 	return false
 }

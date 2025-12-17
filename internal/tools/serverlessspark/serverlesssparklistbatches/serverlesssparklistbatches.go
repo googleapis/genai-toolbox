@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/common"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/iterator"
 )
@@ -124,10 +125,12 @@ type Batch struct {
 	Creator    string `json:"creator"`
 	CreateTime string `json:"createTime"`
 	Operation  string `json:"operation"`
+	ConsoleURL string `json:"consoleUrl"`
+	LogsURL    string `json:"logsUrl"`
 }
 
 // Invoke executes the tool's operation.
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	client := t.Source.GetBatchControllerClient()
 
 	parent := fmt.Sprintf("projects/%s/locations/%s", t.Source.Project, t.Source.Location)
@@ -159,15 +162,26 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		return nil, fmt.Errorf("failed to list batches: %w", err)
 	}
 
-	batches := ToBatches(batchPbs)
+	batches, err := ToBatches(batchPbs)
+	if err != nil {
+		return nil, err
+	}
 
 	return ListBatchesResponse{Batches: batches, NextPageToken: nextPageToken}, nil
 }
 
 // ToBatches converts a slice of protobuf Batch messages to a slice of Batch structs.
-func ToBatches(batchPbs []*dataprocpb.Batch) []Batch {
+func ToBatches(batchPbs []*dataprocpb.Batch) ([]Batch, error) {
 	batches := make([]Batch, 0, len(batchPbs))
 	for _, batchPb := range batchPbs {
+		consoleUrl, err := common.BatchConsoleURLFromProto(batchPb)
+		if err != nil {
+			return nil, fmt.Errorf("error generating console url: %v", err)
+		}
+		logsUrl, err := common.BatchLogsURLFromProto(batchPb)
+		if err != nil {
+			return nil, fmt.Errorf("error generating logs url: %v", err)
+		}
 		batch := Batch{
 			Name:       batchPb.Name,
 			UUID:       batchPb.Uuid,
@@ -175,10 +189,12 @@ func ToBatches(batchPbs []*dataprocpb.Batch) []Batch {
 			Creator:    batchPb.Creator,
 			CreateTime: batchPb.CreateTime.AsTime().Format(time.RFC3339),
 			Operation:  batchPb.Operation,
+			ConsoleURL: consoleUrl,
+			LogsURL:    logsUrl,
 		}
 		batches = append(batches, batch)
 	}
-	return batches
+	return batches, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
@@ -197,7 +213,7 @@ func (t Tool) Authorized(services []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, services)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	// Client OAuth not supported, rely on ADCs.
 	return false
 }

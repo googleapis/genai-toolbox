@@ -26,10 +26,15 @@ tools:
         kind: looker-get-project-files
         source: looker-source
         description: |
-          get_project_files Tool
+          This tool retrieves a list of all LookML files within a specified project,
+          providing details about each file.
 
-          Given a project_id this tool returns the details about
-          the LookML files that make up that project.
+          Parameters:
+          - project_id (required): The unique ID of the LookML project, obtained from `get_projects`.
+
+          Output:
+          A JSON array of objects, each representing a LookML file and containing
+          details such as `path`, `id`, `type`, and `git_status`.
 ```
 
 ## Reference
