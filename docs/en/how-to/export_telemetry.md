@@ -85,9 +85,9 @@ There are a couple of steps to run and use a Collector.
     ./toolbox --telemetry-otlp=127.0.0.1:4553
     ```
 
-    {{< tip note >}}
+    {{< notice tip >}}
     To pass an insecure endpoint, set environment variable `OTEL_EXPORTER_OTLP_INSECURE=true`.
-    {{< /tip >}}
+    {{< /notice >}}
 
 1. Once telemetry datas are collected, you can view them in your telemetry
    backend. If you are using GCP exporters, telemetry will be visible in GCP
