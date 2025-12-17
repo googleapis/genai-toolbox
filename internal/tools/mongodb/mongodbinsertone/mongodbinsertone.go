@@ -102,13 +102,9 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	s, ok := resourceMgr.GetSource(t.Source)
-	if !ok {
-		return nil, fmt.Errorf("unable to retrieve source %s in tool %s", t.Source, t.Name)
-	}
-	source, ok := s.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, t.Source)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
 	}
 
 	if len(params) == 0 {
@@ -121,7 +117,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	var data any
-	err := bson.UnmarshalExtJSON([]byte(jsonData), t.Canonical, &data)
+	err = bson.UnmarshalExtJSON([]byte(jsonData), t.Canonical, &data)
 	if err != nil {
 		return nil, err
 	}
