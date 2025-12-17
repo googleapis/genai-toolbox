@@ -850,7 +850,7 @@ steps:
         go test -c -cover ./tests/oracle
         .ci/test_with_coverage.sh \
           "Oracle DB" \
-          oracle 
+          oracle \
           oracle
 
   - id: "serverless-spark"
