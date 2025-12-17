@@ -164,6 +164,12 @@ limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
 &lt;li>&lt;code>list_triggers&lt;/code>: Lists triggers in the database.&lt;/li>
 &lt;li>&lt;code>list_indexes&lt;/code>: List available user indexes in a PostgreSQL database.&lt;/li>
 &lt;li>&lt;code>list_sequences&lt;/code>: List sequences in a PostgreSQL database.&lt;/li>
+&lt;li>&lt;code>list_publication_tables&lt;/code>: List publication tables in a PostgreSQL database.&lt;/li>
+&lt;li>&lt;code>list_tablespaces&lt;/code>: Lists tablespaces in the database.&lt;/li>
+&lt;li>&lt;code>list_pg_settings&lt;/code>: List configuration parameters for the PostgreSQL server.&lt;/li>
+&lt;li>&lt;code>list_database_stats&lt;/code>: Lists the key performance and activity statistics for
+each database in the AlloyDB instance.&lt;/li>
+&lt;li>&lt;code>list_roles&lt;/code>: Lists all the user-created roles in PostgreSQL database.&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;/ul>
