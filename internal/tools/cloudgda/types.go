@@ -14,6 +14,8 @@
 
 package cloudgda
 
+// See full service definition at: https://github.com/googleapis/googleapis/blob/master/google/cloud/geminidataanalytics/v1beta/data_chat_service.proto
+
 // QueryDataRequest represents the JSON body for the queryData API
 type QueryDataRequest struct {
 	Parent            string             `json:"parent"`

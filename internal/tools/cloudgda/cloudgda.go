@@ -29,11 +29,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const Kind string = "cloud-gemini-data-analytics-query"
+const kind string = "cloud-gemini-data-analytics-query"
 
 func init() {
-	if !tools.Register(Kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", Kind))
+	if !tools.Register(kind, newConfig) {
+		panic(fmt.Sprintf("tool kind %q already registered", kind))
 	}
 }
 
@@ -60,7 +60,7 @@ type Config struct {
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigKind() string {
-	return Kind
+	return kind
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -73,7 +73,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(*cloudgdasrc.Source)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-gemini-data-analytics`", Kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-gemini-data-analytics`", kind)
 	}
 
 	// Define the parameters for the Gemini Data Analytics Query API
@@ -137,9 +137,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	// Parse the access token if provided
-	tokenStr := string(accessToken)
-	if parsedToken, err := accessToken.ParseBearerToken(); err == nil {
-		tokenStr = parsedToken
+	var tokenStr string
+	if t.RequiresClientAuthorization(resourceMgr) {
+		var err error
+		tokenStr, err = accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
 	}
 
 	client, err := t.Source.GetClient(ctx, tokenStr)

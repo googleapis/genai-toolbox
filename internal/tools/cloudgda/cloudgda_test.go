@@ -67,7 +67,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: map[string]tools.ToolConfig{
 				"my-gda-query-tool": cloudgdatool.Config{
 					Name:         "my-gda-query-tool",
-					Kind:         cloudgdatool.Kind,
+					Kind:         "cloud-gemini-data-analytics-query",
 					Source:       "gda-api-source",
 					Description:  "Test Description",
 					Location:     "us-central1",
@@ -180,7 +180,7 @@ func TestInitialize(t *testing.T) {
 			desc: "successful initialization",
 			cfg: cloudgdatool.Config{
 				Name:        "my-gda-query-tool",
-				Kind:        cloudgdatool.Kind,
+				Kind:        "cloud-gemini-data-analytics-query",
 				Source:      "gda-api-source",
 				Description: "Test Description",
 				Location:    "us-central1",
@@ -191,7 +191,7 @@ func TestInitialize(t *testing.T) {
 			desc: "missing source",
 			cfg: cloudgdatool.Config{
 				Name:        "my-gda-query-tool",
-				Kind:        cloudgdatool.Kind,
+				Kind:        "cloud-gemini-data-analytics-query",
 				Source:      "non-existent-source",
 				Description: "Test Description",
 				Location:    "us-central1",
@@ -202,7 +202,7 @@ func TestInitialize(t *testing.T) {
 			desc: "incompatible source kind",
 			cfg: cloudgdatool.Config{
 				Name:        "my-gda-query-tool",
-				Kind:        cloudgdatool.Kind,
+				Kind:        "cloud-gemini-data-analytics-query",
 				Source:      "incompatible-source",
 				Description: "Test Description",
 				Location:    "us-central1",

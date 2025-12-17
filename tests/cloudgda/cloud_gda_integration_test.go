@@ -160,7 +160,7 @@ func TestCloudGdaToolEndpoints(t *testing.T) {
 
 	// 3. Manual MCP Tool Call Test
 	// Initialize MCP session
-	sessionId := tests.RunInitialize(t, "2025-12-12")
+	sessionId := tests.RunInitialize(t, "2024-11-05")
 
 	// Construct MCP Request
 	mcpReq := jsonrpc.JSONRPCRequest{
