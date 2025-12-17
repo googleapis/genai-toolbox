@@ -177,7 +177,7 @@ func TestFailParseFromYamlOracle(t *testing.T) {
 					password: my_pass
 					useOCI: false
 			`,
-			err: "unable to parse source \"my-oracle-fail\" as \"oracle\": invalid Oracle configuration: tnsAdmin can only be used when `UseOCI` is true,as it is used by OCI-specific features, such as Wallets",
+			err: "unable to parse source \"my-oracle-fail\" as \"oracle\": invalid Oracle configuration: `tnsAdmin` can only be used when `UseOCI` is true, or use `walletLocation` instead",
 		},
 	}
 	for _, tc := range tcs {
