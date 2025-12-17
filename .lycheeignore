@@ -3,7 +3,6 @@
 
 ^https:\\/\\/img\\.shields\\.io\\/.*
 \.pdf$
-
 ^mailto:
 
 ^https?:\\/\\/(127\\.0\\.0\\.1|localhost)(:\\d+)?(\\/.*)?$
