@@ -89,19 +89,17 @@ func initDataplexConnection(ctx context.Context) (*dataplex.CatalogClient, error
 func cleanupOldAspectTypes(t *testing.T, ctx context.Context, client *dataplex.CatalogClient, oldThreshold time.Duration) {
 	parent := fmt.Sprintf("projects/%s/locations/us", DataplexProject)
 	olderThanTime := time.Now().Add(-oldThreshold)
-	filterTimeStr := olderThanTime.UTC().Format(time.RFC3339)
-	filter := fmt.Sprintf("create_time < \"%s\"", filterTimeStr)
 
 	listReq := &dataplexpb.ListAspectTypesRequest{
 		Parent:   parent,
-		Filter:   filter,
-		PageSize: 8, // Fetch up to 8 items to delete
+		PageSize: 100,               // Fetch up to 100 items
+		OrderBy:  "create_time asc", // Order by creation time
 	}
 
 	const maxDeletes = 8 // Explicitly limit the number of deletions
 	it := client.ListAspectTypes(ctx, listReq)
 	var aspectTypesToDelete []string
-	for len(aspectTypesToDelete) < maxDeletes { // Condition lifted here
+	for len(aspectTypesToDelete) < maxDeletes {
 		aspectType, err := it.Next()
 		if err == iterator.Done {
 			break
@@ -110,7 +108,15 @@ func cleanupOldAspectTypes(t *testing.T, ctx context.Context, client *dataplex.C
 			t.Logf("Warning: Failed to list aspect types during cleanup: %v", err)
 			return
 		}
-		aspectTypesToDelete = append(aspectTypesToDelete, aspectType.GetName())
+		// Perform time-based filtering in memory
+		if aspectType.CreateTime != nil {
+			createTime := aspectType.CreateTime.AsTime()
+			if createTime.Before(olderThanTime) {
+				aspectTypesToDelete = append(aspectTypesToDelete, aspectType.GetName())
+			}
+		} else {
+			t.Logf("Warning: AspectType %s has no CreateTime", aspectType.GetName())
+		}
 	}
 	if len(aspectTypesToDelete) == 0 {
 		t.Logf("cleanupOldAspectTypes: No aspect types found older than %s to delete.", oldThreshold.String())
@@ -125,7 +131,6 @@ func cleanupOldAspectTypes(t *testing.T, ctx context.Context, client *dataplex.C
 			continue // Skip to the next item if initiation fails
 		}
 
-		// Wait for the long-running operation to complete.
 		if err := op.Wait(ctx); err != nil {
 			t.Logf("Warning: Failed to delete aspect type %s, operation error: %v", aspectTypeName, err)
 		} else {
