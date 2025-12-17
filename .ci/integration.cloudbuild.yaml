@@ -847,7 +847,7 @@ steps:
         tar -C /usr/local -xzf go.tar.gz
         export PATH="/usr/local/go/bin:$$PATH"
 
-        go test -c -cover ./tests/oracle
+        go test -c -coverpkg=./sources/oracle/...,./tools/oracle/... ./tests/oracle
         .ci/test_with_coverage.sh \
           "Oracle DB" \
           oracle \
