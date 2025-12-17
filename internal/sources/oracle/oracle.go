@@ -33,7 +33,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 	if err := decoder.DecodeContext(ctx, &actual); err != nil {
 		return nil, err
 	}
-		
+
 	// Validate that we have one of: tnsAlias, connectionString, or host+service_name
 	if err := actual.validate(); err != nil {
 		return nil, fmt.Errorf("invalid Oracle configuration: %w", err)
@@ -83,7 +83,7 @@ func (c Config) validate() error {
 		return fmt.Errorf("provide only one connection method: 'tns_alias', 'connection_string', or 'host'+'service_name'")
 	}
 
-	if  hasTnsAdmin && !c.UseOCI {
+	if hasTnsAdmin && !c.UseOCI {
 		return fmt.Errorf("`tnsAdmin` can only be used when `UseOCI` is true, or use `walletLocation` instead")
 	}
 
@@ -150,7 +150,7 @@ func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Confi
 	if config.TnsAdmin != "" {
 		originalTnsAdmin := os.Getenv("TNS_ADMIN")
 		os.Setenv("TNS_ADMIN", config.TnsAdmin)
-		logger.DebugContext(ctx, fmt.Sprintf("Setting TNS_ADMIN to: %s\n", config.TnsAdmin)) 
+		logger.DebugContext(ctx, fmt.Sprintf("Setting TNS_ADMIN to: %s\n", config.TnsAdmin))
 		// Restore original TNS_ADMIN after connection
 		defer func() {
 			if originalTnsAdmin != "" {
@@ -189,7 +189,7 @@ func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Confi
 
 		user := config.User
 		password := config.Password
-		
+
 		if hasWallet {
 			finalConnStr = fmt.Sprintf("oracle://%s:%s@%s?ssl=true&wallet=%s",
 				user, password, connectStringBase, config.WalletLocation)
