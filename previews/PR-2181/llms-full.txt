@@ -10498,11 +10498,6 @@ Tools for interacting with ClickHouse databases and tables.
 
 
 
-# Cloud Gemini Data Analytics
-Tools for Cloud Gemini Data Analytics.
-
-
-
 # Cloud Healthcare API
 Tools that work with Cloud Healthcare Sources.
 
@@ -10550,6 +10545,11 @@ Tools that work with Firebird Sources.
 
 # Firestore
 Tools that work with Firestore Sources.
+
+
+
+# Gemini Data Analytics
+Tools for Gemini Data Analytics.
 
 
 

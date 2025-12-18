@@ -97,7 +97,6 @@ List of reference documentation for resources in Toolbox.
   - [Bigtable](https://googleapis.github.io/genai-toolbox/previews/PR-2181/resources/tools/bigtable/): Tools that work with Bigtable Sources.
   - [Cassandra](https://googleapis.github.io/genai-toolbox/previews/PR-2181/resources/tools/cassandra/): Tools that work with Cassandra Sources.
   - [ClickHouse](https://googleapis.github.io/genai-toolbox/previews/PR-2181/resources/tools/clickhouse/): Tools for interacting with ClickHouse databases and tables.
-  - [Cloud Gemini Data Analytics](https://googleapis.github.io/genai-toolbox/previews/PR-2181/resources/tools/cloudgda/): Tools for Cloud Gemini Data Analytics.
   - [Cloud Healthcare API](https://googleapis.github.io/genai-toolbox/previews/PR-2181/resources/tools/cloudhealthcare/): Tools that work with Cloud Healthcare Sources.
   - [Cloud Monitoring](https://googleapis.github.io/genai-toolbox/previews/PR-2181/resources/tools/cloudmonitoring/): Tools that work with Cloud Monitoring source.
   - [Cloud SQL](https://googleapis.github.io/genai-toolbox/previews/PR-2181/resources/tools/cloudsql/): Tools that work with Cloud SQL. 
@@ -108,6 +107,7 @@ List of reference documentation for resources in Toolbox.
   - [Elasticsearch](https://googleapis.github.io/genai-toolbox/previews/PR-2181/resources/tools/elasticsearch/): Tools that work with Elasticsearch Sources.
   - [Firebird](https://googleapis.github.io/genai-toolbox/previews/PR-2181/resources/tools/firebird/): Tools that work with Firebird Sources.
   - [Firestore](https://googleapis.github.io/genai-toolbox/previews/PR-2181/resources/tools/firestore/): Tools that work with Firestore Sources.
+  - [Gemini Data Analytics](https://googleapis.github.io/genai-toolbox/previews/PR-2181/resources/tools/cloudgda/): Tools for Gemini Data Analytics.
   - [HTTP](https://googleapis.github.io/genai-toolbox/previews/PR-2181/resources/tools/http/): Tools that work with HTTP Sources.
   - [Looker](https://googleapis.github.io/genai-toolbox/previews/PR-2181/resources/tools/looker/): Tools that work with Looker Sources.
   - [MindsDB Tools](https://googleapis.github.io/genai-toolbox/previews/PR-2181/resources/tools/mindsdb/): MindsDB tools that enable SQL queries across hundreds of datasources and ML models.
