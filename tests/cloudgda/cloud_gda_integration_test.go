@@ -198,6 +198,10 @@ func TestCloudGdaToolEndpoints(t *testing.T) {
 }
 
 func getCloudGdaToolsConfig() map[string]any {
+	// Mocked responses and a dummy `projectId` are used in this integration
+	// test due to limited project-specific allowlisting. API functionality is
+	// verified via internal monitoring; this test specifically validates the
+	// integration flow between the source and the tool.
 	return map[string]any{
 		"sources": map[string]any{
 			"my-gda-source": map[string]any{

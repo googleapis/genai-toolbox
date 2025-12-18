@@ -1,7 +1,7 @@
 ---
-title: "Cloud Gemini Data Analytics"
+title: "Gemini Data Analytics"
 type: docs
 weight: 1
 description: >
-  Tools for Cloud Gemini Data Analytics.
+  Tools for Gemini Data Analytics.
 ---

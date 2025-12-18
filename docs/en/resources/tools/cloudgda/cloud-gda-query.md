@@ -10,7 +10,7 @@ aliases:
 
 ## About
 
-The `cloud-gemini-data-analytics-query` tool allows you to send natural language questions to the Gemini Data Analytics API and receive structured responses containing SQL queries, natural language answers, and explanations. See https://docs.cloud.google.com/gemini/docs/conversational-analytics-api/data-agent-authored-context-databases for details.
+The `cloud-gemini-data-analytics-query` tool allows you to send natural language questions to the Gemini Data Analytics API and receive structured responses containing SQL queries, natural language answers, and explanations. For details on defining data agent context for database data sources, see the official [documentation](https://docs.cloud.google.com/gemini/docs/conversational-analytics-api/data-agent-authored-context-databases).
 
 ## Example
 
@@ -45,7 +45,7 @@ When using this tool, a `prompt` parameter containing a natural language query i
 
 The structure of the response depends on the `generationOptions` configured in your tool definition (e.g., enabling `generateQueryResult` will include the SQL query results).
 
-See https://docs.cloud.google.com/gemini/docs/conversational-analytics-api/reference/rest for details.
+See [Data Analytics API REST documentation](https://clouddocs.devsite.corp.google.com/gemini/docs/conversational-analytics-api/reference/rest/v1alpha/projects.locations/queryData?rep_location=global) for details.
 
 **Example Input Prompt:**
 
