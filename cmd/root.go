@@ -73,6 +73,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouselistdatabases"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouselisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhousesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudgda"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcarefhirfetchpage"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcarefhirpatienteverything"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcarefhirpatientsearch"

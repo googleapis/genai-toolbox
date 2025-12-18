@@ -110,7 +110,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sqlParam))
+	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sqlParam)
 
 	results, err := t.Pool.QueryContext(ctx, sqlParam)
 	if err != nil {
