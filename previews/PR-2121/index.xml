@@ -3805,7 +3805,7 @@ high-dimensional vectors.&lt;/p>
 &lt;p>Toolbox uses your &lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials
 (ADC)&lt;/a> to authorize with the
 Gemini API client.&lt;/p>
-&lt;p>Optionally, you can use an API key obtain an API
+&lt;p>Optionally, you can use an &lt;a href="https://ai.google.dev/gemini-api/docs/api-key#api-keys">API key&lt;/a> obtain an API
 Key from the &lt;a href="https://aistudio.google.com/app/apikey">Google AI Studio&lt;/a>.&lt;/p>
 &lt;p>We recommend using an API key for testing and using application default
 credentials for production.&lt;/p>
