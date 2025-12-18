@@ -45,8 +45,14 @@ func (cfg Config) EmbeddingModelConfigKind() string {
 func (cfg Config) Initialize() (embeddingmodels.EmbeddingModel, error) {
 	ctx := context.Background()
 
+	// Get client configs
+	configs := &genai.ClientConfig{}
+	if cfg.ApiKey != "" {
+		configs.APIKey = cfg.ApiKey
+	}
+
 	// Create new Gemini API client
-	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: cfg.ApiKey})
+	client, err := genai.NewClient(ctx, configs)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create Gemini API client")
 	}
