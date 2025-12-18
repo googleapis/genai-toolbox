@@ -2401,10 +2401,10 @@ func RunPostgresListPgSettingsTest(t *testing.T, ctx context.Context, pool *pgxp
 // RunPostgresDatabaseStatsTest tests the database_stats tool by comparing API results
 // against a direct query to the database.
 func RunPostgresListDatabaseStatsTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
-	dbName1 := "test_db_stats_1"
-	dbOwner1 := "test_user1"
-	dbName2 := "test_db_stats_2"
-	dbOwner2 := "test_user2"
+	dbName1 := "test_db_stats_" + strings.ReplaceAll(uuid.NewString(), "-", "")
+	dbOwner1 := "test_user_" + strings.ReplaceAll(uuid.NewString(), "-", "")
+	dbName2 := "test_db_stats_" + strings.ReplaceAll(uuid.NewString(), "-", "")
+	dbOwner2 := "test_user_" + strings.ReplaceAll(uuid.NewString(), "-", "")
 
 	cleanup1 := setUpDatabase(t, ctx, pool, dbName1, dbOwner1)
 	defer cleanup1()
