@@ -72,8 +72,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("error initializing Redis client: %s", err)
 	}
 	s := &Source{
-		Name:   r.Name,
-		Kind:   SourceKind,
+		Config: r,
 		Client: client,
 	}
 	return s, nil
@@ -138,13 +137,16 @@ func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 var _ sources.Source = &Source{}
 
 type Source struct {
-	Name   string `yaml:"name"`
-	Kind   string `yaml:"kind"`
+	Config
 	Client RedisClient
 }
 
 func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 func (s *Source) RedisClient() RedisClient {

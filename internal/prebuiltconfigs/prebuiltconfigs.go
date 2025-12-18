@@ -39,6 +39,11 @@ func init() {
 	}
 }
 
+// Getter for the prebuiltToolsSources
+func GetPrebuiltSources() []string {
+	return prebuiltToolsSources
+}
+
 // Get prebuilt tools for a source
 func Get(prebuiltSourceConfig string) ([]byte, error) {
 	content, ok := prebuiltToolYAMLs[prebuiltSourceConfig]

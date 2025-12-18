@@ -62,6 +62,7 @@ type SourceConfig interface {
 // Source is the interface for the source itself.
 type Source interface {
 	SourceKind() string
+	ToConfig() SourceConfig
 }
 
 // InitConnectionSpan adds a span for database pool connection initialization

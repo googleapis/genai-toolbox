@@ -14,7 +14,7 @@ Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.
 
 This guide assumes you have already done the following:
 
-1. Installed [Python 3.9+][install-python] (including [pip][install-pip] and
+1. Installed [Python 3.10+][install-python] (including [pip][install-pip] and
     your preferred virtual environment tool for managing dependencies e.g.
     [venv][install-venv]).
 1. Installed and configured the [Google Cloud SDK (gcloud CLI)][install-gcloud].
@@ -179,7 +179,7 @@ to use BigQuery, and then run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.11.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.23.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -294,8 +294,8 @@ to use BigQuery, and then run the Toolbox server.
     ```
 
     {{< notice note >}}
-    Toolbox enables dynamic reloading by default. To disable, use the
-    `--disable-reload` flag.
+Toolbox enables dynamic reloading by default. To disable, use the
+`--disable-reload` flag.
     {{< /notice >}}
 
 ## Step 3: Connect your agent to Toolbox
@@ -511,7 +511,7 @@ prompt = """
 """
 
 queries = [
-    "Find hotels in Basel with Basel in it's name.",
+    "Find hotels in Basel with Basel in its name.",
     "Can you book the Hilton Basel for me?",
     "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
     "My check in dates would be from April 10, 2024 to April 19, 2024.",

@@ -25,7 +25,8 @@ Server and expects parameters in the SQL query to be in the form of either
 db.QueryContext(ctx, `select * from t where ID = @ID and Name = @p2;`, sql.Named("ID", 6), "Bob")
 ```
 
-[prepare-statement]: https://learn.microsoft.com/sql/relational-databases/system-stored-procedures/sp-prepare-transact-sql?view=sql-server-ver16
+[prepare-statement]:
+    https://learn.microsoft.com/sql/relational-databases/system-stored-procedures/sp-prepare-transact-sql?view=sql-server-ver16
 
 ## Example
 
@@ -78,7 +79,7 @@ tools:
 > including identifiers, column names, and table names. **This makes it more
 > vulnerable to SQL injections**. Using basic parameters only (see above) is
 > recommended for performance and safety reasons. For more details, please check
-> [templateParameters](#template-parameters).
+> [templateParameters](..#template-parameters).
 
 ```yaml
 tools:
@@ -101,11 +102,11 @@ tools:
 
 ## Reference
 
-| **field**          |                  **type**                        | **required** | **description**                                                                                                                            |
-|--------------------|:------------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------|
-| kind               |                   string                         |     true     | Must be "mssql-sql".                                                                                                                       |
-| source             |                   string                         |     true     | Name of the source the T-SQL statement should execute on.                                                                                  |
-| description        |                   string                         |     true     | Description of the tool that is passed to the LLM.                                                                                         |
-| statement          |                   string                         |     true     | SQL statement to execute.                                                                                                                  |
-| parameters         | [parameters](../#specifying-parameters)       |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the SQL statement.                                           |
-| templateParameters | [templateParameters](#template-parameters) |    false     | List of [templateParameters](#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| **field**          |                   **type**                   | **required** | **description**                                                                                                                        |
+|--------------------|:--------------------------------------------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------|
+| kind               |                    string                    |     true     | Must be "mssql-sql".                                                                                                                   |
+| source             |                    string                    |     true     | Name of the source the T-SQL statement should execute on.                                                                              |
+| description        |                    string                    |     true     | Description of the tool that is passed to the LLM.                                                                                     |
+| statement          |                    string                    |     true     | SQL statement to execute.                                                                                                              |
+| parameters         |   [parameters](../#specifying-parameters)    |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the SQL statement.                                          |
+| templateParameters | [templateParameters](..#template-parameters) |    false     | List of [templateParameters](..#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |

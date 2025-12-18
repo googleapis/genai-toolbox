@@ -35,8 +35,10 @@ func GetCloudSQLOpts(ipType, userAgent string, useIAM bool) ([]cloudsqlconn.Opti
 		opts = append(opts, cloudsqlconn.WithDefaultDialOptions(cloudsqlconn.WithPrivateIP()))
 	case "public":
 		opts = append(opts, cloudsqlconn.WithDefaultDialOptions(cloudsqlconn.WithPublicIP()))
+	case "psc":
+		opts = append(opts, cloudsqlconn.WithDefaultDialOptions(cloudsqlconn.WithPSC()))
 	default:
-		return nil, fmt.Errorf("invalid ipType %s", ipType)
+		return nil, fmt.Errorf("invalid ipType %s. Must be one of `public`, `private`, or `psc`", ipType)
 	}
 
 	if useIAM {
@@ -46,7 +48,7 @@ func GetCloudSQLOpts(ipType, userAgent string, useIAM bool) ([]cloudsqlconn.Opti
 }
 
 // GetIAMPrincipalEmailFromADC finds the email associated with ADC
-func GetIAMPrincipalEmailFromADC(ctx context.Context) (string, error) {
+func GetIAMPrincipalEmailFromADC(ctx context.Context, dbType string) (string, error) {
 	// Finds ADC and returns an HTTP client associated with it
 	client, err := google.DefaultClient(ctx,
 		"https://www.googleapis.com/auth/userinfo.email")
@@ -81,9 +83,31 @@ func GetIAMPrincipalEmailFromADC(ctx context.Context) (string, error) {
 	if !ok {
 		return "", fmt.Errorf("email not found in response: %v", err)
 	}
-	// service account email used for IAM should trim the suffix
-	email := strings.TrimSuffix(emailValue.(string), ".gserviceaccount.com")
-	return email, nil
+
+	fullEmail, ok := emailValue.(string)
+	if !ok {
+		return "", fmt.Errorf("email field is not a string")
+	}
+
+	var username string
+	// Format the username based on Database Type
+	switch strings.ToLower(dbType) {
+	case "mysql":
+		username, _, _ = strings.Cut(fullEmail, "@")
+
+	case "postgres":
+		// service account email used for IAM should trim the suffix
+		username = strings.TrimSuffix(fullEmail, ".gserviceaccount.com")
+
+	default:
+		return "", fmt.Errorf("unsupported dbType: %s. Use 'mysql' or 'postgres'", dbType)
+	}
+
+	if username == "" {
+		return "", fmt.Errorf("username from ADC cannot be an empty string")
+	}
+
+	return username, nil
 }
 
 func GetIAMAccessToken(ctx context.Context) (string, error) {

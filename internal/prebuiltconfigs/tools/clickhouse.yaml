@@ -1,0 +1,44 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+sources:
+  clickhouse-source:
+    kind: clickhouse
+    host: ${CLICKHOUSE_HOST}
+    port: ${CLICKHOUSE_PORT}
+    user: ${CLICKHOUSE_USER}
+    password: ${CLICKHOUSE_PASSWORD}
+    database: ${CLICKHOUSE_DATABASE}
+    protocol: ${CLICKHOUSE_PROTOCOL}
+
+tools:
+  execute_sql:
+    kind: clickhouse-execute-sql
+    source: clickhouse-source
+    description: Use this tool to execute SQL.
+
+  list_databases:
+    kind: clickhouse-list-databases
+    source: clickhouse-source
+    description: Use this tool to list all databases in ClickHouse.
+
+  list_tables:
+    kind: clickhouse-list-tables
+    source: clickhouse-source
+    description: Use this tool to list all tables in a specific ClickHouse database.
+
+toolsets:
+  clickhouse_database_tools:
+    - execute_sql
+    - list_databases
+    - list_tables

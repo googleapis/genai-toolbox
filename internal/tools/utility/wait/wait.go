@@ -22,6 +22,7 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 const kind string = "wait"
@@ -55,20 +56,15 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(_ map[string]sources.Source) (tools.Tool, error) {
-	durationParameter := tools.NewStringParameter("duration", "The duration to wait for, specified as a string (e.g., '10s', '2m', '1h').")
-	parameters := tools.Parameters{durationParameter}
+	durationParameter := parameters.NewStringParameter("duration", "The duration to wait for, specified as a string (e.g., '10s', '2m', '1h').")
+	params := parameters.Parameters{durationParameter}
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
 	t := Tool{
-		Name:        cfg.Name,
-		Kind:        kind,
-		Parameters:  parameters,
-		manifest:    tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		Config:      cfg,
+		Parameters:  params,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
 	return t, nil
@@ -78,14 +74,13 @@ func (cfg Config) Initialize(_ map[string]sources.Source) (tools.Tool, error) {
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name        string
-	Kind        string
-	Parameters  tools.Parameters
+	Config
+	Parameters  parameters.Parameters
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 
 	durationStr, ok := paramsMap["duration"].(string)
@@ -103,8 +98,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	return fmt.Sprintf("Wait for %v completed successfully.", totalDuration), nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -117,4 +112,16 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return true
+}
+
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
+	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

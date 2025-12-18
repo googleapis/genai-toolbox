@@ -54,7 +54,7 @@ type Config struct {
 	Project   string         `yaml:"project" validate:"required"`
 	Region    string         `yaml:"region" validate:"required"`
 	Instance  string         `yaml:"instance" validate:"required"`
-	IPAddress string         `yaml:"ipAddress" validate:"required"`
+	IPAddress string         `yaml:"ipAddress"` // Deprecated: kept for backwards compatibility
 	IPType    sources.IPType `yaml:"ipType" validate:"required"`
 	User      string         `yaml:"user" validate:"required"`
 	Password  string         `yaml:"password" validate:"required"`
@@ -68,7 +68,7 @@ func (r Config) SourceConfigKind() string {
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	// Initializes a Cloud SQL MSSQL source
-	db, err := initCloudSQLMssqlConnection(ctx, tracer, r.Name, r.Project, r.Region, r.Instance, r.IPAddress, r.IPType.String(), r.User, r.Password, r.Database)
+	db, err := initCloudSQLMssqlConnection(ctx, tracer, r.Name, r.Project, r.Region, r.Instance, r.IPType.String(), r.User, r.Password, r.Database)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create db connection: %w", err)
 	}
@@ -80,9 +80,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name: r.Name,
-		Kind: SourceKind,
-		Db:   db,
+		Config: r,
+		Db:     db,
 	}
 	return s, nil
 }
@@ -90,10 +89,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 var _ sources.Source = &Source{}
 
 type Source struct {
-	// Cloud SQL MSSQL struct with connection pool
-	Name string `yaml:"name"`
-	Kind string `yaml:"kind"`
-	Db   *sql.DB
+	Config
+	Db *sql.DB
 }
 
 func (s *Source) SourceKind() string {
@@ -101,30 +98,38 @@ func (s *Source) SourceKind() string {
 	return SourceKind
 }
 
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
+}
+
 func (s *Source) MSSQLDB() *sql.DB {
 	// Returns a Cloud SQL MSSQL database connection pool
 	return s.Db
 }
 
-func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipAddress, ipType, user, pass, dbname string) (*sql.DB, error) {
+func initCloudSQLMssqlConnection(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipType, user, pass, dbname string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
 
-	// Create dsn
-	query := fmt.Sprintf("database=%s&cloudsql=%s:%s:%s", dbname, project, region, instance)
-	url := &url.URL{
-		Scheme:   "sqlserver",
-		User:     url.UserPassword(user, pass),
-		Host:     ipAddress,
-		RawQuery: query,
-	}
-
-	// Get dial options
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
+
+	// Create dsn
+	query := url.Values{}
+	query.Add("app name", userAgent)
+	query.Add("database", dbname)
+	query.Add("cloudsql", fmt.Sprintf("%s:%s:%s", project, region, instance))
+
+	url := &url.URL{
+		Scheme:   "sqlserver",
+		User:     url.UserPassword(user, pass),
+		RawQuery: query.Encode(),
+	}
+
+	// Get dial options
 	opts, err := sources.GetCloudSQLOpts(ipType, userAgent, false)
 	if err != nil {
 		return nil, err

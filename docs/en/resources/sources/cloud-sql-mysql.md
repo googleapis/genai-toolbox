@@ -22,11 +22,29 @@ to a database by following these instructions][csql-mysql-quickstart].
 
 ## Available Tools
 
-- [`mysql-sql`](../tools/mysql/mysql-sql.md)  
-  Execute pre-defined prepared SQL queries in MySQL.
+- [`mysql-sql`](../tools/mysql/mysql-sql.md)
+  Execute pre-defined prepared SQL queries in Cloud SQL for MySQL.
 
-- [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
+- [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)
   Run parameterized SQL queries in Cloud SQL for MySQL.
+
+- [`mysql-list-active-queries`](../tools/mysql/mysql-list-active-queries.md)
+  List active queries in Cloud SQL for MySQL.
+
+- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)
+  List tables in a Cloud SQL for MySQL database.
+
+- [`mysql-list-tables-missing-unique-indexes`](../tools/mysql/mysql-list-tables-missing-unique-indexes.md)
+  List tables in a Cloud SQL for MySQL database that do not have primary or unique indices.
+
+- [`mysql-list-table-fragmentation`](../tools/mysql/mysql-list-table-fragmentation.md)
+  List table fragmentation in Cloud SQL for MySQL tables.
+
+### Pre-built Configurations
+
+- [Cloud SQL for MySQL using
+  MCP](https://googleapis.github.io/genai-toolbox/how-to/connect-ide/cloud_sql_mysql_mcp/)
+  Connect your IDE to Cloud SQL for MySQL using Toolbox.
 
 ## Requirements
 
@@ -70,12 +88,39 @@ mTLS.
 [public-ip]: https://cloud.google.com/sql/docs/mysql/configure-ip
 [conn-overview]: https://cloud.google.com/sql/docs/mysql/connect-overview
 
-### Database User
+### Authentication
 
-Currently, this source only uses standard authentication. You will need to [create
-a MySQL user][cloud-sql-users] to login to the database with.
+This source supports both password-based authentication and IAM
+authentication (using your [Application Default Credentials][adc]).
+
+#### Standard Authentication
+
+To connect using user/password, [create
+a MySQL user][cloud-sql-users] and input your credentials in the `user` and
+`password` fields.
+
+```yaml
+user: ${USER_NAME}
+password: ${PASSWORD}
+```
 
 [cloud-sql-users]: https://cloud.google.com/sql/docs/mysql/create-manage-users
+
+#### IAM Authentication
+
+To connect using IAM authentication:
+
+1. Prepare your database instance and user following this [guide][iam-guide].
+2. You could choose one of the two ways to log in:
+    - Specify your IAM email as the `user`.
+    - Leave your `user` field blank. Toolbox will fetch the [ADC][adc]
+      automatically and log in using the email associated with it.
+
+3. Leave the `password` field blank.
+
+[iam-guide]: https://cloud.google.com/sql/docs/mysql/iam-logins
+[cloudsql-users]: https://cloud.google.com/sql/docs/mysql/create-manage-users
+
 
 ## Example
 
@@ -99,13 +144,13 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field** | **type** | **required** | **description**                                                                             |
-|-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "cloud-sql-mysql".                                                                  |
-| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").               |
-| region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                |
-| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                     |
-| database  |  string  |     true     | Name of the MySQL database to connect to (e.g. "my_db").                                    |
-| user      |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-pg-user").                                   |
-| password  |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                            |
-| ipType    |  string  |    false     | IP Type of the Cloud SQL instance; must be one of `public` or `private`. Default: `public`. |
+| **field** | **type** | **required** | **description**                                                                                      |
+|-----------|:--------:|:------------:|------------------------------------------------------------------------------------------------------|
+| kind      |  string  |     true     | Must be "cloud-sql-mysql".                                                                           |
+| project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                        |
+| region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                         |
+| instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                              |
+| database  |  string  |     true     | Name of the MySQL database to connect to (e.g. "my_db").                                             |
+| user      |  string  |     false     | Name of the MySQL user to connect as (e.g "my-mysql-user"). Defaults to IAM auth using [ADC][adc] email if unspecified.                                            |
+| password  |  string  |     false     | Password of the MySQL user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.                                                    |
+| ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public`,  `private`, or `psc`. Default: `public`. |

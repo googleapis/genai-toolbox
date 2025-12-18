@@ -159,7 +159,7 @@ func TestFailParseFromYaml(t *testing.T) {
 					user: my_user
 					password: my_pass
 			`,
-			err: "unable to parse source \"my-pg-instance\" as \"alloydb-postgres\": ipType invalid: must be one of \"public\", or \"private\"",
+			err: "unable to parse source \"my-pg-instance\" as \"alloydb-postgres\": ipType invalid: must be one of \"public\", \"private\", or \"psc\"",
 		},
 		{
 			desc: "extra field",

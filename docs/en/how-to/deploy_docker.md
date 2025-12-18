@@ -67,6 +67,13 @@ networks:
 
 ```
 
+    {{< notice tip >}}  
+To prevent DNS rebinding attack, use the `--allowed-origins` flag to specify a
+list of origins permitted to access the server. E.g. `command: [ "toolbox",
+"--tools-file", "/config/tools.yaml", "--address", "0.0.0.0",
+"--allowed-origins", "https://foo.bar"]`
+{{< /notice >}}
+
 1. Run the following command to bring up the Toolbox and Postgres instance
 
     ```bash
@@ -75,7 +82,7 @@ networks:
 
 {{< notice tip >}}
 
-You can use this setup quickly set up Toolbox + Postgres to follow along in our
+You can use this setup to quickly set up Toolbox + Postgres to follow along in our
 [Quickstart](../getting-started/local_quickstart.md)
 
 {{< /notice >}}

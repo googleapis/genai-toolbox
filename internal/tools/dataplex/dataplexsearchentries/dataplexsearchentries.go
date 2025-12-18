@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	dataplexds "github.com/googleapis/genai-toolbox/internal/sources/dataplex"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 const kind string = "dataplex-search-entries"
@@ -79,29 +80,21 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	query := tools.NewStringParameter("query", "The query against which entries in scope should be matched.")
-	pageSize := tools.NewIntParameterWithDefault("pageSize", 5, "Number of results in the search page.")
-	pageToken := tools.NewStringParameterWithDefault("pageToken", "", "Page token received from a previous locations.searchEntries call. Provide this to retrieve the subsequent page.")
-	orderBy := tools.NewStringParameterWithDefault("orderBy", "relevance", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
-	semanticSearch := tools.NewBooleanParameterWithDefault("semanticSearch", true, "Whether to use semantic search for the query. If true, the query will be processed using semantic search capabilities.")
-	parameters := tools.Parameters{query, pageSize, pageToken, orderBy, semanticSearch}
+	query := parameters.NewStringParameter("query", "The query against which entries in scope should be matched.")
+	pageSize := parameters.NewIntParameterWithDefault("pageSize", 5, "Number of results in the search page.")
+	orderBy := parameters.NewStringParameterWithDefault("orderBy", "relevance", "Specifies the ordering of results. Supported values are: relevance, last_modified_timestamp, last_modified_timestamp asc")
+	params := parameters.Parameters{query, pageSize, orderBy}
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
-	t := &Tool{
-		Name:          cfg.Name,
-		Kind:          kind,
-		Parameters:    parameters,
-		AuthRequired:  cfg.AuthRequired,
+	t := Tool{
+		Config:        cfg,
+		Parameters:    params,
 		CatalogClient: s.CatalogClient(),
 		ProjectID:     s.ProjectID(),
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
-			Parameters:   parameters.Manifest(),
+			Parameters:   params.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
 		mcpManifest: mcpManifest,
@@ -110,35 +103,30 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 }
 
 type Tool struct {
-	Name          string
-	Kind          string
-	Parameters    tools.Parameters
-	AuthRequired  []string
+	Config
+	Parameters    parameters.Parameters
 	CatalogClient *dataplexapi.CatalogClient
 	ProjectID     string
 	manifest      tools.Manifest
 	mcpManifest   tools.McpManifest
 }
 
-func (t *Tool) Authorized(verifiedAuthServices []string) bool {
-	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
 }
 
-func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	query, _ := paramsMap["query"].(string)
-	pageSize, _ := paramsMap["pageSize"].(int32)
-	pageToken, _ := paramsMap["pageToken"].(string)
+	pageSize := int32(paramsMap["pageSize"].(int))
 	orderBy, _ := paramsMap["orderBy"].(string)
-	semanticSearch, _ := paramsMap["semanticSearch"].(bool)
 
 	req := &dataplexpb.SearchEntriesRequest{
 		Query:          query,
 		Name:           fmt.Sprintf("projects/%s/locations/global", t.ProjectID),
 		PageSize:       pageSize,
-		PageToken:      pageToken,
 		OrderBy:        orderBy,
-		SemanticSearch: semanticSearch,
+		SemanticSearch: true,
 	}
 
 	it := t.CatalogClient.SearchEntries(ctx, req)
@@ -157,17 +145,28 @@ func (t *Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error
 	return results, nil
 }
 
-func (t *Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	// Parse parameters from the provided data
-	return tools.ParseParams(t.Parameters, data, claims)
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
-func (t *Tool) Manifest() tools.Manifest {
+func (t Tool) Manifest() tools.Manifest {
 	// Returns the tool manifest
 	return t.manifest
 }
 
-func (t *Tool) McpManifest() tools.McpManifest {
+func (t Tool) McpManifest() tools.McpManifest {
 	// Returns the tool MCP manifest
 	return t.mcpManifest
+}
+func (t Tool) Authorized(verifiedAuthServices []string) bool {
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
+	return false
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

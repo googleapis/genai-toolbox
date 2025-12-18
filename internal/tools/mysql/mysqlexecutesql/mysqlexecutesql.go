@@ -22,9 +22,13 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
+	"github.com/googleapis/genai-toolbox/internal/sources/mindsdb"
 	"github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 const kind string = "mysql-execute-sql"
@@ -50,8 +54,9 @@ type compatibleSource interface {
 // validate compatible sources are still compatible
 var _ compatibleSource = &cloudsqlmysql.Source{}
 var _ compatibleSource = &mysql.Source{}
+var _ compatibleSource = &mindsdb.Source{}
 
-var compatibleSources = [...]string{cloudsqlmysql.SourceKind, mysql.SourceKind}
+var compatibleSources = [...]string{cloudsqlmysql.SourceKind, mysql.SourceKind, mindsdb.SourceKind}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
@@ -81,24 +86,18 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	sqlParameter := tools.NewStringParameter("sql", "The sql to execute.")
-	parameters := tools.Parameters{sqlParameter}
+	sqlParameter := parameters.NewStringParameter("sql", "The sql to execute.")
+	params := parameters.Parameters{sqlParameter}
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
-	}
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
 	// finish tool setup
 	t := Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Pool:         s.MySQLPool(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		Parameters:  params,
+		Pool:        s.MySQLPool(),
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -107,21 +106,19 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string           `yaml:"name"`
-	Kind         string           `yaml:"kind"`
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
+	Config
+	Parameters parameters.Parameters `yaml:"parameters"`
 
 	Pool        *sql.DB
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
-	sliceParams := params.AsSlice()
-	sql, ok := sliceParams[0].(string)
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	paramsMap := params.AsMap()
+	sql, ok := paramsMap["sql"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", sliceParams[0])
+		return nil, fmt.Errorf("unable to get cast %s", paramsMap["sql"])
 	}
 
 	// Log the query executed for debugging.
@@ -129,7 +126,7 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sql)
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
 
 	results, err := t.Pool.QueryContext(ctx, sql)
 	if err != nil {
@@ -160,24 +157,21 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse row: %w", err)
 		}
-		vMap := make(map[string]any)
+		row := orderedmap.Row{}
 		for i, name := range cols {
 			val := rawValues[i]
 			if val == nil {
-				vMap[name] = nil
+				row.Add(name, nil)
 				continue
 			}
 
-			// mysql driver return []uint8 type for "TEXT", "VARCHAR", and "NVARCHAR"
-			// we'll need to cast it back to string
-			switch colTypes[i].DatabaseTypeName() {
-			case "TEXT", "VARCHAR", "NVARCHAR":
-				vMap[name] = string(val.([]byte))
-			default:
-				vMap[name] = val
+			convertedValue, err := mysqlcommon.ConvertToType(colTypes[i], val)
+			if err != nil {
+				return nil, fmt.Errorf("errors encountered when converting values: %w", err)
 			}
+			row.Add(name, convertedValue)
 		}
-		out = append(out, vMap)
+		out = append(out, row)
 	}
 
 	if err := results.Err(); err != nil {
@@ -187,8 +181,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	return out, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -201,4 +195,16 @@ func (t Tool) McpManifest() tools.McpManifest {
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
+	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }

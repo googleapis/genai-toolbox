@@ -1,0 +1,49 @@
+{{/*
+  snippet.html
+  Usage:
+    {{< regionInclude "filename.md" "region_name" >}}
+    {{< regionInclude "filename.python" "region_name" "python" >}}
+*/}}
+
+{{ $file := .Get 0 }}
+{{ $region := .Get 1 }}
+{{ $lang := .Get 2 | default "text" }}
+{{ $path := printf "%s%s" .Page.File.Dir $file }}
+
+{{ if or (not $file) (eq $file "") }}
+  {{ errorf "The file parameter (first argument) is required and must be non-empty in %s" .Page.File.Path }}
+{{ end }}
+{{ if or (not $region) (eq $region "") }}
+  {{ errorf "The region parameter (second argument) is required and must be non-empty in %s" .Page.File.Path }}
+{{ end }}
+{{ if not (fileExists $path) }}
+  {{ errorf "File %q not found (referenced in %s)" $path .Page.File.Path }}
+{{ end }}
+
+{{ $content := readFile $path }}
+{{ $start_tag := printf "[START %s]" $region }}
+{{ $end_tag := printf "[END %s]" $region }}
+
+{{ $snippet := "" }}
+{{ $in_snippet := false }}
+{{ range split $content "\n" }}
+  {{ if $in_snippet }}
+    {{ if in . $end_tag }}
+      {{ $in_snippet = false }}
+    {{ else }}
+      {{ $snippet = printf "%s%s\n" $snippet . }}
+    {{ end }}
+  {{ else if in . $start_tag }}
+    {{ $in_snippet = true }}
+  {{ end }}
+{{ end }}
+
+{{ if eq (trim $snippet "") "" }}
+  {{ errorf "Region %q not found or empty in file %s (referenced in %s)" $region $file .Page.File.Path }}
+{{ end }}
+
+{{ if eq $lang "text" }}
+  {{ $snippet | markdownify }}
+{{ else }}
+  {{ highlight (trim $snippet "\n") $lang "" }}
+{{ end }}

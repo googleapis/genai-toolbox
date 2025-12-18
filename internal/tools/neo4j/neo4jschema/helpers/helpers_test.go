@@ -16,9 +16,11 @@ package helpers
 
 import (
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/types"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 func TestHelperFunctions(t *testing.T) {
@@ -381,4 +383,177 @@ func TestProcessNonAPOCSchema(t *testing.T) {
 			t.Errorf("ProcessNonAPOCSchema() stats mismatch (-want +got):\n%s", diff)
 		}
 	})
+}
+
+func TestConvertValue(t *testing.T) {
+	tests := []struct {
+		name  string
+		input any
+		want  any
+	}{
+		{
+			name:  "nil value",
+			input: nil,
+			want:  nil,
+		},
+		{
+			name:  "neo4j.InvalidValue",
+			input: neo4j.InvalidValue{},
+			want:  nil,
+		},
+		{
+			name:  "primitive bool",
+			input: true,
+			want:  true,
+		},
+		{
+			name:  "primitive int",
+			input: int64(42),
+			want:  int64(42),
+		},
+		{
+			name:  "primitive float",
+			input: 3.14,
+			want:  3.14,
+		},
+		{
+			name:  "primitive string",
+			input: "hello",
+			want:  "hello",
+		},
+		{
+			name:  "neo4j.Date",
+			input: neo4j.Date(time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC)),
+			want:  "2024-06-01",
+		},
+		{
+			name:  "neo4j.LocalTime",
+			input: neo4j.LocalTime(time.Date(0, 0, 0, 12, 34, 56, 0, time.Local)),
+			want:  "12:34:56",
+		},
+		{
+			name:  "neo4j.Time",
+			input: neo4j.Time(time.Date(0, 0, 0, 1, 2, 3, 0, time.UTC)),
+			want:  "01:02:03Z",
+		},
+		{
+			name:  "neo4j.LocalDateTime",
+			input: neo4j.LocalDateTime(time.Date(2024, 6, 1, 10, 20, 30, 0, time.Local)),
+			want:  "2024-06-01T10:20:30",
+		},
+		{
+			name:  "neo4j.Duration",
+			input: neo4j.Duration{Months: 1, Days: 2, Seconds: 3, Nanos: 4},
+			want:  "P1M2DT3.000000004S",
+		},
+		{
+			name:  "neo4j.Point2D",
+			input: neo4j.Point2D{X: 1.1, Y: 2.2, SpatialRefId: 1234},
+			want:  map[string]any{"x": 1.1, "y": 2.2, "srid": uint32(1234)},
+		},
+		{
+			name:  "neo4j.Point3D",
+			input: neo4j.Point3D{X: 1.1, Y: 2.2, Z: 3.3, SpatialRefId: 5467},
+			want:  map[string]any{"x": 1.1, "y": 2.2, "z": 3.3, "srid": uint32(5467)},
+		},
+		{
+			name: "neo4j.Node (handled by Entity case, losing labels)",
+			input: neo4j.Node{
+				ElementId: "element-1",
+				Labels:    []string{"Person"},
+				Props:     map[string]any{"name": "Alice"},
+			},
+			want: map[string]any{
+				"elementId":  "element-1",
+				"labels":     []string{"Person"},
+				"properties": map[string]any{"name": "Alice"},
+			},
+		},
+		{
+			name: "neo4j.Relationship (handled by Entity case, losing type/endpoints)",
+			input: neo4j.Relationship{
+				ElementId:      "element-2",
+				StartElementId: "start-1",
+				EndElementId:   "end-1",
+				Type:           "KNOWS",
+				Props:          map[string]any{"since": 2024},
+			},
+			want: map[string]any{
+				"elementId":      "element-2",
+				"properties":     map[string]any{"since": 2024},
+				"startElementId": "start-1",
+				"endElementId":   "end-1",
+				"type":           "KNOWS",
+			},
+		},
+		{
+			name: "neo4j.Path (elements handled by Entity case)",
+			input: func() neo4j.Path {
+				node1 := neo4j.Node{ElementId: "n10", Labels: []string{"A"}, Props: map[string]any{"p1": "v1"}}
+				node2 := neo4j.Node{ElementId: "n11", Labels: []string{"B"}, Props: map[string]any{"p2": "v2"}}
+				rel1 := neo4j.Relationship{ElementId: "r12", StartElementId: "n10", EndElementId: "n11", Type: "REL", Props: map[string]any{"p3": "v3"}}
+				return neo4j.Path{
+					Nodes:         []neo4j.Node{node1, node2},
+					Relationships: []neo4j.Relationship{rel1},
+				}
+			}(),
+			want: map[string]any{
+				"nodes": []any{
+					map[string]any{
+						"elementId":  "n10",
+						"properties": map[string]any{"p1": "v1"},
+						"labels":     []string{"A"},
+					},
+					map[string]any{
+						"elementId":  "n11",
+						"properties": map[string]any{"p2": "v2"},
+						"labels":     []string{"B"},
+					},
+				},
+				"relationships": []any{
+					map[string]any{
+						"elementId":      "r12",
+						"properties":     map[string]any{"p3": "v3"},
+						"startElementId": "n10",
+						"endElementId":   "n11",
+						"type":           "REL",
+					},
+				},
+			},
+		},
+		{
+			name:  "slice of primitives",
+			input: []any{"a", 1, true},
+			want:  []any{"a", 1, true},
+		},
+		{
+			name:  "slice of mixed types",
+			input: []any{"a", neo4j.Date(time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC))},
+			want:  []any{"a", "2024-06-01"},
+		},
+		{
+			name:  "map of primitives",
+			input: map[string]any{"foo": 1, "bar": "baz"},
+			want:  map[string]any{"foo": 1, "bar": "baz"},
+		},
+		{
+			name:  "map with nested neo4j type",
+			input: map[string]any{"date": neo4j.Date(time.Date(2024, 6, 1, 0, 0, 0, 0, time.UTC))},
+			want:  map[string]any{"date": "2024-06-01"},
+		},
+		{
+			name:  "unhandled type",
+			input: struct{ X int }{X: 5},
+			want:  "{5}",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ConvertValue(tt.input)
+			if !cmp.Equal(got, tt.want) {
+				t.Errorf("ConvertValue() mismatch (-want +got):\n%s", cmp.Diff(tt.want, got))
+			}
+		})
+	}
 }

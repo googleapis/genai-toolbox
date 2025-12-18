@@ -16,11 +16,23 @@ reliability, performance, and ease of use.
 
 ## Available Tools
 
-- [`mysql-sql`](../tools/mysql/mysql-sql.md)  
+- [`mysql-sql`](../tools/mysql/mysql-sql.md)
   Execute pre-defined prepared SQL queries in MySQL.
 
-- [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)  
+- [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)
   Run parameterized SQL queries in MySQL.
+
+- [`mysql-list-active-queries`](../tools/mysql/mysql-list-active-queries.md)
+  List active queries in MySQL.
+
+- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)
+  List tables in a MySQL database.
+
+- [`mysql-list-tables-missing-unique-indexes`](../tools/mysql/mysql-list-tables-missing-unique-indexes.md)
+  List tables in a MySQL database that do not have primary or unique indices.
+
+- [`mysql-list-table-fragmentation`](../tools/mysql/mysql-list-table-fragmentation.md)
+  List table fragmentation in MySQL tables.
 
 ## Requirements
 
@@ -42,6 +54,9 @@ sources:
         database: my_db
         user: ${USER_NAME}
         password: ${PASSWORD}
+        # Optional TLS and other driver parameters. For example, enable preferred TLS:
+        # queryParams:
+        #     tls: preferred
         queryTimeout: 30s # Optional: query timeout duration
 ```
 
@@ -61,3 +76,4 @@ instead of hardcoding your secrets into the configuration file.
 | user         |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-mysql-user").                                    |
 | password     |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                                |
 | queryTimeout |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied. |
+| queryParams | map<string,string> | false | Arbitrary DSN parameters passed to the driver (e.g. `tls: preferred`, `charset: utf8mb4`). Useful for enabling TLS or other connection options. |

@@ -14,7 +14,9 @@
 
 package util
 
-import "github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
+import (
+	"github.com/googleapis/genai-toolbox/internal/server/mcp/jsonrpc"
+)
 
 const (
 	// SERVER_NAME is the server name used in Implementation.
@@ -86,7 +88,8 @@ type ClientCapabilities struct {
 // capabilities are defined here, in this schema, but this is not a closed set: any
 // server can define its own, additional capabilities.
 type ServerCapabilities struct {
-	Tools *ListChanged `json:"tools,omitempty"`
+	Tools   *ListChanged `json:"tools,omitempty"`
+	Prompts *ListChanged `json:"prompts,omitempty"`
 }
 
 // Base interface for metadata with name (identifier) and title (display name) properties.

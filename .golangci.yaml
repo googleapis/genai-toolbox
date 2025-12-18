@@ -23,8 +23,6 @@ linters:
   exclusions:
     presets:
       - std-error-handling
-issues:
-  fix: true
 formatters:
   enable:
     - goimports

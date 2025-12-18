@@ -21,8 +21,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/spanner/spannersql"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlSpanner(t *testing.T) {
@@ -58,8 +58,8 @@ func TestParseFromYamlSpanner(t *testing.T) {
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 					AuthRequired: []string{},
-					Parameters: []tools.Parameter{
-						tools.NewStringParameter("country", "some description"),
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameter("country", "some description"),
 					},
 				},
 			},
@@ -89,8 +89,8 @@ func TestParseFromYamlSpanner(t *testing.T) {
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 					ReadOnly:     true,
 					AuthRequired: []string{},
-					Parameters: []tools.Parameter{
-						tools.NewStringParameter("country", "some description"),
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameter("country", "some description"),
 					},
 				},
 			},
@@ -158,12 +158,12 @@ func TestParseFromYamlWithTemplateParamsSpanner(t *testing.T) {
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 					AuthRequired: []string{},
-					Parameters: []tools.Parameter{
-						tools.NewStringParameter("country", "some description"),
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameter("country", "some description"),
 					},
-					TemplateParameters: []tools.Parameter{
-						tools.NewStringParameter("tableName", "The table to select hotels from."),
-						tools.NewArrayParameter("fieldArray", "The columns to return for the query.", tools.NewStringParameter("column", "A column name that will be returned from the query.")),
+					TemplateParameters: []parameters.Parameter{
+						parameters.NewStringParameter("tableName", "The table to select hotels from."),
+						parameters.NewArrayParameter("fieldArray", "The columns to return for the query.", parameters.NewStringParameter("column", "A column name that will be returned from the query.")),
 					},
 				},
 			},
@@ -193,8 +193,8 @@ func TestParseFromYamlWithTemplateParamsSpanner(t *testing.T) {
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
 					ReadOnly:     true,
 					AuthRequired: []string{},
-					Parameters: []tools.Parameter{
-						tools.NewStringParameter("country", "some description"),
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameter("country", "some description"),
 					},
 				},
 			},

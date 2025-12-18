@@ -21,7 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlNeo4j(t *testing.T) {
@@ -60,8 +60,8 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 					Description:  "some tool description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
 					Statement:    "MATCH (c:Country) WHERE c.name = $country RETURN c.id as id;\n",
-					Parameters: []tools.Parameter{
-						tools.NewStringParameter("country", "country parameter description"),
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameter("country", "country parameter description"),
 					},
 				},
 			},

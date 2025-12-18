@@ -93,6 +93,9 @@ func TestPostgres(t *testing.T) {
 		t.Fatalf("unable to create postgres connection pool: %s", err)
 	}
 
+	// cleanup test environment
+	tests.CleanupPostgresTables(t, ctx, pool)
+
 	// create table name with UUID
 	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
@@ -110,9 +113,10 @@ func TestPostgres(t *testing.T) {
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, PostgresToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
-	toolsFile = tests.AddPgExecuteSqlConfig(t, toolsFile)
+	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "postgres-execute-sql")
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, PostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -128,12 +132,36 @@ func TestPostgres(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	tests.RunToolGetTest(t)
+	// Get configs for tests
+	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := tests.GetPostgresWants()
 
-	select1Want, failInvocationWant, createTableStatement := tests.GetPostgresWants()
-	invokeParamWant, invokeIdNullWant, nullWant, mcpInvokeParamWant := tests.GetNonSpannerInvokeParamWant()
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeIdNullWant, nullWant, true, true)
+	// Run tests
+	tests.RunToolGetTest(t)
+	tests.RunToolInvokeTest(t, select1Want)
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
-	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, tests.NewTemplateParameterTestConfig())
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+
+	// Run Postgres prebuilt tool tests
+	tests.RunPostgresListTablesTest(t, tableNameParam, tableNameAuth, PostgresUser)
+	tests.RunPostgresListViewsTest(t, ctx, pool)
+	tests.RunPostgresListSchemasTest(t, ctx, pool)
+	tests.RunPostgresListActiveQueriesTest(t, ctx, pool)
+	tests.RunPostgresListAvailableExtensionsTest(t)
+	tests.RunPostgresListInstalledExtensionsTest(t)
+	tests.RunPostgresDatabaseOverviewTest(t, ctx, pool)
+	tests.RunPostgresListTriggersTest(t, ctx, pool)
+	tests.RunPostgresListIndexesTest(t, ctx, pool)
+	tests.RunPostgresListSequencesTest(t, ctx, pool)
+	tests.RunPostgresLongRunningTransactionsTest(t, ctx, pool)
+	tests.RunPostgresListLocksTest(t, ctx, pool)
+	tests.RunPostgresReplicationStatsTest(t, ctx, pool)
+	tests.RunPostgresListQueryStatsTest(t, ctx, pool)
+	tests.RunPostgresGetColumnCardinalityTest(t, ctx, pool)
+	tests.RunPostgresListTableStatsTest(t, ctx, pool)
+	tests.RunPostgresListPublicationTablesTest(t, ctx, pool)
+	tests.RunPostgresListTableSpacesTest(t)
+	tests.RunPostgresListPgSettingsTest(t, ctx, pool)
+	tests.RunPostgresListDatabaseStatsTest(t, ctx, pool)
+	tests.RunPostgresListRolesTest(t, ctx, pool)
 }

@@ -21,7 +21,9 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	lookersrc "github.com/googleapis/genai-toolbox/internal/sources/looker"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
 	"github.com/looker-open-source/sdk-codegen/go/rtl"
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
@@ -44,14 +46,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type Config struct {
-	Name        string `yaml:"name" validate:"required"`
-	Kind        string `yaml:"kind" validate:"required"`
-	Source      string `yaml:"source" validate:"required"`
-	Description string `yaml:"description" validate:"required"`
-	// AuthRequired specifies the authentication services required for this tool.
-	// Currently, this field is not actively used for authorization checks within the tool itself,
-	// as the Authorized method always returns true. It is included for potential future extensibility.
-	AuthRequired []string `yaml:"authRequired"`
+	Name         string                 `yaml:"name" validate:"required"`
+	Kind         string                 `yaml:"kind" validate:"required"`
+	Source       string                 `yaml:"source" validate:"required"`
+	Description  string                 `yaml:"description" validate:"required"`
+	AuthRequired []string               `yaml:"authRequired"`
+	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -74,29 +74,34 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
 	}
 
-	modelParameter := tools.NewStringParameter("model", "The model containing the explores.")
-	parameters := tools.Parameters{modelParameter}
+	modelParameter := parameters.NewStringParameter("model", "The model containing the explores.")
+	params := parameters.Parameters{modelParameter}
 
-	mcpManifest := tools.McpManifest{
-		Name:        cfg.Name,
-		Description: cfg.Description,
-		InputSchema: parameters.McpManifest(),
+	annotations := cfg.Annotations
+	if annotations == nil {
+		readOnlyHint := true
+		annotations = &tools.ToolAnnotations{
+			ReadOnlyHint: &readOnlyHint,
+		}
 	}
+
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
 
 	// finish tool setup
 	return Tool{
-		Name:         cfg.Name,
-		Kind:         kind,
-		Parameters:   parameters,
-		AuthRequired: cfg.AuthRequired,
-		Client:       s.Client,
-		ApiSettings:  s.ApiSettings,
+		Config:              cfg,
+		Parameters:          params,
+		UseClientOAuth:      s.UseClientAuthorization(),
+		AuthTokenHeaderName: s.GetAuthTokenHeaderName(),
+		Client:              s.Client,
+		ApiSettings:         s.ApiSettings,
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
-			Parameters:   parameters.Manifest(),
+			Parameters:   params.Manifest(),
 			AuthRequired: cfg.AuthRequired,
 		},
-		mcpManifest: mcpManifest,
+		mcpManifest:        mcpManifest,
+		ShowHiddenExplores: s.ShowHiddenExplores,
 	}, nil
 }
 
@@ -104,17 +109,22 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 var _ tools.Tool = Tool{}
 
 type Tool struct {
-	Name         string `yaml:"name"`
-	Kind         string `yaml:"kind"`
-	Client       *v4.LookerSDK
-	ApiSettings  *rtl.ApiSettings
-	AuthRequired []string         `yaml:"authRequired"`
-	Parameters   tools.Parameters `yaml:"parameters"`
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	Config
+	UseClientOAuth      bool
+	AuthTokenHeaderName string
+	Client              *v4.LookerSDK
+	ApiSettings         *rtl.ApiSettings
+	Parameters          parameters.Parameters `yaml:"parameters"`
+	manifest            tools.Manifest
+	mcpManifest         tools.McpManifest
+	ShowHiddenExplores  bool
 }
 
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
@@ -125,7 +135,11 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 		return nil, fmt.Errorf("'model' must be a string, got %T", mapParams["model"])
 	}
 
-	resp, err := t.Client.LookmlModel(model, "explores(name,label,group_label)", t.ApiSettings)
+	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
+	if err != nil {
+		return nil, fmt.Errorf("error getting sdk: %w", err)
+	}
+	resp, err := sdk.LookmlModel(model, "explores(name,description,label,group_label,hidden)", t.ApiSettings)
 	if err != nil {
 		return nil, fmt.Errorf("error making get_explores request: %s", err)
 	}
@@ -133,9 +147,15 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	var data []any
 	for _, v := range *resp.Explores {
 		logger.DebugContext(ctx, "Got response element of %v\n", v)
+		if !t.ShowHiddenExplores && v.Hidden != nil && *v.Hidden {
+			continue
+		}
 		vMap := make(map[string]any)
 		if v.Name != nil {
 			vMap["name"] = *v.Name
+		}
+		if v.Description != nil {
+			vMap["description"] = *v.Description
 		}
 		if v.Label != nil {
 			vMap["label"] = *v.Label
@@ -151,8 +171,8 @@ func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error)
 	return data, nil
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.Parameters, data, claims)
+func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -164,7 +184,13 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 func (t Tool) Authorized(verifiedAuthServices []string) bool {
-	// Currently, all Looker tools are considered authorized if the source is correctly configured.
-	// The AuthRequired field in the Config struct is reserved for future, more granular authorization.
-	return true
+	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
+}
+
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
+	return t.UseClientOAuth
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return t.AuthTokenHeaderName
 }

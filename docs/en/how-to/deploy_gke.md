@@ -60,8 +60,8 @@ description: >
     gcloud iam service-accounts create $SA_NAME
     ```
 
-1. Grant any IAM roles necessary to the IAM service account. Each source have a
-    list of necessary IAM permissions listed on it's page. The example below is
+1. Grant any IAM roles necessary to the IAM service account. Each source has a
+    list of necessary IAM permissions listed on its page. The example below is
     for cloud sql postgres source:
 
     ```bash
@@ -187,6 +187,12 @@ description: >
                 - key: tools.yaml
                   path: tools.yaml
     ```
+
+    {{< notice tip >}}  
+To prevent DNS rebinding attack, use the `--allowed-origins` flag to specify a
+list of origins permitted to access the server. E.g. `args: ["--address",
+"0.0.0.0", "--allowed-origins", "https://foo.bar"]`
+{{< /notice >}}
 
 1. Create the deployment.
 

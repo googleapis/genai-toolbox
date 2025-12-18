@@ -7,11 +7,11 @@ description: Frequently asked questions about Toolbox.
 
 ## How can I deploy or run Toolbox?
 
-MCP Toolbox for Databases is open-source and can be ran or deployed to a
+MCP Toolbox for Databases is open-source and can be run or deployed to a
 multitude of environments. For convenience, we release [compiled binaries and
 docker images][release-notes] (but you can always compile yourself as well!).
 
-For detailed instructions, check our these resources:
+For detailed instructions, check out these resources:
 
 - [Quickstart: How to Run Locally](../getting-started/local_quickstart.md)
 - [Deploy to Cloud Run](../how-to/deploy_toolbox.md)
@@ -44,15 +44,11 @@ most popular issues, so make sure to +1 ones you are the most interested in.
 
 ## Can Toolbox be used for non-database tools?
 
-Currently, Toolbox is primarily focused on making it easier to create and
-develop tools focused on interacting with Databases. We believe that there are a
-lot of unique problems when interacting with Databases for Gen AI use cases, and
-want to prioritize solving those first.  
+**Yes!** While Toolbox is primarily focused on databases, it also supports generic 
+**HTTP tools** (`kind: http`). These allow you to connect your agents to REST APIs 
+and other web services, enabling workflows that extend beyond database interactions.
 
-However, we've also received feedback that supporting more generic HTTP or
-GRPC tools might be helpful in assisting with migrating to Toolbox or in
-accomplishing more complicated workflows. We're looking into what that might
-best look like in Toolbox.
+For configuration details, see the [HTTP Tools documentation](../resources/tools/http/http.md).
 
 ## Can I use _$BAR_ orchestration framework to use tools from Toolbox?
 
