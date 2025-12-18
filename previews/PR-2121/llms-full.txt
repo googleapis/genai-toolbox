@@ -10242,13 +10242,21 @@ Use Google's Gemini models to generate high-performance text embeddings for vect
 ## Getting Started
 
 Google Gemini provides state-of-the-art embedding models that convert text into
-high-dimensional vectors. To use Gemini embeddings, you must first obtain an API
+high-dimensional vectors. 
+
+### Authentication
+
+Toolbox uses your [Application Default Credentials
+(ADC)][adc] to authorize with the
+Gemini API client.
+
+Optionally, you can use an API key obtain an API
 Key from the [Google AI Studio][ai-studio].
 
-Once you have your key, configure the `embeddingModels` section in your
-`tools.yaml` with the model identifier (e.g., `gemini-embedding-001`) and the
-dimensionality of the vector output.
+We recommend using an API key for testing and using application default
+credentials for production.
 
+[adc]: https://cloud.google.com/docs/authentication#adc
 [ai-studio]: https://aistudio.google.com/app/apikey
 
 ## Behavior
@@ -10289,7 +10297,7 @@ instead of hardcoding your secrets into the configuration file.
 |-----------|:--------:|:------------:|--------------------------------------------------------------|
 | kind      |  string  |     true     | Must be `gemini`.                                            |
 | model     |  string  |     true     | The Gemini model ID to use (e.g., `gemini-embedding-001`).   |
-| apiKey    |  string  |     true     | Your API Key from Google AI Studio.                          |
+| apiKey    |  string  |    false     | Your API Key from Google AI Studio.                          |
 | dimension | integer  |    false     | The number of dimensions in the output vector (e.g., `768`). |
 
 

@@ -3800,11 +3800,15 @@ reporting with source positions and code snippets.&lt;/p>
 &lt;h2 id="response">Response&lt;/h2>
 &lt;p>The tool returns a &lt;code>ValidationResult&lt;/code> object containing:&lt;/p></description></item><item><title>Gemini Embedding</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/embeddingmodels/gemini/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/embeddingmodels/gemini/</guid><description>&lt;h2 id="getting-started">Getting Started&lt;/h2>
 &lt;p>Google Gemini provides state-of-the-art embedding models that convert text into
-high-dimensional vectors. To use Gemini embeddings, you must first obtain an API
+high-dimensional vectors.&lt;/p>
+&lt;h3 id="authentication">Authentication&lt;/h3>
+&lt;p>Toolbox uses your &lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials
+(ADC)&lt;/a> to authorize with the
+Gemini API client.&lt;/p>
+&lt;p>Optionally, you can use an API key obtain an API
 Key from the &lt;a href="https://aistudio.google.com/app/apikey">Google AI Studio&lt;/a>.&lt;/p>
-&lt;p>Once you have your key, configure the &lt;code>embeddingModels&lt;/code> section in your
-&lt;code>tools.yaml&lt;/code> with the model identifier (e.g., &lt;code>gemini-embedding-001&lt;/code>) and the
-dimensionality of the vector output.&lt;/p>
+&lt;p>We recommend using an API key for testing and using application default
+credentials for production.&lt;/p>
 &lt;h2 id="behavior">Behavior&lt;/h2>
 &lt;h3 id="automatic-vectorization">Automatic Vectorization&lt;/h3>
 &lt;p>When a tool parameter is configured with &lt;code>embeddedBy: &amp;lt;your-gemini-model-name&amp;gt;&lt;/code>,
