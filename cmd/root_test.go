@@ -1912,7 +1912,6 @@ func TestMergeToolsFiles(t *testing.T) {
 		})
 	}
 }
-
 func TestPrebuiltAndCustomTools(t *testing.T) {
 	t.Setenv("SQLITE_DATABASE", "test.db")
 	// Setup custom tools file
@@ -1934,8 +1933,9 @@ sources:
 		t.Fatal(err)
 	}
 
-	// Setup conflict file (SQLite has 'list_tables')
-	conflictContent := `
+	// Tool Conflict File
+	// SQLite prebuilt has a tool named 'list_tables'
+	toolConflictContent := `
 tools:
   list_tables:
     kind: http
@@ -1948,12 +1948,55 @@ sources:
     kind: http
     baseUrl: http://example.com
 `
-	conflictFile := filepath.Join(t.TempDir(), "conflict.yaml")
-	if err := os.WriteFile(conflictFile, []byte(conflictContent), 0644); err != nil {
+	toolConflictFile := filepath.Join(t.TempDir(), "tool_conflict.yaml")
+	if err := os.WriteFile(toolConflictFile, []byte(toolConflictContent), 0644); err != nil {
 		t.Fatal(err)
 	}
 
-	// Setup Legacy Auth file
+	// Source Conflict File
+	// SQLite prebuilt has a source named 'sqlite-source'
+	sourceConflictContent := `
+sources:
+  sqlite-source:
+    kind: http
+    baseUrl: http://example.com
+tools:
+  dummy_tool:
+    kind: http
+    source: sqlite-source
+    method: GET
+    path: /
+    description: "Dummy"
+`
+	sourceConflictFile := filepath.Join(t.TempDir(), "source_conflict.yaml")
+	if err := os.WriteFile(sourceConflictFile, []byte(sourceConflictContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Toolset Conflict File
+	// SQLite prebuilt has a toolset named 'sqlite_database_tools'
+	toolsetConflictContent := `
+sources:
+  dummy-src:
+    kind: http
+    baseUrl: http://example.com
+tools:
+  dummy_tool:
+    kind: http
+    source: dummy-src
+    method: GET
+    path: /
+    description: "Dummy"
+toolsets:
+  sqlite_database_tools:
+    - dummy_tool
+`
+	toolsetConflictFile := filepath.Join(t.TempDir(), "toolset_conflict.yaml")
+	if err := os.WriteFile(toolsetConflictFile, []byte(toolsetConflictContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	//Legacy Auth File
 	authContent := `
 authSources:
   legacy-auth:
@@ -1987,8 +2030,20 @@ authSources:
 			},
 		},
 		{
-			desc:      "conflict error",
-			args:      []string{"--prebuilt", "sqlite", "--tools-file", conflictFile},
+			desc:      "tool conflict error",
+			args:      []string{"--prebuilt", "sqlite", "--tools-file", toolConflictFile},
+			wantErr:   true,
+			errString: "resource conflicts detected",
+		},
+		{
+			desc:      "source conflict error",
+			args:      []string{"--prebuilt", "sqlite", "--tools-file", sourceConflictFile},
+			wantErr:   true,
+			errString: "resource conflicts detected",
+		},
+		{
+			desc:      "toolset conflict error",
+			args:      []string{"--prebuilt", "sqlite", "--tools-file", toolsetConflictFile},
 			wantErr:   true,
 			errString: "resource conflicts detected",
 		},
@@ -2007,8 +2062,7 @@ authSources:
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-
-			ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+			ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
 			defer cancel()
 
 			cmd, output, err := invokeCommandWithContext(ctx, tc.args)

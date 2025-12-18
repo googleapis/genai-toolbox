@@ -935,9 +935,6 @@ func run(cmd *Command) error {
 	authSourceConfigs := finalToolsFile.AuthSources
 	if authSourceConfigs != nil {
 		cmd.logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")
-		if cmd.cfg.AuthServiceConfigs == nil {
-			cmd.cfg.AuthServiceConfigs = make(server.AuthServiceConfigs)
-		}
 
 		for k, v := range authSourceConfigs {
 			if _, exists := cmd.cfg.AuthServiceConfigs[k]; exists {

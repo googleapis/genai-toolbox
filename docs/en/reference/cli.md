@@ -46,6 +46,9 @@ description: >
 ```bash
 # Basic server with custom port configuration
 ./toolbox --tools-file "tools.yaml" --port 8080
+
+# Server with prebuilt + custom tools configurations
+./toolbox --tools-file new_tools.yaml --prebuilt alloydb-postgres
 ```
 
 ### Tool Configuration Sources
@@ -72,8 +75,8 @@ The CLI supports multiple mutually exclusive ways to specify tool configurations
 
 {{< notice tip >}}
 The CLI enforces mutual exclusivity between configuration source flags,
-preventing simultaneous use of `--prebuilt` with file-based options, and
-ensuring only one of `--tools-file`, `--tools-files`, or `--tools-folder` is
+preventing simultaneous use of the file-based options ensuring only one of
+`--tools-file`, `--tools-files`, or `--tools-folder` is
 used at a time.
 {{< /notice >}}
 
