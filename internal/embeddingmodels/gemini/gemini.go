@@ -49,6 +49,12 @@ func (cfg Config) Initialize(ctx context.Context) (embeddingmodels.EmbeddingMode
 		configs.APIKey = cfg.ApiKey
 	}
 
+	// Get client configs
+	configs := &genai.ClientConfig{}
+	if cfg.ApiKey != "" {
+		configs.APIKey = cfg.ApiKey
+	}
+
 	// Create new Gemini API client
 	client, err := genai.NewClient(ctx, configs)
 	if err != nil {
