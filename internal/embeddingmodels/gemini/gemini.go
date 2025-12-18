@@ -16,7 +16,7 @@ package gemini
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/util"
@@ -32,7 +32,7 @@ type Config struct {
 	Name      string `yaml:"name" validate:"required"`
 	Kind      string `yaml:"kind" validate:"required"`
 	Model     string `yaml:"model" validate:"required"`
-	ApiKey    string `yaml:"apiKey" validate:"required"`
+	ApiKey    string `yaml:"apiKey"`
 	Dimension int32  `yaml:"dimension"`
 }
 
@@ -48,7 +48,7 @@ func (cfg Config) Initialize() (embeddingmodels.EmbeddingModel, error) {
 	// Create new Gemini API client
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{APIKey: cfg.ApiKey})
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("unable to create Gemini API client")
 	}
 
 	m := &EmbeddingModel{
@@ -77,7 +77,7 @@ func (m EmbeddingModel) ToConfig() embeddingmodels.EmbeddingModelConfig {
 func (m EmbeddingModel) EmbedParameters(ctx context.Context, parameters []string) ([][]float32, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
 	}
 
 	contents := convertStringsToContents(parameters)
