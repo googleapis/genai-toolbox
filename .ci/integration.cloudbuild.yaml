@@ -847,13 +847,18 @@ steps:
         tar -C /usr/local -xzf go.tar.gz
         export PATH="/usr/local/go/bin:$$PATH"
 
-        go test -c -cover \
+        go test -v ./internal/sources/oracle/... \
+          -coverprofile=coverage.out \
           -coverpkg=./internal/sources/...,./internal/tools/...
-
-        .ci/test_with_coverage.sh \
-          "Oracle DB" \
-          oracle \
-          oracle
+        
+        # Coverage check
+        total_coverage=$(go tool cover -func=filtered_coverage.out | grep "total:" | awk '{print $3}')
+        echo "Oracle total coverage: $total_coverage"
+        coverage_numeric=$(echo "$total_coverage" | sed 's/%//')
+        if awk -v cov="$coverage_numeric" 'BEGIN {exit !(cov < 50)}'; then
+            echo "Coverage failure: $total_coverage is below 50%."
+            exit 1
+        fi
 
   - id: "serverless-spark"
     name: golang:1
