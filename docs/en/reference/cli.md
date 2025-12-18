@@ -48,7 +48,7 @@ description: >
 ./toolbox --tools-file "tools.yaml" --port 8080
 
 # Server with prebuilt + custom tools configurations
-./toolbox --tools-file new_tools.yaml --prebuilt alloydb-postgres
+./toolbox --tools-file tools.yaml --prebuilt alloydb-postgres
 ```
 
 ### Tool Configuration Sources
