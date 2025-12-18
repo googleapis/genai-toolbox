@@ -345,6 +345,7 @@ func getClickHouseWants() (string, string, string, string, string) {
 	return select1Want, mcpSelect1Want, mcpMyFailToolWant, createTableStatement, nullWant
 }
 
+
 func TestClickHouseSQLTool(t *testing.T) {
 	_ = getClickHouseVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
