@@ -848,11 +848,11 @@ steps:
         export PATH="/usr/local/go/bin:$$PATH"
 
         go test -v ./internal/sources/oracle/... \
-          -coverprofile=coverage.out \
+          -coverprofile=oracle_coverage.out \
           -coverpkg=./internal/sources/...,./internal/tools/...
         
         # Coverage check
-        total_coverage=$(go tool cover -func=filtered_coverage.out | grep "total:" | awk '{print $3}')
+        total_coverage=$(go tool cover -func=oracle_coverage.out | grep "total:" | awk '{print $3}')
         echo "Oracle total coverage: $total_coverage"
         coverage_numeric=$(echo "$total_coverage" | sed 's/%//')
         if awk -v cov="$coverage_numeric" 'BEGIN {exit !(cov < 50)}'; then
