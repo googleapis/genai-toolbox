@@ -847,7 +847,7 @@ steps:
         tar -C /usr/local -xzf go.tar.gz
         export PATH="/usr/local/go/bin:$$PATH"
 
-        go test -c -race -cover \
+        go test -c -cover \
           -coverpkg=./internal/sources/...,./internal/tools/...
 
         .ci/test_with_coverage.sh \
