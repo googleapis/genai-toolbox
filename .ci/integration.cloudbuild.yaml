@@ -849,7 +849,7 @@ steps:
 
         go test -v ./internal/sources/oracle/... \
           -coverprofile=oracle_coverage.out \
-          -coverpkg=./internal/sources/...,./internal/tools/...
+          -coverpkg=./internal/sources/oracle/...,./internal/tools/oracle/...
         
         # Coverage check
         total_coverage=$(go tool cover -func=oracle_coverage.out | grep "total:" | awk '{print $3}')
