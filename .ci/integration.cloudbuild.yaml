@@ -826,7 +826,7 @@ steps:
           cassandra
 
   - id: "oracle"
-    name: ghcr.io/oracle/oraclelinux8-instantclient:21
+    name: ghcr.io/oracle/oraclelinux9-instantclient:23
     waitFor: ["install-dependencies"]
     entrypoint: /bin/bash
     env:
