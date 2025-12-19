@@ -44,14 +44,17 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Source struct {
-	Name string `yaml:"name"`
-	Kind string `yaml:"kind"`
-	Db   *sql.DB
+	Config
+	Db *sql.DB
 }
 
 // SourceKind implements sources.Source.
 func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) ToConfig() sources.SourceConfig {
+	return s.Config
 }
 
 func (s *Source) DuckDb() *sql.DB {
@@ -84,9 +87,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	s := &Source{
-		Name: r.Name,
-		Kind: r.Kind,
-		Db:   db,
+		Config: r,
+		Db:     db,
 	}
 	return s, nil
 }

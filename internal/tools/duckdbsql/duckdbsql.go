@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/duckdb"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 const kind string = "duckdb-sql"
@@ -50,14 +51,14 @@ var _ compatibleSource = &duckdb.Source{}
 var compatibleSources = [...]string{duckdb.SourceKind}
 
 type Config struct {
-	Name               string           `yaml:"name" validate:"required"`
-	Kind               string           `yaml:"kind" validate:"required"`
-	Source             string           `yaml:"source" validate:"required"`
-	Description        string           `yaml:"description" validate:"required"`
-	Statement          string           `yaml:"statement" validate:"required"`
-	AuthRequired       []string         `yaml:"authRequired"`
-	Parameters         tools.Parameters `yaml:"parameters"`
-	TemplateParameters tools.Parameters `yaml:"templateParameters"`
+	Name               string                `yaml:"name" validate:"required"`
+	Kind               string                `yaml:"kind" validate:"required"`
+	Source             string                `yaml:"source" validate:"required"`
+	Description        string                `yaml:"description" validate:"required"`
+	Statement          string                `yaml:"statement" validate:"required"`
+	AuthRequired       []string              `yaml:"authRequired"`
+	Parameters         parameters.Parameters `yaml:"parameters"`
+	TemplateParameters parameters.Parameters `yaml:"templateParameters"`
 }
 
 // Initialize implements tools.ToolConfig.
@@ -74,26 +75,20 @@ func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	allParameters, paramManifest, paramMcpManifest := tools.ProcessParameters(c.TemplateParameters, c.Parameters)
-
-	mcpManifest := tools.McpManifest{
-		Name:        c.Name,
-		Description: c.Description,
-		InputSchema: paramMcpManifest,
+	allParameters, paramManifest, err := parameters.ProcessParameters(c.TemplateParameters, c.Parameters)
+	if err != nil {
+		return nil, err
 	}
+
+	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, allParameters, nil)
 
 	// finish tool setup
 	t := Tool{
-		Name:               c.Name,
-		Kind:               kind,
-		Parameters:         c.Parameters,
-		TemplateParameters: c.TemplateParameters,
-		AllParams:          allParameters,
-		Statement:          c.Statement,
-		AuthRequired:       c.AuthRequired,
-		Db:                 s.DuckDb(),
-		manifest:           tools.Manifest{Description: c.Description, Parameters: paramManifest, AuthRequired: c.AuthRequired},
-		mcpManifest:        mcpManifest,
+		Config:      c,
+		AllParams:   allParameters,
+		Db:          s.DuckDb(),
+		manifest:    tools.Manifest{Description: c.Description, Parameters: paramManifest, AuthRequired: c.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -106,15 +101,10 @@ func (c Config) ToolConfigKind() string {
 var _ tools.ToolConfig = Config{}
 
 type Tool struct {
-	Name               string           `yaml:"name"`
-	Kind               string           `yaml:"kind"`
-	AuthRequired       []string         `yaml:"authRequired"`
-	Parameters         tools.Parameters `yaml:"parameters"`
-	TemplateParameters tools.Parameters `yaml:"templateParameters"`
-	AllParams          tools.Parameters `yaml:"allParams"`
+	Config
+	AllParams parameters.Parameters `yaml:"allParams"`
 
 	Db          *sql.DB
-	Statement   string `yaml:"statement"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -125,14 +115,14 @@ func (t Tool) Authorized(verifiedAuthSources []string) bool {
 }
 
 // Invoke implements tools.Tool.
-func (t Tool) Invoke(ctx context.Context, params tools.ParamValues) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
-	newStatement, err := tools.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
+	newStatement, err := parameters.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("unable to extract template params %w", err)
 	}
 
-	newParams, err := tools.GetParams(t.Parameters, paramsMap)
+	newParams, err := parameters.GetParams(t.Parameters, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
@@ -203,8 +193,20 @@ func (t Tool) McpManifest() tools.McpManifest {
 }
 
 // ParseParams implements tools.Tool.
-func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (tools.ParamValues, error) {
-	return tools.ParseParams(t.AllParams, data, claimsMap)
+func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
+	return parameters.ParseParams(t.AllParams, data, claimsMap)
+}
+
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
+	return false
+}
+
+func (t Tool) ToConfig() tools.ToolConfig {
+	return t.Config
+}
+
+func (t Tool) GetAuthTokenHeaderName() string {
+	return "Authorization"
 }
 
 var _ tools.Tool = Tool{}
