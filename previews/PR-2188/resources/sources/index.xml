@@ -1009,12 +1009,12 @@ Run parameterized SQL queries in MySQL.&lt;/p>
 List active queries in MySQL.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2188/resources/tools/mysql/mysql-list-tables/">&lt;code>mysql-list-tables&lt;/code>&lt;/a>
-List tables in a MySQL database.&lt;/p>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2188/resources/tools/mysql/mysql-get-query-plan/">&lt;code>mysql-get-query-plan&lt;/code>&lt;/a>
+Provide information about how MySQL executes a SQL statement (EXPLAIN).&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2188/resources/tools/mysql/mysql-list-tables-missing-unique-indexes/">&lt;code>mysql-list-tables-missing-unique-indexes&lt;/code>&lt;/a>
-List tables in a MySQL database that do not have primary or unique indices.&lt;/p></description></item><item><title>Neo4j</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2188/resources/sources/neo4j/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2188/resources/sources/neo4j/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2188/resources/tools/mysql/mysql-list-tables/">&lt;code>mysql-list-tables&lt;/code>&lt;/a>
+List tables in a MySQL database.&lt;/p></description></item><item><title>Neo4j</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2188/resources/sources/neo4j/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2188/resources/sources/neo4j/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://neo4j.com/docs">Neo4j&lt;/a> is a powerful, open source graph database system with over
 15 years of active development that has earned it a strong reputation for
 reliability, feature robustness, and performance.&lt;/p>
