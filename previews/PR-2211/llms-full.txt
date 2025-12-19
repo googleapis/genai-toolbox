@@ -12030,8 +12030,6 @@ prompt = """
 
 # --- Configure the Agent ---
 
-# --- Configure the Agent ---
-
 root_agent = Agent(
     model='gemini-2.0-flash-001',
     name='hotel_agent',
