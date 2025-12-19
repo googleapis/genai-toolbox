@@ -605,7 +605,54 @@ basics&lt;/a>.&lt;/p>
 &lt;p>Firestore uses &lt;a href="https://cloud.google.com/firestore/docs/security/iam">Identity and Access Management (IAM)&lt;/a> to control
 user and group access to Firestore resources. Toolbox will use your &lt;a href="https://cloud.google.com/docs/authentication#adc">Application
 Default Credentials (ADC)&lt;/a> to authorize and authenticate when interacting
-with &lt;a href="https://cloud.google.com/firestore/docs">Firestore&lt;/a>.&lt;/p></description></item><item><title>HTTP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/sources/http/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/sources/http/</guid><description>&lt;h2 id="about">About&lt;/h2>
+with &lt;a href="https://cloud.google.com/firestore/docs">Firestore&lt;/a>.&lt;/p></description></item><item><title>Gemini Data Analytics</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/sources/cloud-gda/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/sources/cloud-gda/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The &lt;code>cloud-gemini-data-analytics&lt;/code> source provides a client to interact with the &lt;a href="https://docs.cloud.google.com/gemini/docs/conversational-analytics-api/reference/rest">Gemini Data Analytics API&lt;/a>. This allows tools to send natural language queries to the API.&lt;/p>
+&lt;p>Authentication can be handled in two ways:&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>Application Default Credentials (ADC) (Recommended):&lt;/strong> By default, the source uses ADC to authenticate with the API. The Toolbox server will fetch the credentials from its running environment (server-side authentication). This is the recommended method.&lt;/li>
+&lt;li>&lt;strong>Client-side OAuth:&lt;/strong> If &lt;code>useClientOAuth&lt;/code> is set to &lt;code>true&lt;/code>, the source expects the authentication token to be provided by the caller when making a request to the Toolbox server (typically via an HTTP Bearer token). The Toolbox server will then forward this token to the underlying Gemini Data Analytics API calls.&lt;/li>
+&lt;/ol>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">sources&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-gda-source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-gemini-data-analytics&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">projectId&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-project-id&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-oauth-gda-source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">cloud-gemini-data-analytics&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">projectId&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">my-project-id&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">useClientOAuth&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">true&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;cloud-gemini-data-analytics&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>projectId&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>The Google Cloud Project ID where the API is enabled.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>useClientOAuth&lt;/td>
+ &lt;td style="text-align: center">boolean&lt;/td>
+ &lt;td style="text-align: center">false&lt;/td>
+ &lt;td>If true, the source uses the token provided by the caller (forwarded to the API). Otherwise, it uses server-side Application Default Credentials (ADC). Defaults to &lt;code>false&lt;/code>.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
+&lt;/table></description></item><item><title>HTTP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/sources/http/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/sources/http/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The HTTP Source allows Toolbox to retrieve data from arbitrary HTTP
 endpoints. This enables Generative AI applications to access data from web APIs
 and other HTTP-accessible resources.&lt;/p>
@@ -962,12 +1009,12 @@ Run parameterized SQL queries in MySQL.&lt;/p>
 List active queries in MySQL.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/tools/mysql/mysql-list-tables/">&lt;code>mysql-list-tables&lt;/code>&lt;/a>
-List tables in a MySQL database.&lt;/p>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/tools/mysql/mysql-get-query-plan/">&lt;code>mysql-get-query-plan&lt;/code>&lt;/a>
+Provide information about how MySQL executes a SQL statement (EXPLAIN).&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/tools/mysql/mysql-list-tables-missing-unique-indexes/">&lt;code>mysql-list-tables-missing-unique-indexes&lt;/code>&lt;/a>
-List tables in a MySQL database that do not have primary or unique indices.&lt;/p></description></item><item><title>Neo4j</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/sources/neo4j/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/sources/neo4j/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/tools/mysql/mysql-list-tables/">&lt;code>mysql-list-tables&lt;/code>&lt;/a>
+List tables in a MySQL database.&lt;/p></description></item><item><title>Neo4j</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/sources/neo4j/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/sources/neo4j/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://neo4j.com/docs">Neo4j&lt;/a> is a powerful, open source graph database system with over
 15 years of active development that has earned it a strong reputation for
 reliability, feature robustness, and performance.&lt;/p>

@@ -69,6 +69,7 @@ List of reference documentation for resources in Toolbox.
   - [Elasticsearch](https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/sources/elasticsearch/): Elasticsearch is a distributed, free and open search and analytics engine  for all types of data, including textual, numerical, geospatial, structured,  and unstructured.
   - [Firebird](https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/sources/firebird/): Firebird is a powerful, cross-platform, and open-source relational database.
   - [Firestore](https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/sources/firestore/): Firestore is a NoSQL document database built for automatic scaling, high performance, and ease of application development. It's a fully managed, serverless database that supports mobile, web, and server development.
+  - [Gemini Data Analytics](https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/sources/cloud-gda/): A "cloud-gemini-data-analytics" source provides a client for the Gemini Data Analytics API.
   - [HTTP](https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/sources/http/): The HTTP source enables the Toolbox to retrieve data from a remote server using HTTP requests.
   - [Looker](https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/sources/looker/): Looker is a business intelligence tool that also provides a semantic layer.
   - [MariaDB](https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/sources/mariadb/): MariaDB is an open-source relational database compatible with MySQL.
@@ -108,6 +109,7 @@ List of reference documentation for resources in Toolbox.
   - [Elasticsearch](https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/tools/elasticsearch/): Tools that work with Elasticsearch Sources.
   - [Firebird](https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/tools/firebird/): Tools that work with Firebird Sources.
   - [Firestore](https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/tools/firestore/): Tools that work with Firestore Sources.
+  - [Gemini Data Analytics](https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/tools/cloudgda/): Tools for Gemini Data Analytics.
   - [HTTP](https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/tools/http/): Tools that work with HTTP Sources.
   - [Looker](https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/tools/looker/): Tools that work with Looker Sources.
   - [MindsDB Tools](https://googleapis.github.io/genai-toolbox/previews/PR-2121/resources/tools/mindsdb/): MindsDB tools that enable SQL queries across hundreds of datasources and ML models.
