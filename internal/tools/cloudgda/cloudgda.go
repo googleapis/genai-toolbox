@@ -24,7 +24,6 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	cloudgdasrc "github.com/googleapis/genai-toolbox/internal/sources/cloudgda"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
@@ -43,6 +42,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 		return nil, err
 	}
 	return actual, nil
+}
+
+type compatibleSource interface {
+	GetProjectID() string
+	GetBaseURL() string
+	UseClientAuthorization() bool
+	GetClient(context.Context, string) (*http.Client, error)
 }
 
 type Config struct {
@@ -64,18 +70,6 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(*cloudgdasrc.Source)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-gemini-data-analytics`", kind)
-	}
-
 	// Define the parameters for the Gemini Data Analytics Query API
 	// The prompt is the only input parameter.
 	allParameters := parameters.Parameters{
@@ -87,7 +81,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	return Tool{
 		Config:      cfg,
 		AllParams:   allParameters,
-		Source:      s,
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}, nil
@@ -99,7 +92,6 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Config
 	AllParams   parameters.Parameters
-	Source      *cloudgdasrc.Source
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -110,6 +102,11 @@ func (t Tool) ToConfig() tools.ToolConfig {
 
 // Invoke executes the tool logic
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
+
 	paramsMap := params.AsMap()
 	prompt, ok := paramsMap["prompt"].(string)
 	if !ok {
@@ -118,11 +115,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	// The API endpoint itself always uses the "global" location.
 	apiLocation := "global"
-	apiParent := fmt.Sprintf("projects/%s/locations/%s", t.Source.ProjectID, apiLocation)
-	apiURL := fmt.Sprintf("%s/v1beta/%s:queryData", t.Source.BaseURL, apiParent)
+	apiParent := fmt.Sprintf("projects/%s/locations/%s", source.GetProjectID(), apiLocation)
+	apiURL := fmt.Sprintf("%s/v1beta/%s:queryData", source.GetBaseURL(), apiParent)
 
 	// The parent in the request payload uses the tool's configured location.
-	payloadParent := fmt.Sprintf("projects/%s/locations/%s", t.Source.ProjectID, t.Location)
+	payloadParent := fmt.Sprintf("projects/%s/locations/%s", source.GetProjectID(), t.Location)
 
 	payload := &QueryDataRequest{
 		Parent:            payloadParent,
@@ -138,7 +135,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	// Parse the access token if provided
 	var tokenStr string
-	if t.RequiresClientAuthorization(resourceMgr) {
+	if source.UseClientAuthorization() {
 		var err error
 		tokenStr, err = accessToken.ParseBearerToken()
 		if err != nil {
@@ -146,7 +143,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
-	client, err := t.Source.GetClient(ctx, tokenStr)
+	client, err := source.GetClient(ctx, tokenStr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get HTTP client: %w", err)
 	}
@@ -196,10 +193,14 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return t.Source.UseClientAuthorization()
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return false, err
+	}
+	return source.UseClientAuthorization(), nil
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(_ tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }
