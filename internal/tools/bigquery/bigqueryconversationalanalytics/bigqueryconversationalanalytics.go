@@ -56,7 +56,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
-	BigQueryTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error)
+	BigQueryTokenSourceWithScope(ctx context.Context, scopes []string) (oauth2.TokenSource, error)
 	BigQueryProject() string
 	BigQueryLocation() string
 	GetMaxQueryResultRows() int
@@ -157,7 +157,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	var bigQueryTokenSourceWithScope oauth2.TokenSource
 	if !s.UseClientAuthorization() {
 		ctx := context.Background()
-		ts, err := s.BigQueryTokenSourceWithScope(ctx, "https://www.googleapis.com/auth/cloud-platform")
+		ts, err := s.BigQueryTokenSourceWithScope(ctx, []string{"https://www.googleapis.com/auth/cloud-platform"})
 		if err != nil {
 			return nil, fmt.Errorf("failed to get cloud-platform token source: %w", err)
 		}
