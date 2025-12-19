@@ -224,15 +224,9 @@ func EmbedParams(ctx context.Context, ps Parameters, paramValues ParamValues, em
 				paramValues[item.Index].Value = finalValue
 				continue
 			}
-			if formatter != nil {
-				formattedVector := formatter(rawVector)
 
-				if err != nil {
-					return nil, fmt.Errorf("error formatting vector for parameter index %d: %w", item.Index, err)
-				}
-				finalValue = formattedVector
-			}
-
+			formattedVector := formatter(rawVector)
+			finalValue = formattedVector
 			paramValues[item.Index].Value = finalValue
 		}
 	}
@@ -412,6 +406,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		a := &FloatParameter{}
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
+		}
+		if a.GetEmbeddedBy() != "" {
+			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
 		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
