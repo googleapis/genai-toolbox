@@ -83,8 +83,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		parameters.NewStringParameter("instanceId", "The ID of the instance"),
 		parameters.NewStringParameter("displayName", "The display name of the instance"),
 		parameters.NewStringParameter("config", "The instance configuration (e.g., regional-us-central1)"),
-		parameters.NewIntParameter("nodeCount", "The number of nodes"),
-		parameters.NewIntParameter("processingUnits", "The number of processing units"),
+		parameters.NewIntParameter("nodeCount", "The number of nodes, mutually exclusive with processingUnits (one must be 0)"),
+		parameters.NewIntParameter("processingUnits", "The number of processing units, mutually exclusive with nodeCount (one must be 0)"),
 		parameters.NewStringParameter("edition", "The edition of the instance (STANDARD, ENTERPRISE, ENTERPRISE_PLUS)"),
 	}
 
