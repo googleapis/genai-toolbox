@@ -10929,15 +10929,15 @@ tools:
 
 The `spanner-create-instance` tool has the following parameters:
 
-| **field**       | **type** | **required** | **description**                                                                |
-| --------------- | :------: | :----------: | ------------------------------------------------------------------------------ |
-| project         |  string  |     true     | The Google Cloud project ID.                                                   |
-| instanceId      |  string  |     true     | The ID of the instance to create.                                              |
-| displayName     |  string  |     true     | The display name of the instance.                                              |
-| config          |  string  |     true     | The instance configuration (e.g., `regional-us-central1`).                     |
-| nodeCount       |  integer |     true     | The number of nodes. Mutually exclusive with `processingUnits` (one must be 0).             |
-| processingUnits |  integer |     true     | The number of processing units. Mutually exclusive with `nodeCount` (one must be 0).        |
-| edition         |  string  |    false     | The edition of the instance (`STANDARD`, `ENTERPRISE`, `ENTERPRISE_PLUS`).     |
+| **field**       | **type** | **required** | **description**                                                                      |
+| --------------- | :------: | :----------: | ------------------------------------------------------------------------------------ |
+| project         |  string  |     true     | The Google Cloud project ID.                                                         |
+| instanceId      |  string  |     true     | The ID of the instance to create.                                                    |
+| displayName     |  string  |     true     | The display name of the instance.                                                    |
+| config          |  string  |     true     | The instance configuration (e.g., `regional-us-central1`).                           |
+| nodeCount       | integer  |     true     | The number of nodes. Mutually exclusive with `processingUnits` (one must be 0).      |
+| processingUnits | integer  |     true     | The number of processing units. Mutually exclusive with `nodeCount` (one must be 0). |
+| edition         |  string  |    false     | The edition of the instance (`STANDARD`, `ENTERPRISE`, `ENTERPRISE_PLUS`).           |
 
 ## Reference
 
