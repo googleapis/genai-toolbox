@@ -49,6 +49,7 @@ var expectedToolSources = []string{
 	"postgres",
 	"serverless-spark",
 	"singlestore",
+	"spanner-admin",
 	"spanner-postgres",
 	"spanner",
 	"sqlite",
