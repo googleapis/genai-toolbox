@@ -16,7 +16,7 @@ package embeddingmodels
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -34,14 +34,26 @@ type EmbeddingModel interface {
 
 type VectorFormatter func(vectorFloats []float32) any
 
-// formatVectorForPgvector converts a slice of floats into a PostgreSQL vector literal string: '[x, y, z]'
+// FormatVectorForPgvector converts a slice of floats into a PostgreSQL vector literal string: '[x, y, z]'
 func FormatVectorForPgvector(vectorFloats []float32) any {
-	str := make([]string, len(vectorFloats))
-	for i, f := range vectorFloats {
-		str[i] = fmt.Sprintf("%g", f)
+	if len(vectorFloats) == 0 {
+		return "[]"
 	}
-	// Join with comma and enclose in square brackets '[]'
-	return fmt.Sprintf("[%s]", strings.Join(str, ", "))
+
+	// Pre-allocate the builder.
+	var b strings.Builder
+	b.Grow(len(vectorFloats) * 10)
+
+	b.WriteByte('[')
+	for i, f := range vectorFloats {
+		if i > 0 {
+			b.WriteString(", ")
+		}
+		b.Write(strconv.AppendFloat(nil, float64(f), 'g', -1, 32))
+	}
+	b.WriteByte(']')
+
+	return b.String()
 }
 
 var _ VectorFormatter = FormatVectorForPgvector
