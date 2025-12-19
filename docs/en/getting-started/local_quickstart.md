@@ -52,7 +52,7 @@ runtime](https://research.google.com/colaboratory/local-runtimes.html).
     {{< tabpane persist=header >}}
 {{< tab header="ADK" lang="bash" >}}
 
-pip install toolbox-core
+pip install toolbox-adk
 {{< /tab >}}
 {{< tab header="Langchain" lang="bash" >}}
 

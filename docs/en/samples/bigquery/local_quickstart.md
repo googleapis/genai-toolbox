@@ -375,7 +375,7 @@ pip install llama-index-llms-google-genai
 
 {{< /tab >}}
 {{< tab header="ADK" lang="bash" >}}
-pip install toolbox-core
+pip install toolbox-adk
 {{< /tab >}}
 {{< /tabpane >}}
 
@@ -617,8 +617,8 @@ from google.adk.agents import Agent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService
+from google.adk.tools.toolbox_toolset import ToolboxToolset
 from google.genai import types # For constructing message content
-from toolbox_core import ToolboxSyncClient
 
 import os
 os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
@@ -635,68 +635,70 @@ os.environ['GOOGLE_CLOUD_LOCATION'] = 'us-central1'
 
 # TODO(developer): Ensure the Toolbox server is running at <http://127.0.0.1:5000>
 
-with ToolboxSyncClient("<http://127.0.0.1:5000>") as toolbox_client:
-    # TODO(developer): Replace "my-toolset" with the actual ID of your toolset as configured in your MCP Toolbox server.
-    agent_toolset = toolbox_client.load_toolset("my-toolset")
+# TODO(developer): Replace "my-toolset" with the actual ID of your toolset as configured in your MCP Toolbox server.
+toolset = ToolboxToolset(
+    server_url="http://127.0.0.1:5000",
+    toolset_name="my-toolset"
+)
 
-    # --- Define the Agent's Prompt ---
-    prompt = """
-      You're a helpful hotel assistant. You handle hotel searching, booking and
-      cancellations. When the user searches for a hotel, mention it's name, id,
-      location and price tier. Always mention hotel ids while performing any
-      searches. This is very important for any operations. For any bookings or
-      cancellations, please provide the appropriate confirmation. Be sure to
-      update checkin or checkout dates if mentioned by the user.
-      Don't ask for confirmations from the user.
-    """
+# --- Define the Agent's Prompt ---
+prompt = """
+  You're a helpful hotel assistant. You handle hotel searching, booking and
+  cancellations. When the user searches for a hotel, mention it's name, id,
+  location and price tier. Always mention hotel ids while performing any
+  searches. This is very important for any operations. For any bookings or
+  cancellations, please provide the appropriate confirmation. Be sure to
+  update checkin or checkout dates if mentioned by the user.
+  Don't ask for confirmations from the user.
+"""
 
-    # --- Configure the Agent ---
+# --- Configure the Agent ---
 
-    root_agent = Agent(
-        model='gemini-2.0-flash-001',
-        name='hotel_agent',
-        description='A helpful AI assistant that can search and book hotels.',
-        instruction=prompt,
-        tools=agent_toolset, # Pass the loaded toolset
+root_agent = Agent(
+    model='gemini-2.0-flash-001',
+    name='hotel_agent',
+    description='A helpful AI assistant that can search and book hotels.',
+    instruction=prompt,
+    tools=[toolset], # Pass the loaded toolset
+)
+
+# --- Initialize Services for Running the Agent ---
+session_service = InMemorySessionService()
+artifacts_service = InMemoryArtifactService()
+# Create a new session for the interaction.
+session = session_service.create_session(
+    state={}, app_name='hotel_agent', user_id='123'
+)
+
+runner = Runner(
+    app_name='hotel_agent',
+    agent=root_agent,
+    artifact_service=artifacts_service,
+    session_service=session_service,
+)
+
+# --- Define Queries and Run the Agent ---
+queries = [
+    "Find hotels in Basel with Basel in it's name.",
+    "Can you book the Hilton Basel for me?",
+    "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+    "My check in dates would be from April 10, 2024 to April 19, 2024.",
+]
+
+for query in queries:
+    content = types.Content(role='user', parts=[types.Part(text=query)])
+    events = runner.run(session_id=session.id,
+                        user_id='123', new_message=content)
+
+    responses = (
+      part.text
+      for event in events
+      for part in event.content.parts
+      if part.text is not None
     )
 
-    # --- Initialize Services for Running the Agent ---
-    session_service = InMemorySessionService()
-    artifacts_service = InMemoryArtifactService()
-    # Create a new session for the interaction.
-    session = session_service.create_session(
-        state={}, app_name='hotel_agent', user_id='123'
-    )
-
-    runner = Runner(
-        app_name='hotel_agent',
-        agent=root_agent,
-        artifact_service=artifacts_service,
-        session_service=session_service,
-    )
-
-    # --- Define Queries and Run the Agent ---
-    queries = [
-        "Find hotels in Basel with Basel in it's name.",
-        "Can you book the Hilton Basel for me?",
-        "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-        "My check in dates would be from April 10, 2024 to April 19, 2024.",
-    ]
-
-    for query in queries:
-        content = types.Content(role='user', parts=[types.Part(text=query)])
-        events = runner.run(session_id=session.id,
-                            user_id='123', new_message=content)
-
-        responses = (
-          part.text
-          for event in events
-          for part in event.content.parts
-          if part.text is not None
-        )
-
-        for text in responses:
-          print(text)
+    for text in responses:
+      print(text)
 {{< /tab >}}
 {{< /tabpane >}}
 
