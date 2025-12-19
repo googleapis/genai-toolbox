@@ -505,18 +505,12 @@ func initBigQueryConnection(
 	var opts []option.ClientOption
 
 	var credScopes []string
-	if impersonateServiceAccount != "" {
-		if len(scopes) > 0 {
-			credScopes = scopes
-		} else {
-			credScopes = []string{"https://www.googleapis.com/auth/cloud-platform"}
-		}
+	if len(scopes) > 0 {
+		credScopes = scopes
+	} else if impersonateServiceAccount != "" {
+		credScopes = []string{"https://www.googleapis.com/auth/cloud-platform"}
 	} else {
-		if len(scopes) > 0 {
-			credScopes = scopes
-		} else {
-			credScopes = []string{bigqueryapi.Scope}
-		}
+		credScopes = []string{bigqueryapi.Scope}
 	}
 
 	if impersonateServiceAccount != "" {
@@ -648,10 +642,8 @@ func initDataplexConnection(
 	} else {
 		var opts []option.ClientOption
 
-		var credScopes []string
-		if len(scopes) > 0 {
-			credScopes = scopes
-		} else {
+		credScopes := scopes
+		if len(credScopes) == 0 {
 			credScopes = []string{"https://www.googleapis.com/auth/cloud-platform"}
 		}
 
