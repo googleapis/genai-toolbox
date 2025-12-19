@@ -46,7 +46,7 @@ func (t PromptsetConfig) Initialize(serverVersion string, promptsMap map[string]
 	var promptset Promptset
 	promptset.Name = t.Name
 	if !tools.IsValidName(promptset.Name) {
-		return promptset, fmt.Errorf("invalid promptset name: %s", t)
+		return promptset, fmt.Errorf("invalid promptset name: %s", promptset.Name)
 	}
 	promptset.Prompts = make([]*Prompt, 0, len(t.PromptNames))
 	promptset.McpManifest = make([]McpManifest, 0, len(t.PromptNames))
@@ -57,7 +57,7 @@ func (t PromptsetConfig) Initialize(serverVersion string, promptsMap map[string]
 	for _, promptName := range t.PromptNames {
 		prompt, ok := promptsMap[promptName]
 		if !ok {
-			return promptset, fmt.Errorf("prompt does not exist: %s", t)
+			return promptset, fmt.Errorf("prompt does not exist: %s", promptName)
 		}
 		promptset.Prompts = append(promptset.Prompts, &prompt)
 		promptset.Manifest.PromptsManifest[promptName] = prompt.Manifest()

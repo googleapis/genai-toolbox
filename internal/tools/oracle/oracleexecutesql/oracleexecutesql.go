@@ -98,7 +98,7 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
 	sqlParam, ok := paramsMap["sql"].(string)
 	if !ok {
@@ -110,7 +110,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sqlParam))
+	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sqlParam)
 
 	results, err := t.Pool.QueryContext(ctx, sqlParam)
 	if err != nil {
@@ -230,7 +230,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
 	return false
 }
 

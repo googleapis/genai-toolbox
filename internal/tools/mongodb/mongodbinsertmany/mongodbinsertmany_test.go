@@ -46,6 +46,30 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 					description: some description
 					database: test_db
 					collection: test_coll
+			`,
+			want: server.ToolConfigs{
+				"example_tool": mongodbinsertmany.Config{
+					Name:         "example_tool",
+					Kind:         "mongodb-insert-many",
+					Source:       "my-instance",
+					AuthRequired: []string{},
+					Database:     "test_db",
+					Collection:   "test_coll",
+					Description:  "some description",
+					Canonical:    false,
+				},
+			},
+		},
+		{
+			desc: "true canonical",
+			in: `
+			tools:
+				example_tool:
+					kind: mongodb-insert-many
+					source: my-instance
+					description: some description
+					database: test_db
+					collection: test_coll
 					canonical: true
 			`,
 			want: server.ToolConfigs{
@@ -58,6 +82,31 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 					Collection:   "test_coll",
 					Description:  "some description",
 					Canonical:    true,
+				},
+			},
+		},
+		{
+			desc: "false canonical",
+			in: `
+			tools:
+				example_tool:
+					kind: mongodb-insert-many
+					source: my-instance
+					description: some description
+					database: test_db
+					collection: test_coll
+					canonical: false
+			`,
+			want: server.ToolConfigs{
+				"example_tool": mongodbinsertmany.Config{
+					Name:         "example_tool",
+					Kind:         "mongodb-insert-many",
+					Source:       "my-instance",
+					AuthRequired: []string{},
+					Database:     "test_db",
+					Collection:   "test_coll",
+					Description:  "some description",
+					Canonical:    false,
 				},
 			},
 		},

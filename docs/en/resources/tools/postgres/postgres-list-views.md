@@ -19,11 +19,11 @@ a Postgres database, excluding those in system schemas (`pg_catalog`,
 - [postgres](../../sources/postgres.md)
 
 `postgres-list-views` lists detailed view information (schemaname, viewname,
-ownername) as JSON for views in a database. The tool takes the following input
+ownername, definition) as JSON for views in a database. The tool takes the following input
 parameters:
 
-- `viewname` (optional): A string pattern to filter view names. The search uses
-  SQL LIKE operator to filter the views. Default: `""`
+- `view_name` (optional): A string pattern to filter view names. Default: `""`
+- `schema_name` (optional): A string pattern to filter schema names. Default: `""`
 - `limit` (optional): The maximum number of rows to return. Default: `50`.
 
 ## Example
