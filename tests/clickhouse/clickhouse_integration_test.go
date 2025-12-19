@@ -15,9 +15,12 @@
 package clickhouse
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -26,16 +29,9 @@ import (
 
 	_ "github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/google/uuid"
-	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	clickhouseexecutesql "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouseexecutesql"
-	clickhouselistdatabases "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouselistdatabases"
-	clickhouselisttables "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhouselisttables"
-	clickhousesql "github.com/googleapis/genai-toolbox/internal/tools/clickhouse/clickhousesql"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/googleapis/genai-toolbox/tests"
-	"go.opentelemetry.io/otel/trace/noop"
 )
 
 var (
@@ -384,150 +380,125 @@ func TestClickHouseSQLTool(t *testing.T) {
 		t.Fatalf("Failed to insert test data: %v", err)
 	}
 
-	t.Run("SimpleSelect", func(t *testing.T) {
-		toolConfig := clickhousesql.Config{
-			Name:        "test-select",
-			Kind:        "clickhouse-sql",
-			Source:      "test-clickhouse",
-			Description: "Test select query",
-			Statement:   fmt.Sprintf("SELECT * FROM %s ORDER BY id", tableName),
-		}
-
-		source := createMockSource(t, pool)
-		sourcesMap := map[string]sources.Source{
-			"test-clickhouse": source,
-		}
-
-		tool, err := toolConfig.Initialize(sourcesMap)
-		if err != nil {
-			t.Fatalf("Failed to initialize tool: %v", err)
-		}
-
-		result, err := tool.Invoke(ctx, nil, parameters.ParamValues{}, "")
-		if err != nil {
-			t.Fatalf("Failed to invoke tool: %v", err)
-		}
-
-		resultSlice, ok := result.([]any)
-		if !ok {
-			t.Fatalf("Expected result to be []any, got %T", result)
-		}
-
-		if len(resultSlice) != 3 {
-			t.Errorf("Expected 3 results, got %d", len(resultSlice))
-		}
-	})
-
-	t.Run("ParameterizedQuery", func(t *testing.T) {
-		toolConfig := clickhousesql.Config{
-			Name:        "test-param-query",
-			Kind:        "clickhouse-sql",
-			Source:      "test-clickhouse",
-			Description: "Test parameterized query",
-			Statement:   fmt.Sprintf("SELECT * FROM %s WHERE age > ? ORDER BY id", tableName),
-			Parameters: parameters.Parameters{
-				parameters.NewIntParameter("min_age", "Minimum age"),
+	toolsFile := map[string]any{
+		"sources": map[string]any{
+			"my-instance": getClickHouseVars(t),
+		},
+		"tools": map[string]any{
+			"test-select": map[string]any{
+				"kind":        ClickHouseToolKind,
+				"source":      "my-instance",
+				"description": "Test select query",
+				"statement":   fmt.Sprintf("SELECT * FROM %s ORDER BY id", tableName),
 			},
-		}
-
-		source := createMockSource(t, pool)
-		sourcesMap := map[string]sources.Source{
-			"test-clickhouse": source,
-		}
-
-		tool, err := toolConfig.Initialize(sourcesMap)
-		if err != nil {
-			t.Fatalf("Failed to initialize tool: %v", err)
-		}
-
-		params := parameters.ParamValues{
-			{Name: "min_age", Value: 28},
-		}
-
-		result, err := tool.Invoke(ctx, nil, params, "")
-		if err != nil {
-			t.Fatalf("Failed to invoke tool: %v", err)
-		}
-
-		resultSlice, ok := result.([]any)
-		if !ok {
-			t.Fatalf("Expected result to be []any, got %T", result)
-		}
-
-		if len(resultSlice) != 2 {
-			t.Errorf("Expected 2 results (Bob and Charlie), got %d", len(resultSlice))
-		}
-	})
-
-	t.Run("EmptyResult", func(t *testing.T) {
-		toolConfig := clickhousesql.Config{
-			Name:        "test-empty-result",
-			Kind:        "clickhouse-sql",
-			Source:      "test-clickhouse",
-			Description: "Test query with no results",
-			Statement:   fmt.Sprintf("SELECT * FROM %s WHERE id = ?", tableName),
-			Parameters: parameters.Parameters{
-				parameters.NewIntParameter("id", "Record ID"),
+			"test-param-query": map[string]any{
+				"kind":        ClickHouseToolKind,
+				"source":      "my-instance",
+				"description": "Test parameterized query",
+				"statement":   fmt.Sprintf("SELECT * FROM %s WHERE age > ? ORDER BY id", tableName),
+				"parameters": []parameters.Parameter{
+					parameters.NewIntParameter("min_age", "Minimum age"),
+				},
 			},
-		}
+			"test-empty-result": map[string]any{
+				"kind":        ClickHouseToolKind,
+				"source":      "my-instance",
+				"description": "Test query with no results",
+				"statement":   fmt.Sprintf("SELECT * FROM %s WHERE id = ?", tableName),
+				"parameters": []parameters.Parameter{
+					parameters.NewIntParameter("id", "Record ID"),
+				},
+			},
+			"test-invalid-sql": map[string]any{
+				"kind":        ClickHouseToolKind,
+				"source":      "my-instance",
+				"description": "Test invalid SQL",
+				"statement":   "SELEC * FROM nonexistent_table", // Typo in SELECT
+			},
+		},
+	}
 
-		source := createMockSource(t, pool)
-		sourcesMap := map[string]sources.Source{
-			"test-clickhouse": source,
-		}
+	var args []string
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
 
-		tool, err := toolConfig.Initialize(sourcesMap)
-		if err != nil {
-			t.Fatalf("Failed to initialize tool: %v", err)
-		}
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
 
-		params := parameters.ParamValues{
-			{Name: "id", Value: 999}, // Non-existent ID
-		}
-
-		result, err := tool.Invoke(ctx, nil, params, "")
-		if err != nil {
-			t.Fatalf("Failed to invoke tool: %v", err)
-		}
-
-		// ClickHouse returns empty slice for no results, not nil
-		if resultSlice, ok := result.([]any); ok {
-			if len(resultSlice) != 0 {
-				t.Errorf("Expected empty result for non-existent record, got %d results", len(resultSlice))
+	tcs := []struct {
+		name           string
+		toolName       string
+		requestBody    []byte
+		resultSliceLen int
+		isErr          bool
+	}{
+		{
+			name:           "SimpleSelect",
+			toolName:       "test-select",
+			requestBody:    []byte(`{}`),
+			resultSliceLen: 3,
+		},
+		{
+			name:           "ParameterizedQuery",
+			toolName:       "test-param-query",
+			requestBody:    []byte(`{"min_age": 28}`),
+			resultSliceLen: 2,
+		},
+		{
+			name:           "EmptyResult",
+			toolName:       "test-empty-result",
+			requestBody:    []byte(`{"id": 999}`), // non-existent id
+			resultSliceLen: 0,
+		},
+		{
+			name:        "InvalidSQL",
+			toolName:    "test-invalid-sql",
+			requestBody: []byte(``),
+			isErr:       true,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
+			resp, respBody := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer(tc.requestBody), nil)
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
 			}
-		} else if result != nil {
-			t.Errorf("Expected empty slice or nil result for empty query, got %v", result)
-		}
-	})
 
-	t.Run("InvalidSQL", func(t *testing.T) {
-		toolConfig := clickhousesql.Config{
-			Name:        "test-invalid-sql",
-			Kind:        "clickhouse-sql",
-			Source:      "test-clickhouse",
-			Description: "Test invalid SQL",
-			Statement:   "SELEC * FROM nonexistent_table", // Typo in SELECT
-		}
+			var body map[string]interface{}
+			err := json.Unmarshal(respBody, &body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
+			}
 
-		source := createMockSource(t, pool)
-		sourcesMap := map[string]sources.Source{
-			"test-clickhouse": source,
-		}
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
+			t.Logf("result is %s", got)
 
-		tool, err := toolConfig.Initialize(sourcesMap)
-		if err != nil {
-			t.Fatalf("Failed to initialize tool: %v", err)
-		}
+			var res []any
+			err = json.Unmarshal([]byte(got), &res)
+			if err != nil {
+				t.Fatalf("error parsing result")
+			}
 
-		_, err = tool.Invoke(ctx, nil, parameters.ParamValues{}, "")
-		if err == nil {
-			t.Error("Expected error for invalid SQL, got nil")
-		}
-
-		if !strings.Contains(err.Error(), "Syntax error") && !strings.Contains(err.Error(), "SELEC") {
-			t.Errorf("Expected syntax error message, got: %v", err)
-		}
-	})
+			if len(res) != tc.resultSliceLen {
+				t.Errorf("Expected %d results, got %d", tc.resultSliceLen, len(res))
+			}
+		})
+	}
 
 	t.Logf("✅ clickhouse-sql tool tests completed successfully")
 }
@@ -545,224 +516,108 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 
 	tableName := "test_exec_sql_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
-	t.Run("CreateTable", func(t *testing.T) {
-		toolConfig := clickhouseexecutesql.Config{
-			Name:        "test-create-table",
-			Kind:        "clickhouse-execute-sql",
-			Source:      "test-clickhouse",
-			Description: "Test create table",
-		}
+	toolsFile := map[string]any{
+		"sources": map[string]any{
+			"my-instance": getClickHouseVars(t),
+		},
+		"tools": map[string]any{
+			"execute-sql-tool": map[string]any{
+				"kind":        "clickhouse-execute-sql",
+				"source":      "my-instance",
+				"description": "Test create table",
+			},
+		},
+	}
 
-		source := createMockSource(t, pool)
-		sourcesMap := map[string]sources.Source{
-			"test-clickhouse": source,
-		}
+	var args []string
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
 
-		tool, err := toolConfig.Initialize(sourcesMap)
-		if err != nil {
-			t.Fatalf("Failed to initialize tool: %v", err)
-		}
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+	tcs := []struct {
+		name           string
+		sql            string
+		resultSliceLen int
+		isErr          bool
+	}{
+		{
+			name:           "CreateTable",
+			sql:            fmt.Sprintf(`CREATE TABLE %s (id UInt32, data String) ENGINE = Memory`, tableName),
+			resultSliceLen: 0,
+		},
+		{
+			name:           "InsertData",
+			sql:            fmt.Sprintf("INSERT INTO %s (id, data) VALUES (1, 'test1'), (2, 'test2')", tableName),
+			resultSliceLen: 0,
+		},
+		{
+			name:           "SelectData",
+			sql:            fmt.Sprintf("SELECT * FROM %s ORDER BY id", tableName),
+			resultSliceLen: 2,
+		},
+		{
+			name:           "DropTable",
+			sql:            fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName),
+			resultSliceLen: 0,
+		},
+		{
+			name:  "MissingSQL",
+			sql:   "",
+			isErr: true,
+		},
 
-		createSQL := fmt.Sprintf(`
-			CREATE TABLE %s (
-				id UInt32,
-				data String
-			) ENGINE = Memory
-		`, tableName)
-
-		params := parameters.ParamValues{
-			{Name: "sql", Value: createSQL},
-		}
-
-		result, err := tool.Invoke(ctx, nil, params, "")
-		if err != nil {
-			t.Fatalf("Failed to create table: %v", err)
-		}
-
-		// CREATE TABLE should return nil or empty slice (no rows)
-		if resultSlice, ok := result.([]any); ok {
-			if len(resultSlice) != 0 {
-				t.Errorf("Expected empty result for CREATE TABLE, got %d results", len(resultSlice))
+		{
+			name:  "SQLInjectionAttempt",
+			sql:   "SELECT 1; DROP TABLE system.users; SELECT 2",
+			isErr: true,
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			param := fmt.Sprintf(`{"sql": "%s"}`, tc.sql)
+			api := "http://127.0.0.1:5000/api/tool/execute-sql-tool/invoke"
+			resp, respBody := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(param)), nil)
+			if resp.StatusCode != http.StatusOK {
+				if tc.isErr {
+					return
+				}
+				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
 			}
-		} else if result != nil {
-			t.Errorf("Expected nil or empty slice for CREATE TABLE, got %v", result)
-		}
-	})
-
-	t.Run("InsertData", func(t *testing.T) {
-		toolConfig := clickhouseexecutesql.Config{
-			Name:        "test-insert",
-			Kind:        "clickhouse-execute-sql",
-			Source:      "test-clickhouse",
-			Description: "Test insert data",
-		}
-
-		source := createMockSource(t, pool)
-		sourcesMap := map[string]sources.Source{
-			"test-clickhouse": source,
-		}
-
-		tool, err := toolConfig.Initialize(sourcesMap)
-		if err != nil {
-			t.Fatalf("Failed to initialize tool: %v", err)
-		}
-
-		insertSQL := fmt.Sprintf("INSERT INTO %s (id, data) VALUES (1, 'test1'), (2, 'test2')", tableName)
-		params := parameters.ParamValues{
-			{Name: "sql", Value: insertSQL},
-		}
-
-		result, err := tool.Invoke(ctx, nil, params, "")
-		if err != nil {
-			t.Fatalf("Failed to insert data: %v", err)
-		}
-
-		// INSERT should return nil or empty slice
-		if resultSlice, ok := result.([]any); ok {
-			if len(resultSlice) != 0 {
-				t.Errorf("Expected empty result for INSERT, got %d results", len(resultSlice))
+			if tc.isErr {
+				t.Fatalf("expecting an error from server")
 			}
-		} else if result != nil {
-			t.Errorf("Expected nil or empty slice for INSERT, got %v", result)
-		}
-	})
 
-	t.Run("SelectData", func(t *testing.T) {
-		toolConfig := clickhouseexecutesql.Config{
-			Name:        "test-select",
-			Kind:        "clickhouse-execute-sql",
-			Source:      "test-clickhouse",
-			Description: "Test select data",
-		}
-
-		source := createMockSource(t, pool)
-		sourcesMap := map[string]sources.Source{
-			"test-clickhouse": source,
-		}
-
-		tool, err := toolConfig.Initialize(sourcesMap)
-		if err != nil {
-			t.Fatalf("Failed to initialize tool: %v", err)
-		}
-
-		selectSQL := fmt.Sprintf("SELECT * FROM %s ORDER BY id", tableName)
-		params := parameters.ParamValues{
-			{Name: "sql", Value: selectSQL},
-		}
-
-		result, err := tool.Invoke(ctx, nil, params, "")
-		if err != nil {
-			t.Fatalf("Failed to select data: %v", err)
-		}
-
-		resultSlice, ok := result.([]any)
-		if !ok {
-			t.Fatalf("Expected result to be []any, got %T", result)
-		}
-
-		if len(resultSlice) != 2 {
-			t.Errorf("Expected 2 results, got %d", len(resultSlice))
-		}
-	})
-
-	t.Run("DropTable", func(t *testing.T) {
-		toolConfig := clickhouseexecutesql.Config{
-			Name:        "test-drop-table",
-			Kind:        "clickhouse-execute-sql",
-			Source:      "test-clickhouse",
-			Description: "Test drop table",
-		}
-
-		source := createMockSource(t, pool)
-		sourcesMap := map[string]sources.Source{
-			"test-clickhouse": source,
-		}
-
-		tool, err := toolConfig.Initialize(sourcesMap)
-		if err != nil {
-			t.Fatalf("Failed to initialize tool: %v", err)
-		}
-
-		dropSQL := fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName)
-		params := parameters.ParamValues{
-			{Name: "sql", Value: dropSQL},
-		}
-
-		result, err := tool.Invoke(ctx, nil, params, "")
-		if err != nil {
-			t.Fatalf("Failed to drop table: %v", err)
-		}
-
-		// DROP TABLE should return nil or empty slice
-		if resultSlice, ok := result.([]any); ok {
-			if len(resultSlice) != 0 {
-				t.Errorf("Expected empty result for DROP TABLE, got %d results", len(resultSlice))
+			var body map[string]interface{}
+			err := json.Unmarshal(respBody, &body)
+			if err != nil {
+				t.Fatalf("error parsing response body")
 			}
-		} else if result != nil {
-			t.Errorf("Expected nil or empty slice for DROP TABLE, got %v", result)
-		}
-	})
 
-	t.Run("MissingSQL", func(t *testing.T) {
-		toolConfig := clickhouseexecutesql.Config{
-			Name:        "test-missing-sql",
-			Kind:        "clickhouse-execute-sql",
-			Source:      "test-clickhouse",
-			Description: "Test missing SQL parameter",
-		}
+			got, ok := body["result"].(string)
+			if !ok {
+				t.Fatalf("unable to find result in response body")
+			}
 
-		source := createMockSource(t, pool)
-		sourcesMap := map[string]sources.Source{
-			"test-clickhouse": source,
-		}
+			var res []any
+			err = json.Unmarshal([]byte(got), &res)
+			if err != nil {
+				t.Fatalf("error parsing result")
+			}
 
-		tool, err := toolConfig.Initialize(sourcesMap)
-		if err != nil {
-			t.Fatalf("Failed to initialize tool: %v", err)
-		}
-
-		// Pass empty SQL parameter - this should cause an error
-		params := parameters.ParamValues{
-			{Name: "sql", Value: ""},
-		}
-
-		_, err = tool.Invoke(ctx, nil, params, "")
-		if err == nil {
-			t.Error("Expected error for empty SQL parameter, got nil")
-		} else {
-			t.Logf("Got expected error for empty SQL parameter: %v", err)
-		}
-	})
-
-	t.Run("SQLInjectionAttempt", func(t *testing.T) {
-		toolConfig := clickhouseexecutesql.Config{
-			Name:        "test-sql-injection",
-			Kind:        "clickhouse-execute-sql",
-			Source:      "test-clickhouse",
-			Description: "Test SQL injection attempt",
-		}
-
-		source := createMockSource(t, pool)
-		sourcesMap := map[string]sources.Source{
-			"test-clickhouse": source,
-		}
-
-		tool, err := toolConfig.Initialize(sourcesMap)
-		if err != nil {
-			t.Fatalf("Failed to initialize tool: %v", err)
-		}
-
-		// Try to execute multiple statements (should fail or execute safely)
-		injectionSQL := "SELECT 1; DROP TABLE system.users; SELECT 2"
-		params := parameters.ParamValues{
-			{Name: "sql", Value: injectionSQL},
-		}
-
-		_, err = tool.Invoke(ctx, nil, params, "")
-		// This should either fail or only execute the first statement
-		// dont check the specific error as behavior may vary
-		_ = err // We're not checking the error intentionally
-	})
+			if len(res) != tc.resultSliceLen {
+				t.Errorf("Expected %d results, got %d", tc.resultSliceLen, len(res))
+			}
+		})
+	}
 
 	t.Logf("✅ clickhouse-execute-sql tool tests completed successfully")
 }
@@ -778,6 +633,49 @@ func TestClickHouseEdgeCases(t *testing.T) {
 	}
 	defer pool.Close()
 
+	tableName := "test_nulls_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	toolsFile := map[string]any{
+		"sources": map[string]any{
+			"my-instance": getClickHouseVars(t),
+		},
+		"tools": map[string]any{
+			"execute-sql-tool": map[string]any{
+				"kind":        "clickhouse-execute-sql",
+				"source":      "my-instance",
+				"description": "Test create table",
+			},
+			"test-null-values": map[string]any{
+				"kind":        "clickhouse-sql",
+				"source":      "my-instance",
+				"description": "Test null values",
+				"statement":   fmt.Sprintf("SELECT * FROM %s ORDER BY id", tableName),
+			},
+			"test-concurrent": map[string]any{
+				"kind":        "clickhouse-sql",
+				"source":      "my-instance",
+				"description": "Test concurrent queries",
+				"statement":   "SELECT number FROM system.numbers LIMIT ?",
+				"parameters": []parameters.Parameter{
+					parameters.NewIntParameter("limit", "Limit"),
+				},
+			},
+		},
+	}
+
+	var args []string
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
 	t.Run("VeryLongQuery", func(t *testing.T) {
 		// Create a very long but valid query
 		var conditions []string
@@ -786,42 +684,37 @@ func TestClickHouseEdgeCases(t *testing.T) {
 		}
 		longQuery := "SELECT 1 WHERE " + strings.Join(conditions, " AND ")
 
-		toolConfig := clickhouseexecutesql.Config{
-			Name:        "test-long-query",
-			Kind:        "clickhouse-execute-sql",
-			Source:      "test-clickhouse",
-			Description: "Test very long query",
+		api := "http://127.0.0.1:5000/api/tool/execute-sql-tool/invoke"
+		param := fmt.Sprintf(`{"sql": "%s"}`, longQuery)
+		resp, respBody := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(param)), nil)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
 		}
 
-		source := createMockSource(t, pool)
-		sourcesMap := map[string]sources.Source{
-			"test-clickhouse": source,
-		}
-
-		tool, err := toolConfig.Initialize(sourcesMap)
+		var body map[string]interface{}
+		err := json.Unmarshal(respBody, &body)
 		if err != nil {
-			t.Fatalf("Failed to initialize tool: %v", err)
+			t.Fatalf("error parsing response body")
 		}
 
-		params := parameters.ParamValues{
-			{Name: "sql", Value: longQuery},
+		got, ok := body["result"].(string)
+		if !ok {
+			t.Fatalf("unable to find result in response body")
 		}
 
-		result, err := tool.Invoke(ctx, nil, params, "")
+		var res []any
+		err = json.Unmarshal([]byte(got), &res)
 		if err != nil {
-			t.Fatalf("Failed to execute long query: %v", err)
+			t.Fatalf("error parsing result")
 		}
 
 		// Should return [{1:1}]
-		if resultSlice, ok := result.([]any); ok {
-			if len(resultSlice) != 1 {
-				t.Errorf("Expected 1 result from long query, got %d", len(resultSlice))
-			}
+		if len(res) != 1 {
+			t.Errorf("Expected 1 result from long query, got %d", len(res))
 		}
 	})
 
 	t.Run("NullValues", func(t *testing.T) {
-		tableName := "test_nulls_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 		createSQL := fmt.Sprintf(`
 			CREATE TABLE %s (
 				id UInt32,
@@ -844,40 +737,35 @@ func TestClickHouseEdgeCases(t *testing.T) {
 			t.Fatalf("Failed to insert null value: %v", err)
 		}
 
-		toolConfig := clickhousesql.Config{
-			Name:        "test-null-values",
-			Kind:        "clickhouse-sql",
-			Source:      "test-clickhouse",
-			Description: "Test null values",
-			Statement:   fmt.Sprintf("SELECT * FROM %s ORDER BY id", tableName),
+		api := "http://127.0.0.1:5000/api/tool/test-null-values/invoke"
+		resp, respBody := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
 		}
 
-		source := createMockSource(t, pool)
-		sourcesMap := map[string]sources.Source{
-			"test-clickhouse": source,
-		}
-
-		tool, err := toolConfig.Initialize(sourcesMap)
+		var body map[string]interface{}
+		err := json.Unmarshal(respBody, &body)
 		if err != nil {
-			t.Fatalf("Failed to initialize tool: %v", err)
+			t.Fatalf("error parsing response body")
 		}
 
-		result, err := tool.Invoke(ctx, nil, parameters.ParamValues{}, "")
-		if err != nil {
-			t.Fatalf("Failed to select null values: %v", err)
-		}
-
-		resultSlice, ok := result.([]any)
+		got, ok := body["result"].(string)
 		if !ok {
-			t.Fatalf("Expected result to be []any, got %T", result)
+			t.Fatalf("unable to find result in response body")
 		}
 
-		if len(resultSlice) != 2 {
-			t.Errorf("Expected 2 results, got %d", len(resultSlice))
+		var res []any
+		err = json.Unmarshal([]byte(got), &res)
+		if err != nil {
+			t.Fatalf("error parsing result")
+		}
+
+		if len(res) != 2 {
+			t.Errorf("Expected 2 result from long query, got %d", len(res))
 		}
 
 		// Check that null is properly handled
-		if firstRow, ok := resultSlice[0].(map[string]any); ok {
+		if firstRow, ok := res[0].(map[string]any); ok {
 			if _, hasNullableField := firstRow["nullable_field"]; !hasNullableField {
 				t.Error("Expected nullable_field in result")
 			}
@@ -885,47 +773,38 @@ func TestClickHouseEdgeCases(t *testing.T) {
 	})
 
 	t.Run("ConcurrentQueries", func(t *testing.T) {
-		toolConfig := clickhousesql.Config{
-			Name:        "test-concurrent",
-			Kind:        "clickhouse-sql",
-			Source:      "test-clickhouse",
-			Description: "Test concurrent queries",
-			Statement:   "SELECT number FROM system.numbers LIMIT ?",
-			Parameters: parameters.Parameters{
-				parameters.NewIntParameter("limit", "Limit"),
-			},
-		}
-
-		source := createMockSource(t, pool)
-		sourcesMap := map[string]sources.Source{
-			"test-clickhouse": source,
-		}
-
-		tool, err := toolConfig.Initialize(sourcesMap)
-		if err != nil {
-			t.Fatalf("Failed to initialize tool: %v", err)
-		}
-
 		// Run multiple queries concurrently
 		done := make(chan bool, 5)
 		for i := 0; i < 5; i++ {
 			go func(n int) {
 				defer func() { done <- true }()
 
-				params := parameters.ParamValues{
-					{Name: "limit", Value: n + 1},
+				params := fmt.Sprintf(`{"limit": %d}`, n+1)
+				api := "http://127.0.0.1:5000/api/tool/test-concurrent/invoke"
+				resp, respBody := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(params)), nil)
+				if resp.StatusCode != http.StatusOK {
+					t.Errorf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
 				}
 
-				result, err := tool.Invoke(ctx, nil, params, "")
+				var body map[string]interface{}
+				err := json.Unmarshal(respBody, &body)
 				if err != nil {
-					t.Errorf("Concurrent query %d failed: %v", n, err)
-					return
+					t.Errorf("error parsing response body")
 				}
 
-				if resultSlice, ok := result.([]any); ok {
-					if len(resultSlice) != n+1 {
-						t.Errorf("Query %d: expected %d results, got %d", n, n+1, len(resultSlice))
-					}
+				got, ok := body["result"].(string)
+				if !ok {
+					t.Errorf("unable to find result in response body")
+				}
+
+				var res []any
+				err = json.Unmarshal([]byte(got), &res)
+				if err != nil {
+					t.Errorf("error parsing result")
+				}
+
+				if len(res) != n+1 {
+					t.Errorf("Query %d: expected %d results, got %d", n, n+1, len(res))
 				}
 			}(i)
 		}
@@ -937,25 +816,6 @@ func TestClickHouseEdgeCases(t *testing.T) {
 	})
 
 	t.Logf("✅ Edge case tests completed successfully")
-}
-
-func createMockSource(t *testing.T, pool *sql.DB) sources.Source {
-	config := clickhouse.Config{
-		Host:     ClickHouseHost,
-		Port:     ClickHousePort,
-		Database: ClickHouseDatabase,
-		User:     ClickHouseUser,
-		Password: ClickHousePass,
-		Protocol: ClickHouseProtocol,
-		Secure:   false,
-	}
-
-	source, err := config.Initialize(context.Background(), noop.NewTracerProvider().Tracer(""))
-	if err != nil {
-		t.Fatalf("Failed to initialize source: %v", err)
-	}
-
-	return source
 }
 
 // getClickHouseSQLParamToolInfo returns statements and param for my-tool clickhouse-sql kind
@@ -1036,44 +896,70 @@ func TestClickHouseListDatabasesTool(t *testing.T) {
 		_, _ = pool.ExecContext(ctx, fmt.Sprintf("DROP DATABASE IF EXISTS %s", testDBName))
 	}()
 
+	toolsFile := map[string]any{
+		"sources": map[string]any{
+			"my-instance": getClickHouseVars(t),
+		},
+		"tools": map[string]any{
+			"test-list-databases": map[string]any{
+				"kind":        "clickhouse-list-databases",
+				"source":      "my-instance",
+				"description": "Test listing databases",
+			},
+			"test-invalid-source": map[string]any{
+				"kind":        "clickhouse-list-databases",
+				"source":      "non-existent-source",
+				"description": "Test with invalid source",
+			},
+		},
+	}
+
+	var args []string
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+
 	t.Run("ListDatabases", func(t *testing.T) {
-		toolConfig := clickhouselistdatabases.Config{
-			Name:        "test-list-databases",
-			Kind:        "clickhouse-list-databases",
-			Source:      "test-clickhouse",
-			Description: "Test listing databases",
+		api := "http://127.0.0.1:5000/api/tool/test-list-databases/invoke"
+		resp, respBody := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
 		}
 
-		source := createMockSource(t, pool)
-		sourcesMap := map[string]sources.Source{
-			"test-clickhouse": source,
-		}
-
-		tool, err := toolConfig.Initialize(sourcesMap)
+		var body map[string]interface{}
+		err := json.Unmarshal(respBody, &body)
 		if err != nil {
-			t.Fatalf("Failed to initialize tool: %v", err)
+			t.Fatalf("error parsing response body")
 		}
 
-		params := parameters.ParamValues{}
-
-		result, err := tool.Invoke(ctx, nil, params, "")
-		if err != nil {
-			t.Fatalf("Failed to list databases: %v", err)
-		}
-
-		databases, ok := result.([]map[string]any)
+		databases, ok := body["result"].(string)
 		if !ok {
-			t.Fatalf("Expected result to be []map[string]any, got %T", result)
+			t.Fatalf("unable to find result in response body")
+		}
+		var res []map[string]any
+		err = json.Unmarshal([]byte(databases), &res)
+		if err != nil {
+			t.Errorf("error parsing result")
 		}
 
 		// Should contain at least the default database and our test database - system and default
-		if len(databases) < 2 {
-			t.Errorf("Expected at least 2 databases, got %d", len(databases))
+		if len(res) < 2 {
+			t.Errorf("Expected at least 2 databases, got %d", len(res))
 		}
 
 		found := false
 		foundDefault := false
-		for _, db := range databases {
+		for _, db := range res {
 			if name, ok := db["name"].(string); ok {
 				if name == testDBName {
 					found = true
@@ -1095,21 +981,12 @@ func TestClickHouseListDatabasesTool(t *testing.T) {
 	})
 
 	t.Run("ListDatabasesWithInvalidSource", func(t *testing.T) {
-		toolConfig := clickhouselistdatabases.Config{
-			Name:        "test-invalid-source",
-			Kind:        "clickhouse-list-databases",
-			Source:      "non-existent-source",
-			Description: "Test with invalid source",
+		api := "http://127.0.0.1:5000/api/tool/test-invalid-source/invoke"
+		resp, _ := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
+		if resp.StatusCode == http.StatusOK {
+			t.Fatalf("expected error for non-existent source, but got 200 OK")
 		}
 
-		sourcesMap := map[string]sources.Source{}
-
-		_, err := toolConfig.Initialize(sourcesMap)
-		if err == nil {
-			t.Error("Expected error for non-existent source, got nil")
-		} else {
-			t.Logf("Got expected error for invalid source: %v", err)
-		}
 	})
 
 	t.Logf("✅ clickhouse-list-databases tool tests completed successfully")
@@ -1148,46 +1025,71 @@ func TestClickHouseListTablesTool(t *testing.T) {
 		t.Fatalf("Failed to create test table 2: %v", err)
 	}
 
+	toolsFile := map[string]any{
+		"sources": map[string]any{
+			"my-instance": getClickHouseVars(t),
+		},
+		"tools": map[string]any{
+			"test-list-tables": map[string]any{
+				"kind":        "clickhouse-list-tables",
+				"source":      "my-instance",
+				"description": "Test listing tables",
+			},
+			"test-invalid-source": map[string]any{
+				"kind":        "clickhouse-list-tables",
+				"source":      "non-existent-source",
+				"description": "Test with invalid source",
+			},
+		},
+	}
+
+	var args []string
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	if err != nil {
+		t.Fatalf("command initialization returned an error: %s", err)
+	}
+	defer cleanup()
+
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
+	if err != nil {
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
+	}
+
 	t.Run("ListTables", func(t *testing.T) {
-		toolConfig := clickhouselisttables.Config{
-			Name:        "test-list-tables",
-			Kind:        "clickhouse-list-tables",
-			Source:      "test-clickhouse",
-			Description: "Test listing tables",
+		api := "http://127.0.0.1:5000/api/tool/test-list-tables/invoke"
+		params := fmt.Sprintf(`{"database": "%s"}`, testDBName)
+		resp, respBody := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(params)), nil)
+		if resp.StatusCode != http.StatusOK {
+			t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
 		}
 
-		source := createMockSource(t, pool)
-		sourcesMap := map[string]sources.Source{
-			"test-clickhouse": source,
-		}
-
-		tool, err := toolConfig.Initialize(sourcesMap)
+		var body map[string]interface{}
+		err := json.Unmarshal(respBody, &body)
 		if err != nil {
-			t.Fatalf("Failed to initialize tool: %v", err)
+			t.Fatalf("error parsing response body")
 		}
 
-		params := parameters.ParamValues{
-			{Name: "database", Value: testDBName},
-		}
-
-		result, err := tool.Invoke(ctx, nil, params, "")
-		if err != nil {
-			t.Fatalf("Failed to list tables: %v", err)
-		}
-
-		tables, ok := result.([]map[string]any)
+		tables, ok := body["result"].(string)
 		if !ok {
-			t.Fatalf("Expected result to be []map[string]any, got %T", result)
+			t.Fatalf("Expected result to be []map[string]any, got %T", tables)
+		}
+		var res []map[string]any
+		err = json.Unmarshal([]byte(tables), &res)
+		if err != nil {
+			t.Errorf("error parsing result")
 		}
 
 		// Should contain exactly 2 tables that we created
-		if len(tables) != 2 {
-			t.Errorf("Expected 2 tables, got %d", len(tables))
+		if len(res) != 2 {
+			t.Errorf("Expected 2 tables, got %d", len(res))
 		}
 
 		foundTable1 := false
 		foundTable2 := false
-		for _, table := range tables {
+		for _, table := range res {
 			if name, ok := table["name"].(string); ok {
 				if name == testTable1 {
 					foundTable1 = true
@@ -1215,48 +1117,18 @@ func TestClickHouseListTablesTool(t *testing.T) {
 	})
 
 	t.Run("ListTablesWithMissingDatabase", func(t *testing.T) {
-		toolConfig := clickhouselisttables.Config{
-			Name:        "test-list-tables-missing-db",
-			Kind:        "clickhouse-list-tables",
-			Source:      "test-clickhouse",
-			Description: "Test listing tables without database parameter",
-		}
-
-		source := createMockSource(t, pool)
-		sourcesMap := map[string]sources.Source{
-			"test-clickhouse": source,
-		}
-
-		tool, err := toolConfig.Initialize(sourcesMap)
-		if err != nil {
-			t.Fatalf("Failed to initialize tool: %v", err)
-		}
-
-		params := parameters.ParamValues{}
-
-		_, err = tool.Invoke(ctx, nil, params, "")
-		if err == nil {
-			t.Error("Expected error for missing database parameter, got nil")
-		} else {
-			t.Logf("Got expected error for missing database: %v", err)
+		api := "http://127.0.0.1:5000/api/tool/test-list-tables/invoke"
+		resp, _ := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
+		if resp.StatusCode == http.StatusOK {
+			t.Error("Expected error for missing database parameter, but got 200 OK")
 		}
 	})
 
 	t.Run("ListTablesWithInvalidSource", func(t *testing.T) {
-		toolConfig := clickhouselisttables.Config{
-			Name:        "test-invalid-source",
-			Kind:        "clickhouse-list-tables",
-			Source:      "non-existent-source",
-			Description: "Test with invalid source",
-		}
-
-		sourcesMap := map[string]sources.Source{}
-
-		_, err := toolConfig.Initialize(sourcesMap)
-		if err == nil {
-			t.Error("Expected error for non-existent source, got nil")
-		} else {
-			t.Logf("Got expected error for invalid source: %v", err)
+		api := "http://127.0.0.1:5000/api/tool/test-invalid-source/invoke"
+		resp, _ := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
+		if resp.StatusCode == http.StatusOK {
+			t.Error("Expected error for non-existent source, but got 200 OK")
 		}
 	})
 
