@@ -23,7 +23,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
 func TestParseFromYamlDuckDb(t *testing.T) {
@@ -55,8 +55,8 @@ func TestParseFromYamlDuckDb(t *testing.T) {
 					Description:  "some description",
 					Statement:    "select * from hotel WHERE name = $hotel;\n",
 					AuthRequired: []string{},
-					Parameters: []tools.Parameter{
-						tools.NewStringParameter("hotel", "hotel parameter description"),
+					Parameters: []parameters.Parameter{
+						parameters.NewStringParameter("hotel", "hotel parameter description"),
 					},
 				},
 			},
