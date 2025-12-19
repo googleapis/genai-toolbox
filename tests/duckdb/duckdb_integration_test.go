@@ -108,20 +108,26 @@ func TestDuckDb(t *testing.T) {
 
 	select1Want, failInvocationWant, _ := GetDuckDbWants()
 
-	_, invokeParamWantNull, nullWant, _ := tests.GetNonSpannerInvokeParamWant()
+	invokeParamWantNull := "[{\"id\":4,\"name\":null}]"
+	nullWant := "null"
 	invokeParamWant := "[{\"name\":\"Alice\"},{\"name\":\"Sid\"}]"
 	mcpInvokeParamWant := "{\"jsonrpc\":\"2.0\",\"id\":\"my-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\\"name\\\":\\\"Alice\\\"}\"},{\"type\":\"text\",\"text\":\"{\\\"name\\\":\\\"Sid\\\"}\"}]}}"
-	tests.RunToolInvokeTest(t, select1Want, invokeParamWant, invokeParamWantNull, nullWant, true, true)
-	tests.RunMCPToolCallMethod(t, mcpInvokeParamWant, failInvocationWant)
-	templateParamTestConfig := tests.NewTemplateParameterTestConfig(
+	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
+	tests.RunToolInvokeTest(t, select1Want,
+		tests.WithMyToolId3NameAliceWant(invokeParamWant),
+		tests.WithMyArrayToolWant(invokeParamWant),
+		tests.WithMyToolById4Want(invokeParamWantNull),
+		tests.WithNullWant(nullWant),
+	)
+	tests.RunMCPToolCallMethod(t, failInvocationWant, mcpSelect1Want, tests.WithMcpMyToolId3NameAliceWant(mcpInvokeParamWant))
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam,
 		tests.WithSelectAllWant("[{\"age\":21,\"id\":1,\"name\":\"Alex\"},{\"age\":100,\"id\":2,\"name\":\"Alice\"}]"),
-		tests.WithSelect1Want("[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]"),
-		tests.WithReplaceNameFieldArray(`["name"]`),
-		tests.WithReplaceNameColFilter("name"),
+		tests.WithTmplSelectId1Want("[{\"age\":21,\"id\":1,\"name\":\"Alex\"}]"),
+		tests.WithNameFieldArray(`["name"]`),
+		tests.WithNameColFilter("name"),
 		tests.WithCreateColArray(`["id INT","name VARCHAR(20)","age INT"]`),
 		tests.WithInsert1Want("[{\"Count\":1}]"),
 	)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam, templateParamTestConfig)
 }
 
 func GetDuckDbParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
