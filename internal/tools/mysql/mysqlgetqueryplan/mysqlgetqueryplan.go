@@ -1,23 +1,36 @@
-// Copyright © 2025, Oracle and/or its affiliates.
+// Copyright 2025 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-package oracleexecutesql
+package mysqlgetqueryplan
 
 import (
 	"context"
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/oracle"
+	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
+	"github.com/googleapis/genai-toolbox/internal/sources/mindsdb"
+	"github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "oracle-execute-sql"
+const kind string = "mysql-get-query-plan"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -34,13 +47,15 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	OracleDB() *sql.DB
+	MySQLPool() *sql.DB
 }
 
 // validate compatible sources are still compatible
-var _ compatibleSource = &oracle.Source{}
+var _ compatibleSource = &cloudsqlmysql.Source{}
+var _ compatibleSource = &mysql.Source{}
+var _ compatibleSource = &mindsdb.Source{}
 
-var compatibleSources = [...]string{oracle.SourceKind}
+var compatibleSources = [...]string{cloudsqlmysql.SourceKind, mysql.SourceKind, mindsdb.SourceKind}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
@@ -70,7 +85,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	sqlParameter := parameters.NewStringParameter("sql", "The SQL to execute.")
+	sqlParameter := parameters.NewStringParameter("sql_statement", "The sql statement to explain.")
 	params := parameters.Parameters{sqlParameter}
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
@@ -79,7 +94,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	t := Tool{
 		Config:      cfg,
 		Parameters:  params,
-		Pool:        s.OracleDB(),
+		Pool:        s.MySQLPool(),
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
@@ -100,9 +115,9 @@ type Tool struct {
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	paramsMap := params.AsMap()
-	sqlParam, ok := paramsMap["sql"].(string)
+	sql, ok := paramsMap["sql_statement"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", paramsMap["sql"])
+		return nil, fmt.Errorf("unable to get cast %s", paramsMap["sql_statement"])
 	}
 
 	// Log the query executed for debugging.
@@ -110,105 +125,31 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sqlParam)
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
 
-	results, err := t.Pool.QueryContext(ctx, sqlParam)
+	query := fmt.Sprintf("EXPLAIN FORMAT=JSON %s", sql)
+	results, err := t.Pool.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
 	defer results.Close()
 
-	// If Columns() errors, it might be a DDL/DML without an OUTPUT clause.
-	// We proceed, and results.Err() will catch actual query execution errors.
-	// 'out' will remain nil if cols is empty or err is not nil here.
-	cols, _ := results.Columns()
-
-	// Get Column types
-	colTypes, err := results.ColumnTypes()
-	if err != nil {
-		if err := results.Err(); err != nil {
-			return nil, fmt.Errorf("query execution error: %w", err)
+	var plan string
+	if results.Next() {
+		if err := results.Scan(&plan); err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
 		}
-		return []any{}, nil
-	}
-
-	var out []any
-	for results.Next() {
-		// Create slice to hold values
-		values := make([]any, len(cols))
-		for i, colType := range colTypes {
-			// Based on the database type, we prepare a pointer to a Go type.
-			switch strings.ToUpper(colType.DatabaseTypeName()) {
-			case "NUMBER", "FLOAT", "BINARY_FLOAT", "BINARY_DOUBLE":
-				if _, scale, ok := colType.DecimalSize(); ok && scale == 0 {
-					// Scale is 0, treat as an integer.
-					values[i] = new(sql.NullInt64)
-				} else {
-					// Scale is non-zero or unknown, treat as a float.
-					values[i] = new(sql.NullFloat64)
-				}
-			case "DATE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
-				values[i] = new(sql.NullTime)
-			case "JSON":
-				values[i] = new(sql.RawBytes)
-			default:
-				values[i] = new(sql.NullString)
-			}
-		}
-
-		if err := results.Scan(values...); err != nil {
-			return nil, fmt.Errorf("unable to scan row: %w", err)
-		}
-
-		vMap := make(map[string]any)
-		for i, col := range cols {
-			receiver := values[i]
-
-			// Dereference the pointer and check for validity (not NULL).
-			switch v := receiver.(type) {
-			case *sql.NullInt64:
-				if v.Valid {
-					vMap[col] = v.Int64
-				} else {
-					vMap[col] = nil
-				}
-			case *sql.NullFloat64:
-				if v.Valid {
-					vMap[col] = v.Float64
-				} else {
-					vMap[col] = nil
-				}
-			case *sql.NullString:
-				if v.Valid {
-					vMap[col] = v.String
-				} else {
-					vMap[col] = nil
-				}
-			case *sql.NullTime:
-				if v.Valid {
-					vMap[col] = v.Time
-				} else {
-					vMap[col] = nil
-				}
-			case *sql.RawBytes:
-				if *v != nil {
-					var unmarshaledData any
-					if err := json.Unmarshal(*v, &unmarshaledData); err != nil {
-						return nil, fmt.Errorf("unable to unmarshal json data for column %s", col)
-					}
-					vMap[col] = unmarshaledData
-				} else {
-					vMap[col] = nil
-				}
-			default:
-				return nil, fmt.Errorf("unexpected receiver type: %T", v)
-			}
-		}
-		out = append(out, vMap)
+	} else {
+		return nil, fmt.Errorf("no query plan returned")
 	}
 
 	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("errors encountered during query execution or row processing: %w", err)
+		return nil, fmt.Errorf("errors encountered during row iteration: %w", err)
+	}
+
+	var out any
+	if err := json.Unmarshal([]byte(plan), &out); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal query plan json: %w", err)
 	}
 
 	return out, nil
