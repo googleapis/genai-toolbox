@@ -92,6 +92,21 @@ func invokeCommand(args []string) (*Command, string, error) {
 	return c, buf.String(), err
 }
 
+// invokeCommandWithContext executes the command with a context and returns the captured output.
+func invokeCommandWithContext(ctx context.Context, args []string) (*Command, string, error) {
+	// Capture output using a buffer
+	buf := new(bytes.Buffer)
+	c := NewCommand(WithStreams(buf, buf))
+
+	c.SetArgs(args)
+	c.SilenceUsage = true
+	c.SilenceErrors = true
+	c.SetContext(ctx)
+
+	err := c.Execute()
+	return c, buf.String(), err
+}
+
 func TestVersion(t *testing.T) {
 	data, err := os.ReadFile("version.txt")
 	if err != nil {
@@ -1756,11 +1771,6 @@ func TestMutuallyExclusiveFlags(t *testing.T) {
 		errString string
 	}{
 		{
-			desc:      "--prebuilt and --tools-file",
-			args:      []string{"--prebuilt", "alloydb", "--tools-file", "my.yaml"},
-			errString: "--prebuilt and --tools-file/--tools-files/--tools-folder flags cannot be used simultaneously",
-		},
-		{
 			desc:      "--tools-file and --tools-files",
 			args:      []string{"--tools-file", "my.yaml", "--tools-files", "a.yaml,b.yaml"},
 			errString: "--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously",
@@ -1897,6 +1907,231 @@ func TestMergeToolsFiles(t *testing.T) {
 				}
 				if !strings.Contains(err.Error(), "resource conflicts detected") {
 					t.Errorf("expected conflict error, but got: %v", err)
+				}
+			}
+		})
+	}
+}
+func TestPrebuiltAndCustomTools(t *testing.T) {
+	t.Setenv("SQLITE_DATABASE", "test.db")
+	// Setup custom tools file
+	customContent := `
+tools:
+  custom_tool:
+    kind: http
+    source: my-http
+    method: GET
+    path: /
+    description: "A custom tool for testing"
+sources:
+  my-http:
+    kind: http
+    baseUrl: http://example.com
+`
+	customFile := filepath.Join(t.TempDir(), "custom.yaml")
+	if err := os.WriteFile(customFile, []byte(customContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Tool Conflict File
+	// SQLite prebuilt has a tool named 'list_tables'
+	toolConflictContent := `
+tools:
+  list_tables:
+    kind: http
+    source: my-http
+    method: GET
+    path: /
+    description: "Conflicting tool"
+sources:
+  my-http:
+    kind: http
+    baseUrl: http://example.com
+`
+	toolConflictFile := filepath.Join(t.TempDir(), "tool_conflict.yaml")
+	if err := os.WriteFile(toolConflictFile, []byte(toolConflictContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Source Conflict File
+	// SQLite prebuilt has a source named 'sqlite-source'
+	sourceConflictContent := `
+sources:
+  sqlite-source:
+    kind: http
+    baseUrl: http://example.com
+tools:
+  dummy_tool:
+    kind: http
+    source: sqlite-source
+    method: GET
+    path: /
+    description: "Dummy"
+`
+	sourceConflictFile := filepath.Join(t.TempDir(), "source_conflict.yaml")
+	if err := os.WriteFile(sourceConflictFile, []byte(sourceConflictContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Toolset Conflict File
+	// SQLite prebuilt has a toolset named 'sqlite_database_tools'
+	toolsetConflictContent := `
+sources:
+  dummy-src:
+    kind: http
+    baseUrl: http://example.com
+tools:
+  dummy_tool:
+    kind: http
+    source: dummy-src
+    method: GET
+    path: /
+    description: "Dummy"
+toolsets:
+  sqlite_database_tools:
+    - dummy_tool
+`
+	toolsetConflictFile := filepath.Join(t.TempDir(), "toolset_conflict.yaml")
+	if err := os.WriteFile(toolsetConflictFile, []byte(toolsetConflictContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	//Legacy Auth File
+	authContent := `
+authSources:
+  legacy-auth:
+    kind: google
+    clientId: "test-client-id"
+`
+	authFile := filepath.Join(t.TempDir(), "auth.yaml")
+	if err := os.WriteFile(authFile, []byte(authContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	testCases := []struct {
+		desc      string
+		args      []string
+		wantErr   bool
+		errString string
+		cfgCheck  func(server.ServerConfig) error
+	}{
+		{
+			desc:    "success mixed",
+			args:    []string{"--prebuilt", "sqlite", "--tools-file", customFile},
+			wantErr: false,
+			cfgCheck: func(cfg server.ServerConfig) error {
+				if _, ok := cfg.ToolConfigs["custom_tool"]; !ok {
+					return fmt.Errorf("custom tool not found")
+				}
+				if _, ok := cfg.ToolConfigs["list_tables"]; !ok {
+					return fmt.Errorf("prebuilt tool 'list_tables' not found")
+				}
+				return nil
+			},
+		},
+		{
+			desc:      "tool conflict error",
+			args:      []string{"--prebuilt", "sqlite", "--tools-file", toolConflictFile},
+			wantErr:   true,
+			errString: "resource conflicts detected",
+		},
+		{
+			desc:      "source conflict error",
+			args:      []string{"--prebuilt", "sqlite", "--tools-file", sourceConflictFile},
+			wantErr:   true,
+			errString: "resource conflicts detected",
+		},
+		{
+			desc:      "toolset conflict error",
+			args:      []string{"--prebuilt", "sqlite", "--tools-file", toolsetConflictFile},
+			wantErr:   true,
+			errString: "resource conflicts detected",
+		},
+		{
+			desc:    "legacy auth additive",
+			args:    []string{"--prebuilt", "sqlite", "--tools-file", authFile},
+			wantErr: false,
+			cfgCheck: func(cfg server.ServerConfig) error {
+				if _, ok := cfg.AuthServiceConfigs["legacy-auth"]; !ok {
+					return fmt.Errorf("legacy auth source not merged into auth services")
+				}
+				return nil
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+			defer cancel()
+
+			cmd, output, err := invokeCommandWithContext(ctx, tc.args)
+
+			if tc.wantErr {
+				if err == nil {
+					t.Fatalf("expected an error but got none")
+				}
+				if !strings.Contains(err.Error(), tc.errString) {
+					t.Errorf("expected error message to contain %q, but got %q", tc.errString, err.Error())
+				}
+			} else {
+				if err != nil && err != context.DeadlineExceeded && err != context.Canceled {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if !strings.Contains(output, "Server ready to serve!") {
+					t.Errorf("server did not start successfully (no ready message found). Output:\n%s", output)
+				}
+				if tc.cfgCheck != nil {
+					if err := tc.cfgCheck(cmd.cfg); err != nil {
+						t.Errorf("config check failed: %v", err)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestDefaultToolsFileBehavior(t *testing.T) {
+	t.Setenv("SQLITE_DATABASE", "test.db")
+	testCases := []struct {
+		desc      string
+		args      []string
+		expectRun bool
+		errString string
+	}{
+		{
+			desc:      "no flags (defaults to tools.yaml)",
+			args:      []string{},
+			expectRun: false,
+			errString: "tools.yaml", // Expect error because tools.yaml doesn't exist in test env
+		},
+		{
+			desc:      "prebuilt only (skips tools.yaml)",
+			args:      []string{"--prebuilt", "sqlite"},
+			expectRun: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+			defer cancel()
+			_, output, err := invokeCommandWithContext(ctx, tc.args)
+
+			if tc.expectRun {
+				if err != nil && err != context.DeadlineExceeded && err != context.Canceled {
+					t.Fatalf("expected server start, got error: %v", err)
+				}
+				// Verify it actually started
+				if !strings.Contains(output, "Server ready to serve!") {
+					t.Errorf("server did not start successfully (no ready message found). Output:\n%s", output)
+				}
+			} else {
+				if err == nil {
+					t.Fatalf("expected error reading default file, got nil")
+				}
+				if !strings.Contains(err.Error(), tc.errString) {
+					t.Errorf("expected error message to contain %q, but got %q", tc.errString, err.Error())
 				}
 			}
 		})
