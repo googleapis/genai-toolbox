@@ -21,7 +21,7 @@ require (
 	github.com/apache/cassandra-gocql-driver/v2 v2.0.0
 	github.com/cenkalti/backoff/v5 v5.0.3
 	github.com/couchbase/gocb/v2 v2.11.1
-	github.com/couchbase/tools-common/http v1.0.9
+	github.com/couchbase/tools-common/http v1.0.10
 	github.com/elastic/elastic-transport-go/v8 v8.8.0
 	github.com/elastic/go-elasticsearch/v9 v9.2.0
 	github.com/fsnotify/fsnotify v1.9.0

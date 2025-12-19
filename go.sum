@@ -796,8 +796,8 @@ github.com/couchbase/goprotostellar v1.0.2 h1:yoPbAL9sCtcyZ5e/DcU5PRMOEFaJrF9awX
 github.com/couchbase/goprotostellar v1.0.2/go.mod h1:5/yqVnZlW2/NSbAWu1hPJCFBEwjxgpe0PFFOlRixnp4=
 github.com/couchbase/tools-common/errors v1.0.0 h1:lEPRdPrk7iHOiZIJspEH7OnywxRR+SKlrG78KkOWnXA=
 github.com/couchbase/tools-common/errors v1.0.0/go.mod h1:9or/a3TpNd/1aZIUr/a8y0uF03O9hachXFCnu6Y3sjM=
-github.com/couchbase/tools-common/http v1.0.9 h1:7Ecf1bnYjub9XMbnrDY5Vb8rssy6DLibil+UTfTPRNQ=
-github.com/couchbase/tools-common/http v1.0.9/go.mod h1:DjwXbyc9PvnIY34MKxG6lF6ucs8c8fbml2oleBbEdZQ=
+github.com/couchbase/tools-common/http v1.0.10 h1:xtAG1vW40EYl1xZssm2P0cUtqPUh6+nmhdh4J3SN4VY=
+github.com/couchbase/tools-common/http v1.0.10/go.mod h1:DjwXbyc9PvnIY34MKxG6lF6ucs8c8fbml2oleBbEdZQ=
 github.com/couchbaselabs/gocaves/client v0.0.0-20250107114554-f96479220ae8 h1:MQfvw4BiLTuyR69FuA5Kex+tXUeLkH+/ucJfVL1/hkM=
 github.com/couchbaselabs/gocaves/client v0.0.0-20250107114554-f96479220ae8/go.mod h1:AVekAZwIY2stsJOMWLAS/0uA/+qdp7pjO8EHnl61QkY=
 github.com/couchbaselabs/gocbconnstr/v2 v2.0.0 h1:HU9DlAYYWR69jQnLN6cpg0fh0hxW/8d5hnglCXXjW78=
