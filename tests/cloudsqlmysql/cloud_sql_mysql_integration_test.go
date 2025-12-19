@@ -163,6 +163,7 @@ func TestCloudSQLMySQLToolEndpoints(t *testing.T) {
 	const expectedOwner = "'toolbox-identity'@'%'"
 	tests.RunMySQLListTablesTest(t, CloudSQLMySQLDatabase, tableNameParam, tableNameAuth, expectedOwner)
 	tests.RunMySQLListActiveQueriesTest(t, ctx, pool)
+	tests.RunMySQLGetQueryPlanTest(t, ctx, pool, CloudSQLMySQLDatabase, tableNameParam)
 }
 
 // Test connection with different IP type
