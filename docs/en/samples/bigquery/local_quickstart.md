@@ -665,10 +665,6 @@ root_agent = Agent(
 # --- Initialize Services for Running the Agent ---
 session_service = InMemorySessionService()
 artifacts_service = InMemoryArtifactService()
-# Create a new session for the interaction.
-session = session_service.create_session(
-    state={}, app_name='hotel_agent', user_id='123'
-)
 
 runner = Runner(
     app_name='hotel_agent',
@@ -677,28 +673,38 @@ runner = Runner(
     session_service=session_service,
 )
 
-# --- Define Queries and Run the Agent ---
-queries = [
-    "Find hotels in Basel with Basel in it's name.",
-    "Can you book the Hilton Basel for me?",
-    "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-    "My check in dates would be from April 10, 2024 to April 19, 2024.",
-]
-
-for query in queries:
-    content = types.Content(role='user', parts=[types.Part(text=query)])
-    events = runner.run(session_id=session.id,
-                        user_id='123', new_message=content)
-
-    responses = (
-      part.text
-      for event in events
-      for part in event.content.parts
-      if part.text is not None
+async def main():
+    # Create a new session for the interaction.
+    session = await session_service.create_session(
+        state={}, app_name='hotel_agent', user_id='123'
     )
 
-    for text in responses:
-      print(text)
+    # --- Define Queries and Run the Agent ---
+    queries = [
+        "Find hotels in Basel with Basel in it's name.",
+        "Can you book the Hilton Basel for me?",
+        "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+        "My check in dates would be from April 10, 2024 to April 19, 2024.",
+    ]
+
+    for query in queries:
+        content = types.Content(role='user', parts=[types.Part(text=query)])
+        events = runner.run(session_id=session.id,
+                            user_id='123', new_message=content)
+
+        responses = (
+          part.text
+          for event in events
+          for part in event.content.parts
+          if part.text is not None
+        )
+
+        for text in responses:
+          print(text)
+
+import asyncio
+if __name__ == "__main__":
+    asyncio.run(main())
 {{< /tab >}}
 {{< /tabpane >}}
 
