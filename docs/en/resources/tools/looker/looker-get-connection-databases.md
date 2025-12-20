@@ -26,10 +26,16 @@ tools:
         kind: looker-get-connection-databases
         source: looker-source
         description: |
-          get_connection_databases Tool
+          This tool retrieves a list of databases available through a specified Looker connection.
+          This is only applicable for connections that support multiple databases.
+          Use `get_connections` to check if a connection supports multiple databases.
 
-          This tool will list the databases available from a connection if the connection
-          supports multiple databases.
+          Parameters:
+          - connection_name (required): The name of the database connection, obtained from `get_connections`.
+
+          Output:
+          A JSON array of strings, where each string is the name of an available database.
+          If the connection does not support multiple databases, an empty list or an error will be returned.
 ```
 
 ## Reference
