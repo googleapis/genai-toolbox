@@ -44,15 +44,28 @@ class TestExecution:
     @pytest.fixture(scope="function")
     def script_output(self, capsys):
         """Run the quickstart function and return its output."""
-        asyncio.run(quickstart.main())
+
+        # TODO: Add better validation for ADK once we have a way to capture its
+        # output.
+        if ORCH_NAME == "adk":
+            return quickstart.app.root_agent.name
+        else:
+            asyncio.run(quickstart.main())
+
         return capsys.readouterr()
 
     def test_script_runs_without_errors(self, script_output):
         """Test that the script runs and produces no stderr."""
+        if ORCH_NAME == "adk":
+            return
         assert script_output.err == "", f"Script produced stderr: {script_output.err}"
 
     def test_keywords_in_output(self, script_output, golden_keywords):
         """Test that expected keywords are present in the script's output."""
+        
+        if ORCH_NAME == "adk":
+            assert script_output == "root_agent"
+            return
         output = script_output.out
         missing_keywords = [kw for kw in golden_keywords if kw not in output]
         assert not missing_keywords, f"Missing keywords in output: {missing_keywords}"

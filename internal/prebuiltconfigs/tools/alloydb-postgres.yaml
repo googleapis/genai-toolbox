@@ -175,7 +175,7 @@ tools:
     list_schemas:
         kind: postgres-list-schemas
         source: alloydb-pg-source
-    
+
     list_indexes:
         kind: postgres-list-indexes
         source: alloydb-pg-source
@@ -190,6 +190,38 @@ tools:
     
     list_triggers:
         kind: postgres-list-triggers
+        source: alloydb-pg-source
+
+    list_query_stats:
+        kind: postgres-list-query-stats
+        source: alloydb-pg-source
+
+    get_column_cardinality:
+        kind: postgres-get-column-cardinality
+        source: alloydb-pg-source
+
+    list_table_stats:
+        kind: postgres-list-table-stats
+        source: alloydb-pg-source
+
+    list_publication_tables:
+        kind: postgres-list-publication-tables
+        source: alloydb-pg-source
+
+    list_tablespaces:
+        kind: postgres-list-tablespaces
+        source: alloydb-pg-source
+
+    list_pg_settings:
+        kind: postgres-list-pg-settings
+        source: alloydb-pg-source
+
+    list_database_stats:
+        kind: postgres-list-database-stats
+        source: alloydb-pg-source
+
+    list_roles:
+        kind: postgres-list-roles
         source: alloydb-pg-source
 
 toolsets:
@@ -214,4 +246,11 @@ toolsets:
         - long_running_transactions
         - list_locks
         - replication_stats
-        
+        - list_query_stats
+        - get_column_cardinality
+        - list_publication_tables
+        - list_tablespaces
+        - list_pg_settings
+        - list_database_stats
+        - list_roles
+        - list_table_stats

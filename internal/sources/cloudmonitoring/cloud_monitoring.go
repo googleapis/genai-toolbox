@@ -29,26 +29,6 @@ import (
 
 const SourceKind string = "cloud-monitoring"
 
-type userAgentRoundTripper struct {
-	userAgent string
-	next      http.RoundTripper
-}
-
-func (rt *userAgentRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	newReq := *req
-	newReq.Header = make(http.Header)
-	for k, v := range req.Header {
-		newReq.Header[k] = v
-	}
-	ua := newReq.Header.Get("User-Agent")
-	if ua == "" {
-		newReq.Header.Set("User-Agent", rt.userAgent)
-	} else {
-		newReq.Header.Set("User-Agent", ua+" "+rt.userAgent)
-	}
-	return rt.next.RoundTrip(&newReq)
-}
-
 // validate interface
 var _ sources.SourceConfig = Config{}
 
@@ -86,10 +66,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	var client *http.Client
 	if r.UseClientOAuth {
 		client = &http.Client{
-			Transport: &userAgentRoundTripper{
-				userAgent: ua,
-				next:      http.DefaultTransport,
-			},
+			Transport: util.NewUserAgentRoundTripper(ua, http.DefaultTransport),
 		}
 	} else {
 		// Use Application Default Credentials
@@ -98,18 +75,15 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 			return nil, fmt.Errorf("failed to find default credentials: %w", err)
 		}
 		baseClient := oauth2.NewClient(ctx, creds.TokenSource)
-		baseClient.Transport = &userAgentRoundTripper{
-			userAgent: ua,
-			next:      baseClient.Transport,
-		}
+		baseClient.Transport = util.NewUserAgentRoundTripper(ua, baseClient.Transport)
 		client = baseClient
 	}
 
 	s := &Source{
 		Config:    r,
-		BaseURL:   "https://monitoring.googleapis.com",
-		Client:    client,
-		UserAgent: ua,
+		baseURL:   "https://monitoring.googleapis.com",
+		client:    client,
+		userAgent: ua,
 	}
 	return s, nil
 }
@@ -118,9 +92,9 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Config
-	BaseURL   string `yaml:"baseUrl"`
-	Client    *http.Client
-	UserAgent string
+	baseURL   string
+	client    *http.Client
+	userAgent string
 }
 
 func (s *Source) SourceKind() string {
@@ -131,6 +105,18 @@ func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
 }
 
+func (s *Source) BaseURL() string {
+	return s.baseURL
+}
+
+func (s *Source) Client() *http.Client {
+	return s.client
+}
+
+func (s *Source) UserAgent() string {
+	return s.userAgent
+}
+
 func (s *Source) GetClient(ctx context.Context, accessToken string) (*http.Client, error) {
 	if s.UseClientOAuth {
 		if accessToken == "" {
@@ -139,7 +125,7 @@ func (s *Source) GetClient(ctx context.Context, accessToken string) (*http.Clien
 		token := &oauth2.Token{AccessToken: accessToken}
 		return oauth2.NewClient(ctx, oauth2.StaticTokenSource(token)), nil
 	}
-	return s.Client, nil
+	return s.client, nil
 }
 
 func (s *Source) UseClientAuthorization() bool {

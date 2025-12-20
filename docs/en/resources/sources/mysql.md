@@ -25,6 +25,9 @@ reliability, performance, and ease of use.
 - [`mysql-list-active-queries`](../tools/mysql/mysql-list-active-queries.md)
   List active queries in MySQL.
 
+- [`mysql-get-query-plan`](../tools/mysql/mysql-get-query-plan.md)
+  Provide information about how MySQL executes a SQL statement (EXPLAIN).
+
 - [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)
   List tables in a MySQL database.
 

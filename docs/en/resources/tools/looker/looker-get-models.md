@@ -26,9 +26,12 @@ tools:
         kind: looker-get-models
         source: looker-source
         description: |
-          The get_models tool retrieves the list of LookML models in the Looker system.
+          This tool retrieves a list of available LookML models in the Looker instance.
+          LookML models define the data structure and relationships that users can query.
+          The output includes details like the model's `name` and `label`, which are
+          essential for subsequent calls to tools like `get_explores` or `query`.
 
-          It takes no parameters.
+          This tool takes no parameters.
 ```
 
 ## Reference

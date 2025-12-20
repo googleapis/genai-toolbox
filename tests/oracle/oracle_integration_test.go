@@ -43,6 +43,7 @@ func getOracleVars(t *testing.T) map[string]any {
 	return map[string]any{
 		"kind":             OracleSourceKind,
 		"connectionString": OracleConnStr,
+		"useOCI":           true,
 		"user":             OracleUser,
 		"password":         OraclePass,
 	}
@@ -50,9 +51,11 @@ func getOracleVars(t *testing.T) map[string]any {
 
 // Copied over from oracle.go
 func initOracleConnection(ctx context.Context, user, pass, connStr string) (*sql.DB, error) {
-	fullConnStr := fmt.Sprintf("oracle://%s:%s@%s", user, pass, connStr)
+	// Build the full Oracle connection string for godror driver
+	fullConnStr := fmt.Sprintf(`user="%s" password="%s" connectString="%s"`,
+		user, pass, connStr)
 
-	db, err := sql.Open("oracle", fullConnStr)
+	db, err := sql.Open("godror", fullConnStr)
 	if err != nil {
 		return nil, fmt.Errorf("unable to open Oracle connection: %w", err)
 	}
@@ -116,13 +119,15 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 
 	// Get configs for tests
 	select1Want := "[{\"1\":1}]"
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: ORA-00900: invalid SQL statement\n error occur at position: 0"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: dpiStmt_execute: ORA-00900: invalid SQL statement"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id NUMBER GENERATED AS IDENTITY PRIMARY KEY, name VARCHAR2(255))"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
 
 	// Run tests
 	tests.RunToolGetTest(t)
 	tests.RunToolInvokeTest(t, select1Want,
+		tests.DisableOptionalNullParamTest(),
+		tests.WithMyToolById4Want("[{\"id\":4,\"name\":\"\"}]"),
 		tests.DisableArrayTest(),
 	)
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)

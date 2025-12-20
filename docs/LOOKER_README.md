@@ -11,80 +11,23 @@ An editor configured to use the Looker MCP server can use its AI capabilities to
 - **Manage Dashboards** - Create, run, and modify dashboards
 - **Manage Looks** - Search for and run saved looks
 - **Health Checks** - Analyze instance health and performance
-- **Developer Tools** - Manage project files and toggle dev mode
 
-## Installation and Setup
+## Prerequisites
 
-### Prerequisites
-
-*   Download and install [MCP Toolbox](https://github.com/googleapis/genai-toolbox):
-    1.  **Download the Toolbox binary**:
-        Download the latest binary for your operating system and architecture from the storage bucket. Check the [releases page](https://github.com/googleapis/genai-toolbox/releases) for OS and CPU architecture support:
-        `https://storage.googleapis.com/genai-toolbox/v0.21.0/<os>/<arch>/toolbox`
-        *   Replace `<os>` with `linux`, `darwin` (macOS), or `windows`.
-        *   Replace `<arch>` with `amd64` (Intel) or `arm64` (Apple Silicon).
-      
-        <!-- {x-release-please-start-version} -->
-        ```
-        curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
-        ```
-        <!-- {x-release-please-end} -->
-    2.  **Make it executable**:
-        ```bash
-        chmod +x toolbox
-        ```
-
-    3.  **Move binary to `/usr/local/bin/` or `/usr/bin/`**:
-        ```bash
-        sudo mv toolbox /usr/local/bin/
-        # sudo mv toolbox /usr/bin/
-        ```
-
-        **On Windows, move binary to the `WindowsApps\` folder**:
-        ```
-        move "C:\Users\<path-to-binary>\toolbox.exe" "C:\Users\<username>\AppData\Local\Microsoft\WindowsApps\"
-        ```
-    
-        **Tip:** Ensure the destination folder for your binary is included in
-        your system's PATH environment variable. To check `PATH`, use `echo
-        $PATH` (or `echo %PATH%` on Windows).
-
-        **Note:** You may need to restart Antigravity for changes to take effect.
-
+*   [Node.js](https://nodejs.org/) installed.
 *   Access to a Looker instance.
 *   API Credentials (`Client ID` and `Client Secret`) or OAuth configuration.
 
-### Configuration
+## Install & Configuration
 
-The MCP server is configured using environment variables.
+1. In the Antigravity MCP Store, click the "Install" button.
 
-```bash
-export LOOKER_BASE_URL="<your-looker-instance-url>"  # e.g. `https://looker.example.com`. You may need to add the port, i.e. `:19999`.
-export LOOKER_CLIENT_ID="<your-looker-client-id>"
-export LOOKER_CLIENT_SECRET="<your-looker-client-secret>"
-export LOOKER_VERIFY_SSL="true" # Optional, defaults to true
-export LOOKER_SHOW_HIDDEN_MODELS="true" # Optional, defaults to true
-export LOOKER_SHOW_HIDDEN_EXPLORES="true" # Optional, defaults to true
-export LOOKER_SHOW_HIDDEN_FIELDS="true" # Optional, defaults to true
-```
+2. Add the required inputs for your [instance](https://docs.cloud.google.com/looker/docs/set-up-and-administer-looker) in the configuration pop-up, then click "Save". You can update this configuration at any time in the "Configure" tab.
 
-Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI):
+You'll now be able to see all enabled tools in the "Tools" tab.
 
-```json
-{
-  "mcpServers": {
-    "looker": {
-      "command": "toolbox",
-      "args": ["--prebuilt", "looker", "--stdio"],
-      "env": {
-        "LOOKER_BASE_URL": "https://your.looker.instance.com",
-        "LOOKER_CLIENT_ID": "your-client-id",
-        "LOOKER_CLIENT_SECRET": "your-client-secret"
-      }
-    }
-  }
-}
-```
+> [!NOTE]
+> If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure exclusions for Microsoft Defender Antivirus](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-exclusions-microsoft-defender-antivirus?view=o365-worldwide) for more details.
 
 ## Usage
 
@@ -112,8 +55,38 @@ The Looker MCP server provides a wide range of tools. Here are some of the key c
 | `dev_mode`              | Toggles development mode.                                 |
 | `get_projects`          | Lists LookML projects.                                    |
 
-*(See the full list of tools in the extension)*
+## Custom MCP Server Configuration
+
+The MCP server is configured using environment variables.
+
+```bash
+export LOOKER_BASE_URL="<your-looker-instance-url>"  # e.g. `https://looker.example.com`. You may need to add the port, i.e. `:19999`.
+export LOOKER_CLIENT_ID="<your-looker-client-id>"
+export LOOKER_CLIENT_SECRET="<your-looker-client-secret>"
+export LOOKER_VERIFY_SSL="true" # Optional, defaults to true
+export LOOKER_SHOW_HIDDEN_MODELS="true" # Optional, defaults to true
+export LOOKER_SHOW_HIDDEN_EXPLORES="true" # Optional, defaults to true
+export LOOKER_SHOW_HIDDEN_FIELDS="true" # Optional, defaults to true
+```
+
+Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI, `mcp_config.json` for Antigravity):
+
+```json
+{
+  "mcpServers": {
+    "looker": {
+      "command": "npx",
+      "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "looker", "--stdio"],
+      "env": {
+        "LOOKER_BASE_URL": "https://your.looker.instance.com",
+        "LOOKER_CLIENT_ID": "your-client-id",
+        "LOOKER_CLIENT_SECRET": "your-client-secret"
+      }
+    }
+  }
+}
+```
 
 ## Documentation
 
-For more information, visit the [Looker documentation](https://cloud.google.com/looker/docs).
+For more information, visit the [Looker documentation](https://cloud.google.com/looker).

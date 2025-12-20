@@ -21,9 +21,9 @@ the following sources:
 `postgres-list-schemas` lists detailed information as JSON for each schema. The
 tool takes the following input parameters:
 
-- `schema_name` (optional): A pattern to filter schema names using SQL LIKE
-  operator.
-   If omitted, all user-defined schemas are returned.
+- `schema_name` (optional): A text to filter results by schema name. Default: `""`
+- `owner` (optional): A text to filter results by owner name. Default: `""`
+- `limit` (optional): The maximum number of rows to return. Default: `50`.
 
 ## Example
 

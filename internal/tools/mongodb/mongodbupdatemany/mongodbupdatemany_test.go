@@ -53,6 +53,62 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
                         - name: name 
                           type: string
                           description: small description
+					updatePayload: |
+					    { $set: { name: {{json .name}} } }
+					updateParams:
+                        - name: name 
+                          type: string
+                          description: small description
+			`,
+			want: server.ToolConfigs{
+				"example_tool": mongodbupdatemany.Config{
+					Name:          "example_tool",
+					Kind:          "mongodb-update-many",
+					Source:        "my-instance",
+					AuthRequired:  []string{},
+					Database:      "test_db",
+					Collection:    "test_coll",
+					FilterPayload: "{ name: {{json .name}} }\n",
+					FilterParams: parameters.Parameters{
+						&parameters.StringParameter{
+							CommonParameter: parameters.CommonParameter{
+								Name: "name",
+								Type: "string",
+								Desc: "small description",
+							},
+						},
+					},
+					UpdatePayload: "{ $set: { name: {{json .name}} } }\n",
+					UpdateParams: parameters.Parameters{
+						&parameters.StringParameter{
+							CommonParameter: parameters.CommonParameter{
+								Name: "name",
+								Type: "string",
+								Desc: "small description",
+							},
+						},
+					},
+					Description: "some description",
+					Canonical:   false,
+				},
+			},
+		},
+		{
+			desc: "true canonical",
+			in: `
+			tools:
+				example_tool:
+					kind: mongodb-update-many
+					source: my-instance
+					description: some description
+					database: test_db
+					collection: test_coll
+					filterPayload: |
+					    { name: {{json .name}} }
+					filterParams:
+                        - name: name 
+                          type: string
+                          description: small description
 					canonical: true
 					updatePayload: |
 					    { $set: { name: {{json .name}} } }
@@ -91,6 +147,63 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 					},
 					Description: "some description",
 					Canonical:   true,
+				},
+			},
+		},
+		{
+			desc: "false canonical",
+			in: `
+			tools:
+				example_tool:
+					kind: mongodb-update-many
+					source: my-instance
+					description: some description
+					database: test_db
+					collection: test_coll
+					filterPayload: |
+					    { name: {{json .name}} }
+					filterParams:
+                        - name: name 
+                          type: string
+                          description: small description
+					canonical: false
+					updatePayload: |
+					    { $set: { name: {{json .name}} } }
+					updateParams:
+                        - name: name 
+                          type: string
+                          description: small description
+			`,
+			want: server.ToolConfigs{
+				"example_tool": mongodbupdatemany.Config{
+					Name:          "example_tool",
+					Kind:          "mongodb-update-many",
+					Source:        "my-instance",
+					AuthRequired:  []string{},
+					Database:      "test_db",
+					Collection:    "test_coll",
+					FilterPayload: "{ name: {{json .name}} }\n",
+					FilterParams: parameters.Parameters{
+						&parameters.StringParameter{
+							CommonParameter: parameters.CommonParameter{
+								Name: "name",
+								Type: "string",
+								Desc: "small description",
+							},
+						},
+					},
+					UpdatePayload: "{ $set: { name: {{json .name}} } }\n",
+					UpdateParams: parameters.Parameters{
+						&parameters.StringParameter{
+							CommonParameter: parameters.CommonParameter{
+								Name: "name",
+								Type: "string",
+								Desc: "small description",
+							},
+						},
+					},
+					Description: "some description",
+					Canonical:   false,
 				},
 			},
 		},

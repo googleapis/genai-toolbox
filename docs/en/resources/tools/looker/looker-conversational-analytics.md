@@ -34,9 +34,10 @@ tools:
         kind: looker-conversational-analytics
         source: looker-source
         description: |
-          Use this tool to perform data analysis, get insights,
-          or answer complex questions about the contents of specific
-          Looker explores.
+          Use this tool to ask questions about your data using the Looker Conversational
+          Analytics API. You must provide a natural language query and a list of
+          1 to 5 model and explore combinations (e.g. [{'model': 'the_model', 'explore': 'the_explore'}]).
+          Use the 'get_models' and 'get_explores' tools to discover available models and explores.
 ```
 
 ## Reference

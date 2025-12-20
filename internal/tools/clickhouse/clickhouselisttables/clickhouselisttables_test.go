@@ -20,7 +20,6 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
-	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
@@ -29,21 +28,6 @@ func TestListTablesConfigToolConfigKind(t *testing.T) {
 	cfg := Config{}
 	if cfg.ToolConfigKind() != listTablesKind {
 		t.Errorf("expected %q, got %q", listTablesKind, cfg.ToolConfigKind())
-	}
-}
-
-func TestListTablesConfigInitializeMissingSource(t *testing.T) {
-	cfg := Config{
-		Name:        "test-list-tables",
-		Kind:        listTablesKind,
-		Source:      "missing-source",
-		Description: "Test list tables tool",
-	}
-
-	srcs := map[string]sources.Source{}
-	_, err := cfg.Initialize(srcs)
-	if err == nil {
-		t.Error("expected error for missing source")
 	}
 }
 

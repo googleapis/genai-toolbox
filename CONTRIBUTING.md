@@ -48,6 +48,17 @@ squashed when merged.
 author for more than 10 days, maintainers may mark that PR as Draft. PRs that
 are inactive for more than 30 days may be closed.
 
+### Automated Code Reviews
+
+This repository uses **Gemini Code Assist** to provide automated code reviews on Pull Requests. While this does not replace human review, it provides immediate feedback on code quality and potential issues.
+
+You can manually trigger the bot by commenting on your Pull Request:
+
+*   `/gemini`: Manually invokes Gemini Code Assist in comments
+*   `/gemini review`: Posts a code review of the changes in the pull request
+*   `/gemini summary`: Posts a summary of the changes in the pull request.
+*   `/gemini help`: Overview of the available commands
+
 ## Adding a New Database Source or Tool
 
 Please create an
@@ -156,15 +167,15 @@ tools.
   [integration.cloudbuild.yaml](.ci/integration.cloudbuild.yaml).
 
 [tool-get]:
-    https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L31
+    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L41
 [tool-call]:
-    <https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L79>
+    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L229
 [mcp-call]:
-    https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L554
+    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L789
 [execute-sql]:
-    <https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L431>
+    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L609
 [temp-param]:
-    <https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L297>
+    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L454
 [temp-param-doc]:
     https://googleapis.github.io/genai-toolbox/resources/tools/#template-parameters
 

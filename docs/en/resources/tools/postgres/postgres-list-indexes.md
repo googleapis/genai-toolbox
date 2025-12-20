@@ -21,12 +21,10 @@ any of the following sources:
 `postgres-list-indexes` lists detailed information as JSON for indexes. The tool
 takes the following input parameters:
 
-- `table_name` (optional): A text to filter results by table name. The input is
-  used within a LIKE clause. Default: `""`
-- `index_name` (optional): A text to filter results by index name. The input is
-  used within a LIKE clause. Default: `""`
-- `schema_name` (optional): A text to filter results by schema name. The input
-  is used within a LIKE clause. Default: `""`
+- `table_name` (optional): A text to filter results by table name. Default: `""`
+- `index_name` (optional): A text to filter results by index name. Default: `""`
+- `schema_name` (optional): A text to filter results by schema name. Default: `""`
+- `only_unused` (optional): If true, returns indexes that have never been used.
 - `limit` (optional): The maximum number of rows to return. Default: `50`.
 
 ## Example

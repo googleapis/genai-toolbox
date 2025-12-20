@@ -30,26 +30,6 @@ import (
 
 const SourceKind string = "cloud-sql-admin"
 
-type userAgentRoundTripper struct {
-	userAgent string
-	next      http.RoundTripper
-}
-
-func (rt *userAgentRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	newReq := *req
-	newReq.Header = make(http.Header)
-	for k, v := range req.Header {
-		newReq.Header[k] = v
-	}
-	ua := newReq.Header.Get("User-Agent")
-	if ua == "" {
-		newReq.Header.Set("User-Agent", rt.userAgent)
-	} else {
-		newReq.Header.Set("User-Agent", ua+" "+rt.userAgent)
-	}
-	return rt.next.RoundTrip(&newReq)
-}
-
 // validate interface
 var _ sources.SourceConfig = Config{}
 
@@ -88,10 +68,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	var client *http.Client
 	if r.UseClientOAuth {
 		client = &http.Client{
-			Transport: &userAgentRoundTripper{
-				userAgent: ua,
-				next:      http.DefaultTransport,
-			},
+			Transport: util.NewUserAgentRoundTripper(ua, http.DefaultTransport),
 		}
 	} else {
 		// Use Application Default Credentials
@@ -100,10 +77,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 			return nil, fmt.Errorf("failed to find default credentials: %w", err)
 		}
 		baseClient := oauth2.NewClient(ctx, creds.TokenSource)
-		baseClient.Transport = &userAgentRoundTripper{
-			userAgent: ua,
-			next:      baseClient.Transport,
-		}
+		baseClient.Transport = util.NewUserAgentRoundTripper(ua, baseClient.Transport)
 		client = baseClient
 	}
 
@@ -134,6 +108,10 @@ func (s *Source) SourceKind() string {
 
 func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
+}
+
+func (s *Source) GetDefaultProject() string {
+	return s.DefaultProject
 }
 
 func (s *Source) GetService(ctx context.Context, accessToken string) (*sqladmin.Service, error) {
