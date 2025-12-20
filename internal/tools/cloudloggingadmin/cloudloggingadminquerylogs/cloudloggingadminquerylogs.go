@@ -55,10 +55,6 @@ type compatibleSource interface {
 	UseClientAuthorization() bool
 }
 
-var _ compatibleSource = &cla.Source{}
-
-var compatibleSources = [...]string{cla.SourceKind}
-
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
