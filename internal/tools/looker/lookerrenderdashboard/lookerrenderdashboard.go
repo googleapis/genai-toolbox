@@ -11,11 +11,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package lookergetdashboards
+package lookerrenderdashboard
 
 import (
 	"context"
 	"fmt"
+	"time"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -29,7 +30,7 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const kind string = "looker-get-dashboards"
+const kind string = "looker-render-dashboard"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -74,15 +75,20 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `looker`", kind)
 	}
 
-	titleParameter := parameters.NewStringParameterWithDefault("title", "", "The title of the dashboard.")
-	descParameter := parameters.NewStringParameterWithDefault("desc", "", "The description of the dashboard.")
-	limitParameter := parameters.NewIntParameterWithDefault("limit", 100, "The number of dashboards to fetch. Default 100")
-	offsetParameter := parameters.NewIntParameterWithDefault("offset", 0, "The number of dashboards to skip before fetching. Default 0")
+	dashboardidParameter := parameters.NewStringParameter("dashboard_id", "The id of the dashboard to render.")
+	// An 8.5 x 11 piece of paper with .25 inch margins works out to
+	// 2400 x 3150, assuming 300 dpi. So that is a good
+	// default for the size of the rendering.
+	// An A4 paper is close enough to accomodate this too.
+	widthParameter := parameters.NewIntParameterWithDefault("width", 3150, "The image width. Default 3150")
+	heightParameter := parameters.NewIntParameterWithDefault("height", 2400, "The image height. Default 2400")
+	formatParameter := parameters.NewStringParameterWithDefault("format", "pdf", "The image type: pdf, png, or jpg")
+
 	params := parameters.Parameters{
-		titleParameter,
-		descParameter,
-		limitParameter,
-		offsetParameter,
+		dashboardidParameter,
+		widthParameter,
+		heightParameter,
+		formatParameter,
 	}
 
 	annotations := cfg.Annotations
@@ -135,55 +141,62 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
 	}
+	logger.DebugContext(ctx, "params = ", params)
 	paramsMap := params.AsMap()
-	title := paramsMap["title"].(string)
-	title_ptr := &title
-	if *title_ptr == "" {
-		title_ptr = nil
+
+	dashboard_id := paramsMap["dashboard_id"].(string)
+	width := int64(paramsMap["width"].(int))
+	height := int64(paramsMap["height"].(int))
+	format := paramsMap["format"].(string)
+
+	var mimeType string
+	switch format {
+	case "pdf":
+		mimeType = "application/pdf"
+	case "jpg":
+		mimeType = "image/jpeg"
+	case "png":
+		mimeType = "image/png"
+	default:
+		return nil, fmt.Errorf("format \"%s\" unsupported. must be png, pdf, or jpg", format)
 	}
-	desc := paramsMap["desc"].(string)
-	desc_ptr := &desc
-	if *desc_ptr == "" {
-		desc_ptr = nil
+
+	req := v4.RequestCreateDashboardRenderTask{
+		DashboardId:  dashboard_id,
+		ResultFormat: format,
+		Width:        width,
+		Height:       height,
 	}
-	limit := int64(paramsMap["limit"].(int))
-	offset := int64(paramsMap["offset"].(int))
 
 	sdk, err := lookercommon.GetLookerSDK(t.UseClientOAuth, t.ApiSettings, t.Client, accessToken)
 	if err != nil {
 		return nil, fmt.Errorf("error getting sdk: %w", err)
 	}
-	req := v4.RequestSearchDashboards{
-		Title:       title_ptr,
-		Description: desc_ptr,
-		Limit:       &limit,
-		Offset:      &offset,
-	}
-	logger.ErrorContext(ctx, "Making request %v", req)
-	resp, err := sdk.SearchDashboards(req, t.ApiSettings)
-	if err != nil {
-		return nil, fmt.Errorf("error making get_dashboards request: %s", err)
-	}
-	logger.ErrorContext(ctx, "Got response %v", resp)
-	var data []any
-	for _, v := range resp {
-		logger.DebugContext(ctx, "Got response element of %v\n", v)
-		vMap := make(map[string]any)
-		if v.Id != nil {
-			vMap["id"] = *v.Id
-		}
-		if v.Title != nil {
-			vMap["title"] = *v.Title
-		}
-		if v.Description != nil {
-			vMap["description"] = *v.Description
-		}
-		logger.DebugContext(ctx, "Converted to %v\n", vMap)
-		data = append(data, vMap)
-	}
-	logger.DebugContext(ctx, "data = ", data)
 
-	return data, nil
+	task, err := sdk.CreateDashboardRenderTask(req, t.ApiSettings)
+	if err != nil {
+		return nil, fmt.Errorf("error making create_dashboard_render_task request: %s", err)
+	}
+
+outer:
+	for {
+		switch *task.Status {
+		case "success":
+			break outer
+		case "failure":
+			return nil, fmt.Errorf("failure processing render task: %s", *task.StatusDetail)
+		default:
+			time.Sleep(10 * time.Second)
+			task, err = sdk.RenderTask(*task.Id, "", t.ApiSettings)
+			if err != nil {
+				return nil, fmt.Errorf("error getting render_task status: %s", err)
+			}
+		}
+	}
+
+	resp, err := sdk.RenderTaskResults(*task.Id, t.ApiSettings)
+
+	return lookercommon.ReturnImage(mimeType, resp), nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

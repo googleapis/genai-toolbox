@@ -1042,6 +1042,41 @@ tools:
           such as `table_name`, `column_name`, `data_type`, and `is_nullable`.
 
 
+    render_query:
+        kind: looker-render-query
+        source: looker-source
+        description: |
+          render_query Tool
+
+          This tool runs a query and returns a jpg or png of the
+          visualization for that query. It accepts the query_id as a
+          parameter. It also accepts a height and width in pixels,
+          defaulting to 1200 x 1575. The format parameter can be 'jpg'
+          or 'png'. 'png' is the default.
+
+    render_look:
+        kind: looker-render-look
+        source: looker-source
+        description: |
+          render_look Tool
+
+          This tool runs the query associated with a look and returns
+          a jpg or png of the visualization for that look. It accepts
+          the look_id as a parameter. It also accepts a height and width
+          in pixels, defaulting to 1200 x 1575. The format parameter
+          can be 'jpg' or 'png'. 'png' is the default.
+
+    render_dashboard:
+        kind: looker-render-dashboard
+        source: looker-source
+        description: |
+          render_dashboard Tool
+
+          This tool renders a dashboard as a pdf, jpg, or png. It accepts
+          the dashboard_id as a parameter. It also accepts a height and width
+          in pixels, defaulting to 2400 x 3150. The format parameter
+          can be 'pdf', 'jpg', or 'png'. 'pdf' is the default.
+
 toolsets:
     looker_tools:
         - get_models
@@ -1058,6 +1093,9 @@ toolsets:
         - make_look
         - get_dashboards
         - run_dashboard
+        - render_query
+        - render_look
+        - render_dashboard
         - make_dashboard
         - add_dashboard_element
         - add_dashboard_filter

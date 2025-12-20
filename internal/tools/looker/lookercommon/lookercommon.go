@@ -16,6 +16,7 @@ package lookercommon
 import (
 	"context"
 	"crypto/tls"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -347,4 +348,13 @@ func UpdateProjectFile(l *v4.LookerSDK, projectId string, fileContent FileConten
 	path := fmt.Sprintf("/projects/%s/files", url.PathEscape(projectId))
 	err := l.AuthSession.Do(nil, "PUT", "/4.0", path, nil, fileContent, options)
 	return err
+}
+
+func ReturnImage(mimeType string, imageData string) map[string]any {
+	data := make(map[string]any)
+	data["type"] = "image"
+	data["mimeType"] = mimeType
+	data["data"] = fmt.Sprintf("data:%s;base64,%s", mimeType, string(base64.StdEncoding.EncodeToString([]byte(imageData))))
+
+	return data
 }
