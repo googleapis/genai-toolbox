@@ -70,27 +70,15 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	limitDescription := fmt.Sprintf("Maximum number of log entries to return (default: %d).", defaultLimit)
 	params := parameters.Parameters{
 		parameters.NewIntParameterWithRequired("limit", limitDescription, false),
 	}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
 	t := Tool{
 		Config:      cfg,
-		source:      s,
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 		params:      params,
@@ -104,26 +92,30 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Config
 
-	source      compatibleSource
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 	params      parameters.Parameters
 }
 
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
+
 	var client *logadmin.Client
 
-	if t.source.UseClientAuthorization() {
+	if source.UseClientAuthorization() {
 		tokenString, err := accessToken.ParseBearerToken()
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse access token: %w", err)
 		}
-		client, err = t.source.LogAdminClientCreator()(tokenString)
+		client, err = source.LogAdminClientCreator()(tokenString)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create client: %w", err)
 		}
 	} else {
-		client = t.source.LogAdminClient()
+		client = source.LogAdminClient()
 		if client == nil {
 			return nil, fmt.Errorf("source client is not initialized")
 		}
@@ -170,14 +162,18 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
-	return t.source.UseClientAuthorization()
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return false, err
+	}
+	return source.UseClientAuthorization(), nil
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }

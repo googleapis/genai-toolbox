@@ -13,7 +13,7 @@ require (
 	cloud.google.com/go/dataproc/v2 v2.15.0
 	cloud.google.com/go/firestore v1.20.0
 	cloud.google.com/go/geminidataanalytics v0.3.0
-	cloud.google.com/go/logging v1.13.0
+	cloud.google.com/go/logging v1.13.1
 	cloud.google.com/go/longrunning v0.7.0
 	cloud.google.com/go/spanner v1.86.1
 	github.com/ClickHouse/clickhouse-go/v2 v2.40.3
