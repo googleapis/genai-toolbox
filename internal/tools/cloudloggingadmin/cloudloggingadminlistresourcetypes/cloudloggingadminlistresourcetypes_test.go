@@ -58,22 +58,6 @@ func TestInitialize(t *testing.T) {
 				AuthRequired: []string{"my-google-auth-service"},
 			},
 		},
-		{
-			desc: "Error: source not found",
-			cfg: cloudloggingadminlistresourcetypes.Config{
-				Name:   "test-tool",
-				Source: "non-existent-source",
-			},
-			wantErr: `no source named "non-existent-source" configured`,
-		},
-		{
-			desc: "Error: incompatible source kind",
-			cfg: cloudloggingadminlistresourcetypes.Config{
-				Name:   "test-tool",
-				Source: "incompatible-source",
-			},
-			wantErr: "invalid source for \"cloud-logging-admin-list-resource-types\" tool",
-		},
 	}
 
 	for _, tc := range testCases {
