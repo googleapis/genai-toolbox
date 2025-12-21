@@ -47,13 +47,14 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name               string                `yaml:"name" validate:"required"`
-	Kind               string                `yaml:"kind" validate:"required"`
-	Source             string                `yaml:"source" validate:"required"`
-	Description        string                `yaml:"description" validate:"required"`
-	NLConfig           string                `yaml:"nlConfig" validate:"required"`
-	AuthRequired       []string              `yaml:"authRequired"`
-	NLConfigParameters parameters.Parameters `yaml:"nlConfigParameters"`
+	Name               string                 `yaml:"name" validate:"required"`
+	Kind               string                 `yaml:"kind" validate:"required"`
+	Source             string                 `yaml:"source" validate:"required"`
+	Description        string                 `yaml:"description" validate:"required"`
+	NLConfig           string                 `yaml:"nlConfig" validate:"required"`
+	AuthRequired       []string               `yaml:"authRequired"`
+	NLConfigParameters parameters.Parameters  `yaml:"nlConfigParameters"`
+	Annotations        *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -102,7 +103,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	cfg.NLConfigParameters = append([]parameters.Parameter{newQuestionParam}, cfg.NLConfigParameters...)
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, cfg.NLConfigParameters, nil)
+	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, cfg.NLConfigParameters, annotations)
 
 	t := Tool{
 		Config:      cfg,
