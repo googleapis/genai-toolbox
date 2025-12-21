@@ -48,8 +48,9 @@ type Config struct {
 	Kind         string                `yaml:"kind" validate:"required"`
 	Source       string                `yaml:"source" validate:"required"`
 	Description  string                `yaml:"description" validate:"required"`
-	AuthRequired []string              `yaml:"authRequired" validate:"required"`
-	Query        string                `yaml:"query"`
+	AuthRequired []string               `yaml:"authRequired" validate:"required"`
+	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	Query        string                 `yaml:"query"`
 	Format       string                `yaml:"format"`
 	Timeout      int                   `yaml:"timeout"`
 	Parameters   parameters.Parameters `yaml:"parameters"`
@@ -78,7 +79,7 @@ type Tool struct {
 var _ tools.Tool = Tool{}
 
 func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
+	annotations := tools.GetAnnotationsOrDefault(c.Annotations, tools.NewReadOnlyAnnotations)
 	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, c.Parameters, annotations)
 
 	return Tool{
