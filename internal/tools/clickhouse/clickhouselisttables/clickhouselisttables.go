@@ -25,12 +25,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-type compatibleSource interface {
-	ClickHousePool() *sql.DB
-}
-
-var compatibleSources = []string{"clickhouse"}
-
 const listTablesKind string = "clickhouse-list-tables"
 const databaseKey string = "database"
 
@@ -46,6 +40,10 @@ func newListTablesConfig(ctx context.Context, name string, decoder *yaml.Decoder
 		return nil, err
 	}
 	return actual, nil
+}
+
+type compatibleSource interface {
+	ClickHousePool() *sql.DB
 }
 
 type Config struct {
@@ -64,16 +62,6 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", listTablesKind, compatibleSources)
-	}
-
 	databaseParameter := parameters.NewStringParameter(databaseKey, "The database to list tables from.")
 	params := parameters.Parameters{databaseParameter}
 
@@ -83,7 +71,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	t := Tool{
 		Config:      cfg,
 		AllParams:   allParameters,
-		Pool:        s.ClickHousePool(),
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
@@ -94,9 +81,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	AllParams parameters.Parameters `yaml:"allParams"`
-
-	Pool        *sql.DB
+	AllParams   parameters.Parameters `yaml:"allParams"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -106,6 +91,11 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
+
 	mapParams := params.AsMap()
 	database, ok := mapParams[databaseKey].(string)
 	if !ok {
@@ -115,7 +105,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// Query to list all tables in the specified database
 	query := fmt.Sprintf("SHOW TABLES FROM %s", database)
 
-	results, err := t.Pool.QueryContext(ctx, query)
+	results, err := source.ClickHousePool().QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
@@ -157,10 +147,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }
