@@ -78,7 +78,8 @@ type Tool struct {
 var _ tools.Tool = Tool{}
 
 func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, c.Parameters, nil)
+	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
+	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, c.Parameters, annotations)
 
 	return Tool{
 		Config:      c,

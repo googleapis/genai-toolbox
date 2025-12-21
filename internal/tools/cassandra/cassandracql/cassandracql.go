@@ -70,7 +70,8 @@ func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 		return nil, err
 	}
 
-	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, allParameters, nil)
+	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
+	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, allParameters, annotations)
 
 	t := Tool{
 		Config:      c,

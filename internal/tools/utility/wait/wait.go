@@ -46,7 +46,8 @@ type Config struct {
 	Kind         string   `yaml:"kind" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	Timeout      string   `yaml:"timeout" validate:"required"`
-	AuthRequired []string `yaml:"authRequired"`
+	AuthRequired []string               `yaml:"authRequired"`
+	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -59,7 +60,8 @@ func (cfg Config) Initialize(_ map[string]sources.Source) (tools.Tool, error) {
 	durationParameter := parameters.NewStringParameter("duration", "The duration to wait for, specified as a string (e.g., '10s', '2m', '1h').")
 	params := parameters.Parameters{durationParameter}
 
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
+	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, annotations)
 
 	t := Tool{
 		Config:      cfg,
