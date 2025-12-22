@@ -113,7 +113,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 // Tool represents the create-instance tool.
 type Tool struct {
 	Config
-	Source      *spanneradmin.Source
 	AllParams   parameters.Parameters
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
