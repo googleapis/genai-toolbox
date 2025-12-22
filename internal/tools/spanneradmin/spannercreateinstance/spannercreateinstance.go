@@ -124,6 +124,11 @@ func (t Tool) ToConfig() tools.ToolConfig {
 
 // Invoke executes the tool's logic.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
+
 	paramsMap := params.AsMap()
 
 	project, _ := paramsMap["project"].(string)
