@@ -73,7 +73,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	s, ok := rawS.(*spanneradmin.Source)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `spanner-admin`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, cfg.Source)
 	}
 
 	project := s.DefaultProject
