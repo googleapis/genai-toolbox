@@ -225,7 +225,6 @@ We use **[lychee](https://github.com/lycheeverse/lychee-action)** for repository
        ^mailto:.*
        ```
 > [!NOTE]
-> Ensuring CI/CD Compatibility for Links <br>
 > To avoid build failures in GitHub Actions, follow the linking pattern demonstrated here: <br>
 > Avoid (Works in Hugo, breaks Link Checker): `[Read more](docs/setup)` or `[Read more](docs/setup/)` <br>
 > Reason: The link checker cannot find a file named "setup" or a directory with that name containing an index. <br>
