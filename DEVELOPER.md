@@ -227,12 +227,10 @@ We use **[lychee](https://github.com/lycheeverse/lychee-action)** for repository
 > [!NOTE]
 > Ensuring CI/CD Compatibility for Links <br>
 > To avoid build failures in GitHub Actions, follow the linking pattern demonstrated here: <br>
-> Avoid (Works in Hugo, breaks Link Checker): <br>
-> [Read more](docs/setup) or [Read more](docs/setup/) <br>
+> Avoid (Works in Hugo, breaks Link Checker): `[Read more](docs/setup)` or `[Read more](docs/setup/)` <br>
 > Reason: The link checker cannot find a file named "setup" or a directory with that name containing an index. <br>
-> Preferred (Works for both): <br>
-> [Read more](docs/setup.md) <br>
-> Reason: The GitHub Action finds the physical file. Hugo then uses its internal logic (or render hooks) to resolve this to the correct /docs/setup/ web URL. <br>
+> Preferred (Works for both): `[Read more](docs/setup.md)` <br>
+> Reason: The GitHub Action finds the physical file. Hugo then uses its internal logic (or render hooks) to resolve this to the correct `/docs/setup/` web URL. <br>
 
 ### Other GitHub Checks
 
