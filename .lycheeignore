@@ -1,25 +1,69 @@
+# ^https?://([a-zA-Z0-9-]+\.)?example\.com(:\d+)?(/.*)?$
 
-^https?:\\/\\/([a-zA-Z0-9-]+\\.)?example\\.com(:\\d+)?(\\/.*)?$ 
+# ^https://img\.shields\.io/.*
+# \.pdf$
 
-^https:\\/\\/img\\.shields\\.io\\/.*
+# ^mailto:
+
+# ^https?://(127\.0\.0\.1|localhost)(:\d+)?(/.*)?$
+
+# ^http://example\.net
+
+# https://xxx.cloud.dgraph.io/
+# https://www.npmjs.com/package/@toolbox-sdk/core
+# https://dev.mysql.com/downloads/installer/
+# https://cloud.dgraph.io/login
+# https://www.mysql.com/
+# https://claude.ai/download
+# https://cloud.google.com/run
+# https://cloud-run-url.app/
+# https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html
+# https://dev.mysql.com/doc/refman/8.4/en/user-names.html
+
+
+
+
+
+
+
+
+
+
+
+# Ignore documentation placeholders and generic example domains
+^https?://([a-zA-Z0-9-]+\.)?example\.com(:\d+)?(/.*)?$
+^http://example\.net
+
+# Shields.io badges often trigger rate limits or intermittent 503s
+^https://img\.shields\.io/.*
+# PDF files are ignored as lychee cannot reliably parse internal PDF links
 \.pdf$
+
+
+# Standard mailto: protocol is not a web URL
 ^mailto:
+# Ignore local development endpoints that won't resolve in CI/CD environments
+^https?://(127\.0\.0\.1|localhost)(:\d+)?(/.*)?$
 
-^https?:\\/\\/(127\\.0\\.0\\.1|localhost)(:\\d+)?(\\/.*)?$
-^https?://127\.0\.0\.1
-
-^https:\/\/localhost:8080\/$
-^http://localhost
-
-^http://example.net
-
-https://xxx.cloud.dgraph.io/
-https://www.npmjs.com/package/@toolbox-sdk/core
-https://dev.mysql.com/downloads/installer/
-https://cloud.dgraph.io/login
-https://www.mysql.com/
-https://claude.ai/download
-https://cloud.google.com/run
+# Placeholder for Google Cloud Run service discovery
 https://cloud-run-url.app/
+
+
+# DGraph Cloud and private instance endpoints
+https://xxx.cloud.dgraph.io/
+https://cloud.dgraph.io/login
+
+# MySQL Community downloads and main site (often protected by bot mitigation)
+https://dev.mysql.com/downloads/installer/
+https://www.mysql.com/
+# Claude desktop download link
+https://claude.ai/download
+# Google Cloud Run product page
+https://cloud.google.com/run
+
+# These specific deep links are known to cause redirect loops or 403s in automated scrapers
 https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html
 https://dev.mysql.com/doc/refman/8.4/en/user-names.html
+
+# npmjs links can occasionally trigger rate limiting during high-frequency CI builds
+https://www.npmjs.com/package/@toolbox-sdk/core
