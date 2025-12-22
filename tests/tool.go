@@ -2401,10 +2401,10 @@ func RunPostgresListPgSettingsTest(t *testing.T, ctx context.Context, pool *pgxp
 // RunPostgresDatabaseStatsTest tests the database_stats tool by comparing API results
 // against a direct query to the database.
 func RunPostgresListDatabaseStatsTest(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
-	dbName1 := "test_db_stats_1"
-	dbOwner1 := "test_user1"
-	dbName2 := "test_db_stats_2"
-	dbOwner2 := "test_user2"
+	dbName1 := "test_db_stats_" + strings.ReplaceAll(uuid.NewString(), "-", "")
+	dbOwner1 := "test_user_" + strings.ReplaceAll(uuid.NewString(), "-", "")
+	dbName2 := "test_db_stats_" + strings.ReplaceAll(uuid.NewString(), "-", "")
+	dbOwner2 := "test_user_" + strings.ReplaceAll(uuid.NewString(), "-", "")
 
 	cleanup1 := setUpDatabase(t, ctx, pool, dbName1, dbOwner1)
 	defer cleanup1()
@@ -3372,6 +3372,81 @@ func RunMySQLListTableFragmentationTest(t *testing.T, databaseName, tableNamePar
 				return a.TableSchema == b.TableSchema && a.TableName == b.TableName
 			})); diff != "" {
 				t.Errorf("Unexpected result: got %#v, want: %#v", got, tc.want)
+			}
+		})
+	}
+}
+
+func RunMySQLGetQueryPlanTest(t *testing.T, ctx context.Context, pool *sql.DB, databaseName, tableNameParam string) {
+	// Create a simple query to explain
+	query := fmt.Sprintf("SELECT * FROM %s", tableNameParam)
+
+	invokeTcs := []struct {
+		name           string
+		requestBody    io.Reader
+		wantStatusCode int
+		checkResult    func(t *testing.T, result any)
+	}{
+		{
+			name:           "invoke get_query_plan with valid query",
+			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"sql_statement": "%s"}`, query)),
+			wantStatusCode: http.StatusOK,
+			checkResult: func(t *testing.T, result any) {
+				resultMap, ok := result.(map[string]any)
+				if !ok {
+					t.Fatalf("result should be a map, got %T", result)
+				}
+				if _, ok := resultMap["query_block"]; !ok {
+					t.Errorf("result should contain 'query_block', got %v", resultMap)
+				}
+			},
+		},
+		{
+			name:           "invoke get_query_plan with invalid query",
+			requestBody:    bytes.NewBufferString(`{"sql_statement": "SELECT * FROM non_existent_table"}`),
+			wantStatusCode: http.StatusBadRequest,
+			checkResult:    nil,
+		},
+	}
+
+	for _, tc := range invokeTcs {
+		t.Run(tc.name, func(t *testing.T) {
+			const api = "http://127.0.0.1:5000/api/tool/get_query_plan/invoke"
+			resp, respBytes := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
+			if resp.StatusCode != tc.wantStatusCode {
+				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBytes))
+			}
+			if tc.wantStatusCode != http.StatusOK {
+				return
+			}
+
+			var bodyWrapper map[string]json.RawMessage
+
+			if err := json.Unmarshal(respBytes, &bodyWrapper); err != nil {
+				t.Fatalf("error parsing response wrapper: %s, body: %s", err, string(respBytes))
+			}
+
+			resultJSON, ok := bodyWrapper["result"]
+			if !ok {
+				t.Fatal("unable to find 'result' in response body")
+			}
+
+			var resultString string
+			if err := json.Unmarshal(resultJSON, &resultString); err != nil {
+				if string(resultJSON) == "null" {
+					resultString = "null"
+				} else {
+					t.Fatalf("'result' is not a JSON-encoded string: %s", err)
+				}
+			}
+
+			var got map[string]any
+			if err := json.Unmarshal([]byte(resultString), &got); err != nil {
+				t.Fatalf("failed to unmarshal actual result string: %v", err)
+			}
+
+			if tc.checkResult != nil {
+				tc.checkResult(t, got)
 			}
 		})
 	}

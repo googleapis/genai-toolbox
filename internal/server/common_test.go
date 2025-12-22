@@ -77,9 +77,9 @@ func (t MockTool) Authorized(verifiedAuthServices []string) bool {
 	return !t.unauthorized
 }
 
-func (t MockTool) RequiresClientAuthorization(tools.SourceProvider) bool {
+func (t MockTool) RequiresClientAuthorization(tools.SourceProvider) (bool, error) {
 	// defaulted to false
-	return t.requiresClientAuthrorization
+	return t.requiresClientAuthrorization, nil
 }
 
 func (t MockTool) McpManifest() tools.McpManifest {
@@ -119,8 +119,8 @@ func (t MockTool) McpManifest() tools.McpManifest {
 	return mcpManifest
 }
 
-func (t MockTool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t MockTool) GetAuthTokenHeaderName(tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }
 
 // MockPrompt is used to mock prompts in tests
