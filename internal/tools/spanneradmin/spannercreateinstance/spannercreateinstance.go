@@ -147,7 +147,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, err
 	}
-	if t.Source.UseClientAuthorization() {
+	if source.UseClientAuthorization() {
 		defer client.Close()
 	}
 
