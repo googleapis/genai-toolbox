@@ -1,6 +1,7 @@
 # Ignore documentation placeholders and generic example domains
 ^https?://([a-zA-Z0-9-]+\.)?example\.com(:\d+)?(/.*)?$
 ^http://example\.net
+
 # Shields.io badges often trigger rate limits or intermittent 503s
 ^https://img\.shields\.io/.*
 # PDF files are ignored as lychee cannot reliably parse internal PDF links
