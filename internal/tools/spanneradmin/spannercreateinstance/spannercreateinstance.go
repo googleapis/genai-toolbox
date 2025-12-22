@@ -42,6 +42,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
+type compatibleSource interface {
+	GetDefaultProject() string
+	GetClient(context.Context, string) (*instance.InstanceAdminClient, error)
+	UseClientAuthorization() bool
+}
+
 // Config defines the configuration for the create-instance tool.
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
