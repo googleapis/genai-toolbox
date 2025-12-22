@@ -107,6 +107,14 @@ func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
 }
 
+func (s *Source) GetProjectID() string {
+	return s.ProjectID
+}
+
+func (s *Source) GetBaseURL() string {
+	return s.BaseURL
+}
+
 func (s *Source) GetClient(ctx context.Context, accessToken string) (*http.Client, error) {
 	if s.UseClientOAuth {
 		if accessToken == "" {
