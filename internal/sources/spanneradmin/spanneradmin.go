@@ -95,6 +95,10 @@ func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
 }
 
+func (s *Source) GetDefaultProject() string {
+	return s.DefaultProject
+}
+
 func (s *Source) GetClient(ctx context.Context, accessToken string) (*instance.InstanceAdminClient, error) {
 	if s.UseClientOAuth {
 		token := &oauth2.Token{AccessToken: accessToken}
