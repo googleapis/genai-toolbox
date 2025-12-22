@@ -143,7 +143,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("one of nodeCount or processingUnits must be positive, and the other must be 0")
 	}
 
-	client, err := t.Source.GetClient(ctx, string(accessToken))
+	client, err := source.GetClient(ctx, string(accessToken))
 	if err != nil {
 		return nil, err
 	}
