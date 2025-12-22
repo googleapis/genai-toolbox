@@ -1,4 +1,3 @@
-
 # Ignore documentation placeholders and generic example domains
 ^https?://([a-zA-Z0-9-]+\.)?example\.com(:\d+)?(/.*)?$
 ^http://example\.net
