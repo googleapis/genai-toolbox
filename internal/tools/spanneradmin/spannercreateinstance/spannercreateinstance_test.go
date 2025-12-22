@@ -73,7 +73,7 @@ func TestParseFromYaml(t *testing.T) {
 	}
 }
 
-func TestInvoke_NodeCountAndProcessingUnitsValidation(t *testing.T) {
+func TestInvokeNodeCountAndProcessingUnitsValidation(t *testing.T) {
 	t.Parallel()
 	testCases := []struct {
 		name    string
