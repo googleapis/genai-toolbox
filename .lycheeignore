@@ -1,34 +1,3 @@
-# ^https?://([a-zA-Z0-9-]+\.)?example\.com(:\d+)?(/.*)?$
-
-# ^https://img\.shields\.io/.*
-# \.pdf$
-
-# ^mailto:
-
-# ^https?://(127\.0\.0\.1|localhost)(:\d+)?(/.*)?$
-
-# ^http://example\.net
-
-# https://xxx.cloud.dgraph.io/
-# https://www.npmjs.com/package/@toolbox-sdk/core
-# https://dev.mysql.com/downloads/installer/
-# https://cloud.dgraph.io/login
-# https://www.mysql.com/
-# https://claude.ai/download
-# https://cloud.google.com/run
-# https://cloud-run-url.app/
-# https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html
-# https://dev.mysql.com/doc/refman/8.4/en/user-names.html
-
-
-
-
-
-
-
-
-
-
 
 # Ignore documentation placeholders and generic example domains
 ^https?://([a-zA-Z0-9-]+\.)?example\.com(:\d+)?(/.*)?$
@@ -39,7 +8,6 @@
 # PDF files are ignored as lychee cannot reliably parse internal PDF links
 \.pdf$
 
-
 # Standard mailto: protocol is not a web URL
 ^mailto:
 # Ignore local development endpoints that won't resolve in CI/CD environments
@@ -47,7 +15,6 @@
 
 # Placeholder for Google Cloud Run service discovery
 https://cloud-run-url.app/
-
 
 # DGraph Cloud and private instance endpoints
 https://xxx.cloud.dgraph.io/
