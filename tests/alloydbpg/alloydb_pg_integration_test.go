@@ -169,6 +169,7 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
+	
 	// Get configs for tests
 	select1Want, failInvocationWant, createTableStatement, mcpSelect1Want := tests.GetPostgresWants()
 
