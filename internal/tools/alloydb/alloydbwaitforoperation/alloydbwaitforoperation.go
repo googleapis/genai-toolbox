@@ -50,8 +50,8 @@ Update the MCP server configuration with the following environment variables:
           "ALLOYDB_POSTGRES_CLUSTER": "{{.Cluster}}",
 {{if .Instance}}          "ALLOYDB_POSTGRES_INSTANCE": "{{.Instance}}",
 {{end}}          "ALLOYDB_POSTGRES_DATABASE": "postgres",
-          "ALLOYDB_POSTGRES_USER": ""{{.User}}",",
-          "ALLOYDB_POSTGRES_PASSWORD": ""{{.Password}}",
+          "ALLOYDB_POSTGRES_USER": "<your-user>",
+          "ALLOYDB_POSTGRES_PASSWORD": "<your-password>"
       }
     }
   }
@@ -280,8 +280,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 					return nil, fmt.Errorf("could not marshal operation: %w", err)
 				}
 
-				if msg, ok := t.generateAlloyDBConnectionMessage(map[string]any{"response": op.Response}); ok {
-					return msg, nil
+				var responseData map[string]any
+				if err := json.Unmarshal(op.Response, &responseData); err == nil && responseData != nil {
+					if msg, ok := t.generateAlloyDBConnectionMessage(responseData); ok {
+						return msg, nil
+					}
 				}
 
 				return string(opBytes), nil
