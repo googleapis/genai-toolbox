@@ -64,6 +64,7 @@ func GetLookerSDK(useClientOAuth bool, config *rtl.ApiSettings, client *v4.Looke
 		return v4.NewLookerSDK(&rtl.AuthSession{
 			Config: *config,
 			Client: http.Client{Transport: newTransport},
+			source: oauth2.StaticTokenSource(&oauth2.Token{AccessToken: string(accessToken)}),
 		}), nil
 	}
 
