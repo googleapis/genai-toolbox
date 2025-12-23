@@ -281,7 +281,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 				}
 
 				var responseData map[string]any
-				if err := json.Unmarshal(op.Response, &responseData); err == nil {
+				if err := json.Unmarshal(op.Response, &responseData); err == nil && responseData != nil {
 					if msg, ok := t.generateAlloyDBConnectionMessage(responseData); ok {
 						return msg, nil
 					}
