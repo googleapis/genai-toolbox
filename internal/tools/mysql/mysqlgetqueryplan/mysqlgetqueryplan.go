@@ -17,7 +17,6 @@ package mysqlgetqueryplan
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
@@ -45,6 +44,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	MySQLPool() *sql.DB
+	RunSQL(context.Context, string, []any) (any, error)
 }
 
 type Config struct {
@@ -108,31 +108,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
 
 	query := fmt.Sprintf("EXPLAIN FORMAT=JSON %s", sql)
-	results, err := source.MySQLPool().QueryContext(ctx, query)
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-	defer results.Close()
-
-	var plan string
-	if results.Next() {
-		if err := results.Scan(&plan); err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
-		}
-	} else {
-		return nil, fmt.Errorf("no query plan returned")
-	}
-
-	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("errors encountered during row iteration: %w", err)
-	}
-
-	var out any
-	if err := json.Unmarshal([]byte(plan), &out); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal query plan json: %w", err)
-	}
-
-	return out, nil
+	return source.RunSQL(ctx, query, nil)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
