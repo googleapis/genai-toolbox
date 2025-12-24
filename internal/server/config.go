@@ -64,6 +64,10 @@ type ServerConfig struct {
 	UI bool
 	// Specifies a list of origins permitted to access this server.
 	AllowedOrigins []string
+	// source file for /.well-known/oauth-protected-resource.
+	OAuthProtectedResource string
+	// source file for /.well-known/oauth-authorization-server.
+	OAuthAuthorizationServer string
 }
 
 type logFormat string
