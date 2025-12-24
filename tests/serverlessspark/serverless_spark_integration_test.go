@@ -660,7 +660,7 @@ func runCancelBatchTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 	}
 
 	if batch.State != dataprocpb.Batch_SUCCEEDED {
-		waitForBatch(t, client, ctx, batchName, []dataprocpb.Batch_State{dataprocpb.Batch_CANCELLING, dataprocpb.Batch_CANCELLED}, 2*time.Minute)
+		waitForBatch(t, client, ctx, batchName, []dataprocpb.Batch_State{dataprocpb.Batch_CANCELLING, dataprocpb.Batch_CANCELLED}, 5*time.Minute)
 	}
 }
 

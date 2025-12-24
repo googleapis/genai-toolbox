@@ -27,7 +27,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
-	_ "github.com/trinodb/trino-go-client/trino" // Import Trino SQL driver
 )
 
 var (
@@ -163,15 +162,21 @@ func setupTrinoTable(t *testing.T, ctx context.Context, pool *sql.DB, createStat
 	if err != nil {
 		t.Fatalf("unable to connect to test database: %s", err)
 	}
+	//Ensure the collection is clean
+    _, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName))
+	if err!=nil {
+		t.Logf("Warning: failed to drop existing table %s",tableName)
+	}
 
 	// Create table
-	_, err = pool.QueryContext(ctx, createStatement)
+		_, err = pool.ExecContext(ctx, createStatement)
+		
 	if err != nil {
 		t.Fatalf("unable to create test table %s: %s", tableName, err)
 	}
 
 	// Insert test data
-	_, err = pool.QueryContext(ctx, insertStatement, params...)
+	_, err = pool.ExecContext(ctx, insertStatement, params...)
 	if err != nil {
 		t.Fatalf("unable to insert test data: %s", err)
 	}
