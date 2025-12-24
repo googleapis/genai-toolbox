@@ -108,7 +108,11 @@ func setupSingleStoreTable(t *testing.T, ctx context.Context, pool *sql.DB, crea
 	if err != nil {
 		t.Fatalf("unable to connect to test database: %s", err)
 	}
-
+	// Safety drop before creation
+    _, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName))
+	if err != nil {
+		t.Fatalf("Warning: failed to drop table %s before creation:%v ",tableName,err)
+	}
 	// Create table
 	_, err = pool.QueryContext(ctx, createStatement)
 	if err != nil {
@@ -211,13 +215,13 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 	toolsFile = addSingleStoreExecuteSQLConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getSingleStoreTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SingleStoreToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
-
+	
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
 	defer cleanup()
-
+	
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
@@ -228,6 +232,7 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 
 	// Get configs for tests
 	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := getSingleStoreWants()
+	
 
 	// Run tests
 	tests.RunToolGetTest(t)

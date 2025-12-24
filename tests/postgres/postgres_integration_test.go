@@ -93,8 +93,12 @@ func TestPostgres(t *testing.T) {
 		t.Fatalf("unable to create postgres connection pool: %s", err)
 	}
 
-	// cleanup test environment
+	// cleanup the collections
 	tests.CleanupPostgresTables(t, ctx, pool)
+	if _,err := pool.Exec(ctx,"DROP ROLE IF EXISTS test_user1"); 
+	err != nil {
+		t.Logf("Warning: failed to dtrop test_user1 role during cleanup:%v",err)
+	}
 
 	// create table name with UUID
 	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
@@ -141,7 +145,7 @@ func TestPostgres(t *testing.T) {
 	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
 	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
-
+	
 	// Run Postgres prebuilt tool tests
 	tests.RunPostgresListTablesTest(t, tableNameParam, tableNameAuth, PostgresUser)
 	tests.RunPostgresListViewsTest(t, ctx, pool)
