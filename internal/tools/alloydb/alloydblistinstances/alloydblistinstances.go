@@ -22,7 +22,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/alloydb/v1"
 )
 
 const kind string = "alloydb-list-instances"
@@ -44,7 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	GetDefaultProject() string
 	UseClientAuthorization() bool
-	GetService(context.Context, string) (*alloydb.Service, error)
+	ListInstance(context.Context, string, string, string, string) (any, error)
 }
 
 // Configuration for the list-instances tool.
@@ -140,19 +139,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("invalid 'cluster' parameter; expected a string")
 	}
 
-	service, err := source.GetService(ctx, string(accessToken))
-	if err != nil {
-		return nil, err
-	}
-
-	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", project, location, cluster)
-
-	resp, err := service.Projects.Locations.Clusters.Instances.List(urlString).Do()
-	if err != nil {
-		return nil, fmt.Errorf("error listing AlloyDB instances: %w", err)
-	}
-
-	return resp, nil
+	return source.ListInstance(ctx, project, location, cluster, string(accessToken))
 }
 
 // ParseParams parses the parameters for the tool.
