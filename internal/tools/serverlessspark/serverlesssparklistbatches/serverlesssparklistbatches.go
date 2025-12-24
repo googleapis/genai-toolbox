@@ -19,10 +19,10 @@ import (
 	"fmt"
 	"time"
 
+	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
 	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/common"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -45,6 +45,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
+type compatibleSource interface {
+	GetBatchControllerClient() *dataproc.BatchControllerClient
+	GetProject() string
+	GetLocation() string
+}
+
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
@@ -63,16 +69,6 @@ func (cfg Config) ToolConfigKind() string {
 
 // Initialize creates a new Tool instance.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("source %q not found", cfg.Source)
-	}
-
-	ds, ok := rawS.(*serverlessspark.Source)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `%s`", kind, serverlessspark.SourceKind)
-	}
-
 	desc := cfg.Description
 	if desc == "" {
 		desc = "Lists available Serverless Spark (aka Dataproc Serverless) batches"
@@ -93,7 +89,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	return Tool{
 		Config:      cfg,
-		Source:      ds,
 		manifest:    tools.Manifest{Description: desc, Parameters: allParameters.Manifest()},
 		mcpManifest: mcpManifest,
 		Parameters:  allParameters,
@@ -103,9 +98,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 // Tool is the implementation of the tool.
 type Tool struct {
 	Config
-
-	Source *serverlessspark.Source
-
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 	Parameters  parameters.Parameters
@@ -131,9 +123,14 @@ type Batch struct {
 
 // Invoke executes the tool's operation.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	client := t.Source.GetBatchControllerClient()
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
 
-	parent := fmt.Sprintf("projects/%s/locations/%s", t.Source.Project, t.Source.Location)
+	client := source.GetBatchControllerClient()
+
+	parent := fmt.Sprintf("projects/%s/locations/%s", source.GetProject(), source.GetLocation())
 	req := &dataprocpb.ListBatchesRequest{
 		Parent:  parent,
 		OrderBy: "create_time desc",
@@ -213,15 +210,15 @@ func (t Tool) Authorized(services []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, services)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
 	// Client OAuth not supported, rely on ADCs.
-	return false
+	return false, nil
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }
