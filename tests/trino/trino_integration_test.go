@@ -27,7 +27,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
-	_ "github.com/trinodb/trino-go-client/trino" // Import Trino SQL driver
 )
 
 var (
@@ -177,7 +176,7 @@ func setupTrinoTable(t *testing.T, ctx context.Context, pool *sql.DB, createStat
 	}
 
 	// Insert test data
-	_, err = pool.QueryContext(ctx, insertStatement, params...)
+	_, err = pool.ExecContext(ctx, insertStatement, params...)
 	if err != nil {
 		t.Fatalf("unable to insert test data: %s", err)
 	}
