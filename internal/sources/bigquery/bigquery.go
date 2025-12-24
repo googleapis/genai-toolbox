@@ -38,6 +38,9 @@ import (
 
 const SourceKind string = "bigquery"
 
+// CloudPlatformScope is a broad scope for Google Cloud Platform services.
+const CloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
+
 const (
 	// No write operations are allowed.
 	WriteModeBlocked string = "blocked"
@@ -420,6 +423,13 @@ func (s *Source) BigQueryTokenSource() oauth2.TokenSource {
 }
 
 func (s *Source) BigQueryTokenSourceWithScope(ctx context.Context, scopes []string) (oauth2.TokenSource, error) {
+	if len(scopes) == 0 {
+		scopes = s.Scopes
+		if len(scopes) == 0 {
+			scopes = []string{CloudPlatformScope}
+		}
+	}
+
 	if s.ImpersonateServiceAccount != "" {
 		// Create impersonated credentials token source with the requested scopes
 		ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
@@ -535,7 +545,7 @@ func initBigQueryConnection(
 	if len(scopes) > 0 {
 		credScopes = scopes
 	} else if impersonateServiceAccount != "" {
-		credScopes = []string{"https://www.googleapis.com/auth/cloud-platform"}
+		credScopes = []string{CloudPlatformScope}
 	} else {
 		credScopes = []string{bigqueryapi.Scope}
 	}
@@ -671,7 +681,7 @@ func initDataplexConnection(
 
 		credScopes := scopes
 		if len(credScopes) == 0 {
-			credScopes = []string{"https://www.googleapis.com/auth/cloud-platform"}
+			credScopes = []string{CloudPlatformScope}
 		}
 
 		if impersonateServiceAccount != "" {
