@@ -23,7 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	sqladmin "google.golang.org/api/sqladmin/v1"
+	"google.golang.org/api/sqladmin/v1"
 )
 
 const kind string = "cloud-sql-mssql-create-instance"
@@ -44,8 +44,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	GetDefaultProject() string
-	GetService(context.Context, string) (*sqladmin.Service, error)
 	UseClientAuthorization() bool
+	CreateInstance(context.Context, string, string, string, string, string, sqladmin.Settings, string) (any, error)
 }
 
 // Config defines the configuration for the create-instances tool.
@@ -148,7 +148,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, fmt.Errorf("error casting 'editionPreset' parameter: %s", paramsMap["editionPreset"])
 	}
-
 	settings := sqladmin.Settings{}
 	switch strings.ToLower(editionPreset) {
 	case "production":
@@ -166,26 +165,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	default:
 		return nil, fmt.Errorf("invalid 'editionPreset': %q. Must be either 'Production' or 'Development'", editionPreset)
 	}
-
-	instance := sqladmin.DatabaseInstance{
-		Name:            name,
-		DatabaseVersion: dbVersion,
-		RootPassword:    rootPassword,
-		Settings:        &settings,
-		Project:         project,
-	}
-
-	service, err := source.GetService(ctx, string(accessToken))
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := service.Instances.Insert(project, &instance).Do()
-	if err != nil {
-		return nil, fmt.Errorf("error creating instance: %w", err)
-	}
-
-	return resp, nil
+	return source.CreateInstance(ctx, project, name, dbVersion, rootPassword, editionPreset, settings, string(accessToken))
 }
 
 // ParseParams parses the parameters for the tool.

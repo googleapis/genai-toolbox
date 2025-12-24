@@ -15,10 +15,16 @@ package cloudsqladmin
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
+	"regexp"
+	"strings"
+	"time"
 
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
@@ -129,4 +135,316 @@ func (s *Source) GetService(ctx context.Context, accessToken string) (*sqladmin.
 
 func (s *Source) UseClientAuthorization() bool {
 	return s.UseClientOAuth
+}
+
+func (s *Source) CloneInstance(ctx context.Context, project, sourceInstanceName, destinationInstanceName, pointInTime, preferredZone, preferredSecondaryZone, accessToken string) (any, error) {
+	cloneContext := &sqladmin.CloneContext{
+		DestinationInstanceName: destinationInstanceName,
+	}
+
+	if pointInTime != "" {
+		cloneContext.PointInTime = pointInTime
+	}
+	if preferredZone != "" {
+		cloneContext.PreferredZone = preferredZone
+	}
+	if preferredSecondaryZone != "" {
+		cloneContext.PreferredSecondaryZone = preferredSecondaryZone
+	}
+
+	rb := &sqladmin.InstancesCloneRequest{
+		CloneContext: cloneContext,
+	}
+	service, err := s.GetService(ctx, accessToken)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := service.Instances.Clone(project, sourceInstanceName, rb).Do()
+	if err != nil {
+		return nil, fmt.Errorf("error cloning instance: %w", err)
+	}
+	return resp, nil
+}
+
+func (s *Source) CreateDatabase(ctx context.Context, name, project, instance, accessToken string) (any, error) {
+	database := sqladmin.Database{
+		Name:     name,
+		Project:  project,
+		Instance: instance,
+	}
+
+	service, err := s.GetService(ctx, accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := service.Databases.Insert(project, instance, &database).Do()
+	if err != nil {
+		return nil, fmt.Errorf("error creating database: %w", err)
+	}
+	return resp, nil
+}
+
+func (s *Source) CreateUsers(ctx context.Context, project, instance, name, password string, iamUser bool, accessToken string) (any, error) {
+	service, err := s.GetService(ctx, accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	user := sqladmin.User{
+		Name: name,
+	}
+
+	if iamUser {
+		user.Type = "CLOUD_IAM_USER"
+	} else {
+		user.Type = "BUILT_IN"
+		if password == "" {
+			return nil, fmt.Errorf("missing 'password' parameter for non-IAM user")
+		}
+		user.Password = password
+	}
+
+	resp, err := service.Users.Insert(project, instance, &user).Do()
+	if err != nil {
+		return nil, fmt.Errorf("error creating user: %w", err)
+	}
+
+	return resp, nil
+}
+
+func (s *Source) GetInstance(ctx context.Context, projectId, instanceId, accessToken string) (any, error) {
+	service, err := s.GetService(ctx, accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := service.Instances.Get(projectId, instanceId).Do()
+	if err != nil {
+		return nil, fmt.Errorf("error getting instance: %w", err)
+	}
+	return resp, nil
+}
+
+func (s *Source) ListDatabase(ctx context.Context, project, instance, accessToken string) (any, error) {
+	service, err := s.GetService(ctx, accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := service.Databases.List(project, instance).Do()
+	if err != nil {
+		return nil, fmt.Errorf("error listing databases: %w", err)
+	}
+
+	if resp.Items == nil {
+		return []any{}, nil
+	}
+
+	type databaseInfo struct {
+		Name      string `json:"name"`
+		Charset   string `json:"charset"`
+		Collation string `json:"collation"`
+	}
+
+	var databases []databaseInfo
+	for _, item := range resp.Items {
+		databases = append(databases, databaseInfo{
+			Name:      item.Name,
+			Charset:   item.Charset,
+			Collation: item.Collation,
+		})
+	}
+	return databases, nil
+}
+
+func (s *Source) ListInstance(ctx context.Context, project, accessToken string) (any, error) {
+	service, err := s.GetService(ctx, accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := service.Instances.List(project).Do()
+	if err != nil {
+		return nil, fmt.Errorf("error listing instances: %w", err)
+	}
+
+	if resp.Items == nil {
+		return []any{}, nil
+	}
+
+	type instanceInfo struct {
+		Name         string `json:"name"`
+		InstanceType string `json:"instanceType"`
+	}
+
+	var instances []instanceInfo
+	for _, item := range resp.Items {
+		instances = append(instances, instanceInfo{
+			Name:         item.Name,
+			InstanceType: item.InstanceType,
+		})
+	}
+	return instances, nil
+}
+
+func (s *Source) CreateInstance(ctx context.Context, project, name, dbVersion, rootPassword, editionPreset string, settings sqladmin.Settings, accessToken string) (any, error) {
+	instance := sqladmin.DatabaseInstance{
+		Name:            name,
+		DatabaseVersion: dbVersion,
+		RootPassword:    rootPassword,
+		Settings:        &settings,
+		Project:         project,
+	}
+
+	service, err := s.GetService(ctx, accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := service.Instances.Insert(project, &instance).Do()
+	if err != nil {
+		return nil, fmt.Errorf("error creating instance: %w", err)
+	}
+
+	return resp, nil
+}
+
+func (s *Source) GetWaitForOperations(ctx context.Context, service *sqladmin.Service, project, operation, connectionMessageTemplate string, delay time.Duration) (any, error) {
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	op, err := service.Operations.Get(project, operation).Do()
+	if err != nil {
+		logger.DebugContext(ctx, fmt.Sprintf("error getting operation: %s, retrying in %v\n", err, delay))
+	} else {
+		if op.Status == "DONE" {
+			if op.Error != nil {
+				var errorBytes []byte
+				errorBytes, err = json.Marshal(op.Error)
+				if err != nil {
+					return nil, fmt.Errorf("operation finished with error but could not marshal error object: %w", err)
+				}
+				return nil, fmt.Errorf("operation finished with error: %s", string(errorBytes))
+			}
+
+			var opBytes []byte
+			opBytes, err = op.MarshalJSON()
+			if err != nil {
+				return nil, fmt.Errorf("could not marshal operation: %w", err)
+			}
+
+			var data map[string]any
+			if err := json.Unmarshal(opBytes, &data); err != nil {
+				return nil, fmt.Errorf("could not unmarshal operation: %w", err)
+			}
+
+			if msg, ok := generateCloudSQLConnectionMessage(ctx, s, logger, data, connectionMessageTemplate); ok {
+				return msg, nil
+			}
+			return string(opBytes), nil
+		}
+		logger.DebugContext(ctx, fmt.Sprintf("Operation not complete, retrying in %v\n", delay))
+	}
+	return nil, nil
+}
+
+func generateCloudSQLConnectionMessage(ctx context.Context, source *Source, logger log.Logger, opResponse map[string]any, connectionMessageTemplate string) (string, bool) {
+	operationType, ok := opResponse["operationType"].(string)
+	if !ok || operationType != "CREATE_DATABASE" {
+		return "", false
+	}
+
+	targetLink, ok := opResponse["targetLink"].(string)
+	if !ok {
+		return "", false
+	}
+
+	r := regexp.MustCompile(`/projects/([^/]+)/instances/([^/]+)/databases/([^/]+)`)
+	matches := r.FindStringSubmatch(targetLink)
+	if len(matches) < 4 {
+		return "", false
+	}
+	project := matches[1]
+	instance := matches[2]
+	database := matches[3]
+
+	instanceData, err := fetchInstanceData(ctx, source, project, instance)
+	if err != nil {
+		logger.DebugContext(ctx, fmt.Sprintf("error fetching instance data: %v\n", err))
+		return "", false
+	}
+
+	region, ok := instanceData["region"].(string)
+	if !ok {
+		return "", false
+	}
+
+	databaseVersion, ok := instanceData["databaseVersion"].(string)
+	if !ok {
+		return "", false
+	}
+
+	var dbType string
+	if strings.Contains(databaseVersion, "POSTGRES") {
+		dbType = "postgres"
+	} else if strings.Contains(databaseVersion, "MYSQL") {
+		dbType = "mysql"
+	} else if strings.Contains(databaseVersion, "SQLSERVER") {
+		dbType = "mssql"
+	} else {
+		return "", false
+	}
+
+	tmpl, err := template.New("cloud-sql-connection").Parse(connectionMessageTemplate)
+	if err != nil {
+		return fmt.Sprintf("template parsing error: %v", err), false
+	}
+
+	data := struct {
+		Project     string
+		Region      string
+		Instance    string
+		DBType      string
+		DBTypeUpper string
+		Database    string
+	}{
+		Project:     project,
+		Region:      region,
+		Instance:    instance,
+		DBType:      dbType,
+		DBTypeUpper: strings.ToUpper(dbType),
+		Database:    database,
+	}
+
+	var b strings.Builder
+	if err := tmpl.Execute(&b, data); err != nil {
+		return fmt.Sprintf("template execution error: %v", err), false
+	}
+
+	return b.String(), true
+}
+
+func fetchInstanceData(ctx context.Context, source *Source, project, instance string) (map[string]any, error) {
+	service, err := source.GetService(ctx, "")
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := service.Instances.Get(project, instance).Do()
+	if err != nil {
+		return nil, fmt.Errorf("error getting instance: %w", err)
+	}
+
+	var data map[string]any
+	var b []byte
+	b, err = resp.MarshalJSON()
+	if err != nil {
+		return nil, fmt.Errorf("error marshalling response: %w", err)
+	}
+	if err := json.Unmarshal(b, &data); err != nil {
+		return nil, fmt.Errorf("error unmarshalling response body: %w", err)
+	}
+	return data, nil
 }
