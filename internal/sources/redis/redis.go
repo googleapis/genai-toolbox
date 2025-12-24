@@ -20,6 +20,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -151,4 +152,44 @@ func (s *Source) ToConfig() sources.SourceConfig {
 
 func (s *Source) RedisClient() RedisClient {
 	return s.Client
+}
+
+func (s *Source) RunCommand(ctx context.Context, cmds [][]any) (any, error) {
+	// Execute commands
+	responses := make([]*redis.Cmd, len(cmds))
+	for i, cmd := range cmds {
+		responses[i] = s.RedisClient().Do(ctx, cmd...)
+	}
+	// Parse responses
+	out := make([]any, len(cmds))
+	for i, resp := range responses {
+		if err := resp.Err(); err != nil {
+			// Add error from each command to `errSum`
+			errString := fmt.Sprintf("error from executing command at index %d: %s", i, err)
+			out[i] = errString
+			continue
+		}
+		val, err := resp.Result()
+		if err != nil {
+			return nil, fmt.Errorf("error getting result: %s", err)
+		}
+		// If result is a map, convert map[any]any to map[string]any
+		// Because the Go's built-in json/encoding marshalling doesn't support
+		// map[any]any as an input
+		var strMap map[string]any
+		var json = jsoniter.ConfigCompatibleWithStandardLibrary
+		mapStr, err := json.Marshal(val)
+		if err != nil {
+			return nil, fmt.Errorf("error marshalling result: %s", err)
+		}
+		err = json.Unmarshal(mapStr, &strMap)
+		if err != nil {
+			// result is not a map
+			out[i] = val
+			continue
+		}
+		out[i] = strMap
+	}
+
+	return out, nil
 }
