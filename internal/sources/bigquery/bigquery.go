@@ -72,15 +72,42 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// BigQuery configs
-	Name                      string   `yaml:"name" validate:"required"`
-	Kind                      string   `yaml:"kind" validate:"required"`
-	Project                   string   `yaml:"project" validate:"required"`
-	Location                  string   `yaml:"location"`
-	WriteMode                 string   `yaml:"writeMode"`
-	AllowedDatasets           []string `yaml:"allowedDatasets"`
-	UseClientOAuth            bool     `yaml:"useClientOAuth"`
-	ImpersonateServiceAccount string   `yaml:"impersonateServiceAccount"`
-	Scopes                    []string `yaml:"scopes"`
+	Name                      string              `yaml:"name" validate:"required"`
+	Kind                      string              `yaml:"kind" validate:"required"`
+	Project                   string              `yaml:"project" validate:"required"`
+	Location                  string              `yaml:"location"`
+	WriteMode                 string              `yaml:"writeMode"`
+	AllowedDatasets           StringOrStringSlice `yaml:"allowedDatasets"`
+	UseClientOAuth            bool                `yaml:"useClientOAuth"`
+	ImpersonateServiceAccount string              `yaml:"impersonateServiceAccount"`
+	Scopes                    StringOrStringSlice `yaml:"scopes"`
+}
+
+// StringOrStringSlice is a custom type that can unmarshal both a single string
+// (which it splits by comma) and a sequence of strings into a string slice.
+type StringOrStringSlice []string
+
+// UnmarshalYAML implements the yaml.Unmarshaler interface.
+func (s *StringOrStringSlice) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var v interface{}
+	if err := unmarshal(&v); err != nil {
+		return err
+	}
+	switch val := v.(type) {
+	case string:
+		*s = strings.Split(val, ",")
+		return nil
+	case []interface{}:
+		for _, item := range val {
+			if str, ok := item.(string); ok {
+				*s = append(*s, str)
+			} else {
+				return fmt.Errorf("element in sequence is not a string: %v", item)
+			}
+		}
+		return nil
+	}
+	return fmt.Errorf("cannot unmarshal %T into StringOrStringSlice", v)
 }
 
 func (r Config) SourceConfigKind() string {
