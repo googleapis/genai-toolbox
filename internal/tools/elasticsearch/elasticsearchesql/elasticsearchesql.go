@@ -15,14 +15,10 @@
 package elasticsearchesql
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/elastic/go-elasticsearch/v9/esapi"
-	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
 	"github.com/goccy/go-yaml"
@@ -41,6 +37,7 @@ func init() {
 
 type compatibleSource interface {
 	ElasticsearchClient() es.EsClient
+	RunSQL(ctx context.Context, format, query string, params []map[string]any) (any, error)
 }
 
 type Config struct {
@@ -91,16 +88,6 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-type esqlColumn struct {
-	Name string `json:"name"`
-	Type string `json:"type"`
-}
-
-type esqlResult struct {
-	Columns []esqlColumn `json:"columns"`
-	Values  [][]any      `json:"values"`
-}
-
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
 	if err != nil {
@@ -116,20 +103,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		defer cancel()
 	}
 
-	bodyStruct := struct {
-		Query  string           `json:"query"`
-		Params []map[string]any `json:"params,omitempty"`
-	}{
-		Query:  t.Query,
-		Params: make([]map[string]any, 0, len(params)),
-	}
-
+	var query string
+	var sqlParams []map[string]any
 	paramMap := params.AsMap()
-
 	// If a query is provided in the params and not already set in the tool, use it.
-	if query, ok := paramMap["query"]; ok {
-		if str, ok := query.(string); ok && bodyStruct.Query == "" {
-			bodyStruct.Query = str
+	if queryVal, ok := paramMap["query"]; ok {
+		if str, ok := queryVal.(string); ok && t.Query == "" {
+			query = str
 		}
 
 		// Drop the query param if not a string or if the tool already has a query.
@@ -140,65 +120,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		if param.GetType() == "array" {
 			return nil, fmt.Errorf("array parameters are not supported yet")
 		}
-		bodyStruct.Params = append(bodyStruct.Params, map[string]any{param.GetName(): paramMap[param.GetName()]})
+		sqlParams = append(sqlParams, map[string]any{param.GetName(): paramMap[param.GetName()]})
 	}
-
-	body, err := json.Marshal(bodyStruct)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal query body: %w", err)
-	}
-	res, err := esapi.EsqlQueryRequest{
-		Body:       bytes.NewReader(body),
-		Format:     t.Format,
-		FilterPath: []string{"columns", "values"},
-		Instrument: source.ElasticsearchClient().InstrumentationEnabled(),
-	}.Do(ctx, source.ElasticsearchClient())
-
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.IsError() {
-		// Try to extract error message from response
-		var esErr json.RawMessage
-		err = util.DecodeJSON(res.Body, &esErr)
-		if err != nil {
-			return nil, fmt.Errorf("elasticsearch error: status %s", res.Status())
-		}
-		return esErr, nil
-	}
-
-	var result esqlResult
-	err = util.DecodeJSON(res.Body, &result)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode response body: %w", err)
-	}
-
-	output := t.esqlToMap(result)
-
-	return output, nil
-}
-
-// esqlToMap converts the esqlResult to a slice of maps.
-func (t Tool) esqlToMap(result esqlResult) []map[string]any {
-	output := make([]map[string]any, 0, len(result.Values))
-	for _, value := range result.Values {
-		row := make(map[string]any)
-		if value == nil {
-			output = append(output, row)
-			continue
-		}
-		for i, col := range result.Columns {
-			if i < len(value) {
-				row[col.Name] = value[i]
-			} else {
-				row[col.Name] = nil
-			}
-		}
-		output = append(output, row)
-	}
-	return output
+	return source.RunSQL(ctx, t.Format, query, sqlParams)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

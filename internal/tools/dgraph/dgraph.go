@@ -16,7 +16,6 @@ package dgraph
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
@@ -44,6 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	DgraphClient() *dgraph.DgraphClient
+	RunSQL(parameters.ParamValues, string, bool, string) (any, error)
 }
 
 type Config struct {
@@ -95,27 +95,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, err
 	}
-
-	paramsMap := params.AsMapWithDollarPrefix()
-
-	resp, err := source.DgraphClient().ExecuteQuery(t.Statement, paramsMap, t.IsQuery, t.Timeout)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := dgraph.CheckError(resp); err != nil {
-		return nil, err
-	}
-
-	var result struct {
-		Data map[string]interface{} `json:"data"`
-	}
-
-	if err := json.Unmarshal(resp, &result); err != nil {
-		return nil, fmt.Errorf("error parsing JSON: %v", err)
-	}
-
-	return result.Data, nil
+	return source.RunSQL(params, t.Statement, t.IsQuery, t.Timeout)
 }
 
 func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
