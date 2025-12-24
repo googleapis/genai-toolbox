@@ -101,7 +101,7 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
-func (s *Source) Query(ctx context.Context, statement string, params []any) (any, error) {
+func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
 	results, err := s.Pool.Query(ctx, statement, params...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w. Query: %v , Values: %v. Toolbox v0.19.0+ is only compatible with AlloyDB AI NL v1.0.3+. Please ensure that you are using the latest AlloyDB AI NL extension", err, statement, params)

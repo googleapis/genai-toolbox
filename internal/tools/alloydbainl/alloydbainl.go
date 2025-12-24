@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 const kind string = "alloydb-ai-nl"
@@ -42,7 +43,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	Query(context.Context, string, []any) (any, error)
+	PostgresPool() *pgxpool.Pool
+	RunSQL(context.Context, string, []any) (any, error)
 }
 
 type Config struct {
@@ -143,7 +145,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		allParamValues[i+2] = fmt.Sprintf("%s", param)
 	}
 
-	return source.Query(ctx, t.Statement, allParamValues)
+	return source.RunSQL(ctx, t.Statement, allParamValues)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
