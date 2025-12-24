@@ -96,16 +96,6 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error creating the Elasticsearch client: %s", err)
 	}
-	
-	// clean index before starting
-	res, err := esapi.IndicesDeleteRequest{ Index: []string{index},}.Do(ctx, esClient)
-	if err != nil {
-    	t.Fatalf("failed to execute pre-test cleanup: %s", err)
-	}
-	if res.IsError() && res.StatusCode != 404 {
-    	t.Fatalf("error during pre-test cleanup: %s", res.String())
-	}
-	res.Body.Close()
 
 	// Delete index if already exists
 	defer func() {
@@ -132,7 +122,7 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 	}
 	for _, doc := range sampleDocs {
 		res, err := esapi.IndexRequest{
-			Index:   index,
+			Index:   "test-index",
 			Body:    strings.NewReader(doc),
 			Refresh: "true",
 		}.Do(ctx, esClient)

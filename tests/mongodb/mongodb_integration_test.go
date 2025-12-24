@@ -446,13 +446,8 @@ func runToolAggregateInvokeTest(t *testing.T, aggregate1Want string, aggregateMa
 func setupMongoDB(t *testing.T, ctx context.Context, database *mongo.Database) func(*testing.T) {
 	collectionName := "test_collection"
 
-	//Ensure the collection is clean
 	if err := database.Collection(collectionName).Drop(ctx); err != nil {
 		t.Logf("Warning: failed to drop collection before setup: %v", err)
-	}
-	// Drop the target collection used in aggregate tests
-	if err := database.Collection("target_collection").Drop(ctx); err != nil {
-		t.Logf("Warning: failed to drop target collection before setup: %v", err)
 	}
 
 	documents := []map[string]any{

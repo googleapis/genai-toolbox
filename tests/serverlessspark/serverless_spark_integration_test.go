@@ -658,11 +658,9 @@ func runCancelBatchTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 		bodyBytes, _ := io.ReadAll(resp.Body)
 		t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
 	}
-	
-	// Increase timeout to 5 minutes to account for slow terminal state transitions in Dataproc Serverless.
 
 	if batch.State != dataprocpb.Batch_SUCCEEDED {
-		waitForBatch(t, client, ctx, batchName, []dataprocpb.Batch_State{dataprocpb.Batch_CANCELLING, dataprocpb.Batch_CANCELLED}, 5*time.Minute)
+		waitForBatch(t, client, ctx, batchName, []dataprocpb.Batch_State{dataprocpb.Batch_CANCELLING, dataprocpb.Batch_CANCELLED}, 2*time.Minute)
 	}
 }
 

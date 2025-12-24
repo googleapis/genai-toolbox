@@ -184,7 +184,6 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 	collection := bucket.Scope(scopeName).Collection(collectionName)
 
 	// Create primary index if it doesn't exist
-	
 	// Create primary index with retry logic
 	maxRetries := 5
 	retryDelay := 50 * time.Millisecond
