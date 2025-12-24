@@ -93,7 +93,7 @@ func TestPostgres(t *testing.T) {
 		t.Fatalf("unable to create postgres connection pool: %s", err)
 	}
 
-	// cleanup test environment
+	// cleanup the collections
 	tests.CleanupPostgresTables(t, ctx, pool)
 
 	// create table name with UUID

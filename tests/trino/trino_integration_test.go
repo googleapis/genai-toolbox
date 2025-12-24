@@ -163,9 +163,15 @@ func setupTrinoTable(t *testing.T, ctx context.Context, pool *sql.DB, createStat
 	if err != nil {
 		t.Fatalf("unable to connect to test database: %s", err)
 	}
+	//Ensure the collection is clean
+    _, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName))
+	if err!=nil {
+		t.Logf("Warning: failed to drop existing table %s",tableName)
+	}
 
 	// Create table
-	_, err = pool.QueryContext(ctx, createStatement)
+		_, err = pool.ExecContext(ctx, createStatement)
+		
 	if err != nil {
 		t.Fatalf("unable to create test table %s: %s", tableName, err)
 	}
