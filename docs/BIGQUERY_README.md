@@ -68,6 +68,7 @@ The BigQuery MCP server is configured using environment variables.
 export BIGQUERY_PROJECT="<your-gcp-project-id>"
 export BIGQUERY_LOCATION="<your-dataset-location>"  # Optional
 export BIGQUERY_USE_CLIENT_OAUTH="true"  # Optional
+export BIGQUERY_SCOPES="<comma-separated-scopes>"  # Optional
 ```
 
 Add the following configuration to your MCP client (e.g., `settings.json` for Gemini CLI, `mcp_config.json` for Antigravity):

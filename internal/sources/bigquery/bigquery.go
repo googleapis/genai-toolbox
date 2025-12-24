@@ -38,6 +38,9 @@ import (
 
 const SourceKind string = "bigquery"
 
+// CloudPlatformScope is a broad scope for Google Cloud Platform services.
+const CloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
+
 const (
 	// No write operations are allowed.
 	WriteModeBlocked string = "blocked"
@@ -72,14 +75,42 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// BigQuery configs
-	Name                      string   `yaml:"name" validate:"required"`
-	Kind                      string   `yaml:"kind" validate:"required"`
-	Project                   string   `yaml:"project" validate:"required"`
-	Location                  string   `yaml:"location"`
-	WriteMode                 string   `yaml:"writeMode"`
-	AllowedDatasets           []string `yaml:"allowedDatasets"`
-	UseClientOAuth            bool     `yaml:"useClientOAuth"`
-	ImpersonateServiceAccount string   `yaml:"impersonateServiceAccount"`
+	Name                      string              `yaml:"name" validate:"required"`
+	Kind                      string              `yaml:"kind" validate:"required"`
+	Project                   string              `yaml:"project" validate:"required"`
+	Location                  string              `yaml:"location"`
+	WriteMode                 string              `yaml:"writeMode"`
+	AllowedDatasets           StringOrStringSlice `yaml:"allowedDatasets"`
+	UseClientOAuth            bool                `yaml:"useClientOAuth"`
+	ImpersonateServiceAccount string              `yaml:"impersonateServiceAccount"`
+	Scopes                    StringOrStringSlice `yaml:"scopes"`
+}
+
+// StringOrStringSlice is a custom type that can unmarshal both a single string
+// (which it splits by comma) and a sequence of strings into a string slice.
+type StringOrStringSlice []string
+
+// UnmarshalYAML implements the yaml.Unmarshaler interface.
+func (s *StringOrStringSlice) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var v interface{}
+	if err := unmarshal(&v); err != nil {
+		return err
+	}
+	switch val := v.(type) {
+	case string:
+		*s = strings.Split(val, ",")
+		return nil
+	case []interface{}:
+		for _, item := range val {
+			if str, ok := item.(string); ok {
+				*s = append(*s, str)
+			} else {
+				return fmt.Errorf("element in sequence is not a string: %v", item)
+			}
+		}
+		return nil
+	}
+	return fmt.Errorf("cannot unmarshal %T into StringOrStringSlice", v)
 }
 
 func (r Config) SourceConfigKind() string {
@@ -128,7 +159,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	} else {
 		// Initializes a BigQuery Google SQL source
-		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.ImpersonateServiceAccount)
+		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.ImpersonateServiceAccount, r.Scopes)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from ADC: %w", err)
 		}
@@ -391,19 +422,26 @@ func (s *Source) BigQueryTokenSource() oauth2.TokenSource {
 	return s.TokenSource
 }
 
-func (s *Source) BigQueryTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error) {
+func (s *Source) BigQueryTokenSourceWithScope(ctx context.Context, scopes []string) (oauth2.TokenSource, error) {
+	if len(scopes) == 0 {
+		scopes = s.Scopes
+		if len(scopes) == 0 {
+			scopes = []string{CloudPlatformScope}
+		}
+	}
+
 	if s.ImpersonateServiceAccount != "" {
-		// Create impersonated credentials token source with the requested scope
+		// Create impersonated credentials token source with the requested scopes
 		ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
 			TargetPrincipal: s.ImpersonateServiceAccount,
-			Scopes:          []string{scope},
+			Scopes:          scopes,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("failed to create impersonated credentials for %q with scope %q: %w", s.ImpersonateServiceAccount, scope, err)
+			return nil, fmt.Errorf("failed to create impersonated credentials for %q with scopes %v: %w", s.ImpersonateServiceAccount, scopes, err)
 		}
 		return ts, nil
 	}
-	return google.DefaultTokenSource(ctx, scope)
+	return google.DefaultTokenSource(ctx, scopes...)
 }
 
 func (s *Source) GetMaxQueryResultRows() int {
@@ -449,7 +487,7 @@ func (s *Source) lazyInitDataplexClient(ctx context.Context, tracer trace.Tracer
 
 	return func() (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
 		once.Do(func() {
-			c, cc, e := initDataplexConnection(ctx, tracer, s.Name, s.Project, s.UseClientOAuth, s.ImpersonateServiceAccount)
+			c, cc, e := initDataplexConnection(ctx, tracer, s.Name, s.Project, s.UseClientOAuth, s.ImpersonateServiceAccount, s.Scopes)
 			if e != nil {
 				err = fmt.Errorf("failed to initialize dataplex client: %w", e)
 				return
@@ -490,6 +528,7 @@ func initBigQueryConnection(
 	project string,
 	location string,
 	impersonateServiceAccount string,
+	scopes []string,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
@@ -502,12 +541,21 @@ func initBigQueryConnection(
 	var tokenSource oauth2.TokenSource
 	var opts []option.ClientOption
 
+	var credScopes []string
+	if len(scopes) > 0 {
+		credScopes = scopes
+	} else if impersonateServiceAccount != "" {
+		credScopes = []string{CloudPlatformScope}
+	} else {
+		credScopes = []string{bigqueryapi.Scope}
+	}
+
 	if impersonateServiceAccount != "" {
-		// Create impersonated credentials token source with cloud-platform scope
+		// Create impersonated credentials token source
 		// This broader scope is needed for tools like conversational analytics
 		cloudPlatformTokenSource, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
 			TargetPrincipal: impersonateServiceAccount,
-			Scopes:          []string{"https://www.googleapis.com/auth/cloud-platform"},
+			Scopes:          credScopes,
 		})
 		if err != nil {
 			return nil, nil, nil, fmt.Errorf("failed to create impersonated credentials for %q: %w", impersonateServiceAccount, err)
@@ -519,9 +567,9 @@ func initBigQueryConnection(
 		}
 	} else {
 		// Use default credentials
-		cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)
+		cred, err := google.FindDefaultCredentials(ctx, credScopes...)
 		if err != nil {
-			return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
+			return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scopes %v: %w", credScopes, err)
 		}
 		tokenSource = cred.TokenSource
 		opts = []option.ClientOption{
@@ -612,6 +660,7 @@ func initDataplexConnection(
 	project string,
 	useClientOAuth bool,
 	impersonateServiceAccount string,
+	scopes []string,
 ) (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
 	var client *dataplexapi.CatalogClient
 	var clientCreator DataplexClientCreator
@@ -630,11 +679,16 @@ func initDataplexConnection(
 	} else {
 		var opts []option.ClientOption
 
+		credScopes := scopes
+		if len(credScopes) == 0 {
+			credScopes = []string{CloudPlatformScope}
+		}
+
 		if impersonateServiceAccount != "" {
 			// Create impersonated credentials token source
 			ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
 				TargetPrincipal: impersonateServiceAccount,
-				Scopes:          []string{"https://www.googleapis.com/auth/cloud-platform"},
+				Scopes:          credScopes,
 			})
 			if err != nil {
 				return nil, nil, fmt.Errorf("failed to create impersonated credentials for %q: %w", impersonateServiceAccount, err)
@@ -645,7 +699,7 @@ func initDataplexConnection(
 			}
 		} else {
 			// Use default credentials
-			cred, err := google.FindDefaultCredentials(ctx)
+			cred, err := google.FindDefaultCredentials(ctx, credScopes...)
 			if err != nil {
 				return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
 			}
