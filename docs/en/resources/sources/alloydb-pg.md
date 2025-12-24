@@ -28,10 +28,10 @@ cluster][alloydb-free-trial].
   Use natural language queries on AlloyDB, powered by AlloyDB AI.
 
 - [`postgres-sql`](../tools/postgres/postgres-sql.md)
-  Execute SQL queries as prepared statements in AlloyDB Postgres.
+  Runs PostgreSQL queries safely by using prepared statements.
 
 - [`postgres-execute-sql`](../tools/postgres/postgres-execute-sql.md)
-  Run parameterized SQL statements in AlloyDB Postgres.
+  Executes a PostgreSQL statement securely using named parameter binding.
 
 - [`postgres-list-tables`](../tools/postgres/postgres-list-tables.md)
   List tables in an AlloyDB for PostgreSQL database.
