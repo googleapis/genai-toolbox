@@ -36,6 +36,8 @@ func TestBuildTrinoDSN(t *testing.T) {
 		accessToken     string
 		kerberosEnabled bool
 		sslEnabled      bool
+		sslCertPath     string
+		sslCert         string
 		want            string
 		wantErr         bool
 	}{
@@ -48,6 +50,19 @@ func TestBuildTrinoDSN(t *testing.T) {
 			schema:  "default",
 			want:    "http://testuser@localhost:8080?catalog=hive&schema=default",
 			wantErr: false,
+		},
+		{
+			name:        "with SSL cert path and cert",
+			host:        "localhost",
+			port:        "8443",
+			user:        "testuser",
+			catalog:     "hive",
+			schema:      "default",
+			sslEnabled:  true,
+			sslCertPath: "/path/to/cert.pem",
+			sslCert:     "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n",
+			want:        "https://testuser@localhost:8443?catalog=hive&schema=default&sslCert=-----BEGIN+CERTIFICATE-----%0A...%0A-----END+CERTIFICATE-----%0A&sslCertPath=%2Fpath%2Fto%2Fcert.pem",
+			wantErr:     false,
 		},
 		{
 			name:     "with password",
@@ -117,7 +132,7 @@ func TestBuildTrinoDSN(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := buildTrinoDSN(tt.host, tt.port, tt.user, tt.password, tt.catalog, tt.schema, tt.queryTimeout, tt.accessToken, tt.kerberosEnabled, tt.sslEnabled)
+			got, err := buildTrinoDSN(tt.host, tt.port, tt.user, tt.password, tt.catalog, tt.schema, tt.queryTimeout, tt.accessToken, tt.kerberosEnabled, tt.sslEnabled, tt.sslCertPath, tt.sslCert)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("buildTrinoDSN() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -212,6 +227,41 @@ func TestParseFromYamlTrino(t *testing.T) {
 					Port:    "8080",
 					Catalog: "hive",
 					Schema:  "default",
+				},
+			},
+		},
+		{
+			desc: "example with SSL cert path and cert",
+			in: `
+			sources:
+				my-trino-ssl-cert:
+					kind: trino
+					host: localhost
+					port: "8443"
+					user: testuser
+					catalog: hive
+					schema: default
+					sslEnabled: true
+					sslCertPath: /path/to/cert.pem
+					sslCert: |-
+						-----BEGIN CERTIFICATE-----
+						...
+						-----END CERTIFICATE-----
+					disableSslVerification: true
+			`,
+			want: server.SourceConfigs{
+				"my-trino-ssl-cert": Config{
+					Name:                   "my-trino-ssl-cert",
+					Kind:                   SourceKind,
+					Host:                   "localhost",
+					Port:                   "8443",
+					User:                   "testuser",
+					Catalog:                "hive",
+					Schema:                 "default",
+					SSLEnabled:             true,
+					SSLCertPath:            "/path/to/cert.pem",
+					SSLCert:                "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----",
+					DisableSslVerification: true,
 				},
 			},
 		},
