@@ -24,6 +24,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
@@ -45,6 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	MySQLPool() *sql.DB
+	RunSQL(context.Context, string, []any) (any, error)
 }
 
 type Config struct {
@@ -108,30 +110,27 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
 
 	query := fmt.Sprintf("EXPLAIN FORMAT=JSON %s", sql)
-	results, err := source.MySQLPool().QueryContext(ctx, query)
+	result, err := source.RunSQL(ctx, query, nil)
 	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		return nil, err
 	}
-	defer results.Close()
-
-	var plan string
-	if results.Next() {
-		if err := results.Scan(&plan); err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
-		}
-	} else {
+	// extract and return only the query plan object
+	resSlice, ok := result.([]any)
+	if !ok || len(resSlice) == 0 {
 		return nil, fmt.Errorf("no query plan returned")
 	}
-
-	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("errors encountered during row iteration: %w", err)
+	row, ok := resSlice[0].(orderedmap.Row)
+	if !ok || len(row.Columns) == 0 {
+		return nil, fmt.Errorf("no query plan returned in row")
 	}
-
-	var out any
+	plan, ok := row.Columns[0].Value.(string)
+	if !ok {
+		return nil, fmt.Errorf("unable to convert plan object to string")
+	}
+	var out map[string]any
 	if err := json.Unmarshal([]byte(plan), &out); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal query plan json: %w", err)
 	}
-
 	return out, nil
 }
 
