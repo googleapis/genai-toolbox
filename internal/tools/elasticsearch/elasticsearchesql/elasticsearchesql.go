@@ -103,8 +103,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		defer cancel()
 	}
 
-	var query string
-	var sqlParams []map[string]any
+	query := t.Query
+	sqlParams := make([]map[string]any, 0, len(params))
 	paramMap := params.AsMap()
 	// If a query is provided in the params and not already set in the tool, use it.
 	if queryVal, ok := paramMap["query"]; ok {

@@ -43,7 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	DgraphClient() *dgraph.DgraphClient
-	RunSQL(parameters.ParamValues, string, bool, string) (any, error)
+	RunSQL(string, parameters.ParamValues, bool, string) (any, error)
 }
 
 type Config struct {
@@ -95,7 +95,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, err
 	}
-	return source.RunSQL(params, t.Statement, t.IsQuery, t.Timeout)
+	return source.RunSQL(t.Statement, params, t.IsQuery, t.Timeout)
 }
 
 func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {

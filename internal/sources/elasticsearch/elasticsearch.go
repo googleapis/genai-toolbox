@@ -168,7 +168,7 @@ func (s *Source) RunSQL(ctx context.Context, format, query string, params []map[
 		Params []map[string]any `json:"params,omitempty"`
 	}{
 		Query:  query,
-		Params: make([]map[string]any, 0, len(params)),
+		Params: params,
 	}
 	body, err := json.Marshal(bodyStruct)
 	if err != nil {

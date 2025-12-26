@@ -115,7 +115,7 @@ func (s *Source) DgraphClient() *DgraphClient {
 	return s.Client
 }
 
-func (s *Source) RunSQL(params parameters.ParamValues, statement string, isQuery bool, timeout string) (any, error) {
+func (s *Source) RunSQL(statement string, params parameters.ParamValues, isQuery bool, timeout string) (any, error) {
 	paramsMap := params.AsMapWithDollarPrefix()
 	resp, err := s.DgraphClient().ExecuteQuery(statement, paramsMap, isQuery, timeout)
 	if err != nil {
