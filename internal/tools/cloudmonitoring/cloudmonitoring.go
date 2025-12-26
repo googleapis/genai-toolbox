@@ -16,9 +16,7 @@ package cloudmonitoring
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/goccy/go-yaml"
@@ -44,9 +42,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	BaseURL() string
 	Client() *http.Client
-	UserAgent() string
+	RunQuery(projectID, query string) (any, error)
 }
 
 type Config struct {
@@ -110,45 +107,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, fmt.Errorf("query parameter not found or not a string")
 	}
-
-	url := fmt.Sprintf("%s/v1/projects/%s/location/global/prometheus/api/v1/query", source.BaseURL(), projectID)
-
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	q := req.URL.Query()
-	q.Add("query", query)
-	req.URL.RawQuery = q.Encode()
-
-	req.Header.Set("User-Agent", source.UserAgent())
-
-	resp, err := source.Client().Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read response body: %w", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("request failed: %s, body: %s", resp.Status, string(body))
-	}
-
-	if len(body) == 0 {
-		return nil, nil
-	}
-
-	var result map[string]any
-	if err := json.Unmarshal(body, &result); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal json: %w, body: %s", err, string(body))
-	}
-
-	return result, nil
+	return source.RunQuery(projectID, query)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

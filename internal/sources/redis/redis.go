@@ -152,3 +152,50 @@ func (s *Source) ToConfig() sources.SourceConfig {
 func (s *Source) RedisClient() RedisClient {
 	return s.Client
 }
+
+func (s *Source) RunCommand(ctx context.Context, cmds [][]any) (any, error) {
+	// Execute commands
+	responses := make([]*redis.Cmd, len(cmds))
+	for i, cmd := range cmds {
+		responses[i] = s.RedisClient().Do(ctx, cmd...)
+	}
+	// Parse responses
+	out := make([]any, len(cmds))
+	for i, resp := range responses {
+		if err := resp.Err(); err != nil {
+			// Add error from each command to `errSum`
+			errString := fmt.Sprintf("error from executing command at index %d: %s", i, err)
+			out[i] = errString
+			continue
+		}
+		val, err := resp.Result()
+		if err != nil {
+			return nil, fmt.Errorf("error getting result: %s", err)
+		}
+		out[i] = convertRedisResult(val)
+	}
+
+	return out, nil
+}
+
+// convertRedisResult recursively converts redis results (map[any]any) to be
+// JSON-marshallable (map[string]any).
+// It converts map[any]any to map[string]any and handles nested structures.
+func convertRedisResult(v any) any {
+	switch val := v.(type) {
+	case map[any]any:
+		m := make(map[string]any)
+		for k, v := range val {
+			m[fmt.Sprint(k)] = convertRedisResult(v)
+		}
+		return m
+	case []any:
+		s := make([]any, len(val))
+		for i, v := range val {
+			s[i] = convertRedisResult(v)
+		}
+		return s
+	default:
+		return v
+	}
+}

@@ -22,8 +22,6 @@ import (
 	redissrc "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	jsoniter "github.com/json-iterator/go"
-	"github.com/redis/go-redis/v9"
 )
 
 const kind string = "redis"
@@ -44,6 +42,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	RedisClient() redissrc.RedisClient
+	RunCommand(context.Context, [][]any) (any, error)
 }
 
 type Config struct {
@@ -94,44 +93,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, fmt.Errorf("error replacing commands' parameters: %s", err)
 	}
-
-	// Execute commands
-	responses := make([]*redis.Cmd, len(cmds))
-	for i, cmd := range cmds {
-		responses[i] = source.RedisClient().Do(ctx, cmd...)
-	}
-	// Parse responses
-	out := make([]any, len(t.Commands))
-	for i, resp := range responses {
-		if err := resp.Err(); err != nil {
-			// Add error from each command to `errSum`
-			errString := fmt.Sprintf("error from executing command at index %d: %s", i, err)
-			out[i] = errString
-			continue
-		}
-		val, err := resp.Result()
-		if err != nil {
-			return nil, fmt.Errorf("error getting result: %s", err)
-		}
-		// If result is a map, convert map[any]any to map[string]any
-		// Because the Go's built-in json/encoding marshalling doesn't support
-		// map[any]any as an input
-		var strMap map[string]any
-		var json = jsoniter.ConfigCompatibleWithStandardLibrary
-		mapStr, err := json.Marshal(val)
-		if err != nil {
-			return nil, fmt.Errorf("error marshalling result: %s", err)
-		}
-		err = json.Unmarshal(mapStr, &strMap)
-		if err != nil {
-			// result is not a map
-			out[i] = val
-			continue
-		}
-		out[i] = strMap
-	}
-
-	return out, nil
+	return source.RunCommand(ctx, cmds)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
