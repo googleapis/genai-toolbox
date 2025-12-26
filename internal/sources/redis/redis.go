@@ -20,7 +20,6 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/redis/go-redis/v9"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -173,23 +172,30 @@ func (s *Source) RunCommand(ctx context.Context, cmds [][]any) (any, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error getting result: %s", err)
 		}
-		// If result is a map, convert map[any]any to map[string]any
-		// Because the Go's built-in json/encoding marshalling doesn't support
-		// map[any]any as an input
-		var strMap map[string]any
-		var json = jsoniter.ConfigCompatibleWithStandardLibrary
-		mapStr, err := json.Marshal(val)
-		if err != nil {
-			return nil, fmt.Errorf("error marshalling result: %s", err)
-		}
-		err = json.Unmarshal(mapStr, &strMap)
-		if err != nil {
-			// result is not a map
-			out[i] = val
-			continue
-		}
-		out[i] = strMap
+		out[i] = convertRedisResult(val)
 	}
 
 	return out, nil
+}
+
+// convertRedisResult recursively converts redis results (map[any]any) to be
+// JSON-marshallable (map[string]any).
+// It converts map[any]any to map[string]any and handles nested structures.
+func convertRedisResult(v any) any {
+	switch val := v.(type) {
+	case map[any]any:
+		m := make(map[string]any)
+		for k, v := range val {
+			m[fmt.Sprint(k)] = convertRedisResult(v)
+		}
+		return m
+	case []any:
+		s := make([]any, len(val))
+		for i, v := range val {
+			s[i] = convertRedisResult(v)
+		}
+		return s
+	default:
+		return v
+	}
 }
