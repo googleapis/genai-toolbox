@@ -17,6 +17,7 @@ package mysqlgetqueryplan
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
@@ -113,7 +114,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, err
 	}
-
 	// extract and return only the query plan object
 	resSlice, ok := result.([]any)
 	if !ok || len(resSlice) == 0 {
@@ -123,8 +123,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok || len(row.Columns) == 0 {
 		return nil, fmt.Errorf("no query plan returned in row")
 	}
-	// EXPLAIN FORMAT=JSON returns a single column.
-	return row.Columns[0].Value, nil
+	plan, ok := row.Columns[0].Value.(string)
+	if !ok {
+		return nil, fmt.Errorf("unable to convert plan object to string")
+	}
+	var out map[string]any
+	if err := json.Unmarshal([]byte(plan), &out); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal query plan json: %w", err)
+	}
+	return out, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

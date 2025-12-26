@@ -259,7 +259,16 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if outputFormat != "simple" && outputFormat != "detailed" {
 		return nil, fmt.Errorf("invalid value for output_format: must be 'simple' or 'detailed', but got %q", outputFormat)
 	}
-	return source.RunSQL(ctx, listTablesStatement, []any{tableNames, outputFormat})
+	resp, err := source.RunSQL(ctx, listTablesStatement, []any{tableNames, outputFormat})
+	if err != nil {
+		return nil, err
+	}
+	// if there's no results, return empty list instead of null
+	resSlice, ok := resp.([]any)
+	if !ok || len(resSlice) == 0 {
+		return []any{}, nil
+	}
+	return resp, err
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
