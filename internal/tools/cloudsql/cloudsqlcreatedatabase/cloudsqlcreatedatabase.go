@@ -22,7 +22,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
 const kind string = "cloud-sql-create-database"
@@ -43,8 +42,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	GetDefaultProject() string
-	GetService(context.Context, string) (*sqladmin.Service, error)
 	UseClientAuthorization() bool
+	CreateDatabase(context.Context, string, string, string, string) (any, error)
 }
 
 // Config defines the configuration for the create-database tool.
@@ -137,24 +136,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, fmt.Errorf("missing 'name' parameter")
 	}
-
-	database := sqladmin.Database{
-		Name:     name,
-		Project:  project,
-		Instance: instance,
-	}
-
-	service, err := source.GetService(ctx, string(accessToken))
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := service.Databases.Insert(project, instance, &database).Do()
-	if err != nil {
-		return nil, fmt.Errorf("error creating database: %w", err)
-	}
-
-	return resp, nil
+	return source.CreateDatabase(ctx, name, project, instance, string(accessToken))
 }
 
 // ParseParams parses the parameters for the tool.

@@ -22,7 +22,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
 const kind string = "cloud-sql-create-users"
@@ -43,8 +42,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	GetDefaultProject() string
-	GetService(context.Context, string) (*sqladmin.Service, error)
 	UseClientAuthorization() bool
+	CreateUsers(context.Context, string, string, string, string, bool, string) (any, error)
 }
 
 // Config defines the configuration for the create-user tool.
@@ -141,33 +140,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	iamUser, _ := paramsMap["iamUser"].(bool)
-
-	user := sqladmin.User{
-		Name: name,
-	}
-
-	if iamUser {
-		user.Type = "CLOUD_IAM_USER"
-	} else {
-		user.Type = "BUILT_IN"
-		password, ok := paramsMap["password"].(string)
-		if !ok || password == "" {
-			return nil, fmt.Errorf("missing 'password' parameter for non-IAM user")
-		}
-		user.Password = password
-	}
-
-	service, err := source.GetService(ctx, string(accessToken))
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := service.Users.Insert(project, instance, &user).Do()
-	if err != nil {
-		return nil, fmt.Errorf("error creating user: %w", err)
-	}
-
-	return resp, nil
+	password, _ := paramsMap["password"].(string)
+	return source.CreateUsers(ctx, project, instance, name, password, iamUser, string(accessToken))
 }
 
 // ParseParams parses the parameters for the tool.
