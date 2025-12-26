@@ -114,12 +114,20 @@ func processRows(iter *spanner.RowIterator) ([]any, error) {
 		cols := row.ColumnNames()
 		for i, c := range cols {
 			if c == "object_details" { // for list graphs or list tables
-				jsonString := row.ColumnValue(i).AsInterface().(string)
-				var details map[string]interface{}
-				if err := json.Unmarshal([]byte(jsonString), &details); err != nil {
-					return nil, fmt.Errorf("unable to unmarshal JSON: %w", err)
+				val := row.ColumnValue(i)
+				if val == nil { // ColumnValue returns the Cloud Spanner Value of column i, or nil for invalid column.
+					rowMap.Add(c, nil)
+				} else {
+					jsonString, ok := val.AsInterface().(string)
+					if !ok {
+						return nil, fmt.Errorf("column 'object_details' is not a string, but %T", val.AsInterface())
+					}
+					var details map[string]any
+					if err := json.Unmarshal([]byte(jsonString), &details); err != nil {
+						return nil, fmt.Errorf("unable to unmarshal JSON: %w", err)
+					}
+					rowMap.Add(c, details)
 				}
-				rowMap.Add(c, details)
 			} else {
 				rowMap.Add(c, row.ColumnValue(i))
 			}

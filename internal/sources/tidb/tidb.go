@@ -147,15 +147,23 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 			// we'll need to cast it back to string
 			switch colTypes[i].DatabaseTypeName() {
 			case "JSON":
-				// unmarshal JSON data before storing to prevent double marshaling
+				// unmarshal JSON data before storing to prevent double
+				// marshaling
+				byteVal, ok := val.([]byte)
+				if !ok {
+					return nil, fmt.Errorf("expected []byte for JSON column, but got %T", val)
+				}
 				var unmarshaledData any
-				err := json.Unmarshal(val.([]byte), &unmarshaledData)
-				if err != nil {
+				if err := json.Unmarshal(byteVal, &unmarshaledData); err != nil {
 					return nil, fmt.Errorf("unable to unmarshal json data %s", val)
 				}
 				vMap[name] = unmarshaledData
 			case "TEXT", "VARCHAR", "NVARCHAR":
-				vMap[name] = string(val.([]byte))
+				byteVal, ok := val.([]byte)
+				if !ok {
+					return nil, fmt.Errorf("expected []byte for text-like column, but got %T", val)
+				}
+				vMap[name] = string(byteVal)
 			default:
 				vMap[name] = val
 			}

@@ -145,7 +145,7 @@ func (s *Source) RunCommand(ctx context.Context, cmds [][]string) (any, error) {
 	out := make([]any, len(cmds))
 	for i, resp := range responses {
 		if err := resp.Error(); err != nil {
-			// Add error from each command to `errSum`
+			// Store error message in the output for this command
 			out[i] = fmt.Sprintf("error from executing command at index %d: %s", i, err)
 			continue
 		}
