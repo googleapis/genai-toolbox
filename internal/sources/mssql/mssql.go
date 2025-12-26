@@ -116,7 +116,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	// If Columns() errors, it might be a DDL/DML without an OUTPUT clause.
 	// We proceed, and results.Err() will catch actual query execution errors.
 	// 'out' will remain nil if cols is empty or err is not nil here.
-	var out []any
+	out := []any{}
 	if err == nil && len(cols) > 0 {
 		// create an array of values for each column, which can be re-used to scan each row
 		rawValues := make([]any, len(cols))

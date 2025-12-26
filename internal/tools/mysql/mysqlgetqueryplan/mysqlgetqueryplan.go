@@ -23,6 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
@@ -108,7 +109,22 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
 
 	query := fmt.Sprintf("EXPLAIN FORMAT=JSON %s", sql)
-	return source.RunSQL(ctx, query, nil)
+	result, err := source.RunSQL(ctx, query, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// extract and return only the query plan object
+	resSlice, ok := result.([]any)
+	if !ok || len(resSlice) == 0 {
+		return nil, fmt.Errorf("no query plan returned")
+	}
+	row, ok := resSlice[0].(orderedmap.Row)
+	if !ok || len(row.Columns) == 0 {
+		return nil, fmt.Errorf("no query plan returned in row")
+	}
+	// EXPLAIN FORMAT=JSON returns a single column.
+	return row.Columns[0].Value, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

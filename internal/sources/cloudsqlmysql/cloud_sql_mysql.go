@@ -107,6 +107,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
+	defer results.Close()
 
 	cols, err := results.Columns()
 	if err != nil {
@@ -119,7 +120,6 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 	for i := range rawValues {
 		values[i] = &rawValues[i]
 	}
-	defer results.Close()
 
 	colTypes, err := results.ColumnTypes()
 	if err != nil {
