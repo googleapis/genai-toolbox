@@ -45,7 +45,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	GetDefaultProject() string
 	UseClientAuthorization() bool
-	CreateInstance(context.Context, string, string, string, string, string, sqladmin.Settings, string) (any, error)
+	CreateInstance(context.Context, string, string, string, string, sqladmin.Settings, string) (any, error)
 }
 
 // Config defines the configuration for the create-instances tool.
@@ -165,7 +165,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	default:
 		return nil, fmt.Errorf("invalid 'editionPreset': %q. Must be either 'Production' or 'Development'", editionPreset)
 	}
-	return source.CreateInstance(ctx, project, name, dbVersion, rootPassword, editionPreset, settings, string(accessToken))
+	return source.CreateInstance(ctx, project, name, dbVersion, rootPassword, settings, string(accessToken))
 }
 
 // ParseParams parses the parameters for the tool.

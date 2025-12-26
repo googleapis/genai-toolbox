@@ -17,10 +17,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"net/http"
 	"regexp"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/goccy/go-yaml"
@@ -35,6 +35,8 @@ import (
 )
 
 const SourceKind string = "cloud-sql-admin"
+
+var targetLinkRegex = regexp.MustCompile(`/projects/([^/]+)/instances/([^/]+)/databases/([^/]+)`)
 
 // validate interface
 var _ sources.SourceConfig = Config{}
@@ -288,7 +290,7 @@ func (s *Source) ListInstance(ctx context.Context, project, accessToken string) 
 	return instances, nil
 }
 
-func (s *Source) CreateInstance(ctx context.Context, project, name, dbVersion, rootPassword, editionPreset string, settings sqladmin.Settings, accessToken string) (any, error) {
+func (s *Source) CreateInstance(ctx context.Context, project, name, dbVersion, rootPassword string, settings sqladmin.Settings, accessToken string) (any, error) {
 	instance := sqladmin.DatabaseInstance{
 		Name:            name,
 		DatabaseVersion: dbVersion,
@@ -317,7 +319,7 @@ func (s *Source) GetWaitForOperations(ctx context.Context, service *sqladmin.Ser
 	}
 	op, err := service.Operations.Get(project, operation).Do()
 	if err != nil {
-		logger.DebugContext(ctx, fmt.Sprintf("error getting operation: %s, retrying in %v\n", err, delay))
+		logger.DebugContext(ctx, fmt.Sprintf("error getting operation: %s, retrying in %v", err, delay))
 	} else {
 		if op.Status == "DONE" {
 			if op.Error != nil {
@@ -345,7 +347,7 @@ func (s *Source) GetWaitForOperations(ctx context.Context, service *sqladmin.Ser
 			}
 			return string(opBytes), nil
 		}
-		logger.DebugContext(ctx, fmt.Sprintf("Operation not complete, retrying in %v\n", delay))
+		logger.DebugContext(ctx, fmt.Sprintf("operation not complete, retrying in %v", delay))
 	}
 	return nil, nil
 }
@@ -361,8 +363,7 @@ func generateCloudSQLConnectionMessage(ctx context.Context, source *Source, logg
 		return "", false
 	}
 
-	r := regexp.MustCompile(`/projects/([^/]+)/instances/([^/]+)/databases/([^/]+)`)
-	matches := r.FindStringSubmatch(targetLink)
+	matches := targetLinkRegex.FindStringSubmatch(targetLink)
 	if len(matches) < 4 {
 		return "", false
 	}
@@ -370,19 +371,19 @@ func generateCloudSQLConnectionMessage(ctx context.Context, source *Source, logg
 	instance := matches[2]
 	database := matches[3]
 
-	instanceData, err := fetchInstanceData(ctx, source, project, instance)
+	dbInstance, err := fetchInstanceData(ctx, source, project, instance)
 	if err != nil {
-		logger.DebugContext(ctx, fmt.Sprintf("error fetching instance data: %v\n", err))
+		logger.DebugContext(ctx, fmt.Sprintf("error fetching instance data: %v", err))
 		return "", false
 	}
 
-	region, ok := instanceData["region"].(string)
-	if !ok {
+	region := dbInstance.Region
+	if region == "" {
 		return "", false
 	}
 
-	databaseVersion, ok := instanceData["databaseVersion"].(string)
-	if !ok {
+	databaseVersion := dbInstance.DatabaseVersion
+	if databaseVersion == "" {
 		return "", false
 	}
 
@@ -426,7 +427,7 @@ func generateCloudSQLConnectionMessage(ctx context.Context, source *Source, logg
 	return b.String(), true
 }
 
-func fetchInstanceData(ctx context.Context, source *Source, project, instance string) (map[string]any, error) {
+func fetchInstanceData(ctx context.Context, source *Source, project, instance string) (*sqladmin.DatabaseInstance, error) {
 	service, err := source.GetService(ctx, "")
 	if err != nil {
 		return nil, err
@@ -436,15 +437,5 @@ func fetchInstanceData(ctx context.Context, source *Source, project, instance st
 	if err != nil {
 		return nil, fmt.Errorf("error getting instance: %w", err)
 	}
-
-	var data map[string]any
-	var b []byte
-	b, err = resp.MarshalJSON()
-	if err != nil {
-		return nil, fmt.Errorf("error marshalling response: %w", err)
-	}
-	if err := json.Unmarshal(b, &data); err != nil {
-		return nil, fmt.Errorf("error unmarshalling response body: %w", err)
-	}
-	return data, nil
+	return resp, nil
 }
