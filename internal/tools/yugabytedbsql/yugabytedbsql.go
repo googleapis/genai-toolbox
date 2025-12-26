@@ -43,6 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	YugabyteDBPool() *pgxpool.Pool
+	RunSQL(context.Context, string, []any) (any, error)
 }
 
 type Config struct {
@@ -108,32 +109,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
 	sliceParams := newParams.AsSlice()
-	results, err := source.YugabyteDBPool().Query(ctx, newStatement, sliceParams...)
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-
-	fields := results.FieldDescriptions()
-
-	var out []any
-	for results.Next() {
-		v, err := results.Values()
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
-		}
-		vMap := make(map[string]any)
-		for i, f := range fields {
-			vMap[f.Name] = v[i]
-		}
-		out = append(out, vMap)
-	}
-
-	// this will catch actual query execution errors
-	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-
-	return out, nil
+	return source.RunSQL(ctx, newStatement, sliceParams)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

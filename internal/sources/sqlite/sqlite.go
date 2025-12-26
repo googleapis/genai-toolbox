@@ -17,10 +17,12 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 	"go.opentelemetry.io/otel/trace"
 	_ "modernc.org/sqlite" // Pure Go SQLite driver
 )
@@ -89,6 +91,66 @@ func (s *Source) ToConfig() sources.SourceConfig {
 
 func (s *Source) SQLiteDB() *sql.DB {
 	return s.Db
+}
+
+func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	// Execute the SQL query with parameters
+	rows, err := s.SQLiteDB().QueryContext(ctx, statement, params...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	defer rows.Close()
+
+	// Get column names
+	cols, err := rows.Columns()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get column names: %w", err)
+	}
+
+	// The sqlite driver does not support ColumnTypes, so we can't get the
+	// underlying database type of the columns. We'll have to rely on the
+	// generic `any` type and then handle the JSON data separately.
+	rawValues := make([]any, len(cols))
+	values := make([]any, len(cols))
+	for i := range rawValues {
+		values[i] = &rawValues[i]
+	}
+
+	// Prepare the result slice
+	var out []any
+	for rows.Next() {
+		if err := rows.Scan(values...); err != nil {
+			return nil, fmt.Errorf("unable to scan row: %w", err)
+		}
+
+		// Create a map for this row
+		row := orderedmap.Row{}
+		for i, name := range cols {
+			val := rawValues[i]
+			// Handle nil values
+			if val == nil {
+				row.Add(name, nil)
+				continue
+			}
+			// Handle JSON data
+			if jsonString, ok := val.(string); ok {
+				var unmarshaledData any
+				if json.Unmarshal([]byte(jsonString), &unmarshaledData) == nil {
+					row.Add(name, unmarshaledData)
+					continue
+				}
+			}
+			// Store the value in the map
+			row.Add(name, val)
+		}
+		out = append(out, row)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating rows: %w", err)
+	}
+
+	return out, nil
 }
 
 func initSQLiteConnection(ctx context.Context, tracer trace.Tracer, name, dbPath string) (*sql.DB, error) {

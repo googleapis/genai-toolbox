@@ -23,9 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/iterator"
 )
 
 const kind string = "spanner-execute-sql"
@@ -47,6 +45,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	SpannerClient() *spanner.Client
 	DatabaseDialect() string
+	RunSQL(context.Context, bool, string, map[string]any) (any, error)
 }
 
 type Config struct {
@@ -91,30 +90,6 @@ type Tool struct {
 	mcpManifest tools.McpManifest
 }
 
-// processRows iterates over the spanner.RowIterator and converts each row to a map[string]any.
-func processRows(iter *spanner.RowIterator) ([]any, error) {
-	var out []any
-	defer iter.Stop()
-
-	for {
-		row, err := iter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
-		}
-
-		rowMap := orderedmap.Row{}
-		cols := row.ColumnNames()
-		for i, c := range cols {
-			rowMap.Add(c, row.ColumnValue(i))
-		}
-		out = append(out, rowMap)
-	}
-	return out, nil
-}
-
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
 	if err != nil {
@@ -133,31 +108,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
-
-	var results []any
-	var opErr error
-	stmt := spanner.Statement{SQL: sql}
-
-	if t.ReadOnly {
-		iter := source.SpannerClient().Single().Query(ctx, stmt)
-		results, opErr = processRows(iter)
-	} else {
-		_, opErr = source.SpannerClient().ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
-			var err error
-			iter := txn.Query(ctx, stmt)
-			results, err = processRows(iter)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-	}
-
-	if opErr != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", opErr)
-	}
-
-	return results, nil
+	return source.RunSQL(ctx, t.ReadOnly, sql, nil)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

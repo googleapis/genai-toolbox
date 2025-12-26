@@ -17,6 +17,7 @@ package tidb
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"regexp"
 
@@ -102,6 +103,79 @@ func (s *Source) ToConfig() sources.SourceConfig {
 
 func (s *Source) TiDBPool() *sql.DB {
 	return s.Pool
+}
+
+func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	results, err := s.TiDBPool().QueryContext(ctx, statement, params...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+
+	cols, err := results.Columns()
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve rows column name: %w", err)
+	}
+
+	// create an array of values for each column, which can be re-used to scan each row
+	rawValues := make([]any, len(cols))
+	values := make([]any, len(cols))
+	for i := range rawValues {
+		values[i] = &rawValues[i]
+	}
+	defer results.Close()
+
+	colTypes, err := results.ColumnTypes()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get column types: %w", err)
+	}
+
+	var out []any
+	for results.Next() {
+		err := results.Scan(values...)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+		vMap := make(map[string]any)
+		for i, name := range cols {
+			val := rawValues[i]
+			if val == nil {
+				vMap[name] = nil
+				continue
+			}
+
+			// mysql driver return []uint8 type for "TEXT", "VARCHAR", and "NVARCHAR"
+			// we'll need to cast it back to string
+			switch colTypes[i].DatabaseTypeName() {
+			case "JSON":
+				// unmarshal JSON data before storing to prevent double
+				// marshaling
+				byteVal, ok := val.([]byte)
+				if !ok {
+					return nil, fmt.Errorf("expected []byte for JSON column, but got %T", val)
+				}
+				var unmarshaledData any
+				if err := json.Unmarshal(byteVal, &unmarshaledData); err != nil {
+					return nil, fmt.Errorf("unable to unmarshal json data %s", val)
+				}
+				vMap[name] = unmarshaledData
+			case "TEXT", "VARCHAR", "NVARCHAR":
+				byteVal, ok := val.([]byte)
+				if !ok {
+					return nil, fmt.Errorf("expected []byte for text-like column, but got %T", val)
+				}
+				vMap[name] = string(byteVal)
+			default:
+				vMap[name] = val
+			}
+		}
+		out = append(out, vMap)
+	}
+
+	if err := results.Err(); err != nil {
+		return nil, fmt.Errorf("errors encountered during row iteration: %w", err)
+	}
+
+	return out, nil
 }
 
 func IsTiDBCloudHost(host string) bool {

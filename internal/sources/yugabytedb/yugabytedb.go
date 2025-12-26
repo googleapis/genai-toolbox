@@ -99,6 +99,35 @@ func (s *Source) YugabyteDBPool() *pgxpool.Pool {
 	return s.Pool
 }
 
+func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	results, err := s.YugabyteDBPool().Query(ctx, statement, params...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+
+	fields := results.FieldDescriptions()
+
+	var out []any
+	for results.Next() {
+		v, err := results.Values()
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+		vMap := make(map[string]any)
+		for i, f := range fields {
+			vMap[f.Name] = v[i]
+		}
+		out = append(out, vMap)
+	}
+
+	// this will catch actual query execution errors
+	if err := results.Err(); err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+
+	return out, nil
+}
+
 func initYugabyteDBConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname, loadBalance, topologyKeys, refreshInterval, explicitFallback, failedHostTTL string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
