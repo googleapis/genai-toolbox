@@ -21,6 +21,7 @@ import (
 	gocql "github.com/apache/cassandra-gocql-driver/v2"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -89,8 +90,30 @@ func (s *Source) ToConfig() sources.SourceConfig {
 }
 
 // SourceKind implements sources.Source.
-func (s Source) SourceKind() string {
+func (s *Source) SourceKind() string {
 	return SourceKind
+}
+
+func (s *Source) RunSQL(ctx context.Context, statement string, params parameters.ParamValues) (any, error) {
+	sliceParams := params.AsSlice()
+	iter := s.CassandraSession().Query(statement, sliceParams...).IterContext(ctx)
+
+	// Create a slice to store the out
+	var out []map[string]interface{}
+
+	// Scan results into a map and append to the slice
+	for {
+		row := make(map[string]interface{}) // Create a new map for each row
+		if !iter.MapScan(row) {
+			break // No more rows
+		}
+		out = append(out, row)
+	}
+
+	if err := iter.Close(); err != nil {
+		return nil, fmt.Errorf("unable to parse rows: %w", err)
+	}
+	return out, nil
 }
 
 var _ sources.Source = &Source{}

@@ -16,7 +16,6 @@ package clickhouse
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
@@ -43,7 +42,7 @@ func newListTablesConfig(ctx context.Context, name string, decoder *yaml.Decoder
 }
 
 type compatibleSource interface {
-	ClickHousePool() *sql.DB
+	RunSQL(context.Context, string, parameters.ParamValues) (any, error)
 }
 
 type Config struct {
@@ -101,33 +100,27 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", databaseKey)
 	}
-
 	// Query to list all tables in the specified database
 	query := fmt.Sprintf("SHOW TABLES FROM %s", database)
 
-	results, err := source.ClickHousePool().QueryContext(ctx, query)
+	out, err := source.RunSQL(ctx, query, nil)
 	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		return nil, err
 	}
-	defer results.Close()
 
-	tables := []map[string]any{}
-	for results.Next() {
-		var tableName string
-		err := results.Scan(&tableName)
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
+	res, ok := out.([]any)
+	if !ok {
+		return nil, fmt.Errorf("unable to convert result to list")
+	}
+	var tables []map[string]any
+	for _, item := range res {
+		tableMap, ok := item.(map[string]any)
+		if !ok {
+			return nil, fmt.Errorf("unexpected type in result: got %T, want map[string]any", item)
 		}
-		tables = append(tables, map[string]any{
-			"name":     tableName,
-			"database": database,
-		})
+		tableMap["database"] = database
+		tables = append(tables, tableMap)
 	}
-
-	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("errors encountered by results.Scan: %w", err)
-	}
-
 	return tables, nil
 }
 

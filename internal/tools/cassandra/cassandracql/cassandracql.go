@@ -43,6 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	CassandraSession() *gocql.Session
+	RunSQL(context.Context, string, parameters.ParamValues) (any, error)
 }
 
 type Config struct {
@@ -121,25 +122,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
-	sliceParams := newParams.AsSlice()
-	iter := source.CassandraSession().Query(newStatement, sliceParams...).IterContext(ctx)
-
-	// Create a slice to store the out
-	var out []map[string]interface{}
-
-	// Scan results into a map and append to the slice
-	for {
-		row := make(map[string]interface{}) // Create a new map for each row
-		if !iter.MapScan(row) {
-			break // No more rows
-		}
-		out = append(out, row)
-	}
-
-	if err := iter.Close(); err != nil {
-		return nil, fmt.Errorf("unable to parse rows: %w", err)
-	}
-	return out, nil
+	return source.RunSQL(ctx, newStatement, newParams)
 }
 
 // Manifest implements tools.Tool.
