@@ -21,9 +21,9 @@ import (
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	bigqueryds "github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/iterator"
 )
 
@@ -46,10 +46,9 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigQueryProject() string
-	BigQueryClient() *bigqueryapi.Client
-	BigQueryClientCreator() bigqueryds.BigqueryClientCreator
 	UseClientAuthorization() bool
 	BigQueryAllowedDatasets() []string
+	RetrieveClientAndService(tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error)
 }
 
 type Config struct {
@@ -135,17 +134,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", projectKey)
 	}
 
-	bqClient := source.BigQueryClient()
-	// Initialize new client if using user OAuth token
-	if source.UseClientAuthorization() {
-		tokenStr, err := accessToken.ParseBearerToken()
-		if err != nil {
-			return nil, fmt.Errorf("error parsing access token: %w", err)
-		}
-		bqClient, _, err = source.BigQueryClientCreator()(tokenStr, false)
-		if err != nil {
-			return nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
-		}
+	bqClient, _, err := source.RetrieveClientAndService(accessToken)
+	if err != nil {
+		return nil, err
 	}
 	datasetIterator := bqClient.Datasets(ctx)
 	datasetIterator.ProjectID = projectId
