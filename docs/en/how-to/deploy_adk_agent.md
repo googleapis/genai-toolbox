@@ -49,7 +49,7 @@ with the necessary configuration for deployment to Vertex AI Agent Engine.
 4.  Add `toolbox-core` as a dependency to the new project:
 
     ```bash
-    uv add toolbox-core
+    uv add toolbox-adk
     ```
 
 ## Step 3: Configure Google Cloud Authentication
@@ -95,22 +95,24 @@ authentication token.
     ```python
     from google.adk import Agent
     from google.adk.apps import App
-    from toolbox_core import ToolboxSyncClient, auth_methods
+    from google.adk.tools.toolbox_toolset import ToolboxToolset
+    from toolbox_adk import CredentialStrategy
 
     # TODO(developer): Replace with your Toolbox Cloud Run Service URL
     TOOLBOX_URL = "https://your-toolbox-service-xyz.a.run.app"
 
-    # Initialize the client with the Cloud Run URL and Auth headers
-    client = ToolboxSyncClient(
-        TOOLBOX_URL, 
-        client_headers={"Authorization": auth_methods.get_google_id_token(TOOLBOX_URL)}
+    # Initialize the toolset with Workload Identity (generates ID token for the URL)
+    toolset = ToolboxToolset(
+        server_url=TOOLBOX_URL,
+        toolset_name="my-toolset",
+        credentials=CredentialStrategy.workload_identity(target_audience=TOOLBOX_URL)
     )
 
     root_agent = Agent(
         name='root_agent',
         model='gemini-2.5-flash',
         instruction="You are a helpful AI assistant designed to provide accurate and useful information.",
-        tools=client.load_toolset(),
+        tools=[toolset],
     )
 
     app = App(root_agent=root_agent, name="my_agent")
