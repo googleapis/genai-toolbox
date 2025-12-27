@@ -191,6 +191,7 @@ See [Usage Examples](../reference/cli.md#examples).
         * `create_instance`
         * `create_user`
         * `clone_instance`
+        * `restore_backup`
 
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for MySQL instance.
@@ -201,6 +202,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
     *   `clone_instance`: Creates a clone for an existing Cloud SQL for MySQL instance.
+    *   `restore_backup`: Restore a backup of a Cloud SQL instance.
 
 ## Cloud SQL for PostgreSQL
 
@@ -279,6 +281,7 @@ See [Usage Examples](../reference/cli.md#examples).
         * `create_instance`
         * `create_user`
         * `clone_instance`
+        * `restore_backup`
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for PostgreSQL instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -288,6 +291,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
     *   `clone_instance`: Creates a clone for an existing Cloud SQL for PostgreSQL instance.
+    *   `restore_backup`: Restore a backup of a Cloud SQL instance.
 
 ## Cloud SQL for SQL Server
 
@@ -340,6 +344,7 @@ See [Usage Examples](../reference/cli.md#examples).
         * `create_instance`
         * `create_user`
         * `clone_instance`
+        * `restore_backup`
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for SQL Server instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -349,6 +354,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
     *   `clone_instance`: Creates a clone for an existing Cloud SQL for SQL Server instance.
+    *   `restore_backup`: Restore a backup of a Cloud SQL instance.
 
 ## Dataplex
 

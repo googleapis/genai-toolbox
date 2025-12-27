@@ -53,6 +53,7 @@ database and users:
         * `create_instance`
         * `create_user`
         * `clone_instance`
+        * `restore_backup`
 
 ## Install MCP Toolbox
 
@@ -299,6 +300,7 @@ instances and interacting with your database:
 * **create_user**: Creates a new user in a Cloud SQL instance.
 * **wait_for_operation**: Waits for a Cloud SQL operation to complete.
 * **clone_instance**: Creates a clone of an existing Cloud SQL for MySQL instance.
+* **restore_backup**: Restore a backup of a Cloud SQL instance.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
