@@ -1,0 +1,461 @@
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: '🏷️ Gemini Automated Issue Triage'
+
+on:
+  issues:
+    types:
+      - 'opened'
+      - 'reopened'
+  issue_comment:
+    types:
+      - 'created'
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'issue number to triage'
+        required: true
+        type: 'number'
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.event.issue.number || github.event.inputs.issue_number }}'
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: 'bash'
+
+permissions:
+  contents: 'read'
+  id-token: 'write'
+  issues: 'write'
+  statuses: 'write'
+  packages: 'read'
+  actions: 'write' # Required for cancelling a workflow run
+
+jobs:
+  triage-issue:
+    if: |-
+      github.repository == 'googleapis/genai-toolbox' &&
+      (
+        github.event_name == 'workflow_dispatch' ||
+        (
+          (github.event_name == 'issues' || github.event_name == 'issue_comment') &&
+          contains(github.event.issue.labels.*.name, 'status: need-triage') &&
+          (github.event_name != 'issue_comment' || (
+            contains(github.event.comment.body, '@gemini-cli /triage') &&
+            (github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'COLLABORATOR')
+          ))
+        )
+      ) &&
+      !contains(github.event.issue.labels.*.name, 'priority:')
+    timeout-minutes: 5
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Get issue data for manual trigger'
+        id: 'get_issue_data'
+        if: |-
+          github.event_name == 'workflow_dispatch'
+        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea'
+        with:
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          script: |
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ github.event.inputs.issue_number }},
+            });
+            core.setOutput('title', issue.title);
+            core.setOutput('body', issue.body);
+            core.setOutput('labels', issue.labels.map(label => label.name).join(','));
+            return issue;
+
+      - name: 'Manual Trigger Pre-flight Checks'
+        if: |-
+          github.event_name == 'workflow_dispatch'
+        env:
+          ISSUE_NUMBER_INPUT: '${{ github.event.inputs.issue_number }}'
+          LABELS: '${{ steps.get_issue_data.outputs.labels }}'
+        run: |
+          if ! echo "${LABELS}" | grep -q 'status: need-triage'; then
+            echo "Issue #${ISSUE_NUMBER_INPUT} does not have the 'status: need-triage' label. Stopping workflow."
+            exit 1
+          fi
+
+          if echo "${LABELS}" | grep -q 'product:' || echo "${LABELS}" | grep -q 'priority:'; then
+            echo "Issue #${ISSUE_NUMBER_INPUT} already has 'product:' or 'priority:' labels. Stopping workflow."
+            exit 1
+          fi
+
+          echo "Manual triage checks passed."
+
+      - name: 'Checkout'
+        uses: 'actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8' # ratchet:actions/checkout@v5
+
+      - name: 'Generate GitHub App Token'
+        id: 'generate_token'
+        uses: 'actions/create-github-app-token@a8d616148505b5069dccd32f177bb87d7f39123b' # ratchet:actions/create-github-app-token@v2
+        with:
+          app-id: '${{ secrets.APP_ID }}'
+          private-key: '${{ secrets.PRIVATE_KEY }}'
+          permission-issues: 'write'
+
+      - name: 'Get Repository Labels'
+        id: 'get_labels'
+        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea'
+        with:
+          github-token: '${{ steps.generate_token.outputs.token }}'
+          script: |-
+            const { data: labels } = await github.rest.issues.listLabelsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            const allowedLabels = [
+              'priority: p0',
+              'priority: p1',
+              'priority: p2',
+              'priority: p3',
+              'product: alloydb',
+              'product: bigquery',
+              'product: bigtable',
+              'product: cassandra',
+              'product: clickhouse',
+              'product: mssql',
+              'product: mysql',
+              'product: postgres',
+              'product: couchbase',
+              'product: dataplex',
+              'product: dgraph',
+              'product: elasticsearch',
+              'product: firebird',
+              'product: firestore',
+              'product: looker',
+              'product: mindsdb',
+              'product: mongodb',
+              'product: neo4j',
+              'product: oceanbase',
+              'product: oracle',
+              'product: redis',
+              'product: serverlessspark',
+              'product: singlestore',
+              'product: spanner',
+              'product: sqlite',
+              'product: tidb',
+              'product: trino',
+              'product: valkey',
+              'product: yugabytedb',
+              'type: bug',
+              'type: cleanup',
+              'type: docs',
+              'type: feature request',
+              'type: process',
+              'type: question'
+            ];
+            const labelNames = labels.map(label => label.name).filter(name => allowedLabels.includes(name));
+            core.setOutput('available_labels', labelNames.join(','));
+            core.info(`Found ${labelNames.length} labels: ${labelNames.join(', ')}`);
+            return labelNames;
+
+      - name: 'Run Gemini Issue Analysis'
+        uses: 'google-github-actions/run-gemini-cli@a3bf79042542528e91937b3a3a6fbc4967ee3c31' # ratchet:google-github-actions/run-gemini-cli@v0
+        id: 'gemini_issue_analysis'
+        env:
+          GITHUB_TOKEN: '' # Do not pass any auth token here since this runs on untrusted inputs
+          ISSUE_TITLE: >-
+            ${{ github.event_name == 'workflow_dispatch' && steps.get_issue_data.outputs.title || github.event.issue.title }}
+          ISSUE_BODY: >-
+            ${{ github.event_name == 'workflow_dispatch' && steps.get_issue_data.outputs.body || github.event.issue.body }}
+          ISSUE_NUMBER: >-
+            ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.issue_number || github.event.issue.number }}
+          REPOSITORY: '${{ github.repository }}'
+          AVAILABLE_LABELS: '${{ steps.get_labels.outputs.available_labels }}'
+        with:
+          gcp_workload_identity_provider: '${{ vars.GCP_WIF_PROVIDER }}'
+          gcp_project_id: '${{ vars.GOOGLE_CLOUD_PROJECT }}'
+          gcp_location: '${{ vars.GOOGLE_CLOUD_LOCATION }}'
+          gcp_service_account: '${{ vars.SERVICE_ACCOUNT_EMAIL }}'
+          gemini_api_key: '${{ secrets.GEMINI_API_KEY }}'
+          use_vertex_ai: '${{ vars.GOOGLE_GENAI_USE_VERTEXAI }}'
+          use_gemini_code_assist: '${{ vars.GOOGLE_GENAI_USE_GCA }}'
+          settings: |-
+            {
+              "maxSessionTurns": 25,
+              "telemetry": {
+                "enabled": true,
+                "target": "gcp"
+              }
+            }
+          prompt: |-
+            ## Role
+
+            You are an issue triage assistant. Your role is to analyze a GitHub
+            issue and determine the single most appropriate product: label,
+            type: label and the single most appropriate priority: label based on
+            the definitions provided.
+
+            ## Steps
+            1. Review the issue title and body: ${{ env.ISSUE_TITLE }} and ${{ env.ISSUE_BODY }}.
+            2. Review the available labels: ${{ env.AVAILABLE_LABELS }}.
+            3. Select exactly one product: label that best matches the issue
+            based on Reference 1: Product Definitions.
+            4. Select exactly one type: label that best matches the issue based
+            on Reference 2: Type Definitions.
+            5. Select exactly one priority: label that best matches the issue based on Reference 2: Priority Definitions.
+            6. Fallback Logic:
+                - If you cannot confidently determine the correct product: label
+                from the definitions, feel free to leave it.
+                - If you cannot confidently determine the correct type: label
+                from the definitions, feel free to leave it.
+                - If you cannot confidently determine the correct priority:
+                label from the definitions, feel free to leave it.
+            7. Output your two or three selected labels in JSON format and nothing else. Example:
+                {"labels_to_set": ["product: alloydb", "priority: p1"]},
+                {"labels_to_set": ["product: bigquery", "type: bug" "priority: p0"]}
+
+            ## Guidelines
+            - Your output must contain exactly one product: label and exactly one priority: label.
+            - Triage only the current issue based on its title and body.
+            - Output only valid JSON format.
+            - Do not include any explanation or additional text, just the JSON.
+
+            Reference 1: Product Definitions
+            product: alloydb
+            - Description: Issues related to the alloydb source or tools.
+
+            product: bigquery
+            - Description: Issues related to the bigquery source or tools.
+
+            product: bigtable
+            - Description: Issues related to the bigtable source or tools.
+
+            product: cassandra
+            - Description: Issues related to the cassandra source or tools.
+
+            product: clickhouse
+            - Description: Issues related to the clickhouse source or tools.
+
+            product: mssql
+            - Description: Issues related to the mssql source or tools.
+
+            product: mysql
+            - Description: Issues related to the mysql source or tools.
+
+            product: postgres
+            - Description: Issues related to the postgres source or tools.
+
+            product: couchbase
+            - Description: Issues related to the couchbase source or tools.
+
+            product: dataplex
+            - Description: Issues related to the dataplex source or tools.
+
+            product: dgraph
+            - Description: Issues related to the dgraph source or tools.
+
+            product: elasticsearch
+            - Description: Issues related to the elasticsearch source or tools.
+
+            product: firebird
+            - Description: Issues related to the firebird source or tools.
+
+            product: firestore
+            - Description: Issues related to the firestore source or tools.
+
+            product: looker
+            - Description: Issues related to the looker source or tools.
+
+            product: mindsdb
+            - Description: Issues related to the mindsdb source or tools.
+
+            product: mongodb
+            - Description: Issues related to the mongodb source or tools.
+
+            product: neo4j
+            - Description: Issues related to the neo4j source or tools.
+
+            product: oceanbase
+            - Description: Issues related to the oceanbase source or tools.
+
+            product: oracle
+            - Description: Issues related to the oracle source or tools.
+
+            product: redis
+            - Description: Issues related to the redis source or tools.
+
+            product: serverlessspark
+            - Description: Issues related to the serverlessspark source or tools.
+
+            product: singlestore
+            - Description: Issues related to the singlestore source or tools.
+
+            product: spanner
+            - Description: Issues related to the spanner source or tools.
+
+            product: sqlite
+            - Description: Issues related to the sqlite source or tools.
+
+            product: tidb
+            - Description: Issues related to the tidb source or tools.
+
+            product: trino
+            - Description: Issues related to the trino source or tools.
+
+            product: valkey
+            - Description: Issues related to the valkey source or tools.
+
+            product: yugabytedb
+            - Description: Issues related to the yugabytedb source or tools.
+
+            Reference 2: Type Definitions
+            type: bug
+            - Error or flaw in code with unintended results or allowing
+            sub-optimal usage patterns.
+
+            type: cleanup
+            - An internal cleanup or hygiene concern.
+
+            type: docs
+            - Improvement to the documentation for an API.
+
+            type: feature request
+            - ‘Nice-to-have’ improvement, new feature or different behavior or
+            design.
+            
+            type: process
+            - A process-related concern. May include testing, release, or the
+            like.
+            
+            type: question
+            - Request for information or clarification.
+
+            Reference 3: Priority Definitions
+            priority: p0: Critical / Blocker
+            - Definition: A catastrophic failure that makes the server unusable for most users or poses a severe security risk. This includes installation failures, authentication failures, persistent crashes, or critical security vulnerabilities.
+            - Key Questions:
+              - Is the main goal of the tool (e.g., connecting an agent to a database) completely impossible?
+              - Is the server failing to install or run?
+              - Does this represent a critical security vulnerability?
+              - Does this block existing user and have to be resolved immediately in order to utilize the server again?
+              - Does this issue affect every user immediately upon running the latest version?
+              - Is there absolutely no temporary workaround or alternative method to achieve the desired result?
+
+            priority: p1: High
+            - Definition: A severe issue that causes a significant degradation of a key feature, produces incorrect or inconsistent results, or severely impacts a large number of users. It requires prompt resolution, though a temporary workaround might exist. This also includes critical missing documentation for core features.
+            - Key Questions:
+              - Does this issue affect a key component that is widely relied upon (e.g., core database operations)?
+              - Are the results produced by the tool incorrect, misleading, or unreliable?
+              - Is a feature failing for a specific, large user group (e.g., all Windows users, all users of a specific shell)?
+              - Does a user need to perform difficult, undocumented steps to work around the problem?
+              - Is essential setup or usage documentation completely missing for a new feature?
+
+            priority: p2: Medium
+            - Definition: A moderately impactful issue causing inconvenience or a non-optimal experience, but a reasonable workaround exists. This also includes failures in non-core features. 
+            - Key Questions:
+              - Is the issue a standard bug fix that only affects a smaller, non-critical area of the code?
+              - Is this a clear, actionable enhancement that adds tangible value without being mission-critical?
+              - Can the user easily and reliably work around the issue without major difficulty?
+              - Is this an overdue technical debt item or a minor documentation correction?
+
+            priority: p3: Low
+            - Definition: A minor, low-impact issue with minimal effect on functionality. This includes most cosmetic defects, typos in documentation, or unclear help text. They have minimal to no impact on the current functionality or user experience and can be addressed when time and resources allow.
+            - Key Questions:
+              - Is this a typo in the README.md, gemini --help text, or other documentation?
+              - Is this a minor cosmetic issue (e.g., text alignment in output, an extra newline) that doesn't affect usability?
+              - Is the issue a minor cleanup or refactoring that doesn't fix a current problem but improves code style?
+              - Can this be ignored for several release cycles without negatively impacting users?
+
+      - name: 'Apply Labels to Issue'
+        if: |-
+          ${{ steps.gemini_issue_analysis.outputs.summary != '' }}
+        env:
+          REPOSITORY: '${{ github.repository }}'
+          ISSUE_NUMBER: '${{ github.event.issue.number || github.event.inputs.issue_number }}'
+          LABELS_OUTPUT: '${{ steps.gemini_issue_analysis.outputs.summary }}'
+        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea'
+        with:
+          github-token: '${{ steps.generate_token.outputs.token }}'
+          script: |
+            const rawOutput = process.env.LABELS_OUTPUT;
+            core.info(`Raw output from model: ${rawOutput}`);
+            let parsedLabels;
+            try {
+              // First, try to parse the raw output as JSON.
+              parsedLabels = JSON.parse(rawOutput);
+            } catch (jsonError) {
+              // If that fails, check for a markdown code block.
+              core.warning(`Direct JSON parsing failed: ${jsonError.message}. Trying to extract from a markdown block.`);
+              const jsonMatch = rawOutput.match(/```json\s*([\s\S]*?)\s*```/);
+              if (jsonMatch && jsonMatch[1]) {
+                try {
+                  parsedLabels = JSON.parse(jsonMatch[1].trim());
+                } catch (markdownError) {
+                  core.setFailed(`Failed to parse JSON even after extracting from markdown block: ${markdownError.message}\nRaw output: ${rawOutput}`);
+                  return;
+                }
+              } else {
+                core.setFailed(`Output is not valid JSON and does not contain a JSON markdown block.\nRaw output: ${rawOutput}`);
+                return;
+              }
+            }
+
+            const issueNumber = parseInt(process.env.ISSUE_NUMBER);
+            const labelsToAdd = parsedLabels.labels_to_set || [];
+
+            if (labelsToAdd.length !== 2) {
+              core.setFailed(`Expected exactly 2 labels (one product:  and one priority: ), but got ${labelsToAdd.length}. Labels: ${labelsToAdd.join(', ')}`);
+              return;
+            }
+
+            // Set labels based on triage result
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              labels: labelsToAdd
+            });
+            core.info(`Successfully added labels for #${issueNumber}: ${labelsToAdd.join(', ')}`);
+
+            // Remove the 'status: need-triage' label
+            try {
+                await github.rest.issues.removeLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    name: 'status: need-triage'
+                });
+                core.info(`Successfully removed 'status: need-triage' label.`);
+            } catch (error) {
+                // If the label doesn't exist, the API call will throw a 404. We can ignore this.
+                if (error.status !== 404) {
+                    core.warning(`Failed to remove 'status: need-triage': ${error.message}`);
+                }
+            }
+
+      - name: 'Post Issue Analysis Failure Comment'
+        if: |-
+          ${{ failure() && steps.gemini_issue_analysis.outcome == 'failure' }}
+        env:
+          ISSUE_NUMBER: '${{ github.event.issue.number || github.event.inputs.issue_number }}'
+          RUN_URL: '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea'
+        with:
+          github-token: '${{ steps.generate_token.outputs.token }}'
+          script: |-
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: parseInt(process.env.ISSUE_NUMBER),
+              body: 'There is a problem with the Gemini CLI issue triaging. Please check the [action logs](${process.env.RUN_URL}) for details.'
+            })
