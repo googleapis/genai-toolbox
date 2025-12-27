@@ -72,11 +72,12 @@ type compatibleSource interface {
 }
 
 type Config struct {
-	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
-	Source       string   `yaml:"source" validate:"required"`
-	Description  string   `yaml:"description"`
-	AuthRequired []string `yaml:"authRequired"`
+	Name         string                 `yaml:"name" validate:"required"`
+	Kind         string                 `yaml:"kind" validate:"required"`
+	Source       string                 `yaml:"source" validate:"required"`
+	Description  string                 `yaml:"description"`
+	AuthRequired []string               `yaml:"authRequired"`
+	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -95,7 +96,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if description == "" {
 		description = "Lists all tablespaces in the database. Returns the tablespace name, owner name, size in bytes(if the current user has CREATE privileges on the tablespace, otherwise NULL), internal object ID, the access control list regarding permissions, and any specific tablespace options."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
+	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, annotations)
 
 	// finish tool setup
 	return Tool{

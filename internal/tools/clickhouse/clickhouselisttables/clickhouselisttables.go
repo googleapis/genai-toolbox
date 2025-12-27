@@ -51,7 +51,8 @@ type Config struct {
 	Kind         string                `yaml:"kind" validate:"required"`
 	Source       string                `yaml:"source" validate:"required"`
 	Description  string                `yaml:"description" validate:"required"`
-	AuthRequired []string              `yaml:"authRequired"`
+	AuthRequired []string               `yaml:"authRequired"`
+	Annotations  *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 	Parameters   parameters.Parameters `yaml:"parameters"`
 }
 
@@ -66,7 +67,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	params := parameters.Parameters{databaseParameter}
 
 	allParameters, paramManifest, _ := parameters.ProcessParameters(nil, params)
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
+	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, annotations)
 
 	t := Tool{
 		Config:      cfg,

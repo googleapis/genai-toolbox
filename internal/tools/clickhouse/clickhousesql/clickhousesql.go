@@ -64,7 +64,8 @@ func (cfg Config) ToolConfigKind() string {
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	allParameters, paramManifest, _ := parameters.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
+	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, annotations)
 
 	t := Tool{
 		Config:      cfg,
