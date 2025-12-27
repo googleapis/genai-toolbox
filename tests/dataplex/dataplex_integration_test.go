@@ -85,6 +85,49 @@ func initDataplexConnection(ctx context.Context) (*dataplex.CatalogClient, error
 	return client, nil
 }
 
+func cleanupExistingAspectTypes(t *testing.T, ctx context.Context, client *dataplex.CatalogClient) {
+        parent := fmt.Sprintf("projects/%s/locations/us", DataplexProject)
+        listReq := &dataplexpb.ListAspectTypesRequest{
+                Parent: parent,
+        }
+        it := client.ListAspectTypes(ctx, listReq)
+        var aspectTypesToDelete []string
+        for {
+                aspectType, err := it.Next()
+                if err == iterator.Done {
+                        break
+                }
+                if err != nil {
+                        t.Fatalf("Failed to list aspect types for cleanup: %v", err)
+                }
+                aspectTypesToDelete = append(aspectTypesToDelete, aspectType.GetName())
+        }
+
+        if len(aspectTypesToDelete) == 0 {
+                t.Logf("No existing aspect types found in %s to delete.", parent)
+                return
+        }
+
+        t.Logf("Deleting %d existing aspect types in %s.", len(aspectTypesToDelete), parent)
+        for _, aspectTypeName := range aspectTypesToDelete {
+                deleteReq := &dataplexpb.DeleteAspectTypeRequest{
+                        Name: aspectTypeName,
+                }
+                _, err := client.DeleteAspectType(ctx, deleteReq)
+                if err != nil {
+                        t.Errorf("Failed to delete aspect type %s: %v", aspectTypeName, err)
+                        continue
+                }
+        }
+	// Verify cleanup
+        it = client.ListAspectTypes(ctx, listReq)
+        _, err := it.Next()
+        if err == nil {
+              // If err is nil, it means an item was successfully fetched, so not empty.
+              t.Fatalf("Cleanup failed: Aspect types still exist in %s.", parent)
+        }
+}
+
 func TestDataplexToolEndpoints(t *testing.T) {
 	sourceConfig := getDataplexVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
@@ -101,6 +144,9 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to create Dataplex connection: %s", err)
 	}
+
+	// Cleanup ALL existing AspectTypes in the project
+        cleanupExistingAspectTypes(t, ctx, dataplexClient)
 
 	// create resources with UUID
 	datasetName := fmt.Sprintf("temp_toolbox_test_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))
