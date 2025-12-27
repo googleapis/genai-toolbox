@@ -101,6 +101,33 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
+func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	results, err := s.Pool.Query(ctx, statement, params...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w. Query: %v , Values: %v. Toolbox v0.19.0+ is only compatible with AlloyDB AI NL v1.0.3+. Please ensure that you are using the latest AlloyDB AI NL extension", err, statement, params)
+	}
+
+	fields := results.FieldDescriptions()
+
+	var out []any
+	for results.Next() {
+		v, err := results.Values()
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+		vMap := make(map[string]any)
+		for i, f := range fields {
+			vMap[f.Name] = v[i]
+		}
+		out = append(out, vMap)
+	}
+	// this will catch actual query execution errors
+	if err := results.Err(); err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	return out, nil
+}
+
 func getOpts(ipType, userAgent string, useIAM bool) ([]alloydbconn.Option, error) {
 	opts := []alloydbconn.Option{alloydbconn.WithUserAgent(userAgent)}
 	switch strings.ToLower(ipType) {

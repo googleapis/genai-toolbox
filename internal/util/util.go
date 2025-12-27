@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -117,6 +118,30 @@ func UserAgentFromContext(ctx context.Context) (string, error) {
 	} else {
 		return "", fmt.Errorf("unable to retrieve user agent")
 	}
+}
+
+type UserAgentRoundTripper struct {
+	userAgent string
+	next      http.RoundTripper
+}
+
+func NewUserAgentRoundTripper(ua string, next http.RoundTripper) *UserAgentRoundTripper {
+	return &UserAgentRoundTripper{
+		userAgent: ua,
+		next:      next,
+	}
+}
+
+func (rt *UserAgentRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	// create a deep copy of the request
+	newReq := req.Clone(req.Context())
+	ua := newReq.Header.Get("User-Agent")
+	if ua == "" {
+		newReq.Header.Set("User-Agent", rt.userAgent)
+	} else {
+		newReq.Header.Set("User-Agent", ua+" "+rt.userAgent)
+	}
+	return rt.next.RoundTrip(newReq)
 }
 
 func NewStrictDecoder(v interface{}) (*yaml.Decoder, error) {
