@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.24.1](https://github.com/googleapis/genai-toolbox/compare/v0.24.0...v0.24.1) (2025-12-27)
+
+
+### Bug Fixes
+
+* Add import for cloudgda source ([#2217](https://github.com/googleapis/genai-toolbox/issues/2217)) ([7daa411](https://github.com/googleapis/genai-toolbox/commit/7daa4111f4ebfb0a35319fd67a8f7b9f0f99efcf))
+* **tools/alloydb-wait-for-operation:** Fix connection message generation ([#2228](https://github.com/googleapis/genai-toolbox/issues/2228)) ([7053fbb](https://github.com/googleapis/genai-toolbox/commit/7053fbb1953653143d39a8510916ea97a91022a6))
+
 ## [0.24.0](https://github.com/googleapis/genai-toolbox/compare/v0.23.0...v0.24.0) (2025-12-19)
 
 
