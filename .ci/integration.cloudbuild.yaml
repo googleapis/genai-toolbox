@@ -180,7 +180,8 @@ steps:
       - "BIGTABLE_PROJECT=$PROJECT_ID"
       - "BIGTABLE_INSTANCE=$_BIGTABLE_INSTANCE"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLIENT_ID"]
+    secretEnv:
+      ["CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -395,7 +396,8 @@ steps:
       - "CLOUD_SQL_MYSQL_DATABASE=$_DATABASE_NAME"
       - "CLOUD_SQL_MYSQL_REGION=$_REGION"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLOUD_SQL_MYSQL_USER", "CLOUD_SQL_MYSQL_PASS", "CLIENT_ID"]
+    secretEnv:
+      ["CLOUD_SQL_MYSQL_USER", "CLOUD_SQL_MYSQL_PASS", "CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -507,7 +509,7 @@ steps:
           sqlite
 
   - id: "couchbase"
-    name: golang:1
+    name : golang:1
     waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
@@ -515,8 +517,7 @@ steps:
       - "COUCHBASE_SCOPE=$_COUCHBASE_SCOPE"
       - "COUCHBASE_BUCKET=$_COUCHBASE_BUCKET"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv:
-      ["COUCHBASE_CONNECTION", "COUCHBASE_USER", "COUCHBASE_PASS", "CLIENT_ID"]
+    secretEnv: ["COUCHBASE_CONNECTION", "COUCHBASE_USER", "COUCHBASE_PASS", "CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -529,7 +530,7 @@ steps:
           couchbase
 
   - id: "redis"
-    name: golang:1
+    name : golang:1
     waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
@@ -546,9 +547,9 @@ steps:
           "Redis" \
           redis \
           redis
-
+        
   - id: "valkey"
-    name: golang:1
+    name : golang:1
     waitFor: ["compile-test-binary"]
     entrypoint: /bin/bash
     env:
@@ -678,6 +679,25 @@ steps:
           "MindsDB" \
           mindsdb \
           mindsdb
+
+  - id: "duckdb"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    secretEnv: ["CLIENT_ID"]
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "DuckDB" \
+          duckdb \
+          duckdb
 
   - id: "cloud-sql"
     name: golang:1
