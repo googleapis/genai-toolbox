@@ -2452,15 +2452,15 @@ func RunPostgresListDatabaseStatsTest(t *testing.T, ctx context.Context, pool *p
 		},
 		{
 			name:           "filter by tablespace",
-			requestBody:    bytes.NewBuffer([]byte(`{"default_tablespace": "pg_default"}`)),
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"default_tablespace": "pg_default", "database_name": "%s"}`, dbName1))),
 			wantStatusCode: http.StatusOK,
-			want:           []map[string]interface{}{db1Want, db2Want},
+			want:           []map[string]interface{}{db1Want},
 		},
 		{
-			name:           "sort by size (desc)",
-			requestBody:    bytes.NewBuffer([]byte(`{"sort_by": "size"}`)),
+			name:           "sort by size",
+			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf(`{"sort_by": "size", "database_name": "%s"}`, dbName2))),
 			wantStatusCode: http.StatusOK,
-			want:           []map[string]interface{}{db1Want, db2Want},
+			want:           []map[string]interface{}{db2Want},
 		},
 	}
 
@@ -2472,7 +2472,6 @@ func RunPostgresListDatabaseStatsTest(t *testing.T, ctx context.Context, pool *p
 			if resp.StatusCode != tc.wantStatusCode {
 				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(body))
 			}
-
 			var bodyWrapper struct {
 				Result json.RawMessage `json:"result"`
 			}

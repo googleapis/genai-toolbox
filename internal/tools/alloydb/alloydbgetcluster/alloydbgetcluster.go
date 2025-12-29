@@ -22,7 +22,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/alloydb/v1"
 )
 
 const kind string = "alloydb-get-cluster"
@@ -44,7 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	GetDefaultProject() string
 	UseClientAuthorization() bool
-	GetService(context.Context, string) (*alloydb.Service, error)
+	GetCluster(context.Context, string, string, string, string) (any, error)
 }
 
 // Configuration for the get-cluster tool.
@@ -141,19 +140,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("invalid 'cluster' parameter; expected a string")
 	}
 
-	service, err := source.GetService(ctx, string(accessToken))
-	if err != nil {
-		return nil, err
-	}
-
-	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", project, location, cluster)
-
-	resp, err := service.Projects.Locations.Clusters.Get(urlString).Do()
-	if err != nil {
-		return nil, fmt.Errorf("error getting AlloyDB cluster: %w", err)
-	}
-
-	return resp, nil
+	return source.GetCluster(ctx, project, location, cluster, string(accessToken))
 }
 
 // ParseParams parses the parameters for the tool.
