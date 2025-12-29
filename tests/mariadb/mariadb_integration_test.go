@@ -250,7 +250,7 @@ func RunMariDBListTablesTest(t *testing.T, databaseName, tableNameParam, tableNa
 			name:           "invoke list_tables with non-existent table",
 			requestBody:    bytes.NewBufferString(`{"table_names": "non_existent_table"}`),
 			wantStatusCode: http.StatusOK,
-			want:           nil,
+			want:           []objectDetails{},
 		},
 	}
 	for _, tc := range invokeTcs {
@@ -282,7 +282,7 @@ func RunMariDBListTablesTest(t *testing.T, databaseName, tableNameParam, tableNa
 				if err := json.Unmarshal([]byte(resultString), &tables); err != nil {
 					t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
 				}
-				var details []map[string]any
+				details := []map[string]any{}
 				for _, table := range tables {
 					var d map[string]any
 					if err := json.Unmarshal([]byte(table.ObjectDetails), &d); err != nil {
@@ -292,23 +292,19 @@ func RunMariDBListTablesTest(t *testing.T, databaseName, tableNameParam, tableNa
 				}
 				got = details
 			} else {
-				if resultString == "null" {
-					got = nil
-				} else {
-					var tables []tableInfo
-					if err := json.Unmarshal([]byte(resultString), &tables); err != nil {
-						t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
-					}
-					var details []objectDetails
-					for _, table := range tables {
-						var d objectDetails
-						if err := json.Unmarshal([]byte(table.ObjectDetails), &d); err != nil {
-							t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
-						}
-						details = append(details, d)
-					}
-					got = details
+				var tables []tableInfo
+				if err := json.Unmarshal([]byte(resultString), &tables); err != nil {
+					t.Fatalf("failed to unmarshal outer JSON array into []tableInfo: %v", err)
 				}
+				details := []objectDetails{}
+				for _, table := range tables {
+					var d objectDetails
+					if err := json.Unmarshal([]byte(table.ObjectDetails), &d); err != nil {
+						t.Fatalf("failed to unmarshal nested ObjectDetails string: %v", err)
+					}
+					details = append(details, d)
+				}
+				got = details
 			}
 
 			opts := []cmp.Option{
@@ -319,7 +315,7 @@ func RunMariDBListTablesTest(t *testing.T, databaseName, tableNameParam, tableNa
 
 			// Checking only the current database where the test tables are created to avoid brittle tests.
 			if tc.isAllTables {
-				var filteredGot []objectDetails
+				filteredGot := []objectDetails{}
 				if got != nil {
 					for _, item := range got.([]objectDetails) {
 						if item.SchemaName == databaseName {
@@ -327,11 +323,7 @@ func RunMariDBListTablesTest(t *testing.T, databaseName, tableNameParam, tableNa
 						}
 					}
 				}
-				if len(filteredGot) == 0 {
-					got = nil
-				} else {
-					got = filteredGot
-				}
+				got = filteredGot
 			}
 
 			if diff := cmp.Diff(tc.want, got, opts...); diff != "" {

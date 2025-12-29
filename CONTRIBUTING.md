@@ -167,15 +167,15 @@ tools.
   [integration.cloudbuild.yaml](.ci/integration.cloudbuild.yaml).
 
 [tool-get]:
-    https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L31
+    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L41
 [tool-call]:
-    <https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L79>
+    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L229
 [mcp-call]:
-    https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L554
+    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L789
 [execute-sql]:
-    <https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L431>
+    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L609
 [temp-param]:
-    <https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/tests/tool.go#L297>
+    https://github.com/googleapis/genai-toolbox/blob/v0.23.0/tests/tool.go#L454
 [temp-param-doc]:
     https://googleapis.github.io/genai-toolbox/resources/tools/#template-parameters
 

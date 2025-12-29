@@ -13,6 +13,12 @@ allowing developers to interact with and take action on databases.
 See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for
 details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 
+{{< notice tip >}}
+You can now use `--prebuilt` along `--tools-file`, `--tools-files`, or
+`--tools-folder` to combine prebuilt configs with custom tools.
+See [Usage Examples](../reference/cli.md#examples).
+{{< /notice >}}
+
 ## AlloyDB Postgres
 
 *   `--prebuilt` value: `alloydb-postgres`
