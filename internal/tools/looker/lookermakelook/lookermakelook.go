@@ -154,10 +154,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("error making me request: %s", err)
 	}
 
-	if folder == "" && mresp.PersonalFolderId != nil && *mresp.PersonalFolderId != "" {
+	if folder == "" {
+		if mresp.PersonalFolderId == nil || *mresp.PersonalFolderId == "" {
+			return nil, fmt.Errorf("user does not have a personal folder. A folder must be specified")
+		}
 		folder = *mresp.PersonalFolderId
-	} else if folder == "" && (mresp.PersonalFolderId == nil || *mresp.PersonalFolderId == "") {
-		return nil, fmt.Errorf("user does not have a personal folder. A folder must be specified")
 	}
 
 	looks, err := sdk.FolderLooks(folder, "title", source.LookerApiSettings())
