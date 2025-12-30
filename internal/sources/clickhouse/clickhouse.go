@@ -75,7 +75,7 @@ func (r Config) SourceConfigKind() string {
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
-	pool, err := initClickHouseConnectionPool(ctx, tracer, r.Name, r.Host, r.Port, r.User, r.Password, r.Database, r.Protocol, r.Secure, r.MaxOpenConns, r.MaxIdleConns, r.ConnMaxLifetime)
+	pool, err := initClickHouseConnectionPool(ctx, tracer, r)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create pool: %w", err)
 	}
@@ -120,11 +120,12 @@ func validateConfig(protocol string) error {
 	return nil
 }
 
-func initClickHouseConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname, protocol string, secure bool, maxOpenConns, maxIdleConns *int, connMaxLifetime string) (*sql.DB, error) {
+func initClickHouseConnectionPool(ctx context.Context, tracer trace.Tracer, config Config) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, config.Name)
 	defer span.End()
 
+	protocol := config.Protocol
 	if protocol == "" {
 		protocol = "https"
 	}
@@ -133,15 +134,15 @@ func initClickHouseConnectionPool(ctx context.Context, tracer trace.Tracer, name
 		return nil, err
 	}
 
-	encodedUser := url.QueryEscape(user)
-	encodedPass := url.QueryEscape(pass)
+	encodedUser := url.QueryEscape(config.User)
+	encodedPass := url.QueryEscape(config.Password)
 
 	var dsn string
 	scheme := protocol
-	if protocol == "http" && secure {
+	if protocol == "http" && config.Secure {
 		scheme = "https"
 	}
-	dsn = fmt.Sprintf("%s://%s:%s@%s:%s/%s", scheme, encodedUser, encodedPass, host, port, dbname)
+	dsn = fmt.Sprintf("%s://%s:%s@%s:%s/%s", scheme, encodedUser, encodedPass, config.Host, config.Port, config.Database)
 	if scheme == "https" {
 		dsn += "?secure=true&skip_verify=false"
 	}
@@ -153,24 +154,24 @@ func initClickHouseConnectionPool(ctx context.Context, tracer trace.Tracer, name
 
 	// Set MaxOpenConns with default value if not specified
 	maxOpen := DefaultMaxOpenConns
-	if maxOpenConns != nil {
-		maxOpen = *maxOpenConns
+	if config.MaxOpenConns != nil {
+		maxOpen = *config.MaxOpenConns
 	}
 	pool.SetMaxOpenConns(maxOpen)
 
 	// Set MaxIdleConns with default value if not specified
 	maxIdle := DefaultMaxIdleConns
-	if maxIdleConns != nil {
-		maxIdle = *maxIdleConns
+	if config.MaxIdleConns != nil {
+		maxIdle = *config.MaxIdleConns
 	}
 	pool.SetMaxIdleConns(maxIdle)
 
 	// Set ConnMaxLifetime with default value if not specified
 	connLifetime := DefaultConnMaxLifetime
-	if connMaxLifetime != "" {
-		parsedLifetime, err := time.ParseDuration(connMaxLifetime)
+	if config.ConnMaxLifetime != "" {
+		parsedLifetime, err := time.ParseDuration(config.ConnMaxLifetime)
 		if err != nil {
-			return nil, fmt.Errorf("invalid connMaxLifetime %q: %w", connMaxLifetime, err)
+			return nil, fmt.Errorf("invalid connMaxLifetime %q: %w", config.ConnMaxLifetime, err)
 		}
 		connLifetime = parsedLifetime
 	}

@@ -403,7 +403,17 @@ func TestInitClickHouseConnectionPoolDSNGeneration(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pool, err := initClickHouseConnectionPool(ctx, tracer, "test", tt.host, tt.port, tt.user, tt.pass, tt.dbname, tt.protocol, tt.secure, nil, nil, "")
+			config := Config{
+				Name:     "test",
+				Host:     tt.host,
+				Port:     tt.port,
+				User:     tt.user,
+				Password: tt.pass,
+				Database: tt.dbname,
+				Protocol: tt.protocol,
+				Secure:   tt.secure,
+			}
+			pool, err := initClickHouseConnectionPool(ctx, tracer, config)
 
 			if !tt.shouldErr && err != nil {
 				t.Errorf("Expected no error, got: %v", err)
@@ -472,7 +482,20 @@ func TestInitClickHouseConnectionPoolWithPoolSettings(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pool, err := initClickHouseConnectionPool(ctx, tracer, "test", "localhost", "8443", "user", "pass", "db", "https", true, tt.maxOpenConns, tt.maxIdleConns, tt.connMaxLifetime)
+			config := Config{
+				Name:            "test",
+				Host:            "localhost",
+				Port:            "8443",
+				User:            "user",
+				Password:        "pass",
+				Database:        "db",
+				Protocol:        "https",
+				Secure:          true,
+				MaxOpenConns:    tt.maxOpenConns,
+				MaxIdleConns:    tt.maxIdleConns,
+				ConnMaxLifetime: tt.connMaxLifetime,
+			}
+			pool, err := initClickHouseConnectionPool(ctx, tracer, config)
 
 			if tt.expectErr {
 				if err == nil {
