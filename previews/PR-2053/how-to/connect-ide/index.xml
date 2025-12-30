@@ -45,6 +45,7 @@ to expose your developer assistant tools to a Looker instance:&lt;/p>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2053/how-to/connect-ide/looker_mcp/#configure-your-mcp-client">Cline&lt;/a> (VS Code extension)&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2053/how-to/connect-ide/looker_mcp/#configure-your-mcp-client">Claude desktop&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2053/how-to/connect-ide/looker_mcp/#configure-your-mcp-client">Claude code&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2053/how-to/connect-ide/looker_mcp/#connect-with-antigravity">Antigravity&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;h2 id="set-up-looker">Set up Looker&lt;/h2>
 &lt;ol>

@@ -74,6 +74,22 @@ redeploying your application.
 
 ## Getting Started
 
+### (Non-production) Running Toolbox
+
+You can run Toolbox directly with a [configuration file](../configure.md):
+
+```sh
+npx @toolbox-sdk/server --tools-file tools.yaml
+```
+
+This runs the latest version of the toolbox server with your configuration file.
+
+{{< notice note >}}
+This method should only be used for non-production use cases such as
+experimentation. For any production use-cases, please consider [Installing the
+server](#installing-the-server) and then [running it](#running-the-server).
+{{< /notice >}}
+
 ### Installing the server
 
 For the latest version, check the [releases page][releases] and use the
@@ -90,7 +106,7 @@ To install Toolbox as a binary on Linux (AMD64):
 
 ```sh
 # see releases page for other versions
-export VERSION=0.21.0
+export VERSION=0.24.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 chmod +x toolbox
 ```
@@ -101,7 +117,7 @@ To install Toolbox as a binary on macOS (Apple Silicon):
 
 ```sh
 # see releases page for other versions
-export VERSION=0.21.0
+export VERSION=0.24.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
 chmod +x toolbox
 ```
@@ -112,19 +128,29 @@ To install Toolbox as a binary on macOS (Intel):
 
 ```sh
 # see releases page for other versions
-export VERSION=0.21.0
+export VERSION=0.24.0
 curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
 chmod +x toolbox
 ```
 
 {{% /tab %}}
-{{% tab header="Windows (AMD64)" lang="en" %}}
-To install Toolbox as a binary on Windows (AMD64):
+{{% tab header="Windows (Command Prompt)" lang="en" %}}
+To install Toolbox as a binary on Windows (Command Prompt):
+
+```cmd
+:: see releases page for other versions
+set VERSION=0.24.0
+curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
+```
+
+{{% /tab %}}
+{{% tab header="Windows (PowerShell)" lang="en" %}}
+To install Toolbox as a binary on Windows (PowerShell):
 
 ```powershell
-:: see releases page for other versions
-set VERSION=0.21.0
-curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
+# see releases page for other versions
+$VERSION = "0.24.0"
+curl.exe -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe"
 ```
 
 {{% /tab %}}
@@ -135,7 +161,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.21.0
+export VERSION=0.24.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -154,7 +180,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.21.0
+go install github.com/googleapis/genai-toolbox@v0.24.0
 ```
 
 {{% /tab %}}
@@ -297,6 +323,10 @@ let client = new ToolboxClient(URL);
 const toolboxTools = await client.loadToolset('toolsetName');
 {{< /highlight >}}
 
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's
+README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
+
 {{% /tab %}}
 {{% tab header="LangChain/Langraph" lang="en" %}}
 
@@ -320,6 +350,10 @@ const getTool = (toolboxTool) => tool(currTool, {
 // Use these tools in your Langchain/Langraph applications
 const tools = toolboxTools.map(getTool);
 {{< /highlight >}}
+
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's
+README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
 
 {{% /tab %}}
 {{% tab header="Genkit" lang="en" %}}
@@ -356,6 +390,10 @@ const getTool = (toolboxTool) => ai.defineTool({
 const tools = toolboxTools.map(getTool);
 {{< /highlight >}}
 
+For more detailed instructions on using the Toolbox Core SDK, see the
+[project's
+README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
+
 {{% /tab %}}
 {{% tab header="LlamaIndex" lang="en" %}}
 
@@ -383,12 +421,32 @@ const tools = toolboxTools.map(getTool);
 
 {{< /highlight >}}
 
-{{% /tab %}}
-{{< /tabpane >}}
-
 For more detailed instructions on using the Toolbox Core SDK, see the
 [project's
 README](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/README.md).
+
+{{% /tab %}}
+{{% tab header="ADK TS" lang="en" %}}
+
+{{< highlight javascript >}}
+import { ToolboxClient } from '@toolbox-sdk/adk';
+
+// Replace with the actual URL where your Toolbox service is running
+const URL = 'http://127.0.0.1:5000';
+
+let client = new ToolboxClient(URL);
+const tools = await client.loadToolset();
+
+// Use the client and tools as per requirement
+
+{{< /highlight >}}
+
+For detailed samples on using the Toolbox JS SDK with ADK JS, see the [project's
+README.](https://github.com/googleapis/mcp-toolbox-sdk-js/tree/main/packages/toolbox-adk/README.md)
+
+{{% /tab %}}
+{{< /tabpane >}}
+
 
 #### Go
 
@@ -920,11 +978,24 @@ from Toolbox.
     ```
 
 1. In a new terminal, install the
-   [SDK](https://www.npmjs.com/package/@toolbox-sdk/core).
-
-    ```bash
-    npm install @toolbox-sdk/core
-    ```
+   SDK package.
+   {{< tabpane persist=header >}}
+{{< tab header="LangChain" lang="bash" >}}
+npm install @toolbox-sdk/core
+{{< /tab >}}
+{{< tab header="GenkitJS" lang="bash" >}}
+npm install @toolbox-sdk/core
+{{< /tab >}}
+{{< tab header="LlamaIndex" lang="bash" >}}
+npm install @toolbox-sdk/core
+{{< /tab >}}
+{{< tab header="GoogleGenAI" lang="bash" >}}
+npm install @toolbox-sdk/core
+{{< /tab >}}
+{{< tab header="ADK" lang="bash" >}}
+npm install @toolbox-sdk/adk
+{{< /tab >}}
+{{< /tabpane >}}
 
 1. Install other required dependencies
 
@@ -940,6 +1011,9 @@ npm install llamaindex @llamaindex/google @llamaindex/workflow
 {{< /tab >}}
 {{< tab header="GoogleGenAI" lang="bash" >}}
 npm install @google/genai
+{{< /tab >}}
+{{< tab header="ADK" lang="bash" >}}
+npm install @google/adk
 {{< /tab >}}
 {{< /tabpane >}}
 
@@ -968,6 +1042,12 @@ npm install @google/genai
 {{< tab header="GoogleGenAI" lang="js" >}}
 
 {{< include "quickstart/js/genAI/quickstart.js" >}}
+
+{{< /tab >}}
+
+{{< tab header="ADK" lang="js" >}}
+
+{{< include "quickstart/js/adk/quickstart.js" >}}
 
 {{< /tab >}}
 
@@ -1082,6 +1162,249 @@ repo](https://github.com/googleapis/mcp-toolbox-sdk-go).
 {{</ notice >}}
 
 
+# Prompts using Gemini CLI
+How to get started using Toolbox prompts locally with PostgreSQL and [Gemini CLI](https://pypi.org/project/gemini-cli/).
+
+
+## Before you begin
+
+This guide assumes you have already done the following:
+
+1. Installed [PostgreSQL 16+ and the `psql` client][install-postgres].
+ 
+[install-postgres]: https://www.postgresql.org/download/
+
+## Step 1: Set up your database
+
+In this section, we will create a database, insert some data that needs to be
+accessed by our agent, and create a database user for Toolbox to connect with.
+
+1. Connect to postgres using the `psql` command:
+
+    ```bash
+    psql -h 127.0.0.1 -U postgres
+    ```
+
+    Here, `postgres` denotes the default postgres superuser.
+
+    {{< notice info >}}
+
+#### **Having trouble connecting?**
+
+* **Password Prompt:** If you are prompted for a password for the `postgres`
+  user and do not know it (or a blank password doesn't work), your PostgreSQL
+  installation might require a password or a different authentication method.
+* **`FATAL: role "postgres" does not exist`:** This error means the default
+  `postgres` superuser role isn't available under that name on your system.
+* **`Connection refused`:** Ensure your PostgreSQL server is actually running.
+  You can typically check with `sudo systemctl status postgresql` and start it
+  with `sudo systemctl start postgresql` on Linux systems.
+
+<br/>
+
+#### **Common Solution**
+
+For password issues or if the `postgres` role seems inaccessible directly, try
+switching to the `postgres` operating system user first. This user often has
+permission to connect without a password for local connections (this is called
+peer authentication).
+
+```bash
+sudo -i -u postgres
+psql -h 127.0.0.1
+```
+
+Once you are in the `psql` shell using this method, you can proceed with the
+database creation steps below. Afterwards, type `\q` to exit `psql`, and then
+`exit` to return to your normal user shell.
+
+If desired, once connected to `psql` as the `postgres` OS user, you can set a
+password for the `postgres` *database* user using: `ALTER USER postgres WITH
+PASSWORD 'your_chosen_password';`. This would allow direct connection with `-U
+postgres` and a password next time.
+    {{< /notice >}}
+
+1. Create a new database and a new user:
+
+    {{< notice tip >}}
+  For a real application, it's best to follow the principle of least permission
+  and only grant the privileges your application needs.
+    {{< /notice >}}
+
+    ```sql
+      CREATE USER toolbox_user WITH PASSWORD 'my-password';
+
+      CREATE DATABASE toolbox_db;
+      GRANT ALL PRIVILEGES ON DATABASE toolbox_db TO toolbox_user;
+
+      ALTER DATABASE toolbox_db OWNER TO toolbox_user;
+    ```
+
+1. End the database session:
+
+    ```bash
+    \q
+    ```
+
+    (If you used `sudo -i -u postgres` and then `psql`, remember you might also
+    need to type `exit` after `\q` to leave the `postgres` user's shell
+    session.)
+
+1. Connect to your database with your new user:
+
+    ```bash
+    psql -h 127.0.0.1 -U toolbox_user -d toolbox_db
+    ```
+
+1. Create the required tables using the following commands:
+
+    ```sql
+    CREATE TABLE users (
+      id SERIAL PRIMARY KEY,
+      username VARCHAR(50) NOT NULL,
+      email VARCHAR(100) UNIQUE NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+
+    CREATE TABLE restaurants (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(100) NOT NULL,
+      location VARCHAR(100)
+    );
+
+    CREATE TABLE reviews (
+      id SERIAL PRIMARY KEY,
+      user_id INT REFERENCES users(id),
+      restaurant_id INT REFERENCES restaurants(id),
+      rating INT CHECK (rating >= 1 AND rating <= 5),
+      review_text TEXT,
+      is_published BOOLEAN DEFAULT false,
+      moderation_status VARCHAR(50) DEFAULT 'pending_manual_review',      
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    ```
+
+1. Insert dummy data into the tables.
+
+    ```sql
+    INSERT INTO users (id, username, email) VALUES
+    (123, 'jane_d', 'jane.d@example.com'),
+    (124, 'john_s', 'john.s@example.com'),
+    (125, 'sam_b', 'sam.b@example.com');
+
+    INSERT INTO restaurants (id, name, location) VALUES
+    (455, 'Pizza Palace', '123 Main St'),
+    (456, 'The Corner Bistro', '456 Oak Ave'),
+    (457, 'Sushi Spot', '789 Pine Ln');
+
+    INSERT INTO reviews (user_id, restaurant_id, rating, review_text, is_published, moderation_status) VALUES
+    (124, 455, 5, 'Best pizza in town! The crust was perfect.', true, 'approved'),
+    (125, 457, 4, 'Great sushi, very fresh. A bit pricey but worth it.', true, 'approved'),
+    (123, 457, 5, 'Absolutely loved the dragon roll. Will be back!', true, 'approved'),
+    (123, 456, 4, 'The atmosphere was lovely and the food was great. My photo upload might have been weird though.', false, 'pending_manual_review'),
+    (125, 456, 1, 'This review contains inappropriate language.', false, 'rejected');
+    ```
+
+1. End the database session:
+
+    ```bash
+    \q
+    ```
+
+## Step 2: Configure Toolbox
+
+Create a file named `tools.yaml`. This file defines the database connection, the
+SQL tools available, and the prompts the agents will use.
+
+```yaml
+sources:
+  my-foodiefind-db:
+    kind: postgres
+    host: 127.0.0.1
+    port: 5432
+    database: toolbox_db
+    user: toolbox_user
+    password: my-password
+tools:
+  find_user_by_email:
+    kind: postgres-sql
+    source: my-foodiefind-db
+    description: Find a user's ID by their email address.
+    parameters:
+      - name: email
+        type: string
+        description: The email address of the user to find.
+    statement: SELECT id FROM users WHERE email = $1;
+  find_restaurant_by_name:
+    kind: postgres-sql
+    source: my-foodiefind-db
+    description: Find a restaurant's ID by its exact name.
+    parameters:
+      - name: name
+        type: string
+        description: The name of the restaurant to find.
+    statement: SELECT id FROM restaurants WHERE name = $1;
+  find_review_by_user_and_restaurant:
+    kind: postgres-sql
+    source: my-foodiefind-db
+    description: Find the full record for a specific review using the user's ID and the restaurant's ID.
+    parameters:
+      - name: user_id
+        type: integer
+        description: The numerical ID of the user.
+      - name: restaurant_id
+        type: integer
+        description: The numerical ID of the restaurant.
+    statement: SELECT * FROM reviews WHERE user_id = $1 AND restaurant_id = $2;
+prompts:
+  investigate_missing_review:
+    description: "Investigates a user's missing review by finding the user, restaurant, and the review itself, then analyzing its status."
+    arguments:
+      - name: "user_email"
+        description: "The email of the user who wrote the review."
+      - name: "restaurant_name"
+        description: "The name of the restaurant being reviewed."
+    messages:
+      - content: >-
+          **Goal:** Find the review written by the user with email '{{.user_email}}' for the restaurant named '{{.restaurant_name}}' and understand its status.
+          **Workflow:**
+          1. Use the `find_user_by_email` tool with the email '{{.user_email}}' to get the `user_id`.
+          2. Use the `find_restaurant_by_name` tool with the name '{{.restaurant_name}}' to get the `restaurant_id`.
+          3. Use the `find_review_by_user_and_restaurant` tool with the `user_id` and `restaurant_id` you just found.
+          4. Analyze the results from the final tool call. Examine the `is_published` and `moderation_status` fields and explain the review's status to the user in a clear, human-readable sentence.
+```
+
+## Step 3: Connect to Gemini CLI
+
+Configure the Gemini CLI to talk to your local Toolbox MCP server.
+
+1. Open or create your Gemini settings file: `~/.gemini/settings.json`.
+2. Add the following configuration to the file:
+
+    ```json
+    {
+      "mcpServers": {
+        "MCPToolbox": {
+          "httpUrl": "http://localhost:5000/mcp"
+        }
+      },
+      "mcp": {
+        "allowed": ["MCPToolbox"]
+      }
+    }
+    ```
+3. Start Gemini CLI using 
+    ```sh
+    gemini
+    ```
+    In case Gemini CLI is already running, use `/mcp refresh` to refresh the MCP server.
+
+4. Use gemini slash commands to run your prompt: 
+    ```sh
+    /investigate_missing_review --user_email="jane.d@example.com" --restaurant_name="The Corner Bistro"
+    ```
+
+
 # Quickstart (MCP)
 How to get started running Toolbox locally with MCP Inspector.
 
@@ -1185,7 +1508,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -1631,11 +1954,11 @@ Protocol (OTLP). If you would like to use a collector, please refer to this
 
 The following flags are used to determine Toolbox's telemetry configuration:
 
-| **flag**                   | **type** | **description**                                                                                                  |
-|----------------------------|----------|------------------------------------------------------------------------------------------------------------------|
-| `--telemetry-gcp`          | bool     | Enable exporting directly to Google Cloud Monitoring. Default is `false`.                                        |
-| `--telemetry-otlp`         | string   | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. "<http://127.0.0.1:4318>"). |
-| `--telemetry-service-name` | string   | Sets the value of the `service.name` resource attribute. Default is `toolbox`.                                   |
+| **flag**                   | **type** | **description**                                                                                                                                                                                           |
+|----------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--telemetry-gcp`          | bool     | Enable exporting directly to Google Cloud Monitoring. Default is `false`.                                                                                                                                 |
+| `--telemetry-otlp`         | string   | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. "127.0.0.1:4318"). To pass an insecure endpoint here, set environment variable `OTEL_EXPORTER_OTLP_INSECURE=true`. |
+| `--telemetry-service-name` | string   | Sets the value of the `service.name` resource attribute. Default is `toolbox`.                                                                                                                            |
 
 In addition to the flags noted above, you can also make additional configuration
 for OpenTelemetry via the [General SDK Configuration][sdk-configuration] through
@@ -1655,7 +1978,7 @@ To enable Google Cloud Exporter:
 To enable OTLP Exporter, provide Collector endpoint:
 
 ```bash
-./toolbox --telemetry-otlp="http://127.0.0.1:4553"
+./toolbox --telemetry-otlp="127.0.0.1:4553"
 ```
 
 
@@ -1763,6 +2086,7 @@ to expose your developer assistant tools to a Looker instance:
 * [Cline][cline] (VS Code extension)
 * [Claude desktop][claudedesktop]
 * [Claude code][claudecode]
+* [Antigravity][antigravity]
 
 [toolbox]: https://github.com/googleapis/genai-toolbox
 [gemini-cli]: #configure-your-mcp-client
@@ -1772,6 +2096,7 @@ to expose your developer assistant tools to a Looker instance:
 [cline]: #configure-your-mcp-client
 [claudedesktop]: #configure-your-mcp-client
 [claudecode]: #configure-your-mcp-client
+[antigravity]: #connect-with-antigravity
 
 ## Set up Looker
 
@@ -1782,6 +2107,55 @@ to expose your developer assistant tools to a Looker instance:
    something like `https://looker.example.com`. In some cases the API is
    listening at a different port, and you will need to use
    `https://looker.example.com:19999` instead.
+
+## Connect with Antigravity
+
+You can connect Looker to Antigravity in the following ways:
+
+* Using the MCP Store
+* Using a custom configuration
+
+{{< notice note >}}
+You don't need to download the MCP Toolbox binary to use these methods.
+{{< /notice >}}
+
+{{< tabpane text=true >}}
+{{% tab header="MCP Store" lang="en" %}}
+The most straightforward way to connect to Looker in Antigravity is by using the built-in MCP Store.
+
+1. Open Antigravity and open the editor's agent panel.
+1. Click the **"..."** icon at the top of the panel and select **MCP Servers**.
+1. Locate **Looker** in the list of available servers and click Install.
+1. Follow the on-screen prompts to securely link your accounts where applicable.
+
+After you install Looker in the MCP Store, resources and tools from the server are automatically available to the editor. 
+
+{{% /tab %}}
+{{% tab header="Custom config" lang="en" %}}
+ To connect to a custom MCP server, follow these steps:
+
+1. Open Antigravity and navigate to the MCP store using the **"..."** drop-down at the top of the editor's agent panel.
+1. To open the **mcp_config.json** file, click **MCP Servers** and then click **Manage MCP Servers > View raw config**.
+1. Add the following configuration, replace the environment variables with your values, and save.
+    
+    ```json
+    {
+      "mcpServers": {
+        "looker": {
+          "command": "npx",
+          "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "looker", "--stdio"],
+          "env": {
+              "LOOKER_BASE_URL": "https://looker.example.com",
+              "LOOKER_CLIENT_ID": "your-client-id",
+              "LOOKER_CLIENT_SECRET": "your-client-secret"
+          }
+        }
+      }
+    }
+    ```
+
+{{% /tab %}}
+{{< /tabpane >}}
 
 ## Install MCP Toolbox
 
@@ -1794,19 +2168,19 @@ to expose your developer assistant tools to a Looker instance:
 
 {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -2035,7 +2409,7 @@ assistant to list models, explores, dimensions, and measures. Run a
 query, retrieve the SQL for a query, and run a saved Look.
 
 The full tool list is available in the [Prebuilt Tools
-Reference](../../reference/prebuilt-tools/#looker).
+Reference](../../reference/prebuilt-tools.md/#looker).
 
 The following tools are available to the LLM:
 
@@ -2068,6 +2442,8 @@ instance and create new saved content.
    data
 1. **make_dashboard**: Create a saved dashboard in Looker and return the URL
 1. **add_dashboard_element**: Add a tile to a dashboard
+1. **add_dashboard_filter**: Add a filter to a dashboard
+1. **generate_embed_url**: Generate an embed url for content
 
 ### Looker Instance Health Tools
 
@@ -2144,19 +2520,19 @@ expose your developer assistant tools to a MySQL instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -2463,19 +2839,19 @@ expose your developer assistant tools to a Neo4j instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -2789,19 +3165,19 @@ Omni](https://cloud.google.com/alloydb/omni/current/docs/overview).
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3122,19 +3498,19 @@ instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3441,19 +3817,19 @@ to expose your developer assistant tools to a SQLite instance:
    <!-- {x-release-please-start-version} -->
    {{< tabpane persist=header >}}
 {{< tab header="linux/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/linux/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/arm64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/arm64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/darwin/arm64/toolbox
 {{< /tab >}}
 
 {{< tab header="darwin/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/amd64/toolbox
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/darwin/amd64/toolbox
 {{< /tab >}}
 
 {{< tab header="windows/amd64" lang="bash" >}}
-curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe
+curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/windows/amd64/toolbox.exe
 {{< /tab >}}
 {{< /tabpane >}}
     <!-- {x-release-please-end} -->
@@ -3736,6 +4112,7 @@ instance, database and users:
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
 
 ## Install MCP Toolbox
 
@@ -3981,6 +4358,7 @@ instances and interacting with your database:
 * **list_databases**: Lists all databases for a Cloud SQL instance.
 * **create_user**: Creates a new user in a Cloud SQL instance.
 * **wait_for_operation**: Waits for a Cloud SQL operation to complete.
+* **clone_instance**: Creates a clone of an existing Cloud SQL for PostgreSQL instance.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
@@ -4038,6 +4416,7 @@ database and users:
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
 
 ## Install MCP Toolbox
 
@@ -4283,6 +4662,7 @@ instances and interacting with your database:
 * **list_databases**: Lists all databases for a Cloud SQL instance.
 * **create_user**: Creates a new user in a Cloud SQL instance.
 * **wait_for_operation**: Waits for a Cloud SQL operation to complete.
+* **clone_instance**: Creates a clone of an existing Cloud SQL for MySQL instance.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
@@ -4340,6 +4720,7 @@ instance, database and users:
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
 
 ## Install MCP Toolbox
 
@@ -4585,6 +4966,7 @@ instances and interacting with your database:
 * **list_databases**: Lists all databases for a Cloud SQL instance.
 * **create_user**: Creates a new user in a Cloud SQL instance.
 * **wait_for_operation**: Waits for a Cloud SQL operation to complete.
+* **clone_instance**: Creates a clone of an existing Cloud SQL for SQL Server instance.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
@@ -5038,7 +5420,7 @@ section.
     export IMAGE=us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:latest
     ```
 
-{{< notice note >}}  
+   {{< notice note >}}  
 **The `$PORT` Environment Variable**  
 Google Cloud Run dictates the port your application must listen on by setting
 the `$PORT` environment variable inside your container. This value defaults to
@@ -5068,6 +5450,45 @@ deployment will time out.
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
         --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080" \
+        # TODO(dev): update the following to match your VPC if necessary
+        --network default \
+        --subnet default
+        # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
+    ```
+
+### Update deployed server to be secure
+
+To prevent DNS rebinding attack, use the `--allowed-origins` flag to specify a
+list of origins permitted to access the server. In order to do that, you will
+have to re-deploy the cloud run service with the new flag.
+
+1. Set an environment variable to the cloud run url: 
+
+    ```bash
+    export URL=<cloud run url>
+    ```
+
+2. Redeploy Toolbox:
+
+    ```bash
+    gcloud run deploy toolbox \
+        --image $IMAGE \
+        --service-account toolbox-identity \
+        --region us-central1 \
+        --set-secrets "/app/tools.yaml=tools:latest" \
+        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL"
+        # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
+    ```
+
+    If you are using a VPC network, use the command below:
+
+    ```bash
+    gcloud run deploy toolbox \
+        --image $IMAGE \
+        --service-account toolbox-identity \
+        --region us-central1 \
+        --set-secrets "/app/tools.yaml=tools:latest" \
+        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL" \
         # TODO(dev): update the following to match your VPC if necessary
         --network default \
         --subnet default
@@ -5504,6 +5925,12 @@ How to set up and configure Toolbox to deploy on Kubernetes with Google Kubernet
                   path: tools.yaml
     ```
 
+    {{< notice tip >}}  
+To prevent DNS rebinding attack, use the `--allowed-origins` flag to specify a
+list of origins permitted to access the server. E.g. `args: ["--address",
+"0.0.0.0", "--allowed-origins", "https://foo.bar"]`
+{{< /notice >}}
+
 1. Create the deployment.
 
     ```bash
@@ -5660,6 +6087,13 @@ networks:
 
 ```
 
+    {{< notice tip >}}  
+To prevent DNS rebinding attack, use the `--allowed-origins` flag to specify a
+list of origins permitted to access the server. E.g. `command: [ "toolbox",
+"--tools-file", "/config/tools.yaml", "--address", "0.0.0.0",
+"--allowed-origins", "https://foo.bar"]`
+{{< /notice >}}
+
 1. Run the following command to bring up the Toolbox and Postgres instance
 
     ```bash
@@ -5780,11 +6214,15 @@ There are a couple of steps to run and use a Collector.
     ```
 
 1. Run toolbox with the `--telemetry-otlp` flag. Configure it to send them to
-   `http://127.0.0.1:4553` (for HTTP) or the Collector's URL.
+   `127.0.0.1:4553` (for HTTP) or the Collector's URL.
 
     ```bash
-    ./toolbox --telemetry-otlp=http://127.0.0.1:4553
+    ./toolbox --telemetry-otlp=127.0.0.1:4553
     ```
+
+    {{< notice tip >}}
+    To pass an insecure endpoint, set environment variable `OTEL_EXPORTER_OTLP_INSECURE=true`.
+    {{< /notice >}}
 
 1. Once telemetry datas are collected, you can view them in your telemetry
    backend. If you are using GCP exporters, telemetry will be visible in GCP
@@ -6272,6 +6710,25 @@ cluster][alloydb-free-trial].
 
 - [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
   List cardinality of columns in a table in a PostgreSQL database.
+
+- [`postgres-list-table-stats`](../tools/postgres/postgres-list-table-stats.md)
+  List statistics of a table in a PostgreSQL database.
+
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
+
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
+  List tablespaces in an AlloyDB for PostgreSQL database.
+
+- [`postgres-list-pg-settings`](../tools/postgres/postgres-list-pg-settings.md)
+  List configuration parameters for the PostgreSQL server.
+
+- [`postgres-list-database-stats`](../tools/postgres/postgres-list-database-stats.md)
+  Lists the key performance and activity statistics for each database in the AlloyDB
+  instance.
+
+- [`postgres-list-roles`](../tools/postgres/postgres-list-roles.md)
+  Lists all the user-created roles in PostgreSQL database..
 
 ### Pre-built Configurations
 
@@ -7015,6 +7472,9 @@ to a database by following these instructions][csql-mysql-quickstart].
 - [`mysql-list-active-queries`](../tools/mysql/mysql-list-active-queries.md)
   List active queries in Cloud SQL for MySQL.
 
+- [`mysql-get-query-plan`](../tools/mysql/mysql-get-query-plan.md)
+  Provide information about how MySQL executes a SQL statement (EXPLAIN).
+
 - [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)
   List tables in a Cloud SQL for MySQL database.
 
@@ -7072,12 +7532,39 @@ mTLS.
 [public-ip]: https://cloud.google.com/sql/docs/mysql/configure-ip
 [conn-overview]: https://cloud.google.com/sql/docs/mysql/connect-overview
 
-### Database User
+### Authentication
 
-Currently, this source only uses standard authentication. You will need to [create
-a MySQL user][cloud-sql-users] to login to the database with.
+This source supports both password-based authentication and IAM
+authentication (using your [Application Default Credentials][adc]).
+
+#### Standard Authentication
+
+To connect using user/password, [create
+a MySQL user][cloud-sql-users] and input your credentials in the `user` and
+`password` fields.
+
+```yaml
+user: ${USER_NAME}
+password: ${PASSWORD}
+```
 
 [cloud-sql-users]: https://cloud.google.com/sql/docs/mysql/create-manage-users
+
+#### IAM Authentication
+
+To connect using IAM authentication:
+
+1. Prepare your database instance and user following this [guide][iam-guide].
+2. You could choose one of the two ways to log in:
+    - Specify your IAM email as the `user`.
+    - Leave your `user` field blank. Toolbox will fetch the [ADC][adc]
+      automatically and log in using the email associated with it.
+
+3. Leave the `password` field blank.
+
+[iam-guide]: https://cloud.google.com/sql/docs/mysql/iam-logins
+[cloudsql-users]: https://cloud.google.com/sql/docs/mysql/create-manage-users
+
 
 ## Example
 
@@ -7108,8 +7595,8 @@ instead of hardcoding your secrets into the configuration file.
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                         |
 | instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                              |
 | database  |  string  |     true     | Name of the MySQL database to connect to (e.g. "my_db").                                             |
-| user      |  string  |     true     | Name of the MySQL user to connect as (e.g. "my-pg-user").                                            |
-| password  |  string  |     true     | Password of the MySQL user (e.g. "my-password").                                                     |
+| user      |  string  |     false     | Name of the MySQL user to connect as (e.g "my-mysql-user"). Defaults to IAM auth using [ADC][adc] email if unspecified.                                            |
+| password  |  string  |     false     | Password of the MySQL user (e.g. "my-password"). Defaults to attempting IAM authentication if unspecified.                                                    |
 | ipType    |  string  |    false     | IP Type of the Cloud SQL instance, must be either `public`,  `private`, or `psc`. Default: `public`. |
 
 
@@ -7167,6 +7654,7 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
   List sequences in a PostgreSQL database.
+
 - [`postgres-long-running-transactions`](../tools/postgres/postgres-long-running-transactions.md)
   List long running transactions in a PostgreSQL database.
 
@@ -7181,6 +7669,25 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
   List cardinality of columns in a table in a PostgreSQL database.
+
+- [`postgres-list-table-stats`](../tools/postgres/postgres-list-table-stats.md)
+  List statistics of a table in a PostgreSQL database.
+
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
+
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
+  List tablespaces in a PostgreSQL database.
+
+- [`postgres-list-pg-settings`](../tools/postgres/postgres-list-pg-settings.md)
+  List configuration parameters for the PostgreSQL server.
+
+- [`postgres-list-database-stats`](../tools/postgres/postgres-list-database-stats.md)
+  Lists the key performance and activity statistics for each database in the postgreSQL
+  instance.
+
+- [`postgres-list-roles`](../tools/postgres/postgres-list-roles.md)
+  Lists all the user-created roles in PostgreSQL database..
 
 ### Pre-built Configurations
 
@@ -8094,6 +8601,42 @@ sources:
 | database  |  string  |     false    | Name of the Firestore database to connect to. Defaults to "(default)" if not specified.                  |
 
 
+# Gemini Data Analytics
+A "cloud-gemini-data-analytics" source provides a client for the Gemini Data Analytics API.
+
+
+## About
+
+The `cloud-gemini-data-analytics` source provides a client to interact with the [Gemini Data Analytics API](https://docs.cloud.google.com/gemini/docs/conversational-analytics-api/reference/rest). This allows tools to send natural language queries to the API.
+
+Authentication can be handled in two ways:
+
+1.  **Application Default Credentials (ADC) (Recommended):** By default, the source uses ADC to authenticate with the API. The Toolbox server will fetch the credentials from its running environment (server-side authentication). This is the recommended method.
+2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source expects the authentication token to be provided by the caller when making a request to the Toolbox server (typically via an HTTP Bearer token). The Toolbox server will then forward this token to the underlying Gemini Data Analytics API calls.
+
+## Example
+
+```yaml
+sources:
+  my-gda-source:
+    kind: cloud-gemini-data-analytics
+    projectId: my-project-id
+
+  my-oauth-gda-source:
+    kind: cloud-gemini-data-analytics
+    projectId: my-project-id
+    useClientOAuth: true
+```
+
+## Reference
+
+| **field**      | **type** | **required** | **description**                                                                                                                                                              |
+| -------------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| kind           |  string  |     true     | Must be "cloud-gemini-data-analytics".                                                                                                                                       |
+| projectId      |  string  |     true     | The Google Cloud Project ID where the API is enabled.                                                                                                                        |
+| useClientOAuth | boolean  |    false     | If true, the source uses the token provided by the caller (forwarded to the API). Otherwise, it uses server-side Application Default Credentials (ADC). Defaults to `false`. |
+
+
 # HTTP
 The HTTP source enables the Toolbox to retrieve data from a remote server using HTTP requests.
 
@@ -8234,21 +8777,95 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field**            | **type** | **required** | **description**                                                                           |
-|----------------------|:--------:|:------------:|-------------------------------------------------------------------------------------------|
-| kind                 |  string  |     true     | Must be "looker".                                                                         |
-| base_url             |  string  |     true     | The URL of your Looker server with no trailing /.                                         |
-| client_id            |  string  |    false     | The client id assigned by Looker.                                                         |
-| client_secret        |  string  |    false     | The client secret assigned by Looker.                                                     |
-| verify_ssl           |  string  |    false     | Whether to check the ssl certificate of the server.                                       |
-| project              |  string  |    false     | The project id to use in Google Cloud.                                                    |
-| location             |  string  |    false     | The location to use in Google Cloud. (default: us)                                        |
-| timeout              |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, 120s is applied. |
-| use_client_oauth     |  string  |    false     | Use OAuth tokens instead of client_id and client_secret. (default: false) If a header     |
-|                      |          |              | name is provided, it will be used instead of "Authorization".                             |
-| show_hidden_models   |  string  |    false     | Show or hide hidden models. (default: true)                                               |
-| show_hidden_explores |  string  |    false     | Show or hide hidden explores. (default: true)                                             |
-| show_hidden_fields   |  string  |    false     | Show or hide hidden fields. (default: true)                                               |
+| **field**            | **type** | **required** | **description**                                                                                                                                     |
+|----------------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind                 |  string  |     true     | Must be "looker".                                                                                                                                   |
+| base_url             |  string  |     true     | The URL of your Looker server with no trailing /.                                                                                                   |
+| client_id            |  string  |    false     | The client id assigned by Looker.                                                                                                                   |
+| client_secret        |  string  |    false     | The client secret assigned by Looker.                                                                                                               |
+| verify_ssl           |  string  |    false     | Whether to check the ssl certificate of the server.                                                                                                 |
+| project              |  string  |    false     | The project id to use in Google Cloud.                                                                                                              |
+| location             |  string  |    false     | The location to use in Google Cloud. (default: us)                                                                                                  |
+| timeout              |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, 120s is applied.                                                           |
+| use_client_oauth     |  string  |    false     | Use OAuth tokens instead of client_id and client_secret. (default: false) If a header name is provided, it will be used instead of "Authorization". |
+| show_hidden_models   |  string  |    false     | Show or hide hidden models. (default: true)                                                                                                         |
+| show_hidden_explores |  string  |    false     | Show or hide hidden explores. (default: true)                                                                                                       |
+| show_hidden_fields   |  string  |    false     | Show or hide hidden fields. (default: true)                                                                                                         |
+
+# MariaDB
+MariaDB is an open-source relational database compatible with MySQL.
+
+## About
+
+MariaDB is a relational database management system derived from MySQL. It
+implements the MySQL protocol and client libraries and supports modern SQL
+features with a focus on performance and reliability.
+
+**Note**: MariaDB is supported using the MySQL source.
+## Available Tools
+
+- [`mysql-sql`](../tools/mysql/mysql-sql.md)
+  Execute pre-defined prepared SQL queries in MariaDB.
+
+- [`mysql-execute-sql`](../tools/mysql/mysql-execute-sql.md)
+  Run parameterized SQL queries in MariaDB.
+
+- [`mysql-list-active-queries`](../tools/mysql/mysql-list-active-queries.md)
+  List active queries in MariaDB.
+
+- [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)
+  List tables in a MariaDB database.
+
+- [`mysql-list-tables-missing-unique-indexes`](../tools/mysql/mysql-list-tables-missing-unique-indexes.md)
+  List tables in a MariaDB database that do not have primary or unique indices.
+
+- [`mysql-list-table-fragmentation`](../tools/mysql/mysql-list-table-fragmentation.md)
+  List table fragmentation in MariaDB tables.
+
+## Requirements
+
+### Database User
+
+This source only uses standard authentication. You will need to [create a
+MariaDB user][mariadb-users] to log in to the database.
+
+[mariadb-users]: https://mariadb.com/kb/en/create-user/
+
+## Example
+
+```yaml
+sources:
+    my_mariadb_db:
+        kind: mysql
+        host: 127.0.0.1
+        port: 3306
+        database: my_db
+        user: ${MARIADB_USER}
+        password: ${MARIADB_PASS}
+        # Optional TLS and other driver parameters. For example, enable preferred TLS:
+        # queryParams:
+        #     tls: preferred
+        queryTimeout: 30s # Optional: query timeout duration
+```
+
+{{< notice tip >}}
+Use environment variables instead of committing credentials to source files.
+{{< /notice >}}
+
+
+## Reference
+
+| **field**    | **type** | **required** | **description**                                                                                 |
+| ------------ | :------: | :----------: | ----------------------------------------------------------------------------------------------- |
+| kind         |  string  |     true     | Must be `mysql`.                                                                                |
+| host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
+| port         |  string  |     true     | Port to connect to (e.g. "3307").                                                               |
+| database     |  string  |     true     | Name of the MariaDB database to connect to (e.g. "my_db").                                        |
+| user         |  string  |     true     | Name of the MariaDB user to connect as (e.g. "my-mysql-user").                                    |
+| password     |  string  |     true     | Password of the MariaDB user (e.g. "my-password").                                                |
+| queryTimeout |  string  |    false     | Maximum time to wait for query execution (e.g. "30s", "2m"). By default, no timeout is applied. |
+| queryParams | map<string,string> | false | Arbitrary DSN parameters passed to the driver (e.g. `tls: preferred`, `charset: utf8mb4`). Useful for enabling TLS or other connection options. |
+
 
 # MindsDB
 MindsDB is an AI federated database that enables SQL queries across hundreds of datasources and ML models.
@@ -8490,6 +9107,9 @@ reliability, performance, and ease of use.
 - [`mysql-list-active-queries`](../tools/mysql/mysql-list-active-queries.md)
   List active queries in MySQL.
 
+- [`mysql-get-query-plan`](../tools/mysql/mysql-get-query-plan.md)
+  Provide information about how MySQL executes a SQL statement (EXPLAIN).
+
 - [`mysql-list-tables`](../tools/mysql/mysql-list-tables.md)
   List tables in a MySQL database.
 
@@ -8698,10 +9318,10 @@ DW) database workloads.
 ## Available Tools
 
 - [`oracle-sql`](../tools/oracle/oracle-sql.md)
-  Execute pre-defined prepared SQL queries in Oracle.
+    Execute pre-defined prepared SQL queries in Oracle.
 
 - [`oracle-execute-sql`](../tools/oracle/oracle-execute-sql.md)
-  Run parameterized SQL queries in Oracle.
+    Run parameterized SQL queries in Oracle.
 
 ## Requirements
 
@@ -8712,6 +9332,25 @@ user][oracle-users] to log in to the database with the necessary permissions.
 
 [oracle-users]:
     https://docs.oracle.com/en/database/oracle/oracle-database/21/sqlrf/CREATE-USER.html
+
+### Oracle Driver Requirement (Conditional)
+
+The Oracle source offers two connection drivers:
+
+1. **Pure Go Driver (`useOCI: false`, default):** Uses the `go-ora` library.
+   This driver is simpler and does not require any local Oracle software
+   installation, but it **lacks support for advanced features** like Oracle
+   Wallets or Kerberos authentication.
+
+2. **OCI-Based Driver (`useOCI: true`):** Uses the `godror` library, which
+   provides access to **advanced Oracle features** like Digital Wallet support.
+
+If you set `useOCI: true`, you **must** install the **Oracle Instant Client**
+libraries on the machine where this tool runs.
+
+You can download the Instant Client from the official Oracle website: [Oracle
+Instant Client
+Downloads](https://www.oracle.com/database/technologies/instant-client/downloads.html)
 
 ## Connection Methods
 
@@ -8746,12 +9385,15 @@ using a TNS (Transparent Network Substrate) alias.
   containing it. This setting will override the `TNS_ADMIN` environment
   variable.
 
-## Example
+## Examples
+
+This example demonstrates the four connection methods you could choose from:
 
 ```yaml
 sources:
     my-oracle-source:
         kind: oracle
+        
         # --- Choose one connection method ---
         # 1. Host, Port, and Service Name
         host: 127.0.0.1
@@ -8768,6 +9410,43 @@ sources:
         user: ${USER_NAME}
         password: ${PASSWORD}
 
+        # Optional: Set to true to use the OCI-based driver for advanced features (Requires Oracle Instant Client)
+```
+
+### Using an Oracle Wallet
+
+Oracle Wallet allows you to store credentails used for database connection. Depending whether you are using an OCI-based driver, the wallet configuration is different.
+
+#### Pure Go Driver (`useOCI: false`) - Oracle Wallet
+
+The `go-ora` driver uses the `walletLocation` field to connect to a database secured with an Oracle Wallet without standard username and password.
+
+```yaml
+sources:
+    pure-go-wallet:
+        kind: oracle
+        connectionString: "127.0.0.1:1521/XEPDB1"
+        user: ${USER_NAME}
+        password: ${PASSWORD}
+        # The TNS Alias is often required to connect to a service registered in tnsnames.ora
+        tnsAlias: "SECURE_DB_ALIAS"
+        walletLocation: "/path/to/my/wallet/directory"
+```
+
+#### OCI-Based Driver (`useOCI: true`) - Oracle Wallet
+
+For the OCI-based driver, wallet authentication is triggered by setting tnsAdmin to the wallet directory and connecting via a tnsAlias. 
+
+```yaml
+sources:
+    oci-wallet:
+        kind: oracle
+        connectionString: "127.0.0.1:1521/XEPDB1"
+        user: ${USER_NAME}
+        password: ${PASSWORD}
+        tnsAlias: "WALLET_DB_ALIAS"
+        tnsAdmin: "/opt/oracle/wallet" # Directory containing tnsnames.ora, sqlnet.ora, and wallet files
+        useOCI: true
 ```
 
 {{< notice tip >}}
@@ -8777,17 +9456,18 @@ instead of hardcoding your secrets into the configuration file.
 
 ## Reference
 
-| **field**        | **type** | **required** | **description**                                                                                                             |
-|------------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------|
-| kind             |  string  |     true     | Must be "oracle".                                                                                                           |
-| user             |  string  |     true     | Name of the Oracle user to connect as (e.g. "my-oracle-user").                                                              |
-| password         |  string  |     true     | Password of the Oracle user (e.g. "my-password").                                                                           |
-| host             |  string  |    false     | IP address or hostname to connect to (e.g. "127.0.0.1"). Required if not using `connectionString` or `tnsAlias`.            |
-| port             | integer  |    false     | Port to connect to (e.g. "1521"). Required if not using `connectionString` or `tnsAlias`.                                   |
-| serviceName      |  string  |    false     | The Oracle service name of the database to connect to. Required if not using `connectionString` or `tnsAlias`.              |
-| connectionString |  string  |    false     | A direct connection string (e.g. "hostname:port/servicename"). Use as an alternative to `host`, `port`, and `serviceName`.  |
-| tnsAlias         |  string  |    false     | A TNS alias from a `tnsnames.ora` file. Use as an alternative to `host`/`port` or `connectionString`.                       |
-| tnsAdmin         |  string  |    false     | Path to the directory containing the `tnsnames.ora` file. This overrides the `TNS_ADMIN` environment variable if it is set. |
+| **field**        | **type** | **required** | **description**                                                                                                                                                                         |
+|------------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kind             |  string  |     true     | Must be "oracle".                                                                                                                                                                       |
+| user             |  string  |     true     | Name of the Oracle user to connect as (e.g. "my-oracle-user").                                                                                                                          |
+| password         |  string  |     true     | Password of the Oracle user (e.g. "my-password").                                                                                                                                       |
+| host             |  string  |    false     | IP address or hostname to connect to (e.g. "127.0.0.1"). Required if not using `connectionString` or `tnsAlias`.                                                                        |
+| port             | integer  |    false     | Port to connect to (e.g. "1521"). Required if not using `connectionString` or `tnsAlias`.                                                                                               |
+| serviceName      |  string  |    false     | The Oracle service name of the database to connect to. Required if not using `connectionString` or `tnsAlias`.                                                                          |
+| connectionString |  string  |    false     | A direct connection string (e.g. "hostname:port/servicename"). Use as an alternative to `host`, `port`, and `serviceName`.                                                              |
+| tnsAlias         |  string  |    false     | A TNS alias from a `tnsnames.ora` file. Use as an alternative to `host`/`port` or `connectionString`.                                                                                   |
+| tnsAdmin         |  string  |    false     | Path to the directory containing the `tnsnames.ora` file. This overrides the `TNS_ADMIN` environment variable if it is set.                                                             |
+| useOCI           |   bool   |    false     | If true, uses the OCI-based driver (godror) which supports Oracle Wallet/Kerberos but requires the Oracle Instant Client libraries to be installed. Defaults to false (pure Go driver). |
 
 
 # PostgreSQL
@@ -8854,6 +9534,25 @@ reputation for reliability, feature robustness, and performance.
 
 - [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
   List cardinality of columns in a table in a PostgreSQL database.
+
+- [`postgres-list-table-stats`](../tools/postgres/postgres-list-table-stats.md)
+  List statistics of a table in a PostgreSQL database.
+
+- [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
+  List publication tables in a PostgreSQL database.
+
+- [`postgres-list-tablespaces`](../tools/postgres/postgres-list-tablespaces.md)
+  List tablespaces in a PostgreSQL database.
+
+- [`postgres-list-pg-settings`](../tools/postgres/postgres-list-pg-settings.md)
+  List configuration parameters for the PostgreSQL server.
+
+- [`postgres-list-database-stats`](../tools/postgres/postgres-list-database-stats.md)
+  Lists the key performance and activity statistics for each database in the postgreSQL
+  server.
+
+- [`postgres-list-roles`](../tools/postgres/postgres-list-roles.md)
+  Lists all the user-created roles in PostgreSQL database..
 
 ### Pre-built Configurations
 
@@ -9017,6 +9716,10 @@ Apache Spark.
   Get a Serverless Spark batch.
 - [`serverless-spark-cancel-batch`](../tools/serverless-spark/serverless-spark-cancel-batch.md)
   Cancel a running Serverless Spark batch operation.
+- [`serverless-spark-create-pyspark-batch`](../tools/serverless-spark/serverless-spark-create-pyspark-batch.md)
+  Create a Serverless Spark PySpark batch operation.
+- [`serverless-spark-create-spark-batch`](../tools/serverless-spark/serverless-spark-create-spark-batch.md)
+  Create a Serverless Spark Java batch operation.
 
 ## Requirements
 
@@ -9966,6 +10669,11 @@ Tools that work with Firestore Sources.
 
 
 
+# Gemini Data Analytics
+Tools for Gemini Data Analytics.
+
+
+
 # HTTP
 Tools that work with HTTP Sources.
 
@@ -10152,6 +10860,8 @@ Tools that work with Google Cloud Serverless for Apache Spark Sources.
 - [serverless-spark-get-batch](./serverless-spark-get-batch.md)
 - [serverless-spark-list-batches](./serverless-spark-list-batches.md)
 - [serverless-spark-cancel-batch](./serverless-spark-cancel-batch.md)
+- [serverless-spark-create-pyspark-batch](./serverless-spark-create-pyspark-batch.md)
+- [serverless-spark-create-spark-batch](./serverless-spark-create-spark-batch.md)
 
 
 # SingleStore
@@ -10474,7 +11184,7 @@ In this section, we will download and install the Toolbox binary.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    export VERSION="0.21.0"
+    export VERSION="0.24.0"
     curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -10904,7 +11614,7 @@ to use BigQuery, and then run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -11538,7 +12248,7 @@ In this section, we will download Toolbox, configure our tools in a
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -11732,7 +12442,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -11857,7 +12567,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -11967,7 +12677,7 @@ In this section, we will download Toolbox and run the Toolbox server.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    curl -O https://storage.googleapis.com/genai-toolbox/v0.21.0/$OS/toolbox
+    curl -O https://storage.googleapis.com/genai-toolbox/v0.24.0/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
 
@@ -12176,15 +12886,16 @@ This page describes the `toolbox` command-line options.
 |              | `--log-level`              | Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.                                                                                                                  | `info`      |
 |              | `--logging-format`         | Specify logging format to use. Allowed: 'standard' or 'JSON'.                                                                                                                                 | `standard`  |
 | `-p`         | `--port`                   | Port the server will listen on.                                                                                                                                                               | `5000`      |
-|              | `--prebuilt`               | Use a prebuilt tool configuration by source type. Cannot be used with --tools-file. See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values.                                     |             |
+|              | `--prebuilt`               | Use a prebuilt tool configuration by source type. See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values.                                     |             |
 |              | `--stdio`                  | Listens via MCP STDIO instead of acting as a remote HTTP server.                                                                                                                              |             |
 |              | `--telemetry-gcp`          | Enable exporting directly to Google Cloud Monitoring.                                                                                                                                         |             |
 |              | `--telemetry-otlp`         | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')                                                                                 |             |
 |              | `--telemetry-service-name` | Sets the value of the service.name resource attribute for telemetry data.                                                                                                                     | `toolbox`   |
-|              | `--tools-file`             | File path specifying the tool configuration. Cannot be used with --prebuilt, --tools-files, or --tools-folder.                                                                                |             |
-|              | `--tools-files`            | Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --prebuilt, --tools-file, or --tools-folder.                                                    |             |
-|              | `--tools-folder`           | Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --prebuilt, --tools-file, or --tools-files. |             |
+|              | `--tools-file`             | File path specifying the tool configuration. Cannot be used with --tools-files or --tools-folder.                                                                                |             |
+|              | `--tools-files`            | Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --tools-file or --tools-folder.                                                    |             |
+|              | `--tools-folder`           | Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --tools-file or --tools-files. |             |
 |              | `--ui`                     | Launches the Toolbox UI web server.                                                                                                                                                           |             |
+|              | `--allowed-origins`        | Specifies a list of origins permitted to access this server.                                                                                                                                  | `*`         |
 | `-v`         | `--version`                | version for toolbox                                                                                                                                                                           |             |
 
 ## Examples
@@ -12205,6 +12916,9 @@ This page describes the `toolbox` command-line options.
 ```bash
 # Basic server with custom port configuration
 ./toolbox --tools-file "tools.yaml" --port 8080
+
+# Server with prebuilt + custom tools configurations
+./toolbox --tools-file tools.yaml --prebuilt alloydb-postgres
 ```
 
 ### Tool Configuration Sources
@@ -12231,8 +12945,8 @@ The CLI supports multiple mutually exclusive ways to specify tool configurations
 
 {{< notice tip >}}
 The CLI enforces mutual exclusivity between configuration source flags,
-preventing simultaneous use of `--prebuilt` with file-based options, and
-ensuring only one of `--tools-file`, `--tools-files`, or `--tools-folder` is
+preventing simultaneous use of the file-based options ensuring only one of
+`--tools-file`, `--tools-files`, or `--tools-folder` is
 used at a time.
 {{< /notice >}}
 
@@ -12258,6 +12972,12 @@ allowing developers to interact with and take action on databases.
 
 See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for
 details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
+
+{{< notice tip >}}
+You can now use `--prebuilt` along `--tools-file`, `--tools-files`, or
+`--tools-folder` to combine prebuilt configs with custom tools.
+See [Usage Examples](../reference/cli.md#examples).
+{{< /notice >}}
 
 ## AlloyDB Postgres
 
@@ -12296,6 +13016,12 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
+    *   `list_tablespaces`: Lists tablespaces in the database.
+    *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
+    *   `list_database_stats`: Lists the key performance and activity statistics for
+        each database in the AlloyDB instance.
+    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.  
 
 ## AlloyDB Postgres Admin
 
@@ -12424,6 +13150,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
+
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for MySQL instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -12432,6 +13160,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_databases`: Lists all databases for a Cloud SQL instance.
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
+    *   `clone_instance`: Creates a clone for an existing Cloud SQL for MySQL instance.
 
 ## Cloud SQL for PostgreSQL
 
@@ -12470,6 +13199,12 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
+    *   `list_tablespaces`: Lists tablespaces in the database.
+    *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
+    *   `list_database_stats`: Lists the key performance and activity statistics for
+        each database in the postgreSQL instance.
+    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.  
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -12503,6 +13238,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for PostgreSQL instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -12511,6 +13247,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_databases`: Lists all databases for a Cloud SQL instance.
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
+    *   `clone_instance`: Creates a clone for an existing Cloud SQL for PostgreSQL instance.
 
 ## Cloud SQL for SQL Server
 
@@ -12562,6 +13299,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for SQL Server instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -12570,6 +13308,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_databases`: Lists all databases for a Cloud SQL instance.
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
+    *   `clone_instance`: Creates a clone for an existing Cloud SQL for SQL Server instance.
 
 ## Dataplex
 
@@ -12643,6 +13382,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `run_dashboard`: Runs the queries associated with a dashboard.
     *   `make_dashboard`: Creates a new dashboard.
     *   `add_dashboard_element`: Adds a tile to a dashboard.
+    *   `add_dashboard_filter`: Adds a filter to a dashboard.
+    *   `generate_embed_url`: Generate an embed url for content.
     *   `health_pulse`: Test the health of a Looker instance.
     *   `health_analyze`: Analyze the LookML usage of a Looker instance.
     *   `health_vacuum`: Suggest LookML elements that can be removed.
@@ -12689,8 +13430,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 
 *   `--prebuilt` value: `mssql`
 *   **Environment Variables:**
-    *   `MSSQL_HOST`: The hostname or IP address of the SQL Server instance.
-    *   `MSSQL_PORT`: The port number for the SQL Server instance.
+    *   `MSSQL_HOST`: (Optional) The hostname or IP address of the SQL Server instance.
+    *   `MSSQL_PORT`: (Optional) The port number for the SQL Server instance.
     *   `MSSQL_DATABASE`: The name of the database to connect to.
     *   `MSSQL_USER`: The database username.
     *   `MSSQL_PASSWORD`: The password for the database user.
@@ -12771,6 +13512,12 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
+    *   `list_tablespaces`: Lists tablespaces in the database.
+    *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
+    *   `list_database_stats`: Lists the key performance and activity statistics for
+        each database in the PostgreSQL server.
+    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.  
 
 ## Google Cloud Serverless for Apache Spark
 
@@ -12802,6 +13549,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `execute_sql`: Executes a DML SQL query.
     *   `execute_sql_dql`: Executes a DQL SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_graphs`: Lists graphs in the database.
 
 ## Spanner (PostgreSQL dialect)
 
