@@ -65,8 +65,8 @@ type Config struct {
 	Password         string `yaml:"password"`
 	Protocol         string `yaml:"protocol"`
 	Secure           bool   `yaml:"secure"`
-	MaxOpenConns     *int   `yaml:"maxOpenConns"`
-	MaxIdleConns     *int   `yaml:"maxIdleConns"`
+	MaxOpenConns     *int   `yaml:"maxOpenConns" validate:"omitempty,gt=0"`
+	MaxIdleConns     *int   `yaml:"maxIdleConns" validate:"omitempty,gt=0"`
 	ConnMaxLifetime  string `yaml:"connMaxLifetime"`
 }
 
