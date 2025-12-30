@@ -24,6 +24,7 @@ import (
 	_ "github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -97,6 +98,69 @@ func (s *Source) ToConfig() sources.SourceConfig {
 
 func (s *Source) ClickHousePool() *sql.DB {
 	return s.Pool
+}
+
+func (s *Source) RunSQL(ctx context.Context, statement string, params parameters.ParamValues) (any, error) {
+	var sliceParams []any
+	if params != nil {
+		sliceParams = params.AsSlice()
+	}
+	results, err := s.ClickHousePool().QueryContext(ctx, statement, sliceParams...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	defer results.Close()
+
+	cols, err := results.Columns()
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve rows column name: %w", err)
+	}
+
+	// create an array of values for each column, which can be re-used to scan each row
+	rawValues := make([]any, len(cols))
+	values := make([]any, len(cols))
+	for i := range rawValues {
+		values[i] = &rawValues[i]
+	}
+
+	colTypes, err := results.ColumnTypes()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get column types: %w", err)
+	}
+
+	var out []any
+	for results.Next() {
+		err := results.Scan(values...)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+		vMap := make(map[string]any)
+		for i, name := range cols {
+			// ClickHouse driver may return specific types that need handling
+			switch colTypes[i].DatabaseTypeName() {
+			case "String", "FixedString":
+				if rawValues[i] != nil {
+					// Handle potential []byte to string conversion if needed
+					if b, ok := rawValues[i].([]byte); ok {
+						vMap[name] = string(b)
+					} else {
+						vMap[name] = rawValues[i]
+					}
+				} else {
+					vMap[name] = nil
+				}
+			default:
+				vMap[name] = rawValues[i]
+			}
+		}
+		out = append(out, vMap)
+	}
+
+	if err := results.Err(); err != nil {
+		return nil, fmt.Errorf("errors encountered by results.Scan: %w", err)
+	}
+
+	return out, nil
 }
 
 func validateConfig(protocol string) error {
