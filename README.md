@@ -1035,12 +1035,12 @@ The version will be incremented  as follows:
 
 ### Post-1.0.0 Versioning
 
-Once the project reaches a stable `1.0.0` release, the versioning will follow
-the more common convention:
+Once the project reaches a stable `1.0.0` release, the version number
+**`MAJOR.MINOR.PATCH`** will follow the more common convention:
 
-- **`MAJOR.MINOR.PATCH`**: Incremented for incompatible API changes.
-- **`MAJOR.MINOR.PATCH`**: Incremented for new, backward-compatible functionality.
-- **`MAJOR.MINOR.PATCH`**: Incremented for backward-compatible bug fixes.
+- **`MAJOR`**: Incremented for incompatible API changes.
+- **`MINOR`**: Incremented for new, backward-compatible functionality.
+- **`PATCH`**: Incremented for backward-compatible bug fixes.
 
 The public API that this applies to is the CLI associated with Toolbox, the
 interactions with official SDKs, and the definitions in the `tools.yaml` file.
