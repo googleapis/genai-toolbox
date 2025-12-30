@@ -108,7 +108,7 @@ func setupSingleStoreTable(t *testing.T, ctx context.Context, pool *sql.DB, crea
 	if err != nil {
 		t.Fatalf("unable to connect to test database: %s", err)
 	}
-	
+
 	// Safety drop before creation
 	_, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName))
 	if err != nil {
