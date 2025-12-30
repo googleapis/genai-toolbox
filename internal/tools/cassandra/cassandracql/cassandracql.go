@@ -147,6 +147,6 @@ func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValue
 
 var _ tools.Tool = Tool{}
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }
