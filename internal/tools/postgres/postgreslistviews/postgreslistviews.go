@@ -20,9 +20,6 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/alloydbpg"
-	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
-	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -31,13 +28,24 @@ import (
 const kind string = "postgres-list-views"
 
 const listViewsStatement = `
-			SELECT schemaname, viewname, viewowner
-			FROM pg_views
-			WHERE
-				schemaname NOT IN ('pg_catalog', 'information_schema')
-				AND ($1::text IS NULL OR viewname LIKE '%' || $1::text || '%')
-			ORDER BY viewname
-			LIMIT COALESCE($2::int, 50);
+	WITH list_views AS (
+		SELECT
+			schemaname AS schema_name,
+			viewname AS view_name,
+			viewowner AS owner_name,
+			definition
+		FROM pg_views
+	)
+	SELECT *
+	FROM list_views
+	WHERE
+		schema_name NOT IN ('pg_catalog', 'information_schema', 'pg_toast')
+		AND schema_name NOT LIKE 'pg_temp_%'
+		AND ($1::text IS NULL OR view_name ILIKE '%' || $1::text || '%')
+		AND ($2::text IS NULL OR schema_name ILIKE '%' || $2::text || '%')
+	ORDER BY
+		schema_name, view_name
+	LIMIT COALESCE($3::int, 50);
 `
 
 func init() {
@@ -58,13 +66,6 @@ type compatibleSource interface {
 	PostgresPool() *pgxpool.Pool
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &alloydbpg.Source{}
-var _ compatibleSource = &cloudsqlpg.Source{}
-var _ compatibleSource = &postgres.Source{}
-
-var compatibleSources = [...]string{alloydbpg.SourceKind, cloudsqlpg.SourceKind, postgres.SourceKind}
-
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
@@ -81,34 +82,21 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithDefault("viewname", "", "Optional: A specific view name to search for."),
+		parameters.NewStringParameterWithDefault("view_name", "", "Optional: A specific view name to search for."),
+		parameters.NewStringParameterWithDefault("schema_name", "", "Optional: A specific schema name to search for."),
 		parameters.NewIntParameterWithDefault("limit", 50, "Optional: The maximum number of rows to return."),
 	}
 	paramManifest := allParameters.Manifest()
-	description := cfg.Description
-	if description == "" {
-		description = "Lists views in the database from pg_views with a default limit of 50 rows. Returns schemaname, viewname and the ownername."
+	if cfg.Description == "" {
+		cfg.Description = "Lists views in the database from pg_views with a default limit of 50 rows. Returns schemaname, viewname, ownername and the definition."
 	}
-	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
 	// finish tool setup
 	return Tool{
 		Config:    cfg,
 		allParams: allParameters,
-		pool:      s.PostgresPool(),
 		manifest: tools.Manifest{
 			Description:  cfg.Description,
 			Parameters:   paramManifest,
@@ -124,12 +112,16 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Config
 	allParams   parameters.Parameters `yaml:"allParams"`
-	pool        *pgxpool.Pool
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
+
 	paramsMap := params.AsMap()
 
 	newParams, err := parameters.GetParams(t.allParams, paramsMap)
@@ -138,7 +130,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 	sliceParams := newParams.AsSlice()
 
-	results, err := t.pool.Query(ctx, listViewsStatement, sliceParams...)
+	results, err := source.PostgresPool().Query(ctx, listViewsStatement, sliceParams...)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
 	}
@@ -183,14 +175,14 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }

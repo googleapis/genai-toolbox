@@ -19,7 +19,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	dataproc "cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
+	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
+	dataprocpb "cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/goccy/go-yaml"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
@@ -34,17 +35,23 @@ func unmarshalProto(data any, m proto.Message) error {
 	return protojson.Unmarshal(jsonData, m)
 }
 
+type compatibleSource interface {
+	GetBatchControllerClient() *dataproc.BatchControllerClient
+	GetProject() string
+	GetLocation() string
+}
+
 // Config is a common config that can be used with any type of create batch tool. However, each tool
 // will still need its own config type, embedding this Config, so it can provide a type-specific
 // Initialize implementation.
 type Config struct {
-	Name              string                      `yaml:"name" validate:"required"`
-	Kind              string                      `yaml:"kind" validate:"required"`
-	Source            string                      `yaml:"source" validate:"required"`
-	Description       string                      `yaml:"description"`
-	RuntimeConfig     *dataproc.RuntimeConfig     `yaml:"runtimeConfig"`
-	EnvironmentConfig *dataproc.EnvironmentConfig `yaml:"environmentConfig"`
-	AuthRequired      []string                    `yaml:"authRequired"`
+	Name              string                        `yaml:"name" validate:"required"`
+	Kind              string                        `yaml:"kind" validate:"required"`
+	Source            string                        `yaml:"source" validate:"required"`
+	Description       string                        `yaml:"description"`
+	RuntimeConfig     *dataprocpb.RuntimeConfig     `yaml:"runtimeConfig"`
+	EnvironmentConfig *dataprocpb.EnvironmentConfig `yaml:"environmentConfig"`
+	AuthRequired      []string                      `yaml:"authRequired"`
 }
 
 func NewConfig(ctx context.Context, name string, decoder *yaml.Decoder) (Config, error) {
@@ -73,7 +80,7 @@ func NewConfig(ctx context.Context, name string, decoder *yaml.Decoder) (Config,
 	}
 
 	if ymlCfg.RuntimeConfig != nil {
-		rc := &dataproc.RuntimeConfig{}
+		rc := &dataprocpb.RuntimeConfig{}
 		if err := unmarshalProto(ymlCfg.RuntimeConfig, rc); err != nil {
 			return Config{}, fmt.Errorf("failed to unmarshal runtimeConfig: %w", err)
 		}
@@ -81,7 +88,7 @@ func NewConfig(ctx context.Context, name string, decoder *yaml.Decoder) (Config,
 	}
 
 	if ymlCfg.EnvironmentConfig != nil {
-		ec := &dataproc.EnvironmentConfig{}
+		ec := &dataprocpb.EnvironmentConfig{}
 		if err := unmarshalProto(ymlCfg.EnvironmentConfig, ec); err != nil {
 			return Config{}, fmt.Errorf("failed to unmarshal environmentConfig: %w", err)
 		}

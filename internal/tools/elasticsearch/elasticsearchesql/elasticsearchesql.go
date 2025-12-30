@@ -43,10 +43,6 @@ type compatibleSource interface {
 	ElasticsearchClient() es.EsClient
 }
 
-var _ compatibleSource = &es.Source{}
-
-var compatibleSources = [...]string{es.SourceKind}
-
 type Config struct {
 	Name         string                `yaml:"name" validate:"required"`
 	Kind         string                `yaml:"kind" validate:"required"`
@@ -77,29 +73,15 @@ type Tool struct {
 	Config
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
-	EsClient    es.EsClient
 }
 
 var _ tools.Tool = Tool{}
 
 func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	src, ok := srcs[c.Source]
-	if !ok {
-		return nil, fmt.Errorf("source %q not found", c.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := src.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, c.Parameters, nil)
 
 	return Tool{
 		Config:      c,
-		EsClient:    s.ElasticsearchClient(),
 		manifest:    tools.Manifest{Description: c.Description, Parameters: c.Parameters.Manifest(), AuthRequired: c.AuthRequired},
 		mcpManifest: mcpManifest,
 	}, nil
@@ -120,6 +102,11 @@ type esqlResult struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
+
 	var cancel context.CancelFunc
 	if t.Timeout > 0 {
 		ctx, cancel = context.WithTimeout(ctx, time.Duration(t.Timeout)*time.Second)
@@ -164,8 +151,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		Body:       bytes.NewReader(body),
 		Format:     t.Format,
 		FilterPath: []string{"columns", "values"},
-		Instrument: t.EsClient.InstrumentationEnabled(),
-	}.Do(ctx, t.EsClient)
+		Instrument: source.ElasticsearchClient().InstrumentationEnabled(),
+	}.Do(ctx, source.ElasticsearchClient())
 
 	if err != nil {
 		return nil, err
@@ -230,10 +217,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }
