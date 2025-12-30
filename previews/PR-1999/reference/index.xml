@@ -48,7 +48,7 @@
  &lt;tr>
  &lt;td>&lt;/td>
  &lt;td>&lt;code>--prebuilt&lt;/code>&lt;/td>
- &lt;td>Use a prebuilt tool configuration by source type. Cannot be used with &amp;ndash;tools-file. See &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1999/reference/prebuilt-tools/">Prebuilt Tools Reference&lt;/a> for allowed values.&lt;/td>
+ &lt;td>Use a prebuilt tool configuration by source type. See &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1999/reference/prebuilt-tools/">Prebuilt Tools Reference&lt;/a> for allowed values.&lt;/td>
  &lt;td>&lt;/td>
  &lt;/tr>
  &lt;tr>
@@ -78,19 +78,19 @@
  &lt;tr>
  &lt;td>&lt;/td>
  &lt;td>&lt;code>--tools-file&lt;/code>&lt;/td>
- &lt;td>File path specifying the tool configuration. Cannot be used with &amp;ndash;prebuilt, &amp;ndash;tools-files, or &amp;ndash;tools-folder.&lt;/td>
+ &lt;td>File path specifying the tool configuration. Cannot be used with &amp;ndash;tools-files or &amp;ndash;tools-folder.&lt;/td>
  &lt;td>&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td>&lt;/td>
  &lt;td>&lt;code>--tools-files&lt;/code>&lt;/td>
- &lt;td>Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with &amp;ndash;prebuilt, &amp;ndash;tools-file, or &amp;ndash;tools-folder.&lt;/td>
+ &lt;td>Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with &amp;ndash;tools-file or &amp;ndash;tools-folder.&lt;/td>
  &lt;td>&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td>&lt;/td>
  &lt;td>&lt;code>--tools-folder&lt;/code>&lt;/td>
- &lt;td>Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with &amp;ndash;prebuilt, &amp;ndash;tools-file, or &amp;ndash;tools-files.&lt;/td>
+ &lt;td>Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with &amp;ndash;tools-file or &amp;ndash;tools-files.&lt;/td>
  &lt;td>&lt;/td>
  &lt;/tr>
  &lt;tr>
@@ -120,200 +120,125 @@ the capabilities of agents. These tools are built to be generic and adaptable,
 allowing developers to interact with and take action on databases.&lt;/p>
 &lt;p>See guides, &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-1999/how-to/connect-ide/">Connect from your IDE&lt;/a>, for
 details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.&lt;/p>
-&lt;h2 id="alloydb-postgres">AlloyDB Postgres&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>alloydb-postgres&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_REGION&lt;/code>: The region of your AlloyDB instance.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_CLUSTER&lt;/code>: The ID of your AlloyDB cluster.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_INSTANCE&lt;/code>: The ID of your AlloyDB instance.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_USER&lt;/code>: (Optional) The database username. Defaults to
-IAM authentication if unspecified.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_PASSWORD&lt;/code>: (Optional) The password for the database
-user. Defaults to IAM authentication if unspecified.&lt;/li>
-&lt;li>&lt;code>ALLOYDB_POSTGRES_IP_TYPE&lt;/code>: (Optional) The IP type i.e. &amp;ldquo;Public&amp;rdquo; or
-&amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>AlloyDB Client&lt;/strong> (&lt;code>roles/alloydb.client&lt;/code>) to connect to the instance.&lt;/li>
-&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to
-execute queries.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
-&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
-&lt;li>&lt;code>list_autovacuum_configurations&lt;/code>: Lists autovacuum configurations in the
-database.&lt;/li>
-&lt;li>&lt;code>list_memory_configurations&lt;/code>: Lists memory-related configurations in the
-database.&lt;/li>
-&lt;li>&lt;code>list_top_bloated_tables&lt;/code>: List top bloated tables in the database.&lt;/li>
-&lt;li>&lt;code>list_replication_slots&lt;/code>: Lists replication slots in the database.&lt;/li>
-&lt;li>&lt;code>list_invalid_indexes&lt;/code>: Lists invalid indexes in the database.&lt;/li>
-&lt;li>&lt;code>get_query_plan&lt;/code>: Generate the execution plan of a statement.&lt;/li>
-&lt;li>&lt;code>list_views&lt;/code>: Lists views in the database from pg_views with a default
-limit of 50 rows. Returns schemaname, viewname and the ownername.&lt;/li>
-&lt;li>&lt;code>list_schemas&lt;/code>: Lists schemas in the database.&lt;/li>
-&lt;li>&lt;code>database_overview&lt;/code>: Fetches the current state of the PostgreSQL server.&lt;/li>
-&lt;li>&lt;code>list_triggers&lt;/code>: Lists triggers in the database.&lt;/li>
-&lt;li>&lt;code>list_indexes&lt;/code>: List available user indexes in a PostgreSQL database.&lt;/li>
-&lt;li>&lt;code>list_sequences&lt;/code>: List sequences in a PostgreSQL database.&lt;/li>
-&lt;li>&lt;code>list_publication_tables&lt;/code>: List publication tables in a PostgreSQL database.&lt;/li>
-&lt;li>&lt;code>list_tablespaces&lt;/code>: Lists tablespaces in the database.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="alloydb-postgres-admin">AlloyDB Postgres Admin&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>alloydb-postgres-admin&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>AlloyDB Viewer&lt;/strong> (&lt;code>roles/alloydb.viewer&lt;/code>) is required for &lt;code>list&lt;/code> and
-&lt;code>get&lt;/code> tools.&lt;/li>
-&lt;li>&lt;strong>AlloyDB Admin&lt;/strong> (&lt;code>roles/alloydb.admin&lt;/code>) is required for &lt;code>create&lt;/code> tools.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>create_cluster&lt;/code>: Creates a new AlloyDB cluster.&lt;/li>
-&lt;li>&lt;code>list_clusters&lt;/code>: Lists all AlloyDB clusters in a project.&lt;/li>
-&lt;li>&lt;code>get_cluster&lt;/code>: Gets information about a specified AlloyDB cluster.&lt;/li>
-&lt;li>&lt;code>create_instance&lt;/code>: Creates a new AlloyDB instance within a cluster.&lt;/li>
-&lt;li>&lt;code>list_instances&lt;/code>: Lists all instances within an AlloyDB cluster.&lt;/li>
-&lt;li>&lt;code>get_instance&lt;/code>: Gets information about a specified AlloyDB instance.&lt;/li>
-&lt;li>&lt;code>create_user&lt;/code>: Creates a new database user in an AlloyDB cluster.&lt;/li>
-&lt;li>&lt;code>list_users&lt;/code>: Lists all database users within an AlloyDB cluster.&lt;/li>
-&lt;li>&lt;code>get_user&lt;/code>: Gets information about a specified database user in an
-AlloyDB cluster.&lt;/li>
-&lt;li>&lt;code>wait_for_operation&lt;/code>: Polls the operations API to track the status of
-long-running operations.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="alloydb-postgres-observability">AlloyDB Postgres Observability&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>alloydb-postgres-observability&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>Monitoring Viewer&lt;/strong> (&lt;code>roles/monitoring.viewer&lt;/code>) is required on the
-project to view monitoring data.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>get_system_metrics&lt;/code>: Fetches system level cloud monitoring data
-(timeseries metrics) for an AlloyDB instance using a PromQL query.&lt;/li>
-&lt;li>&lt;code>get_query_metrics&lt;/code>: Fetches query level cloud monitoring data
-(timeseries metrics) for queries running in an AlloyDB instance using a
-PromQL query.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="bigquery">BigQuery&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>bigquery&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>BIGQUERY_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
-&lt;li>&lt;code>BIGQUERY_LOCATION&lt;/code>: (Optional) The dataset location.&lt;/li>
-&lt;li>&lt;code>BIGQUERY_USE_CLIENT_OAUTH&lt;/code>: (Optional) If &lt;code>true&lt;/code>, forwards the client&amp;rsquo;s
-OAuth access token for authentication. Defaults to &lt;code>false&lt;/code>.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>BigQuery User&lt;/strong> (&lt;code>roles/bigquery.user&lt;/code>) to execute queries and view
-metadata.&lt;/li>
-&lt;li>&lt;strong>BigQuery Metadata Viewer&lt;/strong> (&lt;code>roles/bigquery.metadataViewer&lt;/code>) to view
-all datasets.&lt;/li>
-&lt;li>&lt;strong>BigQuery Data Editor&lt;/strong> (&lt;code>roles/bigquery.dataEditor&lt;/code>) to create or
-modify datasets and tables.&lt;/li>
-&lt;li>&lt;strong>Gemini for Google Cloud&lt;/strong> (&lt;code>roles/cloudaicompanion.user&lt;/code>) to use the
-conversational analytics API.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>analyze_contribution&lt;/code>: Use this tool to perform contribution analysis,
-also called key driver analysis.&lt;/li>
-&lt;li>&lt;code>ask_data_insights&lt;/code>: Use this tool to perform data analysis, get
-insights, or answer complex questions about the contents of specific
-BigQuery tables. For more information on required roles, API setup, and
-IAM configuration, see the setup and authentication section of the
-&lt;a href="https://cloud.google.com/gemini/docs/conversational-analytics-api/overview">Conversational Analytics API
-documentation&lt;/a>.&lt;/li>
-&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL statement.&lt;/li>
-&lt;li>&lt;code>forecast&lt;/code>: Use this tool to forecast time series data.&lt;/li>
-&lt;li>&lt;code>get_dataset_info&lt;/code>: Gets dataset metadata.&lt;/li>
-&lt;li>&lt;code>get_table_info&lt;/code>: Gets table metadata.&lt;/li>
-&lt;li>&lt;code>list_dataset_ids&lt;/code>: Lists datasets.&lt;/li>
-&lt;li>&lt;code>list_table_ids&lt;/code>: Lists tables.&lt;/li>
-&lt;li>&lt;code>search_catalog&lt;/code>: Search for entries based on the provided query.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="cloud-sql-for-mysql">Cloud SQL for MySQL&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mysql&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Environment Variables:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>CLOUD_SQL_MYSQL_PROJECT&lt;/code>: The GCP project ID.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_MYSQL_REGION&lt;/code>: The region of your Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_MYSQL_INSTANCE&lt;/code>: The ID of your Cloud SQL instance.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_MYSQL_DATABASE&lt;/code>: The name of the database to connect to.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_MYSQL_USER&lt;/code>: The database username.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_MYSQL_PASSWORD&lt;/code>: The password for the database user.&lt;/li>
-&lt;li>&lt;code>CLOUD_SQL_MYSQL_IP_TYPE&lt;/code>: The IP type i.e. &amp;ldquo;Public
-or &amp;ldquo;Private&amp;rdquo; (Default: Public).&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>Cloud SQL Client&lt;/strong> (&lt;code>roles/cloudsql.client&lt;/code>) to connect to the
-instance.&lt;/li>
-&lt;li>Database-level permissions (e.g., &lt;code>SELECT&lt;/code>, &lt;code>INSERT&lt;/code>) are required to
-execute queries.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>execute_sql&lt;/code>: Executes a SQL query.&lt;/li>
-&lt;li>&lt;code>list_tables&lt;/code>: Lists tables in the database.&lt;/li>
-&lt;li>&lt;code>get_query_plan&lt;/code>: Provides information about how MySQL executes a SQL
-statement.&lt;/li>
-&lt;li>&lt;code>list_active_queries&lt;/code>: Lists ongoing queries.&lt;/li>
-&lt;li>&lt;code>list_tables_missing_unique_indexes&lt;/code>: Looks for tables that do not have
-primary or unique key contraint.&lt;/li>
-&lt;li>&lt;code>list_table_fragmentation&lt;/code>: Displays table fragmentation in MySQL.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="cloud-sql-for-mysql-observability">Cloud SQL for MySQL Observability&lt;/h2>
-&lt;ul>
-&lt;li>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mysql-observability&lt;/code>&lt;/li>
-&lt;li>&lt;strong>Permissions:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;strong>Monitoring Viewer&lt;/strong> (&lt;code>roles/monitoring.viewer&lt;/code>) is required on the
-project to view monitoring data.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>&lt;strong>Tools:&lt;/strong>
-&lt;ul>
-&lt;li>&lt;code>get_system_metrics&lt;/code>: Fetches system level cloud monitoring data
-(timeseries metrics) for a MySQL instance using a PromQL query.&lt;/li>
-&lt;li>&lt;code>get_query_metrics&lt;/code>: Fetches query level cloud monitoring data
-(timeseries metrics) for queries running in a MySQL instance using a
-PromQL query.&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;h2 id="cloud-sql-for-mysql-admin">Cloud SQL for MySQL Admin&lt;/h2>
-&lt;ul>
-&lt;li>
-&lt;p>&lt;code>--prebuilt&lt;/code> value: &lt;code>cloud-sql-mysql-admin&lt;/code>&lt;/p></description></item></channel></rss>
+&lt;style type="text/css">
+ 
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #6be;
+ --content-color: #444;
+ --content-background-color: #e7f2fa;
+ }
+
+ .notice.info {
+ --title-background-color: #fb7;
+ --content-background-color: #fec;
+ }
+
+ .notice.tip {
+ --title-background-color: #5a5;
+ --content-background-color: #efe;
+ }
+
+ .notice.warning {
+ --title-background-color: #c33;
+ --content-background-color: #fee;
+ }
+
+ 
+ @media (prefers-color-scheme:dark) {
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+ }
+
+ body.dark .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ body.dark .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ body.dark .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ body.dark .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+
+ 
+ .notice {
+ padding: 18px;
+ line-height: 24px;
+ margin-bottom: 24px;
+ border-radius: 4px;
+ color: var(--content-color);
+ background: var(--content-background-color);
+ }
+
+ .notice p:last-child {
+ margin-bottom: 0
+ }
+
+ 
+ .notice-title {
+ margin: -18px -18px 12px;
+ padding: 4px 18px;
+ border-radius: 4px 4px 0 0;
+ font-weight: 700;
+ color: var(--title-color);
+ background: var(--title-background-color);
+ }
+
+ 
+ .icon-notice {
+ display: inline-flex;
+ align-self: center;
+ margin-right: 8px;
+ }
+
+ .icon-notice img,
+ .icon-notice svg {
+ height: 1em;
+ width: 1em;
+ fill: currentColor;
+ }
+
+ .icon-notice img,
+ .icon-notice.baseline svg {
+ top: .125em;
+ position: relative;
+ }
+&lt;/style>&lt;div class="notice tip" >
+ &lt;p class="notice-title">
+ &lt;span class="icon-notice baseline">
+ &lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="300.5 134 300 300">
+ &lt;path d="M551.281 252.36c0-3.32-1.172-6.641-3.515-8.985l-17.774-17.578c-2.344-2.344-5.469-3.711-8.789-3.711-3.32 0-6.445 1.367-8.789 3.71l-79.687 79.493-44.141-44.14c-2.344-2.344-5.469-3.712-8.79-3.712-3.32 0-6.444 1.368-8.788 3.711l-17.774 17.579c-2.343 2.343-3.515 5.664-3.515 8.984 0 3.32 1.172 6.445 3.515 8.789l70.704 70.703c2.343 2.344 5.664 3.711 8.789 3.711 3.32 0 6.64-1.367 8.984-3.71l106.055-106.056c2.343-2.343 3.515-5.468 3.515-8.789ZM600.5 284c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
+&lt;/svg>
+
+ &lt;/span>Tip&lt;/p></description></item></channel></rss>
