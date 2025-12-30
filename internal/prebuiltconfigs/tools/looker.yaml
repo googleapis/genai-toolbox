@@ -959,6 +959,21 @@ tools:
           Output:
           A confirmation message upon successful file deletion.
 
+    validate_project:
+        kind: looker-validate-project
+        source: looker-source
+        description: |
+          This tool checks a LookML project for syntax errors.
+
+          Prerequisite: The Looker session must be in Development Mode. Use `dev_mode: true` first.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+
+          Output:
+          A list of error details including the file path and line number, and also a list of models
+          that are not currently valid due to LookML errors.
+
     get_connections:
         kind: looker-get-connections
         source: looker-source
@@ -1072,6 +1087,7 @@ toolsets:
         - create_project_file
         - update_project_file
         - delete_project_file
+        - validate_project
         - get_connections
         - get_connection_schemas
         - get_connection_databases
