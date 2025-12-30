@@ -42,9 +42,7 @@ func (cfg Config) EmbeddingModelConfigKind() string {
 }
 
 // Initialize a Gemini embedding model
-func (cfg Config) Initialize() (embeddingmodels.EmbeddingModel, error) {
-	ctx := context.Background()
-
+func (cfg Config) Initialize(ctx context.Context) (embeddingmodels.EmbeddingModel, error) {
 	// Get client configs
 	configs := &genai.ClientConfig{}
 	if cfg.ApiKey != "" {

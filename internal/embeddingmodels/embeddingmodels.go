@@ -19,7 +19,7 @@ import "context"
 // EmbeddingModelConfig is the interface for configuring embedding models.
 type EmbeddingModelConfig interface {
 	EmbeddingModelConfigKind() string
-	Initialize() (EmbeddingModel, error)
+	Initialize(context.Context) (EmbeddingModel, error)
 }
 
 type EmbeddingModel interface {

@@ -142,7 +142,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 				trace.WithAttributes(attribute.String("model_name", name)),
 			)
 			defer span.End()
-			em, err := ec.Initialize()
+			em, err := ec.Initialize(ctx)
 			if err != nil {
 				return nil, fmt.Errorf("unable to initialize embedding model %q: %w", name, err)
 			}
