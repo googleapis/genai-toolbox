@@ -13,6 +13,12 @@ allowing developers to interact with and take action on databases.
 See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for
 details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 
+{{< notice tip >}}
+You can now use `--prebuilt` along `--tools-file`, `--tools-files`, or
+`--tools-folder` to combine prebuilt configs with custom tools.
+See [Usage Examples](../reference/cli.md#examples).
+{{< /notice >}}
+
 ## AlloyDB Postgres
 
 *   `--prebuilt` value: `alloydb-postgres`
@@ -50,6 +56,12 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
+    *   `list_tablespaces`: Lists tablespaces in the database.
+    *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
+    *   `list_database_stats`: Lists the key performance and activity statistics for
+        each database in the AlloyDB instance.
+    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.  
 
 ## AlloyDB Postgres Admin
 
@@ -178,6 +190,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
+
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for MySQL instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -186,6 +200,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_databases`: Lists all databases for a Cloud SQL instance.
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
+    *   `clone_instance`: Creates a clone for an existing Cloud SQL for MySQL instance.
 
 ## Cloud SQL for PostgreSQL
 
@@ -224,6 +239,12 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
+    *   `list_tablespaces`: Lists tablespaces in the database.
+    *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
+    *   `list_database_stats`: Lists the key performance and activity statistics for
+        each database in the postgreSQL instance.
+    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.  
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -257,6 +278,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for PostgreSQL instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -265,6 +287,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_databases`: Lists all databases for a Cloud SQL instance.
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
+    *   `clone_instance`: Creates a clone for an existing Cloud SQL for PostgreSQL instance.
 
 ## Cloud SQL for SQL Server
 
@@ -316,6 +339,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
+        * `clone_instance`
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for SQL Server instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -324,6 +348,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_databases`: Lists all databases for a Cloud SQL instance.
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
+    *   `clone_instance`: Creates a clone for an existing Cloud SQL for SQL Server instance.
 
 ## Dataplex
 
@@ -397,6 +422,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `run_dashboard`: Runs the queries associated with a dashboard.
     *   `make_dashboard`: Creates a new dashboard.
     *   `add_dashboard_element`: Adds a tile to a dashboard.
+    *   `add_dashboard_filter`: Adds a filter to a dashboard.
+    *   `generate_embed_url`: Generate an embed url for content.
     *   `health_pulse`: Test the health of a Looker instance.
     *   `health_analyze`: Analyze the LookML usage of a Looker instance.
     *   `health_vacuum`: Suggest LookML elements that can be removed.
@@ -443,8 +470,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 
 *   `--prebuilt` value: `mssql`
 *   **Environment Variables:**
-    *   `MSSQL_HOST`: The hostname or IP address of the SQL Server instance.
-    *   `MSSQL_PORT`: The port number for the SQL Server instance.
+    *   `MSSQL_HOST`: (Optional) The hostname or IP address of the SQL Server instance.
+    *   `MSSQL_PORT`: (Optional) The port number for the SQL Server instance.
     *   `MSSQL_DATABASE`: The name of the database to connect to.
     *   `MSSQL_USER`: The database username.
     *   `MSSQL_PASSWORD`: The password for the database user.
@@ -525,6 +552,12 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `list_triggers`: Lists triggers in the database. 
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
+    *   `list_tablespaces`: Lists tablespaces in the database.
+    *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
+    *   `list_database_stats`: Lists the key performance and activity statistics for
+        each database in the PostgreSQL server.
+    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.  
 
 ## Google Cloud Serverless for Apache Spark
 
@@ -556,6 +589,7 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `execute_sql`: Executes a DML SQL query.
     *   `execute_sql_dql`: Executes a DQL SQL query.
     *   `list_tables`: Lists tables in the database.
+    *   `list_graphs`: Lists graphs in the database.
 
 ## Spanner (PostgreSQL dialect)
 

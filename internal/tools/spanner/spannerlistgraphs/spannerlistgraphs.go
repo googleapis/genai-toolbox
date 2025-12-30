@@ -23,7 +23,6 @@ import (
 	"cloud.google.com/go/spanner"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	spannerdb "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/iterator"
@@ -50,11 +49,6 @@ type compatibleSource interface {
 	DatabaseDialect() string
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &spannerdb.Source{}
-
-var compatibleSources = [...]string{spannerdb.SourceKind}
-
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
@@ -71,23 +65,6 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
-	// verify the dialect is GoogleSQL
-	if strings.ToLower(s.DatabaseDialect()) != "googlesql" {
-		return nil, fmt.Errorf("invalid source dialect for %q tool: source dialect must be GoogleSQL", kind)
-	}
-
 	// Define parameters for the tool
 	allParameters := parameters.Parameters{
 		parameters.NewStringParameterWithDefault(
@@ -104,7 +81,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	description := cfg.Description
 	if description == "" {
-		description = "Lists detailed graph schema information (node tables, edge tables, labels and property declarations) as JSON for user-created graphs. Filters by a comma-separated list of names. If names are omitted, lists all graphs in user schemas."
+		description = "Lists detailed graph schema information (node tables, edge tables, labels and property declarations) as JSON for user-created graphs. Filters by a comma-separated list of graph names. If names are omitted, lists all graphs. The output can be 'simple' (graph names only) or 'detailed' (full schema)."
 	}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, description, cfg.AuthRequired, allParameters, nil)
 
@@ -112,8 +89,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	t := Tool{
 		Config:      cfg,
 		AllParams:   allParameters,
-		Client:      s.SpannerClient(),
-		dialect:     s.DatabaseDialect(),
 		manifest:    tools.Manifest{Description: description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
@@ -126,8 +101,6 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Config
 	AllParams   parameters.Parameters `yaml:"allParams"`
-	Client      *spanner.Client
-	dialect     string
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -165,7 +138,17 @@ func processRows(iter *spanner.RowIterator) ([]any, error) {
 	return out, nil
 }
 
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check dialect here at RUNTIME instead of startup
+	if strings.ToLower(source.DatabaseDialect()) != "googlesql" {
+		return nil, fmt.Errorf("operation not supported: The 'spanner-list-graphs' tool is only available for GoogleSQL dialect databases. Your current database dialect is '%s'", source.DatabaseDialect())
+	}
+
 	paramsMap := params.AsMap()
 
 	graphNames, _ := paramsMap["graph_names"].(string)
@@ -185,7 +168,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 	}
 
 	// Execute the query (read-only)
-	iter := t.Client.Single().Query(ctx, stmt)
+	iter := source.SpannerClient().Single().Query(ctx, stmt)
 	results, err := processRows(iter)
 	if err != nil {
 		return nil, fmt.Errorf("unable to execute query: %w", err)
@@ -210,16 +193,16 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }
 
 // GoogleSQL statement for listing graphs

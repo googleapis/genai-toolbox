@@ -26,6 +26,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
+	"github.com/googleapis/genai-toolbox/internal/server/resources"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -49,7 +50,7 @@ type MockTool struct {
 	requiresClientAuthrorization bool
 }
 
-func (t MockTool) Invoke(context.Context, parameters.ParamValues, tools.AccessToken) (any, error) {
+func (t MockTool) Invoke(context.Context, tools.SourceProvider, parameters.ParamValues, tools.AccessToken) (any, error) {
 	mock := []any{t.Name}
 	return mock, nil
 }
@@ -76,9 +77,9 @@ func (t MockTool) Authorized(verifiedAuthServices []string) bool {
 	return !t.unauthorized
 }
 
-func (t MockTool) RequiresClientAuthorization() bool {
+func (t MockTool) RequiresClientAuthorization(tools.SourceProvider) (bool, error) {
 	// defaulted to false
-	return t.requiresClientAuthrorization
+	return t.requiresClientAuthrorization, nil
 }
 
 func (t MockTool) McpManifest() tools.McpManifest {
@@ -118,8 +119,8 @@ func (t MockTool) McpManifest() tools.McpManifest {
 	return mcpManifest
 }
 
-func (t MockTool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t MockTool) GetAuthTokenHeaderName(tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }
 
 // MockPrompt is used to mock prompts in tests
@@ -275,7 +276,7 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := NewResourceManager(nil, nil, tools, toolsets, prompts, promptsets)
+	resourceManager := resources.NewResourceManager(nil, nil, tools, toolsets, prompts, promptsets)
 
 	server := Server{
 		version:         fakeVersionString,

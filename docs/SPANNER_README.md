@@ -11,53 +11,7 @@ An editor configured to use the Cloud Spanner MCP server can use its AI capabili
 
 ## Prerequisites
 
-*   Download and install [MCP Toolbox](https://github.com/googleapis/genai-toolbox):
-    1.  **Download the Toolbox binary**:
-        Download the latest binary for your operating system and architecture from the storage bucket. Check the [releases page](https://github.com/googleapis/genai-toolbox/releases) for additional versions: 
-      
-        <!-- {x-release-please-start-version} -->
-        * To install Toolbox as a binary on Linux (AMD64):
-          ```bash
-          curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v0.21.0/linux/amd64/toolbox
-          ```
-
-        * To install Toolbox as a binary on macOS (Apple Silicon):
-          ```bash
-          curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/arm64/toolbox
-          ```
-
-        * To install Toolbox as a binary on macOS (Intel):
-          ```bash
-          curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v0.21.0/darwin/amd64/toolbox
-          ```
-
-        * To install Toolbox as a binary on Windows (AMD64):
-          ```powershell
-          curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v0.21.0/windows/amd64/toolbox.exe"
-          ```
-        <!-- {x-release-please-end} -->
-        
-    2.  **Make it executable**:
-
-        ```bash
-        chmod +x toolbox
-        ```
-
-    3.  **Add the binary to $PATH in `.~/bash_profile`** (Note: You may need to restart Antigravity for changes to take effect.):
-
-        ```bash
-        export PATH=$PATH:path/to/folder
-        ```
-
-        **On Windows, move binary to the `WindowsApps\` folder**:
-        ```
-        move "C:\Users\<path-to-binary>\toolbox.exe" "C:\Users\<username>\AppData\Local\Microsoft\WindowsApps\"
-        ```
-    
-        **Tip:** Ensure the destination folder for your binary is included in
-        your system's PATH environment variable. To check `PATH`, use `echo
-        $PATH` (or `echo %PATH%` on Windows).
-
+*   [Node.js](https://nodejs.org/) installed.
 *   A Google Cloud project with the **Cloud Spanner API** enabled.
 *   Ensure [Application Default Credentials](https://cloud.google.com/docs/authentication/gcloud) are available in your environment.
 *   IAM Permissions:
@@ -72,6 +26,9 @@ An editor configured to use the Cloud Spanner MCP server can use its AI capabili
 
 You'll now be able to see all enabled tools in the "Tools" tab.
 
+> [!NOTE]
+> If you encounter issues with Windows Defender blocking the execution, you may need to configure an allowlist. See [Configure exclusions for Microsoft Defender Antivirus](https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/configure-exclusions-microsoft-defender-antivirus?view=o365-worldwide) for more details.
+
 ## Usage
 
 Once configured, the MCP server will automatically provide Cloud Spanner capabilities to your AI assistant. You can:
@@ -84,11 +41,12 @@ Once configured, the MCP server will automatically provide Cloud Spanner capabil
 
 The Cloud Spanner MCP server provides the following tools:
 
-| Tool Name         | Description                                                |
-|:------------------|:-----------------------------------------------------------|
-| `execute_sql`     | Use this tool to execute DML SQL.                          |
-| `execute_sql_dql` | Use this tool to execute DQL SQL.                          |
-| `list_tables`     | Lists detailed schema information for user-created tables. |
+| Tool Name         | Description                                                      |
+|:------------------|:-----------------------------------------------------------------|
+| `execute_sql`     | Use this tool to execute DML SQL.                                |
+| `execute_sql_dql` | Use this tool to execute DQL SQL.                                |
+| `list_tables`     | Lists detailed schema information for user-created tables.       |
+| `list_graphs`     | Lists detailed graph schema information for user-created graphs. |
 
 ## Custom MCP Server Configuration
 
@@ -107,8 +65,8 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
 {
   "mcpServers": {
     "spanner": {
-      "command": "toolbox",
-      "args": ["--prebuilt", "spanner", "--stdio"],
+      "command": "npx",
+      "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "spanner", "--stdio"],
       "env": {
         "SPANNER_PROJECT": "your-project-id",
         "SPANNER_INSTANCE": "your-instance-id",

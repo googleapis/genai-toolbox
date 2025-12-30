@@ -85,14 +85,21 @@ func (token AccessToken) ParseBearerToken() (string, error) {
 }
 
 type Tool interface {
-	Invoke(context.Context, parameters.ParamValues, AccessToken) (any, error)
+	Invoke(context.Context, SourceProvider, parameters.ParamValues, AccessToken) (any, error)
 	ParseParams(map[string]any, map[string]map[string]any) (parameters.ParamValues, error)
 	Manifest() Manifest
 	McpManifest() McpManifest
 	Authorized([]string) bool
-	RequiresClientAuthorization() bool
+	RequiresClientAuthorization(SourceProvider) (bool, error)
 	ToConfig() ToolConfig
-	GetAuthTokenHeaderName() string
+	GetAuthTokenHeaderName(SourceProvider) (string, error)
+}
+
+// SourceProvider defines the minimal view of the server.ResourceManager
+// that the Tool package needs.
+// This is implemented to prevent import cycles.
+type SourceProvider interface {
+	GetSource(sourceName string) (sources.Source, bool)
 }
 
 // Manifest is the representation of tools sent to Client SDKs.
@@ -149,4 +156,17 @@ func IsAuthorized(authRequiredSources []string, verifiedAuthServices []string) b
 		}
 	}
 	return false
+}
+
+func GetCompatibleSource[T any](resourceMgr SourceProvider, sourceName, toolName, toolKind string) (T, error) {
+	var zero T
+	s, ok := resourceMgr.GetSource(sourceName)
+	if !ok {
+		return zero, fmt.Errorf("unable to retrieve source %q for tool %q", sourceName, toolName)
+	}
+	source, ok := s.(T)
+	if !ok {
+		return zero, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", toolKind, sourceName)
+	}
+	return source, nil
 }

@@ -105,6 +105,21 @@ redeploying your application.
 
 ## Getting Started
 
+### (Non-production) Running Toolbox
+
+You can run Toolbox directly with a [configuration file](#configuration):
+
+```sh
+npx @toolbox-sdk/server --tools-file tools.yaml
+```
+
+This runs the latest version of the toolbox server with your configuration file.
+
+> [!NOTE]
+> This method should only be used for non-production use cases such as
+> experimentation. For any production use-cases, please consider [Installing the
+> server](#installing-the-server) and then [running it](#running-the-server).
+
 ### Installing the server
 
 For the latest version, check the [releases page][releases] and use the
@@ -125,7 +140,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.21.0
+> export VERSION=0.24.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 > chmod +x toolbox
 > ```
@@ -138,7 +153,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.21.0
+> export VERSION=0.24.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
 > chmod +x toolbox
 > ```
@@ -151,21 +166,33 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.21.0
+> export VERSION=0.24.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
 > chmod +x toolbox
 > ```
 >
 > </details>
 > <details>
-> <summary>Windows (AMD64)</summary>
+> <summary>Windows (Command Prompt)</summary>
 >
-> To install Toolbox as a binary on Windows (AMD64):
+> To install Toolbox as a binary on Windows (Command Prompt):
+>
+> ```cmd
+> :: see releases page for other versions
+> set VERSION=0.24.0
+> curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
+> ```
+>
+> </details>
+> <details>
+> <summary>Windows (PowerShell)</summary>
+>
+> To install Toolbox as a binary on Windows (PowerShell):
 >
 > ```powershell
-> :: see releases page for other versions
-> set VERSION=0.21.0
-> curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
+> # see releases page for other versions
+> $VERSION = "0.24.0"
+> curl.exe -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe"
 > ```
 >
 > </details>
@@ -177,7 +204,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.21.0
+export VERSION=0.24.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -201,7 +228,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.21.0
+go install github.com/googleapis/genai-toolbox@v0.24.0
 ```
 <!-- {x-release-please-end} -->
 
@@ -287,6 +314,16 @@ command:
 
 ```sh
 toolbox --tools-file "tools.yaml"
+```
+
+</details>
+
+<details>
+<summary>NPM</summary>
+
+To run Toolbox directly without manually downloading the binary (requires Node.js):
+```sh
+npx @toolbox-sdk/server --tools-file tools.yaml
 ```
 
 </details>
@@ -513,6 +550,36 @@ For more detailed instructions on using the Toolbox Core SDK, see the
     // Use these tools in your Genkit applications
     const tools = toolboxTools.map(getTool);
     ```
+
+  </details>
+  <details>
+    <summary>ADK</summary>
+
+1. Install [Toolbox ADK SDK][toolbox-adk-js]:
+
+    ```bash
+    npm install @toolbox-sdk/adk
+    ```
+
+2. Load tools:
+
+    ```javascript
+    import { ToolboxClient } from '@toolbox-sdk/adk';
+
+    // update the url to point to your server
+    const URL = 'http://127.0.0.1:5000';
+    let client = new ToolboxClient(URL);
+
+    // these tools can be passed to your application!
+    const tools = await client.loadToolset('toolsetName');
+    ```
+
+    For more detailed instructions on using the Toolbox ADK SDK, see the
+    [project's README][toolbox-adk-js-readme].
+
+    [toolbox-adk-js]: https://www.npmjs.com/package/@toolbox-sdk/adk
+    [toolbox-adk-js-readme]:
+       https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-adk/README.md
 
   </details>
 </details>
@@ -968,12 +1035,12 @@ The version will be incremented  as follows:
 
 ### Post-1.0.0 Versioning
 
-Once the project reaches a stable `1.0.0` release, the versioning will follow
-the more common convention:
+Once the project reaches a stable `1.0.0` release, the version number
+**`MAJOR.MINOR.PATCH`** will follow the more common convention:
 
-- **`MAJOR.MINOR.PATCH`**: Incremented for incompatible API changes.
-- **`MAJOR.MINOR.PATCH`**: Incremented for new, backward-compatible functionality.
-- **`MAJOR.MINOR.PATCH`**: Incremented for backward-compatible bug fixes.
+- **`MAJOR`**: Incremented for incompatible API changes.
+- **`MINOR`**: Incremented for new, backward-compatible functionality.
+- **`PATCH`**: Incremented for backward-compatible bug fixes.
 
 The public API that this applies to is the CLI associated with Toolbox, the
 interactions with official SDKs, and the definitions in the `tools.yaml` file.

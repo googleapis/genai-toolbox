@@ -46,9 +46,9 @@ func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool
 	var toolset Toolset
 	toolset.Name = t.Name
 	if !IsValidName(toolset.Name) {
-		return toolset, fmt.Errorf("invalid toolset name: %s", t)
+		return toolset, fmt.Errorf("invalid toolset name: %s", toolset.Name)
 	}
-	toolset.Tools = make([]*Tool, len(t.ToolNames))
+	toolset.Tools = make([]*Tool, 0, len(t.ToolNames))
 	toolset.Manifest = ToolsetManifest{
 		ServerVersion: serverVersion,
 		ToolsManifest: make(map[string]Manifest),
@@ -56,7 +56,7 @@ func (t ToolsetConfig) Initialize(serverVersion string, toolsMap map[string]Tool
 	for _, toolName := range t.ToolNames {
 		tool, ok := toolsMap[toolName]
 		if !ok {
-			return toolset, fmt.Errorf("tool does not exist: %s", t)
+			return toolset, fmt.Errorf("tool does not exist: %s", toolName)
 		}
 		toolset.Tools = append(toolset.Tools, &tool)
 		toolset.Manifest.ToolsManifest[toolName] = tool.Manifest()
