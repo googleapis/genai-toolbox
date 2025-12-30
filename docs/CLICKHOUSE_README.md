@@ -59,6 +59,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
 
 You can also configure connection pool settings in your `tools.yaml` file:
 
+
 ```yaml
 sources:
   my-clickhouse-source:
@@ -74,5 +75,5 @@ sources:
     maxOpenConns: 50        # Optional: Maximum number of open connections (default: 25)
     maxIdleConns: 10       # Optional: Maximum number of idle connections (default: 5)
     connMaxLifetime: 10m   # Optional: Maximum connection lifetime (default: 5m)
-                            # Accepts duration strings like "30s", "5m", "1h", etc.
+                            # Accepts duration strings like "30s", "5m", "1h", etc.                     
 ```
