@@ -62,26 +62,31 @@ tools:
 
 ## Response Format
 
-The response is an
+The response contains the
 [operation](https://docs.cloud.google.com/dataproc-serverless/docs/reference/rest/v1/projects.locations.operations#resource:-operation)
 metadata JSON object corresponding to [batch operation
-metadata](https://pkg.go.dev/cloud.google.com/go/dataproc/v2/apiv1/dataprocpb#BatchOperationMetadata)
-Example:
+metadata](https://pkg.go.dev/cloud.google.com/go/dataproc/v2/apiv1/dataprocpb#BatchOperationMetadata),
+plus additional fields `consoleUrl` and `logsUrl` where a human can go for more
+detailed information.
 
 ```json
 {
-  "batch": "projects/myproject/locations/us-central1/batches/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-  "batchUuid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-  "createTime": "2025-11-19T16:36:47.607119Z",
-  "description": "Batch",
-  "labels": {
-    "goog-dataproc-batch-uuid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-    "goog-dataproc-location": "us-central1"
+  "opMetadata": {
+    "batch": "projects/myproject/locations/us-central1/batches/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+    "batchUuid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+    "createTime": "2025-11-19T16:36:47.607119Z",
+    "description": "Batch",
+    "labels": {
+      "goog-dataproc-batch-uuid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+      "goog-dataproc-location": "us-central1"
+    },
+    "operationType": "BATCH",
+    "warnings": [
+      "No runtime version specified. Using the default runtime version."
+    ]
   },
-  "operationType": "BATCH",
-  "warnings": [
-    "No runtime version specified. Using the default runtime version."
-  ]
+  "consoleUrl": "https://console.cloud.google.com/dataproc/batches/...",
+  "logsUrl": "https://console.cloud.google.com/logs/viewer?..."
 }
 ```
 

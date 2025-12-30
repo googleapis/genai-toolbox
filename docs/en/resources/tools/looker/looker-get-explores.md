@@ -40,10 +40,13 @@ tools:
         kind: looker-get-explores
         source: looker-source
         description: |
-          The get_explores tool retrieves the list of explores defined in a LookML model
-          in the Looker system.
+          This tool retrieves a list of explores defined within a specific LookML model.
+          Explores represent a curated view of your data, typically joining several
+          tables together to allow for focused analysis on a particular subject area.
+          The output provides details like the explore's `name` and `label`.
 
-          It takes one parameter, the model_name looked up from get_models.
+          Parameters:
+          - model_name (required): The name of the LookML model, obtained from `get_models`.
 ```
 
 ## Reference
