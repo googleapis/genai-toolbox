@@ -145,7 +145,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		allParamValues[i+2] = fmt.Sprintf("%s", param)
 	}
 
-	return source.RunSQL(ctx, t.Statement, allParamValues)
+	resp, err := source.RunSQL(ctx, t.Statement, allParamValues)
+	if err != nil {
+		return nil, fmt.Errorf("%w. Query: %v , Values: %v. Toolbox v0.19.0+ is only compatible with AlloyDB AI NL v1.0.3+. Please ensure that you are using the latest AlloyDB AI NL extension", err, t.Statement, allParamValues)
+	}
+	return resp, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
