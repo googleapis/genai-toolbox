@@ -17,7 +17,9 @@ package bigquery
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"net/http"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -26,13 +28,16 @@ import (
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/impersonate"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -481,6 +486,131 @@ func (s *Source) lazyInitDataplexClient(ctx context.Context, tracer trace.Tracer
 		})
 		return client, clientCreator, err
 	}
+}
+
+func (s *Source) RetrieveClientAndService(accessToken tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+	bqClient := s.BigQueryClient()
+	restService := s.BigQueryRestService()
+
+	// Initialize new client if using user OAuth token
+	if s.UseClientAuthorization() {
+		tokenStr, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, nil, fmt.Errorf("error parsing access token: %w", err)
+		}
+		bqClient, restService, err = s.BigQueryClientCreator()(tokenStr, true)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
+		}
+	}
+	return bqClient, restService, nil
+}
+
+func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, statement, statementType string, params []bigqueryapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty) (any, error) {
+	query := bqClient.Query(statement)
+	query.Location = bqClient.Location
+	if params != nil {
+		query.Parameters = params
+	}
+	if connProps != nil {
+		query.ConnectionProperties = connProps
+	}
+
+	// This block handles SELECT statements, which return a row set.
+	// We iterate through the results, convert each row into a map of
+	// column names to values, and return the collection of rows.
+	job, err := query.Run(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	it, err := job.Read(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read query results: %w", err)
+	}
+
+	var out []any
+	for {
+		var val []bigqueryapi.Value
+		err = it.Next(&val)
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("unable to iterate through query results: %w", err)
+		}
+		schema := it.Schema
+		row := orderedmap.Row{}
+		for i, field := range schema {
+			row.Add(field.Name, NormalizeValue(val[i]))
+		}
+		out = append(out, row)
+	}
+	// If the query returned any rows, return them directly.
+	if len(out) > 0 {
+		return out, nil
+	}
+
+	// This handles the standard case for a SELECT query that successfully
+	// executes but returns zero rows.
+	if statementType == "SELECT" {
+		return "The query returned 0 rows.", nil
+	}
+	// This is the fallback for a successful query that doesn't return content.
+	// In most cases, this will be for DML/DDL statements like INSERT, UPDATE, CREATE, etc.
+	// However, it is also possible that this was a query that was expected to return rows
+	// but returned none, a case that we cannot distinguish here.
+	return "Query executed successfully and returned no content.", nil
+}
+
+// NormalizeValue converts BigQuery specific types to standard JSON-compatible types.
+// Specifically, it handles *big.Rat (used for NUMERIC/BIGNUMERIC) by converting
+// them to decimal strings with up to 38 digits of precision, trimming trailing zeros.
+// It recursively handles slices (arrays) and maps (structs) using reflection.
+func NormalizeValue(v any) any {
+	if v == nil {
+		return nil
+	}
+
+	// Handle *big.Rat specifically.
+	if rat, ok := v.(*big.Rat); ok {
+		// Convert big.Rat to a decimal string.
+		// Use a precision of 38 digits (enough for BIGNUMERIC and NUMERIC)
+		// and trim trailing zeros to match BigQuery's behavior.
+		s := rat.FloatString(38)
+		if strings.Contains(s, ".") {
+			s = strings.TrimRight(s, "0")
+			s = strings.TrimRight(s, ".")
+		}
+		return s
+	}
+
+	// Use reflection for slices and maps to handle various underlying types.
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.Slice, reflect.Array:
+		// Preserve []byte as is, so json.Marshal encodes it as Base64 string (BigQuery BYTES behavior).
+		if rv.Type().Elem().Kind() == reflect.Uint8 {
+			return v
+		}
+		newSlice := make([]any, rv.Len())
+		for i := 0; i < rv.Len(); i++ {
+			newSlice[i] = NormalizeValue(rv.Index(i).Interface())
+		}
+		return newSlice
+	case reflect.Map:
+		// Ensure keys are strings to produce a JSON-compatible map.
+		if rv.Type().Key().Kind() != reflect.String {
+			return v
+		}
+		newMap := make(map[string]any, rv.Len())
+		iter := rv.MapRange()
+		for iter.Next() {
+			newMap[iter.Key().String()] = NormalizeValue(iter.Value().Interface())
+		}
+		return newMap
+	}
+
+	return v
 }
 
 func initBigQueryConnection(

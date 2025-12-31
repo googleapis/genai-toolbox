@@ -4,6 +4,7 @@ package oracle
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -133,6 +134,107 @@ func (s *Source) ToConfig() sources.SourceConfig {
 
 func (s *Source) OracleDB() *sql.DB {
 	return s.DB
+}
+
+func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	rows, err := s.OracleDB().QueryContext(ctx, statement, params...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	defer rows.Close()
+
+	// If Columns() errors, it might be a DDL/DML without an OUTPUT clause.
+	// We proceed, and results.Err() will catch actual query execution errors.
+	// 'out' will remain nil if cols is empty or err is not nil here.
+	cols, _ := rows.Columns()
+
+	// Get Column types
+	colTypes, err := rows.ColumnTypes()
+	if err != nil {
+		if err := rows.Err(); err != nil {
+			return nil, fmt.Errorf("query execution error: %w", err)
+		}
+		return []any{}, nil
+	}
+
+	var out []any
+	for rows.Next() {
+		values := make([]any, len(cols))
+		for i, colType := range colTypes {
+			switch strings.ToUpper(colType.DatabaseTypeName()) {
+			case "NUMBER", "FLOAT", "BINARY_FLOAT", "BINARY_DOUBLE":
+				if _, scale, ok := colType.DecimalSize(); ok && scale == 0 {
+					// Scale is 0, treat it as an integer.
+					values[i] = new(sql.NullInt64)
+				} else {
+					// Scale is non-zero or unknown, treat
+					// it as a float.
+					values[i] = new(sql.NullFloat64)
+				}
+			case "DATE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
+				values[i] = new(sql.NullTime)
+			case "JSON":
+				values[i] = new(sql.RawBytes)
+			default:
+				values[i] = new(sql.NullString)
+			}
+		}
+
+		if err := rows.Scan(values...); err != nil {
+			return nil, fmt.Errorf("unable to scan row: %w", err)
+		}
+
+		vMap := make(map[string]any)
+		for i, col := range cols {
+			receiver := values[i]
+
+			switch v := receiver.(type) {
+			case *sql.NullInt64:
+				if v.Valid {
+					vMap[col] = v.Int64
+				} else {
+					vMap[col] = nil
+				}
+			case *sql.NullFloat64:
+				if v.Valid {
+					vMap[col] = v.Float64
+				} else {
+					vMap[col] = nil
+				}
+			case *sql.NullString:
+				if v.Valid {
+					vMap[col] = v.String
+				} else {
+					vMap[col] = nil
+				}
+			case *sql.NullTime:
+				if v.Valid {
+					vMap[col] = v.Time
+				} else {
+					vMap[col] = nil
+				}
+			case *sql.RawBytes:
+				if *v != nil {
+					var unmarshaledData any
+					if err := json.Unmarshal(*v, &unmarshaledData); err != nil {
+						return nil, fmt.Errorf("unable to unmarshal json data for column %s", col)
+					}
+					vMap[col] = unmarshaledData
+				} else {
+					vMap[col] = nil
+				}
+			default:
+				return nil, fmt.Errorf("unexpected receiver type: %T", v)
+			}
+		}
+		out = append(out, vMap)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("errors encountered during query execution or row processing: %w", err)
+	}
+
+	return out, nil
 }
 
 func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Config) (*sql.DB, error) {
