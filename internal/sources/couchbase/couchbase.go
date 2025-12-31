@@ -17,6 +17,7 @@ package couchbase
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -24,6 +25,7 @@ import (
 	tlsutil "github.com/couchbase/tools-common/http/tls"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -108,6 +110,27 @@ func (s *Source) CouchbaseScope() *gocb.Scope {
 
 func (s *Source) CouchbaseQueryScanConsistency() uint {
 	return s.QueryScanConsistency
+}
+
+func (s *Source) RunSQL(statement string, params parameters.ParamValues) (any, error) {
+	results, err := s.CouchbaseScope().Query(statement, &gocb.QueryOptions{
+		ScanConsistency: gocb.QueryScanConsistency(s.CouchbaseQueryScanConsistency()),
+		NamedParameters: params.AsMap(),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+
+	var out []any
+	for results.Next() {
+		var result json.RawMessage
+		err := results.Row(&result)
+		if err != nil {
+			return nil, fmt.Errorf("error processing row: %w", err)
+		}
+		out = append(out, result)
+	}
+	return out, nil
 }
 
 func (r Config) createCouchbaseOptions() (gocb.ClusterOptions, error) {
