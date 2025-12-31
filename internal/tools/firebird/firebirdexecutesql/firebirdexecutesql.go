@@ -44,6 +44,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirebirdDB() *sql.DB
+	RunSQL(context.Context, string, []any) (any, error)
 }
 
 type Config struct {
@@ -106,49 +107,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
-
-	rows, err := source.FirebirdDB().QueryContext(ctx, sql)
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-	defer rows.Close()
-
-	cols, err := rows.Columns()
-
-	var out []any
-	if err == nil && len(cols) > 0 {
-		values := make([]any, len(cols))
-		scanArgs := make([]any, len(values))
-		for i := range values {
-			scanArgs[i] = &values[i]
-		}
-
-		for rows.Next() {
-			err = rows.Scan(scanArgs...)
-			if err != nil {
-				return nil, fmt.Errorf("unable to parse row: %w", err)
-			}
-
-			vMap := make(map[string]any)
-			for i, colName := range cols {
-				if b, ok := values[i].([]byte); ok {
-					vMap[colName] = string(b)
-				} else {
-					vMap[colName] = values[i]
-				}
-			}
-			out = append(out, vMap)
-		}
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating rows: %w", err)
-	}
-
-	// In most cases, DML/DDL statements like INSERT, UPDATE, CREATE, etc. might return no rows
-	// However, it is also possible that this was a query that was expected to return rows
-	// but returned none, a case that we cannot distinguish here.
-	return out, nil
+	return source.RunSQL(ctx, sql, nil)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
