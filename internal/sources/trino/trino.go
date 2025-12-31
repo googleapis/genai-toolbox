@@ -25,6 +25,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	trinogo "github.com/trinodb/trino-go-client/trino"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -118,8 +119,13 @@ func initTrinoConnectionPool(ctx context.Context, tracer trace.Tracer, name, hos
 		return nil, fmt.Errorf("failed to build DSN: %w", err)
 	}
 
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+	}
+
 	if disableSslVerification {
-		fmt.Printf("WARNING: SSL verification is disabled for trino source %q. This is an insecure setting and should not be used in production.", name)
+		logger.WarnContext(ctx, "SSL verification is disabled for trino source %s. This is an insecure setting and should not be used in production.\n", name)
 		tr := &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		}
