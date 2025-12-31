@@ -272,7 +272,7 @@ To run Toolbox from binary:
 To run the server after pulling the [container image](#installing-the-server):
 
 ```sh
-export VERSION=0.11.0 # Use the version you pulled
+export VERSION=0.24.0 # Use the version you pulled
 docker run -p 5000:5000 \
 -v $(pwd)/tools.yaml:/app/tools.yaml \
 us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION \
