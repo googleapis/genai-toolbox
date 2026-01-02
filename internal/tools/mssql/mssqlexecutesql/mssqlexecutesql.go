@@ -23,7 +23,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
@@ -45,6 +44,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	MSSQLDB() *sql.DB
+	RunSQL(context.Context, string, []any) (any, error)
 }
 
 type Config struct {
@@ -106,47 +106,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
-
-	results, err := source.MSSQLDB().QueryContext(ctx, sql)
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-	defer results.Close()
-
-	cols, err := results.Columns()
-	// If Columns() errors, it might be a DDL/DML without an OUTPUT clause.
-	// We proceed, and results.Err() will catch actual query execution errors.
-	// 'out' will remain nil if cols is empty or err is not nil here.
-
-	var out []any
-	if err == nil && len(cols) > 0 {
-		// create an array of values for each column, which can be re-used to scan each row
-		rawValues := make([]any, len(cols))
-		values := make([]any, len(cols))
-		for i := range rawValues {
-			values[i] = &rawValues[i]
-		}
-
-		for results.Next() {
-			scanErr := results.Scan(values...)
-			if scanErr != nil {
-				return nil, fmt.Errorf("unable to parse row: %w", scanErr)
-			}
-			row := orderedmap.Row{}
-			for i, name := range cols {
-				row.Add(name, rawValues[i])
-			}
-			out = append(out, row)
-		}
-	}
-
-	// Check for errors from iterating over rows or from the query execution itself.
-	// results.Close() is handled by defer.
-	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("errors encountered during query execution or row processing: %w", err)
-	}
-
-	return out, nil
+	return source.RunSQL(ctx, sql, nil)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

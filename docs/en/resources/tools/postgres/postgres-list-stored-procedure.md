@@ -32,7 +32,7 @@ The tool returns a JSON array where each element represents a stored procedure w
 
 ```yaml
 tools:
-  list_stored_procedures:
+  list_stored_procedure:
     kind: postgres-list-stored-procedure
     source: postgres-source
     description: "Retrieves stored procedure metadata including definitions and owners."

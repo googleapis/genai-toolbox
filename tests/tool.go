@@ -4531,7 +4531,7 @@ func RunPostgresListStoredProcedureTest(t *testing.T, ctx context.Context, pool 
 
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			const api = "http://127.0.0.1:5000/api/tool/list_stored_procedures/invoke"
+			const api = "http://127.0.0.1:5000/api/tool/list_stored_procedure/invoke"
 			resp, respBody := RunRequest(t, http.MethodPost, api, tc.requestBody, nil)
 			if resp.StatusCode != tc.wantStatusCode {
 				t.Fatalf("wrong status code: got %d, want %d, body: %s", resp.StatusCode, tc.wantStatusCode, string(respBody))
