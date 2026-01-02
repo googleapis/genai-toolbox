@@ -2086,6 +2086,7 @@ to expose your developer assistant tools to a Looker instance:
 * [Cline][cline] (VS Code extension)
 * [Claude desktop][claudedesktop]
 * [Claude code][claudecode]
+* [Antigravity][antigravity]
 
 [toolbox]: https://github.com/googleapis/genai-toolbox
 [gemini-cli]: #configure-your-mcp-client
@@ -2095,6 +2096,7 @@ to expose your developer assistant tools to a Looker instance:
 [cline]: #configure-your-mcp-client
 [claudedesktop]: #configure-your-mcp-client
 [claudecode]: #configure-your-mcp-client
+[antigravity]: #connect-with-antigravity
 
 ## Set up Looker
 
@@ -2105,6 +2107,55 @@ to expose your developer assistant tools to a Looker instance:
    something like `https://looker.example.com`. In some cases the API is
    listening at a different port, and you will need to use
    `https://looker.example.com:19999` instead.
+
+## Connect with Antigravity
+
+You can connect Looker to Antigravity in the following ways:
+
+* Using the MCP Store
+* Using a custom configuration
+
+{{< notice note >}}
+You don't need to download the MCP Toolbox binary to use these methods.
+{{< /notice >}}
+
+{{< tabpane text=true >}}
+{{% tab header="MCP Store" lang="en" %}}
+The most straightforward way to connect to Looker in Antigravity is by using the built-in MCP Store.
+
+1. Open Antigravity and open the editor's agent panel.
+1. Click the **"..."** icon at the top of the panel and select **MCP Servers**.
+1. Locate **Looker** in the list of available servers and click Install.
+1. Follow the on-screen prompts to securely link your accounts where applicable.
+
+After you install Looker in the MCP Store, resources and tools from the server are automatically available to the editor. 
+
+{{% /tab %}}
+{{% tab header="Custom config" lang="en" %}}
+ To connect to a custom MCP server, follow these steps:
+
+1. Open Antigravity and navigate to the MCP store using the **"..."** drop-down at the top of the editor's agent panel.
+1. To open the **mcp_config.json** file, click **MCP Servers** and then click **Manage MCP Servers > View raw config**.
+1. Add the following configuration, replace the environment variables with your values, and save.
+    
+    ```json
+    {
+      "mcpServers": {
+        "looker": {
+          "command": "npx",
+          "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "looker", "--stdio"],
+          "env": {
+              "LOOKER_BASE_URL": "https://looker.example.com",
+              "LOOKER_CLIENT_ID": "your-client-id",
+              "LOOKER_CLIENT_SECRET": "your-client-secret"
+          }
+        }
+      }
+    }
+    ```
+
+{{% /tab %}}
+{{< /tabpane >}}
 
 ## Install MCP Toolbox
 
@@ -2358,7 +2409,7 @@ assistant to list models, explores, dimensions, and measures. Run a
 query, retrieve the SQL for a query, and run a saved Look.
 
 The full tool list is available in the [Prebuilt Tools
-Reference](../../reference/prebuilt-tools/#looker).
+Reference](../../reference/prebuilt-tools.md/#looker).
 
 The following tools are available to the LLM:
 
@@ -8187,22 +8238,38 @@ Finds resources that were created within, before, or after a given date or time.
 ### Aspect Search
 To search for entries based on their attached aspects, use the following query syntax.
 
-aspect:x	Matches x as a substring of the full path to the aspect type of an aspect that is attached to the entry, in the format projectid.location.ASPECT_TYPE_ID
-aspect=x	Matches x as the full path to the aspect type of an aspect that is attached to the entry, in the format projectid.location.ASPECT_TYPE_ID
-aspect:xOPERATORvalue	
-Searches for aspect field values. Matches x as a substring of the full path to the aspect type and field name of an aspect that is attached to the entry, in the format projectid.location.ASPECT_TYPE_ID.FIELD_NAME
+`has:x`
+Matches `x` as a substring of the full path to the aspect type of an aspect that is attached to the entry, in the format `projectid.location.ASPECT_TYPE_ID`
 
-The list of supported {OPERATOR}s depends on the type of field in the aspect, as follows:
-- String: = (exact match) and : (substring)
-- All number types: =, :, <, >, <=, >=, =>, =<
-- Enum: =
-- Datetime: same as for numbers, but the values to compare are treated as datetimes instead of numbers
-- Boolean: =
+`has=x`
+Matches `x` as the full path to the aspect type of an aspect that is attached to the entry, in the format `projectid.location.ASPECT_TYPE_ID`
 
-Only top-level fields of the aspect are searchable. For example, all of the following queries match entries where the value of the is-enrolled field in the employee-info aspect type is true. Other entries that match on the substring are also returned.
-- aspect:example-project.us-central1.employee-info.is-enrolled=true
-- aspect:example-project.us-central1.employee=true
-- aspect:employee=true
+`xOPERATORvalue`
+Searches for aspect field values. Matches x as a substring of the full path to the aspect type and field name of an aspect that is attached to the entry, in the format `projectid.location.ASPECT_TYPE_ID.FIELD_NAME`
+
+The list of supported operators depends on the type of field in the aspect, as follows:
+* **String**: `=` (exact match)
+* **All number types**: `=`, `:`, `<`, `>`, `<=`, `>=`, `=>`, `=<`
+* **Enum**: `=` (exact match only)
+* **Datetime**: same as for numbers, but the values to compare are treated as datetimes instead of numbers
+* **Boolean**: `=`
+
+Only top-level fields of the aspect are searchable.
+
+* Syntax for system aspect types:
+    * `ASPECT_TYPE_ID.FIELD_NAME`
+    * `dataplex-types.ASPECT_TYPE_ID.FIELD_NAME`
+    * `dataplex-types.LOCATION.ASPECT_TYPE_ID.FIELD_NAME`
+For example, the following queries match entries where the value of the `type` field in the `bigquery-dataset` aspect is `default`:
+    * `bigquery-dataset.type=default`
+    * `dataplex-types.bigquery-dataset.type=default`
+    * `dataplex-types.global.bigquery-dataset.type=default`
+* Syntax for custom aspect types:
+    * If the aspect is created in the global region: `PROJECT_ID.ASPECT_TYPE_ID.FIELD_NAME`
+    * If the aspect is created in a specific region: `PROJECT_ID.REGION.ASPECT_TYPE_ID.FIELD_NAME`
+For example, the following queries match entries where the value of the `is-enrolled` field in the `employee-info` aspect is `true`.
+    * `example-project.us-central1.employee-info.is-enrolled=true`
+    * `example-project.employee-info.is-enrolled=true`
 
 Example:-
 You can use following filters
@@ -8215,6 +8282,25 @@ Logical AND and logical OR are supported. For example, foo OR bar.
 
 You can negate a predicate with a - (hyphen) or NOT prefix. For example, -name:foo returns resources with names that don't match the predicate foo.
 Logical operators are case-sensitive. `OR` and `AND` are acceptable whereas `or` and `and` are not.
+
+### Abbreviated syntax
+
+An abbreviated search syntax is also available, using `|` (vertical bar) for `OR` operators and `,` (comma) for `AND` operators.
+
+For example, to search for entries inside one of many projects using the `OR` operator, you can use the following abbreviated syntax:
+
+`projectid:(id1|id2|id3|id4)`
+
+The same search without using abbreviated syntax looks like the following:
+
+`projectid:id1 OR projectid:id2 OR projectid:id3 OR projectid:id4`
+
+To search for entries with matching column names, use the following:
+
+* **AND**: `column:(name1,name2,name3)`
+* **OR**: `column:(name1|name2|name3)`
+
+This abbreviated syntax works for the qualified predicates except for `label` in keyword search.
 
 ### Request
 1. Always try to rewrite the prompt using search syntax.
