@@ -5,7 +5,6 @@ from google.adk.tools.toolbox_toolset import ToolboxToolset
 # TODO(developer): update the TOOLBOX_URL to your toolbox endpoint
 toolset = ToolboxToolset(
     server_url="http://127.0.0.1:5000",
-    toolset_name="my-toolset"
 )
 
 root_agent = Agent(

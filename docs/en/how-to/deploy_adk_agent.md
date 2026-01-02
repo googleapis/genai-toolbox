@@ -104,7 +104,6 @@ authentication token.
     # Initialize the toolset with Workload Identity (generates ID token for the URL)
     toolset = ToolboxToolset(
         server_url=TOOLBOX_URL,
-        toolset_name="my-toolset",
         credentials=CredentialStrategy.workload_identity(target_audience=TOOLBOX_URL)
     )
 
