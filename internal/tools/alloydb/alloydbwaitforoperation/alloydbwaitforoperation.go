@@ -16,18 +16,14 @@ package alloydbwaitforoperation
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
-	"text/template"
 	"time"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/alloydb/v1"
 )
 
 const kind string = "alloydb-wait-for-operation"
@@ -50,8 +46,8 @@ Update the MCP server configuration with the following environment variables:
           "ALLOYDB_POSTGRES_CLUSTER": "{{.Cluster}}",
 {{if .Instance}}          "ALLOYDB_POSTGRES_INSTANCE": "{{.Instance}}",
 {{end}}          "ALLOYDB_POSTGRES_DATABASE": "postgres",
-          "ALLOYDB_POSTGRES_USER": ""{{.User}}",",
-          "ALLOYDB_POSTGRES_PASSWORD": ""{{.Password}}",
+          "ALLOYDB_POSTGRES_USER": "<your-user>",
+          "ALLOYDB_POSTGRES_PASSWORD": "<your-password>"
       }
     }
   }
@@ -92,7 +88,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	GetDefaultProject() string
 	UseClientAuthorization() bool
-	GetService(context.Context, string) (*alloydb.Service, error)
+	GetOperations(context.Context, string, string, string, string, time.Duration, string) (any, error)
 }
 
 // Config defines the configuration for the wait-for-operation tool.
@@ -237,15 +233,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("missing 'operation' parameter")
 	}
 
-	service, err := source.GetService(ctx, string(accessToken))
-	if err != nil {
-		return nil, err
-	}
-
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Minute)
 	defer cancel()
-
-	name := fmt.Sprintf("projects/%s/locations/%s/operations/%s", project, location, operation)
 
 	delay := t.Delay
 	maxDelay := t.MaxDelay
@@ -260,33 +249,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		default:
 		}
 
-		op, err := service.Projects.Locations.Operations.Get(name).Do()
+		op, err := source.GetOperations(ctx, project, location, operation, alloyDBConnectionMessageTemplate, delay, string(accessToken))
 		if err != nil {
-			fmt.Printf("error getting operation: %s, retrying in %v\n", err, delay)
-		} else {
-			if op.Done {
-				if op.Error != nil {
-					var errorBytes []byte
-					errorBytes, err = json.Marshal(op.Error)
-					if err != nil {
-						return nil, fmt.Errorf("operation finished with error but could not marshal error object: %w", err)
-					}
-					return nil, fmt.Errorf("operation finished with error: %s", string(errorBytes))
-				}
-
-				var opBytes []byte
-				opBytes, err = op.MarshalJSON()
-				if err != nil {
-					return nil, fmt.Errorf("could not marshal operation: %w", err)
-				}
-
-				if msg, ok := t.generateAlloyDBConnectionMessage(map[string]any{"response": op.Response}); ok {
-					return msg, nil
-				}
-
-				return string(opBytes), nil
-			}
-			fmt.Printf("Operation not complete, retrying in %v\n", delay)
+			return nil, err
+		} else if op != nil {
+			return op, nil
 		}
 
 		time.Sleep(delay)
@@ -297,57 +264,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		retries++
 	}
 	return nil, fmt.Errorf("exceeded max retries waiting for operation")
-}
-
-func (t Tool) generateAlloyDBConnectionMessage(responseData map[string]any) (string, bool) {
-	resourceName, ok := responseData["name"].(string)
-	if !ok {
-		return "", false
-	}
-
-	parts := strings.Split(resourceName, "/")
-	var project, region, cluster, instance string
-
-	// Expected format: projects/{project}/locations/{location}/clusters/{cluster}
-	// or projects/{project}/locations/{location}/clusters/{cluster}/instances/{instance}
-	if len(parts) < 6 || parts[0] != "projects" || parts[2] != "locations" || parts[4] != "clusters" {
-		return "", false
-	}
-
-	project = parts[1]
-	region = parts[3]
-	cluster = parts[5]
-
-	if len(parts) >= 8 && parts[6] == "instances" {
-		instance = parts[7]
-	} else {
-		return "", false
-	}
-
-	tmpl, err := template.New("alloydb-connection").Parse(alloyDBConnectionMessageTemplate)
-	if err != nil {
-		// This should not happen with a static template
-		return fmt.Sprintf("template parsing error: %v", err), false
-	}
-
-	data := struct {
-		Project  string
-		Region   string
-		Cluster  string
-		Instance string
-	}{
-		Project:  project,
-		Region:   region,
-		Cluster:  cluster,
-		Instance: instance,
-	}
-
-	var b strings.Builder
-	if err := tmpl.Execute(&b, data); err != nil {
-		return fmt.Sprintf("template execution error: %v", err), false
-	}
-
-	return b.String(), true
 }
 
 // ParseParams parses the parameters for the tool.

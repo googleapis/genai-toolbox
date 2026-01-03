@@ -15,6 +15,7 @@
 package elasticsearch_test
 
 import (
+	"reflect"
 	"testing"
 
 	yaml "github.com/goccy/go-yaml"
@@ -60,6 +61,158 @@ func TestParseFromYamlElasticsearch(t *testing.T) {
 			}
 			if diff := cmp.Diff(tc.want, got.Sources); diff != "" {
 				t.Errorf("unexpected config diff (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestTool_esqlToMap(t1 *testing.T) {
+	tests := []struct {
+		name   string
+		result elasticsearch.EsqlResult
+		want   []map[string]any
+	}{
+		{
+			name: "simple case with two rows",
+			result: elasticsearch.EsqlResult{
+				Columns: []elasticsearch.EsqlColumn{
+					{Name: "first_name", Type: "text"},
+					{Name: "last_name", Type: "text"},
+				},
+				Values: [][]any{
+					{"John", "Doe"},
+					{"Jane", "Smith"},
+				},
+			},
+			want: []map[string]any{
+				{"first_name": "John", "last_name": "Doe"},
+				{"first_name": "Jane", "last_name": "Smith"},
+			},
+		},
+		{
+			name: "different data types",
+			result: elasticsearch.EsqlResult{
+				Columns: []elasticsearch.EsqlColumn{
+					{Name: "id", Type: "integer"},
+					{Name: "active", Type: "boolean"},
+					{Name: "score", Type: "float"},
+				},
+				Values: [][]any{
+					{1, true, 95.5},
+					{2, false, 88.0},
+				},
+			},
+			want: []map[string]any{
+				{"id": 1, "active": true, "score": 95.5},
+				{"id": 2, "active": false, "score": 88.0},
+			},
+		},
+		{
+			name: "no rows",
+			result: elasticsearch.EsqlResult{
+				Columns: []elasticsearch.EsqlColumn{
+					{Name: "id", Type: "integer"},
+					{Name: "name", Type: "text"},
+				},
+				Values: [][]any{},
+			},
+			want: []map[string]any{},
+		},
+		{
+			name: "null values",
+			result: elasticsearch.EsqlResult{
+				Columns: []elasticsearch.EsqlColumn{
+					{Name: "id", Type: "integer"},
+					{Name: "name", Type: "text"},
+				},
+				Values: [][]any{
+					{1, nil},
+					{2, "Alice"},
+				},
+			},
+			want: []map[string]any{
+				{"id": 1, "name": nil},
+				{"id": 2, "name": "Alice"},
+			},
+		},
+		{
+			name: "missing values in a row",
+			result: elasticsearch.EsqlResult{
+				Columns: []elasticsearch.EsqlColumn{
+					{Name: "id", Type: "integer"},
+					{Name: "name", Type: "text"},
+					{Name: "age", Type: "integer"},
+				},
+				Values: [][]any{
+					{1, "Bob"},
+					{2, "Charlie", 30},
+				},
+			},
+			want: []map[string]any{
+				{"id": 1, "name": "Bob", "age": nil},
+				{"id": 2, "name": "Charlie", "age": 30},
+			},
+		},
+		{
+			name: "all null row",
+			result: elasticsearch.EsqlResult{
+				Columns: []elasticsearch.EsqlColumn{
+					{Name: "id", Type: "integer"},
+					{Name: "name", Type: "text"},
+				},
+				Values: [][]any{
+					nil,
+				},
+			},
+			want: []map[string]any{
+				{},
+			},
+		},
+		{
+			name: "empty columns",
+			result: elasticsearch.EsqlResult{
+				Columns: []elasticsearch.EsqlColumn{},
+				Values: [][]any{
+					{},
+					{},
+				},
+			},
+			want: []map[string]any{
+				{},
+				{},
+			},
+		},
+		{
+			name: "more values than columns",
+			result: elasticsearch.EsqlResult{
+				Columns: []elasticsearch.EsqlColumn{
+					{Name: "id", Type: "integer"},
+				},
+				Values: [][]any{
+					{1, "extra"},
+				},
+			},
+			want: []map[string]any{
+				{"id": 1},
+			},
+		},
+		{
+			name: "no columns but with values",
+			result: elasticsearch.EsqlResult{
+				Columns: []elasticsearch.EsqlColumn{},
+				Values: [][]any{
+					{1, "data"},
+				},
+			},
+			want: []map[string]any{
+				{},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t1.Run(tt.name, func(t1 *testing.T) {
+			if got := elasticsearch.EsqlToMap(tt.result); !reflect.DeepEqual(got, tt.want) {
+				t1.Errorf("esqlToMap() = %v, want %v", got, tt.want)
 			}
 		})
 	}
