@@ -188,16 +188,14 @@ description: >
                   path: tools.yaml
     ```
 
-    {{< notice tip >}}  
-To prevent DNS rebinding attack, use the `--allowed-hosts` flag to specify a
-list of hosts for validation. E.g. `command: [ "toolbox",
-"--tools-file", "/config/tools.yaml", "--address", "0.0.0.0",
-"--allowed-hosts", "localhost:5000"]`
+    {{< notice tip >}}
+To prevent DNS rebinding attack, use the `--allowed-origins` flag to specify a
+list of origins permitted to access the server. E.g. `args: ["--address",
+"0.0.0.0", "--allowed-hosts", "foo.bar:5000"]`
 
 To implement CORs, use the `--allowed-origins` flag to specify a
-list of origins permitted to access the server. E.g. `command: [ "toolbox",
-"--tools-file", "/config/tools.yaml", "--address", "0.0.0.0",
-"--allowed-origins", "https://foo.bar"]`
+list of origins permitted to access the server. E.g. `args: ["--address",
+"0.0.0.0", "--allowed-origins", "https://foo.bar"]`
 {{< /notice >}}
 
 1. Create the deployment.

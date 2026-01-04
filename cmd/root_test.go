@@ -66,6 +66,9 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	if c.AllowedOrigins == nil {
 		c.AllowedOrigins = []string{"*"}
 	}
+	if c.AllowedHosts == nil {
+		c.AllowedHosts = []string{"*"}
+	}
 	return c
 }
 

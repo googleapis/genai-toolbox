@@ -270,18 +270,12 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
 }
 
-func HostCheck(allowedHosts []string) func(http.Handler) http.Handler {
+func hostCheck(allowedHosts map[string]struct{}) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			isAllowed := false
-			for _, h := range allowedHosts {
-				if h == "*" || r.Host == h {
-					isAllowed = true
-					break
-				}
-			}
-
-			if !isAllowed {
+			_, hasWildcard := allowedHosts["*"]
+			_, hostIsAllowed := allowedHosts[r.Host]
+			if !hasWildcard && !hostIsAllowed {
 				// Return 400 Bad Request or 403 Forbidden to block the attack
 				http.Error(w, "Invalid Host header", http.StatusBadRequest)
 				return
@@ -380,7 +374,11 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	if slices.Contains(cfg.AllowedHosts, "*") {
 		s.logger.WarnContext(ctx, "wildcard (`*`) allows all hosts to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-hosts` flag to prevent DNS rebinding attacks")
 	}
-	r.Use(HostCheck(cfg.AllowedHosts))
+	allowedHostsMap := make(map[string]struct{}, len(cfg.AllowedHosts))
+	for _, h := range cfg.AllowedHosts {
+		allowedHostsMap[h] = struct{}{}
+	}
+	r.Use(hostCheck(allowedHostsMap))
 
 	// control plane
 	apiR, err := apiRouter(s)
