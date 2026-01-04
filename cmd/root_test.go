@@ -219,6 +219,13 @@ func TestServerConfigFlags(t *testing.T) {
 				AllowedOrigins: []string{"http://foo.com", "http://bar.com"},
 			}),
 		},
+		{
+			desc: "allowed hosts",
+			args: []string{"--allowed-hosts", "http://foo.com,http://bar.com"},
+			want: withDefaults(server.ServerConfig{
+				AllowedHosts: []string{"http://foo.com", "http://bar.com"},
+			}),
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
