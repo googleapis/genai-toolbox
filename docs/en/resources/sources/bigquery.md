@@ -133,7 +133,7 @@ sources:
     # impersonateServiceAccount: "service-account@project-id.iam.gserviceaccount.com" # Optional: Service account to impersonate
     # scopes: # Optional: List of OAuth scopes to request.
     #   - "https://www.googleapis.com/auth/bigquery"
-    #   - "https://www.googleapis.com/auth/drive.only"
+    #   - "https://www.googleapis.com/auth/drive.readonly"
 ```
 
 Initialize a BigQuery source that uses the client's access token:
@@ -152,7 +152,7 @@ sources:
     # impersonateServiceAccount: "service-account@project-id.iam.gserviceaccount.com" # Optional: Service account to impersonate
     # scopes: # Optional: List of OAuth scopes to request.
     #   - "https://www.googleapis.com/auth/bigquery"
-    #   - "https://www.googleapis.com/auth/drive.only"
+    #   - "https://www.googleapis.com/auth/drive.readonly"
 ```
 
 ## Reference
