@@ -33,48 +33,61 @@ export function initializeResize() {
     secondNav.appendChild(resizeHandle);
 
     // Load saved width or use default
-    const savedWidth = localStorage.getItem(STORAGE_KEY);
-    const initialWidth = savedWidth ? parseInt(savedWidth, 10) : DEFAULT_WIDTH;
+    let initialWidth = DEFAULT_WIDTH;
+    try {
+        const savedWidth = localStorage.getItem(STORAGE_KEY);
+        if (savedWidth) {
+            const parsed = parseInt(savedWidth, 10);
+            if (!isNaN(parsed) && parsed >= MIN_WIDTH) {
+                initialWidth = parsed;
+            }
+        }
+    } catch (e) {
+        // localStorage may be unavailable in private browsing mode
+        console.warn('Failed to load saved panel width:', e);
+    }
     setPanelWidth(secondNav, initialWidth);
 
     // Setup resize functionality
-    let isResizing = false;
     let startX = 0;
     let startWidth = 0;
 
-    resizeHandle.addEventListener('mousedown', (e) => {
-        isResizing = true;
-        startX = e.clientX;
-        startWidth = secondNav.offsetWidth;
-        resizeHandle.classList.add('active');
-        document.body.style.cursor = 'ew-resize';
-        document.body.style.userSelect = 'none';
-        e.preventDefault();
-    });
-
-    document.addEventListener('mousemove', (e) => {
-        if (!isResizing) {
-            return;
-        }
-
+    const onMouseMove = (e) => {
         const deltaX = e.clientX - startX;
         const newWidth = startWidth + deltaX;
         const maxWidth = (window.innerWidth * MAX_WIDTH_PERCENT) / 100;
 
         const clampedWidth = Math.max(MIN_WIDTH, Math.min(newWidth, maxWidth));
         setPanelWidth(secondNav, clampedWidth);
-    });
+    };
 
-    document.addEventListener('mouseup', () => {
-        if (isResizing) {
-            isResizing = false;
-            resizeHandle.classList.remove('active');
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-            
-            // Save width to localStorage
+    const onMouseUp = () => {
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+
+        resizeHandle.classList.remove('active');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+
+        // Save width to localStorage
+        try {
             localStorage.setItem(STORAGE_KEY, secondNav.offsetWidth.toString());
+        } catch (e) {
+            // localStorage may be unavailable in private browsing mode
+            console.warn('Failed to save panel width:', e);
         }
+    };
+
+    resizeHandle.addEventListener('mousedown', (e) => {
+        startX = e.clientX;
+        startWidth = secondNav.offsetWidth;
+        resizeHandle.classList.add('active');
+        document.body.style.cursor = 'ew-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
     });
 
     // Handle window resize to enforce max width
@@ -84,7 +97,12 @@ export function initializeResize() {
         
         if (currentWidth > maxWidth) {
             setPanelWidth(secondNav, maxWidth);
-            localStorage.setItem(STORAGE_KEY, maxWidth.toString());
+            try {
+                localStorage.setItem(STORAGE_KEY, maxWidth.toString());
+            } catch (e) {
+                // localStorage may be unavailable in private browsing mode
+                console.warn('Failed to save panel width:', e);
+            }
         }
     });
 }
@@ -94,6 +112,5 @@ export function initializeResize() {
  */
 function setPanelWidth(panel, width) {
     panel.style.flex = `0 0 ${width}px`;
-    panel.style.width = `${width}px`;
 }
 

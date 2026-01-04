@@ -107,10 +107,7 @@ body {
     transition: background-color 0.2s ease;
 }
 
-.resize-handle:hover {
-    background-color: var(--toolbox-blue);
-}
-
+.resize-handle:hover,
 .resize-handle.active {
     background-color: var(--toolbox-blue);
 }
