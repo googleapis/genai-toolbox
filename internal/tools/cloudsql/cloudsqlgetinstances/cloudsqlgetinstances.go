@@ -22,7 +22,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/sqladmin/v1"
 )
 
 const kind string = "cloud-sql-get-instance"
@@ -43,8 +42,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	GetDefaultProject() string
-	GetService(context.Context, string) (*sqladmin.Service, error)
 	UseClientAuthorization() bool
+	GetInstance(context.Context, string, string, string) (any, error)
 }
 
 // Config defines the configuration for the get-instances tool.
@@ -133,18 +132,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, fmt.Errorf("missing 'instanceId' parameter")
 	}
-
-	service, err := source.GetService(ctx, string(accessToken))
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := service.Instances.Get(projectId, instanceId).Do()
-	if err != nil {
-		return nil, fmt.Errorf("error getting instance: %w", err)
-	}
-
-	return resp, nil
+	return source.GetInstance(ctx, projectId, instanceId, string(accessToken))
 }
 
 // ParseParams parses the parameters for the tool.
