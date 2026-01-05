@@ -125,3 +125,37 @@ func (s *Source) ToConfig() sources.SourceConfig {
 func (s *Source) ValkeyClient() valkey.Client {
 	return s.Client
 }
+
+func (s *Source) RunCommand(ctx context.Context, cmds [][]string) (any, error) {
+	// Build commands
+	builtCmds := make(valkey.Commands, len(cmds))
+
+	for i, cmd := range cmds {
+		builtCmds[i] = s.ValkeyClient().B().Arbitrary(cmd...).Build()
+	}
+
+	if len(builtCmds) == 0 {
+		return nil, fmt.Errorf("no valid commands were built to execute")
+	}
+
+	// Execute commands
+	responses := s.ValkeyClient().DoMulti(ctx, builtCmds...)
+
+	// Parse responses
+	out := make([]any, len(cmds))
+	for i, resp := range responses {
+		if err := resp.Error(); err != nil {
+			// Store error message in the output for this command
+			out[i] = fmt.Sprintf("error from executing command at index %d: %s", i, err)
+			continue
+		}
+		val, err := resp.ToAny()
+		if err != nil {
+			out[i] = fmt.Sprintf("error parsing response: %s", err)
+			continue
+		}
+		out[i] = val
+	}
+
+	return out, nil
+}
