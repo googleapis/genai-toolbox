@@ -23,7 +23,7 @@ import (
 	"google.golang.org/genai"
 )
 
-const EmbeddingModelKind = "gemini"
+const EmbeddingModelKind string = "gemini"
 
 // validate interface
 var _ embeddingmodels.EmbeddingModelConfig = Config{}

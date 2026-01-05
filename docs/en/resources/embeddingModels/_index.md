@@ -43,7 +43,7 @@ embeddingModels:
 
 ```
 
-### Step 1 - Embed Tool Parameters
+### Step 2 - Embed Tool Parameters
 
 Use the defined embedding model, embed your query parameters using the
 `embeddedBy` field. Only string-typed
