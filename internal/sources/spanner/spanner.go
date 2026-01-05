@@ -16,13 +16,16 @@ package spanner
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"cloud.google.com/go/spanner"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/api/iterator"
 )
 
 const SourceKind string = "spanner"
@@ -91,6 +94,79 @@ func (s *Source) SpannerClient() *spanner.Client {
 
 func (s *Source) DatabaseDialect() string {
 	return s.Dialect.String()
+}
+
+// processRows iterates over the spanner.RowIterator and converts each row to a map[string]any.
+func processRows(iter *spanner.RowIterator) ([]any, error) {
+	var out []any
+	defer iter.Stop()
+
+	for {
+		row, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+
+		rowMap := orderedmap.Row{}
+		cols := row.ColumnNames()
+		for i, c := range cols {
+			if c == "object_details" { // for list graphs or list tables
+				val := row.ColumnValue(i)
+				if val == nil { // ColumnValue returns the Cloud Spanner Value of column i, or nil for invalid column.
+					rowMap.Add(c, nil)
+				} else {
+					jsonString, ok := val.AsInterface().(string)
+					if !ok {
+						return nil, fmt.Errorf("column 'object_details' is not a string, but %T", val.AsInterface())
+					}
+					var details map[string]any
+					if err := json.Unmarshal([]byte(jsonString), &details); err != nil {
+						return nil, fmt.Errorf("unable to unmarshal JSON: %w", err)
+					}
+					rowMap.Add(c, details)
+				}
+			} else {
+				rowMap.Add(c, row.ColumnValue(i))
+			}
+		}
+		out = append(out, rowMap)
+	}
+	return out, nil
+}
+
+func (s *Source) RunSQL(ctx context.Context, readOnly bool, statement string, params map[string]any) (any, error) {
+	var results []any
+	var err error
+	var opErr error
+	stmt := spanner.Statement{
+		SQL: statement,
+	}
+	if params != nil {
+		stmt.Params = params
+	}
+
+	if readOnly {
+		iter := s.SpannerClient().Single().Query(ctx, stmt)
+		results, opErr = processRows(iter)
+	} else {
+		_, opErr = s.SpannerClient().ReadWriteTransaction(ctx, func(ctx context.Context, txn *spanner.ReadWriteTransaction) error {
+			iter := txn.Query(ctx, stmt)
+			results, err = processRows(iter)
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+	}
+
+	if opErr != nil {
+		return nil, fmt.Errorf("unable to execute client: %w", opErr)
+	}
+
+	return results, nil
 }
 
 func initSpannerClient(ctx context.Context, tracer trace.Tracer, name, project, instance, dbname string) (*spanner.Client, error) {

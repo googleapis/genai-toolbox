@@ -22,7 +22,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/sqladmin/v1"
 )
 
 const kind string = "cloud-sql-list-databases"
@@ -43,8 +42,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	GetDefaultProject() string
-	GetService(context.Context, string) (*sqladmin.Service, error)
 	UseClientAuthorization() bool
+	ListDatabase(context.Context, string, string, string) (any, error)
 }
 
 // Config defines the configuration for the list-databases tool.
@@ -132,37 +131,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, fmt.Errorf("missing 'instance' parameter")
 	}
-
-	service, err := source.GetService(ctx, string(accessToken))
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := service.Databases.List(project, instance).Do()
-	if err != nil {
-		return nil, fmt.Errorf("error listing databases: %w", err)
-	}
-
-	if resp.Items == nil {
-		return []any{}, nil
-	}
-
-	type databaseInfo struct {
-		Name      string `json:"name"`
-		Charset   string `json:"charset"`
-		Collation string `json:"collation"`
-	}
-
-	var databases []databaseInfo
-	for _, item := range resp.Items {
-		databases = append(databases, databaseInfo{
-			Name:      item.Name,
-			Charset:   item.Charset,
-			Collation: item.Collation,
-		})
-	}
-
-	return databases, nil
+	return source.ListDatabase(ctx, project, instance, string(accessToken))
 }
 
 // ParseParams parses the parameters for the tool.
