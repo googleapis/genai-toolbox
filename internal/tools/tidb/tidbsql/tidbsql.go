@@ -17,7 +17,6 @@ package tidbsql
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
@@ -44,6 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	TiDBPool() *sql.DB
+	RunSQL(context.Context, string, []any) (any, error)
 }
 
 type Config struct {
@@ -110,68 +110,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	sliceParams := newParams.AsSlice()
-	results, err := source.TiDBPool().QueryContext(ctx, newStatement, sliceParams...)
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-
-	cols, err := results.Columns()
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve rows column name: %w", err)
-	}
-
-	// create an array of values for each column, which can be re-used to scan each row
-	rawValues := make([]any, len(cols))
-	values := make([]any, len(cols))
-	for i := range rawValues {
-		values[i] = &rawValues[i]
-	}
-	defer results.Close()
-
-	colTypes, err := results.ColumnTypes()
-	if err != nil {
-		return nil, fmt.Errorf("unable to get column types: %w", err)
-	}
-
-	var out []any
-	for results.Next() {
-		err := results.Scan(values...)
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
-		}
-		vMap := make(map[string]any)
-		for i, name := range cols {
-			val := rawValues[i]
-			if val == nil {
-				vMap[name] = nil
-				continue
-			}
-
-			// mysql driver return []uint8 type for "TEXT", "VARCHAR", and "NVARCHAR"
-			// we'll need to cast it back to string
-			switch colTypes[i].DatabaseTypeName() {
-			case "JSON":
-				// unmarshal JSON data before storing to prevent double marshaling
-				var unmarshaledData any
-				err := json.Unmarshal(val.([]byte), &unmarshaledData)
-				if err != nil {
-					return nil, fmt.Errorf("unable to unmarshal json data %s", val)
-				}
-				vMap[name] = unmarshaledData
-			case "TEXT", "VARCHAR", "NVARCHAR":
-				vMap[name] = string(val.([]byte))
-			default:
-				vMap[name] = val
-			}
-		}
-		out = append(out, vMap)
-	}
-
-	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("errors encountered during row iteration: %w", err)
-	}
-
-	return out, nil
+	return source.RunSQL(ctx, newStatement, sliceParams)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

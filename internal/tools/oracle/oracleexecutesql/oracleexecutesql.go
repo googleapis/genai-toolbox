@@ -5,9 +5,7 @@ package oracleexecutesql
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
-	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -34,6 +32,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	OracleDB() *sql.DB
+	RunSQL(context.Context, string, []any) (any, error)
 }
 
 type Config struct {
@@ -95,107 +94,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
 	logger.DebugContext(ctx, "executing `%s` tool query: %s", kind, sqlParam)
-
-	results, err := source.OracleDB().QueryContext(ctx, sqlParam)
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-	defer results.Close()
-
-	// If Columns() errors, it might be a DDL/DML without an OUTPUT clause.
-	// We proceed, and results.Err() will catch actual query execution errors.
-	// 'out' will remain nil if cols is empty or err is not nil here.
-	cols, _ := results.Columns()
-
-	// Get Column types
-	colTypes, err := results.ColumnTypes()
-	if err != nil {
-		if err := results.Err(); err != nil {
-			return nil, fmt.Errorf("query execution error: %w", err)
-		}
-		return []any{}, nil
-	}
-
-	var out []any
-	for results.Next() {
-		// Create slice to hold values
-		values := make([]any, len(cols))
-		for i, colType := range colTypes {
-			// Based on the database type, we prepare a pointer to a Go type.
-			switch strings.ToUpper(colType.DatabaseTypeName()) {
-			case "NUMBER", "FLOAT", "BINARY_FLOAT", "BINARY_DOUBLE":
-				if _, scale, ok := colType.DecimalSize(); ok && scale == 0 {
-					// Scale is 0, treat as an integer.
-					values[i] = new(sql.NullInt64)
-				} else {
-					// Scale is non-zero or unknown, treat as a float.
-					values[i] = new(sql.NullFloat64)
-				}
-			case "DATE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
-				values[i] = new(sql.NullTime)
-			case "JSON":
-				values[i] = new(sql.RawBytes)
-			default:
-				values[i] = new(sql.NullString)
-			}
-		}
-
-		if err := results.Scan(values...); err != nil {
-			return nil, fmt.Errorf("unable to scan row: %w", err)
-		}
-
-		vMap := make(map[string]any)
-		for i, col := range cols {
-			receiver := values[i]
-
-			// Dereference the pointer and check for validity (not NULL).
-			switch v := receiver.(type) {
-			case *sql.NullInt64:
-				if v.Valid {
-					vMap[col] = v.Int64
-				} else {
-					vMap[col] = nil
-				}
-			case *sql.NullFloat64:
-				if v.Valid {
-					vMap[col] = v.Float64
-				} else {
-					vMap[col] = nil
-				}
-			case *sql.NullString:
-				if v.Valid {
-					vMap[col] = v.String
-				} else {
-					vMap[col] = nil
-				}
-			case *sql.NullTime:
-				if v.Valid {
-					vMap[col] = v.Time
-				} else {
-					vMap[col] = nil
-				}
-			case *sql.RawBytes:
-				if *v != nil {
-					var unmarshaledData any
-					if err := json.Unmarshal(*v, &unmarshaledData); err != nil {
-						return nil, fmt.Errorf("unable to unmarshal json data for column %s", col)
-					}
-					vMap[col] = unmarshaledData
-				} else {
-					vMap[col] = nil
-				}
-			default:
-				return nil, fmt.Errorf("unexpected receiver type: %T", v)
-			}
-		}
-		out = append(out, vMap)
-	}
-
-	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("errors encountered during query execution or row processing: %w", err)
-	}
-
-	return out, nil
+	return source.RunSQL(ctx, sqlParam, nil)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
