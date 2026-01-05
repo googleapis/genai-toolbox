@@ -6,7 +6,7 @@ description: >
   Use Google's Gemini models to generate high-performance text embeddings for vector databases.
 ---
 
-## Getting Started
+## About
 
 Google Gemini provides state-of-the-art embedding models that convert text into
 high-dimensional vectors. 
