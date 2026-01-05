@@ -22,7 +22,7 @@ require (
 	github.com/cenkalti/backoff/v5 v5.0.3
 	github.com/couchbase/gocb/v2 v2.11.1
 	github.com/couchbase/tools-common/http v1.0.9
-	github.com/elastic/elastic-transport-go/v8 v8.7.0
+	github.com/elastic/elastic-transport-go/v8 v8.8.0
 	github.com/elastic/go-elasticsearch/v9 v9.2.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-chi/chi/v5 v5.2.3
@@ -37,12 +37,11 @@ require (
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.7.6
-	github.com/json-iterator/go v1.1.12
 	github.com/looker-open-source/sdk-codegen/go v0.25.21
 	github.com/microsoft/go-mssqldb v1.9.3
 	github.com/nakagami/firebirdsql v0.9.15
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.4
-	github.com/redis/go-redis/v9 v9.16.0
+	github.com/redis/go-redis/v9 v9.17.2
 	github.com/sijms/go-ora/v2 v2.9.0
 	github.com/spf13/cobra v1.10.1
 	github.com/thlib/go-timezone-local v0.0.7
@@ -138,6 +137,7 @@ require (
 	github.com/jcmturner/goidentity/v6 v6.0.1 // indirect
 	github.com/jcmturner/gokrb5/v8 v8.4.4 // indirect
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.11 // indirect

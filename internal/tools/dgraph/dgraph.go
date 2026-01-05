@@ -16,7 +16,6 @@ package dgraph
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
@@ -44,12 +43,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	DgraphClient() *dgraph.DgraphClient
+	RunSQL(string, parameters.ParamValues, bool, string) (any, error)
 }
-
-// validate compatible sources are still compatible
-var _ compatibleSource = &dgraph.Source{}
-
-var compatibleSources = [...]string{dgraph.SourceKind}
 
 type Config struct {
 	Name         string                `yaml:"name" validate:"required"`
@@ -71,26 +66,13 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, cfg.Parameters, nil)
 
 	// finish tool setup
 	t := Tool{
-		Config:       cfg,
-		DgraphClient: s.DgraphClient(),
-		manifest:     tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:  mcpManifest,
+		Config:      cfg,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -100,9 +82,8 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	DgraphClient *dgraph.DgraphClient
-	manifest     tools.Manifest
-	mcpManifest  tools.McpManifest
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -110,26 +91,11 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	paramsMap := params.AsMapWithDollarPrefix()
-
-	resp, err := t.DgraphClient.ExecuteQuery(t.Statement, paramsMap, t.IsQuery, t.Timeout)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
 	if err != nil {
 		return nil, err
 	}
-
-	if err := dgraph.CheckError(resp); err != nil {
-		return nil, err
-	}
-
-	var result struct {
-		Data map[string]interface{} `json:"data"`
-	}
-
-	if err := json.Unmarshal(resp, &result); err != nil {
-		return nil, fmt.Errorf("error parsing JSON: %v", err)
-	}
-
-	return result.Data, nil
+	return source.RunSQL(t.Statement, params, t.IsQuery, t.Timeout)
 }
 
 func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
@@ -148,10 +114,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }
