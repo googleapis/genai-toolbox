@@ -4,14 +4,17 @@ package oracle
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/goccy/go-yaml"
+	_ "github.com/godror/godror"   // OCI driver
+	_ "github.com/sijms/go-ora/v2" // Pure Go driver
+
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
-	_ "github.com/sijms/go-ora/v2"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -32,7 +35,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 		return nil, err
 	}
 
-	// Validate that we have one of: tns_alias, connection_string, or host+service_name
+	// Validate that we have one of: tnsAlias, connectionString, or host+service_name
 	if err := actual.validate(); err != nil {
 		return nil, fmt.Errorf("invalid Oracle configuration: %w", err)
 	}
@@ -43,21 +46,24 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	Name             string `yaml:"name" validate:"required"`
 	Kind             string `yaml:"kind" validate:"required"`
-	ConnectionString string `yaml:"connectionString,omitempty"` // Direct connection string (hostname[:port]/servicename)
-	TnsAlias         string `yaml:"tnsAlias,omitempty"`         // TNS alias from tnsnames.ora
-	Host             string `yaml:"host,omitempty"`             // Optional when using connectionString/tnsAlias
-	Port             int    `yaml:"port,omitempty"`             // Explicit port support
-	ServiceName      string `yaml:"serviceName,omitempty"`      // Optional when using connectionString/tnsAlias
+	ConnectionString string `yaml:"connectionString,omitempty"`
+	TnsAlias         string `yaml:"tnsAlias,omitempty"`
+	TnsAdmin         string `yaml:"tnsAdmin,omitempty"`
+	Host             string `yaml:"host,omitempty"`
+	Port             int    `yaml:"port,omitempty"`
+	ServiceName      string `yaml:"serviceName,omitempty"`
 	User             string `yaml:"user" validate:"required"`
 	Password         string `yaml:"password" validate:"required"`
-	TnsAdmin         string `yaml:"tnsAdmin,omitempty"` // Optional: override TNS_ADMIN environment variable
+	UseOCI           bool   `yaml:"useOCI,omitempty"`
+	WalletLocation   string `yaml:"walletLocation,omitempty"`
 }
 
-// validate ensures we have one of: tns_alias, connection_string, or host+service_name
 func (c Config) validate() error {
+	hasTnsAdmin := strings.TrimSpace(c.TnsAdmin) != ""
 	hasTnsAlias := strings.TrimSpace(c.TnsAlias) != ""
 	hasConnStr := strings.TrimSpace(c.ConnectionString) != ""
 	hasHostService := strings.TrimSpace(c.Host) != "" && strings.TrimSpace(c.ServiceName) != ""
+	hasWallet := strings.TrimSpace(c.WalletLocation) != ""
 
 	connectionMethods := 0
 	if hasTnsAlias {
@@ -76,6 +82,14 @@ func (c Config) validate() error {
 
 	if connectionMethods > 1 {
 		return fmt.Errorf("provide only one connection method: 'tns_alias', 'connection_string', or 'host'+'service_name'")
+	}
+
+	if hasTnsAdmin && !c.UseOCI {
+		return fmt.Errorf("`tnsAdmin` can only be used when `UseOCI` is true, or use `walletLocation` instead")
+	}
+
+	if hasWallet && c.UseOCI {
+		return fmt.Errorf("when using an OCI driver, use `tnsAdmin` to specify credentials file location instead")
 	}
 
 	return nil
@@ -122,6 +136,107 @@ func (s *Source) OracleDB() *sql.DB {
 	return s.DB
 }
 
+func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	rows, err := s.OracleDB().QueryContext(ctx, statement, params...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	defer rows.Close()
+
+	// If Columns() errors, it might be a DDL/DML without an OUTPUT clause.
+	// We proceed, and results.Err() will catch actual query execution errors.
+	// 'out' will remain nil if cols is empty or err is not nil here.
+	cols, _ := rows.Columns()
+
+	// Get Column types
+	colTypes, err := rows.ColumnTypes()
+	if err != nil {
+		if err := rows.Err(); err != nil {
+			return nil, fmt.Errorf("query execution error: %w", err)
+		}
+		return []any{}, nil
+	}
+
+	var out []any
+	for rows.Next() {
+		values := make([]any, len(cols))
+		for i, colType := range colTypes {
+			switch strings.ToUpper(colType.DatabaseTypeName()) {
+			case "NUMBER", "FLOAT", "BINARY_FLOAT", "BINARY_DOUBLE":
+				if _, scale, ok := colType.DecimalSize(); ok && scale == 0 {
+					// Scale is 0, treat it as an integer.
+					values[i] = new(sql.NullInt64)
+				} else {
+					// Scale is non-zero or unknown, treat
+					// it as a float.
+					values[i] = new(sql.NullFloat64)
+				}
+			case "DATE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
+				values[i] = new(sql.NullTime)
+			case "JSON":
+				values[i] = new(sql.RawBytes)
+			default:
+				values[i] = new(sql.NullString)
+			}
+		}
+
+		if err := rows.Scan(values...); err != nil {
+			return nil, fmt.Errorf("unable to scan row: %w", err)
+		}
+
+		vMap := make(map[string]any)
+		for i, col := range cols {
+			receiver := values[i]
+
+			switch v := receiver.(type) {
+			case *sql.NullInt64:
+				if v.Valid {
+					vMap[col] = v.Int64
+				} else {
+					vMap[col] = nil
+				}
+			case *sql.NullFloat64:
+				if v.Valid {
+					vMap[col] = v.Float64
+				} else {
+					vMap[col] = nil
+				}
+			case *sql.NullString:
+				if v.Valid {
+					vMap[col] = v.String
+				} else {
+					vMap[col] = nil
+				}
+			case *sql.NullTime:
+				if v.Valid {
+					vMap[col] = v.Time
+				} else {
+					vMap[col] = nil
+				}
+			case *sql.RawBytes:
+				if *v != nil {
+					var unmarshaledData any
+					if err := json.Unmarshal(*v, &unmarshaledData); err != nil {
+						return nil, fmt.Errorf("unable to unmarshal json data for column %s", col)
+					}
+					vMap[col] = unmarshaledData
+				} else {
+					vMap[col] = nil
+				}
+			default:
+				return nil, fmt.Errorf("unexpected receiver type: %T", v)
+			}
+		}
+		out = append(out, vMap)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("errors encountered during query execution or row processing: %w", err)
+	}
+
+	return out, nil
+}
+
 func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Config) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, config.Name)
@@ -132,7 +247,8 @@ func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Confi
 		panic(err)
 	}
 
-	// Set TNS_ADMIN environment variable if specified in config.
+	hasWallet := strings.TrimSpace(config.WalletLocation) != ""
+
 	if config.TnsAdmin != "" {
 		originalTnsAdmin := os.Getenv("TNS_ADMIN")
 		os.Setenv("TNS_ADMIN", config.TnsAdmin)
@@ -147,28 +263,49 @@ func initOracleConnection(ctx context.Context, tracer trace.Tracer, config Confi
 		}()
 	}
 
-	var serverString string
+	var connectStringBase string
 	if config.TnsAlias != "" {
-		// Use TNS alias
-		serverString = strings.TrimSpace(config.TnsAlias)
+		connectStringBase = strings.TrimSpace(config.TnsAlias)
 	} else if config.ConnectionString != "" {
-		// Use provided connection string directly (hostname[:port]/servicename format)
-		serverString = strings.TrimSpace(config.ConnectionString)
+		connectStringBase = strings.TrimSpace(config.ConnectionString)
 	} else {
-		// Build connection string from host and service_name
 		if config.Port > 0 {
-			serverString = fmt.Sprintf("%s:%d/%s", config.Host, config.Port, config.ServiceName)
+			connectStringBase = fmt.Sprintf("%s:%d/%s", config.Host, config.Port, config.ServiceName)
 		} else {
-			serverString = fmt.Sprintf("%s/%s", config.Host, config.ServiceName)
+			connectStringBase = fmt.Sprintf("%s/%s", config.Host, config.ServiceName)
 		}
 	}
 
-	connStr := fmt.Sprintf("oracle://%s:%s@%s",
-		config.User, config.Password, serverString)
+	var driverName string
+	var finalConnStr string
 
-	db, err := sql.Open("oracle", connStr)
+	if config.UseOCI {
+		// Use godror driver (requires OCI)
+		driverName = "godror"
+		finalConnStr = fmt.Sprintf(`user="%s" password="%s" connectString="%s"`,
+			config.User, config.Password, connectStringBase)
+		logger.DebugContext(ctx, fmt.Sprintf("Using godror driver (OCI-based) with connectString: %s\n", connectStringBase))
+	} else {
+		// Use go-ora driver (pure Go)
+		driverName = "oracle"
+
+		user := config.User
+		password := config.Password
+
+		if hasWallet {
+			finalConnStr = fmt.Sprintf("oracle://%s:%s@%s?ssl=true&wallet=%s",
+				user, password, connectStringBase, config.WalletLocation)
+		} else {
+			// Standard go-ora connection
+			finalConnStr = fmt.Sprintf("oracle://%s:%s@%s",
+				config.User, config.Password, connectStringBase)
+			logger.DebugContext(ctx, fmt.Sprintf("Using go-ora driver (pure-Go) with serverString: %s\n", connectStringBase))
+		}
+	}
+
+	db, err := sql.Open(driverName, finalConnStr)
 	if err != nil {
-		return nil, fmt.Errorf("unable to open Oracle connection: %w", err)
+		return nil, fmt.Errorf("unable to open Oracle connection with driver %s: %w", driverName, err)
 	}
 
 	return db, nil
