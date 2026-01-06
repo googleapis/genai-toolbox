@@ -33,6 +33,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
@@ -197,6 +198,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistroles"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistschemas"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistsequences"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresliststoredprocedure"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttablespaces"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttablestats"
@@ -385,12 +387,13 @@ func NewCommand(opts ...Option) *Command {
 }
 
 type ToolsFile struct {
-	Sources      server.SourceConfigs      `yaml:"sources"`
-	AuthSources  server.AuthServiceConfigs `yaml:"authSources"` // Deprecated: Kept for compatibility.
-	AuthServices server.AuthServiceConfigs `yaml:"authServices"`
-	Tools        server.ToolConfigs        `yaml:"tools"`
-	Toolsets     server.ToolsetConfigs     `yaml:"toolsets"`
-	Prompts      server.PromptConfigs      `yaml:"prompts"`
+	Sources         server.SourceConfigs         `yaml:"sources"`
+	AuthSources     server.AuthServiceConfigs    `yaml:"authSources"` // Deprecated: Kept for compatibility.
+	AuthServices    server.AuthServiceConfigs    `yaml:"authServices"`
+	EmbeddingModels server.EmbeddingModelConfigs `yaml:"embeddingModels"`
+	Tools           server.ToolConfigs           `yaml:"tools"`
+	Toolsets        server.ToolsetConfigs        `yaml:"toolsets"`
+	Prompts         server.PromptConfigs         `yaml:"prompts"`
 }
 
 // parseEnv replaces environment variables ${ENV_NAME} with their values.
@@ -439,11 +442,12 @@ func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 // All resource names (sources, authServices, tools, toolsets) must be unique across all files.
 func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 	merged := ToolsFile{
-		Sources:      make(server.SourceConfigs),
-		AuthServices: make(server.AuthServiceConfigs),
-		Tools:        make(server.ToolConfigs),
-		Toolsets:     make(server.ToolsetConfigs),
-		Prompts:      make(server.PromptConfigs),
+		Sources:         make(server.SourceConfigs),
+		AuthServices:    make(server.AuthServiceConfigs),
+		EmbeddingModels: make(server.EmbeddingModelConfigs),
+		Tools:           make(server.ToolConfigs),
+		Toolsets:        make(server.ToolsetConfigs),
+		Prompts:         make(server.PromptConfigs),
 	}
 
 	var conflicts []string
@@ -476,6 +480,15 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 				conflicts = append(conflicts, fmt.Sprintf("authService '%s' (file #%d)", name, fileIndex+1))
 			} else {
 				merged.AuthServices[name] = authService
+			}
+		}
+
+		// Check for conflicts and merge embeddingModels
+		for name, model := range file.EmbeddingModels {
+			if _, exists := merged.EmbeddingModels[name]; exists {
+				conflicts = append(conflicts, fmt.Sprintf("embedding model '%s' (file #%d)", name, fileIndex+1))
+			} else {
+				merged.EmbeddingModels[name] = model
 			}
 		}
 
@@ -583,14 +596,14 @@ func handleDynamicReload(ctx context.Context, toolsFile ToolsFile, s *server.Ser
 		panic(err)
 	}
 
-	sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := validateReloadEdits(ctx, toolsFile)
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := validateReloadEdits(ctx, toolsFile)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to validate reloaded edits: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
 		return err
 	}
 
-	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
+	s.ResourceMgr.SetResources(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	return nil
 }
@@ -598,7 +611,7 @@ func handleDynamicReload(ctx context.Context, toolsFile ToolsFile, s *server.Ser
 // validateReloadEdits checks that the reloaded tools file configs can initialized without failing
 func validateReloadEdits(
 	ctx context.Context, toolsFile ToolsFile,
-) (map[string]sources.Source, map[string]auth.AuthService, map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset, error,
+) (map[string]sources.Source, map[string]auth.AuthService, map[string]embeddingmodels.EmbeddingModel, map[string]tools.Tool, map[string]tools.Toolset, map[string]prompts.Prompt, map[string]prompts.Promptset, error,
 ) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
@@ -616,22 +629,23 @@ func validateReloadEdits(
 	defer span.End()
 
 	reloadedConfig := server.ServerConfig{
-		Version:            versionString,
-		SourceConfigs:      toolsFile.Sources,
-		AuthServiceConfigs: toolsFile.AuthServices,
-		ToolConfigs:        toolsFile.Tools,
-		ToolsetConfigs:     toolsFile.Toolsets,
-		PromptConfigs:      toolsFile.Prompts,
+		Version:               versionString,
+		SourceConfigs:         toolsFile.Sources,
+		AuthServiceConfigs:    toolsFile.AuthServices,
+		EmbeddingModelConfigs: toolsFile.EmbeddingModels,
+		ToolConfigs:           toolsFile.Tools,
+		ToolsetConfigs:        toolsFile.Toolsets,
+		PromptConfigs:         toolsFile.Prompts,
 	}
 
-	sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := server.InitializeConfigs(ctx, reloadedConfig)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to initialize reloaded configs: %w", err)
 		logger.WarnContext(ctx, errMsg.Error())
-		return nil, nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, nil, err
 	}
 
-	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
+	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
 }
 
 // watchChanges checks for changes in the provided yaml tools file(s) or folder.
