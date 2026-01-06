@@ -85,6 +85,7 @@ type Config struct {
 	AllowedDatasets           []string `yaml:"allowedDatasets"`
 	UseClientOAuth            bool     `yaml:"useClientOAuth"`
 	ImpersonateServiceAccount string   `yaml:"impersonateServiceAccount"`
+	MaxResultRows             int      `yaml:"maxResultRows"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -119,7 +120,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Client:             client,
 		RestService:        restService,
 		TokenSource:        tokenSource,
-		MaxQueryResultRows: 50,
+		MaxQueryResultRows: r.MaxResultRows,
 		ClientCreator:      clientCreator,
 	}
 
@@ -530,6 +531,9 @@ func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, state
 
 	var out []any
 	for {
+		if s.MaxQueryResultRows > 0 && len(out) >= s.MaxQueryResultRows {
+			break
+		}
 		var val []bigqueryapi.Value
 		err = it.Next(&val)
 		if err == iterator.Done {
