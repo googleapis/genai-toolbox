@@ -18,6 +18,7 @@ import (
 	"sync"
 
 	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -25,30 +26,33 @@ import (
 
 // ResourceManager contains available resources for the server. Should be initialized with NewResourceManager().
 type ResourceManager struct {
-	mu           sync.RWMutex
-	sources      map[string]sources.Source
-	authServices map[string]auth.AuthService
-	tools        map[string]tools.Tool
-	toolsets     map[string]tools.Toolset
-	prompts      map[string]prompts.Prompt
-	promptsets   map[string]prompts.Promptset
+	mu              sync.RWMutex
+	sources         map[string]sources.Source
+	authServices    map[string]auth.AuthService
+	embeddingModels map[string]embeddingmodels.EmbeddingModel
+	tools           map[string]tools.Tool
+	toolsets        map[string]tools.Toolset
+	prompts         map[string]prompts.Prompt
+	promptsets      map[string]prompts.Promptset
 }
 
 func NewResourceManager(
 	sourcesMap map[string]sources.Source,
 	authServicesMap map[string]auth.AuthService,
+	embeddingModelsMap map[string]embeddingmodels.EmbeddingModel,
 	toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset,
 	promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset,
 
 ) *ResourceManager {
 	resourceMgr := &ResourceManager{
-		mu:           sync.RWMutex{},
-		sources:      sourcesMap,
-		authServices: authServicesMap,
-		tools:        toolsMap,
-		toolsets:     toolsetsMap,
-		prompts:      promptsMap,
-		promptsets:   promptsetsMap,
+		mu:              sync.RWMutex{},
+		sources:         sourcesMap,
+		authServices:    authServicesMap,
+		embeddingModels: embeddingModelsMap,
+		tools:           toolsMap,
+		toolsets:        toolsetsMap,
+		prompts:         promptsMap,
+		promptsets:      promptsetsMap,
 	}
 
 	return resourceMgr
@@ -66,6 +70,13 @@ func (r *ResourceManager) GetAuthService(authServiceName string) (auth.AuthServi
 	defer r.mu.RUnlock()
 	authService, ok := r.authServices[authServiceName]
 	return authService, ok
+}
+
+func (r *ResourceManager) GetEmbeddingModel(embeddingModelName string) (embeddingmodels.EmbeddingModel, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	model, ok := r.embeddingModels[embeddingModelName]
+	return model, ok
 }
 
 func (r *ResourceManager) GetTool(toolName string) (tools.Tool, bool) {
@@ -96,11 +107,12 @@ func (r *ResourceManager) GetPromptset(promptsetName string) (prompts.Promptset,
 	return promptset, ok
 }
 
-func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset, promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset) {
+func (r *ResourceManager) SetResources(sourcesMap map[string]sources.Source, authServicesMap map[string]auth.AuthService, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, toolsMap map[string]tools.Tool, toolsetsMap map[string]tools.Toolset, promptsMap map[string]prompts.Prompt, promptsetsMap map[string]prompts.Promptset) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.sources = sourcesMap
 	r.authServices = authServicesMap
+	r.embeddingModels = embeddingModelsMap
 	r.tools = toolsMap
 	r.toolsets = toolsetsMap
 	r.prompts = promptsMap
@@ -112,6 +124,16 @@ func (r *ResourceManager) GetAuthServiceMap() map[string]auth.AuthService {
 	defer r.mu.RUnlock()
 	copiedMap := make(map[string]auth.AuthService, len(r.authServices))
 	for k, v := range r.authServices {
+		copiedMap[k] = v
+	}
+	return copiedMap
+}
+
+func (r *ResourceManager) GetEmbeddingModelMap() map[string]embeddingmodels.EmbeddingModel {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	copiedMap := make(map[string]embeddingmodels.EmbeddingModel, len(r.embeddingModels))
+	for k, v := range r.embeddingModels {
 		copiedMap[k] = v
 	}
 	return copiedMap
