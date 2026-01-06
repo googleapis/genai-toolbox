@@ -32,6 +32,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels/gemini"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
@@ -1830,9 +1831,10 @@ func TestFileLoadingErrors(t *testing.T) {
 
 func TestMergeToolsFiles(t *testing.T) {
 	file1 := ToolsFile{
-		Sources:  server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
-		Tools:    server.ToolConfigs{"tool1": http.Config{Name: "tool1"}},
-		Toolsets: server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}},
+		Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
+		Tools:           server.ToolConfigs{"tool1": http.Config{Name: "tool1"}},
+		Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}},
+		EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
 	}
 	file2 := ToolsFile{
 		AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
@@ -1854,11 +1856,12 @@ func TestMergeToolsFiles(t *testing.T) {
 			name:  "merge two distinct files",
 			files: []ToolsFile{file1, file2},
 			want: ToolsFile{
-				Sources:      server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
-				AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
-				Tools:        server.ToolConfigs{"tool1": http.Config{Name: "tool1"}, "tool2": http.Config{Name: "tool2"}},
-				Toolsets:     server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}, "set2": tools.ToolsetConfig{Name: "set2"}},
-				Prompts:      server.PromptConfigs{},
+				Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
+				AuthServices:    server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
+				Tools:           server.ToolConfigs{"tool1": http.Config{Name: "tool1"}, "tool2": http.Config{Name: "tool2"}},
+				Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}, "set2": tools.ToolsetConfig{Name: "set2"}},
+				Prompts:         server.PromptConfigs{},
+				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
 			},
 			wantErr: false,
 		},
@@ -1871,22 +1874,24 @@ func TestMergeToolsFiles(t *testing.T) {
 			name:  "merge single file",
 			files: []ToolsFile{file1},
 			want: ToolsFile{
-				Sources:      file1.Sources,
-				AuthServices: make(server.AuthServiceConfigs),
-				Tools:        file1.Tools,
-				Toolsets:     file1.Toolsets,
-				Prompts:      server.PromptConfigs{},
+				Sources:         file1.Sources,
+				AuthServices:    make(server.AuthServiceConfigs),
+				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
+				Tools:           file1.Tools,
+				Toolsets:        file1.Toolsets,
+				Prompts:         server.PromptConfigs{},
 			},
 		},
 		{
 			name:  "merge empty list",
 			files: []ToolsFile{},
 			want: ToolsFile{
-				Sources:      make(server.SourceConfigs),
-				AuthServices: make(server.AuthServiceConfigs),
-				Tools:        make(server.ToolConfigs),
-				Toolsets:     make(server.ToolsetConfigs),
-				Prompts:      server.PromptConfigs{},
+				Sources:         make(server.SourceConfigs),
+				AuthServices:    make(server.AuthServiceConfigs),
+				EmbeddingModels: make(server.EmbeddingModelConfigs),
+				Tools:           make(server.ToolConfigs),
+				Toolsets:        make(server.ToolsetConfigs),
+				Prompts:         server.PromptConfigs{},
 			},
 		},
 	}
