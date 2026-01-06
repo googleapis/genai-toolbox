@@ -97,6 +97,10 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		r.WriteMode = WriteModeAllowed
 	}
 
+	if r.MaxResultRows == 0 {
+		r.MaxResultRows = 50
+	}
+
 	if r.WriteMode == WriteModeProtected && r.UseClientOAuth {
 		// The protected mode only allows write operations to the session's temporary datasets.
 		// when using client OAuth, a new session is created every
