@@ -786,6 +786,27 @@ steps:
           trino \
           trinosql trinoexecutesql
 
+  - id: "kdb"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "KDB_HOST=$_KDB_HOST"
+      - "KDB_PORT=$_KDB_PORT"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "KDB" \
+          kdb \
+          kdb
+
   - id: "yugabytedb"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -833,7 +854,8 @@ steps:
     env:
       - "GOPATH=/gopath"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLIENT_ID", "CASSANDRA_USER", "CASSANDRA_PASS", "CASSANDRA_HOST"]
+    secretEnv:
+      ["CLIENT_ID", "CASSANDRA_USER", "CASSANDRA_PASS", "CASSANDRA_HOST"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -1110,6 +1132,8 @@ substitutions:
   _TRINO_PORT: "8080"
   _TRINO_CATALOG: "memory"
   _TRINO_SCHEMA: "default"
+  _KDB_HOST: 127.0.0.1
+  _KDB_PORT: "5001"
   _OCEANBASE_PORT: "2883"
   _OCEANBASE_DATABASE: "oceanbase"
   _MINDSDB_PORT: "47335"
