@@ -96,8 +96,8 @@ type Config struct {
 type StringOrStringSlice []string
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface.
-func (s *StringOrStringSlice) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	var v interface{}
+func (s *StringOrStringSlice) UnmarshalYAML(unmarshal func(any) error) error {
+	var v any
 	if err := unmarshal(&v); err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (s *StringOrStringSlice) UnmarshalYAML(unmarshal func(interface{}) error) e
 	case string:
 		*s = strings.Split(val, ",")
 		return nil
-	case []interface{}:
+	case []any:
 		for _, item := range val {
 			if str, ok := item.(string); ok {
 				*s = append(*s, str)
