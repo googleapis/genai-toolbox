@@ -1531,9 +1531,11 @@ Looker personal folder.&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2259/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>looker-make-dashboard&lt;/code> takes one parameter:&lt;/p>
+&lt;p>&lt;code>looker-make-dashboard&lt;/code> takes three parameters:&lt;/p>
 &lt;ol>
 &lt;li>the &lt;code>title&lt;/code>&lt;/li>
+&lt;li>the &lt;code>description&lt;/code>&lt;/li>
+&lt;li>an optional &lt;code>folder&lt;/code> id. If not provided, the user&amp;rsquo;s default folder will be used.&lt;/li>
 &lt;/ol>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -1591,7 +1593,7 @@ Looker personal folder.&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2259/resources/sources/looker/">looker&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>&lt;code>looker-make-look&lt;/code> takes eleven parameters:&lt;/p>
+&lt;p>&lt;code>looker-make-look&lt;/code> takes twelve parameters:&lt;/p>
 &lt;ol>
 &lt;li>the &lt;code>model&lt;/code>&lt;/li>
 &lt;li>the &lt;code>explore&lt;/code>&lt;/li>
@@ -1604,6 +1606,7 @@ Looker personal folder.&lt;/p>
 &lt;li>an optional &lt;code>vis_config&lt;/code>&lt;/li>
 &lt;li>the &lt;code>title&lt;/code>&lt;/li>
 &lt;li>an optional &lt;code>description&lt;/code>&lt;/li>
+&lt;li>an optional &lt;code>folder&lt;/code> id. If not provided, the user&amp;rsquo;s default folder will be used.&lt;/li>
 &lt;/ol>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
