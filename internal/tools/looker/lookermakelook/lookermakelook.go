@@ -76,6 +76,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	params = append(params, titleParameter)
 	descParameter := parameters.NewStringParameterWithDefault("description", "", "The description of the Look")
 	params = append(params, descParameter)
+	folderParameter := parameters.NewStringParameterWithDefault("folder", "", "The folder id where the Look will be created. Leave blank to use the user's personal folder")
+	params = append(params, folderParameter)
 	vizParameter := parameters.NewMapParameterWithDefault("vis_config",
 		map[string]any{},
 		"The visualization config for the query",
@@ -140,17 +142,26 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, fmt.Errorf("error getting sdk: %w", err)
 	}
+	paramsMap := params.AsMap()
+	title := paramsMap["title"].(string)
+	description := paramsMap["description"].(string)
+	folder := paramsMap["folder"].(string)
+	visConfig := paramsMap["vis_config"].(map[string]any)
+
 	mrespFields := "id,personal_folder_id"
 	mresp, err := sdk.Me(mrespFields, source.LookerApiSettings())
 	if err != nil {
 		return nil, fmt.Errorf("error making me request: %s", err)
 	}
 
-	paramsMap := params.AsMap()
-	title := paramsMap["title"].(string)
-	description := paramsMap["description"].(string)
+	if folder == "" {
+		if mresp.PersonalFolderId == nil || *mresp.PersonalFolderId == "" {
+			return nil, fmt.Errorf("user does not have a personal folder. A folder must be specified")
+		}
+		folder = *mresp.PersonalFolderId
+	}
 
-	looks, err := sdk.FolderLooks(*mresp.PersonalFolderId, "title", source.LookerApiSettings())
+	looks, err := sdk.FolderLooks(folder, "title", source.LookerApiSettings())
 	if err != nil {
 		return nil, fmt.Errorf("error getting existing looks in folder: %s", err)
 	}
@@ -161,10 +172,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 	if slices.Contains(lookTitles, title) {
 		lt, _ := json.Marshal(lookTitles)
-		return nil, fmt.Errorf("title %s already used in user's folder. Currently used titles are %v. Make the call again with a unique title", title, string(lt))
+		return nil, fmt.Errorf("title %s already used in folder. Currently used titles are %v. Make the call again with a unique title", title, string(lt))
 	}
 
-	visConfig := paramsMap["vis_config"].(map[string]any)
 	wq.VisConfig = &visConfig
 
 	qrespFields := "id"
@@ -178,7 +188,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		UserId:      mresp.Id,
 		Description: &description,
 		QueryId:     qresp.Id,
-		FolderId:    mresp.PersonalFolderId,
+		FolderId:    &folder,
 	}
 	resp, err := sdk.CreateLook(wlwq, "", source.LookerApiSettings())
 	if err != nil {
