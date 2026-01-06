@@ -189,12 +189,9 @@ tools.
 
 * **(Optional) Add samples** to the `docs/en/samples/<newdb>` directory.
 
-### Updating labels and triaging bot
+### Updating labels
 
 * Add a `product: <source>` label in `.github/labels.yaml`
-* Add label to the gemini for issue triage's prompt in
-  `.github/workflows/gemini_scheduled_issue_triage.yml` and
-  `.github/workflows/gemini_automated_issue_triage.yml`.
 
 ### (Optional) Adding Prebuilt Tools
 
