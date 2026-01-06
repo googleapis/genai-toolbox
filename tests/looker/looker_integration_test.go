@@ -800,6 +800,13 @@ func TestLooker(t *testing.T) {
 						"type":        "string",
 					},
 					map[string]any{
+						"authSources": []any{},
+						"description": "The folder id where the Look will be created. Leave blank to use the user's personal folder",
+						"name":        "folder",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
 						"additionalProperties": true,
 						"authSources":          []any{},
 						"description":          "The visualization config for the query",
@@ -866,6 +873,13 @@ func TestLooker(t *testing.T) {
 						"authSources": []any{},
 						"description": "The description of the Dashboard",
 						"name":        "description",
+						"required":    false,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The folder id where the Dashboard will be created. Leave blank to use the user's personal folder",
+						"name":        "folder",
 						"required":    false,
 						"type":        "string",
 					},

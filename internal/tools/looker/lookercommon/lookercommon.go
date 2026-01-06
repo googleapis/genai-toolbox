@@ -47,6 +47,8 @@ func GetLookerSDK(useClientOAuth bool, config *rtl.ApiSettings, client *v4.Looke
 		if accessToken == "" {
 			return nil, fmt.Errorf("no access token supplied with request")
 		}
+
+		session := rtl.NewAuthSession(*config)
 		// Configure base transport with TLS
 		transport := &http.Transport{
 			TLSClientConfig: &tls.Config{
@@ -55,16 +57,15 @@ func GetLookerSDK(useClientOAuth bool, config *rtl.ApiSettings, client *v4.Looke
 		}
 
 		// Build transport for end user token
-		newTransport := &transportWithAuthHeader{
-			Base:      transport,
-			AuthToken: accessToken,
+		session.Client = http.Client{
+			Transport: &transportWithAuthHeader{
+				Base:      transport,
+				AuthToken: accessToken,
+			},
 		}
 
 		// return SDK with new Transport
-		return v4.NewLookerSDK(&rtl.AuthSession{
-			Config: *config,
-			Client: http.Client{Transport: newTransport},
-		}), nil
+		return v4.NewLookerSDK(session), nil
 	}
 
 	if client == nil {
