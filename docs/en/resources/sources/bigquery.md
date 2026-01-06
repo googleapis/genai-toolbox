@@ -124,7 +124,7 @@ sources:
     #   - "my_dataset_1"
     #   - "other_project.my_dataset_2"
     # impersonateServiceAccount: "service-account@project-id.iam.gserviceaccount.com" # Optional: Service account to impersonate
-    # maxResultRows: 50 # Optional: Limits the number of rows returned by queries. Defaults to 50.
+    # maxQueryResultRows: 50 # Optional: Limits the number of rows returned by queries. Defaults to 50.
 ```
 
 Initialize a BigQuery source that uses the client's access token:
@@ -141,7 +141,7 @@ sources:
     #   - "my_dataset_1"
     #   - "other_project.my_dataset_2"
     # impersonateServiceAccount: "service-account@project-id.iam.gserviceaccount.com" # Optional: Service account to impersonate
-    # maxResultRows: 50 # Optional: Limits the number of rows returned by queries. Defaults to 50.
+    # maxQueryResultRows: 50 # Optional: Limits the number of rows returned by queries. Defaults to 50.
 ```
 
 ## Reference
@@ -155,4 +155,4 @@ sources:
 | allowedDatasets           | []string |    false     | An optional list of dataset IDs that tools using this source are allowed to access. If provided, any tool operation attempting to access a dataset not in this list will be rejected. To enforce this, two types of operations are also disallowed: 1) Dataset-level operations (e.g., `CREATE SCHEMA`), and 2) operations where table access cannot be statically analyzed (e.g., `EXECUTE IMMEDIATE`, `CREATE PROCEDURE`). If a single dataset is provided, it will be treated as the default for prebuilt tools. |
 | useClientOAuth            |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries. **Note:** This cannot be used with `writeMode: protected`.                                                                                                                                                                                                                                                                                                                                                |
 | impersonateServiceAccount |  string  |    false     | Service account email to impersonate when making BigQuery and Dataplex API calls. The authenticated principal must have the `roles/iam.serviceAccountTokenCreator` role on the target service account. [Learn More](https://cloud.google.com/iam/docs/service-account-impersonation)                                                                                                                                                                                                                                |
-| maxResultRows             |   int    |    false     | The maximum number of rows to return from a query. Defaults to 50. |
+| maxQueryResultRows             |   int    |    false     | The maximum number of rows to return from a query. Defaults to 50. |

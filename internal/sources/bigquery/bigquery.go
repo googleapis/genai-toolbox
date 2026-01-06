@@ -85,7 +85,7 @@ type Config struct {
 	AllowedDatasets           []string `yaml:"allowedDatasets"`
 	UseClientOAuth            bool     `yaml:"useClientOAuth"`
 	ImpersonateServiceAccount string   `yaml:"impersonateServiceAccount"`
-	MaxResultRows             int      `yaml:"maxResultRows"`
+	MaxQueryResultRows        int      `yaml:"maxQueryResultRows"`
 }
 
 func (r Config) SourceConfigKind() string {
@@ -97,8 +97,8 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		r.WriteMode = WriteModeAllowed
 	}
 
-	if r.MaxResultRows == 0 {
-		r.MaxResultRows = 50
+	if r.MaxQueryResultRows == 0 {
+		r.MaxQueryResultRows = 50
 	}
 
 	if r.WriteMode == WriteModeProtected && r.UseClientOAuth {
@@ -124,7 +124,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Client:             client,
 		RestService:        restService,
 		TokenSource:        tokenSource,
-		MaxQueryResultRows: r.MaxResultRows,
+		MaxQueryResultRows: r.MaxQueryResultRows,
 		ClientCreator:      clientCreator,
 	}
 

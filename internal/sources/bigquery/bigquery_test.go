@@ -21,9 +21,12 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources/bigquery"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
 func TestParseFromYamlBigQuery(t *testing.T) {
@@ -132,6 +135,26 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "with max query result rows example",
+			in: `
+			sources:
+				my-instance:
+					kind: bigquery
+					project: my-project
+					location: us
+					maxQueryResultRows: 10
+			`,
+			want: server.SourceConfigs{
+				"my-instance": bigquery.Config{
+					Name:               "my-instance",
+					Kind:               bigquery.SourceKind,
+					Project:            "my-project",
+					Location:           "us",
+					MaxQueryResultRows: 10,
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -193,6 +216,59 @@ func TestFailParseFromYaml(t *testing.T) {
 			errStr := err.Error()
 			if errStr != tc.err {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
+			}
+		})
+	}
+}
+
+func TestInitialize_MaxQueryResultRows(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	ctx = util.WithUserAgent(ctx, "test-agent")
+	tracer := trace.NewNoopTracerProvider().Tracer("")
+
+	tcs := []struct {
+		desc string
+		cfg  bigquery.Config
+		want int
+	}{
+		{
+			desc: "default value",
+			cfg: bigquery.Config{
+				Name:           "test-default",
+				Kind:           bigquery.SourceKind,
+				Project:        "test-project",
+				UseClientOAuth: true,
+			},
+			want: 50,
+		},
+		{
+			desc: "configured value",
+			cfg: bigquery.Config{
+				Name:               "test-configured",
+				Kind:               bigquery.SourceKind,
+				Project:            "test-project",
+				UseClientOAuth:     true,
+				MaxQueryResultRows: 100,
+			},
+			want: 100,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			src, err := tc.cfg.Initialize(ctx, tracer)
+			if err != nil {
+				t.Fatalf("Initialize failed: %v", err)
+			}
+			bqSrc, ok := src.(*bigquery.Source)
+			if !ok {
+				t.Fatalf("Expected *bigquery.Source, got %T", src)
+			}
+			if bqSrc.MaxQueryResultRows != tc.want {
+				t.Errorf("MaxQueryResultRows = %d, want %d", bqSrc.MaxQueryResultRows, tc.want)
 			}
 		})
 	}

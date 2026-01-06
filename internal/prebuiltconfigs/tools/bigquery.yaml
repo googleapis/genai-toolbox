@@ -18,7 +18,7 @@ sources:
     project: ${BIGQUERY_PROJECT}
     location: ${BIGQUERY_LOCATION:}
     useClientOAuth: ${BIGQUERY_USE_CLIENT_OAUTH:false}
-    maxResultRows: ${BIGQUERY_MAX_RESULT_ROWS:50}
+    maxQueryResultRows: ${BIGQUERY_MAX_QUERY_RESULT_ROWS:50}
 
 tools:
   analyze_contribution:
