@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,8 +33,8 @@ import (
 var (
 	SnowflakeSourceKind = "snowflake"
 	SnowflakeToolKind   = "snowflake-sql"
-	SnowflakeHost    = os.Getenv("SNOWFLAKE_HOST")
-	SnowflakePort    = os.Getenv("SNOWFLAKE_PORT")
+	SnowflakeHost       = os.Getenv("SNOWFLAKE_HOST")
+	SnowflakePort       = os.Getenv("SNOWFLAKE_PORT")
 	SnowflakeAccount    = os.Getenv("SNOWFLAKE_ACCOUNT")
 	SnowflakeUser       = os.Getenv("SNOWFLAKE_USER")
 	SnowflakePassword   = os.Getenv("SNOWFLAKE_PASS")
@@ -79,7 +79,7 @@ func getSnowflakeVars(t *testing.T) map[string]any {
 }
 
 // Copied over from snowflake.go
-func initSnowflakeConnectionPool(ctx context.Context, account, user, password, database, schema, warehouse, role string) (*sqlx.DB, error){
+func initSnowflakeConnectionPool(ctx context.Context, account, user, password, database, schema, warehouse, role string) (*sqlx.DB, error) {
 	// Set defaults for optional parameters
 	if warehouse == "" {
 		warehouse = "COMPUTE_WH"
