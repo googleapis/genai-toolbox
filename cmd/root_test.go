@@ -1759,8 +1759,8 @@ func TestPrebuiltTools(t *testing.T) {
 			name: "Snowflake prebuilt tool",
 			in:   snowflake_config,
 			wantToolset: server.ToolsetConfigs{
-				"snowflake-tools": tools.ToolsetConfig{
-					Name:      "snowflake-tools",
+				"snowflake_tools": tools.ToolsetConfig{
+					Name:      "snowflake_tools",
 					ToolNames: []string{"execute_sql", "list_tables"},
 				},
 			},
