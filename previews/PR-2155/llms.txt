@@ -90,6 +90,8 @@ List of reference documentation for resources in Toolbox.
   - [Trino](https://googleapis.github.io/genai-toolbox/previews/PR-2155/resources/sources/trino/): Trino is a distributed SQL query engine for big data analytics.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-2155/resources/sources/valkey/): Valkey is an open-source, in-memory data structure store, forked from Redis.
   - [YugabyteDB](https://googleapis.github.io/genai-toolbox/previews/PR-2155/resources/sources/yugabytedb/): YugabyteDB is a high-performance, distributed SQL database. 
+- [EmbeddingModels](https://googleapis.github.io/genai-toolbox/previews/PR-2155/resources/embeddingmodels/): EmbeddingModels represent services that transform text into vector embeddings for semantic search.
+  - [Gemini Embedding](https://googleapis.github.io/genai-toolbox/previews/PR-2155/resources/embeddingmodels/gemini/): Use Google's Gemini models to generate high-performance text embeddings for vector databases.
 - [Tools](https://googleapis.github.io/genai-toolbox/previews/PR-2155/resources/tools/): Tools define actions an agent can take -- such as reading and writing to a source.
   - [AlloyDB AI NL](https://googleapis.github.io/genai-toolbox/previews/PR-2155/resources/tools/alloydbainl/): AlloyDB AI NL Tool.
   - [AlloyDB for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-2155/resources/tools/alloydb/): Tools for AlloyDB for PostgreSQL.
