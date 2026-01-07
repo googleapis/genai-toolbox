@@ -1142,7 +1142,7 @@ Run parameterized SQL queries in SingleStore.&lt;/p></description></item><item><
 Execute SQL queries as prepared statements in Snowflake.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="../tools/snowflake/snowflake-execute-sql.md">&lt;code>snowflake-execute-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-858/resources/tools/snowflake/snowflake-execute-sql/">&lt;code>snowflake-execute-sql&lt;/code>&lt;/a>&lt;br>
 Run parameterized SQL statements in Snowflake.&lt;/p>
 &lt;/li>
 &lt;/ul>

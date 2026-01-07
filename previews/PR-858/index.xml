@@ -8290,7 +8290,7 @@ names, or other parts of the query.&lt;/p></description></item><item><title>Snow
 Execute SQL queries as prepared statements in Snowflake.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;a href="../tools/snowflake/snowflake-execute-sql.md">&lt;code>snowflake-execute-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-858/resources/tools/snowflake/snowflake-execute-sql/">&lt;code>snowflake-execute-sql&lt;/code>&lt;/a>&lt;br>
 Run parameterized SQL statements in Snowflake.&lt;/p>
 &lt;/li>
 &lt;/ul>
@@ -8430,7 +8430,7 @@ Snowflake user to login to the database with.&lt;/p>
  &lt;path d="M551.281 252.36c0-3.32-1.172-6.641-3.515-8.985l-17.774-17.578c-2.344-2.344-5.469-3.711-8.789-3.711-3.32 0-6.445 1.367-8.789 3.71l-79.687 79.493-44.141-44.14c-2.344-2.344-5.469-3.712-8.79-3.712-3.32 0-6.444 1.368-8.788 3.711l-17.774 17.579c-2.343 2.343-3.515 5.664-3.515 8.984 0 3.32 1.172 6.445 3.515 8.789l70.704 70.703c2.343 2.344 5.664 3.711 8.789 3.711 3.32 0 6.64-1.367 8.984-3.71l106.055-106.056c2.343-2.343 3.515-5.468 3.515-8.789ZM600.5 284c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
 &lt;/svg>
 
- &lt;/span>Tip&lt;/p></description></item><item><title>snowflake-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-858/resources/tools/snowflake/snowflake-execite-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-858/resources/tools/snowflake/snowflake-execite-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
+ &lt;/span>Tip&lt;/p></description></item><item><title>snowflake-execute-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-858/resources/tools/snowflake/snowflake-execute-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-858/resources/tools/snowflake/snowflake-execute-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A &lt;code>snowflake-execute-sql&lt;/code> tool executes a SQL statement against a Snowflake
 database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
@@ -8477,10 +8477,10 @@ human-in-the-loop and shouldn&amp;rsquo;t be used for production agents.&lt;/p>&
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;tr>
- &lt;td>readOnly&lt;/td>
- &lt;td style="text-align: center">bool&lt;/td>
+ &lt;td>authRequired&lt;/td>
+ &lt;td style="text-align: center">array[string]&lt;/td>
  &lt;td style="text-align: center">false&lt;/td>
- &lt;td>When set to &lt;code>true&lt;/code>, the &lt;code>statement&lt;/code> is run as a read-only transaction. Default: &lt;code>false&lt;/code>.&lt;/td>
+ &lt;td>List of auth services that are required to use this tool.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
 &lt;/table></description></item><item><title>snowflake-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-858/resources/tools/snowflake/snowflake-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-858/resources/tools/snowflake/snowflake-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
@@ -8492,19 +8492,6 @@ database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;p>The specified SQL statement is executed as a prepared statement, and specified
 parameters will be inserted according to their position: e.g. &lt;code>:1&lt;/code> will be the
 first parameter specified, &lt;code>:2&lt;/code> will be the second parameter, and so on.&lt;/p>
-&lt;blockquote>
-&lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
-Query parameters can be used as substitutes for arbitrary expressions.
-Parameters cannot be used as substitutes for identifiers, column names, table
-names, or other parts of the query.&lt;/p></description></item><item><title>snowflake-sql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-858/samples/snowflake/snowflake-sql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-858/samples/snowflake/snowflake-sql/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>snowflake-sql&lt;/code> tool executes a pre-defined SQL statement against a Snowflake
-database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
-&lt;ul>
-&lt;li>&lt;a href="../../sources/snowflake.md">snowflake&lt;/a>&lt;/li>
-&lt;/ul>
-&lt;p>The specified SQL statement is executed as a parameterized statement, and specified
-parameters will be used according to their name: e.g. &lt;code>$id&lt;/code>.&lt;/p>
-&lt;h2 id="example">Example&lt;/h2>
 &lt;blockquote>
 &lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
 Query parameters can be used as substitutes for arbitrary expressions.

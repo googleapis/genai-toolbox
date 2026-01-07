@@ -149,7 +149,6 @@ Samples and guides for using Toolbox.
   - [Quickstart (MCP with Looker and Gemini-CLI)](https://googleapis.github.io/genai-toolbox/previews/PR-858/samples/looker/looker_gemini/): How to get started running Toolbox with Gemini-CLI and Looker as the source.
   - [Quickstart (MCP with Looker)](https://googleapis.github.io/genai-toolbox/previews/PR-858/samples/looker/looker_mcp_inspector/): How to get started running Toolbox with MCP Inspector and Looker as the source.
 - [Snowflake](https://googleapis.github.io/genai-toolbox/previews/PR-858/samples/snowflake/): How to get started running Toolbox with MCP Inspector and Snowflake as the source.
-  - [snowflake-sql](https://googleapis.github.io/genai-toolbox/previews/PR-858/samples/snowflake/snowflake-sql/): A "snowflake-sql" tool executes a pre-defined SQL statement against a Snowflake database.
 
 ### About
 
