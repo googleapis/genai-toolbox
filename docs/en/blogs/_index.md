@@ -1,6 +1,6 @@
 ---
 title: "Featured Articles"
-weight: 6
+weight: 3
 description: Toolbox Medium Blogs
 manualLink: "https://medium.com/@mcp_toolbox"
 manualLinkTarget: _blank
