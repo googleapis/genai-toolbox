@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,16 +19,18 @@ import { renderSourceDetails } from "./sourcesDisplay.js";
  * These functions run after the browser finishes loading and parsing HTML structure.
  * This ensures that elements can be safely accessed.
  */
-document.addEventListener('DOMContentLoaded', () => {
-    const sourceDisplayArea = document.getElementById('source-display-area');
-    const secondaryPanelContent = document.getElementById('secondary-panel-content');
+document.addEventListener("DOMContentLoaded", () => {
+  const sourceDisplayArea = document.getElementById("source-display-area");
+  const secondaryPanelContent = document.getElementById(
+    "secondary-panel-content"
+  );
 
-    if (!secondaryPanelContent || !sourceDisplayArea) {
-        console.error('Required DOM elements not found.');
-        return;
-    }
+  if (!secondaryPanelContent || !sourceDisplayArea) {
+    console.error("Required DOM elements not found.");
+    return;
+  }
 
-    loadSources(secondaryPanelContent, sourceDisplayArea);
+  loadSources(secondaryPanelContent, sourceDisplayArea);
 });
 
 /**
@@ -38,14 +40,14 @@ document.addEventListener('DOMContentLoaded', () => {
  * @returns {!Promise<void>}
  */
 async function loadSources(secondaryPanelContent, sourceDisplayArea) {
-    secondaryPanelContent.innerHTML = '<p>Fetching sources...</p>';
-    try {
-        const sources = await fetchSources();
-        renderSourceList(sources, secondaryPanelContent, sourceDisplayArea);
-    } catch (error) {
-        console.error('Failed to load sources:', error);
-        secondaryPanelContent.innerHTML = `<p class="error">Failed to load sources: <pre><code>${error}</code></pre></p>`;
-    }
+  secondaryPanelContent.innerHTML = "<p>Fetching sources...</p>";
+  try {
+    const sources = await fetchSources();
+    renderSourceList(sources, secondaryPanelContent, sourceDisplayArea);
+  } catch (error) {
+    console.error("Failed to load sources:", error);
+    secondaryPanelContent.innerHTML = `<p class="error">Failed to load sources: <pre><code>${error}</code></pre></p>`;
+  }
 }
 
 /**
@@ -55,25 +57,27 @@ async function loadSources(secondaryPanelContent, sourceDisplayArea) {
  * @param {!HTMLElement} sourceDisplayArea The element for showing source details.
  */
 function renderSourceList(sources, secondaryPanelContent, sourceDisplayArea) {
-    secondaryPanelContent.innerHTML = '';
+  secondaryPanelContent.innerHTML = "";
 
-    if (!Array.isArray(sources) || sources.length === 0) {
-        secondaryPanelContent.textContent = 'No sources found.';
-        return;
-    }
+  if (!Array.isArray(sources) || sources.length === 0) {
+    secondaryPanelContent.textContent = "No sources found.";
+    return;
+  }
 
-    const ul = document.createElement('ul');
-    sources.forEach(source => {
-        const li = document.createElement('li');
-        const button = document.createElement('button');
-        button.textContent = source.name;
-        button.dataset.sourcename = source.name;
-        button.classList.add('tool-button');
-        button.addEventListener('click', (event) => handleSourceClick(event, secondaryPanelContent, sourceDisplayArea));
-        li.appendChild(button);
-        ul.appendChild(li);
-    });
-    secondaryPanelContent.appendChild(ul);
+  const ul = document.createElement("ul");
+  sources.forEach((source) => {
+    const li = document.createElement("li");
+    const button = document.createElement("button");
+    button.textContent = source.name;
+    button.dataset.sourcename = source.name;
+    button.classList.add("tool-button");
+    button.addEventListener("click", (event) =>
+      handleSourceClick(event, secondaryPanelContent, sourceDisplayArea)
+    );
+    li.appendChild(button);
+    ul.appendChild(li);
+  });
+  secondaryPanelContent.appendChild(ul);
 }
 
 /**
@@ -82,24 +86,30 @@ function renderSourceList(sources, secondaryPanelContent, sourceDisplayArea) {
  * @param {!HTMLElement} secondaryPanelContent The element containing the source list.
  * @param {!HTMLElement} sourceDisplayArea The element for showing source details.
  */
-async function handleSourceClick(event, secondaryPanelContent, sourceDisplayArea) {
-    const sourceName = event.target.dataset.sourcename;
-    if (!sourceName) {
-        return;
-    }
+async function handleSourceClick(
+  event,
+  secondaryPanelContent,
+  sourceDisplayArea
+) {
+  const sourceName = event.target.dataset.sourcename;
+  if (!sourceName) {
+    return;
+  }
 
-    const currentActive = secondaryPanelContent.querySelector('.tool-button.active');
-    if (currentActive) {
-        currentActive.classList.remove('active');
-    }
-    event.target.classList.add('active');
+  const currentActive = secondaryPanelContent.querySelector(
+    ".tool-button.active"
+  );
+  if (currentActive) {
+    currentActive.classList.remove("active");
+  }
+  event.target.classList.add("active");
 
-    sourceDisplayArea.innerHTML = '<p>Loading source details...</p>';
-    try {
-        const source = await fetchSource(sourceName);
-        renderSourceDetails(source, sourceDisplayArea);
-    } catch (error) {
-        console.error(`Failed to load details for source "${sourceName}":`, error);
-        sourceDisplayArea.innerHTML = `<p class="error">Failed to load details for ${sourceName}. ${error.message}</p>`;
-    }
+  sourceDisplayArea.innerHTML = "<p>Loading source details...</p>";
+  try {
+    const source = await fetchSource(sourceName);
+    renderSourceDetails(source, sourceDisplayArea);
+  } catch (error) {
+    console.error(`Failed to load details for source "${sourceName}":`, error);
+    sourceDisplayArea.innerHTML = `<p class="error">Failed to load details for ${sourceName}. ${error.message}</p>`;
+  }
 }

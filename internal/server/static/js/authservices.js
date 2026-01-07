@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,16 +19,20 @@ import { renderAuthServiceDetails } from "./authservicesDisplay.js";
  * These functions run after the browser finishes loading and parsing HTML structure.
  * This ensures that elements can be safely accessed.
  */
-document.addEventListener('DOMContentLoaded', () => {
-    const authServiceDisplayArea = document.getElementById('authservice-display-area');
-    const secondaryPanelContent = document.getElementById('secondary-panel-content');
+document.addEventListener("DOMContentLoaded", () => {
+  const authServiceDisplayArea = document.getElementById(
+    "authservice-display-area"
+  );
+  const secondaryPanelContent = document.getElementById(
+    "secondary-panel-content"
+  );
 
-    if (!secondaryPanelContent || !authServiceDisplayArea) {
-        console.error('Required DOM elements not found.');
-        return;
-    }
+  if (!secondaryPanelContent || !authServiceDisplayArea) {
+    console.error("Required DOM elements not found.");
+    return;
+  }
 
-    loadAuthServices(secondaryPanelContent, authServiceDisplayArea);
+  loadAuthServices(secondaryPanelContent, authServiceDisplayArea);
 });
 
 /**
@@ -38,14 +42,18 @@ document.addEventListener('DOMContentLoaded', () => {
  * @returns {!Promise<void>}
  */
 async function loadAuthServices(secondaryPanelContent, authServiceDisplayArea) {
-    secondaryPanelContent.innerHTML = '<p>Fetching auth services...</p>';
-    try {
-        const services = await fetchAuthServices();
-        renderAuthServiceList(services, secondaryPanelContent, authServiceDisplayArea);
-    } catch (error) {
-        console.error('Failed to load auth services:', error);
-        secondaryPanelContent.innerHTML = `<p class="error">Failed to load auth services: <pre><code>${error}</code></pre></p>`;
-    }
+  secondaryPanelContent.innerHTML = "<p>Fetching auth services...</p>";
+  try {
+    const services = await fetchAuthServices();
+    renderAuthServiceList(
+      services,
+      secondaryPanelContent,
+      authServiceDisplayArea
+    );
+  } catch (error) {
+    console.error("Failed to load auth services:", error);
+    secondaryPanelContent.innerHTML = `<p class="error">Failed to load auth services: <pre><code>${error}</code></pre></p>`;
+  }
 }
 
 /**
@@ -54,26 +62,36 @@ async function loadAuthServices(secondaryPanelContent, authServiceDisplayArea) {
  * @param {!HTMLElement} secondaryPanelContent The element for the auth service list.
  * @param {!HTMLElement} authServiceDisplayArea The element for showing auth service details.
  */
-function renderAuthServiceList(services, secondaryPanelContent, authServiceDisplayArea) {
-    secondaryPanelContent.innerHTML = '';
+function renderAuthServiceList(
+  services,
+  secondaryPanelContent,
+  authServiceDisplayArea
+) {
+  secondaryPanelContent.innerHTML = "";
 
-    if (!Array.isArray(services) || services.length === 0) {
-        secondaryPanelContent.textContent = 'No auth services found.';
-        return;
-    }
+  if (!Array.isArray(services) || services.length === 0) {
+    secondaryPanelContent.textContent = "No auth services found.";
+    return;
+  }
 
-    const ul = document.createElement('ul');
-    services.forEach(service => {
-        const li = document.createElement('li');
-        const button = document.createElement('button');
-        button.textContent = service.name;
-        button.dataset.authservicename = service.name;
-        button.classList.add('tool-button');
-        button.addEventListener('click', (event) => handleAuthServiceClick(event, secondaryPanelContent, authServiceDisplayArea));
-        li.appendChild(button);
-        ul.appendChild(li);
-    });
-    secondaryPanelContent.appendChild(ul);
+  const ul = document.createElement("ul");
+  services.forEach((service) => {
+    const li = document.createElement("li");
+    const button = document.createElement("button");
+    button.textContent = service.name;
+    button.dataset.authservicename = service.name;
+    button.classList.add("tool-button");
+    button.addEventListener("click", (event) =>
+      handleAuthServiceClick(
+        event,
+        secondaryPanelContent,
+        authServiceDisplayArea
+      )
+    );
+    li.appendChild(button);
+    ul.appendChild(li);
+  });
+  secondaryPanelContent.appendChild(ul);
 }
 
 /**
@@ -82,24 +100,33 @@ function renderAuthServiceList(services, secondaryPanelContent, authServiceDispl
  * @param {!HTMLElement} secondaryPanelContent The element containing the auth service list.
  * @param {!HTMLElement} authServiceDisplayArea The element for showing auth service details.
  */
-async function handleAuthServiceClick(event, secondaryPanelContent, authServiceDisplayArea) {
-    const authServiceName = event.target.dataset.authservicename;
-    if (!authServiceName) {
-        return;
-    }
+async function handleAuthServiceClick(
+  event,
+  secondaryPanelContent,
+  authServiceDisplayArea
+) {
+  const authServiceName = event.target.dataset.authservicename;
+  if (!authServiceName) {
+    return;
+  }
 
-    const currentActive = secondaryPanelContent.querySelector('.tool-button.active');
-    if (currentActive) {
-        currentActive.classList.remove('active');
-    }
-    event.target.classList.add('active');
+  const currentActive = secondaryPanelContent.querySelector(
+    ".tool-button.active"
+  );
+  if (currentActive) {
+    currentActive.classList.remove("active");
+  }
+  event.target.classList.add("active");
 
-    authServiceDisplayArea.innerHTML = '<p>Loading auth service details...</p>';
-    try {
-        const service = await fetchAuthService(authServiceName);
-        renderAuthServiceDetails(service, authServiceDisplayArea);
-    } catch (error) {
-        console.error(`Failed to load details for auth service "${authServiceName}":`, error);
-        authServiceDisplayArea.innerHTML = `<p class="error">Failed to load details for ${authServiceName}. ${error.message}</p>`;
-    }
+  authServiceDisplayArea.innerHTML = "<p>Loading auth service details...</p>";
+  try {
+    const service = await fetchAuthService(authServiceName);
+    renderAuthServiceDetails(service, authServiceDisplayArea);
+  } catch (error) {
+    console.error(
+      `Failed to load details for auth service "${authServiceName}":`,
+      error
+    );
+    authServiceDisplayArea.innerHTML = `<p class="error">Failed to load details for ${authServiceName}. ${error.message}</p>`;
+  }
 }

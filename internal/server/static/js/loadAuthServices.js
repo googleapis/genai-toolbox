@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,21 +17,25 @@
  * @returns {!Promise<!Array<{name: string, kind: string}>>}
  */
 export async function fetchAuthServices() {
-    const response = await fetch('/api/authservice');
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const apiResponse = await response.json();
-    if (!apiResponse || typeof apiResponse.authServices !== 'object' || apiResponse.authServices === null) {
-        throw new Error('Invalid response format from auth service API.');
-    }
+  const response = await fetch("/api/authservice");
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const apiResponse = await response.json();
+  if (
+    !apiResponse ||
+    typeof apiResponse.authServices !== "object" ||
+    apiResponse.authServices === null
+  ) {
+    throw new Error("Invalid response format from auth service API.");
+  }
 
-    return Object.values(apiResponse.authServices).map(service => ({
-        name: service.name || '',
-        kind: service.kind || '',
-        headerName: service.headerName || '',
-        tools: Array.isArray(service.tools) ? service.tools : [],
-    }));
+  return Object.values(apiResponse.authServices).map((service) => ({
+    name: service.name || "",
+    kind: service.kind || "",
+    headerName: service.headerName || "",
+    tools: Array.isArray(service.tools) ? service.tools : [],
+  }));
 }
 
 /**
@@ -40,23 +44,31 @@ export async function fetchAuthServices() {
  * @returns {!Promise<{name: string, kind: string}>}
  */
 export async function fetchAuthService(authServiceName) {
-    const response = await fetch(`/api/authservice/${encodeURIComponent(authServiceName)}`);
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const apiResponse = await response.json();
-    if (!apiResponse || typeof apiResponse.authServices !== 'object' || apiResponse.authServices === null) {
-        throw new Error('Invalid response format from auth service API.');
-    }
-    const service = apiResponse.authServices[authServiceName];
-    if (!service) {
-        throw new Error(`Auth service "${authServiceName}" not found in API response.`);
-    }
+  const response = await fetch(
+    `/api/authservice/${encodeURIComponent(authServiceName)}`
+  );
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const apiResponse = await response.json();
+  if (
+    !apiResponse ||
+    typeof apiResponse.authServices !== "object" ||
+    apiResponse.authServices === null
+  ) {
+    throw new Error("Invalid response format from auth service API.");
+  }
+  const service = apiResponse.authServices[authServiceName];
+  if (!service) {
+    throw new Error(
+      `Auth service "${authServiceName}" not found in API response.`
+    );
+  }
 
-    return {
-        name: service.name || authServiceName,
-        kind: service.kind || '',
-        headerName: service.headerName || '',
-        tools: Array.isArray(service.tools) ? service.tools : [],
-    };
+  return {
+    name: service.name || authServiceName,
+    kind: service.kind || "",
+    headerName: service.headerName || "",
+    tools: Array.isArray(service.tools) ? service.tools : [],
+  };
 }

@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,19 +17,23 @@
  * @returns {!Promise<!Array<{name: string, kind: string}>>}
  */
 export async function fetchSources() {
-    const response = await fetch('/api/source');
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const apiResponse = await response.json();
-    if (!apiResponse || typeof apiResponse.sources !== 'object' || apiResponse.sources === null) {
-        throw new Error('Invalid response format from source API.');
-    }
+  const response = await fetch("/api/source");
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const apiResponse = await response.json();
+  if (
+    !apiResponse ||
+    typeof apiResponse.sources !== "object" ||
+    apiResponse.sources === null
+  ) {
+    throw new Error("Invalid response format from source API.");
+  }
 
-    return Object.values(apiResponse.sources).map(source => ({
-        name: source.name || '',
-        kind: source.kind || '',
-    }));
+  return Object.values(apiResponse.sources).map((source) => ({
+    name: source.name || "",
+    kind: source.kind || "",
+  }));
 }
 
 /**
@@ -38,22 +42,26 @@ export async function fetchSources() {
  * @returns {!Promise<{name: string, kind: string}>}
  */
 export async function fetchSource(sourceName) {
-    const response = await fetch(`/api/source/${encodeURIComponent(sourceName)}`);
-    if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const apiResponse = await response.json();
-    if (!apiResponse || typeof apiResponse.sources !== 'object' || apiResponse.sources === null) {
-        throw new Error('Invalid response format from source API.');
-    }
-    const source = apiResponse.sources[sourceName];
-    if (!source) {
-        throw new Error(`Source "${sourceName}" not found in API response.`);
-    }
+  const response = await fetch(`/api/source/${encodeURIComponent(sourceName)}`);
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  const apiResponse = await response.json();
+  if (
+    !apiResponse ||
+    typeof apiResponse.sources !== "object" ||
+    apiResponse.sources === null
+  ) {
+    throw new Error("Invalid response format from source API.");
+  }
+  const source = apiResponse.sources[sourceName];
+  if (!source) {
+    throw new Error(`Source "${sourceName}" not found in API response.`);
+  }
 
-    return {
-        name: source.name || sourceName,
-        kind: source.kind || '',
-        config: source.config || {},
-    };
+  return {
+    name: source.name || sourceName,
+    kind: source.kind || "",
+    config: source.config || {},
+  };
 }

@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,41 +18,43 @@
  * @param {!HTMLElement} container The container to render into.
  */
 export function renderAuthServiceDetails(service, container) {
-    container.innerHTML = '';
+  container.innerHTML = "";
 
-    const wrapper = document.createElement('div');
-    wrapper.className = 'tool-box';
+  const wrapper = document.createElement("div");
+  wrapper.className = "tool-box";
 
-    const title = document.createElement('h3');
-    title.textContent = service.name || 'Unnamed auth service';
+  const title = document.createElement("h3");
+  title.textContent = service.name || "Unnamed auth service";
 
-    const kind = document.createElement('p');
-    kind.innerHTML = `<strong>Kind:</strong> ${service.kind || 'unknown'}`;
+  const kind = document.createElement("p");
+  kind.innerHTML = `<strong>Kind:</strong> ${service.kind || "unknown"}`;
 
-    const headerName = document.createElement('p');
-    headerName.innerHTML = `<strong>Header:</strong> ${service.headerName || (service.name ? `${service.name}_token` : 'unknown')}`;
+  const headerName = document.createElement("p");
+  headerName.innerHTML = `<strong>Header:</strong> ${
+    service.headerName || (service.name ? `${service.name}_token` : "unknown")
+  }`;
 
-    const toolsTitle = document.createElement('h5');
-    toolsTitle.textContent = 'Used by tools';
+  const toolsTitle = document.createElement("h5");
+  toolsTitle.textContent = "Used by tools";
 
-    const toolsList = document.createElement('ul');
-    const tools = Array.isArray(service.tools) ? service.tools : [];
-    if (tools.length === 0) {
-        const emptyItem = document.createElement('li');
-        emptyItem.textContent = 'No tools reference this auth service.';
-        toolsList.appendChild(emptyItem);
-    } else {
-        tools.forEach(toolName => {
-            const item = document.createElement('li');
-            item.textContent = toolName;
-            toolsList.appendChild(item);
-        });
-    }
+  const toolsList = document.createElement("ul");
+  const tools = Array.isArray(service.tools) ? service.tools : [];
+  if (tools.length === 0) {
+    const emptyItem = document.createElement("li");
+    emptyItem.textContent = "No tools reference this auth service.";
+    toolsList.appendChild(emptyItem);
+  } else {
+    tools.forEach((toolName) => {
+      const item = document.createElement("li");
+      item.textContent = toolName;
+      toolsList.appendChild(item);
+    });
+  }
 
-    wrapper.appendChild(title);
-    wrapper.appendChild(kind);
-    wrapper.appendChild(headerName);
-    wrapper.appendChild(toolsTitle);
-    wrapper.appendChild(toolsList);
-    container.appendChild(wrapper);
+  wrapper.appendChild(title);
+  wrapper.appendChild(kind);
+  wrapper.appendChild(headerName);
+  wrapper.appendChild(toolsTitle);
+  wrapper.appendChild(toolsList);
+  container.appendChild(wrapper);
 }
