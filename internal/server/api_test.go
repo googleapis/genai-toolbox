@@ -432,8 +432,8 @@ func TestAuthServiceListEndpoint(t *testing.T) {
 	if !ok {
 		t.Fatalf("auth-a not found in response")
 	}
-	if authAInfo.HeaderName != "auth-a_token" {
-		t.Fatalf("unexpected headerName: want %q, got %q", "auth-a_token", authAInfo.HeaderName)
+	if authAInfo.HeaderName != "auth-a" {
+		t.Fatalf("unexpected headerName: want %q, got %q", "auth-a", authAInfo.HeaderName)
 	}
 	if len(authAInfo.Tools) != 1 || authAInfo.Tools[0] != "tool-auth-a" {
 		t.Fatalf("unexpected tools list for auth-a: %v", authAInfo.Tools)
@@ -480,8 +480,8 @@ func TestAuthServiceGetEndpoint(t *testing.T) {
 	if !ok {
 		t.Fatalf("auth-a not found in response")
 	}
-	if authAInfo.HeaderName != "auth-a_token" {
-		t.Fatalf("unexpected headerName: want %q, got %q", "auth-a_token", authAInfo.HeaderName)
+	if authAInfo.HeaderName != "auth-a" {
+		t.Fatalf("unexpected headerName: want %q, got %q", "auth-a", authAInfo.HeaderName)
 	}
 	if len(authAInfo.Tools) != 1 || authAInfo.Tools[0] != "tool-auth-a" {
 		t.Fatalf("unexpected tools list for auth-a: %v", authAInfo.Tools)

@@ -42,7 +42,7 @@ func authServiceListHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	defer span.End()
 
 	authServicesMap := s.ResourceMgr.GetAuthServiceMap()
-	usageByAuthService := authServiceToolUsage(s.ResourceMgr.GetToolsMap())
+	usageByAuthService := toolsForAuthServices(s.ResourceMgr.GetToolsMap())
 	resp := AuthServiceListResponse{
 		AuthServices: make(map[string]AuthServiceInfo, len(authServicesMap)),
 	}
@@ -71,21 +71,21 @@ func authServiceGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
-	usageByAuthService := authServiceToolUsage(s.ResourceMgr.GetToolsMap())
+	toolsMap := s.ResourceMgr.GetToolsMap()
 	resp := AuthServiceListResponse{
 		AuthServices: map[string]AuthServiceInfo{
 			authServiceName: {
 				Name:       authService.GetName(),
 				Kind:       authService.AuthServiceKind(),
 				HeaderName: authService.GetName(),
-				Tools:      usageByAuthService[authServiceName],
+				Tools:      toolsForAuthService(toolsMap, authServiceName),
 			},
 		},
 	}
 	render.JSON(w, r, resp)
 }
 
-func authServiceToolUsage(toolsMap map[string]tools.Tool) map[string][]string {
+func toolsForAuthServices(toolsMap map[string]tools.Tool) map[string][]string {
 	usage := make(map[string]map[string]bool)
 
 	for toolName, tool := range toolsMap {
@@ -120,4 +120,28 @@ func addAuthServiceUsage(usage map[string]map[string]bool, authName, toolName st
 		usage[authName] = make(map[string]bool)
 	}
 	usage[authName][toolName] = true
+}
+
+func toolsForAuthService(toolsMap map[string]tools.Tool, authServiceName string) []string {
+	toolsSet := make(map[string]bool, len(toolsMap))
+	for toolName, tool := range toolsMap {
+		manifest := tool.Manifest()
+		if slices.Contains(manifest.AuthRequired, authServiceName) {
+			toolsSet[toolName] = true
+			continue
+		}
+		for _, param := range manifest.Parameters {
+			if slices.Contains(param.AuthServices, authServiceName) {
+				toolsSet[toolName] = true
+				break
+			}
+		}
+	}
+
+	toolsList := make([]string, 0, len(toolsSet))
+	for toolName := range toolsSet {
+		toolsList = append(toolsList, toolName)
+	}
+	slices.Sort(toolsList)
+	return toolsList
 }
