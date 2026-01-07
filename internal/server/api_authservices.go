@@ -50,7 +50,7 @@ func authServiceListHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		resp.AuthServices[name] = AuthServiceInfo{
 			Name:       authService.GetName(),
 			Kind:       authService.AuthServiceKind(),
-			HeaderName: authService.GetName() + "_token",
+			HeaderName: authService.GetName(),
 			Tools:      usageByAuthService[name],
 		}
 	}
@@ -77,7 +77,7 @@ func authServiceGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			authServiceName: {
 				Name:       authService.GetName(),
 				Kind:       authService.AuthServiceKind(),
-				HeaderName: authService.GetName() + "_token",
+				HeaderName: authService.GetName(),
 				Tools:      usageByAuthService[authServiceName],
 			},
 		},
