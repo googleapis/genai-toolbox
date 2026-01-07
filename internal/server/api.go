@@ -25,6 +25,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/render"
+	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/attribute"
@@ -58,8 +59,9 @@ func apiRouter(s *Server) (chi.Router, error) {
 }
 
 type SourceInfo struct {
-	Name string `json:"name"`
-	Kind string `json:"kind"`
+	Name   string         `json:"name"`
+	Kind   string         `json:"kind"`
+	Config map[string]any `json:"config,omitempty"`
 }
 
 type SourceListResponse struct {
@@ -164,6 +166,46 @@ func addAuthServiceUsage(usage map[string]map[string]bool, authName, toolName st
 	usage[authName][toolName] = true
 }
 
+func sourceConfigToMap(cfg any) (map[string]any, error) {
+	raw, err := yaml.Marshal(cfg)
+	if err != nil {
+		return nil, err
+	}
+	var configMap map[string]any
+	if err := yaml.Unmarshal(raw, &configMap); err != nil {
+		return nil, err
+	}
+	return configMap, nil
+}
+
+func redactSensitiveValues(v any) {
+	switch typed := v.(type) {
+	case map[string]any:
+		for k, val := range typed {
+			if isSensitiveKey(k) {
+				typed[k] = "[REDACTED]"
+				continue
+			}
+			redactSensitiveValues(val)
+		}
+	case []any:
+		for i := range typed {
+			redactSensitiveValues(typed[i])
+		}
+	}
+}
+
+func isSensitiveKey(key string) bool {
+	lower := strings.ToLower(key)
+	sensitive := []string{"password", "secret", "token", "key", "credential"}
+	for _, keyword := range sensitive {
+		if strings.Contains(lower, keyword) {
+			return true
+		}
+	}
+	return false
+}
+
 // sourceListHandler handles requests for listing all sources.
 func sourceListHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/source/list")
@@ -197,11 +239,20 @@ func sourceGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
 		return
 	}
+	configMap, err := sourceConfigToMap(source.ToConfig())
+	if err != nil {
+		errMsg := fmt.Errorf("unable to serialize source %q config: %w", sourceName, err)
+		s.logger.DebugContext(ctx, errMsg.Error())
+		_ = render.Render(w, r, newErrResponse(errMsg, http.StatusInternalServerError))
+		return
+	}
+	redactSensitiveValues(configMap)
 	resp := SourceListResponse{
 		Sources: map[string]SourceInfo{
 			sourceName: {
-				Name: sourceName,
-				Kind: source.SourceKind(),
+				Name:   sourceName,
+				Kind:   source.SourceKind(),
+				Config: configMap,
 			},
 		},
 	}

@@ -338,7 +338,12 @@ func TestSourceListEndpoint(t *testing.T) {
 }
 
 func TestSourceGetEndpoint(t *testing.T) {
-	sourceA := &MockSource{Name: "source-a", Kind: "postgres"}
+	sourceA := &MockSource{
+		Name:     "source-a",
+		Kind:     "postgres",
+		Host:     "127.0.0.1",
+		Password: "secret",
+	}
 	sourcesMap := map[string]sources.Source{
 		"source-a": sourceA,
 	}
@@ -366,8 +371,18 @@ func TestSourceGetEndpoint(t *testing.T) {
 		t.Fatalf("unable to parse SourceListResponse: %s", err)
 	}
 
-	if _, ok := m.Sources["source-a"]; !ok {
+	sourceInfo, ok := m.Sources["source-a"]
+	if !ok {
 		t.Fatalf("source-a not found in response")
+	}
+	if sourceInfo.Config == nil {
+		t.Fatalf("expected config for source-a, got nil")
+	}
+	if host, ok := sourceInfo.Config["host"]; !ok || host != "127.0.0.1" {
+		t.Fatalf("expected host to be %q, got %v", "127.0.0.1", host)
+	}
+	if password, ok := sourceInfo.Config["password"]; !ok || password != "[REDACTED]" {
+		t.Fatalf("expected password to be redacted, got %v", password)
 	}
 
 	resp, _, err = runRequest(ts, http.MethodGet, "/source/unknown-source", nil, nil)

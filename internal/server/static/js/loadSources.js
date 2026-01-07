@@ -54,5 +54,6 @@ export async function fetchSource(sourceName) {
     return {
         name: source.name || sourceName,
         kind: source.kind || '',
+        config: source.config || {},
     };
 }

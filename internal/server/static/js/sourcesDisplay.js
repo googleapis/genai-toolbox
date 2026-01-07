@@ -29,7 +29,40 @@ export function renderSourceDetails(source, container) {
     const kind = document.createElement('p');
     kind.innerHTML = `<strong>Kind:</strong> ${source.kind || 'unknown'}`;
 
+    const configTitle = document.createElement('h5');
+    configTitle.textContent = 'Configuration';
+
+    const configList = document.createElement('ul');
+    const configEntries = source.config && typeof source.config === 'object' ? Object.entries(source.config) : [];
+    if (configEntries.length === 0) {
+        const emptyItem = document.createElement('li');
+        emptyItem.textContent = 'No configuration details available.';
+        configList.appendChild(emptyItem);
+    } else {
+        configEntries.forEach(([key, value]) => {
+            const item = document.createElement('li');
+            item.textContent = `${key}: ${formatConfigValue(value)}`;
+            configList.appendChild(item);
+        });
+    }
+
     wrapper.appendChild(title);
     wrapper.appendChild(kind);
+    wrapper.appendChild(configTitle);
+    wrapper.appendChild(configList);
     container.appendChild(wrapper);
+}
+
+function formatConfigValue(value) {
+    if (value === null || value === undefined) {
+        return 'null';
+    }
+    if (typeof value === 'object') {
+        try {
+            return JSON.stringify(value);
+        } catch (e) {
+            return '[object]';
+        }
+    }
+    return String(value);
 }
