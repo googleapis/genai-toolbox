@@ -534,10 +534,7 @@ func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, state
 	}
 
 	var out []any
-	for {
-		if s.MaxQueryResultRows > 0 && len(out) >= s.MaxQueryResultRows {
-			break
-		}
+	for s.MaxQueryResultRows <= 0 || len(out) < s.MaxQueryResultRows {
 		var val []bigqueryapi.Value
 		err = it.Next(&val)
 		if err == iterator.Done {

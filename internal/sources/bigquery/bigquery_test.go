@@ -21,7 +21,7 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources/bigquery"
@@ -227,7 +227,7 @@ func TestInitialize_MaxQueryResultRows(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	ctx = util.WithUserAgent(ctx, "test-agent")
-	tracer := trace.NewNoopTracerProvider().Tracer("")
+	tracer := noop.NewTracerProvider().Tracer("")
 
 	tcs := []struct {
 		desc string
