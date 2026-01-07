@@ -49,6 +49,7 @@ var expectedToolSources = []string{
 	"postgres",
 	"serverless-spark",
 	"singlestore",
+	"snowflake",
 	"spanner-postgres",
 	"spanner",
 	"sqlite",

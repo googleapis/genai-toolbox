@@ -135,3 +135,8 @@ tools:
             - name: table_names
               type: string
               description: "Optional: A comma-separated list of table names. If empty, details for all tables in the specified database and schema will be listed."
+
+toolsets:
+    snowflake_tools:
+        - execute_sql
+        - list_tables

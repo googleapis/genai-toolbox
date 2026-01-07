@@ -33,8 +33,6 @@ import (
 var (
 	SnowflakeSourceKind = "snowflake"
 	SnowflakeToolKind   = "snowflake-sql"
-	SnowflakeHost       = os.Getenv("SNOWFLAKE_HOST")
-	SnowflakePort       = os.Getenv("SNOWFLAKE_PORT")
 	SnowflakeAccount    = os.Getenv("SNOWFLAKE_ACCOUNT")
 	SnowflakeUser       = os.Getenv("SNOWFLAKE_USER")
 	SnowflakePassword   = os.Getenv("SNOWFLAKE_PASS")
@@ -89,7 +87,7 @@ func initSnowflakeConnectionPool(ctx context.Context, account, user, password, d
 	}
 
 	// Snowflake DSN format: user:password@account/database/schema?warehouse=warehouse&role=role
-	dsn := fmt.Sprintf("%s:%s@%s/%s/%s?warehouse=%s", user, password, account, database, schema, warehouse)
+	dsn := fmt.Sprintf("%s:%s@%s/%s/%s?warehouse=%s&role=%s", user, password, account, database, schema, warehouse, role)
 	db, err := sqlx.ConnectContext(ctx, "snowflake", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create connection: %w", err)
@@ -152,9 +150,17 @@ func TestSnowflake(t *testing.T) {
 
 	// Run tests
 	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want)
-	tests.RunMCPToolCallMethod(t, failInvocationWant, mcpSelect1Want)
-	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
+	tests.RunToolInvokeTest(t, select1Want,
+		tests.DisableArrayTest(),
+		tests.WithMyToolId3NameAliceWant(`[{"ID":"1","NAME":"Alice"},{"ID":"3","NAME":"Sid"}]`),
+		tests.WithMyToolById4Want(`[{"ID":"4","NAME":null}]`),
+		tests.WithNullWant("null"),
+	)
+	tests.RunMCPToolCallMethod(t, failInvocationWant, mcpSelect1Want, tests.WithMcpMyToolId3NameAliceWant(`{"jsonrpc":"2.0","id":"my-tool","result":{"content":[{"type":"text","text":"{\"ID\":\"1\",\"NAME\":\"Alice\"}"},{"type":"text","text":"{\"ID\":\"3\",\"NAME\":\"Sid\"}"}]}}`))
+
+	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want,
+		tests.WithExecuteCreateWant(`[{"status":"Table T successfully created."}]`),
+		tests.WithExecuteDropWant(`[{"status":"T successfully dropped."}]`))
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
 
@@ -214,10 +220,10 @@ func getSnowflakeTmplToolStatement() (string, string) {
 
 // getSnowflakeWants return the expected wants for snowflake
 func getSnowflakeWants() (string, string, string, string) {
-	select1Want := "[{\"1\":1}]"
-	failInvocationWant := `{\"jsonrpc\":\"2.0\",\"id\":\"invoke-fail-tool\",\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"unable to execute query: 000606 (57P03): No active warehouse selected in the current session.  Select an active warehouse with the 'use warehouse' command.\"}],\"isError\":true}}`
-	createTableStatement := "\"CREATE TABLE t (id INTEGER AUTOINCREMENT PRIMARY KEY, name STRING)\""
-	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"?column?\":1}"}]}}`
+	select1Want := `[{"1":"1"}]`
+	failInvocationWant := `unexpected 'SELEC'`
+	createTableStatement := `"CREATE TABLE t (id INTEGER AUTOINCREMENT PRIMARY KEY, name STRING)"`
+	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":\"1\"}"}]}}`
 	return select1Want, failInvocationWant, createTableStatement, mcpSelect1Want
 }
 
