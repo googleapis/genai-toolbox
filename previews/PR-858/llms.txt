@@ -123,6 +123,7 @@ List of reference documentation for resources in Toolbox.
   - [Redis](https://googleapis.github.io/genai-toolbox/previews/PR-858/resources/tools/redis/): Tools that work with Redis Sources.
   - [Serverless for Apache Spark](https://googleapis.github.io/genai-toolbox/previews/PR-858/resources/tools/serverless-spark/): Tools that work with Google Cloud Serverless for Apache Spark Sources.
   - [SingleStore](https://googleapis.github.io/genai-toolbox/previews/PR-858/resources/tools/singlestore/): Tools that work with SingleStore Sources
+  - [Snowflake](https://googleapis.github.io/genai-toolbox/previews/PR-858/resources/tools/snowflake/): Tools that work with Snowflake Sources.
   - [Spanner](https://googleapis.github.io/genai-toolbox/previews/PR-858/resources/tools/spanner/): Tools that work with Spanner Sources.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-858/resources/tools/mssql/): Tools that work with SQL Server Sources, such as CloudSQL for SQL Server.
   - [SQLite](https://googleapis.github.io/genai-toolbox/previews/PR-858/resources/tools/sqlite/): Tools that work with SQLite Sources.

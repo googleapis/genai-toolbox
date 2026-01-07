@@ -1138,7 +1138,7 @@ Run parameterized SQL queries in SingleStore.&lt;/p></description></item><item><
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
 &lt;ul>
 &lt;li>
-&lt;p>&lt;a href="../tools/snowflake/snowflake-sql.md">&lt;code>snowflake-sql&lt;/code>&lt;/a>&lt;br>
+&lt;p>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-858/resources/tools/snowflake/snowflake-sql/">&lt;code>snowflake-sql&lt;/code>&lt;/a>&lt;br>
 Execute SQL queries as prepared statements in Snowflake.&lt;/p>
 &lt;/li>
 &lt;li>

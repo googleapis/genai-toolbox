@@ -11139,6 +11139,11 @@ Tools that work with SingleStore Sources
 
 
 
+# Snowflake
+Tools that work with Snowflake Sources.
+
+
+
 # Spanner
 Tools that work with Spanner Sources.
 
