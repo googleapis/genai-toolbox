@@ -64,6 +64,21 @@ function getToolInstructions() {
     `;
 }
 
+function getSourceInstructions() {
+    return `
+      <div class="resource-instructions">
+        <h1 class="resource-title">Sources</h1>
+        <p class="resource-intro">To inspect a source, please click on one of your sources to the left.</p>
+        <h2 class="resource-subtitle">What are Sources?</h2>
+        <p class="resource-description">
+          Sources define the data backends that tools connect to, such as databases or APIs.
+          You can define Sources as a map in the <code>sources</code> section of your <code>tools.yaml</code> file.
+        </p>
+        <a href="https://googleapis.github.io/genai-toolbox/resources/sources/" class="btn btn--externalDocs" target="_blank" rel="noopener noreferrer">Sources Documentation</a>
+      </div>
+    `;
+}
+
 function getToolsetInstructions() {
     return `
       <div class="resource-instructions">

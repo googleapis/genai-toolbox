@@ -22,6 +22,7 @@ func webRouter() (chi.Router, error) {
 
 	// direct routes for html pages to provide clean URLs
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) { serveHTML(w, r, "static/index.html") })
+	r.Get("/sources", func(w http.ResponseWriter, r *http.Request) { serveHTML(w, r, "static/sources.html") })
 	r.Get("/tools", func(w http.ResponseWriter, r *http.Request) { serveHTML(w, r, "static/tools.html") })
 	r.Get("/toolsets", func(w http.ResponseWriter, r *http.Request) { serveHTML(w, r, "static/toolsets.html") })
 

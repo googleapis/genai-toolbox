@@ -24,21 +24,26 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/server/resources"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/telemetry"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // fakeVersionString is used as a temporary version string in tests
 const fakeVersionString = "0.0.0"
 
 var (
-	_ tools.Tool     = MockTool{}
-	_ prompts.Prompt = MockPrompt{}
+	_ tools.Tool       = MockTool{}
+	_ prompts.Prompt   = MockPrompt{}
+	_ sources.Source   = &MockSource{}
+	_ auth.AuthService = &MockAuthService{}
 )
 
 // MockTool is used to mock tools in tests
@@ -46,9 +51,83 @@ type MockTool struct {
 	Name                         string
 	Description                  string
 	Params                       []parameters.Parameter
+	AuthRequired                 []string
 	manifest                     tools.Manifest
 	unauthorized                 bool
 	requiresClientAuthrorization bool
+}
+
+// MockSourceConfig is used to mock sources in tests.
+type MockSourceConfig struct {
+	Name     string `yaml:"name"`
+	Kind     string `yaml:"kind"`
+	Host     string `yaml:"host"`
+	Password string `yaml:"password"`
+}
+
+func (c MockSourceConfig) SourceConfigKind() string {
+	return c.Kind
+}
+
+func (c MockSourceConfig) Initialize(context.Context, trace.Tracer) (sources.Source, error) {
+	return &MockSource{Name: c.Name, Kind: c.Kind, Host: c.Host, Password: c.Password}, nil
+}
+
+// MockSource is used to mock sources in tests.
+type MockSource struct {
+	Name     string
+	Kind     string
+	Host     string
+	Password string
+}
+
+func (s *MockSource) SourceKind() string {
+	return s.Kind
+}
+
+func (s *MockSource) ToConfig() sources.SourceConfig {
+	return MockSourceConfig{
+		Name:     s.Name,
+		Kind:     s.Kind,
+		Host:     s.Host,
+		Password: s.Password,
+	}
+}
+
+// MockAuthServiceConfig is used to mock auth services in tests.
+type MockAuthServiceConfig struct {
+	Name string
+	Kind string
+}
+
+func (c MockAuthServiceConfig) AuthServiceConfigKind() string {
+	return c.Kind
+}
+
+func (c MockAuthServiceConfig) Initialize() (auth.AuthService, error) {
+	return &MockAuthService{Name: c.Name, Kind: c.Kind}, nil
+}
+
+// MockAuthService is used to mock auth services in tests.
+type MockAuthService struct {
+	Name string
+	Kind string
+}
+
+func (s *MockAuthService) AuthServiceKind() string {
+	return s.Kind
+}
+
+func (s *MockAuthService) GetName() string {
+	return s.Name
+}
+
+func (s *MockAuthService) GetClaimsFromHeader(context.Context, http.Header) (map[string]any, error) {
+	return nil, nil
+}
+
+func (s *MockAuthService) ToConfig() auth.AuthServiceConfig {
+	return MockAuthServiceConfig{Name: s.Name, Kind: s.Kind}
 }
 
 func (t MockTool) Invoke(context.Context, tools.SourceProvider, parameters.ParamValues, tools.AccessToken) (any, error) {
@@ -74,7 +153,7 @@ func (t MockTool) Manifest() tools.Manifest {
 	for _, p := range t.Params {
 		pMs = append(pMs, p.Manifest())
 	}
-	return tools.Manifest{Description: t.Description, Parameters: pMs}
+	return tools.Manifest{Description: t.Description, Parameters: pMs, AuthRequired: t.AuthRequired}
 }
 
 func (t MockTool) Authorized(verifiedAuthServices []string) bool {
@@ -262,6 +341,20 @@ func setUpResources(t *testing.T, mockTools []MockTool, mockPrompts []MockPrompt
 
 // setUpServer create a new server with tools, toolsets, prompts, and promptsets.
 func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, toolsets map[string]tools.Toolset, prompts map[string]prompts.Prompt, promptsets map[string]prompts.Promptset) (chi.Router, func()) {
+	return setUpServerWithResources(t, router, nil, nil, tools, toolsets, prompts, promptsets)
+}
+
+// setUpServerWithResources create a new server with sources, auth services, tools, toolsets, prompts, and promptsets.
+func setUpServerWithResources(
+	t *testing.T,
+	router string,
+	sourcesMap map[string]sources.Source,
+	authServices map[string]auth.AuthService,
+	tools map[string]tools.Tool,
+	toolsets map[string]tools.Toolset,
+	prompts map[string]prompts.Prompt,
+	promptsets map[string]prompts.Promptset,
+) (chi.Router, func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	testLogger, err := log.NewStdLogger(os.Stdout, os.Stderr, "info")
@@ -281,7 +374,7 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := resources.NewResourceManager(nil, nil, nil, tools, toolsets, prompts, promptsets)
+	resourceManager := resources.NewResourceManager(sourcesMap, authServices, nil, tools, toolsets, prompts, promptsets)
 
 	server := Server{
 		version:         fakeVersionString,

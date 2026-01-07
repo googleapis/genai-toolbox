@@ -23,6 +23,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
@@ -293,5 +294,86 @@ func TestToolInvokeEndpoint(t *testing.T) {
 				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
 			}
 		})
+	}
+}
+
+func TestSourceListEndpoint(t *testing.T) {
+	sourceA := &MockSource{Name: "source-a", Kind: "postgres"}
+	sourceB := &MockSource{Name: "source-b", Kind: "mysql"}
+	sourcesMap := map[string]sources.Source{
+		"source-a": sourceA,
+		"source-b": sourceB,
+	}
+
+	r, shutdown := setUpServerWithResources(t, "api", sourcesMap, nil, nil, nil, nil, nil)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	resp, body, err := runRequest(ts, http.MethodGet, "/source", nil, nil)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+
+	if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
+		t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("unexpected status code: want %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	var m SourceListResponse
+	if err := json.Unmarshal(body, &m); err != nil {
+		t.Fatalf("unable to parse SourceListResponse: %s", err)
+	}
+
+	if _, ok := m.Sources["source-a"]; !ok {
+		t.Fatalf("source-a not found in response")
+	}
+	if _, ok := m.Sources["source-b"]; !ok {
+		t.Fatalf("source-b not found in response")
+	}
+}
+
+func TestSourceGetEndpoint(t *testing.T) {
+	sourceA := &MockSource{Name: "source-a", Kind: "postgres"}
+	sourcesMap := map[string]sources.Source{
+		"source-a": sourceA,
+	}
+
+	r, shutdown := setUpServerWithResources(t, "api", sourcesMap, nil, nil, nil, nil, nil)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	resp, body, err := runRequest(ts, http.MethodGet, "/source/source-a", nil, nil)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+
+	if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
+		t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("unexpected status code: want %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	var m SourceListResponse
+	if err := json.Unmarshal(body, &m); err != nil {
+		t.Fatalf("unable to parse SourceListResponse: %s", err)
+	}
+
+	if _, ok := m.Sources["source-a"]; !ok {
+		t.Fatalf("source-a not found in response")
+	}
+
+	resp, _, err = runRequest(ts, http.MethodGet, "/source/unknown-source", nil, nil)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+	if resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("unexpected status code for missing source: want %d, got %d", http.StatusNotFound, resp.StatusCode)
 	}
 }

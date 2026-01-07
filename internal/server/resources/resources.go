@@ -139,6 +139,16 @@ func (r *ResourceManager) GetEmbeddingModelMap() map[string]embeddingmodels.Embe
 	return copiedMap
 }
 
+func (r *ResourceManager) GetSourcesMap() map[string]sources.Source {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	copiedMap := make(map[string]sources.Source, len(r.sources))
+	for k, v := range r.sources {
+		copiedMap[k] = v
+	}
+	return copiedMap
+}
+
 func (r *ResourceManager) GetToolsMap() map[string]tools.Tool {
 	r.mu.RLock()
 	defer r.mu.RUnlock()

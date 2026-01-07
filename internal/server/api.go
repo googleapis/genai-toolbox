@@ -39,6 +39,9 @@ func apiRouter(s *Server) (chi.Router, error) {
 	r.Use(middleware.StripSlashes)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
+	r.Get("/source", func(w http.ResponseWriter, r *http.Request) { sourceListHandler(s, w, r) })
+	r.Get("/source/{sourceName}", func(w http.ResponseWriter, r *http.Request) { sourceGetHandler(s, w, r) })
+
 	r.Get("/toolset", func(w http.ResponseWriter, r *http.Request) { toolsetHandler(s, w, r) })
 	r.Get("/toolset/{toolsetName}", func(w http.ResponseWriter, r *http.Request) { toolsetHandler(s, w, r) })
 
@@ -48,6 +51,59 @@ func apiRouter(s *Server) (chi.Router, error) {
 	})
 
 	return r, nil
+}
+
+type SourceInfo struct {
+	Name string `json:"name"`
+	Kind string `json:"kind"`
+}
+
+type SourceListResponse struct {
+	Sources map[string]SourceInfo `json:"sources"`
+}
+
+// sourceListHandler handles requests for listing all sources.
+func sourceListHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/source/list")
+	r = r.WithContext(ctx)
+	defer span.End()
+
+	sourcesMap := s.ResourceMgr.GetSourcesMap()
+	resp := SourceListResponse{
+		Sources: make(map[string]SourceInfo, len(sourcesMap)),
+	}
+	for name, source := range sourcesMap {
+		resp.Sources[name] = SourceInfo{
+			Name: name,
+			Kind: source.SourceKind(),
+		}
+	}
+	render.JSON(w, r, resp)
+}
+
+// sourceGetHandler handles requests for a single source.
+func sourceGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/source/get")
+	r = r.WithContext(ctx)
+	defer span.End()
+
+	sourceName := chi.URLParam(r, "sourceName")
+	source, ok := s.ResourceMgr.GetSource(sourceName)
+	if !ok {
+		err := fmt.Errorf("source %q does not exist", sourceName)
+		s.logger.DebugContext(ctx, err.Error())
+		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
+		return
+	}
+	resp := SourceListResponse{
+		Sources: map[string]SourceInfo{
+			sourceName: {
+				Name: sourceName,
+				Kind: source.SourceKind(),
+			},
+		},
+	}
+	render.JSON(w, r, resp)
 }
 
 // toolsetHandler handles the request for information about a Toolset.
