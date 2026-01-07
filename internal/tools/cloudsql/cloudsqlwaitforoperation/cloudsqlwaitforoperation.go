@@ -16,18 +16,15 @@ package cloudsqlwaitforoperation
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"regexp"
-	"strings"
-	"text/template"
 	"time"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"google.golang.org/api/sqladmin/v1"
 )
 
 const kind string = "cloud-sql-wait-for-operation"
@@ -87,6 +84,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 	return actual, nil
 }
 
+type compatibleSource interface {
+	GetDefaultProject() string
+	GetService(context.Context, string) (*sqladmin.Service, error)
+	UseClientAuthorization() bool
+	GetWaitForOperations(context.Context, *sqladmin.Service, string, string, string, time.Duration) (any, error)
+}
+
 // Config defines the configuration for the wait-for-operation tool.
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
@@ -118,12 +122,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
 	}
 
-	s, ok := rawS.(*cloudsqladmin.Source)
+	s, ok := rawS.(compatibleSource)
 	if !ok {
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-sql-admin`", kind)
 	}
 
-	project := s.DefaultProject
+	project := s.GetDefaultProject()
 	var projectParam parameters.Parameter
 	if project != "" {
 		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
@@ -177,7 +181,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	return Tool{
 		Config:      cfg,
-		Source:      s,
 		AllParams:   allParameters,
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
@@ -191,17 +194,15 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 // Tool represents the wait-for-operation tool.
 type Tool struct {
 	Config
-	Source    *cloudsqladmin.Source
-	AllParams parameters.Parameters `yaml:"allParams"`
+	AllParams   parameters.Parameters `yaml:"allParams"`
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 
 	// Polling configuration
 	Delay      time.Duration
 	MaxDelay   time.Duration
 	Multiplier float64
 	MaxRetries int
-
-	manifest    tools.Manifest
-	mcpManifest tools.McpManifest
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -210,6 +211,11 @@ func (t Tool) ToConfig() tools.ToolConfig {
 
 // Invoke executes the tool's logic.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
+
 	paramsMap := params.AsMap()
 
 	project, ok := paramsMap["project"].(string)
@@ -221,13 +227,13 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("missing 'operation' parameter")
 	}
 
-	service, err := t.Source.GetService(ctx, string(accessToken))
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Minute)
+	defer cancel()
+
+	service, err := source.GetService(ctx, string(accessToken))
 	if err != nil {
 		return nil, err
 	}
-
-	ctx, cancel := context.WithTimeout(ctx, 30*time.Minute)
-	defer cancel()
 
 	delay := t.Delay
 	maxDelay := t.MaxDelay
@@ -242,37 +248,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		default:
 		}
 
-		op, err := service.Operations.Get(project, operationID).Do()
+		op, err := source.GetWaitForOperations(ctx, service, project, operationID, cloudSQLConnectionMessageTemplate, delay)
 		if err != nil {
-			fmt.Printf("error getting operation: %s, retrying in %v\n", err, delay)
-		} else {
-			if op.Status == "DONE" {
-				if op.Error != nil {
-					var errorBytes []byte
-					errorBytes, err = json.Marshal(op.Error)
-					if err != nil {
-						return nil, fmt.Errorf("operation finished with error but could not marshal error object: %w", err)
-					}
-					return nil, fmt.Errorf("operation finished with error: %s", string(errorBytes))
-				}
-
-				var opBytes []byte
-				opBytes, err = op.MarshalJSON()
-				if err != nil {
-					return nil, fmt.Errorf("could not marshal operation: %w", err)
-				}
-
-				var data map[string]any
-				if err := json.Unmarshal(opBytes, &data); err != nil {
-					return nil, fmt.Errorf("could not unmarshal operation: %w", err)
-				}
-
-				if msg, ok := t.generateCloudSQLConnectionMessage(data); ok {
-					return msg, nil
-				}
-				return string(opBytes), nil
-			}
-			fmt.Printf("Operation not complete, retrying in %v\n", delay)
+			return nil, err
+		} else if op != nil {
+			return op, nil
 		}
 
 		time.Sleep(delay)
@@ -290,6 +270,10 @@ func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any)
 	return parameters.ParseParams(t.AllParams, data, claims)
 }
 
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
+}
+
 // Manifest returns the tool's manifest.
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
@@ -305,109 +289,14 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return true
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return t.Source.UseClientAuthorization()
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return false, err
+	}
+	return source.UseClientAuthorization(), nil
 }
 
-func (t Tool) generateCloudSQLConnectionMessage(opResponse map[string]any) (string, bool) {
-	operationType, ok := opResponse["operationType"].(string)
-	if !ok || operationType != "CREATE_DATABASE" {
-		return "", false
-	}
-
-	targetLink, ok := opResponse["targetLink"].(string)
-	if !ok {
-		return "", false
-	}
-
-	r := regexp.MustCompile(`/projects/([^/]+)/instances/([^/]+)/databases/([^/]+)`)
-	matches := r.FindStringSubmatch(targetLink)
-	if len(matches) < 4 {
-		return "", false
-	}
-	project := matches[1]
-	instance := matches[2]
-	database := matches[3]
-
-	instanceData, err := t.fetchInstanceData(context.Background(), project, instance)
-	if err != nil {
-		fmt.Printf("error fetching instance data: %v\n", err)
-		return "", false
-	}
-
-	region, ok := instanceData["region"].(string)
-	if !ok {
-		return "", false
-	}
-
-	databaseVersion, ok := instanceData["databaseVersion"].(string)
-	if !ok {
-		return "", false
-	}
-
-	var dbType string
-	if strings.Contains(databaseVersion, "POSTGRES") {
-		dbType = "postgres"
-	} else if strings.Contains(databaseVersion, "MYSQL") {
-		dbType = "mysql"
-	} else if strings.Contains(databaseVersion, "SQLSERVER") {
-		dbType = "mssql"
-	} else {
-		return "", false
-	}
-
-	tmpl, err := template.New("cloud-sql-connection").Parse(cloudSQLConnectionMessageTemplate)
-	if err != nil {
-		return fmt.Sprintf("template parsing error: %v", err), false
-	}
-
-	data := struct {
-		Project     string
-		Region      string
-		Instance    string
-		DBType      string
-		DBTypeUpper string
-		Database    string
-	}{
-		Project:     project,
-		Region:      region,
-		Instance:    instance,
-		DBType:      dbType,
-		DBTypeUpper: strings.ToUpper(dbType),
-		Database:    database,
-	}
-
-	var b strings.Builder
-	if err := tmpl.Execute(&b, data); err != nil {
-		return fmt.Sprintf("template execution error: %v", err), false
-	}
-
-	return b.String(), true
-}
-
-func (t Tool) fetchInstanceData(ctx context.Context, project, instance string) (map[string]any, error) {
-	service, err := t.Source.GetService(ctx, "")
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := service.Instances.Get(project, instance).Do()
-	if err != nil {
-		return nil, fmt.Errorf("error getting instance: %w", err)
-	}
-
-	var data map[string]any
-	var b []byte
-	b, err = resp.MarshalJSON()
-	if err != nil {
-		return nil, fmt.Errorf("error marshalling response: %w", err)
-	}
-	if err := json.Unmarshal(b, &data); err != nil {
-		return nil, fmt.Errorf("error unmarshalling response body: %w", err)
-	}
-	return data, nil
-}
-
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }

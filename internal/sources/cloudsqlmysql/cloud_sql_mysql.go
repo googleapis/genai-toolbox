@@ -24,7 +24,9 @@ import (
 	"cloud.google.com/go/cloudsqlconn/mysql/mysql"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/tools/mysql/mysqlcommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -54,8 +56,8 @@ type Config struct {
 	Region   string         `yaml:"region" validate:"required"`
 	Instance string         `yaml:"instance" validate:"required"`
 	IPType   sources.IPType `yaml:"ipType"`
-	User     string         `yaml:"user" validate:"required"`
-	Password string         `yaml:"password" validate:"required"`
+	User     string         `yaml:"user"`
+	Password string         `yaml:"password"`
 	Database string         `yaml:"database" validate:"required"`
 }
 
@@ -100,31 +102,143 @@ func (s *Source) MySQLPool() *sql.DB {
 	return s.Pool
 }
 
+func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	results, err := s.MySQLPool().QueryContext(ctx, statement, params...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	defer results.Close()
+
+	cols, err := results.Columns()
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve rows column name: %w", err)
+	}
+
+	// create an array of values for each column, which can be re-used to scan each row
+	rawValues := make([]any, len(cols))
+	values := make([]any, len(cols))
+	for i := range rawValues {
+		values[i] = &rawValues[i]
+	}
+
+	colTypes, err := results.ColumnTypes()
+	if err != nil {
+		return nil, fmt.Errorf("unable to get column types: %w", err)
+	}
+
+	var out []any
+	for results.Next() {
+		err := results.Scan(values...)
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+		row := orderedmap.Row{}
+		for i, name := range cols {
+			val := rawValues[i]
+			if val == nil {
+				row.Add(name, nil)
+				continue
+			}
+
+			convertedValue, err := mysqlcommon.ConvertToType(colTypes[i], val)
+			if err != nil {
+				return nil, fmt.Errorf("errors encountered when converting values: %w", err)
+			}
+			row.Add(name, convertedValue)
+		}
+		out = append(out, row)
+	}
+
+	if err := results.Err(); err != nil {
+		return nil, fmt.Errorf("errors encountered during row iteration: %w", err)
+	}
+
+	return out, nil
+}
+
+func getConnectionConfig(ctx context.Context, user, pass string) (string, string, bool, error) {
+	useIAM := true
+
+	// If username and password both provided, use password authentication
+	if user != "" && pass != "" {
+		useIAM = false
+		return user, pass, useIAM, nil
+	}
+
+	// If username is empty, fetch email from ADC
+	// otherwise, use username as IAM email
+	if user == "" {
+		if pass != "" {
+			return "", "", useIAM, fmt.Errorf("password is provided without a username. Please provide both a username and password, or leave both fields empty")
+		}
+		email, err := sources.GetIAMPrincipalEmailFromADC(ctx, "mysql")
+		if err != nil {
+			return "", "", useIAM, fmt.Errorf("error getting email from ADC: %v", err)
+		}
+		user = email
+	}
+
+	// Pass the user, empty password and useIAM set to true
+	return user, pass, useIAM, nil
+}
+
 func initCloudSQLMySQLConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipType, user, pass, dbname string) (*sql.DB, error) {
 	//nolint:all // Reassigned ctx
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
+
+	// Configure the driver to connect to the database
+	user, pass, useIAM, err := getConnectionConfig(ctx, user, pass)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get Cloud SQL connection config: %w", err)
+	}
 
 	// Create a new dialer with options
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
-	opts, err := sources.GetCloudSQLOpts(ipType, userAgent, false)
+	opts, err := sources.GetCloudSQLOpts(ipType, userAgent, useIAM)
 	if err != nil {
 		return nil, err
 	}
 
-	if !slices.Contains(sql.Drivers(), "cloudsql-mysql") {
-		_, err = mysql.RegisterDriver("cloudsql-mysql", opts...)
-		if err != nil {
+	// Use a unique driver name based on the source name.
+	driverName := fmt.Sprintf("cloudsql-mysql-%s", name)
+
+	if !slices.Contains(sql.Drivers(), driverName) {
+		if _, err := mysql.RegisterDriver(driverName, opts...); err != nil {
 			return nil, fmt.Errorf("unable to register driver: %w", err)
 		}
 	}
+
+	var dsn string
 	// Tell the driver to use the Cloud SQL Go Connector to create connections
-	dsn := fmt.Sprintf("%s:%s@cloudsql-mysql(%s:%s:%s)/%s?connectionAttributes=program_name:%s", user, pass, project, region, instance, dbname, url.QueryEscape(userAgent))
+	if useIAM {
+		dsn = fmt.Sprintf("%s@%s(%s:%s:%s)/%s?connectionAttributes=program_name:%s",
+			user,
+			driverName,
+			project,
+			region,
+			instance,
+			dbname,
+			url.QueryEscape(userAgent),
+		)
+	} else {
+		dsn = fmt.Sprintf("%s:%s@%s(%s:%s:%s)/%s?connectionAttributes=program_name:%s",
+			user,
+			pass,
+			driverName,
+			project,
+			region,
+			instance,
+			dbname,
+			url.QueryEscape(userAgent),
+		)
+	}
+
 	db, err := sql.Open(
-		"cloudsql-mysql",
+		driverName,
 		dsn,
 	)
 	if err != nil {

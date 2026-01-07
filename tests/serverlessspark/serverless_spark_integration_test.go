@@ -48,6 +48,11 @@ var (
 	serverlessSparkServiceAccount = os.Getenv("SERVERLESS_SPARK_SERVICE_ACCOUNT")
 )
 
+const (
+	batchURLPrefix = "https://console.cloud.google.com/dataproc/batches/"
+	logsURLPrefix  = "https://console.cloud.google.com/logs/viewer?"
+)
+
 func getServerlessSparkVars(t *testing.T) map[string]any {
 	switch "" {
 	case serverlessSparkLocation:
@@ -326,7 +331,7 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				for _, tc := range tcs {
 					t.Run(tc.name, func(t *testing.T) {
 						t.Parallel()
-						runCreatePysparkBatchTest(t, client, ctx, tc.toolName, tc.request, tc.waitForSuccess, tc.validate)
+						runCreateSparkBatchTest(t, client, ctx, tc.toolName, tc.request, tc.waitForSuccess, tc.validate)
 					})
 				}
 			})
@@ -739,6 +744,17 @@ func runListBatchesTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 			if !reflect.DeepEqual(actual, tc.want) {
 				t.Fatalf("unexpected batches: got %+v, want %+v", actual, tc.want)
 			}
+
+			// want has URLs because it's created from Batch instances by the same utility function
+			// used by the tool internals. Double-check that the URLs are reasonable.
+			for _, batch := range tc.want {
+				if !strings.HasPrefix(batch.ConsoleURL, batchURLPrefix) {
+					t.Errorf("unexpected consoleUrl in batch: %#v", batch)
+				}
+				if !strings.HasPrefix(batch.LogsURL, logsURLPrefix) {
+					t.Errorf("unexpected logsUrl in batch: %#v", batch)
+				}
+			}
 		})
 	}
 }
@@ -767,8 +783,12 @@ func listBatchesRpc(t *testing.T, client *dataproc.BatchControllerClient, ctx co
 	if !exact && (len(batchPbs) == 0 || len(batchPbs) > n) {
 		t.Fatalf("expected between 1 and %d batches, got %d", n, len(batchPbs))
 	}
+	batches, err := serverlesssparklistbatches.ToBatches(batchPbs)
+	if err != nil {
+		t.Fatalf("failed to convert batches to JSON: %v", err)
+	}
 
-	return serverlesssparklistbatches.ToBatches(batchPbs)
+	return batches
 }
 
 func runAuthTest(t *testing.T, toolName string, request map[string]any, wantStatus int) {
@@ -868,11 +888,27 @@ func runGetBatchTest(t *testing.T, client *dataproc.BatchControllerClient, ctx c
 			if !ok {
 				t.Fatalf("unable to find result in response body")
 			}
+			var wrappedResult map[string]any
+			if err := json.Unmarshal([]byte(result), &wrappedResult); err != nil {
+				t.Fatalf("error unmarshalling result: %s", err)
+			}
+			consoleURL, ok := wrappedResult["consoleUrl"].(string)
+			if !ok || !strings.HasPrefix(consoleURL, batchURLPrefix) {
+				t.Errorf("unexpected consoleUrl: %v", consoleURL)
+			}
+			logsURL, ok := wrappedResult["logsUrl"].(string)
+			if !ok || !strings.HasPrefix(logsURL, logsURLPrefix) {
+				t.Errorf("unexpected logsUrl: %v", logsURL)
+			}
+			batchJSON, err := json.Marshal(wrappedResult["batch"])
+			if err != nil {
+				t.Fatalf("failed to marshal batch: %v", err)
+			}
 
 			// Unmarshal JSON to proto for proto-aware deep comparison.
 			var batch dataprocpb.Batch
-			if err := protojson.Unmarshal([]byte(result), &batch); err != nil {
-				t.Fatalf("error unmarshalling result: %s", err)
+			if err := protojson.Unmarshal(batchJSON, &batch); err != nil {
+				t.Fatalf("error unmarshalling batch from wrapped result: %s", err)
 			}
 
 			if !cmp.Equal(&batch, tc.want, protocmp.Transform()) {
@@ -922,63 +958,35 @@ func runCreateSparkBatchTest(
 		t.Fatalf("unable to find result in response body")
 	}
 
-	var meta dataprocpb.BatchOperationMetadata
-	if err := json.Unmarshal([]byte(result), &meta); err != nil {
+	var resultMap map[string]any
+	if err := json.Unmarshal([]byte(result), &resultMap); err != nil {
 		t.Fatalf("failed to unmarshal result: %v", err)
 	}
-
-	if validate != nil {
-		b, err := client.GetBatch(ctx, &dataprocpb.GetBatchRequest{Name: meta.Batch})
-		if err != nil {
-			t.Fatalf("failed to get batch: %s", err)
-		}
-		validate(t, b)
+	consoleURL, ok := resultMap["consoleUrl"].(string)
+	if !ok || !strings.HasPrefix(consoleURL, batchURLPrefix) {
+		t.Errorf("unexpected consoleUrl: %v", consoleURL)
 	}
-
-	if waitForSuccess {
-		waitForBatch(t, client, ctx, meta.Batch, []dataprocpb.Batch_State{dataprocpb.Batch_SUCCEEDED}, 5*time.Minute)
+	logsURL, ok := resultMap["logsUrl"].(string)
+	if !ok || !strings.HasPrefix(logsURL, logsURLPrefix) {
+		t.Errorf("unexpected logsUrl: %v", logsURL)
 	}
-}
-
-func runCreatePysparkBatchTest(
-	t *testing.T,
-	client *dataproc.BatchControllerClient,
-	ctx context.Context,
-	toolName string,
-	request map[string]any,
-	waitForSuccess bool,
-	validate func(t *testing.T, b *dataprocpb.Batch),
-) {
-	resp, err := invokeTool(toolName, request, nil)
-	if err != nil {
-		t.Fatalf("invokeTool failed: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
-	}
-
-	var body map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
-		t.Fatalf("error parsing response body: %v", err)
-	}
-
-	result, ok := body["result"].(string)
+	metaMap, ok := resultMap["opMetadata"].(map[string]any)
 	if !ok {
-		t.Fatalf("unable to find result in response body")
+		t.Fatalf("unexpected opMetadata: %v", metaMap)
 	}
-
+	metaJson, err := json.Marshal(metaMap)
+	if err != nil {
+		t.Fatalf("failed to marshal op metadata to JSON: %s", err)
+	}
 	var meta dataprocpb.BatchOperationMetadata
-	if err := json.Unmarshal([]byte(result), &meta); err != nil {
+	if err := json.Unmarshal([]byte(metaJson), &meta); err != nil {
 		t.Fatalf("failed to unmarshal result: %v", err)
 	}
 
 	if validate != nil {
 		b, err := client.GetBatch(ctx, &dataprocpb.GetBatchRequest{Name: meta.Batch})
 		if err != nil {
-			t.Fatalf("failed to get batch: %s", err)
+			t.Fatalf("failed to get batch %s: %s", meta.Batch, err)
 		}
 		validate(t, b)
 	}

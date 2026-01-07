@@ -24,6 +24,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -101,6 +102,33 @@ func (s *Source) PostgresPool() *pgxpool.Pool {
 	return s.Pool
 }
 
+func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (any, error) {
+	results, err := s.Pool.Query(ctx, statement, params...)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	defer results.Close()
+
+	fields := results.FieldDescriptions()
+	var out []any
+	for results.Next() {
+		v, err := results.Values()
+		if err != nil {
+			return nil, fmt.Errorf("unable to parse row: %w", err)
+		}
+		row := orderedmap.Row{}
+		for i, f := range fields {
+			row.Add(f.Name, v[i])
+		}
+		out = append(out, row)
+	}
+	// this will catch actual query execution errors
+	if err := results.Err(); err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	return out, nil
+}
+
 func getOpts(ipType, userAgent string, useIAM bool) ([]alloydbconn.Option, error) {
 	opts := []alloydbconn.Option{alloydbconn.WithUserAgent(userAgent)}
 	switch strings.ToLower(ipType) {
@@ -141,7 +169,7 @@ func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string
 			// If password is provided without an username, raise an error
 			return "", useIAM, fmt.Errorf("password is provided without a username. Please provide both a username and password, or leave both fields empty")
 		}
-		email, err := sources.GetIAMPrincipalEmailFromADC(ctx)
+		email, err := sources.GetIAMPrincipalEmailFromADC(ctx, "postgres")
 		if err != nil {
 			return "", useIAM, fmt.Errorf("error getting email from ADC: %v", err)
 		}
