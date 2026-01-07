@@ -29,6 +29,9 @@ export function renderSourceDetails(source, container) {
     const kind = document.createElement('p');
     kind.innerHTML = `<strong>Kind:</strong> ${source.kind || 'unknown'}`;
 
+    const summary = document.createElement('p');
+    summary.innerHTML = `<strong>Type:</strong> ${formatSourceType(source.kind)}`;
+
     const configTitle = document.createElement('h5');
     configTitle.textContent = 'Configuration';
 
@@ -48,6 +51,7 @@ export function renderSourceDetails(source, container) {
 
     wrapper.appendChild(title);
     wrapper.appendChild(kind);
+    wrapper.appendChild(summary);
     wrapper.appendChild(configTitle);
     wrapper.appendChild(configList);
     container.appendChild(wrapper);
@@ -65,4 +69,16 @@ function formatConfigValue(value) {
         }
     }
     return String(value);
+}
+
+function formatSourceType(kind) {
+    if (!kind) {
+        return 'Unknown source';
+    }
+    const normalized = String(kind).replace(/[_-]+/g, ' ').trim().toLowerCase();
+    return `${capitalizeWords(normalized)} source`;
+}
+
+function capitalizeWords(value) {
+    return value.replace(/\b\w/g, char => char.toUpperCase());
 }
