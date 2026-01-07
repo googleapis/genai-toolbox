@@ -56,7 +56,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
-	BigQueryTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error)
+	BigQueryTokenSourceWithScope(ctx context.Context, scopes []string) (oauth2.TokenSource, error)
 	BigQueryProject() string
 	BigQueryLocation() string
 	GetMaxQueryResultRows() int
@@ -191,10 +191,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			return nil, fmt.Errorf("error parsing access token: %w", err)
 		}
 	} else {
-		// Get cloud-platform token source for Gemini Data Analytics API during initialization
-		tokenSource, err := source.BigQueryTokenSourceWithScope(ctx, "https://www.googleapis.com/auth/cloud-platform")
+		// Get a token source for the Gemini Data Analytics API.
+		tokenSource, err := source.BigQueryTokenSourceWithScope(ctx, nil)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get cloud-platform token source: %w", err)
+			return nil, fmt.Errorf("failed to get token source: %w", err)
 		}
 
 		// Use cloud-platform token source for Gemini Data Analytics API
