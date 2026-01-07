@@ -99,5 +99,5 @@ tools:
 | description        |                    string                    |     true     | Description of the tool that is passed to the LLM.                                                                                     |
 | statement          |                    string                    |     true     | SQL statement to execute on.                                                                                                           |
 | parameters         |   [parameters](../#specifying-parameters)    |    false     | List of [parameters](../#specifying-parameters) that will be inserted into the SQL statement.                                          |
-| readOnly           |                     bool                     |    false     | When set to `true`, the `statement` is run as a read-only transaction. Default: `false`.                                               |
 | templateParameters | [templateParameters](..#template-parameters) |    false     | List of [templateParameters](..#template-parameters) that will be inserted into the SQL statement before executing prepared statement. |
+| authRequired       |                array[string]                 |    false     | List of auth services that are required to use this tool.                                                                              |
