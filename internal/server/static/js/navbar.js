@@ -31,7 +31,7 @@ function renderNavbar(containerId, activePath) {
             </div>
             <ul>
                 <li><a href="/ui/sources">Sources</a></li>
-                <!--<li><a href="/ui/authservices">Auth Services</a></li>-->
+                <li><a href="/ui/authservices">Auth Services</a></li>
                 <li><a href="/ui/tools">Tools</a></li>
                 <li><a href="/ui/toolsets">Toolsets</a></li>
             </ul>

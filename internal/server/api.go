@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
@@ -38,6 +39,9 @@ func apiRouter(s *Server) (chi.Router, error) {
 	r.Use(middleware.AllowContentType("application/json"))
 	r.Use(middleware.StripSlashes)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
+
+	r.Get("/authservice", func(w http.ResponseWriter, r *http.Request) { authServiceListHandler(s, w, r) })
+	r.Get("/authservice/{authServiceName}", func(w http.ResponseWriter, r *http.Request) { authServiceGetHandler(s, w, r) })
 
 	r.Get("/source", func(w http.ResponseWriter, r *http.Request) { sourceListHandler(s, w, r) })
 	r.Get("/source/{sourceName}", func(w http.ResponseWriter, r *http.Request) { sourceGetHandler(s, w, r) })
@@ -60,6 +64,104 @@ type SourceInfo struct {
 
 type SourceListResponse struct {
 	Sources map[string]SourceInfo `json:"sources"`
+}
+
+type AuthServiceInfo struct {
+	Name       string   `json:"name"`
+	Kind       string   `json:"kind"`
+	HeaderName string   `json:"headerName"`
+	Tools      []string `json:"tools"`
+}
+
+type AuthServiceListResponse struct {
+	AuthServices map[string]AuthServiceInfo `json:"authServices"`
+}
+
+// authServiceListHandler handles requests for listing all auth services.
+func authServiceListHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/authservice/list")
+	r = r.WithContext(ctx)
+	defer span.End()
+
+	authServicesMap := s.ResourceMgr.GetAuthServiceMap()
+	usageByAuthService := authServiceToolUsage(s.ResourceMgr.GetToolsMap())
+	resp := AuthServiceListResponse{
+		AuthServices: make(map[string]AuthServiceInfo, len(authServicesMap)),
+	}
+	for name, authService := range authServicesMap {
+		resp.AuthServices[name] = AuthServiceInfo{
+			Name:       authService.GetName(),
+			Kind:       authService.AuthServiceKind(),
+			HeaderName: authService.GetName() + "_token",
+			Tools:      usageByAuthService[name],
+		}
+	}
+	render.JSON(w, r, resp)
+}
+
+// authServiceGetHandler handles requests for a single auth service.
+func authServiceGetHandler(s *Server, w http.ResponseWriter, r *http.Request) {
+	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/authservice/get")
+	r = r.WithContext(ctx)
+	defer span.End()
+
+	authServiceName := chi.URLParam(r, "authServiceName")
+	authService, ok := s.ResourceMgr.GetAuthService(authServiceName)
+	if !ok {
+		err := fmt.Errorf("auth service %q does not exist", authServiceName)
+		s.logger.DebugContext(ctx, err.Error())
+		_ = render.Render(w, r, newErrResponse(err, http.StatusNotFound))
+		return
+	}
+	usageByAuthService := authServiceToolUsage(s.ResourceMgr.GetToolsMap())
+	resp := AuthServiceListResponse{
+		AuthServices: map[string]AuthServiceInfo{
+			authServiceName: {
+				Name:       authService.GetName(),
+				Kind:       authService.AuthServiceKind(),
+				HeaderName: authService.GetName() + "_token",
+				Tools:      usageByAuthService[authServiceName],
+			},
+		},
+	}
+	render.JSON(w, r, resp)
+}
+
+func authServiceToolUsage(toolsMap map[string]tools.Tool) map[string][]string {
+	usage := make(map[string]map[string]bool)
+
+	for toolName, tool := range toolsMap {
+		manifest := tool.Manifest()
+		for _, authName := range manifest.AuthRequired {
+			addAuthServiceUsage(usage, authName, toolName)
+		}
+		for _, param := range manifest.Parameters {
+			for _, authName := range param.AuthServices {
+				addAuthServiceUsage(usage, authName, toolName)
+			}
+		}
+	}
+
+	out := make(map[string][]string, len(usage))
+	for authName, toolsSet := range usage {
+		toolsList := make([]string, 0, len(toolsSet))
+		for toolName := range toolsSet {
+			toolsList = append(toolsList, toolName)
+		}
+		slices.Sort(toolsList)
+		out[authName] = toolsList
+	}
+	return out
+}
+
+func addAuthServiceUsage(usage map[string]map[string]bool, authName, toolName string) {
+	if authName == "" {
+		return
+	}
+	if usage[authName] == nil {
+		usage[authName] = make(map[string]bool)
+	}
+	usage[authName][toolName] = true
 }
 
 // sourceListHandler handles requests for listing all sources.

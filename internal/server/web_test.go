@@ -60,6 +60,20 @@ func TestWebEndpoint(t *testing.T) {
 			wantPageTitle:   "Tools View",
 		},
 		{
+			name:            "web auth services page",
+			path:            "/ui/authservices",
+			wantStatus:      http.StatusOK,
+			wantContentType: "text/html",
+			wantPageTitle:   "Auth Services View",
+		},
+		{
+			name:            "web auth services page with trailing slash",
+			path:            "/ui/authservices/",
+			wantStatus:      http.StatusOK,
+			wantContentType: "text/html",
+			wantPageTitle:   "Auth Services View",
+		},
+		{
 			name:            "web sources page",
 			path:            "/ui/sources",
 			wantStatus:      http.StatusOK,

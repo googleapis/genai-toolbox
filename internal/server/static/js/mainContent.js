@@ -79,6 +79,21 @@ function getSourceInstructions() {
     `;
 }
 
+function getAuthServiceInstructions() {
+    return `
+      <div class="resource-instructions">
+        <h1 class="resource-title">Auth Services</h1>
+        <p class="resource-intro">To inspect an auth service, please click on one of your auth services to the left.</p>
+        <h2 class="resource-subtitle">What are Auth Services?</h2>
+        <p class="resource-description">
+          Auth services define how incoming requests are authenticated and how claims are extracted for tools.
+          You can define Auth Services as a map in the <code>authServices</code> section of your <code>tools.yaml</code> file.
+        </p>
+        <a href="https://googleapis.github.io/genai-toolbox/resources/authServices/" class="btn btn--externalDocs" target="_blank" rel="noopener noreferrer">Auth Services Documentation</a>
+      </div>
+    `;
+}
+
 function getToolsetInstructions() {
     return `
       <div class="resource-instructions">

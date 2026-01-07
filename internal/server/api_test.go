@@ -23,6 +23,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
@@ -375,5 +376,107 @@ func TestSourceGetEndpoint(t *testing.T) {
 	}
 	if resp.StatusCode != http.StatusNotFound {
 		t.Fatalf("unexpected status code for missing source: want %d, got %d", http.StatusNotFound, resp.StatusCode)
+	}
+}
+
+func TestAuthServiceListEndpoint(t *testing.T) {
+	authA := &MockAuthService{Name: "auth-a", Kind: "google"}
+	authB := &MockAuthService{Name: "auth-b", Kind: "google"}
+	authMap := map[string]auth.AuthService{
+		"auth-a": authA,
+		"auth-b": authB,
+	}
+	toolsMap := map[string]tools.Tool{
+		"tool-auth-a": MockTool{Name: "tool-auth-a", AuthRequired: []string{"auth-a"}},
+	}
+
+	r, shutdown := setUpServerWithResources(t, "api", nil, authMap, toolsMap, nil, nil, nil)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	resp, body, err := runRequest(ts, http.MethodGet, "/authservice", nil, nil)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+
+	if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
+		t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("unexpected status code: want %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	var m AuthServiceListResponse
+	if err := json.Unmarshal(body, &m); err != nil {
+		t.Fatalf("unable to parse AuthServiceListResponse: %s", err)
+	}
+
+	authAInfo, ok := m.AuthServices["auth-a"]
+	if !ok {
+		t.Fatalf("auth-a not found in response")
+	}
+	if authAInfo.HeaderName != "auth-a_token" {
+		t.Fatalf("unexpected headerName: want %q, got %q", "auth-a_token", authAInfo.HeaderName)
+	}
+	if len(authAInfo.Tools) != 1 || authAInfo.Tools[0] != "tool-auth-a" {
+		t.Fatalf("unexpected tools list for auth-a: %v", authAInfo.Tools)
+	}
+
+	if _, ok := m.AuthServices["auth-b"]; !ok {
+		t.Fatalf("auth-b not found in response")
+	}
+}
+
+func TestAuthServiceGetEndpoint(t *testing.T) {
+	authA := &MockAuthService{Name: "auth-a", Kind: "google"}
+	authMap := map[string]auth.AuthService{
+		"auth-a": authA,
+	}
+	toolsMap := map[string]tools.Tool{
+		"tool-auth-a": MockTool{Name: "tool-auth-a", AuthRequired: []string{"auth-a"}},
+	}
+
+	r, shutdown := setUpServerWithResources(t, "api", nil, authMap, toolsMap, nil, nil, nil)
+	defer shutdown()
+	ts := runServer(r, false)
+	defer ts.Close()
+
+	resp, body, err := runRequest(ts, http.MethodGet, "/authservice/auth-a", nil, nil)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+
+	if contentType := resp.Header.Get("Content-type"); contentType != "application/json" {
+		t.Fatalf("unexpected content-type header: want %s, got %s", "application/json", contentType)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("unexpected status code: want %d, got %d", http.StatusOK, resp.StatusCode)
+	}
+
+	var m AuthServiceListResponse
+	if err := json.Unmarshal(body, &m); err != nil {
+		t.Fatalf("unable to parse AuthServiceListResponse: %s", err)
+	}
+
+	authAInfo, ok := m.AuthServices["auth-a"]
+	if !ok {
+		t.Fatalf("auth-a not found in response")
+	}
+	if authAInfo.HeaderName != "auth-a_token" {
+		t.Fatalf("unexpected headerName: want %q, got %q", "auth-a_token", authAInfo.HeaderName)
+	}
+	if len(authAInfo.Tools) != 1 || authAInfo.Tools[0] != "tool-auth-a" {
+		t.Fatalf("unexpected tools list for auth-a: %v", authAInfo.Tools)
+	}
+
+	resp, _, err = runRequest(ts, http.MethodGet, "/authservice/unknown-auth", nil, nil)
+	if err != nil {
+		t.Fatalf("unexpected error during request: %s", err)
+	}
+	if resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("unexpected status code for missing auth service: want %d, got %d", http.StatusNotFound, resp.StatusCode)
 	}
 }

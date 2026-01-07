@@ -130,6 +130,42 @@ func (s *MockAuthService) ToConfig() auth.AuthServiceConfig {
 	return MockAuthServiceConfig{Name: s.Name, Kind: s.Kind}
 }
 
+// MockAuthServiceConfig is used to mock auth services in tests.
+type MockAuthServiceConfig struct {
+	Name string
+	Kind string
+}
+
+func (c MockAuthServiceConfig) AuthServiceConfigKind() string {
+	return c.Kind
+}
+
+func (c MockAuthServiceConfig) Initialize() (auth.AuthService, error) {
+	return &MockAuthService{Name: c.Name, Kind: c.Kind}, nil
+}
+
+// MockAuthService is used to mock auth services in tests.
+type MockAuthService struct {
+	Name string
+	Kind string
+}
+
+func (s *MockAuthService) AuthServiceKind() string {
+	return s.Kind
+}
+
+func (s *MockAuthService) GetName() string {
+	return s.Name
+}
+
+func (s *MockAuthService) GetClaimsFromHeader(context.Context, http.Header) (map[string]any, error) {
+	return nil, nil
+}
+
+func (s *MockAuthService) ToConfig() auth.AuthServiceConfig {
+	return MockAuthServiceConfig{Name: s.Name, Kind: s.Kind}
+}
+
 func (t MockTool) Invoke(context.Context, tools.SourceProvider, parameters.ParamValues, tools.AccessToken) (any, error) {
 	mock := []any{t.Name}
 	return mock, nil
