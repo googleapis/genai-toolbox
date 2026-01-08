@@ -25,6 +25,7 @@ import (
 	"strings"
 	"text/template"
 
+	embeddingmodels "github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
@@ -162,6 +163,76 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 	return params, nil
 }
 
+func EmbedParams(ctx context.Context, ps Parameters, paramValues ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, formatter embeddingmodels.VectorFormatter) (ParamValues, error) {
+
+	type ParamToEmbed struct {
+		OriginalValue string
+		Index         int // The index in the original Parameters slice
+	}
+
+	// Map: modelName -> list of ParamToEmbed
+	parametersToEmbed := make(map[string][]ParamToEmbed)
+
+	for i, p := range ps {
+		modelName := p.GetEmbeddedBy()
+		if modelName == "" {
+			continue
+		}
+
+		// Get parameter's value to be embedded
+		valueStr, ok := paramValues[i].Value.(string)
+		if !ok {
+			return nil, fmt.Errorf("parameter '%s' is marked for embedding but has a non-string value (type: %T)", p.GetName(), paramValues[i].Value)
+		}
+
+		parametersToEmbed[modelName] = append(parametersToEmbed[modelName], ParamToEmbed{
+			OriginalValue: valueStr,
+			Index:         i,
+		})
+	}
+
+	// Batch embedding request sent to each model
+	for modelName, params := range parametersToEmbed {
+		model, ok := embeddingModelsMap[modelName]
+		if !ok {
+			return nil, fmt.Errorf("embedding model does not exist: %s", modelName)
+		}
+
+		// Extract only the string values for the API call
+		stringBatch := make([]string, len(params))
+		for i, paramStr := range params {
+			stringBatch[i] = paramStr.OriginalValue
+		}
+
+		embeddings, err := model.EmbedParameters(ctx, stringBatch)
+		if err != nil {
+			return nil, fmt.Errorf("error embedding parameters with model %s: %w", modelName, err)
+		}
+
+		if len(embeddings) != len(stringBatch) {
+			return nil, fmt.Errorf("model %s returned %d embeddings for %d inputs", modelName, len(embeddings), len(stringBatch))
+		}
+
+		for i, rawVector := range embeddings {
+
+			item := params[i]
+
+			// Call vector formatter
+			var finalValue any = rawVector
+
+			if formatter == nil {
+				paramValues[item.Index].Value = finalValue
+				continue
+			}
+
+			formattedVector := formatter(rawVector)
+			finalValue = formattedVector
+			paramValues[item.Index].Value = finalValue
+		}
+	}
+	return paramValues, nil
+}
+
 // helper function to convert a string array parameter to a comma separated string
 func ConvertArrayParamToString(param any) (string, error) {
 	switch v := param.(type) {
@@ -246,6 +317,7 @@ type Parameter interface {
 	GetDefault() any
 	GetRequired() bool
 	GetAuthServices() []ParamAuthService
+	GetEmbeddedBy() string
 	Parse(any) (any, error)
 	Manifest() ParameterManifest
 	McpManifest() (ParameterMcpManifest, []string)
@@ -321,6 +393,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
 		}
+		if a.GetEmbeddedBy() != "" {
+			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
+		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
 			a.AuthServices = append(a.AuthServices, a.AuthSources...)
@@ -331,6 +406,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		a := &FloatParameter{}
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
+		}
+		if a.GetEmbeddedBy() != "" {
+			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
 		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
@@ -343,6 +421,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
 		}
+		if a.GetEmbeddedBy() != "" {
+			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
+		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
 			a.AuthServices = append(a.AuthServices, a.AuthSources...)
@@ -354,6 +435,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
 		}
+		if a.GetEmbeddedBy() != "" {
+			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
+		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
 			a.AuthServices = append(a.AuthServices, a.AuthSources...)
@@ -364,6 +448,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		a := &MapParameter{}
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
+		}
+		if a.GetEmbeddedBy() != "" {
+			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
 		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
@@ -421,6 +508,7 @@ type ParameterManifest struct {
 	Items                *ParameterManifest `json:"items,omitempty"`
 	Default              any                `json:"default,omitempty"`
 	AdditionalProperties any                `json:"additionalProperties,omitempty"`
+	EmbeddedBy           string             `json:"embeddedBy,omitempty"`
 }
 
 // ParameterMcpManifest represents properties when served as part of a ToolMcpManifest.
@@ -442,6 +530,7 @@ type CommonParameter struct {
 	ExcludedValues []any              `yaml:"excludedValues"`
 	AuthServices   []ParamAuthService `yaml:"authServices"`
 	AuthSources    []ParamAuthService `yaml:"authSources"` // Deprecated: Kept for compatibility.
+	EmbeddedBy     string             `yaml:"embeddedBy"`
 }
 
 // GetName returns the name specified for the Parameter.
@@ -497,6 +586,10 @@ func (p *CommonParameter) IsExcludedValues(v any) bool {
 		}
 	}
 	return false
+}
+
+func (p *CommonParameter) GetEmbeddedBy() string {
+	return p.EmbeddedBy
 }
 
 // MatchStringOrRegex checks if the input matches the target

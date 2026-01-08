@@ -67,6 +67,9 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	if c.AllowedOrigins == nil {
 		c.AllowedOrigins = []string{"*"}
 	}
+	if c.AllowedHosts == nil {
+		c.AllowedHosts = []string{"*"}
+	}
 	return c
 }
 
@@ -218,6 +221,13 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--allowed-origins", "http://foo.com,http://bar.com"},
 			want: withDefaults(server.ServerConfig{
 				AllowedOrigins: []string{"http://foo.com", "http://bar.com"},
+			}),
+		},
+		{
+			desc: "allowed hosts",
+			args: []string{"--allowed-hosts", "http://foo.com,http://bar.com"},
+			want: withDefaults(server.ServerConfig{
+				AllowedHosts: []string{"http://foo.com", "http://bar.com"},
 			}),
 		},
 	}
@@ -1352,6 +1362,7 @@ func TestPrebuiltTools(t *testing.T) {
 	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
 	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
 	cloudhealthcare_config, _ := prebuiltconfigs.Get("cloud-healthcare")
+	snowflake_config, _ := prebuiltconfigs.Get("snowflake")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1448,6 +1459,14 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("CLOUD_HEALTHCARE_PROJECT", "your_gcp_project_id")
 	t.Setenv("CLOUD_HEALTHCARE_REGION", "your_gcp_region")
 	t.Setenv("CLOUD_HEALTHCARE_DATASET", "your_healthcare_dataset")
+
+	t.Setenv("SNOWFLAKE_ACCOUNT", "your_account")
+	t.Setenv("SNOWFLAKE_USER", "your_username")
+	t.Setenv("SNOWFLAKE_PASSWORD", "your_pass")
+	t.Setenv("SNOWFLAKE_DATABASE", "your_db")
+	t.Setenv("SNOWFLAKE_SCHEMA", "your_schema")
+	t.Setenv("SNOWFLAKE_WAREHOUSE", "your_wh")
+	t.Setenv("SNOWFLAKE_ROLE", "your_role")
 
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -1743,6 +1762,16 @@ func TestPrebuiltTools(t *testing.T) {
 				"cloud_healthcare_dicom_tools": tools.ToolsetConfig{
 					Name:      "cloud_healthcare_dicom_tools",
 					ToolNames: []string{"get_dicom_store", "get_dicom_store_metrics", "search_dicom_studies", "search_dicom_series", "search_dicom_instances", "retrieve_rendered_dicom_instance"},
+				},
+			},
+		},
+		{
+			name: "Snowflake prebuilt tool",
+			in:   snowflake_config,
+			wantToolset: server.ToolsetConfigs{
+				"snowflake_tools": tools.ToolsetConfig{
+					Name:      "snowflake_tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
 				},
 			},
 		},
