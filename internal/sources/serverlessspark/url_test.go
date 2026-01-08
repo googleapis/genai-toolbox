@@ -1,10 +1,10 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,19 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package serverlessspark_test
 
 import (
 	"testing"
 	"time"
 
 	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
+	"github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 func TestExtractBatchDetails_Success(t *testing.T) {
 	batchName := "projects/my-project/locations/us-central1/batches/my-batch"
-	projectID, location, batchID, err := ExtractBatchDetails(batchName)
+	projectID, location, batchID, err := serverlessspark.ExtractBatchDetails(batchName)
 	if err != nil {
 		t.Errorf("ExtractBatchDetails() error = %v, want no error", err)
 		return
@@ -45,7 +46,7 @@ func TestExtractBatchDetails_Success(t *testing.T) {
 
 func TestExtractBatchDetails_Failure(t *testing.T) {
 	batchName := "invalid-name"
-	_, _, _, err := ExtractBatchDetails(batchName)
+	_, _, _, err := serverlessspark.ExtractBatchDetails(batchName)
 	wantErr := "failed to parse batch name: invalid-name"
 	if err == nil || err.Error() != wantErr {
 		t.Errorf("ExtractBatchDetails() error = %v, want %v", err, wantErr)
@@ -53,7 +54,7 @@ func TestExtractBatchDetails_Failure(t *testing.T) {
 }
 
 func TestBatchConsoleURL(t *testing.T) {
-	got := BatchConsoleURL("my-project", "us-central1", "my-batch")
+	got := serverlessspark.BatchConsoleURL("my-project", "us-central1", "my-batch")
 	want := "https://console.cloud.google.com/dataproc/batches/us-central1/my-batch/summary?project=my-project"
 	if got != want {
 		t.Errorf("BatchConsoleURL() = %v, want %v", got, want)
@@ -63,7 +64,7 @@ func TestBatchConsoleURL(t *testing.T) {
 func TestBatchLogsURL(t *testing.T) {
 	startTime := time.Date(2025, 10, 1, 5, 0, 0, 0, time.UTC)
 	endTime := time.Date(2025, 10, 1, 6, 0, 0, 0, time.UTC)
-	got := BatchLogsURL("my-project", "us-central1", "my-batch", startTime, endTime)
+	got := serverlessspark.BatchLogsURL("my-project", "us-central1", "my-batch", startTime, endTime)
 	want := "https://console.cloud.google.com/logs/viewer?advancedFilter=" +
 		"resource.type%3D%22cloud_dataproc_batch%22" +
 		"%0Aresource.labels.project_id%3D%22my-project%22" +
@@ -82,7 +83,7 @@ func TestBatchConsoleURLFromProto(t *testing.T) {
 	batchPb := &dataprocpb.Batch{
 		Name: "projects/my-project/locations/us-central1/batches/my-batch",
 	}
-	got, err := BatchConsoleURLFromProto(batchPb)
+	got, err := serverlessspark.BatchConsoleURLFromProto(batchPb)
 	if err != nil {
 		t.Fatalf("BatchConsoleURLFromProto() error = %v", err)
 	}
@@ -100,7 +101,7 @@ func TestBatchLogsURLFromProto(t *testing.T) {
 		CreateTime: timestamppb.New(createTime),
 		StateTime:  timestamppb.New(stateTime),
 	}
-	got, err := BatchLogsURLFromProto(batchPb)
+	got, err := serverlessspark.BatchLogsURLFromProto(batchPb)
 	if err != nil {
 		t.Fatalf("BatchLogsURLFromProto() error = %v", err)
 	}
