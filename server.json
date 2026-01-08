@@ -1,5 +1,5 @@
 {
-    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
     "name": "io.github.googleapis/genai-toolbox",
     "description": "MCP Toolbox for Databases enables your agent to connect to your database.",
     "title": "MCP Toolbox",
