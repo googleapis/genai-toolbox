@@ -198,6 +198,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistroles"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistschemas"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslistsequences"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgresliststoredprocedure"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttables"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttablespaces"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/postgres/postgreslisttablestats"
@@ -214,6 +215,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparklistbatches"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/singlestore/singlestoreexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/singlestore/singlestoresql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/snowflake/snowflakeexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/snowflake/snowflakesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerlistgraphs"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerlisttables"
@@ -262,6 +265,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/singlestore"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/snowflake"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/tidb"
@@ -483,11 +487,11 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 		}
 
 		// Check for conflicts and merge embeddingModels
-		for name, model := range file.EmbeddingModels {
+		for name, em := range file.EmbeddingModels {
 			if _, exists := merged.EmbeddingModels[name]; exists {
 				conflicts = append(conflicts, fmt.Sprintf("embedding model '%s' (file #%d)", name, fileIndex+1))
 			} else {
-				merged.EmbeddingModels[name] = model
+				merged.EmbeddingModels[name] = em
 			}
 		}
 
