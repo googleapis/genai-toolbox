@@ -949,6 +949,7 @@ func run(cmd *Command) error {
 
 	cmd.cfg.SourceConfigs = finalToolsFile.Sources
 	cmd.cfg.AuthServiceConfigs = finalToolsFile.AuthServices
+	cmd.cfg.EmbeddingModelConfigs = finalToolsFile.EmbeddingModels
 	cmd.cfg.ToolConfigs = finalToolsFile.Tools
 	cmd.cfg.ToolsetConfigs = finalToolsFile.Toolsets
 	cmd.cfg.PromptConfigs = finalToolsFile.Prompts
