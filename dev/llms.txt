@@ -20,6 +20,9 @@ How to get started with Toolbox.
 Some core concepts in Toolbox
 - [Telemetry](https://googleapis.github.io/genai-toolbox/dev/concepts/telemetry/): An overview of telemetry and observability in Toolbox.
 
+### Featured Articles
+
+Toolbox Medium Blogs
 ### How-to
 
 List of guides detailing how to do different things with Toolbox. 
