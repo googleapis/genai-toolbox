@@ -136,6 +136,28 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			},
 		},
 		{
+			desc: "with custom scopes example",
+			in: `
+			sources:
+				my-instance:
+					kind: bigquery
+					project: my-project
+					location: us
+					scopes:
+						- https://www.googleapis.com/auth/bigquery
+						- https://www.googleapis.com/auth/cloud-platform
+			`,
+			want: server.SourceConfigs{
+				"my-instance": bigquery.Config{
+					Name:     "my-instance",
+					Kind:     bigquery.SourceKind,
+					Project:  "my-project",
+					Location: "us",
+					Scopes:   []string{"https://www.googleapis.com/auth/bigquery", "https://www.googleapis.com/auth/cloud-platform"},
+				},
+			},
+		},
+		{
 			desc: "with max query result rows example",
 			in: `
 			sources:

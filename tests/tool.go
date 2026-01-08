@@ -611,6 +611,9 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 	// Default values for ExecuteSqlTestConfig
 	configs := &ExecuteSqlTestConfig{
 		select1Statement: `"SELECT 1"`,
+		createWant:       "null",
+		dropWant:         "null",
+		selectEmptyWant:  "null",
 	}
 
 	// Apply provided options
@@ -646,7 +649,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(fmt.Sprintf(`{"sql": %s}`, createTableStatement))),
-			want:          "null",
+			want:          configs.createWant,
 			isErr:         false,
 		},
 		{
@@ -654,7 +657,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT * FROM t"}`)),
-			want:          "null",
+			want:          configs.selectEmptyWant,
 			isErr:         false,
 		},
 		{
@@ -662,7 +665,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"DROP TABLE t"}`)),
-			want:          "null",
+			want:          configs.dropWant,
 			isErr:         false,
 		},
 		{

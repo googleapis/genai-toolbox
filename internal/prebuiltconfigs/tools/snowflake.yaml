@@ -1,0 +1,142 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+sources:
+    snowflake-source:
+        kind: snowflake
+        account: ${SNOWFLAKE_ACCOUNT}
+        user: ${SNOWFLAKE_USER}
+        password: ${SNOWFLAKE_PASSWORD}
+        database: ${SNOWFLAKE_DATABASE}
+        schema: ${SNOWFLAKE_SCHEMA}
+        warehouse: ${SNOWFLAKE_WAREHOUSE}
+        role: ${SNOWFLAKE_ROLE}
+
+tools:
+    execute_sql:
+        kind: snowflake-execute-sql
+        source: snowflake-source
+        description: Use this tool to execute SQL.
+
+    list_tables:
+        kind: snowflake-sql
+        source: snowflake-source
+        description: "Lists detailed schema information (object type, columns, constraints, indexes, owner, comment) as JSON for user-created tables. Filters by a comma-separated list of names. If names are omitted, lists all tables in the specified database and schema."
+        statement: |
+           WITH
+           input_param AS (
+                SELECT ? AS param -- Single bind variable here
+           )
+           ,
+           all_tables_mode AS (
+                SELECT COALESCE(TRIM(param), '') = '' AS is_all_tables
+                FROM input_param
+           ) --SELECT * FROM all_tables_mode;
+           ,
+           filtered_table_names AS (
+                SELECT DISTINCT TRIM(LOWER(value)) AS table_name
+                FROM input_param, all_tables_mode, TABLE(SPLIT_TO_TABLE(param, ','))
+                WHERE NOT is_all_tables
+           ) -- SELECT * FROM filtered_table_names;
+           ,
+           table_info AS (
+                SELECT
+                    t.TABLE_CATALOG,
+                    t.TABLE_SCHEMA,
+                    t.TABLE_NAME,
+                    t.TABLE_TYPE,
+                    t.TABLE_OWNER,
+                    t.COMMENT
+                FROM
+                    all_tables_mode
+                    CROSS JOIN ${SNOWFLAKE_DATABASE}.INFORMATION_SCHEMA.TABLES T
+                WHERE
+                    t.TABLE_TYPE = 'BASE TABLE'
+                    AND t.TABLE_SCHEMA NOT IN ('INFORMATION_SCHEMA')
+                    AND t.TABLE_SCHEMA = '${SNOWFLAKE_SCHEMA}'
+                    AND is_all_tables OR LOWER(T.TABLE_NAME) IN (SELECT table_name FROM filtered_table_names)
+            ) -- SELECT * FROM table_info;
+            ,
+            columns_info AS (
+                SELECT
+                    c.TABLE_CATALOG AS database_name,
+                    c.TABLE_SCHEMA AS schema_name,
+                    c.TABLE_NAME AS table_name,
+                    c.COLUMN_NAME AS column_name,
+                    c.DATA_TYPE AS data_type,
+                    c.ORDINAL_POSITION AS column_ordinal_position,
+                    c.IS_NULLABLE AS is_nullable,
+                    c.COLUMN_DEFAULT AS column_default,
+                    c.COMMENT AS column_comment
+                FROM
+                    ${SNOWFLAKE_DATABASE}.INFORMATION_SCHEMA.COLUMNS c
+                    INNER JOIN table_info USING (TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME)
+            )
+            ,
+            constraints_info AS (
+                SELECT
+                    tc.TABLE_CATALOG AS database_name,
+                    tc.TABLE_SCHEMA AS schema_name,
+                    tc.TABLE_NAME AS table_name,
+                    tc.CONSTRAINT_NAME AS constraint_name,
+                    tc.CONSTRAINT_TYPE AS constraint_type
+                FROM
+                    ${SNOWFLAKE_DATABASE}.INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+                    INNER JOIN table_info USING (TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME)
+                GROUP BY
+                    tc.TABLE_CATALOG, tc.TABLE_SCHEMA, tc.TABLE_NAME, tc.CONSTRAINT_NAME, tc.CONSTRAINT_TYPE
+            )
+            SELECT
+                ti.TABLE_SCHEMA AS schema_name,
+                ti.TABLE_NAME AS object_name,
+                OBJECT_CONSTRUCT(
+                    'schema_name', ti.TABLE_SCHEMA,
+                    'object_name', ti.TABLE_NAME,
+                    'object_type', ti.TABLE_TYPE,
+                    'owner', ti.TABLE_OWNER,
+                    'comment', ti.COMMENT,
+                    'columns', COALESCE(
+                        (SELECT ARRAY_AGG(
+                            OBJECT_CONSTRUCT(
+                                'column_name', ci.column_name,
+                                'data_type', ci.data_type,
+                                'ordinal_position', ci.column_ordinal_position,
+                                'is_nullable', ci.is_nullable,
+                                'column_default', ci.column_default,
+                                'column_comment', ci.column_comment
+                            )
+                        ) FROM columns_info ci WHERE ci.table_name = ti.TABLE_NAME AND ci.schema_name = ti.TABLE_SCHEMA),
+                        ARRAY_CONSTRUCT()
+                    ),
+                    'constraints', COALESCE(
+                        (SELECT ARRAY_AGG(
+                            OBJECT_CONSTRUCT(
+                                'constraint_name', cons.constraint_name,
+                                'constraint_type', cons.constraint_type
+                            )
+                        ) FROM constraints_info cons WHERE cons.table_name = ti.TABLE_NAME AND cons.schema_name = ti.TABLE_SCHEMA),
+                        ARRAY_CONSTRUCT()
+                    )
+                ) AS object_details
+            FROM table_info ti
+            ORDER BY ti.TABLE_SCHEMA, ti.TABLE_NAME;
+        parameters:
+            - name: table_names
+              type: string
+              description: "Optional: A comma-separated list of table names. If empty, details for all tables in the specified database and schema will be listed."
+
+toolsets:
+    snowflake_tools:
+        - execute_sql
+        - list_tables
