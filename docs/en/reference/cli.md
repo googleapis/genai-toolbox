@@ -25,8 +25,8 @@ description: >
 |              | `--tools-files`            | Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --tools-file or --tools-folder.                                                    |             |
 |              | `--tools-folder`           | Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --tools-file or --tools-files. |             |
 |              | `--ui`                     | Launches the Toolbox UI web server.                                                                                                                                              |             |
-|              | `--allowed-origins`        | Specifies a list of origins permitted to access this server.                                                                                                                     | `*`         |
-|              | `--allowed-hosts`          | Specifies a list of hosts permitted to access this server.                                                                                                                       | `*`         |
+|              | `--allowed-origins`        | Specifies a list of origins permitted to access this server for CORs access.                                                                                                     | `*`         |
+|              | `--allowed-hosts`          | Specifies a list of hosts permitted to access this server to prevent DNS rebinding attacks.                                                                                      | `*`         |
 | `-v`         | `--version`                | version for toolbox                                                                                                                                                              |             |
 
 ## Examples
