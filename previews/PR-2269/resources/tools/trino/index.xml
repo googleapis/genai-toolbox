@@ -51,8 +51,10 @@ database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2269/resources/sources/trino/">trino&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>The specified SQL statement is executed as a &lt;a href="https://trino.io/docs/current/sql/prepare.html">prepared statement&lt;/a>,
-and specified parameters will be inserted according to their position: e.g. &lt;code>$1&lt;/code>
-will be the first parameter specified, &lt;code>$2&lt;/code> will be the second parameter, and so
-on. If template parameters are included, they will be resolved before execution
-of the prepared statement.&lt;/p></description></item></channel></rss>
+&lt;p>The specified SQL statement is executed as a &lt;a href="https://trino.io/docs/current/sql/prepare.html">prepared statement&lt;/a>, and expects parameters in the SQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
+Query parameters can be used as substitutes for arbitrary expressions.
+Parameters cannot be used as substitutes for identifiers, column names, table
+names, or other parts of the query.&lt;/p></description></item></channel></rss>
