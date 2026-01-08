@@ -32,6 +32,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels/gemini"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
@@ -1361,6 +1362,7 @@ func TestPrebuiltTools(t *testing.T) {
 	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
 	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
 	cloudhealthcare_config, _ := prebuiltconfigs.Get("cloud-healthcare")
+	snowflake_config, _ := prebuiltconfigs.Get("snowflake")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1458,6 +1460,14 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("CLOUD_HEALTHCARE_REGION", "your_gcp_region")
 	t.Setenv("CLOUD_HEALTHCARE_DATASET", "your_healthcare_dataset")
 
+	t.Setenv("SNOWFLAKE_ACCOUNT", "your_account")
+	t.Setenv("SNOWFLAKE_USER", "your_username")
+	t.Setenv("SNOWFLAKE_PASSWORD", "your_pass")
+	t.Setenv("SNOWFLAKE_DATABASE", "your_db")
+	t.Setenv("SNOWFLAKE_SCHEMA", "your_schema")
+	t.Setenv("SNOWFLAKE_WAREHOUSE", "your_wh")
+	t.Setenv("SNOWFLAKE_ROLE", "your_role")
+
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -1513,7 +1523,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"alloydb_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "alloydb_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats", "list_stored_procedure"},
 				},
 			},
 		},
@@ -1543,7 +1553,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats", "list_stored_procedure"},
 				},
 			},
 		},
@@ -1643,7 +1653,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"postgres_database_tools": tools.ToolsetConfig{
 					Name:      "postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats", "list_stored_procedure"},
 				},
 			},
 		},
@@ -1755,6 +1765,16 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Snowflake prebuilt tool",
+			in:   snowflake_config,
+			wantToolset: server.ToolsetConfigs{
+				"snowflake_tools": tools.ToolsetConfig{
+					Name:      "snowflake_tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tcs {
@@ -1840,9 +1860,10 @@ func TestFileLoadingErrors(t *testing.T) {
 
 func TestMergeToolsFiles(t *testing.T) {
 	file1 := ToolsFile{
-		Sources:  server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
-		Tools:    server.ToolConfigs{"tool1": http.Config{Name: "tool1"}},
-		Toolsets: server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}},
+		Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
+		Tools:           server.ToolConfigs{"tool1": http.Config{Name: "tool1"}},
+		Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}},
+		EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
 	}
 	file2 := ToolsFile{
 		AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
@@ -1864,11 +1885,12 @@ func TestMergeToolsFiles(t *testing.T) {
 			name:  "merge two distinct files",
 			files: []ToolsFile{file1, file2},
 			want: ToolsFile{
-				Sources:      server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
-				AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
-				Tools:        server.ToolConfigs{"tool1": http.Config{Name: "tool1"}, "tool2": http.Config{Name: "tool2"}},
-				Toolsets:     server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}, "set2": tools.ToolsetConfig{Name: "set2"}},
-				Prompts:      server.PromptConfigs{},
+				Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
+				AuthServices:    server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
+				Tools:           server.ToolConfigs{"tool1": http.Config{Name: "tool1"}, "tool2": http.Config{Name: "tool2"}},
+				Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}, "set2": tools.ToolsetConfig{Name: "set2"}},
+				Prompts:         server.PromptConfigs{},
+				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
 			},
 			wantErr: false,
 		},
@@ -1881,22 +1903,24 @@ func TestMergeToolsFiles(t *testing.T) {
 			name:  "merge single file",
 			files: []ToolsFile{file1},
 			want: ToolsFile{
-				Sources:      file1.Sources,
-				AuthServices: make(server.AuthServiceConfigs),
-				Tools:        file1.Tools,
-				Toolsets:     file1.Toolsets,
-				Prompts:      server.PromptConfigs{},
+				Sources:         file1.Sources,
+				AuthServices:    make(server.AuthServiceConfigs),
+				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
+				Tools:           file1.Tools,
+				Toolsets:        file1.Toolsets,
+				Prompts:         server.PromptConfigs{},
 			},
 		},
 		{
 			name:  "merge empty list",
 			files: []ToolsFile{},
 			want: ToolsFile{
-				Sources:      make(server.SourceConfigs),
-				AuthServices: make(server.AuthServiceConfigs),
-				Tools:        make(server.ToolConfigs),
-				Toolsets:     make(server.ToolsetConfigs),
-				Prompts:      server.PromptConfigs{},
+				Sources:         make(server.SourceConfigs),
+				AuthServices:    make(server.AuthServiceConfigs),
+				EmbeddingModels: make(server.EmbeddingModelConfigs),
+				Tools:           make(server.ToolConfigs),
+				Toolsets:        make(server.ToolsetConfigs),
+				Prompts:         server.PromptConfigs{},
 			},
 		},
 	}

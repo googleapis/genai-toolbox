@@ -25,6 +25,7 @@ import (
 
 	bigqueryapi "cloud.google.com/go/bigquery"
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
@@ -55,7 +56,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigQueryClient() *bigqueryapi.Client
-	BigQueryTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error)
+	BigQueryTokenSourceWithScope(ctx context.Context, scopes []string) (oauth2.TokenSource, error)
 	BigQueryProject() string
 	BigQueryLocation() string
 	GetMaxQueryResultRows() int
@@ -190,10 +191,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			return nil, fmt.Errorf("error parsing access token: %w", err)
 		}
 	} else {
-		// Get cloud-platform token source for Gemini Data Analytics API during initialization
-		tokenSource, err := source.BigQueryTokenSourceWithScope(ctx, "https://www.googleapis.com/auth/cloud-platform")
+		// Get a token source for the Gemini Data Analytics API.
+		tokenSource, err := source.BigQueryTokenSourceWithScope(ctx, nil)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get cloud-platform token source: %w", err)
+			return nil, fmt.Errorf("failed to get token source: %w", err)
 		}
 
 		// Use cloud-platform token source for Gemini Data Analytics API
@@ -265,6 +266,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

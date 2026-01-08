@@ -30,6 +30,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/go-chi/httplog/v2"
 	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/server/resources"
@@ -56,6 +57,7 @@ type Server struct {
 func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	map[string]sources.Source,
 	map[string]auth.AuthService,
+	map[string]embeddingmodels.EmbeddingModel,
 	map[string]tools.Tool,
 	map[string]tools.Toolset,
 	map[string]prompts.Prompt,
@@ -91,7 +93,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return s, nil
 		}()
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		sourcesMap[name] = s
 	}
@@ -119,7 +121,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return a, nil
 		}()
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		authServicesMap[name] = a
 	}
@@ -128,6 +130,34 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 		authServiceNames = append(authServiceNames, name)
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d authServices: %s", len(authServicesMap), strings.Join(authServiceNames, ", ")))
+
+	// Initialize and validate embedding models from configs.
+	embeddingModelsMap := make(map[string]embeddingmodels.EmbeddingModel)
+	for name, ec := range cfg.EmbeddingModelConfigs {
+		em, err := func() (embeddingmodels.EmbeddingModel, error) {
+			_, span := instrumentation.Tracer.Start(
+				ctx,
+				"toolbox/server/embeddingmodel/init",
+				trace.WithAttributes(attribute.String("model_kind", ec.EmbeddingModelConfigKind())),
+				trace.WithAttributes(attribute.String("model_name", name)),
+			)
+			defer span.End()
+			em, err := ec.Initialize(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("unable to initialize embedding model %q: %w", name, err)
+			}
+			return em, nil
+		}()
+		if err != nil {
+			return nil, nil, nil, nil, nil, nil, nil, err
+		}
+		embeddingModelsMap[name] = em
+	}
+	embeddingModelNames := make([]string, 0, len(embeddingModelsMap))
+	for name := range embeddingModelsMap {
+		embeddingModelNames = append(embeddingModelNames, name)
+	}
+	l.InfoContext(ctx, fmt.Sprintf("Initialized %d embeddingModels: %s", len(embeddingModelsMap), strings.Join(embeddingModelNames, ", ")))
 
 	// initialize and validate the tools from configs
 	toolsMap := make(map[string]tools.Tool)
@@ -147,7 +177,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return t, nil
 		}()
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		toolsMap[name] = t
 	}
@@ -184,7 +214,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return t, err
 		}()
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		toolsetsMap[name] = t
 	}
@@ -216,7 +246,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return p, nil
 		}()
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		promptsMap[name] = p
 	}
@@ -253,7 +283,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 			return p, err
 		}()
 		if err != nil {
-			return nil, nil, nil, nil, nil, nil, err
+			return nil, nil, nil, nil, nil, nil, nil, err
 		}
 		promptsetsMap[name] = p
 	}
@@ -267,7 +297,7 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	}
 	l.InfoContext(ctx, fmt.Sprintf("Initialized %d promptsets: %s", len(promptsetsMap), strings.Join(promptsetNames, ", ")))
 
-	return sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
+	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
 }
 
 func hostCheck(allowedHosts map[string]struct{}) func(http.Handler) http.Handler {
@@ -335,7 +365,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	httpLogger := httplog.NewLogger("httplog", httpOpts)
 	r.Use(httplog.RequestLogger(httpLogger))
 
-	sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := InitializeConfigs(ctx, cfg)
+	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := InitializeConfigs(ctx, cfg)
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize configs: %w", err)
 	}
@@ -345,7 +375,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := resources.NewResourceManager(sourcesMap, authServicesMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
+	resourceManager := resources.NewResourceManager(sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap)
 
 	s := &Server{
 		version:         cfg.Version,
