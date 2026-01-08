@@ -118,7 +118,11 @@ func redactSensitiveValues(v any) {
 
 func isSensitiveKey(key string) bool {
 	lower := strings.ToLower(key)
-	sensitive := []string{"password", "secret", "token", "key", "credential"}
+	// Avoid using "key" as a substring match as it is too broad and can match things like "primary_key".
+	if lower == "key" || lower == "api_key" {
+		return true
+	}
+	sensitive := []string{"password", "secret", "token", "credential"}
 	for _, keyword := range sensitive {
 		if strings.Contains(lower, keyword) {
 			return true
