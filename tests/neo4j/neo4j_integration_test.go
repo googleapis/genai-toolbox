@@ -165,6 +165,7 @@ func TestNeo4jToolEndpoints(t *testing.T) {
 							"type":        "boolean",
 							"required":    false,
 							"description": "If set to true, the query will be validated and information about the execution will be returned without running the query. Defaults to false.",
+							"default":     false,
 							"authSources": []any{},
 						},
 					},
