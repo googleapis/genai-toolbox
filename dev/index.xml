@@ -8830,11 +8830,13 @@ database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/dev/resources/sources/trino/">trino&lt;/a>&lt;/li>
 &lt;/ul>
-&lt;p>The specified SQL statement is executed as a &lt;a href="https://trino.io/docs/current/sql/prepare.html">prepared statement&lt;/a>,
-and specified parameters will be inserted according to their position: e.g. &lt;code>$1&lt;/code>
-will be the first parameter specified, &lt;code>$2&lt;/code> will be the second parameter, and so
-on. If template parameters are included, they will be resolved before execution
-of the prepared statement.&lt;/p></description></item><item><title>valkey</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/valkey/valkey/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/valkey/valkey/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>The specified SQL statement is executed as a &lt;a href="https://trino.io/docs/current/sql/prepare.html">prepared statement&lt;/a>, and expects parameters in the SQL query to be in the form of placeholders &lt;code>?&lt;/code>.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;blockquote>
+&lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
+Query parameters can be used as substitutes for arbitrary expressions.
+Parameters cannot be used as substitutes for identifiers, column names, table
+names, or other parts of the query.&lt;/p></description></item><item><title>valkey</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/valkey/valkey/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/valkey/valkey/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A valkey tool executes a series of pre-defined Valkey commands against a
 Valkey instance.&lt;/p>
 &lt;p>The specified Valkey commands are executed sequentially. Each command is
