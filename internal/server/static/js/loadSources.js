@@ -12,29 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * Fetches the list of sources from the API.
- * @returns {!Promise<!Array<{name: string, kind: string}>>}
- */
-export async function fetchSources() {
-  const response = await fetch("/api/source");
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const apiResponse = await response.json();
-  if (
-    !apiResponse ||
-    typeof apiResponse.sources !== "object" ||
-    apiResponse.sources === null
-  ) {
-    throw new Error("Invalid response format from source API.");
-  }
-
-  return Object.values(apiResponse.sources).map((source) => ({
-    name: source.name || "",
-    kind: source.kind || "",
-  }));
-}
+import { fetchJsonObjectByKey } from "./apiFetch.js";
 
 /**
  * Fetches details for a specific source.
@@ -42,19 +20,11 @@ export async function fetchSources() {
  * @returns {!Promise<{name: string, kind: string}>}
  */
 export async function fetchSource(sourceName) {
-  const response = await fetch(`/api/source/${encodeURIComponent(sourceName)}`);
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const apiResponse = await response.json();
-  if (
-    !apiResponse ||
-    typeof apiResponse.sources !== "object" ||
-    apiResponse.sources === null
-  ) {
-    throw new Error("Invalid response format from source API.");
-  }
-  const source = apiResponse.sources[sourceName];
+  const sources = await fetchJsonObjectByKey(
+    `/api/source/${encodeURIComponent(sourceName)}`,
+    "sources"
+  );
+  const source = sources[sourceName];
   if (!source) {
     throw new Error(`Source "${sourceName}" not found in API response.`);
   }
@@ -64,4 +34,16 @@ export async function fetchSource(sourceName) {
     kind: source.kind || "",
     config: source.config || {},
   };
+}
+
+/**
+ * Fetches the list of sources from the API.
+ * @returns {!Promise<!Array<{name: string, kind: string}>>}
+ */
+export async function fetchSources() {
+  const sources = await fetchJsonObjectByKey("/api/source", "sources");
+  return Object.values(sources).map((source) => ({
+    name: source.name || "",
+    kind: source.kind || "",
+  }));
 }

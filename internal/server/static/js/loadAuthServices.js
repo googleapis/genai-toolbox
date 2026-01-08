@@ -12,31 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * Fetches the list of auth services from the API.
- * @returns {!Promise<!Array<{name: string, kind: string}>>}
- */
-export async function fetchAuthServices() {
-  const response = await fetch("/api/authservice");
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const apiResponse = await response.json();
-  if (
-    !apiResponse ||
-    typeof apiResponse.authServices !== "object" ||
-    apiResponse.authServices === null
-  ) {
-    throw new Error("Invalid response format from auth service API.");
-  }
-
-  return Object.values(apiResponse.authServices).map((service) => ({
-    name: service.name || "",
-    kind: service.kind || "",
-    headerName: service.headerName || "",
-    tools: Array.isArray(service.tools) ? service.tools : [],
-  }));
-}
+import { fetchJsonObjectByKey } from "./apiFetch.js";
 
 /**
  * Fetches details for a specific auth service.
@@ -44,21 +20,11 @@ export async function fetchAuthServices() {
  * @returns {!Promise<{name: string, kind: string}>}
  */
 export async function fetchAuthService(authServiceName) {
-  const response = await fetch(
-    `/api/authservice/${encodeURIComponent(authServiceName)}`
+  const authServices = await fetchJsonObjectByKey(
+    `/api/authservice/${encodeURIComponent(authServiceName)}`,
+    "authServices"
   );
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const apiResponse = await response.json();
-  if (
-    !apiResponse ||
-    typeof apiResponse.authServices !== "object" ||
-    apiResponse.authServices === null
-  ) {
-    throw new Error("Invalid response format from auth service API.");
-  }
-  const service = apiResponse.authServices[authServiceName];
+  const service = authServices[authServiceName];
   if (!service) {
     throw new Error(
       `Auth service "${authServiceName}" not found in API response.`
@@ -71,4 +37,21 @@ export async function fetchAuthService(authServiceName) {
     headerName: service.headerName || "",
     tools: Array.isArray(service.tools) ? service.tools : [],
   };
+}
+
+/**
+ * Fetches the list of auth services from the API.
+ * @returns {!Promise<!Array<{name: string, kind: string}>>}
+ */
+export async function fetchAuthServices() {
+  const authServices = await fetchJsonObjectByKey(
+    "/api/authservice",
+    "authServices"
+  );
+  return Object.values(authServices).map((service) => ({
+    name: service.name || "",
+    kind: service.kind || "",
+    headerName: service.headerName || "",
+    tools: Array.isArray(service.tools) ? service.tools : [],
+  }));
 }
