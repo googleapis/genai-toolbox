@@ -20,6 +20,9 @@ How to get started with Toolbox.
 Some core concepts in Toolbox
 - [Telemetry](https://googleapis.github.io/genai-toolbox/previews/PR-2218/concepts/telemetry/): An overview of telemetry and observability in Toolbox.
 
+### Featured Articles
+
+Toolbox Medium Blogs
 ### How-to
 
 List of guides detailing how to do different things with Toolbox. 
@@ -83,6 +86,7 @@ List of reference documentation for resources in Toolbox.
   - [Redis](https://googleapis.github.io/genai-toolbox/previews/PR-2218/resources/sources/redis/): Redis is a in-memory data structure store.
   - [Serverless for Apache Spark](https://googleapis.github.io/genai-toolbox/previews/PR-2218/resources/sources/serverless-spark/): Google Cloud Serverless for Apache Spark lets you run Spark workloads without requiring you to provision and manage your own Spark cluster.
   - [SingleStore](https://googleapis.github.io/genai-toolbox/previews/PR-2218/resources/sources/singlestore/): SingleStore is the cloud-native database built with speed and scale to power data-intensive applications.
+  - [Snowflake](https://googleapis.github.io/genai-toolbox/previews/PR-2218/resources/sources/snowflake/): Snowflake is a cloud-based data platform.
   - [Spanner](https://googleapis.github.io/genai-toolbox/previews/PR-2218/resources/sources/spanner/): Spanner is a fully managed database service from Google Cloud that combines  relational, key-value, graph, and search capabilities.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-2218/resources/sources/mssql/): SQL Server is a relational database management system (RDBMS).
   - [SQLite](https://googleapis.github.io/genai-toolbox/previews/PR-2218/resources/sources/sqlite/): SQLite is a C-language library that implements a small, fast, self-contained,  high-reliability, full-featured, SQL database engine.
@@ -122,6 +126,7 @@ List of reference documentation for resources in Toolbox.
   - [Redis](https://googleapis.github.io/genai-toolbox/previews/PR-2218/resources/tools/redis/): Tools that work with Redis Sources.
   - [Serverless for Apache Spark](https://googleapis.github.io/genai-toolbox/previews/PR-2218/resources/tools/serverless-spark/): Tools that work with Google Cloud Serverless for Apache Spark Sources.
   - [SingleStore](https://googleapis.github.io/genai-toolbox/previews/PR-2218/resources/tools/singlestore/): Tools that work with SingleStore Sources
+  - [Snowflake](https://googleapis.github.io/genai-toolbox/previews/PR-2218/resources/tools/snowflake/): Tools that work with Snowflake Sources.
   - [Spanner](https://googleapis.github.io/genai-toolbox/previews/PR-2218/resources/tools/spanner/): Tools that work with Spanner Sources.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-2218/resources/tools/mssql/): Tools that work with SQL Server Sources, such as CloudSQL for SQL Server.
   - [SQLite](https://googleapis.github.io/genai-toolbox/previews/PR-2218/resources/tools/sqlite/): Tools that work with SQLite Sources.
@@ -146,6 +151,7 @@ Samples and guides for using Toolbox.
   - [Gemini-CLI and OAuth](https://googleapis.github.io/genai-toolbox/previews/PR-2218/samples/looker/looker_gemini_oauth/): How to connect to Looker from Gemini-CLI with end-user credentials
   - [Quickstart (MCP with Looker and Gemini-CLI)](https://googleapis.github.io/genai-toolbox/previews/PR-2218/samples/looker/looker_gemini/): How to get started running Toolbox with Gemini-CLI and Looker as the source.
   - [Quickstart (MCP with Looker)](https://googleapis.github.io/genai-toolbox/previews/PR-2218/samples/looker/looker_mcp_inspector/): How to get started running Toolbox with MCP Inspector and Looker as the source.
+- [Snowflake](https://googleapis.github.io/genai-toolbox/previews/PR-2218/samples/snowflake/): How to get started running Toolbox with MCP Inspector and Snowflake as the source.
 
 ### About
 
