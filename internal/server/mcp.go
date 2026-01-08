@@ -40,6 +40,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type sseSession struct {
@@ -143,12 +144,20 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 			}
 			return err
 		}
-		v, res, err := processMcpMessage(ctx, []byte(line), s.server, s.protocol, "", "", nil)
+
+		// Create a span for STDIO MCP requests - will be renamed based on method
+		spanCtx, span := s.server.instrumentation.Tracer.Start(ctx, "toolbox/server/mcp/stdio")
+		span.SetAttributes(attribute.String("transport", "mcp-stdio"))
+
+		v, res, err := processMcpMessage(spanCtx, []byte(line), s.server, s.protocol, "", "", nil)
 		if err != nil {
 			// errors during the processing of message will generate a valid MCP Error response.
 			// server can continue to run.
-			s.server.logger.ErrorContext(ctx, err.Error())
+			s.server.logger.ErrorContext(spanCtx, err.Error())
+			span.SetStatus(codes.Error, err.Error())
 		}
+		span.End()
+
 		if v != "" {
 			s.protocol = v
 		}
@@ -248,6 +257,7 @@ func sseHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
 	span.SetAttributes(attribute.String("session_id", sessionId))
 	span.SetAttributes(attribute.String("toolset_name", toolsetName))
+	span.SetAttributes(attribute.String("transport", "mcp-sse"))
 
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
@@ -336,7 +346,8 @@ func methodNotAllowed(s *Server, w http.ResponseWriter, r *http.Request) {
 func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/mcp")
+	// Initialize trace early - will be renamed based on method
+	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/mcp/shttp")
 	r = r.WithContext(ctx)
 	ctx = util.WithLogger(r.Context(), s.logger)
 
@@ -369,6 +380,8 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	if headerProtocolVersion != "" {
 		if !mcp.VerifyProtocolVersion(headerProtocolVersion) {
 			err := fmt.Errorf("invalid protocol version: %s", headerProtocolVersion)
+			span.SetStatus(codes.Error, err.Error())
+			span.End()
 			_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
 			return
 		}
@@ -379,6 +392,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	promptsetName := chi.URLParam(r, "promptsetName")
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
 	span.SetAttributes(attribute.String("toolset_name", toolsetName))
+	span.SetAttributes(attribute.String("transport", "mcp-shttp"))
 
 	var err error
 	defer func() {
@@ -502,6 +516,17 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 	if baseMessage.Id == nil {
 		err := mcp.NotificationHandler(ctx, body)
 		return "", nil, err
+	}
+
+	// Update span name based on method for better trace categorization
+	span := trace.SpanFromContext(ctx)
+	switch baseMessage.Method {
+	case "tools/list":
+		span.SetName("toolbox/server/toolset/get")
+		span.SetAttributes(attribute.String("toolset_name", toolsetName))
+	case "tools/call":
+		span.SetName("toolbox/server/tool/invoke")
+		// tool_name will be set in the method handler once parsed
 	}
 
 	switch baseMessage.Method {

@@ -28,6 +28,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server/resources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // ProcessMethod returns a response for the request.
@@ -94,6 +96,11 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	toolName := req.Params.Name
 	toolArgument := req.Params.Arguments
 	logger.DebugContext(ctx, fmt.Sprintf("tool name: %s", toolName))
+
+	// Set tool_name attribute on the current span
+	span := trace.SpanFromContext(ctx)
+	span.SetAttributes(attribute.String("tool_name", toolName))
+
 	tool, ok := resourceMgr.GetTool(toolName)
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
