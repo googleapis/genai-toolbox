@@ -43,9 +43,10 @@ func TestServe(t *testing.T) {
 
 	addr, port := "127.0.0.1", 5000
 	cfg := server.ServerConfig{
-		Version: "0.0.0",
-		Address: addr,
-		Port:    port,
+		Version:      "0.0.0",
+		Address:      addr,
+		Port:         port,
+		AllowedHosts: []string{"*"},
 	}
 
 	otelShutdown, err := telemetry.SetupOTel(ctx, "0.0.0", "", false, "toolbox")
