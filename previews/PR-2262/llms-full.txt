@@ -5461,14 +5461,18 @@ deployment will time out.
 
 ### Update deployed server to be secure
 
-To prevent DNS rebinding attack, use the `--allowed-origins` flag to specify a
-list of origins permitted to access the server. In order to do that, you will
+To prevent DNS rebinding attack, use the `--allowed-hosts` flag to specify a
+list of hosts. In order to do that, you will
 have to re-deploy the cloud run service with the new flag.
+
+To implement CORs checks, use the `--allowed-origins` flag to specify a list of
+origins permitted to access the server.
 
 1. Set an environment variable to the cloud run url: 
 
     ```bash
     export URL=<cloud run url>
+    export HOST=<cloud run host>
     ```
 
 2. Redeploy Toolbox:
@@ -5479,7 +5483,7 @@ have to re-deploy the cloud run service with the new flag.
         --service-account toolbox-identity \
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
-        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL"
+        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL","--allowed-hosts=$HOST"
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
     ```
 
@@ -5491,7 +5495,7 @@ have to re-deploy the cloud run service with the new flag.
         --service-account toolbox-identity \
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
-        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL" \
+        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL","--allowed-hosts=$HOST" \
         # TODO(dev): update the following to match your VPC if necessary
         --network default \
         --subnet default
@@ -5928,8 +5932,12 @@ How to set up and configure Toolbox to deploy on Kubernetes with Google Kubernet
                   path: tools.yaml
     ```
 
-    {{< notice tip >}}  
+    {{< notice tip >}}
 To prevent DNS rebinding attack, use the `--allowed-origins` flag to specify a
+list of origins permitted to access the server. E.g. `args: ["--address",
+"0.0.0.0", "--allowed-hosts", "foo.bar:5000"]`
+
+To implement CORs, use the `--allowed-origins` flag to specify a
 list of origins permitted to access the server. E.g. `args: ["--address",
 "0.0.0.0", "--allowed-origins", "https://foo.bar"]`
 {{< /notice >}}
@@ -6091,7 +6099,12 @@ networks:
 ```
 
     {{< notice tip >}}  
-To prevent DNS rebinding attack, use the `--allowed-origins` flag to specify a
+To prevent DNS rebinding attack, use the `--allowed-hosts` flag to specify a
+list of hosts for validation. E.g. `command: [ "toolbox",
+"--tools-file", "/config/tools.yaml", "--address", "0.0.0.0",
+"--allowed-hosts", "localhost:5000"]`
+
+To implement CORs, use the `--allowed-origins` flag to specify a
 list of origins permitted to access the server. E.g. `command: [ "toolbox",
 "--tools-file", "/config/tools.yaml", "--address", "0.0.0.0",
 "--allowed-origins", "https://foo.bar"]`
@@ -13321,25 +13334,26 @@ This page describes the `toolbox` command-line options.
 
 ## Reference
 
-| Flag (Short) | Flag (Long)                | Description                                                                                                                                                                                   | Default     |
-|--------------|----------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
-| `-a`         | `--address`                | Address of the interface the server will listen on.                                                                                                                                           | `127.0.0.1` |
-|              | `--disable-reload`         | Disables dynamic reloading of tools file.                                                                                                                                                     |             |
-| `-h`         | `--help`                   | help for toolbox                                                                                                                                                                              |             |
-|              | `--log-level`              | Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.                                                                                                                  | `info`      |
-|              | `--logging-format`         | Specify logging format to use. Allowed: 'standard' or 'JSON'.                                                                                                                                 | `standard`  |
-| `-p`         | `--port`                   | Port the server will listen on.                                                                                                                                                               | `5000`      |
-|              | `--prebuilt`               | Use a prebuilt tool configuration by source type. See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values.                                     |             |
-|              | `--stdio`                  | Listens via MCP STDIO instead of acting as a remote HTTP server.                                                                                                                              |             |
-|              | `--telemetry-gcp`          | Enable exporting directly to Google Cloud Monitoring.                                                                                                                                         |             |
-|              | `--telemetry-otlp`         | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')                                                                                 |             |
-|              | `--telemetry-service-name` | Sets the value of the service.name resource attribute for telemetry data.                                                                                                                     | `toolbox`   |
+| Flag (Short) | Flag (Long)                | Description                                                                                                                                                                      | Default     |
+|--------------|----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------|
+| `-a`         | `--address`                | Address of the interface the server will listen on.                                                                                                                              | `127.0.0.1` |
+|              | `--disable-reload`         | Disables dynamic reloading of tools file.                                                                                                                                        |             |
+| `-h`         | `--help`                   | help for toolbox                                                                                                                                                                 |             |
+|              | `--log-level`              | Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.                                                                                                     | `info`      |
+|              | `--logging-format`         | Specify logging format to use. Allowed: 'standard' or 'JSON'.                                                                                                                    | `standard`  |
+| `-p`         | `--port`                   | Port the server will listen on.                                                                                                                                                  | `5000`      |
+|              | `--prebuilt`               | Use a prebuilt tool configuration by source type. See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values.                                                          |             |
+|              | `--stdio`                  | Listens via MCP STDIO instead of acting as a remote HTTP server.                                                                                                                 |             |
+|              | `--telemetry-gcp`          | Enable exporting directly to Google Cloud Monitoring.                                                                                                                            |             |
+|              | `--telemetry-otlp`         | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')                                                                    |             |
+|              | `--telemetry-service-name` | Sets the value of the service.name resource attribute for telemetry data.                                                                                                        | `toolbox`   |
 |              | `--tools-file`             | File path specifying the tool configuration. Cannot be used with --tools-files or --tools-folder.                                                                                |             |
 |              | `--tools-files`            | Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --tools-file or --tools-folder.                                                    |             |
 |              | `--tools-folder`           | Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --tools-file or --tools-files. |             |
-|              | `--ui`                     | Launches the Toolbox UI web server.                                                                                                                                                           |             |
-|              | `--allowed-origins`        | Specifies a list of origins permitted to access this server.                                                                                                                                  | `*`         |
-| `-v`         | `--version`                | version for toolbox                                                                                                                                                                           |             |
+|              | `--ui`                     | Launches the Toolbox UI web server.                                                                                                                                              |             |
+|              | `--allowed-origins`        | Specifies a list of origins permitted to access this server for CORs access.                                                                                                     | `*`         |
+|              | `--allowed-hosts`          | Specifies a list of hosts permitted to access this server to prevent DNS rebinding attacks.                                                                                      | `*`         |
+| `-v`         | `--version`                | version for toolbox                                                                                                                                                              |             |
 
 ## Examples
 
