@@ -34,6 +34,7 @@ type compatibleSource interface {
 	GetDefaultProject() string
 	GetService(context.Context, string) (*sqladmin.Service, error)
 	UseClientAuthorization() bool
+	InsertBackupRun(ctx context.Context, project, instance, location, backupDescription, accessToken string) (any, error)
 }
 
 // Config defines the configuration for the create-backup tool.
@@ -86,9 +87,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	allParameters := parameters.Parameters{
 		projectParam,
 		parameters.NewStringParameter("instance", "Cloud SQL instance ID. This does not include the project ID."),
-		// Location and description are optional.
+		// Location and backup_description are optional.
 		parameters.NewStringParameterWithRequired("location", "Location of the backup run.", false),
-		parameters.NewStringParameterWithRequired("description", "The description of this backup run.", false),
+		parameters.NewStringParameterWithRequired("backup_description", "The description of this backup run.", false),
 	}
 	paramManifest := allParameters.Manifest()
 
@@ -135,28 +136,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("error casting 'instance' parameter: %v", paramsMap["instance"])
 	}
 
-	backupRun := &sqladmin.BackupRun{}
+	location, _ := paramsMap["location"].(string)
+	description, _ := paramsMap["backup_description"].(string)
 
-	location, ok := paramsMap["location"].(string)
-	if ok {
-		backupRun.Location = location
-	}
-	description, ok := paramsMap["description"].(string)
-	if ok {
-		backupRun.Description = description
-	}
-
-	service, err := source.GetService(ctx, string(accessToken))
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := service.BackupRuns.Insert(project, instance, backupRun).Do()
-	if err != nil {
-		return nil, fmt.Errorf("error creating backup: %w", err)
-	}
-
-	return resp, nil
+	return source.InsertBackupRun(ctx, project, instance, location, description, string(accessToken))
 }
 
 // ParseParams parses the parameters for the tool.

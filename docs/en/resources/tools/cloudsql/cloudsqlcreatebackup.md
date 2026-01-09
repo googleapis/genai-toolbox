@@ -37,14 +37,7 @@ tools:
 | project                    | string   | true         | The project ID.                                                                 |
 | instance                   | string   | true         | The name of the instance to take a backup on. Does not include the project ID.  |
 | location                   | string   | false        | (Optional) Location of the backup run.                                          |
-| description                | string   | false        | (Optional) The description of this backup run.                                  |
-
-## Usage Notes
-
-- The tool is used for taking on-demand backups on Cloud SQL instances.
-- The source must be a valid Cloud SQL Admin API source.
-- You can optionally specify the `location` parameter to set the location of the backup. If omitted, the backup will be stored in the custom backup location if set on the instance, or the multi-region that is geographically closest to the location of the Cloud SQL instance if not set.
-- You can optionally specify the `description` parameter to set a description for the backup. If omitted, the description will be empty.
+| backup_description         | string   | false        | (Optional) The description of this backup run.                                  |
 
 ## See Also
 - [Cloud SQL Admin API documentation](https://cloud.google.com/sql/docs/mysql/admin-api)

@@ -154,7 +154,7 @@ func TestCreateBackupToolEndpoints(t *testing.T) {
 		{
 			name:     "successful backup creation with optional parameters",
 			toolName: "create-backup",
-			body:     `{"project": "p1", "instance": "instance-optional", "location": "us-central1", "description": "test desc"}`,
+			body:     `{"project": "p1", "instance": "instance-optional", "location": "us-central1", "backup_description": "test desc"}`,
 			want:     `{"name":"op1","status":"PENDING"}`,
 		},
 		{
