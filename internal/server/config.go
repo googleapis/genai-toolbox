@@ -68,6 +68,8 @@ type ServerConfig struct {
 	UI bool
 	// Specifies a list of origins permitted to access this server.
 	AllowedOrigins []string
+	// Specifies a list of hosts permitted to access this server
+	AllowedHosts []string
 }
 
 type logFormat string
