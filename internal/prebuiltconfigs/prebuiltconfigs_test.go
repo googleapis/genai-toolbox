@@ -50,6 +50,7 @@ var expectedToolSources = []string{
 	"serverless-spark",
 	"singlestore",
 	"spanner-admin",
+	"snowflake",
 	"spanner-postgres",
 	"spanner",
 	"sqlite",
@@ -128,9 +129,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	sqlite_config, _ := Get("sqlite")
 	neo4jconfig, _ := Get("neo4j")
 	healthcare_config, _ := Get("cloud-healthcare")
-
+	snowflake_config, _ := Get("snowflake")
 	if len(alloydb_admin_config) <= 0 {
-		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
+		t.Fatalf("unexpected error: could not fetch alloydb admin prebuilt tools yaml")
 	}
 	if len(alloydb_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb prebuilt tools yaml")
@@ -198,6 +199,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	if len(singlestore_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch singlestore prebuilt tools yaml")
 	}
+	if len(snowflake_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch snowflake prebuilt tools yaml")
+	}
 	if len(spanner_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch spanner prebuilt tools yaml")
 	}
@@ -218,6 +222,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(healthcare_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch healthcare prebuilt tools yaml")
+	}
+	if len(snowflake_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch snowflake prebuilt tools yaml")
 	}
 }
 
