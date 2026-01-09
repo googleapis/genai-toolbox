@@ -14,7 +14,7 @@
         "url": "https://github.com/googleapis/genai-toolbox",
         "source": "github"
     },
-    "version": "0.25.0",
+    "version": "0.25.1",
     "packages": [
         {
             "registryType": "oci",
