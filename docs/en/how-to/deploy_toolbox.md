@@ -211,6 +211,9 @@ from toolbox_core import ToolboxClient, auth_methods
 # Replace with the Cloud Run service URL generated in the previous step
 URL = "https://cloud-run-url.app"
 
+# WARNING: There is a known issue that may cause it to fail with a 401 error
+# on local machines. 
+# See https://github.com/googleapis/mcp-toolbox-sdk-python/issues/496
 auth_token_provider = auth_methods.aget_google_id_token(URL) # can also use sync method
 
 async def main():

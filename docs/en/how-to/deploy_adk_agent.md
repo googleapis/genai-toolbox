@@ -101,6 +101,9 @@ authentication token.
     TOOLBOX_URL = "https://your-toolbox-service-xyz.a.run.app"
 
     # Initialize the client with the Cloud Run URL and Auth headers
+    # WARNING: There is a known issue that may cause it to fail with a 401 error
+    # on local machines. 
+    # See https://github.com/googleapis/mcp-toolbox-sdk-python/issues/496
     client = ToolboxSyncClient(
         TOOLBOX_URL, 
         client_headers={"Authorization": auth_methods.get_google_id_token(TOOLBOX_URL)}
