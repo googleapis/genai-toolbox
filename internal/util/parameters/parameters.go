@@ -478,9 +478,13 @@ func (ps Parameters) McpManifest() (McpToolsSchema, map[string][]string) {
 	for _, p := range ps {
 		name := p.GetName()
 		paramManifest, authParamList := p.McpManifest()
+		defaultV := p.GetDefault()
+		if defaultV != nil {
+			paramManifest.Default = defaultV
+		}
 		properties[name] = paramManifest
 		// parameters that doesn't have a default value are added to the required field
-		if CheckParamRequired(p.GetRequired(), p.GetDefault()) {
+		if CheckParamRequired(p.GetRequired(), defaultV) {
 			required = append(required, name)
 		}
 		if len(authParamList) > 0 {
@@ -502,6 +506,7 @@ type ParameterManifest struct {
 	Description          string             `json:"description"`
 	AuthServices         []string           `json:"authSources"`
 	Items                *ParameterManifest `json:"items,omitempty"`
+	Default              any                `json:"default,omitempty"`
 	AdditionalProperties any                `json:"additionalProperties,omitempty"`
 	EmbeddedBy           string             `json:"embeddedBy,omitempty"`
 }
@@ -511,6 +516,7 @@ type ParameterMcpManifest struct {
 	Type                 string                `json:"type"`
 	Description          string                `json:"description"`
 	Items                *ParameterMcpManifest `json:"items,omitempty"`
+	Default              any                   `json:"default,omitempty"`
 	AdditionalProperties any                   `json:"additionalProperties,omitempty"`
 }
 
@@ -788,6 +794,7 @@ func (p *StringParameter) Manifest() ParameterManifest {
 		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authServiceNames,
+		Default:      p.GetDefault(),
 	}
 }
 
@@ -946,6 +953,7 @@ func (p *IntParameter) Manifest() ParameterManifest {
 		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authServiceNames,
+		Default:      p.GetDefault(),
 	}
 }
 
@@ -1102,6 +1110,7 @@ func (p *FloatParameter) Manifest() ParameterManifest {
 		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authServiceNames,
+		Default:      p.GetDefault(),
 	}
 }
 
@@ -1235,6 +1244,7 @@ func (p *BooleanParameter) Manifest() ParameterManifest {
 		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authServiceNames,
+		Default:      p.GetDefault(),
 	}
 }
 
@@ -1430,6 +1440,7 @@ func (p *ArrayParameter) Manifest() ParameterManifest {
 		Description:  p.Desc,
 		AuthServices: authServiceNames,
 		Items:        &items,
+		Default:      p.GetDefault(),
 	}
 }
 
@@ -1675,7 +1686,10 @@ func (p *MapParameter) Manifest() ParameterManifest {
 		// If no valueType is given, allow any properties.
 		additionalProperties = true
 	}
-
+	var defaultV any
+	if p.Default != nil {
+		defaultV = *p.Default
+	}
 	return ParameterManifest{
 		Name:                 p.Name,
 		Type:                 "object",
@@ -1683,6 +1697,7 @@ func (p *MapParameter) Manifest() ParameterManifest {
 		Description:          p.Desc,
 		AuthServices:         authServiceNames,
 		AdditionalProperties: additionalProperties,
+		Default:              defaultV,
 	}
 }
 
