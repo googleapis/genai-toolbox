@@ -1,10 +1,14 @@
 {
   "name": "@toolbox-sdk/server-win32-x64",
-  "version": "0.24.1",
+  "version": "0.25.0",
   "license": "Apache-2.0",
   "author": "Google LLC",
-  "os": ["win32"],
-  "cpu": ["x64"],
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
   "main": "bin/toolbox.exe",
   "repository": "googleapis/genai-toolbox",
   "scripts": {
