@@ -30,6 +30,12 @@ const kind string = "cloud-sql-insert-backup"
 
 var _ tools.ToolConfig = Config{}
 
+type compatibleSource interface {
+	GetDefaultProject() string
+	GetService(context.Context, string) (*sqladmin.Service, error)
+	UseClientAuthorization() bool
+}
+
 // Config defines the configuration for the insert-backup tool.
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
@@ -64,12 +70,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if !ok {
 		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
 	}
-	s, ok := rawS.(*cloudsqladmin.Source)
+	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-sql-admin`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, cfg.Source)
 	}
 
-	project := s.DefaultProject
+	project := s.GetDefaultProject()
 	var projectParam parameters.Parameter
 	if project != "" {
 		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
@@ -116,6 +122,10 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
 	paramsMap := params.AsMap()
 
 	project, ok := paramsMap["project"].(string)
@@ -138,7 +148,7 @@ func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessT
 		backupRun.Description = description
 	}
 
-	service, err := t.Source.GetService(ctx, string(accessToken))
+	service, err := source.GetService(ctx, string(accessToken))
 	if err != nil {
 		return nil, err
 	}
@@ -171,10 +181,15 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return true
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
-	return t.Source.UseClientAuthorization()
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return false, err
+	}
+
+	return source.UseClientAuthorization(), nil
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }
