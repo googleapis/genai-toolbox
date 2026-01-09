@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cloudsqlinsertbackup_test
+package cloudsqlcreatebackup_test
 
 import (
 	"testing"
@@ -21,7 +21,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlinsertbackup"
+	"github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlcreatebackup"
 )
 
 func TestParseFromYaml(t *testing.T) {
@@ -38,15 +38,15 @@ func TestParseFromYaml(t *testing.T) {
 			desc: "basic example",
 			in: `
 			tools:
-			  insert-backup-tool:
-			    kind: cloud-sql-insert-backup
+			  create-backup-tool:
+			    kind: cloud-sql-create-backup
 			    description: a test description
 			    source: a-source
 			`,
 			want: server.ToolConfigs{
-				"insert-backup-tool": cloudsqlinsertbackup.Config{
-					Name:         "insert-backup-tool",
-					Kind:         "cloud-sql-insert-backup",
+				"create-backup-tool": cloudsqlcreatebackup.Config{
+					Name:         "create-backup-tool",
+					Kind:         "cloud-sql-create-backup",
 					Description:  "a test description",
 					Source:       "a-source",
 					AuthRequired: []string{},

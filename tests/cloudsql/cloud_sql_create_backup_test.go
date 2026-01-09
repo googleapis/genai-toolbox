@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -36,15 +36,15 @@ import (
 )
 
 var (
-	insertBackupToolKind = "cloud-sql-insert-backup"
+	createBackupToolKind = "cloud-sql-create-backup"
 )
 
-type insertBackupTransport struct {
+type createBackupTransport struct {
 	transport http.RoundTripper
 	url       *url.URL
 }
 
-func (t *insertBackupTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+func (t *createBackupTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if strings.HasPrefix(req.URL.String(), "https://sqladmin.googleapis.com") {
 		req.URL.Scheme = t.url.Scheme
 		req.URL.Host = t.url.Host
@@ -52,11 +52,11 @@ func (t *insertBackupTransport) RoundTrip(req *http.Request) (*http.Response, er
 	return t.transport.RoundTrip(req)
 }
 
-type masterInsertBackupHandler struct {
+type mastercreateBackupHandler struct {
 	t *testing.T
 }
 
-func (h *masterInsertBackupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *mastercreateBackupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !strings.Contains(r.UserAgent(), "genai-toolbox/") {
 		h.t.Errorf("User-Agent header not found")
 	}
@@ -96,11 +96,11 @@ func (h *masterInsertBackupHandler) ServeHTTP(w http.ResponseWriter, r *http.Req
 	}
 }
 
-func TestInsertBackupToolEndpoints(t *testing.T) {
+func TestCreateBackupToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	handler := &masterInsertBackupHandler{t: t}
+	handler := &mastercreateBackupHandler{t: t}
 	server := httptest.NewServer(handler)
 	defer server.Close()
 
@@ -113,7 +113,7 @@ func TestInsertBackupToolEndpoints(t *testing.T) {
 	if originalTransport == nil {
 		originalTransport = http.DefaultTransport
 	}
-	http.DefaultClient.Transport = &insertBackupTransport{
+	http.DefaultClient.Transport = &createBackupTransport{
 		transport: originalTransport,
 		url:       serverURL,
 	}
@@ -122,7 +122,7 @@ func TestInsertBackupToolEndpoints(t *testing.T) {
 	})
 
 	var args []string
-	toolsFile := getInsertBackupToolsConfig()
+	toolsFile := getCreateBackupToolsConfig()
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
@@ -146,20 +146,20 @@ func TestInsertBackupToolEndpoints(t *testing.T) {
 		errorStatus int
 	}{
 		{
-			name:     "successful backup insertion with no optional parameters",
-			toolName: "insert-backup",
+			name:     "successful backup creation with no optional parameters",
+			toolName: "create-backup",
 			body:     `{"project": "p1", "instance": "instance-no-optional"}`,
 			want:     `{"name":"op1","status":"PENDING"}`,
 		},
 		{
-			name:     "successful backup insertion with optional parameters",
-			toolName: "insert-backup",
+			name:     "successful backup creation with optional parameters",
+			toolName: "create-backup",
 			body:     `{"project": "p1", "instance": "instance-optional", "location": "us-central1", "description": "test desc"}`,
 			want:     `{"name":"op1","status":"PENDING"}`,
 		},
 		{
 			name:        "missing instance name",
-			toolName:    "insert-backup",
+			toolName:    "create-backup",
 			body:        `{"project": "p1", "escription": "invalid"}`,
 			expectError: true,
 			errorStatus: http.StatusBadRequest,
@@ -167,7 +167,6 @@ func TestInsertBackupToolEndpoints(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			api := fmt.Sprintf("http://127.0.0.1:5000/api/tool/%s/invoke", tc.toolName)
 			req, err := http.NewRequest(http.MethodPost, api, bytes.NewBufferString(tc.body))
@@ -216,7 +215,7 @@ func TestInsertBackupToolEndpoints(t *testing.T) {
 	}
 }
 
-func getInsertBackupToolsConfig() map[string]any {
+func getCreateBackupToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
@@ -224,8 +223,8 @@ func getInsertBackupToolsConfig() map[string]any {
 			},
 		},
 		"tools": map[string]any{
-			"insert-backup": map[string]any{
-				"kind":   insertBackupToolKind,
+			"create-backup": map[string]any{
+				"kind":   createBackupToolKind,
 				"source": "my-cloud-sql-source",
 			},
 		},

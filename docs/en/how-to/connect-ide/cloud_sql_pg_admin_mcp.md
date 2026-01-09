@@ -48,7 +48,7 @@ instance, database and users:
     * `roles/cloudsql.editor`: Provides permissions to manage existing resources.
         * All `viewer` tools
         * `create_database`
-        * `insert_backup`
+        * `create_backup`
     * `roles/cloudsql.admin`: Provides full control over all resources.
         * All `editor` and `viewer` tools
         * `create_instance`
@@ -300,7 +300,7 @@ instances and interacting with your database:
 * **create_user**: Creates a new user in a Cloud SQL instance.
 * **wait_for_operation**: Waits for a Cloud SQL operation to complete.
 * **clone_instance**: Creates a clone of an existing Cloud SQL for PostgreSQL instance.
-* **insert_backup**: Creates a backup on a Cloud SQL instance.
+* **create_backup**: Creates a backup on a Cloud SQL instance.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs

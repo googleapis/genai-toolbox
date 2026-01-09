@@ -1,11 +1,11 @@
 ---
-title: cloud-sql-insert-backup
+title: cloud-sql-create-backup
 type: docs
 weight: 10
 description: "Creates a backup on a Cloud SQL instance."
 ---
 
-The `cloud-sql-insert-backup` tool creates an on-demand backup on a Cloud SQL instance using the Cloud SQL Admin API.
+The `cloud-sql-create-backup` tool creates an on-demand backup on a Cloud SQL instance using the Cloud SQL Admin API.
 
 {{< notice info dd>}}
 This tool uses a `source` of kind `cloud-sql-admin`.
@@ -13,12 +13,12 @@ This tool uses a `source` of kind `cloud-sql-admin`.
 
 ## Examples
 
-Basic backup insertion (current state)
+Basic backup creation (current state)
 
 ```yaml
 tools:
-  backup-insertion-basic:
-    kind: cloud-sql-insert-backup
+  backup-creation-basic:
+    kind: cloud-sql-create-backup
     source: cloud-sql-admin-source
     description: "Creates a backup on the given Cloud SQL instance."
 ```
@@ -26,7 +26,7 @@ tools:
 ### Tool Configuration
 | **field**      | **type** | **required** | **description**                                               |
 | -------------- | :------: | :----------: | ------------------------------------------------------------- |
-| kind           | string   | true         | Must be "cloud-sql-insert-backup".                            |
+| kind           | string   | true         | Must be "cloud-sql-create-backup".                            |
 | source         | string   | true         | The name of the `cloud-sql-admin` source to use.              |
 | description    | string   | false        | A description of the tool.                                    |
 
