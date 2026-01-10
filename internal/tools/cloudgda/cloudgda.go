@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -73,20 +74,22 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		parameters.NewStringParameterWithRequired("query", "A natural language formulation of a database query.", true),
 	}
 	// The input and outputs are for tool guidance, usage guidance is for multi-turn interaction.
-	guidance := "Tool guidance:\n" +
-		"  Inputs:\n" +
-		"    1. query: A natural language formulation of a database query.\n" +
-		"  Outputs: (all optional)\n" +
-		"    1. disambiguation_question: Clarification questions or comments where the tool needs the users' input.\n" +
-		"    2. generated_query: The generated query for the user query.\n" +
-		"    3. intent_explanation: An explanation for why the tool produced `generated_query`.\n" +
-		"    4. query_result: The result of executing `generated_query`.\n" +
-		"    5. natural_language_answer: The natural language answer that summarizes the `query` and `query_result`.\n" +
-		"\n" +
-		"Usage guidance:\n" +
-		"  1. If `disambiguation_question` is produced, then solicit the needed inputs from the user and try the tool with a new `query` that has the needed clarification.\n" +
-		"  2. If `natural_language_answer` is produced, use `intent_explanation` and `generated_query` to see if you need to clarify any assumptions for the user.\n" +
-		"  3. If the tool output indicates failure or empty results, explain that clearly using the provided reasoning."
+	guidance := strings.Join([]string{
+		"Tool guidance:",
+		"  Inputs:",
+		"    1. query: A natural language formulation of a database query.",
+		"  Outputs: (all optional)",
+		"    1. disambiguation_question: Clarification questions or comments where the tool needs the users' input.",
+		"    2. generated_query: The generated query for the user query.",
+		"    3. intent_explanation: An explanation for why the tool produced `generated_query`.",
+		"    4. query_result: The result of executing `generated_query`.",
+		"    5. natural_language_answer: The natural language answer that summarizes the `query` and `query_result`.",
+		"",
+		"Usage guidance:",
+		"  1. If `disambiguation_question` is produced, then solicit the needed inputs from the user and try the tool with a new `query` that has the needed clarification.",
+		"  2. If `natural_language_answer` is produced, use `intent_explanation` and `generated_query` to see if you need to clarify any assumptions for the user.",
+		"  3. If the tool output indicates failure or empty results, explain that clearly using the provided reasoning.",
+	}, "\n")
 
 	if cfg.Description != "" {
 		cfg.Description += "\n\n" + guidance
