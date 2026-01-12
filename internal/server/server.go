@@ -300,6 +300,21 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	return sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, nil
 }
 
+func hostCheck(allowedHosts map[string]struct{}) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, hasWildcard := allowedHosts["*"]
+			_, hostIsAllowed := allowedHosts[r.Host]
+			if !hasWildcard && !hostIsAllowed {
+				// Return 400 Bad Request or 403 Forbidden to block the attack
+				http.Error(w, "Invalid Host header", http.StatusBadRequest)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 // NewServer returns a Server object based on provided Config.
 func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	instrumentation, err := util.InstrumentationFromContext(ctx)
@@ -374,7 +389,7 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 
 	// cors
 	if slices.Contains(cfg.AllowedOrigins, "*") {
-		s.logger.WarnContext(ctx, "wildcard (`*`) allows all origin to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-origins` flag to prevent DNS rebinding attacks")
+		s.logger.WarnContext(ctx, "wildcard (`*`) allows all origin to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-origins` flag")
 	}
 	corsOpts := cors.Options{
 		AllowedOrigins:   cfg.AllowedOrigins,
@@ -385,6 +400,15 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 		MaxAge:           300,                        // cache preflight results for 5 minutes
 	}
 	r.Use(cors.Handler(corsOpts))
+	// validate hosts for DNS rebinding attacks
+	if slices.Contains(cfg.AllowedHosts, "*") {
+		s.logger.WarnContext(ctx, "wildcard (`*`) allows all hosts to access the resource and is not secure. Use it with cautious for public, non-sensitive data, or during local development. Recommended to use `--allowed-hosts` flag to prevent DNS rebinding attacks")
+	}
+	allowedHostsMap := make(map[string]struct{}, len(cfg.AllowedHosts))
+	for _, h := range cfg.AllowedHosts {
+		allowedHostsMap[h] = struct{}{}
+	}
+	r.Use(hostCheck(allowedHostsMap))
 
 	// control plane
 	apiR, err := apiRouter(s)
