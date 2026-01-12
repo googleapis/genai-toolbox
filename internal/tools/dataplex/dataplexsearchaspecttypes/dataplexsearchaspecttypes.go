@@ -26,6 +26,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"google.golang.org/api/iterator"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 const kind string = "dataplex-search-aspect-types"
@@ -131,9 +133,18 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	var results []*dataplexpb.AspectType
 	for {
 		entry, err := it.Next()
-		if err != nil {
+		if err == iterator.Done {
 			break
 		}
+		if err != nil {
+			if st, ok := grpcstatus.FromError(err); ok {
+				errorCode := st.Code()
+				errorMessage := st.Message()
+				return nil, fmt.Errorf("Failed to search aspect types with error code: '%s' message: %s", errorCode.String(), errorMessage)
+			}
+			return nil, fmt.Errorf("Failed to search aspect types with error: %w", err)
+		}
+
 		resourceName := entry.DataplexEntry.GetEntrySource().Resource
 		getAspectTypeReq := &dataplexpb.GetAspectTypeRequest{
 			Name: resourceName,

@@ -25,6 +25,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"google.golang.org/api/iterator"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 const kind string = "dataplex-search-entries"
@@ -115,6 +117,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	it := source.CatalogClient().SearchEntries(ctx, req)
+
 	if it == nil {
 		return nil, fmt.Errorf("failed to create search entries iterator for project %q", source.ProjectID())
 	}
@@ -122,8 +125,16 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	var results []*dataplexpb.SearchEntriesResult
 	for {
 		entry, err := it.Next()
-		if err != nil {
+		if err == iterator.Done {
 			break
+		}
+		if err != nil {
+			if st, ok := grpcstatus.FromError(err); ok {
+				errorCode := st.Code()
+				errorMessage := st.Message()
+				return nil, fmt.Errorf("Failed to search entries with error code: '%s' message: %s", errorCode.String(), errorMessage)
+			}
+			return nil, fmt.Errorf("Failed to search entries with error: %w", err)
 		}
 		results = append(results, entry)
 	}
