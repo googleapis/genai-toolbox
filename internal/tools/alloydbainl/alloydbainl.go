@@ -77,26 +77,21 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		placeholderParts = append(placeholderParts, fmt.Sprintf("$%d", i+3)) // $1, $2 reserved
 	}
 
-	var paramNamesSQL string
-	var paramValuesSQL string
-
+	var stmt string
 	if numParams > 0 {
-		paramNamesSQL = fmt.Sprintf("ARRAY[%s]", strings.Join(quotedNameParts, ", "))
-		paramValuesSQL = fmt.Sprintf("ARRAY[%s]", strings.Join(placeholderParts, ", "))
+		paramNamesSQL := fmt.Sprintf("ARRAY[%s]", strings.Join(quotedNameParts, ", "))
+		paramValuesSQL := fmt.Sprintf("ARRAY[%s]", strings.Join(placeholderParts, ", "))
+		// execute_nl_query is the AlloyDB AI function that executes the natural language query
+		// The first parameter is the natural language query, which is passed as $1
+		// The second parameter is the NLConfig, which is passed as a $2
+		// The following params are the list of PSV values passed to the NLConfig
+		// Example SQL statement being executed:
+		// SELECT alloydb_ai_nl.execute_nl_query(nl_question => 'How many tickets do I have?', nl_config_id => 'cymbal_air_nl_config', param_names => ARRAY ['user_email'], param_values => ARRAY ['hailongli@google.com']);
+		stmtFormat := "SELECT alloydb_ai_nl.execute_nl_query(nl_question => $1, nl_config_id => $2, param_names => %s, param_values => %s);"
+		stmt = fmt.Sprintf(stmtFormat, paramNamesSQL, paramValuesSQL)
 	} else {
-		paramNamesSQL = "ARRAY[]::TEXT[]"
-		paramValuesSQL = "ARRAY[]::TEXT[]"
+		stmt = "SELECT alloydb_ai_nl.execute_nl_query(nl_question => $1, nl_config_id => $2);"
 	}
-
-	// execute_nl_query is the AlloyDB AI function that executes the natural language query
-	// The first parameter is the natural language query, which is passed as $1
-	// The second parameter is the NLConfig, which is passed as a $2
-	// The following params are the list of PSV values passed to the NLConfig
-	// Example SQL statement being executed:
-	// SELECT alloydb_ai_nl.execute_nl_query(nl_question => 'How many tickets do I have?', nl_config_id => 'cymbal_air_nl_config', param_names => ARRAY ['user_email'], param_values => ARRAY ['hailongli@google.com']);
-	stmtFormat := "SELECT alloydb_ai_nl.execute_nl_query(nl_question => $1, nl_config_id => $2, param_names => %s, param_values => %s);"
-	stmt := fmt.Sprintf(stmtFormat, paramNamesSQL, paramValuesSQL)
-
 	newQuestionParam := parameters.NewStringParameter(
 		"question",                              // name
 		"The natural language question to ask.", // description

@@ -16,8 +16,12 @@ package cloudhealthcare
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -254,4 +258,300 @@ func (s *Source) IsDICOMStoreAllowed(storeID string) bool {
 
 func (s *Source) UseClientAuthorization() bool {
 	return s.UseClientOAuth
+}
+
+func parseResults(resp *http.Response) (any, error) {
+	respBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("could not read response: %w", err)
+	}
+	if resp.StatusCode > 299 {
+		return nil, fmt.Errorf("status %d %s: %s", resp.StatusCode, resp.Status, respBytes)
+	}
+	var jsonMap map[string]interface{}
+	if err := json.Unmarshal(respBytes, &jsonMap); err != nil {
+		return nil, fmt.Errorf("could not unmarshal response as json: %w", err)
+	}
+	return jsonMap, nil
+}
+
+func (s *Source) getService(tokenStr string) (*healthcare.Service, error) {
+	svc := s.Service()
+	var err error
+	// Initialize new service if using user OAuth token
+	if s.UseClientAuthorization() {
+		svc, err = s.ServiceCreator()(tokenStr)
+		if err != nil {
+			return nil, fmt.Errorf("error creating service from OAuth access token: %w", err)
+		}
+	}
+	return svc, nil
+}
+
+func (s *Source) FHIRFetchPage(ctx context.Context, url, tokenStr string) (any, error) {
+	var httpClient *http.Client
+	if s.UseClientAuthorization() {
+		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: tokenStr})
+		httpClient = oauth2.NewClient(ctx, ts)
+	} else {
+		// The source.Service() object holds a client with the default credentials.
+		// However, the client is not exported, so we have to create a new one.
+		var err error
+		httpClient, err = google.DefaultClient(ctx, healthcare.CloudHealthcareScope)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create default http client: %w", err)
+		}
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create http request: %w", err)
+	}
+	req.Header.Set("Accept", "application/fhir+json;charset=utf-8")
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get fhir page from %q: %w", url, err)
+	}
+	defer resp.Body.Close()
+	return parseResults(resp)
+}
+
+func (s *Source) FHIRPatientEverything(storeID, patientID, tokenStr string, opts []googleapi.CallOption) (any, error) {
+	svc, err := s.getService(tokenStr)
+	if err != nil {
+		return nil, err
+	}
+
+	name := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/fhirStores/%s/fhir/Patient/%s", s.Project(), s.Region(), s.DatasetID(), storeID, patientID)
+	resp, err := svc.Projects.Locations.Datasets.FhirStores.Fhir.PatientEverything(name).Do(opts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to call patient everything for %q: %w", name, err)
+	}
+	defer resp.Body.Close()
+	return parseResults(resp)
+}
+
+func (s *Source) FHIRPatientSearch(storeID, tokenStr string, opts []googleapi.CallOption) (any, error) {
+	svc, err := s.getService(tokenStr)
+	if err != nil {
+		return nil, err
+	}
+
+	name := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/fhirStores/%s", s.Project(), s.Region(), s.DatasetID(), storeID)
+	resp, err := svc.Projects.Locations.Datasets.FhirStores.Fhir.SearchType(name, "Patient", &healthcare.SearchResourcesRequest{ResourceType: "Patient"}).Do(opts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to search patient resources: %w", err)
+	}
+	defer resp.Body.Close()
+	return parseResults(resp)
+}
+
+func (s *Source) GetDataset(tokenStr string) (*healthcare.Dataset, error) {
+	svc, err := s.getService(tokenStr)
+	if err != nil {
+		return nil, err
+	}
+
+	datasetName := fmt.Sprintf("projects/%s/locations/%s/datasets/%s", s.Project(), s.Region(), s.DatasetID())
+	dataset, err := svc.Projects.Locations.Datasets.Get(datasetName).Do()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get dataset %q: %w", datasetName, err)
+	}
+	return dataset, nil
+}
+
+func (s *Source) GetFHIRResource(storeID, resType, resID, tokenStr string) (any, error) {
+	svc, err := s.getService(tokenStr)
+	if err != nil {
+		return nil, err
+	}
+
+	name := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/fhirStores/%s/fhir/%s/%s", s.Project(), s.Region(), s.DatasetID(), storeID, resType, resID)
+	call := svc.Projects.Locations.Datasets.FhirStores.Fhir.Read(name)
+	call.Header().Set("Content-Type", "application/fhir+json;charset=utf-8")
+	resp, err := call.Do()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get fhir resource %q: %w", name, err)
+	}
+	defer resp.Body.Close()
+	return parseResults(resp)
+}
+
+func (s *Source) GetDICOMStore(storeID, tokenStr string) (*healthcare.DicomStore, error) {
+	svc, err := s.getService(tokenStr)
+	if err != nil {
+		return nil, err
+	}
+
+	storeName := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/dicomStores/%s", s.Project(), s.Region(), s.DatasetID(), storeID)
+	store, err := svc.Projects.Locations.Datasets.DicomStores.Get(storeName).Do()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get DICOM store %q: %w", storeName, err)
+	}
+	return store, nil
+}
+
+func (s *Source) GetFHIRStore(storeID, tokenStr string) (*healthcare.FhirStore, error) {
+	svc, err := s.getService(tokenStr)
+	if err != nil {
+		return nil, err
+	}
+
+	storeName := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/fhirStores/%s", s.Project(), s.Region(), s.DatasetID(), storeID)
+	store, err := svc.Projects.Locations.Datasets.FhirStores.Get(storeName).Do()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get FHIR store %q: %w", storeName, err)
+	}
+	return store, nil
+}
+
+func (s *Source) GetDICOMStoreMetrics(storeID, tokenStr string) (*healthcare.DicomStoreMetrics, error) {
+	svc, err := s.getService(tokenStr)
+	if err != nil {
+		return nil, err
+	}
+
+	storeName := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/dicomStores/%s", s.Project(), s.Region(), s.DatasetID(), storeID)
+	store, err := svc.Projects.Locations.Datasets.DicomStores.GetDICOMStoreMetrics(storeName).Do()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics for DICOM store %q: %w", storeName, err)
+	}
+	return store, nil
+}
+
+func (s *Source) GetFHIRStoreMetrics(storeID, tokenStr string) (*healthcare.FhirStoreMetrics, error) {
+	svc, err := s.getService(tokenStr)
+	if err != nil {
+		return nil, err
+	}
+
+	storeName := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/fhirStores/%s", s.Project(), s.Region(), s.DatasetID(), storeID)
+	store, err := svc.Projects.Locations.Datasets.FhirStores.GetFHIRStoreMetrics(storeName).Do()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metrics for FHIR store %q: %w", storeName, err)
+	}
+	return store, nil
+}
+
+func (s *Source) ListDICOMStores(tokenStr string) ([]*healthcare.DicomStore, error) {
+	svc, err := s.getService(tokenStr)
+	if err != nil {
+		return nil, err
+	}
+
+	datasetName := fmt.Sprintf("projects/%s/locations/%s/datasets/%s", s.Project(), s.Region(), s.DatasetID())
+	stores, err := svc.Projects.Locations.Datasets.DicomStores.List(datasetName).Do()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get dataset %q: %w", datasetName, err)
+	}
+	var filtered []*healthcare.DicomStore
+	for _, store := range stores.DicomStores {
+		if len(s.AllowedDICOMStores()) == 0 {
+			filtered = append(filtered, store)
+			continue
+		}
+		if len(store.Name) == 0 {
+			continue
+		}
+		parts := strings.Split(store.Name, "/")
+		if _, ok := s.AllowedDICOMStores()[parts[len(parts)-1]]; ok {
+			filtered = append(filtered, store)
+		}
+	}
+	return filtered, nil
+}
+
+func (s *Source) ListFHIRStores(tokenStr string) ([]*healthcare.FhirStore, error) {
+	svc, err := s.getService(tokenStr)
+	if err != nil {
+		return nil, err
+	}
+
+	datasetName := fmt.Sprintf("projects/%s/locations/%s/datasets/%s", s.Project(), s.Region(), s.DatasetID())
+	stores, err := svc.Projects.Locations.Datasets.FhirStores.List(datasetName).Do()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get dataset %q: %w", datasetName, err)
+	}
+	var filtered []*healthcare.FhirStore
+	for _, store := range stores.FhirStores {
+		if len(s.AllowedFHIRStores()) == 0 {
+			filtered = append(filtered, store)
+			continue
+		}
+		if len(store.Name) == 0 {
+			continue
+		}
+		parts := strings.Split(store.Name, "/")
+		if _, ok := s.AllowedFHIRStores()[parts[len(parts)-1]]; ok {
+			filtered = append(filtered, store)
+		}
+	}
+	return filtered, nil
+}
+
+func (s *Source) RetrieveRenderedDICOMInstance(storeID, study, series, sop string, frame int, tokenStr string) (any, error) {
+	svc, err := s.getService(tokenStr)
+	if err != nil {
+		return nil, err
+	}
+
+	name := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/dicomStores/%s", s.Project(), s.Region(), s.DatasetID(), storeID)
+	dicomWebPath := fmt.Sprintf("studies/%s/series/%s/instances/%s/frames/%d/rendered", study, series, sop, frame)
+	call := svc.Projects.Locations.Datasets.DicomStores.Studies.Series.Instances.Frames.RetrieveRendered(name, dicomWebPath)
+	call.Header().Set("Accept", "image/jpeg")
+	resp, err := call.Do()
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve dicom instance rendered image: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("could not read response: %w", err)
+	}
+	if resp.StatusCode > 299 {
+		return nil, fmt.Errorf("RetrieveRendered: status %d %s: %s", resp.StatusCode, resp.Status, respBytes)
+	}
+	base64String := base64.StdEncoding.EncodeToString(respBytes)
+	return base64String, nil
+}
+
+func (s *Source) SearchDICOM(toolKind, storeID, dicomWebPath, tokenStr string, opts []googleapi.CallOption) (any, error) {
+	svc, err := s.getService(tokenStr)
+	if err != nil {
+		return nil, err
+	}
+	name := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/dicomStores/%s", s.Project(), s.Region(), s.DatasetID(), storeID)
+	var resp *http.Response
+	switch toolKind {
+	case "cloud-healthcare-search-dicom-instances":
+		resp, err = svc.Projects.Locations.Datasets.DicomStores.SearchForInstances(name, dicomWebPath).Do(opts...)
+	case "cloud-healthcare-search-dicom-series":
+		resp, err = svc.Projects.Locations.Datasets.DicomStores.SearchForSeries(name, dicomWebPath).Do(opts...)
+	case "cloud-healthcare-search-dicom-studies":
+		resp, err = svc.Projects.Locations.Datasets.DicomStores.SearchForStudies(name, dicomWebPath).Do(opts...)
+	default:
+		return nil, fmt.Errorf("incompatible tool kind: %s", toolKind)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to search dicom series: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("could not read response: %w", err)
+	}
+	if resp.StatusCode > 299 {
+		return nil, fmt.Errorf("search: status %d %s: %s", resp.StatusCode, resp.Status, respBytes)
+	}
+	if len(respBytes) == 0 {
+		return []interface{}{}, nil
+	}
+	var result []interface{}
+	if err := json.Unmarshal(respBytes, &result); err != nil {
+		return nil, fmt.Errorf("could not unmarshal response as list: %w", err)
+	}
+	return result, nil
 }
