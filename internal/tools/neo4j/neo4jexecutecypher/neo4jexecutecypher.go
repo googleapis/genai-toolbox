@@ -19,12 +19,10 @@ import (
 	"fmt"
 
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jexecutecypher/classifier"
-	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/helpers"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 const kind string = "neo4j-execute-cypher"
@@ -44,8 +42,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	Neo4jDriver() neo4j.DriverWithContext
-	Neo4jDatabase() string
+	Neo4jDatabase() string // kept to ensure neo4j source
+	RunQuery(context.Context, string, map[string]any, bool, bool) (any, error)
 }
 
 type Config struct {
@@ -80,7 +78,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	t := Tool{
 		Config:      cfg,
 		Parameters:  params,
-		classifier:  classifier.NewQueryClassifier(),
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
@@ -93,7 +90,6 @@ var _ tools.Tool = Tool{}
 type Tool struct {
 	Config
 	Parameters  parameters.Parameters `yaml:"parameters"`
-	classifier  *classifier.QueryClassifier
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -119,63 +115,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("unable to cast dry_run parameter %s", paramsMap["dry_run"])
 	}
 
-	// validate the cypher query before executing
-	cf := t.classifier.Classify(cypherStr)
-	if cf.Error != nil {
-		return nil, cf.Error
-	}
-
-	if cf.Type == classifier.WriteQuery && t.ReadOnly {
-		return nil, fmt.Errorf("this tool is read-only and cannot execute write queries")
-	}
-
-	if dryRun {
-		// Add EXPLAIN to the beginning of the query to validate it without executing
-		cypherStr = "EXPLAIN " + cypherStr
-	}
-
-	config := neo4j.ExecuteQueryWithDatabase(source.Neo4jDatabase())
-	results, err := neo4j.ExecuteQuery(ctx, source.Neo4jDriver(), cypherStr, nil,
-		neo4j.EagerResultTransformer, config)
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-
-	// If dry run, return the summary information only
-	if dryRun {
-		summary := results.Summary
-		plan := summary.Plan()
-		execPlan := map[string]any{
-			"queryType":     cf.Type.String(),
-			"statementType": summary.StatementType(),
-			"operator":      plan.Operator(),
-			"arguments":     plan.Arguments(),
-			"identifiers":   plan.Identifiers(),
-			"childrenCount": len(plan.Children()),
-		}
-		if len(plan.Children()) > 0 {
-			execPlan["children"] = addPlanChildren(plan)
-		}
-		return []map[string]any{execPlan}, nil
-	}
-
-	var out []any
-	keys := results.Keys
-	records := results.Records
-
-	for _, record := range records {
-		vMap := make(map[string]any)
-		for col, value := range record.Values {
-			vMap[keys[col]] = helpers.ConvertValue(value)
-		}
-		out = append(out, vMap)
-	}
-
-	return out, nil
+	return source.RunQuery(ctx, cypherStr, nil, t.ReadOnly, dryRun)
 }
 
 func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claimsMap)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -192,24 +140,6 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
 	return false, nil
-}
-
-// Recursive function to add plan children
-func addPlanChildren(p neo4j.Plan) []map[string]any {
-	var children []map[string]any
-	for _, child := range p.Children() {
-		childMap := map[string]any{
-			"operator":       child.Operator(),
-			"arguments":      child.Arguments(),
-			"identifiers":    child.Identifiers(),
-			"children_count": len(child.Children()),
-		}
-		if len(child.Children()) > 0 {
-			childMap["children"] = addPlanChildren(child)
-		}
-		children = append(children, childMap)
-	}
-	return children
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {

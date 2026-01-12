@@ -18,9 +18,9 @@ import (
 	"context"
 	"fmt"
 
-	dataplexapi "cloud.google.com/go/dataplex/apiv1"
-	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
+	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -43,8 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	CatalogClient() *dataplexapi.CatalogClient
-	ProjectID() string
+	SearchEntries(context.Context, string, int, string) ([]*dataplexpb.SearchEntriesResult, error)
 }
 
 type Config struct {
@@ -99,39 +98,20 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, err
 	}
-
 	paramsMap := params.AsMap()
 	query, _ := paramsMap["query"].(string)
-	pageSize := int32(paramsMap["pageSize"].(int))
+	pageSize, _ := paramsMap["pageSize"].(int)
 	orderBy, _ := paramsMap["orderBy"].(string)
-
-	req := &dataplexpb.SearchEntriesRequest{
-		Query:          query,
-		Name:           fmt.Sprintf("projects/%s/locations/global", source.ProjectID()),
-		PageSize:       pageSize,
-		OrderBy:        orderBy,
-		SemanticSearch: true,
-	}
-
-	it := source.CatalogClient().SearchEntries(ctx, req)
-	if it == nil {
-		return nil, fmt.Errorf("failed to create search entries iterator for project %q", source.ProjectID())
-	}
-
-	var results []*dataplexpb.SearchEntriesResult
-	for {
-		entry, err := it.Next()
-		if err != nil {
-			break
-		}
-		results = append(results, entry)
-	}
-	return results, nil
+	return source.SearchEntries(ctx, query, pageSize, orderBy)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	// Parse parameters from the provided data
 	return parameters.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

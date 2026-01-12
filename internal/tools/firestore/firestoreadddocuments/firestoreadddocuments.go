@@ -20,6 +20,7 @@ import (
 
 	firestoreapi "cloud.google.com/go/firestore"
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
@@ -47,6 +48,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
+	AddDocuments(context.Context, string, any, bool) (map[string]any, error)
 }
 
 type Config struct {
@@ -133,24 +135,20 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	mapParams := params.AsMap()
-
 	// Get collection path
 	collectionPath, ok := mapParams[collectionPathKey].(string)
 	if !ok || collectionPath == "" {
 		return nil, fmt.Errorf("invalid or missing '%s' parameter", collectionPathKey)
 	}
-
 	// Validate collection path
 	if err := util.ValidateCollectionPath(collectionPath); err != nil {
 		return nil, fmt.Errorf("invalid collection path: %w", err)
 	}
-
 	// Get document data
 	documentDataRaw, ok := mapParams[documentDataKey]
 	if !ok {
 		return nil, fmt.Errorf("invalid or missing '%s' parameter", documentDataKey)
 	}
-
 	// Convert the document data from JSON format to Firestore format
 	// The client is passed to handle referenceValue types
 	documentData, err := util.JSONToFirestoreValue(documentDataRaw, source.FirestoreClient())
@@ -163,34 +161,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if val, ok := mapParams[returnDocumentDataKey].(bool); ok {
 		returnData = val
 	}
-
-	// Get the collection reference
-	collection := source.FirestoreClient().Collection(collectionPath)
-
-	// Add the document to the collection
-	docRef, writeResult, err := collection.Add(ctx, documentData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to add document: %w", err)
-	}
-
-	// Build the response
-	response := map[string]any{
-		"documentPath": docRef.Path,
-		"createTime":   writeResult.UpdateTime.Format("2006-01-02T15:04:05.999999999Z"),
-	}
-
-	// Add document data if requested
-	if returnData {
-		// Convert the document data back to simple JSON format
-		simplifiedData := util.FirestoreValueToJSON(documentData)
-		response["documentData"] = simplifiedData
-	}
-
-	return response, nil
+	return source.AddDocuments(ctx, collectionPath, documentData, returnData)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

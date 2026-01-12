@@ -16,11 +16,11 @@ package couchbase
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/couchbase/gocb/v2"
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -44,7 +44,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	CouchbaseScope() *gocb.Scope
-	CouchbaseQueryScanConsistency() uint
+	RunSQL(string, parameters.ParamValues) (any, error)
 }
 
 type Config struct {
@@ -112,28 +112,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
-	results, err := source.CouchbaseScope().Query(newStatement, &gocb.QueryOptions{
-		ScanConsistency: gocb.QueryScanConsistency(source.CouchbaseQueryScanConsistency()),
-		NamedParameters: newParams.AsMap(),
-	})
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-
-	var out []any
-	for results.Next() {
-		var result json.RawMessage
-		err := results.Row(&result)
-		if err != nil {
-			return nil, fmt.Errorf("error processing row: %w", err)
-		}
-		out = append(out, result)
-	}
-	return out, nil
+	return source.RunSQL(newStatement, newParams)
 }
 
 func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.AllParams, data, claimsMap)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

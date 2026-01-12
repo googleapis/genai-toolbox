@@ -17,16 +17,13 @@ package serverlesssparklistbatches
 import (
 	"context"
 	"fmt"
-	"time"
 
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
-	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/common"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/iterator"
 )
 
 const kind = "serverless-spark-list-batches"
@@ -47,8 +44,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	GetBatchControllerClient() *dataproc.BatchControllerClient
-	GetProject() string
-	GetLocation() string
+	ListBatches(context.Context, *int, string, string) (any, error)
 }
 
 type Config struct {
@@ -103,99 +99,32 @@ type Tool struct {
 	Parameters  parameters.Parameters
 }
 
-// ListBatchesResponse is the response from the list batches API.
-type ListBatchesResponse struct {
-	Batches       []Batch `json:"batches"`
-	NextPageToken string  `json:"nextPageToken"`
-}
-
-// Batch represents a single batch job.
-type Batch struct {
-	Name       string `json:"name"`
-	UUID       string `json:"uuid"`
-	State      string `json:"state"`
-	Creator    string `json:"creator"`
-	CreateTime string `json:"createTime"`
-	Operation  string `json:"operation"`
-	ConsoleURL string `json:"consoleUrl"`
-	LogsURL    string `json:"logsUrl"`
-}
-
 // Invoke executes the tool's operation.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
 	if err != nil {
 		return nil, err
 	}
-
-	client := source.GetBatchControllerClient()
-
-	parent := fmt.Sprintf("projects/%s/locations/%s", source.GetProject(), source.GetLocation())
-	req := &dataprocpb.ListBatchesRequest{
-		Parent:  parent,
-		OrderBy: "create_time desc",
-	}
-
 	paramMap := params.AsMap()
+	var pageSize *int
 	if ps, ok := paramMap["pageSize"]; ok && ps != nil {
-		req.PageSize = int32(ps.(int))
-		if (req.PageSize) <= 0 {
-			return nil, fmt.Errorf("pageSize must be positive: %d", req.PageSize)
+		pageSizeV := ps.(int)
+		if pageSizeV <= 0 {
+			return nil, fmt.Errorf("pageSize must be positive: %d", pageSizeV)
 		}
+		pageSize = &pageSizeV
 	}
-	if pt, ok := paramMap["pageToken"]; ok && pt != nil {
-		req.PageToken = pt.(string)
-	}
-	if filter, ok := paramMap["filter"]; ok && filter != nil {
-		req.Filter = filter.(string)
-	}
-
-	it := client.ListBatches(ctx, req)
-	pager := iterator.NewPager(it, int(req.PageSize), req.PageToken)
-
-	var batchPbs []*dataprocpb.Batch
-	nextPageToken, err := pager.NextPage(&batchPbs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list batches: %w", err)
-	}
-
-	batches, err := ToBatches(batchPbs)
-	if err != nil {
-		return nil, err
-	}
-
-	return ListBatchesResponse{Batches: batches, NextPageToken: nextPageToken}, nil
-}
-
-// ToBatches converts a slice of protobuf Batch messages to a slice of Batch structs.
-func ToBatches(batchPbs []*dataprocpb.Batch) ([]Batch, error) {
-	batches := make([]Batch, 0, len(batchPbs))
-	for _, batchPb := range batchPbs {
-		consoleUrl, err := common.BatchConsoleURLFromProto(batchPb)
-		if err != nil {
-			return nil, fmt.Errorf("error generating console url: %v", err)
-		}
-		logsUrl, err := common.BatchLogsURLFromProto(batchPb)
-		if err != nil {
-			return nil, fmt.Errorf("error generating logs url: %v", err)
-		}
-		batch := Batch{
-			Name:       batchPb.Name,
-			UUID:       batchPb.Uuid,
-			State:      batchPb.State.Enum().String(),
-			Creator:    batchPb.Creator,
-			CreateTime: batchPb.CreateTime.AsTime().Format(time.RFC3339),
-			Operation:  batchPb.Operation,
-			ConsoleURL: consoleUrl,
-			LogsURL:    logsUrl,
-		}
-		batches = append(batches, batch)
-	}
-	return batches, nil
+	pt, _ := paramMap["pageToken"].(string)
+	filter, _ := paramMap["filter"].(string)
+	return source.ListBatches(ctx, pageSize, pt, filter)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

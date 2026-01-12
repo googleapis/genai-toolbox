@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -43,8 +44,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirebaseRulesClient() *firebaserules.Service
-	GetProjectId() string
-	GetDatabaseId() string
+	GetRules(context.Context) (any, error)
 }
 
 type Config struct {
@@ -97,33 +97,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, err
 	}
-
-	// Get the latest release for Firestore
-	releaseName := fmt.Sprintf("projects/%s/releases/cloud.firestore/%s", source.GetProjectId(), source.GetDatabaseId())
-	release, err := source.FirebaseRulesClient().Projects.Releases.Get(releaseName).Context(ctx).Do()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get latest Firestore release: %w", err)
-	}
-
-	if release.RulesetName == "" {
-		return nil, fmt.Errorf("no active Firestore rules were found in project '%s' and database '%s'", source.GetProjectId(), source.GetDatabaseId())
-	}
-
-	// Get the ruleset content
-	ruleset, err := source.FirebaseRulesClient().Projects.Rulesets.Get(release.RulesetName).Context(ctx).Do()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get ruleset content: %w", err)
-	}
-
-	if ruleset.Source == nil || len(ruleset.Source.Files) == 0 {
-		return nil, fmt.Errorf("no rules files found in ruleset")
-	}
-
-	return ruleset, nil
+	return source.GetRules(ctx)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

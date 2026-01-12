@@ -19,10 +19,10 @@ import (
 	"fmt"
 
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/sqladmin/v1"
 )
 
 const kind string = "cloud-sql-list-instances"
@@ -43,8 +43,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	GetDefaultProject() string
-	GetService(context.Context, string) (*sqladmin.Service, error)
 	UseClientAuthorization() bool
+	ListInstance(context.Context, string, string) (any, error)
 }
 
 // Config defines the configuration for the list-instance tool.
@@ -127,40 +127,16 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, fmt.Errorf("missing 'project' parameter")
 	}
-
-	service, err := source.GetService(ctx, string(accessToken))
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := service.Instances.List(project).Do()
-	if err != nil {
-		return nil, fmt.Errorf("error listing instances: %w", err)
-	}
-
-	if resp.Items == nil {
-		return []any{}, nil
-	}
-
-	type instanceInfo struct {
-		Name         string `json:"name"`
-		InstanceType string `json:"instanceType"`
-	}
-
-	var instances []instanceInfo
-	for _, item := range resp.Items {
-		instances = append(instances, instanceInfo{
-			Name:         item.Name,
-			InstanceType: item.InstanceType,
-		})
-	}
-
-	return instances, nil
+	return source.ListInstance(ctx, project, string(accessToken))
 }
 
 // ParseParams parses the parameters for the tool.
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.AllParams, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
 }
 
 // Manifest returns the tool's manifest.

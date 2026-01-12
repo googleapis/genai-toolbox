@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -121,6 +122,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	PostgresPool() *pgxpool.Pool
+	RunSQL(context.Context, string, []any) (any, error)
 }
 
 type Config struct {
@@ -182,37 +184,23 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if outputFormat != "simple" && outputFormat != "detailed" {
 		return nil, fmt.Errorf("invalid value for output_format: must be 'simple' or 'detailed', but got %q", outputFormat)
 	}
-
-	results, err := source.PostgresPool().Query(ctx, listTablesStatement, tableNames, outputFormat)
+	resp, err := source.RunSQL(ctx, listTablesStatement, []any{tableNames, outputFormat})
 	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		return nil, err
 	}
-	defer results.Close()
-
-	fields := results.FieldDescriptions()
-	out := []map[string]any{}
-
-	for results.Next() {
-		values, err := results.Values()
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
-		}
-		rowMap := make(map[string]any)
-		for i, field := range fields {
-			rowMap[string(field.Name)] = values[i]
-		}
-		out = append(out, rowMap)
+	resSlice, ok := resp.([]any)
+	if !ok || len(resSlice) == 0 {
+		return []any{}, nil
 	}
-
-	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("error reading query results: %w", err)
-	}
-
-	return out, nil
+	return resp, err
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.AllParams, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

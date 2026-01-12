@@ -19,8 +19,7 @@ import (
 	"fmt"
 
 	"github.com/goccy/go-yaml"
-	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/helpers"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -44,8 +43,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	Neo4jDriver() neo4j.DriverWithContext
-	Neo4jDatabase() string
+	Neo4jDatabase() string // kept to ensure neo4j source
+	RunQuery(context.Context, string, map[string]any, bool, bool) (any, error)
 }
 
 type Config struct {
@@ -93,30 +92,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-
-	config := neo4j.ExecuteQueryWithDatabase(source.Neo4jDatabase())
-	results, err := neo4j.ExecuteQuery[*neo4j.EagerResult](ctx, source.Neo4jDriver(), t.Statement, paramsMap,
-		neo4j.EagerResultTransformer, config)
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-
-	var out []any
-	keys := results.Keys
-	records := results.Records
-	for _, record := range records {
-		vMap := make(map[string]any)
-		for col, value := range record.Values {
-			vMap[keys[col]] = helpers.ConvertValue(value)
-		}
-		out = append(out, vMap)
-	}
-
-	return out, nil
+	return source.RunQuery(ctx, t.Statement, paramsMap, false, false)
 }
 
 func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claimsMap)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

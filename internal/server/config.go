@@ -21,6 +21,8 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels/gemini"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -38,6 +40,8 @@ type ServerConfig struct {
 	SourceConfigs SourceConfigs
 	// AuthServiceConfigs defines what sources of authentication are available for tools.
 	AuthServiceConfigs AuthServiceConfigs
+	// EmbeddingModelConfigs defines a models used to embed parameters.
+	EmbeddingModelConfigs EmbeddingModelConfigs
 	// ToolConfigs defines what tools are available.
 	ToolConfigs ToolConfigs
 	// ToolsetConfigs defines what tools are available.
@@ -64,6 +68,8 @@ type ServerConfig struct {
 	UI bool
 	// Specifies a list of origins permitted to access this server.
 	AllowedOrigins []string
+	// Specifies a list of hosts permitted to access this server
+	AllowedHosts []string
 }
 
 type logFormat string
@@ -194,6 +200,50 @@ func (c *AuthServiceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(i
 		switch kind {
 		case google.AuthServiceKind:
 			actual := google.Config{Name: name}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
+		default:
+			return fmt.Errorf("%q is not a valid kind of auth source", kind)
+		}
+	}
+	return nil
+}
+
+// EmbeddingModelConfigs is a type used to allow unmarshal of the embedding model config map
+type EmbeddingModelConfigs map[string]embeddingmodels.EmbeddingModelConfig
+
+// validate interface
+var _ yaml.InterfaceUnmarshalerContext = &EmbeddingModelConfigs{}
+
+func (c *EmbeddingModelConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
+	*c = make(EmbeddingModelConfigs)
+	// Parse the 'kind' fields for each embedding model
+	var raw map[string]util.DelayedUnmarshaler
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	for name, u := range raw {
+		// Unmarshal to a general type that ensure it capture all fields
+		var v map[string]any
+		if err := u.Unmarshal(&v); err != nil {
+			return fmt.Errorf("unable to unmarshal embedding model %q: %w", name, err)
+		}
+
+		kind, ok := v["kind"]
+		if !ok {
+			return fmt.Errorf("missing 'kind' field for embedding model %q", name)
+		}
+
+		dec, err := util.NewStrictDecoder(v)
+		if err != nil {
+			return fmt.Errorf("error creating decoder: %w", err)
+		}
+		switch kind {
+		case gemini.EmbeddingModelKind:
+			actual := gemini.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
 			}
