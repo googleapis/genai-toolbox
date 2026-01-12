@@ -1,5 +1,5 @@
 ---
-title: "Toolbox-langchain"
+title: "langchain"
 type: docs
 weight: 8
 description: >
