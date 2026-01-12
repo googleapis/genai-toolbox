@@ -379,6 +379,23 @@ to approve PRs for main. TeamSync is used to create this team from the MDB
 Group `toolbox-contributors`. Googlers who are developing for MCP-Toolbox
 but aren't part of the core team should join this group.
 
+### Issue/PR Triage and SLO
+After an issue is created, maintainers will assign the following labels:
+* `Priority` (defaulted to P0)
+* `Type` (if applicable)
+* `Product` (if applicable)
+
+All incoming issues and PRs will follow the following SLO:
+| Type            | Priority | Objective                                                              |
+|-----------------|----------|------------------------------------------------------------------------|
+| Feature Request | P0       | Must respond within **5 days**                                         |
+| Process         | P0       | Must respond within **5 days**                                         |
+| Bugs            | P0       | Must respond within **5 days**, and resolve/closure within **14 days** |
+| Bugs            | P1       | Must respond within **7 days**, and resolve/closure within **90 days** |
+| Bugs            | P2       | Must respond within **30 days**
+
+_Types that are not listed in the table do not adhere to any SLO._
+
 ### Releasing
 
 Toolbox has two types of releases: versioned and continuous. It uses Google

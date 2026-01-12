@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -44,7 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	CatalogClient() *dataplexapi.CatalogClient
+	LookupEntry(context.Context, string, int, []string, string) (*dataplexpb.Entry, error)
 }
 
 type Config struct {
@@ -118,12 +117,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-	viewMap := map[int]dataplexpb.EntryView{
-		1: dataplexpb.EntryView_BASIC,
-		2: dataplexpb.EntryView_FULL,
-		3: dataplexpb.EntryView_CUSTOM,
-		4: dataplexpb.EntryView_ALL,
-	}
 	name, _ := paramsMap["name"].(string)
 	entry, _ := paramsMap["entry"].(string)
 	view, _ := paramsMap["view"].(int)
@@ -132,19 +125,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("can't convert aspectTypes to array of strings: %s", err)
 	}
 	aspectTypes := aspectTypeSlice.([]string)
-
-	req := &dataplexpb.LookupEntryRequest{
-		Name:        name,
-		View:        viewMap[view],
-		AspectTypes: aspectTypes,
-		Entry:       entry,
-	}
-
-	result, err := source.CatalogClient().LookupEntry(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
+	return source.LookupEntry(ctx, name, view, aspectTypes, entry)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

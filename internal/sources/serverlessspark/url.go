@@ -1,10 +1,10 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
-//      http://www.apache.org/licenses/LICENSE-2.0
+//     http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package common
+package serverlessspark
 
 import (
 	"fmt"
@@ -23,12 +23,12 @@ import (
 	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 )
 
+var batchFullNameRegex = regexp.MustCompile(`projects/(?P<project>[^/]+)/locations/(?P<location>[^/]+)/batches/(?P<batch_id>[^/]+)`)
+
 const (
 	logTimeBufferBefore = 1 * time.Minute
 	logTimeBufferAfter  = 10 * time.Minute
 )
-
-var batchFullNameRegex = regexp.MustCompile(`projects/(?P<project>[^/]+)/locations/(?P<location>[^/]+)/batches/(?P<batch_id>[^/]+)`)
 
 // Extract BatchDetails extracts the project ID, location, and batch ID from a fully qualified batch name.
 func ExtractBatchDetails(batchName string) (projectID, location, batchID string, err error) {
@@ -37,26 +37,6 @@ func ExtractBatchDetails(batchName string) (projectID, location, batchID string,
 		return "", "", "", fmt.Errorf("failed to parse batch name: %s", batchName)
 	}
 	return matches[1], matches[2], matches[3], nil
-}
-
-// BatchConsoleURLFromProto builds a URL to the Google Cloud Console linking to the batch summary page.
-func BatchConsoleURLFromProto(batchPb *dataprocpb.Batch) (string, error) {
-	projectID, location, batchID, err := ExtractBatchDetails(batchPb.GetName())
-	if err != nil {
-		return "", err
-	}
-	return BatchConsoleURL(projectID, location, batchID), nil
-}
-
-// BatchLogsURLFromProto builds a URL to the Google Cloud Console showing Cloud Logging for the given batch and time range.
-func BatchLogsURLFromProto(batchPb *dataprocpb.Batch) (string, error) {
-	projectID, location, batchID, err := ExtractBatchDetails(batchPb.GetName())
-	if err != nil {
-		return "", err
-	}
-	createTime := batchPb.GetCreateTime().AsTime()
-	stateTime := batchPb.GetStateTime().AsTime()
-	return BatchLogsURL(projectID, location, batchID, createTime, stateTime), nil
 }
 
 // BatchConsoleURL builds a URL to the Google Cloud Console linking to the batch summary page.
@@ -88,4 +68,24 @@ resource.labels.batch_id="%s"`
 	v.Add("project", projectID)
 
 	return "https://console.cloud.google.com/logs/viewer?" + v.Encode()
+}
+
+// BatchConsoleURLFromProto builds a URL to the Google Cloud Console linking to the batch summary page.
+func BatchConsoleURLFromProto(batchPb *dataprocpb.Batch) (string, error) {
+	projectID, location, batchID, err := ExtractBatchDetails(batchPb.GetName())
+	if err != nil {
+		return "", err
+	}
+	return BatchConsoleURL(projectID, location, batchID), nil
+}
+
+// BatchLogsURLFromProto builds a URL to the Google Cloud Console showing Cloud Logging for the given batch and time range.
+func BatchLogsURLFromProto(batchPb *dataprocpb.Batch) (string, error) {
+	projectID, location, batchID, err := ExtractBatchDetails(batchPb.GetName())
+	if err != nil {
+		return "", err
+	}
+	createTime := batchPb.GetCreateTime().AsTime()
+	stateTime := batchPb.GetStateTime().AsTime()
+	return BatchLogsURL(projectID, location, batchID, createTime, stateTime), nil
 }
