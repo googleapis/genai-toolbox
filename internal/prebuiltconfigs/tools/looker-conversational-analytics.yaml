@@ -29,26 +29,37 @@ tools:
         kind: looker-conversational-analytics
         source: looker-source
         description: |
-          Use this tool to perform data analysis, get insights,
-          or answer complex questions about the contents of specific
-          Looker explores.
+          Use this tool to ask questions about your data using the Looker Conversational
+          Analytics API. You must provide a natural language query and a list of
+          1 to 5 model and explore combinations (e.g. [{'model': 'the_model', 'explore': 'the_explore'}]).
+          Use the 'get_models' and 'get_explores' tools to discover available models and explores.
 
     get_models:
         kind: looker-get-models
         source: looker-source
         description: |
-          The get_models tool retrieves the list of LookML models in the Looker system.
+          get_models Tool
 
-          It takes no parameters.
+          This tool retrieves a list of available LookML models in the Looker instance.
+          LookML models define the data structure and relationships that users can query.
+          The output includes details like the model's `name` and `label`, which are
+          essential for subsequent calls to tools like `get_explores` or `query`.
+
+          This tool takes no parameters.
 
     get_explores:
         kind: looker-get-explores
         source: looker-source
         description: |
-          The get_explores tool retrieves the list of explores defined in a LookML model
-          in the Looker system.
+          get_explores Tool
 
-          It takes one parameter, the model_name looked up from get_models.
+          This tool retrieves a list of explores defined within a specific LookML model.
+          Explores represent a curated view of your data, typically joining several
+          tables together to allow for focused analysis on a particular subject area.
+          The output provides details like the explore's `name` and `label`.
+
+          Parameters:
+          - model_name (required): The name of the LookML model, obtained from `get_models`.
 
 toolsets:
     looker_conversational_analytics_tools:

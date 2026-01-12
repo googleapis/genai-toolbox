@@ -58,6 +58,7 @@ to a database by following these instructions][csql-pg-quickstart].
 
 - [`postgres-list-sequences`](../tools/postgres/postgres-list-sequences.md)
   List sequences in a PostgreSQL database.
+
 - [`postgres-long-running-transactions`](../tools/postgres/postgres-long-running-transactions.md)
   List long running transactions in a PostgreSQL database.
 
@@ -73,6 +74,9 @@ to a database by following these instructions][csql-pg-quickstart].
 - [`postgres-get-column-cardinality`](../tools/postgres/postgres-get-column-cardinality.md)
   List cardinality of columns in a table in a PostgreSQL database.
 
+- [`postgres-list-table-stats`](../tools/postgres/postgres-list-table-stats.md)
+  List statistics of a table in a PostgreSQL database.
+
 - [`postgres-list-publication-tables`](../tools/postgres/postgres-list-publication-tables.md)
   List publication tables in a PostgreSQL database.
 
@@ -87,7 +91,10 @@ to a database by following these instructions][csql-pg-quickstart].
   instance.
 
 - [`postgres-list-roles`](../tools/postgres/postgres-list-roles.md)
-  Lists all the user-created roles in PostgreSQL database..
+  Lists all the user-created roles in PostgreSQL database.
+
+- [`postgres-list-stored-procedure`](../tools/postgres/postgres-list-stored-procedure.md)
+  Lists all the stored procedure in PostgreSQL database.
 
 ### Pre-built Configurations
 

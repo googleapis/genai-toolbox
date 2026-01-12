@@ -201,6 +201,10 @@ tools:
         kind: postgres-get-column-cardinality
         source: postgresql-source
 
+    list_table_stats:
+        kind: postgres-list-table-stats
+        source: postgresql-source
+
     list_publication_tables:
         kind: postgres-list-publication-tables
         source: postgresql-source
@@ -219,6 +223,10 @@ tools:
 
     list_roles:
         kind: postgres-list-roles
+        source: postgresql-source
+
+    list_stored_procedure:
+        kind: postgres-list-stored-procedure
         source: postgresql-source
 
 toolsets:
@@ -250,3 +258,5 @@ toolsets:
         - list_pg_settings
         - list_database_stats
         - list_roles
+        - list_table_stats
+        - list_stored_procedure
