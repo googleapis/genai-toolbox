@@ -13145,7 +13145,7 @@ Source code for [python-sdk](https://github.com/googleapis/mcp-toolbox-sdk-pytho
 {{< /notice >}}
 
 
-# Toolbox-langchain
+# langchain
 Toolbox-langchain SDK for connecting to the MCP Toolbox server and invoking tools programmatically.
 
 
