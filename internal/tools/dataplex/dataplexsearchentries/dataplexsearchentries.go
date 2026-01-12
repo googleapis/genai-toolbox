@@ -18,15 +18,12 @@ import (
 	"context"
 	"fmt"
 
-	dataplexapi "cloud.google.com/go/dataplex/apiv1"
-	dataplexpb "cloud.google.com/go/dataplex/apiv1/dataplexpb"
+	"cloud.google.com/go/dataplex/apiv1/dataplexpb"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/iterator"
-	grpcstatus "google.golang.org/grpc/status"
 )
 
 const kind string = "dataplex-search-entries"
@@ -46,8 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	CatalogClient() *dataplexapi.CatalogClient
-	ProjectID() string
+	SearchEntries(context.Context, string, int, string) ([]*dataplexpb.SearchEntriesResult, error)
 }
 
 type Config struct {
@@ -102,43 +98,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, err
 	}
-
 	paramsMap := params.AsMap()
 	query, _ := paramsMap["query"].(string)
-	pageSize := int32(paramsMap["pageSize"].(int))
+	pageSize, _ := paramsMap["pageSize"].(int)
 	orderBy, _ := paramsMap["orderBy"].(string)
-
-	req := &dataplexpb.SearchEntriesRequest{
-		Query:          query,
-		Name:           fmt.Sprintf("projects/%s/locations/global", source.ProjectID()),
-		PageSize:       pageSize,
-		OrderBy:        orderBy,
-		SemanticSearch: true,
-	}
-
-	it := source.CatalogClient().SearchEntries(ctx, req)
-
-	if it == nil {
-		return nil, fmt.Errorf("failed to create search entries iterator for project %q", source.ProjectID())
-	}
-
-	var results []*dataplexpb.SearchEntriesResult
-	for {
-		entry, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			if st, ok := grpcstatus.FromError(err); ok {
-				errorCode := st.Code()
-				errorMessage := st.Message()
-				return nil, fmt.Errorf("Failed to search entries with error code: '%s' message: %s", errorCode.String(), errorMessage)
-			}
-			return nil, fmt.Errorf("Failed to search entries with error: %w", err)
-		}
-		results = append(results, entry)
-	}
-	return results, nil
+	return source.SearchEntries(ctx, query, pageSize, orderBy)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
