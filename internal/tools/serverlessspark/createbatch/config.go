@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
 	dataprocpb "cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/goccy/go-yaml"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -36,9 +35,7 @@ func unmarshalProto(data any, m proto.Message) error {
 }
 
 type compatibleSource interface {
-	GetBatchControllerClient() *dataproc.BatchControllerClient
-	GetProject() string
-	GetLocation() string
+	CreateBatch(context.Context, *dataprocpb.Batch) (map[string]any, error)
 }
 
 // Config is a common config that can be used with any type of create batch tool. However, each tool
