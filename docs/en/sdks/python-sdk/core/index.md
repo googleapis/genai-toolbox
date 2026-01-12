@@ -1,5 +1,5 @@
 ---
-title: "Toolbox-core"
+title: "core"
 type: docs
 weight: 8
 description: >
