@@ -33,8 +33,8 @@ import (
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
 	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/google/go-cmp/cmp"
+	"github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparklistbatches"
 	"github.com/googleapis/genai-toolbox/tests"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -676,7 +676,7 @@ func runListBatchesTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 		filter   string
 		pageSize int
 		numPages int
-		want     []serverlesssparklistbatches.Batch
+		want     []serverlessspark.Batch
 	}{
 		{name: "one page", pageSize: 2, numPages: 1, want: batch2},
 		{name: "two pages", pageSize: 1, numPages: 2, want: batch2},
@@ -701,7 +701,7 @@ func runListBatchesTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			var actual []serverlesssparklistbatches.Batch
+			var actual []serverlessspark.Batch
 			var pageToken string
 			for i := 0; i < tc.numPages; i++ {
 				request := map[string]any{
@@ -733,7 +733,7 @@ func runListBatchesTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 					t.Fatalf("unable to find result in response body")
 				}
 
-				var listResponse serverlesssparklistbatches.ListBatchesResponse
+				var listResponse serverlessspark.ListBatchesResponse
 				if err := json.Unmarshal([]byte(result), &listResponse); err != nil {
 					t.Fatalf("error unmarshalling result: %s", err)
 				}
@@ -759,7 +759,7 @@ func runListBatchesTest(t *testing.T, client *dataproc.BatchControllerClient, ct
 	}
 }
 
-func listBatchesRpc(t *testing.T, client *dataproc.BatchControllerClient, ctx context.Context, filter string, n int, exact bool) []serverlesssparklistbatches.Batch {
+func listBatchesRpc(t *testing.T, client *dataproc.BatchControllerClient, ctx context.Context, filter string, n int, exact bool) []serverlessspark.Batch {
 	parent := fmt.Sprintf("projects/%s/locations/%s", serverlessSparkProject, serverlessSparkLocation)
 	req := &dataprocpb.ListBatchesRequest{
 		Parent:   parent,
@@ -783,7 +783,7 @@ func listBatchesRpc(t *testing.T, client *dataproc.BatchControllerClient, ctx co
 	if !exact && (len(batchPbs) == 0 || len(batchPbs) > n) {
 		t.Fatalf("expected between 1 and %d batches, got %d", n, len(batchPbs))
 	}
-	batches, err := serverlesssparklistbatches.ToBatches(batchPbs)
+	batches, err := serverlessspark.ToBatches(batchPbs)
 	if err != nil {
 		t.Fatalf("failed to convert batches to JSON: %v", err)
 	}

@@ -431,6 +431,7 @@ func TestLooker(t *testing.T) {
 						"description":          "The filters for the query",
 						"name":                 "filters",
 						"required":             false,
+						"default":              map[string]any{},
 						"type":                 "object",
 					},
 					map[string]any{
@@ -446,6 +447,7 @@ func TestLooker(t *testing.T) {
 						"name":     "pivots",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -460,6 +462,7 @@ func TestLooker(t *testing.T) {
 						"name":     "sorts",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -467,6 +470,7 @@ func TestLooker(t *testing.T) {
 						"name":        "limit",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(500),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -519,6 +523,7 @@ func TestLooker(t *testing.T) {
 						"description":          "The filters for the query",
 						"name":                 "filters",
 						"required":             false,
+						"default":              map[string]any{},
 						"type":                 "object",
 					},
 					map[string]any{
@@ -534,6 +539,7 @@ func TestLooker(t *testing.T) {
 						"name":     "pivots",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -548,6 +554,7 @@ func TestLooker(t *testing.T) {
 						"name":     "sorts",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -555,6 +562,7 @@ func TestLooker(t *testing.T) {
 						"name":        "limit",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(500),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -607,6 +615,7 @@ func TestLooker(t *testing.T) {
 						"description":          "The filters for the query",
 						"name":                 "filters",
 						"required":             false,
+						"default":              map[string]any{},
 						"type":                 "object",
 					},
 					map[string]any{
@@ -622,6 +631,7 @@ func TestLooker(t *testing.T) {
 						"name":     "pivots",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -636,6 +646,7 @@ func TestLooker(t *testing.T) {
 						"name":     "sorts",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -643,6 +654,7 @@ func TestLooker(t *testing.T) {
 						"name":        "limit",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(500),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -658,6 +670,7 @@ func TestLooker(t *testing.T) {
 						"name":                 "vis_config",
 						"required":             false,
 						"type":                 "object",
+						"default":              map[string]any{},
 					},
 				},
 			},
@@ -675,6 +688,7 @@ func TestLooker(t *testing.T) {
 						"name":        "title",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -682,6 +696,7 @@ func TestLooker(t *testing.T) {
 						"name":        "desc",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -689,6 +704,7 @@ func TestLooker(t *testing.T) {
 						"name":        "limit",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(100),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -696,6 +712,7 @@ func TestLooker(t *testing.T) {
 						"name":        "offset",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(0),
 					},
 				},
 			},
@@ -741,6 +758,7 @@ func TestLooker(t *testing.T) {
 						"description":          "The filters for the query",
 						"name":                 "filters",
 						"required":             false,
+						"default":              map[string]any{},
 						"type":                 "object",
 					},
 					map[string]any{
@@ -756,6 +774,7 @@ func TestLooker(t *testing.T) {
 						"name":     "pivots",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -770,6 +789,7 @@ func TestLooker(t *testing.T) {
 						"name":     "sorts",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -777,6 +797,7 @@ func TestLooker(t *testing.T) {
 						"name":        "limit",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(500),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -797,6 +818,15 @@ func TestLooker(t *testing.T) {
 						"description": "The description of the Look",
 						"name":        "description",
 						"required":    false,
+						"default":     "",
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The folder id where the Look will be created. Leave blank to use the user's personal folder",
+						"name":        "folder",
+						"required":    false,
+						"default":     "",
 						"type":        "string",
 					},
 					map[string]any{
@@ -806,6 +836,7 @@ func TestLooker(t *testing.T) {
 						"name":                 "vis_config",
 						"required":             false,
 						"type":                 "object",
+						"default":              map[string]any{},
 					},
 				},
 			},
@@ -823,6 +854,7 @@ func TestLooker(t *testing.T) {
 						"name":        "title",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -830,6 +862,7 @@ func TestLooker(t *testing.T) {
 						"name":        "desc",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -837,6 +870,7 @@ func TestLooker(t *testing.T) {
 						"name":        "limit",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(100),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -844,6 +878,7 @@ func TestLooker(t *testing.T) {
 						"name":        "offset",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(0),
 					},
 				},
 			},
@@ -868,6 +903,15 @@ func TestLooker(t *testing.T) {
 						"name":        "description",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "The folder id where the Dashboard will be created. Leave blank to use the user's personal folder",
+						"name":        "folder",
+						"required":    false,
+						"type":        "string",
+						"default":     "",
 					},
 				},
 			},
@@ -906,6 +950,7 @@ func TestLooker(t *testing.T) {
 						"name":        "filter_type",
 						"required":    false,
 						"type":        "string",
+						"default":     "field_filter",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -941,6 +986,7 @@ func TestLooker(t *testing.T) {
 						"name":        "allow_multiple_values",
 						"required":    false,
 						"type":        "boolean",
+						"default":     true,
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -948,6 +994,7 @@ func TestLooker(t *testing.T) {
 						"name":        "required",
 						"required":    false,
 						"type":        "boolean",
+						"default":     false,
 					},
 				},
 			},
@@ -993,6 +1040,7 @@ func TestLooker(t *testing.T) {
 						"description":          "The filters for the query",
 						"name":                 "filters",
 						"required":             false,
+						"default":              map[string]any{},
 						"type":                 "object",
 					},
 					map[string]any{
@@ -1008,6 +1056,7 @@ func TestLooker(t *testing.T) {
 						"name":     "pivots",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1022,6 +1071,7 @@ func TestLooker(t *testing.T) {
 						"name":     "sorts",
 						"required": false,
 						"type":     "array",
+						"default":  []any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1029,6 +1079,7 @@ func TestLooker(t *testing.T) {
 						"name":        "limit",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(500),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1050,6 +1101,7 @@ func TestLooker(t *testing.T) {
 						"name":        "title",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"additionalProperties": true,
@@ -1058,6 +1110,7 @@ func TestLooker(t *testing.T) {
 						"name":                 "vis_config",
 						"required":             false,
 						"type":                 "object",
+						"default":              map[string]any{},
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1069,6 +1122,7 @@ func TestLooker(t *testing.T) {
 							"name":                 "dashboard_filter",
 							"required":             false,
 							"type":                 "object",
+							"default":              map[string]any{},
 						},
 						"name":     "dashboard_filters",
 						"required": false,
@@ -1167,6 +1221,7 @@ func TestLooker(t *testing.T) {
 						"name":        "timeframe",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(90),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1174,6 +1229,7 @@ func TestLooker(t *testing.T) {
 						"name":        "min_queries",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(0),
 					},
 				},
 			},
@@ -1198,6 +1254,7 @@ func TestLooker(t *testing.T) {
 						"name":        "project",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1205,6 +1262,7 @@ func TestLooker(t *testing.T) {
 						"name":        "model",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1212,6 +1270,7 @@ func TestLooker(t *testing.T) {
 						"name":        "explore",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1219,6 +1278,7 @@ func TestLooker(t *testing.T) {
 						"name":        "timeframe",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(90),
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1226,6 +1286,7 @@ func TestLooker(t *testing.T) {
 						"name":        "min_queries",
 						"required":    false,
 						"type":        "integer",
+						"default":     float64(1),
 					},
 				},
 			},
@@ -1243,6 +1304,7 @@ func TestLooker(t *testing.T) {
 						"name":        "devMode",
 						"required":    false,
 						"type":        "boolean",
+						"default":     true,
 					},
 				},
 			},
@@ -1396,6 +1458,7 @@ func TestLooker(t *testing.T) {
 						"name":        "type",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 					map[string]any{
 						"authSources": []any{},
@@ -1403,6 +1466,7 @@ func TestLooker(t *testing.T) {
 						"name":        "id",
 						"required":    false,
 						"type":        "string",
+						"default":     "",
 					},
 				},
 			},

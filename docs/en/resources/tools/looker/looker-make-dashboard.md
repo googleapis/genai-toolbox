@@ -18,9 +18,11 @@ It's compatible with the following sources:
 
 - [looker](../../sources/looker.md)
 
-`looker-make-dashboard` takes one parameter:
+`looker-make-dashboard` takes three parameters:
 
 1. the `title`
+2. the `description`
+3. an optional `folder` id. If not provided, the user's default folder will be used.
 
 ## Example
 

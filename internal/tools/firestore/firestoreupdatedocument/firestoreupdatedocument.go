@@ -21,6 +21,7 @@ import (
 
 	firestoreapi "cloud.google.com/go/firestore"
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
@@ -49,6 +50,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
+	UpdateDocument(context.Context, string, []firestoreapi.Update, any, bool) (map[string]any, error)
 }
 
 type Config struct {
@@ -176,23 +178,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			}
 		}
 	}
-
-	// Get return document data flag
-	returnData := false
-	if val, ok := mapParams[returnDocumentDataKey].(bool); ok {
-		returnData = val
-	}
-
-	// Get the document reference
-	docRef := source.FirestoreClient().Doc(documentPath)
-
-	// Prepare update data
-	var writeResult *firestoreapi.WriteResult
-	var writeErr error
-
+	// Use selective field update with update mask
+	updates := make([]firestoreapi.Update, 0, len(updatePaths))
+	var documentData any
 	if len(updatePaths) > 0 {
-		// Use selective field update with update mask
-		updates := make([]firestoreapi.Update, 0, len(updatePaths))
 
 		// Convert document data without delete markers
 		dataMap, err := util.JSONToFirestoreValue(documentDataRaw, source.FirestoreClient())
@@ -219,41 +208,20 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 				Value: value,
 			})
 		}
-
-		writeResult, writeErr = docRef.Update(ctx, updates)
 	} else {
 		// Update all fields in the document data (merge)
-		documentData, err := util.JSONToFirestoreValue(documentDataRaw, source.FirestoreClient())
+		documentData, err = util.JSONToFirestoreValue(documentDataRaw, source.FirestoreClient())
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert document data: %w", err)
 		}
-		writeResult, writeErr = docRef.Set(ctx, documentData, firestoreapi.MergeAll)
 	}
 
-	if writeErr != nil {
-		return nil, fmt.Errorf("failed to update document: %w", writeErr)
+	// Get return document data flag
+	returnData := false
+	if val, ok := mapParams[returnDocumentDataKey].(bool); ok {
+		returnData = val
 	}
-
-	// Build the response
-	response := map[string]any{
-		"documentPath": docRef.Path,
-		"updateTime":   writeResult.UpdateTime.Format("2006-01-02T15:04:05.999999999Z"),
-	}
-
-	// Add document data if requested
-	if returnData {
-		// Fetch the updated document to return the current state
-		snapshot, err := docRef.Get(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to retrieve updated document: %w", err)
-		}
-
-		// Convert the document data to simple JSON format
-		simplifiedData := util.FirestoreValueToJSON(snapshot.Data())
-		response["documentData"] = simplifiedData
-	}
-
-	return response, nil
+	return source.UpdateDocument(ctx, documentPath, updates, documentData, returnData)
 }
 
 // getFieldValue retrieves a value from a nested map using a dot-separated path
@@ -284,6 +252,10 @@ func getFieldValue(data map[string]interface{}, path string) (interface{}, bool)
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {
