@@ -16,18 +16,14 @@ package retrieverendereddicominstance
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
-	"io"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	healthcareds "github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/common"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/healthcare/v1"
 )
 
 const kind string = "cloud-healthcare-retrieve-rendered-dicom-instance"
@@ -53,13 +49,9 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	Project() string
-	Region() string
-	DatasetID() string
 	AllowedDICOMStores() map[string]struct{}
-	Service() *healthcare.Service
-	ServiceCreator() healthcareds.HealthcareServiceCreator
 	UseClientAuthorization() bool
+	RetrieveRenderedDICOMInstance(string, string, string, string, int, string) (any, error)
 }
 
 type Config struct {
@@ -135,20 +127,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, err
 	}
-
-	svc := source.Service()
-	// Initialize new service if using user OAuth token
-	if source.UseClientAuthorization() {
-		tokenStr, err := accessToken.ParseBearerToken()
-		if err != nil {
-			return nil, fmt.Errorf("error parsing access token: %w", err)
-		}
-		svc, err = source.ServiceCreator()(tokenStr)
-		if err != nil {
-			return nil, fmt.Errorf("error creating service from OAuth access token: %w", err)
-		}
+	tokenStr, err := accessToken.ParseBearerToken()
+	if err != nil {
+		return nil, fmt.Errorf("error parsing access token: %w", err)
 	}
-
 	study, ok := params.AsMap()[studyInstanceUIDKey].(string)
 	if !ok {
 		return nil, fmt.Errorf("invalid '%s' parameter; expected a string", studyInstanceUIDKey)
@@ -165,25 +147,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, fmt.Errorf("invalid '%s' parameter; expected an integer", frameNumberKey)
 	}
-	name := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/dicomStores/%s", source.Project(), source.Region(), source.DatasetID(), storeID)
-	dicomWebPath := fmt.Sprintf("studies/%s/series/%s/instances/%s/frames/%d/rendered", study, series, sop, frame)
-	call := svc.Projects.Locations.Datasets.DicomStores.Studies.Series.Instances.Frames.RetrieveRendered(name, dicomWebPath)
-	call.Header().Set("Accept", "image/jpeg")
-	resp, err := call.Do()
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve dicom instance rendered image: %w", err)
-	}
-	defer resp.Body.Close()
-
-	respBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("could not read response: %w", err)
-	}
-	if resp.StatusCode > 299 {
-		return nil, fmt.Errorf("RetrieveRendered: status %d %s: %s", resp.StatusCode, resp.Status, respBytes)
-	}
-	base64String := base64.StdEncoding.EncodeToString(respBytes)
-	return base64String, nil
+	return source.RetrieveRenderedDICOMInstance(storeID, study, series, sop, frame, tokenStr)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

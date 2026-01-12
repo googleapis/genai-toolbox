@@ -215,6 +215,8 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparklistbatches"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/singlestore/singlestoreexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/singlestore/singlestoresql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/snowflake/snowflakeexecutesql"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/snowflake/snowflakesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerlistgraphs"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/spanner/spannerlisttables"
@@ -263,6 +265,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/redis"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/singlestore"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/snowflake"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/spanner"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/sqlite"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/tidb"
@@ -378,7 +381,9 @@ func NewCommand(opts ...Option) *Command {
 	flags.BoolVar(&cmd.cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 	flags.BoolVar(&cmd.cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
 	flags.BoolVar(&cmd.cfg.UI, "ui", false, "Launches the Toolbox UI web server.")
+	// TODO: Insecure by default. Might consider updating this for v1.0.0
 	flags.StringSliceVar(&cmd.cfg.AllowedOrigins, "allowed-origins", []string{"*"}, "Specifies a list of origins permitted to access this server. Defaults to '*'.")
+	flags.StringSliceVar(&cmd.cfg.AllowedHosts, "allowed-hosts", []string{"*"}, "Specifies a list of hosts permitted to access this server. Defaults to '*'.")
 
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }
@@ -944,6 +949,7 @@ func run(cmd *Command) error {
 
 	cmd.cfg.SourceConfigs = finalToolsFile.Sources
 	cmd.cfg.AuthServiceConfigs = finalToolsFile.AuthServices
+	cmd.cfg.EmbeddingModelConfigs = finalToolsFile.EmbeddingModels
 	cmd.cfg.ToolConfigs = finalToolsFile.Tools
 	cmd.cfg.ToolsetConfigs = finalToolsFile.Toolsets
 	cmd.cfg.PromptConfigs = finalToolsFile.Prompts
