@@ -200,6 +200,10 @@ tools:
         kind: postgres-get-column-cardinality
         source: alloydb-pg-source
 
+    list_table_stats:
+        kind: postgres-list-table-stats
+        source: alloydb-pg-source
+
     list_publication_tables:
         kind: postgres-list-publication-tables
         source: alloydb-pg-source
@@ -218,6 +222,10 @@ tools:
 
     list_roles:
         kind: postgres-list-roles
+        source: alloydb-pg-source
+
+    list_stored_procedure:
+        kind: postgres-list-stored-procedure
         source: alloydb-pg-source
 
 toolsets:
@@ -249,3 +257,5 @@ toolsets:
         - list_pg_settings
         - list_database_stats
         - list_roles
+        - list_table_stats
+        - list_stored_procedure

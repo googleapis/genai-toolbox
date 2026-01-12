@@ -28,8 +28,8 @@ import (
 	"text/template"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	httpsrc "github.com/googleapis/genai-toolbox/internal/sources/http"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
@@ -48,6 +48,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 		return nil, err
 	}
 	return actual, nil
+}
+
+type compatibleSource interface {
+	HttpDefaultHeaders() map[string]string
+	HttpBaseURL() string
+	HttpQueryParams() map[string]string
+	Client() *http.Client
 }
 
 type Config struct {
@@ -81,7 +88,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// verify the source is compatible
-	s, ok := rawS.(*httpsrc.Source)
+	s, ok := rawS.(compatibleSource)
 	if !ok {
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `http`", kind)
 	}
@@ -89,7 +96,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// Combine Source and Tool headers.
 	// In case of conflict, Tool header overrides Source header
 	combinedHeaders := make(map[string]string)
-	maps.Copy(combinedHeaders, s.DefaultHeaders)
+	maps.Copy(combinedHeaders, s.HttpDefaultHeaders())
 	maps.Copy(combinedHeaders, cfg.Headers)
 
 	// Create a slice for all parameters
@@ -113,14 +120,11 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	return Tool{
-		Config:             cfg,
-		BaseURL:            s.BaseURL,
-		Headers:            combinedHeaders,
-		DefaultQueryParams: s.QueryParams,
-		Client:             s.Client,
-		AllParams:          allParameters,
-		manifest:           tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
-		mcpManifest:        mcpManifest,
+		Config:      cfg,
+		Headers:     combinedHeaders,
+		AllParams:   allParameters,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}, nil
 }
 
@@ -129,12 +133,8 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	BaseURL            string                `yaml:"baseURL"`
-	Headers            map[string]string     `yaml:"headers"`
-	DefaultQueryParams map[string]string     `yaml:"defaultQueryParams"`
-	AllParams          parameters.Parameters `yaml:"allParams"`
-
-	Client      *http.Client
+	Headers     map[string]string     `yaml:"headers"`
+	AllParams   parameters.Parameters `yaml:"allParams"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -229,6 +229,11 @@ func getHeaders(headerParams parameters.Parameters, defaultHeaders map[string]st
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
+
 	paramsMap := params.AsMap()
 
 	// Calculate request body
@@ -238,7 +243,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	// Calculate URL
-	urlString, err := getURL(t.BaseURL, t.Path, t.PathParams, t.QueryParams, t.DefaultQueryParams, paramsMap)
+	urlString, err := getURL(source.HttpBaseURL(), t.Path, t.PathParams, t.QueryParams, source.HttpQueryParams(), paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error populating path parameters: %s", err)
 	}
@@ -256,7 +261,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	// Make request and fetch response
-	resp, err := t.Client.Do(req)
+	resp, err := source.Client().Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("error making HTTP request: %s", err)
 	}
@@ -283,6 +288,10 @@ func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any)
 	return parameters.ParseParams(t.AllParams, data, claims)
 }
 
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
+}
+
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
@@ -295,10 +304,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }

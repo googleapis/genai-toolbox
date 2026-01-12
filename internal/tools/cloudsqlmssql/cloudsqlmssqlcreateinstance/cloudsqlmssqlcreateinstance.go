@@ -20,11 +20,11 @@ import (
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	sqladmin "google.golang.org/api/sqladmin/v1"
+	"google.golang.org/api/sqladmin/v1"
 )
 
 const kind string = "cloud-sql-mssql-create-instance"
@@ -41,6 +41,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 		return nil, err
 	}
 	return actual, nil
+}
+
+type compatibleSource interface {
+	GetDefaultProject() string
+	UseClientAuthorization() bool
+	CreateInstance(context.Context, string, string, string, string, sqladmin.Settings, string) (any, error)
 }
 
 // Config defines the configuration for the create-instances tool.
@@ -66,12 +72,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	if !ok {
 		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
 	}
-	s, ok := rawS.(*cloudsqladmin.Source)
+	s, ok := rawS.(compatibleSource)
 	if !ok {
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `cloud-sql-admin`", kind)
 	}
 
-	project := s.DefaultProject
+	project := s.GetDefaultProject()
 	var projectParam parameters.Parameter
 	if project != "" {
 		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
@@ -96,7 +102,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	return Tool{
 		Config:      cfg,
-		Source:      s,
 		AllParams:   allParameters,
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
@@ -106,7 +111,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 // Tool represents the create-instances tool.
 type Tool struct {
 	Config
-	Source      *cloudsqladmin.Source
 	AllParams   parameters.Parameters `yaml:"allParams"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
@@ -118,6 +122,11 @@ func (t Tool) ToConfig() tools.ToolConfig {
 
 // Invoke executes the tool's logic.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
+
 	paramsMap := params.AsMap()
 
 	project, ok := paramsMap["project"].(string)
@@ -140,7 +149,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, fmt.Errorf("error casting 'editionPreset' parameter: %s", paramsMap["editionPreset"])
 	}
-
 	settings := sqladmin.Settings{}
 	switch strings.ToLower(editionPreset) {
 	case "production":
@@ -158,31 +166,16 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	default:
 		return nil, fmt.Errorf("invalid 'editionPreset': %q. Must be either 'Production' or 'Development'", editionPreset)
 	}
-
-	instance := sqladmin.DatabaseInstance{
-		Name:            name,
-		DatabaseVersion: dbVersion,
-		RootPassword:    rootPassword,
-		Settings:        &settings,
-		Project:         project,
-	}
-
-	service, err := t.Source.GetService(ctx, string(accessToken))
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := service.Instances.Insert(project, &instance).Do()
-	if err != nil {
-		return nil, fmt.Errorf("error creating instance: %w", err)
-	}
-
-	return resp, nil
+	return source.CreateInstance(ctx, project, name, dbVersion, rootPassword, settings, string(accessToken))
 }
 
 // ParseParams parses the parameters for the tool.
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.AllParams, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
 }
 
 // Manifest returns the tool's manifest.
@@ -200,10 +193,14 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return true
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return t.Source.UseClientAuthorization()
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return false, err
+	}
+	return source.UseClientAuthorization(), nil
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }

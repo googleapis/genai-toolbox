@@ -19,11 +19,10 @@ import (
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	alloydbadmin "github.com/googleapis/genai-toolbox/internal/sources/alloydbadmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/alloydb/v1"
 )
 
 const kind string = "alloydb-create-instance"
@@ -40,6 +39,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 		return nil, err
 	}
 	return actual, nil
+}
+
+type compatibleSource interface {
+	GetDefaultProject() string
+	UseClientAuthorization() bool
+	CreateInstance(context.Context, string, string, string, string, string, string, int, string) (any, error)
 }
 
 // Configuration for the create-instance tool.
@@ -66,12 +71,12 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("source %q not found", cfg.Source)
 	}
 
-	s, ok := rawS.(*alloydbadmin.Source)
+	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `alloydb-admin`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, cfg.Source)
 	}
 
-	project := s.DefaultProject
+	project := s.GetDefaultProject()
 	var projectParam parameters.Parameter
 	if project != "" {
 		projectParam = parameters.NewStringParameterWithDefault("project", project, "The GCP project ID. This is pre-configured; do not ask for it unless the user explicitly provides a different one.")
@@ -98,7 +103,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	return Tool{
 		Config:      cfg,
-		Source:      s,
 		AllParams:   allParameters,
 		manifest:    tools.Manifest{Description: description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
@@ -108,7 +112,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 // Tool represents the create-instance tool.
 type Tool struct {
 	Config
-	Source    *alloydbadmin.Source
 	AllParams parameters.Parameters `yaml:"allParams"`
 
 	manifest    tools.Manifest
@@ -121,6 +124,11 @@ func (t Tool) ToConfig() tools.ToolConfig {
 
 // Invoke executes the tool's logic.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
+
 	paramsMap := params.AsMap()
 	project, ok := paramsMap["project"].(string)
 	if !ok || project == "" {
@@ -147,50 +155,26 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("invalid 'instanceType' parameter; expected 'PRIMARY' or 'READ_POOL'")
 	}
 
-	service, err := t.Source.GetService(ctx, string(accessToken))
-	if err != nil {
-		return nil, err
-	}
+	displayName, _ := paramsMap["displayName"].(string)
 
-	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", project, location, cluster)
-
-	// Build the request body using the type-safe Instance struct.
-	instance := &alloydb.Instance{
-		InstanceType: instanceType,
-		NetworkConfig: &alloydb.InstanceNetworkConfig{
-			EnablePublicIp: true,
-		},
-		DatabaseFlags: map[string]string{
-			"password.enforce_complexity": "on",
-		},
-	}
-
-	if displayName, ok := paramsMap["displayName"].(string); ok && displayName != "" {
-		instance.DisplayName = displayName
-	}
-
+	var nodeCount int
 	if instanceType == "READ_POOL" {
-		nodeCount, ok := paramsMap["nodeCount"].(int)
+		nodeCount, ok = paramsMap["nodeCount"].(int)
 		if !ok {
 			return nil, fmt.Errorf("invalid 'nodeCount' parameter; expected an integer for READ_POOL")
 		}
-		instance.ReadPoolConfig = &alloydb.ReadPoolConfig{
-			NodeCount: int64(nodeCount),
-		}
 	}
 
-	// The Create API returns a long-running operation.
-	resp, err := service.Projects.Locations.Clusters.Instances.Create(urlString, instance).InstanceId(instanceID).Do()
-	if err != nil {
-		return nil, fmt.Errorf("error creating AlloyDB instance: %w", err)
-	}
-
-	return resp, nil
+	return source.CreateInstance(ctx, project, location, cluster, instanceID, instanceType, displayName, nodeCount, string(accessToken))
 }
 
 // ParseParams parses the parameters for the tool.
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.AllParams, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
 }
 
 // Manifest returns the tool's manifest.
@@ -208,10 +192,15 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return true
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return t.Source.UseClientAuthorization()
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return false, err
+	}
+
+	return source.UseClientAuthorization(), nil
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }
