@@ -142,66 +142,6 @@ func TestSQLConfigInitializeValidSource(t *testing.T) {
 	}
 }
 
-func TestSQLConfigInitializeMissingSource(t *testing.T) {
-	config := Config{
-		Name:        "test-tool",
-		Kind:        sqlKind,
-		Source:      "missing-source",
-		Description: "Test tool",
-		Statement:   "SELECT 1",
-		Parameters:  parameters.Parameters{},
-	}
-
-	sources := map[string]sources.Source{}
-
-	_, err := config.Initialize(sources)
-	if err == nil {
-		t.Fatal("Expected error for missing source, got nil")
-	}
-
-	expectedErr := `no source named "missing-source" configured`
-	if err.Error() != expectedErr {
-		t.Errorf("Expected error %q, got %q", expectedErr, err.Error())
-	}
-}
-
-// mockIncompatibleSource is a mock source that doesn't implement the compatibleSource interface
-type mockIncompatibleSource struct{}
-
-func (m *mockIncompatibleSource) SourceKind() string {
-	return "mock"
-}
-
-func (m *mockIncompatibleSource) ToConfig() sources.SourceConfig {
-	return nil
-}
-
-func TestSQLConfigInitializeIncompatibleSource(t *testing.T) {
-	config := Config{
-		Name:        "test-tool",
-		Kind:        sqlKind,
-		Source:      "incompatible-source",
-		Description: "Test tool",
-		Statement:   "SELECT 1",
-		Parameters:  parameters.Parameters{},
-	}
-
-	mockSource := &mockIncompatibleSource{}
-
-	sources := map[string]sources.Source{
-		"incompatible-source": mockSource,
-	}
-
-	_, err := config.Initialize(sources)
-	if err == nil {
-		t.Fatal("Expected error for incompatible source, got nil")
-	}
-
-	if err.Error() == "" {
-		t.Error("Expected non-empty error message")
-	}
-}
-
 func TestToolManifest(t *testing.T) {
 	tool := Tool{
 		manifest: tools.Manifest{

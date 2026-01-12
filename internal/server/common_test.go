@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/server/resources"
@@ -64,6 +65,10 @@ func (t MockTool) ParseParams(data map[string]any, claimsMap map[string]map[stri
 	return parameters.ParseParams(t.Params, data, claimsMap)
 }
 
+func (t MockTool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Params, paramValues, embeddingModelsMap, nil)
+}
+
 func (t MockTool) Manifest() tools.Manifest {
 	pMs := make([]parameters.ParameterManifest, 0, len(t.Params))
 	for _, p := range t.Params {
@@ -77,9 +82,9 @@ func (t MockTool) Authorized(verifiedAuthServices []string) bool {
 	return !t.unauthorized
 }
 
-func (t MockTool) RequiresClientAuthorization(tools.SourceProvider) bool {
+func (t MockTool) RequiresClientAuthorization(tools.SourceProvider) (bool, error) {
 	// defaulted to false
-	return t.requiresClientAuthrorization
+	return t.requiresClientAuthrorization, nil
 }
 
 func (t MockTool) McpManifest() tools.McpManifest {
@@ -119,8 +124,8 @@ func (t MockTool) McpManifest() tools.McpManifest {
 	return mcpManifest
 }
 
-func (t MockTool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t MockTool) GetAuthTokenHeaderName(tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }
 
 // MockPrompt is used to mock prompts in tests
@@ -276,7 +281,7 @@ func setUpServer(t *testing.T, router string, tools map[string]tools.Tool, tools
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := resources.NewResourceManager(nil, nil, tools, toolsets, prompts, promptsets)
+	resourceManager := resources.NewResourceManager(nil, nil, nil, tools, toolsets, prompts, promptsets)
 
 	server := Server{
 		version:         fakeVersionString,

@@ -23,8 +23,8 @@ import (
 
 	firestoreapi "cloud.google.com/go/firestore"
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -52,12 +52,9 @@ var validOperators = map[string]bool{
 
 // Error messages
 const (
-	errFilterParseFailed      = "failed to parse filters: %w"
-	errQueryExecutionFailed   = "failed to execute query: %w"
-	errTemplateParseFailed    = "failed to parse template: %w"
-	errTemplateExecFailed     = "failed to execute template: %w"
-	errLimitParseFailed       = "failed to parse limit value '%s': %w"
-	errSelectFieldParseFailed = "failed to parse select field: %w"
+	errFilterParseFailed    = "failed to parse filters: %w"
+	errQueryExecutionFailed = "failed to execute query: %w"
+	errLimitParseFailed     = "failed to parse limit value '%s': %w"
 )
 
 func init() {
@@ -78,11 +75,6 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
 }
-
-// validate compatible sources are still compatible
-var _ compatibleSource = &firestoreds.Source{}
-
-var compatibleSources = [...]string{firestoreds.SourceKind}
 
 // Config represents the configuration for the Firestore query tool
 type Config struct {
@@ -114,18 +106,6 @@ func (cfg Config) ToolConfigKind() string {
 
 // Initialize creates a new Tool instance from the configuration
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	// Set default limit if not specified
 	if cfg.Limit == "" {
 		cfg.Limit = fmt.Sprintf("%d", defaultLimit)
@@ -137,7 +117,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// finish tool setup
 	t := Tool{
 		Config:      cfg,
-		Client:      s.FirestoreClient(),
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: cfg.Parameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
@@ -201,6 +180,11 @@ type QueryResponse struct {
 
 // Invoke executes the Firestore query based on the provided parameters
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
+
 	paramsMap := params.AsMap()
 
 	// Process collection path with template substitution
@@ -210,7 +194,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	// Build the query
-	query, err := t.buildQuery(collectionPath, paramsMap)
+	query, err := t.buildQuery(source, collectionPath, paramsMap)
 	if err != nil {
 		return nil, err
 	}
@@ -220,8 +204,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 }
 
 // buildQuery constructs the Firestore query from parameters
-func (t Tool) buildQuery(collectionPath string, params map[string]any) (*firestoreapi.Query, error) {
-	collection := t.Client.Collection(collectionPath)
+func (t Tool) buildQuery(source compatibleSource, collectionPath string, params map[string]any) (*firestoreapi.Query, error) {
+	collection := source.FirestoreClient().Collection(collectionPath)
 	query := collection.Query
 
 	// Process and apply filters if template is provided
@@ -239,7 +223,7 @@ func (t Tool) buildQuery(collectionPath string, params map[string]any) (*firesto
 		}
 
 		// Convert simplified filter to Firestore filter
-		if filter := t.convertToFirestoreFilter(simplifiedFilter); filter != nil {
+		if filter := t.convertToFirestoreFilter(source, simplifiedFilter); filter != nil {
 			query = query.WhereEntity(filter)
 		}
 	}
@@ -280,12 +264,12 @@ func (t Tool) buildQuery(collectionPath string, params map[string]any) (*firesto
 }
 
 // convertToFirestoreFilter converts simplified filter format to Firestore EntityFilter
-func (t Tool) convertToFirestoreFilter(filter SimplifiedFilter) firestoreapi.EntityFilter {
+func (t Tool) convertToFirestoreFilter(source compatibleSource, filter SimplifiedFilter) firestoreapi.EntityFilter {
 	// Handle AND filters
 	if len(filter.And) > 0 {
 		filters := make([]firestoreapi.EntityFilter, 0, len(filter.And))
 		for _, f := range filter.And {
-			if converted := t.convertToFirestoreFilter(f); converted != nil {
+			if converted := t.convertToFirestoreFilter(source, f); converted != nil {
 				filters = append(filters, converted)
 			}
 		}
@@ -299,7 +283,7 @@ func (t Tool) convertToFirestoreFilter(filter SimplifiedFilter) firestoreapi.Ent
 	if len(filter.Or) > 0 {
 		filters := make([]firestoreapi.EntityFilter, 0, len(filter.Or))
 		for _, f := range filter.Or {
-			if converted := t.convertToFirestoreFilter(f); converted != nil {
+			if converted := t.convertToFirestoreFilter(source, f); converted != nil {
 				filters = append(filters, converted)
 			}
 		}
@@ -313,7 +297,7 @@ func (t Tool) convertToFirestoreFilter(filter SimplifiedFilter) firestoreapi.Ent
 	if filter.Field != "" && filter.Op != "" && filter.Value != nil {
 		if validOperators[filter.Op] {
 			// Convert the value using the Firestore native JSON converter
-			convertedValue, err := util.JSONToFirestoreValue(filter.Value, t.Client)
+			convertedValue, err := util.JSONToFirestoreValue(filter.Value, source.FirestoreClient())
 			if err != nil {
 				// If conversion fails, use the original value
 				convertedValue = filter.Value
@@ -510,6 +494,10 @@ func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any)
 	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
+}
+
 // Manifest returns the tool manifest
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
@@ -525,10 +513,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }

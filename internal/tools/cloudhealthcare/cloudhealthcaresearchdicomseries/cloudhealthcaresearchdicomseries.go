@@ -21,6 +21,7 @@ import (
 	"io"
 
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	healthcareds "github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -65,11 +66,6 @@ type compatibleSource interface {
 	UseClientAuthorization() bool
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &healthcareds.Source{}
-
-var compatibleSources = [...]string{healthcareds.SourceKind}
-
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
@@ -95,7 +91,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, cfg.Source)
 	}
 
 	params := parameters.Parameters{
@@ -117,17 +113,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	// finish tool setup
 	t := Tool{
-		Config:         cfg,
-		Parameters:     params,
-		Project:        s.Project(),
-		Region:         s.Region(),
-		Dataset:        s.DatasetID(),
-		AllowedStores:  s.AllowedDICOMStores(),
-		UseClientOAuth: s.UseClientAuthorization(),
-		ServiceCreator: s.ServiceCreator(),
-		Service:        s.Service(),
-		manifest:       tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
-		mcpManifest:    mcpManifest,
+		Config:      cfg,
+		Parameters:  params,
+		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
+		mcpManifest: mcpManifest,
 	}
 	return t, nil
 }
@@ -137,15 +126,9 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	UseClientOAuth bool                  `yaml:"useClientOAuth"`
-	Parameters     parameters.Parameters `yaml:"parameters"`
-
-	Project, Region, Dataset string
-	AllowedStores            map[string]struct{}
-	Service                  *healthcare.Service
-	ServiceCreator           healthcareds.HealthcareServiceCreator
-	manifest                 tools.Manifest
-	mcpManifest              tools.McpManifest
+	Parameters  parameters.Parameters `yaml:"parameters"`
+	manifest    tools.Manifest
+	mcpManifest tools.McpManifest
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
@@ -153,19 +136,24 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	storeID, err := common.ValidateAndFetchStoreID(params, t.AllowedStores)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := t.Service
+	storeID, err := common.ValidateAndFetchStoreID(params, source.AllowedDICOMStores())
+	if err != nil {
+		return nil, err
+	}
+
+	svc := source.Service()
 	// Initialize new service if using user OAuth token
-	if t.UseClientOAuth {
+	if source.UseClientAuthorization() {
 		tokenStr, err := accessToken.ParseBearerToken()
 		if err != nil {
 			return nil, fmt.Errorf("error parsing access token: %w", err)
 		}
-		svc, err = t.ServiceCreator(tokenStr)
+		svc, err = source.ServiceCreator()(tokenStr)
 		if err != nil {
 			return nil, fmt.Errorf("error creating service from OAuth access token: %w", err)
 		}
@@ -187,7 +175,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 	}
 
-	name := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/dicomStores/%s", t.Project, t.Region, t.Dataset, storeID)
+	name := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/dicomStores/%s", source.Project(), source.Region(), source.DatasetID(), storeID)
 	resp, err := svc.Projects.Locations.Datasets.DicomStores.SearchForSeries(name, dicomWebPath).Do(opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search dicom series: %w", err)
@@ -215,6 +203,10 @@ func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any)
 	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
+}
+
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
@@ -227,10 +219,14 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return t.UseClientOAuth
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return false, err
+	}
+	return source.UseClientAuthorization(), nil
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }

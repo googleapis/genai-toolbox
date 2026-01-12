@@ -21,8 +21,8 @@ import (
 
 	firestoreapi "cloud.google.com/go/firestore"
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	firestoreds "github.com/googleapis/genai-toolbox/internal/sources/firestore"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -52,11 +52,6 @@ type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
 }
 
-// validate compatible sources are still compatible
-var _ compatibleSource = &firestoreds.Source{}
-
-var compatibleSources = [...]string{firestoreds.SourceKind}
-
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
 	Kind         string   `yaml:"kind" validate:"required"`
@@ -73,18 +68,6 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	// Create parameters
 	documentPathParameter := parameters.NewStringParameter(
 		documentPathKey,
@@ -134,7 +117,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	t := Tool{
 		Config:      cfg,
 		Parameters:  params,
-		Client:      s.FirestoreClient(),
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
@@ -146,9 +128,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	Parameters parameters.Parameters `yaml:"parameters"`
-
-	Client      *firestoreapi.Client
+	Parameters  parameters.Parameters `yaml:"parameters"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -158,6 +138,11 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
+
 	mapParams := params.AsMap()
 
 	// Get document path
@@ -200,7 +185,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	// Get the document reference
-	docRef := t.Client.Doc(documentPath)
+	docRef := source.FirestoreClient().Doc(documentPath)
 
 	// Prepare update data
 	var writeResult *firestoreapi.WriteResult
@@ -211,7 +196,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		updates := make([]firestoreapi.Update, 0, len(updatePaths))
 
 		// Convert document data without delete markers
-		dataMap, err := util.JSONToFirestoreValue(documentDataRaw, t.Client)
+		dataMap, err := util.JSONToFirestoreValue(documentDataRaw, source.FirestoreClient())
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert document data: %w", err)
 		}
@@ -239,7 +224,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		writeResult, writeErr = docRef.Update(ctx, updates)
 	} else {
 		// Update all fields in the document data (merge)
-		documentData, err := util.JSONToFirestoreValue(documentDataRaw, t.Client)
+		documentData, err := util.JSONToFirestoreValue(documentDataRaw, source.FirestoreClient())
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert document data: %w", err)
 		}
@@ -302,6 +287,10 @@ func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any)
 	return parameters.ParseParams(t.Parameters, data, claims)
 }
 
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
+}
+
 func (t Tool) Manifest() tools.Manifest {
 	return t.manifest
 }
@@ -314,10 +303,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }

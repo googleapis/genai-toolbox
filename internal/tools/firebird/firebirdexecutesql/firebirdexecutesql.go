@@ -20,8 +20,8 @@ import (
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/firebird"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -45,11 +45,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirebirdDB() *sql.DB
+	RunSQL(context.Context, string, []any) (any, error)
 }
-
-var _ compatibleSource = &firebird.Source{}
-
-var compatibleSources = [...]string{firebird.SourceKind}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
@@ -66,16 +63,6 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	sqlParameter := parameters.NewStringParameter("sql", "The sql to execute.")
 	params := parameters.Parameters{sqlParameter}
 
@@ -84,7 +71,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	t := Tool{
 		Config:      cfg,
 		Parameters:  params,
-		Db:          s.FirebirdDB(),
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: params.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
@@ -95,9 +81,7 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	Parameters parameters.Parameters `yaml:"parameters"`
-
-	Db          *sql.DB
+	Parameters  parameters.Parameters `yaml:"parameters"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
@@ -107,6 +91,11 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
+
 	paramsMap := params.AsMap()
 	sql, ok := paramsMap["sql"].(string)
 	if !ok {
@@ -119,53 +108,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
-
-	rows, err := t.Db.QueryContext(ctx, sql)
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-	defer rows.Close()
-
-	cols, err := rows.Columns()
-
-	var out []any
-	if err == nil && len(cols) > 0 {
-		values := make([]any, len(cols))
-		scanArgs := make([]any, len(values))
-		for i := range values {
-			scanArgs[i] = &values[i]
-		}
-
-		for rows.Next() {
-			err = rows.Scan(scanArgs...)
-			if err != nil {
-				return nil, fmt.Errorf("unable to parse row: %w", err)
-			}
-
-			vMap := make(map[string]any)
-			for i, colName := range cols {
-				if b, ok := values[i].([]byte); ok {
-					vMap[colName] = string(b)
-				} else {
-					vMap[colName] = values[i]
-				}
-			}
-			out = append(out, vMap)
-		}
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating rows: %w", err)
-	}
-
-	// In most cases, DML/DDL statements like INSERT, UPDATE, CREATE, etc. might return no rows
-	// However, it is also possible that this was a query that was expected to return rows
-	// but returned none, a case that we cannot distinguish here.
-	return out, nil
+	return source.RunSQL(ctx, sql, nil)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -180,10 +131,10 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }

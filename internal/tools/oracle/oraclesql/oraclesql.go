@@ -5,13 +5,11 @@ package oraclesql
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
-	"strings"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/oracle"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
@@ -34,12 +32,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	OracleDB() *sql.DB
+	RunSQL(context.Context, string, []any) (any, error)
 }
-
-// validate compatible sources are still compatible
-var _ compatibleSource = &oracle.Source{}
-
-var compatibleSources = [...]string{oracle.SourceKind}
 
 type Config struct {
 	Name               string                `yaml:"name" validate:"required"`
@@ -60,18 +54,6 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	// verify source exists
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("no source named %q configured", cfg.Source)
-	}
-
-	// verify the source is compatible
-	s, ok := rawS.(compatibleSource)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
-	}
-
 	allParameters, paramManifest, err := parameters.ProcessParameters(cfg.TemplateParameters, cfg.Parameters)
 	if err != nil {
 		return nil, fmt.Errorf("error processing parameters: %w", err)
@@ -83,7 +65,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	t := Tool{
 		Config:      cfg,
 		AllParams:   allParameters,
-		DB:          s.OracleDB(),
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: paramManifest, AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
 	}
@@ -95,14 +76,17 @@ var _ tools.Tool = Tool{}
 
 type Tool struct {
 	Config
-	AllParams parameters.Parameters `yaml:"allParams"`
-
-	DB          *sql.DB
+	AllParams   parameters.Parameters `yaml:"allParams"`
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
+
 	paramsMap := params.AsMap()
 	newStatement, err := parameters.ResolveTemplateParams(t.TemplateParameters, t.Statement, paramsMap)
 	if err != nil {
@@ -119,103 +103,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		fmt.Printf("[%d]=%T ", i, p)
 	}
 	fmt.Printf("\n")
-
-	rows, err := t.DB.QueryContext(ctx, newStatement, sliceParams...)
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-	defer rows.Close()
-
-	cols, _ := rows.Columns()
-
-	// Get Column types
-	colTypes, err := rows.ColumnTypes()
-	if err != nil {
-		return nil, fmt.Errorf("unable to get column types: %w", err)
-	}
-
-	var out []any
-	for rows.Next() {
-		values := make([]any, len(cols))
-		for i, colType := range colTypes {
-			switch strings.ToUpper(colType.DatabaseTypeName()) {
-			case "NUMBER", "FLOAT", "BINARY_FLOAT", "BINARY_DOUBLE":
-				if _, scale, ok := colType.DecimalSize(); ok && scale == 0 {
-					// Scale is 0, treat it as an integer.
-					values[i] = new(sql.NullInt64)
-				} else {
-					// Scale is non-zero or unknown, treat
-					// it as a float.
-					values[i] = new(sql.NullFloat64)
-				}
-			case "DATE", "TIMESTAMP", "TIMESTAMP WITH TIME ZONE", "TIMESTAMP WITH LOCAL TIME ZONE":
-				values[i] = new(sql.NullTime)
-			case "JSON":
-				values[i] = new(sql.RawBytes)
-			default:
-				values[i] = new(sql.NullString)
-			}
-		}
-
-		if err := rows.Scan(values...); err != nil {
-			return nil, fmt.Errorf("unable to scan row: %w", err)
-		}
-
-		vMap := make(map[string]any)
-		for i, col := range cols {
-			receiver := values[i]
-
-			switch v := receiver.(type) {
-			case *sql.NullInt64:
-				if v.Valid {
-					vMap[col] = v.Int64
-				} else {
-					vMap[col] = nil
-				}
-			case *sql.NullFloat64:
-				if v.Valid {
-					vMap[col] = v.Float64
-				} else {
-					vMap[col] = nil
-				}
-			case *sql.NullString:
-				if v.Valid {
-					vMap[col] = v.String
-				} else {
-					vMap[col] = nil
-				}
-			case *sql.NullTime:
-				if v.Valid {
-					vMap[col] = v.Time
-				} else {
-					vMap[col] = nil
-				}
-			case *sql.RawBytes:
-				if *v != nil {
-					var unmarshaledData any
-					if err := json.Unmarshal(*v, &unmarshaledData); err != nil {
-						return nil, fmt.Errorf("unable to unmarshal json data for column %s", col)
-					}
-					vMap[col] = unmarshaledData
-				} else {
-					vMap[col] = nil
-				}
-			default:
-				return nil, fmt.Errorf("unexpected receiver type: %T", v)
-			}
-		}
-		out = append(out, vMap)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("errors encountered during query execution or row processing: %w", err)
-	}
-
-	return out, nil
+	return source.RunSQL(ctx, newStatement, sliceParams)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.AllParams, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -230,14 +126,14 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, verifiedAuthServices)
 }
 
-func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) bool {
-	return false
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
+	return false, nil
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }

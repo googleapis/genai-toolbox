@@ -52,4 +52,6 @@ README for detailed installation and usage instructions:
 | `toolbox-llamaindex` | LlamaIndex applications | LlamaIndex | `packages/toolbox-llamaindex/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-python/blob/main/packages/toolbox-llamaindex/README.md) | ![pypi version](https://img.shields.io/pypi/v/toolbox-llamaindex.svg) |
 
 
-[Github](https://github.com/googleapis/mcp-toolbox-sdk-python)
+{{< notice note >}}
+Source code for [python-sdk](https://github.com/googleapis/mcp-toolbox-sdk-python)
+{{< /notice >}}
