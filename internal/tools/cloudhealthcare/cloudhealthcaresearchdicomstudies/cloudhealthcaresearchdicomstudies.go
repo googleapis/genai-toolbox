@@ -16,17 +16,15 @@ package searchdicomstudies
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	healthcareds "github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/common"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/healthcare/v1"
+	"google.golang.org/api/googleapi"
 )
 
 const kind string = "cloud-healthcare-search-dicom-studies"
@@ -54,13 +52,9 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	Project() string
-	Region() string
-	DatasetID() string
 	AllowedDICOMStores() map[string]struct{}
-	Service() *healthcare.Service
-	ServiceCreator() healthcareds.HealthcareServiceCreator
 	UseClientAuthorization() bool
+	SearchDICOM(string, string, string, string, []googleapi.CallOption) (any, error)
 }
 
 type Config struct {
@@ -137,55 +131,28 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, err
 	}
-
 	storeID, err := common.ValidateAndFetchStoreID(params, source.AllowedDICOMStores())
 	if err != nil {
 		return nil, err
 	}
-
-	svc := source.Service()
-	// Initialize new service if using user OAuth token
-	if source.UseClientAuthorization() {
-		tokenStr, err := accessToken.ParseBearerToken()
-		if err != nil {
-			return nil, fmt.Errorf("error parsing access token: %w", err)
-		}
-		svc, err = source.ServiceCreator()(tokenStr)
-		if err != nil {
-			return nil, fmt.Errorf("error creating service from OAuth access token: %w", err)
-		}
+	tokenStr, err := accessToken.ParseBearerToken()
+	if err != nil {
+		return nil, fmt.Errorf("error parsing access token: %w", err)
 	}
-
 	opts, err := common.ParseDICOMSearchParameters(params, []string{studyInstanceUIDKey, patientNameKey, patientIDKey, accessionNumberKey, referringPhysicianNameKey, studyDateKey})
 	if err != nil {
 		return nil, err
 	}
-	name := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/dicomStores/%s", source.Project(), source.Region(), source.DatasetID(), storeID)
-	resp, err := svc.Projects.Locations.Datasets.DicomStores.SearchForStudies(name, "studies").Do(opts...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to search dicom studies: %w", err)
-	}
-	defer resp.Body.Close()
-
-	respBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("could not read response: %w", err)
-	}
-	if resp.StatusCode > 299 {
-		return nil, fmt.Errorf("search: status %d %s: %s", resp.StatusCode, resp.Status, respBytes)
-	}
-	if len(respBytes) == 0 {
-		return []interface{}{}, nil
-	}
-	var result []interface{}
-	if err := json.Unmarshal([]byte(string(respBytes)), &result); err != nil {
-		return nil, fmt.Errorf("could not unmarshal response as list: %w", err)
-	}
-	return result, nil
+	dicomWebPath := "studies"
+	return source.SearchDICOM(t.Kind, storeID, dicomWebPath, tokenStr, opts)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

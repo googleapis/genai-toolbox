@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -292,6 +293,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	MSSQLDB() *sql.DB
+	RunSQL(context.Context, string, []any) (any, error)
 }
 
 type Config struct {
@@ -356,48 +358,24 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		sql.Named("table_names", paramsMap["table_names"]),
 		sql.Named("output_format", outputFormat),
 	}
-
-	rows, err := source.MSSQLDB().QueryContext(ctx, listTablesStatement, namedArgs...)
+	resp, err := source.RunSQL(ctx, listTablesStatement, namedArgs)
 	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		return nil, err
 	}
-	defer rows.Close()
-
-	cols, err := rows.Columns()
-	if err != nil {
-		return nil, fmt.Errorf("unable to fetch column names: %w", err)
+	// if there's no results, return empty list instead of null
+	resSlice, ok := resp.([]any)
+	if !ok || len(resSlice) == 0 {
+		return []any{}, nil
 	}
-
-	// create an array of values for each column, which can be re-used to scan each row
-	rawValues := make([]any, len(cols))
-	values := make([]any, len(cols))
-	for i := range rawValues {
-		values[i] = &rawValues[i]
-	}
-
-	out := []any{}
-	for rows.Next() {
-		err = rows.Scan(values...)
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
-		}
-		vMap := make(map[string]any)
-		for i, name := range cols {
-			vMap[name] = rawValues[i]
-		}
-		out = append(out, vMap)
-	}
-
-	// Check if error occurred during iteration
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("errors encountered during row iteration: %w", err)
-	}
-
-	return out, nil
+	return resp, err
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.AllParams, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

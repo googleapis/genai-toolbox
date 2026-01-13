@@ -20,6 +20,7 @@ import (
 
 	firestoreapi "cloud.google.com/go/firestore"
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
@@ -45,6 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
+	GetDocuments(context.Context, []string) ([]any, error)
 }
 
 type Config struct {
@@ -127,41 +129,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			return nil, fmt.Errorf("invalid document path at index %d: %w", i, err)
 		}
 	}
-
-	// Create document references from paths
-	docRefs := make([]*firestoreapi.DocumentRef, len(documentPaths))
-	for i, path := range documentPaths {
-		docRefs[i] = source.FirestoreClient().Doc(path)
-	}
-
-	// Get all documents
-	snapshots, err := source.FirestoreClient().GetAll(ctx, docRefs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get documents: %w", err)
-	}
-
-	// Convert snapshots to response data
-	results := make([]any, len(snapshots))
-	for i, snapshot := range snapshots {
-		docData := make(map[string]any)
-		docData["path"] = documentPaths[i]
-		docData["exists"] = snapshot.Exists()
-
-		if snapshot.Exists() {
-			docData["data"] = snapshot.Data()
-			docData["createTime"] = snapshot.CreateTime
-			docData["updateTime"] = snapshot.UpdateTime
-			docData["readTime"] = snapshot.ReadTime
-		}
-
-		results[i] = docData
-	}
-
-	return results, nil
+	return source.GetDocuments(ctx, documentPaths)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

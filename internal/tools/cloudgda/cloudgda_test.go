@@ -333,7 +333,7 @@ func TestInvoke(t *testing.T) {
 		{Name: "prompt", Value: "How many accounts who have region in Prague are eligible for loans?"},
 	}
 
-	resourceMgr := resources.NewResourceManager(srcs, nil, nil, nil, nil, nil)
+	resourceMgr := resources.NewResourceManager(srcs, nil, nil, nil, nil, nil, nil)
 
 	// Invoke the tool
 	result, err := tool.Invoke(ctx, resourceMgr, params, "") // No accessToken needed for ADC client

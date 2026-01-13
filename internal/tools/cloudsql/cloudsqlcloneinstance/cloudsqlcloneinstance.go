@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -45,6 +46,7 @@ type compatibleSource interface {
 	GetDefaultProject() string
 	GetService(context.Context, string) (*sqladmin.Service, error)
 	UseClientAuthorization() bool
+	CloneInstance(context.Context, string, string, string, string, string, string, string) (any, error)
 }
 
 // Config defines the configuration for the clone-instance tool.
@@ -144,43 +146,20 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("error casting 'destinationInstanceName' parameter: %v", paramsMap["destinationInstanceName"])
 	}
 
-	cloneContext := &sqladmin.CloneContext{
-		DestinationInstanceName: destinationInstanceName,
-	}
+	pointInTime, _ := paramsMap["pointInTime"].(string)
+	preferredZone, _ := paramsMap["preferredZone"].(string)
+	preferredSecondaryZone, _ := paramsMap["preferredSecondaryZone"].(string)
 
-	pointInTime, ok := paramsMap["pointInTime"].(string)
-	if ok {
-		cloneContext.PointInTime = pointInTime
-	}
-	preferredZone, ok := paramsMap["preferredZone"].(string)
-	if ok {
-		cloneContext.PreferredZone = preferredZone
-	}
-	preferredSecondaryZone, ok := paramsMap["preferredSecondaryZone"].(string)
-	if ok {
-		cloneContext.PreferredSecondaryZone = preferredSecondaryZone
-	}
-
-	rb := &sqladmin.InstancesCloneRequest{
-		CloneContext: cloneContext,
-	}
-
-	service, err := source.GetService(ctx, string(accessToken))
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := service.Instances.Clone(project, sourceInstanceName, rb).Do()
-	if err != nil {
-		return nil, fmt.Errorf("error cloning instance: %w", err)
-	}
-
-	return resp, nil
+	return source.CloneInstance(ctx, project, sourceInstanceName, destinationInstanceName, pointInTime, preferredZone, preferredSecondaryZone, string(accessToken))
 }
 
 // ParseParams parses the parameters for the tool.
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.AllParams, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
 }
 
 // Manifest returns the tool's manifest.

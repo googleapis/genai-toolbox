@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -44,6 +45,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	PostgresPool() *pgxpool.Pool
+	RunSQL(context.Context, string, []any) (any, error)
 }
 
 type Config struct {
@@ -76,26 +78,21 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		placeholderParts = append(placeholderParts, fmt.Sprintf("$%d", i+3)) // $1, $2 reserved
 	}
 
-	var paramNamesSQL string
-	var paramValuesSQL string
-
+	var stmt string
 	if numParams > 0 {
-		paramNamesSQL = fmt.Sprintf("ARRAY[%s]", strings.Join(quotedNameParts, ", "))
-		paramValuesSQL = fmt.Sprintf("ARRAY[%s]", strings.Join(placeholderParts, ", "))
+		paramNamesSQL := fmt.Sprintf("ARRAY[%s]", strings.Join(quotedNameParts, ", "))
+		paramValuesSQL := fmt.Sprintf("ARRAY[%s]", strings.Join(placeholderParts, ", "))
+		// execute_nl_query is the AlloyDB AI function that executes the natural language query
+		// The first parameter is the natural language query, which is passed as $1
+		// The second parameter is the NLConfig, which is passed as a $2
+		// The following params are the list of PSV values passed to the NLConfig
+		// Example SQL statement being executed:
+		// SELECT alloydb_ai_nl.execute_nl_query(nl_question => 'How many tickets do I have?', nl_config_id => 'cymbal_air_nl_config', param_names => ARRAY ['user_email'], param_values => ARRAY ['hailongli@google.com']);
+		stmtFormat := "SELECT alloydb_ai_nl.execute_nl_query(nl_question => $1, nl_config_id => $2, param_names => %s, param_values => %s);"
+		stmt = fmt.Sprintf(stmtFormat, paramNamesSQL, paramValuesSQL)
 	} else {
-		paramNamesSQL = "ARRAY[]::TEXT[]"
-		paramValuesSQL = "ARRAY[]::TEXT[]"
+		stmt = "SELECT alloydb_ai_nl.execute_nl_query(nl_question => $1, nl_config_id => $2);"
 	}
-
-	// execute_nl_query is the AlloyDB AI function that executes the natural language query
-	// The first parameter is the natural language query, which is passed as $1
-	// The second parameter is the NLConfig, which is passed as a $2
-	// The following params are the list of PSV values passed to the NLConfig
-	// Example SQL statement being executed:
-	// SELECT alloydb_ai_nl.execute_nl_query(nl_question => 'How many tickets do I have?', nl_config_id => 'cymbal_air_nl_config', param_names => ARRAY ['user_email'], param_values => ARRAY ['hailongli@google.com']);
-	stmtFormat := "SELECT alloydb_ai_nl.execute_nl_query(nl_question => $1, nl_config_id => $2, param_names => %s, param_values => %s);"
-	stmt := fmt.Sprintf(stmtFormat, paramNamesSQL, paramValuesSQL)
-
 	newQuestionParam := parameters.NewStringParameter(
 		"question",                              // name
 		"The natural language question to ask.", // description
@@ -137,7 +134,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, err
 	}
-	pool := source.PostgresPool()
 
 	sliceParams := params.AsSlice()
 	allParamValues := make([]any, len(sliceParams)+1)
@@ -147,35 +143,19 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		allParamValues[i+2] = fmt.Sprintf("%s", param)
 	}
 
-	results, err := pool.Query(ctx, t.Statement, allParamValues...)
+	resp, err := source.RunSQL(ctx, t.Statement, allParamValues)
 	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w. Query: %v , Values: %v. Toolbox v0.19.0+ is only compatible with AlloyDB AI NL v1.0.3+. Please ensure that you are using the latest AlloyDB AI NL extension", err, t.Statement, allParamValues)
+		return nil, fmt.Errorf("%w. Query: %v , Values: %v. Toolbox v0.19.0+ is only compatible with AlloyDB AI NL v1.0.3+. Please ensure that you are using the latest AlloyDB AI NL extension", err, t.Statement, allParamValues)
 	}
-
-	fields := results.FieldDescriptions()
-
-	var out []any
-	for results.Next() {
-		v, err := results.Values()
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
-		}
-		vMap := make(map[string]any)
-		for i, f := range fields {
-			vMap[f.Name] = v[i]
-		}
-		out = append(out, vMap)
-	}
-	// this will catch actual query execution errors
-	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-
-	return out, nil
+	return resp, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

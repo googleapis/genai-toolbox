@@ -16,10 +16,10 @@ package dgraph
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/dgraph"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -44,6 +44,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	DgraphClient() *dgraph.DgraphClient
+	RunSQL(string, parameters.ParamValues, bool, string) (any, error)
 }
 
 type Config struct {
@@ -97,31 +98,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, err
 	}
-
-	paramsMap := params.AsMapWithDollarPrefix()
-
-	resp, err := source.DgraphClient().ExecuteQuery(t.Statement, paramsMap, t.IsQuery, t.Timeout)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := dgraph.CheckError(resp); err != nil {
-		return nil, err
-	}
-
-	var result struct {
-		Data map[string]interface{} `json:"data"`
-	}
-
-	if err := json.Unmarshal(resp, &result); err != nil {
-		return nil, fmt.Errorf("error parsing JSON: %v", err)
-	}
-
-	return result.Data, nil
+	return source.RunSQL(t.Statement, params, t.IsQuery, t.Timeout)
 }
 
 func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claimsMap)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

@@ -16,21 +16,13 @@ package fhirfetchpage
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	healthcareds "github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/healthcare/v1"
-
-	"net/http"
-
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 )
 
 const kind string = "cloud-healthcare-fhir-fetch-page"
@@ -53,13 +45,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	Project() string
-	Region() string
-	DatasetID() string
-	AllowedFHIRStores() map[string]struct{}
-	Service() *healthcare.Service
-	ServiceCreator() healthcareds.HealthcareServiceCreator
 	UseClientAuthorization() bool
+	FHIRFetchPage(context.Context, string, string) (any, error)
 }
 
 type Config struct {
@@ -119,52 +106,19 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", pageURLKey)
 	}
 
-	var httpClient *http.Client
-	if source.UseClientAuthorization() {
-		tokenStr, err := accessToken.ParseBearerToken()
-		if err != nil {
-			return nil, fmt.Errorf("error parsing access token: %w", err)
-		}
-		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: tokenStr})
-		httpClient = oauth2.NewClient(ctx, ts)
-	} else {
-		// The source.Service() object holds a client with the default credentials.
-		// However, the client is not exported, so we have to create a new one.
-		var err error
-		httpClient, err = google.DefaultClient(ctx, healthcare.CloudHealthcareScope)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create default http client: %w", err)
-		}
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	tokenStr, err := accessToken.ParseBearerToken()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create http request: %w", err)
+		return nil, fmt.Errorf("error parsing access token: %w", err)
 	}
-	req.Header.Set("Accept", "application/fhir+json;charset=utf-8")
-
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get fhir page from %q: %w", url, err)
-	}
-	defer resp.Body.Close()
-
-	respBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("could not read response: %w", err)
-	}
-	if resp.StatusCode > 299 {
-		return nil, fmt.Errorf("read: status %d %s: %s", resp.StatusCode, resp.Status, respBytes)
-	}
-	var jsonMap map[string]interface{}
-	if err := json.Unmarshal([]byte(string(respBytes)), &jsonMap); err != nil {
-		return nil, fmt.Errorf("could not unmarshal response as json: %w", err)
-	}
-	return jsonMap, nil
+	return source.FHIRFetchPage(ctx, url, tokenStr)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

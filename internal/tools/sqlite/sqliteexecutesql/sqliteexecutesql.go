@@ -17,14 +17,13 @@ package sqliteexecutesql
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
-	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
@@ -46,6 +45,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	SQLiteDB() *sql.DB
+	RunSQL(context.Context, string, []any) (any, error)
 }
 
 type Config struct {
@@ -110,69 +110,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
-
-	results, err := source.SQLiteDB().QueryContext(ctx, sql)
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-
-	cols, err := results.Columns()
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve rows column name: %w", err)
-	}
-
-	// The sqlite driver does not support ColumnTypes, so we can't get the
-	// underlying database type of the columns. We'll have to rely on the
-	// generic `any` type and then handle the JSON data separately.
-
-	// create an array of values for each column, which can be re-used to scan each row
-	rawValues := make([]any, len(cols))
-	values := make([]any, len(cols))
-	for i := range rawValues {
-		values[i] = &rawValues[i]
-	}
-	defer results.Close()
-
-	var out []any
-	for results.Next() {
-		err := results.Scan(values...)
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
-		}
-		row := orderedmap.Row{}
-		for i, name := range cols {
-			val := rawValues[i]
-			if val == nil {
-				row.Add(name, nil)
-				continue
-			}
-
-			// Handle JSON data
-			if jsonString, ok := val.(string); ok {
-				var unmarshaledData any
-				if json.Unmarshal([]byte(jsonString), &unmarshaledData) == nil {
-					row.Add(name, unmarshaledData)
-					continue
-				}
-			}
-			row.Add(name, val)
-		}
-		out = append(out, row)
-	}
-
-	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("errors encountered during row iteration: %w", err)
-	}
-
-	if len(out) == 0 {
-		return nil, nil
-	}
-
-	return out, nil
+	return source.RunSQL(ctx, sql, nil)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

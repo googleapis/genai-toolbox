@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -114,6 +115,7 @@ func (token AccessToken) ParseBearerToken() (string, error) {
 type Tool interface {
 	Invoke(context.Context, SourceProvider, parameters.ParamValues, AccessToken) (any, error)
 	ParseParams(map[string]any, map[string]map[string]any) (parameters.ParamValues, error)
+	EmbedParams(context.Context, parameters.ParamValues, map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error)
 	Manifest() Manifest
 	McpManifest() McpManifest
 	Authorized([]string) bool

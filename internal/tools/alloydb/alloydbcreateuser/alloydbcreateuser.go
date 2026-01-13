@@ -19,10 +19,10 @@ import (
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/alloydb/v1"
 )
 
 const kind string = "alloydb-create-user"
@@ -44,7 +44,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	GetDefaultProject() string
 	UseClientAuthorization() bool
-	GetService(context.Context, string) (*alloydb.Service, error)
+	CreateUser(context.Context, string, string, []string, string, string, string, string, string) (any, error)
 }
 
 // Configuration for the create-user tool.
@@ -155,51 +155,33 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok || (userType != "ALLOYDB_BUILT_IN" && userType != "ALLOYDB_IAM_USER") {
 		return nil, fmt.Errorf("invalid or missing 'userType' parameter; expected 'ALLOYDB_BUILT_IN' or 'ALLOYDB_IAM_USER'")
 	}
-
-	service, err := source.GetService(ctx, string(accessToken))
-	if err != nil {
-		return nil, err
-	}
-
-	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", project, location, cluster)
-
-	// Build the request body using the type-safe User struct.
-	user := &alloydb.User{
-		UserType: userType,
-	}
+	var password string
 
 	if userType == "ALLOYDB_BUILT_IN" {
-		password, ok := paramsMap["password"].(string)
+		password, ok = paramsMap["password"].(string)
 		if !ok || password == "" {
 			return nil, fmt.Errorf("password is required when userType is ALLOYDB_BUILT_IN")
 		}
-		user.Password = password
 	}
 
+	var roles []string
 	if dbRolesRaw, ok := paramsMap["databaseRoles"].([]any); ok && len(dbRolesRaw) > 0 {
-		var roles []string
 		for _, r := range dbRolesRaw {
 			if role, ok := r.(string); ok {
 				roles = append(roles, role)
 			}
 		}
-		if len(roles) > 0 {
-			user.DatabaseRoles = roles
-		}
 	}
-
-	// The Create API returns a long-running operation.
-	resp, err := service.Projects.Locations.Clusters.Users.Create(urlString, user).UserId(userID).Do()
-	if err != nil {
-		return nil, fmt.Errorf("error creating AlloyDB user: %w", err)
-	}
-
-	return resp, nil
+	return source.CreateUser(ctx, userType, password, roles, string(accessToken), project, location, cluster, userID)
 }
 
 // ParseParams parses the parameters for the tool.
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.AllParams, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
 }
 
 // Manifest returns the tool's manifest.

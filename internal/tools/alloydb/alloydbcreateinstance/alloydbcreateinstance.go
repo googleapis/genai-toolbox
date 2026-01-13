@@ -19,10 +19,10 @@ import (
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/alloydb/v1"
 )
 
 const kind string = "alloydb-create-instance"
@@ -44,7 +44,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	GetDefaultProject() string
 	UseClientAuthorization() bool
-	GetService(context.Context, string) (*alloydb.Service, error)
+	CreateInstance(context.Context, string, string, string, string, string, string, int, string) (any, error)
 }
 
 // Configuration for the create-instance tool.
@@ -157,50 +157,26 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("invalid 'instanceType' parameter; expected 'PRIMARY' or 'READ_POOL'")
 	}
 
-	service, err := source.GetService(ctx, string(accessToken))
-	if err != nil {
-		return nil, err
-	}
+	displayName, _ := paramsMap["displayName"].(string)
 
-	urlString := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", project, location, cluster)
-
-	// Build the request body using the type-safe Instance struct.
-	instance := &alloydb.Instance{
-		InstanceType: instanceType,
-		NetworkConfig: &alloydb.InstanceNetworkConfig{
-			EnablePublicIp: true,
-		},
-		DatabaseFlags: map[string]string{
-			"password.enforce_complexity": "on",
-		},
-	}
-
-	if displayName, ok := paramsMap["displayName"].(string); ok && displayName != "" {
-		instance.DisplayName = displayName
-	}
-
+	var nodeCount int
 	if instanceType == "READ_POOL" {
-		nodeCount, ok := paramsMap["nodeCount"].(int)
+		nodeCount, ok = paramsMap["nodeCount"].(int)
 		if !ok {
 			return nil, fmt.Errorf("invalid 'nodeCount' parameter; expected an integer for READ_POOL")
 		}
-		instance.ReadPoolConfig = &alloydb.ReadPoolConfig{
-			NodeCount: int64(nodeCount),
-		}
 	}
 
-	// The Create API returns a long-running operation.
-	resp, err := service.Projects.Locations.Clusters.Instances.Create(urlString, instance).InstanceId(instanceID).Do()
-	if err != nil {
-		return nil, fmt.Errorf("error creating AlloyDB instance: %w", err)
-	}
-
-	return resp, nil
+	return source.CreateInstance(ctx, project, location, cluster, instanceID, instanceType, displayName, nodeCount, string(accessToken))
 }
 
 // ParseParams parses the parameters for the tool.
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.AllParams, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
 }
 
 // Manifest returns the tool's manifest.

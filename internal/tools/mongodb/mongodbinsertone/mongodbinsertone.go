@@ -19,12 +19,11 @@ import (
 	"fmt"
 
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const kind string = "mongodb-insert-one"
@@ -47,6 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	MongoClient() *mongo.Client
+	InsertOne(context.Context, string, bool, string, string) (any, error)
 }
 
 type Config struct {
@@ -106,7 +106,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, err
 	}
-
 	if len(params) == 0 {
 		return nil, errors.New("no input found")
 	}
@@ -115,23 +114,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, errors.New("no input found")
 	}
-
-	var data any
-	err = bson.UnmarshalExtJSON([]byte(jsonData), t.Canonical, &data)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := source.MongoClient().Database(t.Database).Collection(t.Collection).InsertOne(ctx, data, options.InsertOne())
-	if err != nil {
-		return nil, err
-	}
-
-	return res.InsertedID, nil
+	return source.InsertOne(ctx, jsonData, t.Canonical, t.Database, t.Collection)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.PayloadParams, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.PayloadParams, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

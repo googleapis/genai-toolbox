@@ -20,6 +20,7 @@ import (
 
 	"cloud.google.com/go/bigtable"
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -43,6 +44,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	BigtableClient() *bigtable.Client
+	RunSQL(context.Context, string, parameters.Parameters, parameters.ParamValues) (any, error)
 }
 
 type Config struct {
@@ -96,45 +98,6 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func getBigtableType(paramType string) (bigtable.SQLType, error) {
-	switch paramType {
-	case "boolean":
-		return bigtable.BoolSQLType{}, nil
-	case "string":
-		return bigtable.StringSQLType{}, nil
-	case "integer":
-		return bigtable.Int64SQLType{}, nil
-	case "float":
-		return bigtable.Float64SQLType{}, nil
-	case "array":
-		return bigtable.ArraySQLType{}, nil
-	default:
-		return nil, fmt.Errorf("unknow param type %s", paramType)
-	}
-}
-
-func getMapParamsType(tparams parameters.Parameters, params parameters.ParamValues) (map[string]bigtable.SQLType, error) {
-	btParamTypes := make(map[string]bigtable.SQLType)
-	for _, p := range tparams {
-		if p.GetType() == "array" {
-			itemType, err := getBigtableType(p.Manifest().Items.Type)
-			if err != nil {
-				return nil, err
-			}
-			btParamTypes[p.GetName()] = bigtable.ArraySQLType{
-				ElemType: itemType,
-			}
-			continue
-		}
-		paramType, err := getBigtableType(p.GetType())
-		if err != nil {
-			return nil, err
-		}
-		btParamTypes[p.GetName()] = paramType
-	}
-	return btParamTypes, nil
-}
-
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
 	if err != nil {
@@ -151,50 +114,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
-
-	mapParamsType, err := getMapParamsType(t.Parameters, newParams)
-	if err != nil {
-		return nil, fmt.Errorf("fail to get map params: %w", err)
-	}
-
-	ps, err := source.BigtableClient().PrepareStatement(
-		ctx,
-		newStatement,
-		mapParamsType,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("unable to prepare statement: %w", err)
-	}
-
-	bs, err := ps.Bind(newParams.AsMap())
-	if err != nil {
-		return nil, fmt.Errorf("unable to bind: %w", err)
-	}
-
-	var out []any
-	err = bs.Execute(ctx, func(resultRow bigtable.ResultRow) bool {
-		vMap := make(map[string]any)
-		cols := resultRow.Metadata.Columns
-
-		for _, c := range cols {
-			var columValue any
-			err = resultRow.GetByName(c.Name, &columValue)
-			vMap[c.Name] = columValue
-		}
-
-		out = append(out, vMap)
-
-		return true
-	})
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute client: %w", err)
-	}
-
-	return out, nil
+	return source.RunSQL(ctx, newStatement, t.Parameters, newParams)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.AllParams, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

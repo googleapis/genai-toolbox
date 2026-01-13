@@ -19,8 +19,8 @@ import (
 	"fmt"
 
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	healthcareds "github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/common"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -44,13 +44,9 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	Project() string
-	Region() string
-	DatasetID() string
 	AllowedDICOMStores() map[string]struct{}
-	Service() *healthcare.Service
-	ServiceCreator() healthcareds.HealthcareServiceCreator
 	UseClientAuthorization() bool
+	GetDICOMStore(string, string) (*healthcare.DicomStore, error)
 }
 
 type Config struct {
@@ -118,35 +114,23 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, err
 	}
-
 	storeID, err := common.ValidateAndFetchStoreID(params, source.AllowedDICOMStores())
 	if err != nil {
 		return nil, err
 	}
-
-	svc := source.Service()
-	// Initialize new service if using user OAuth token
-	if source.UseClientAuthorization() {
-		tokenStr, err := accessToken.ParseBearerToken()
-		if err != nil {
-			return nil, fmt.Errorf("error parsing access token: %w", err)
-		}
-		svc, err = source.ServiceCreator()(tokenStr)
-		if err != nil {
-			return nil, fmt.Errorf("error creating service from OAuth access token: %w", err)
-		}
-	}
-
-	storeName := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/dicomStores/%s", source.Project(), source.Region(), source.DatasetID(), storeID)
-	store, err := svc.Projects.Locations.Datasets.DicomStores.Get(storeName).Do()
+	tokenStr, err := accessToken.ParseBearerToken()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get DICOM store %q: %w", storeName, err)
+		return nil, fmt.Errorf("error parsing access token: %w", err)
 	}
-	return store, nil
+	return source.GetDICOMStore(storeID, tokenStr)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

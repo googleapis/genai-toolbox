@@ -16,10 +16,10 @@ package clickhouse
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -42,7 +42,7 @@ func newExecuteSQLConfig(ctx context.Context, name string, decoder *yaml.Decoder
 }
 
 type compatibleSource interface {
-	ClickHousePool() *sql.DB
+	RunSQL(context.Context, string, parameters.ParamValues) (any, error)
 }
 
 type Config struct {
@@ -100,67 +100,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, fmt.Errorf("unable to cast sql parameter %s", paramsMap["sql"])
 	}
-
-	results, err := source.ClickHousePool().QueryContext(ctx, sql)
-	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-	defer results.Close()
-
-	cols, err := results.Columns()
-	if err != nil {
-		return nil, fmt.Errorf("unable to retrieve rows column name: %w", err)
-	}
-
-	// create an array of values for each column, which can be re-used to scan each row
-	rawValues := make([]any, len(cols))
-	values := make([]any, len(cols))
-	for i := range rawValues {
-		values[i] = &rawValues[i]
-	}
-
-	colTypes, err := results.ColumnTypes()
-	if err != nil {
-		return nil, fmt.Errorf("unable to get column types: %w", err)
-	}
-
-	var out []any
-	for results.Next() {
-		err := results.Scan(values...)
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
-		}
-		vMap := make(map[string]any)
-		for i, name := range cols {
-			// ClickHouse driver may return specific types that need handling
-			switch colTypes[i].DatabaseTypeName() {
-			case "String", "FixedString":
-				if rawValues[i] != nil {
-					// Handle potential []byte to string conversion if needed
-					if b, ok := rawValues[i].([]byte); ok {
-						vMap[name] = string(b)
-					} else {
-						vMap[name] = rawValues[i]
-					}
-				} else {
-					vMap[name] = nil
-				}
-			default:
-				vMap[name] = rawValues[i]
-			}
-		}
-		out = append(out, vMap)
-	}
-
-	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("errors encountered by results.Scan: %w", err)
-	}
-
-	return out, nil
+	return source.RunSQL(ctx, sql, nil)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

@@ -142,14 +142,18 @@ deployment will time out.
 
 ### Update deployed server to be secure
 
-To prevent DNS rebinding attack, use the `--allowed-origins` flag to specify a
-list of origins permitted to access the server. In order to do that, you will
+To prevent DNS rebinding attack, use the `--allowed-hosts` flag to specify a
+list of hosts. In order to do that, you will
 have to re-deploy the cloud run service with the new flag.
+
+To implement CORs checks, use the `--allowed-origins` flag to specify a list of
+origins permitted to access the server.
 
 1. Set an environment variable to the cloud run url: 
 
     ```bash
     export URL=<cloud run url>
+    export HOST=<cloud run host>
     ```
 
 2. Redeploy Toolbox:
@@ -160,7 +164,7 @@ have to re-deploy the cloud run service with the new flag.
         --service-account toolbox-identity \
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
-        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL"
+        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL","--allowed-hosts=$HOST"
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
     ```
 
@@ -172,7 +176,7 @@ have to re-deploy the cloud run service with the new flag.
         --service-account toolbox-identity \
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
-        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL" \
+        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL","--allowed-hosts=$HOST" \
         # TODO(dev): update the following to match your VPC if necessary
         --network default \
         --subnet default

@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -42,6 +43,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	ValkeyClient() valkey.Client
+	RunCommand(context.Context, [][]string) (any, error)
 }
 
 type Config struct {
@@ -95,38 +97,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, fmt.Errorf("error replacing commands' parameters: %s", err)
 	}
-
-	// Build commands
-	builtCmds := make(valkey.Commands, len(commands))
-
-	for i, cmd := range commands {
-		builtCmds[i] = source.ValkeyClient().B().Arbitrary(cmd...).Build()
-	}
-
-	if len(builtCmds) == 0 {
-		return nil, fmt.Errorf("no valid commands were built to execute")
-	}
-
-	// Execute commands
-	responses := source.ValkeyClient().DoMulti(ctx, builtCmds...)
-
-	// Parse responses
-	out := make([]any, len(t.Commands))
-	for i, resp := range responses {
-		if err := resp.Error(); err != nil {
-			// Add error from each command to `errSum`
-			out[i] = fmt.Sprintf("error from executing command at index %d: %s", i, err)
-			continue
-		}
-		val, err := resp.ToAny()
-		if err != nil {
-			out[i] = fmt.Sprintf("error parsing response: %s", err)
-			continue
-		}
-		out[i] = val
-	}
-
-	return out, nil
+	return source.RunCommand(ctx, commands)
 }
 
 // replaceCommandsParams is a helper function to replace parameters in the commands
@@ -165,6 +136,10 @@ func replaceCommandsParams(commands [][]string, params parameters.Parameters, pa
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {

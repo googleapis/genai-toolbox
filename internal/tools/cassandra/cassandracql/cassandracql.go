@@ -20,6 +20,7 @@ import (
 
 	gocql "github.com/apache/cassandra-gocql-driver/v2"
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -43,6 +44,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	CassandraSession() *gocql.Session
+	RunSQL(context.Context, string, parameters.ParamValues) (any, error)
 }
 
 type Config struct {
@@ -123,25 +125,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, fmt.Errorf("unable to extract standard params %w", err)
 	}
-	sliceParams := newParams.AsSlice()
-	iter := source.CassandraSession().Query(newStatement, sliceParams...).IterContext(ctx)
-
-	// Create a slice to store the out
-	var out []map[string]interface{}
-
-	// Scan results into a map and append to the slice
-	for {
-		row := make(map[string]interface{}) // Create a new map for each row
-		if !iter.MapScan(row) {
-			break // No more rows
-		}
-		out = append(out, row)
-	}
-
-	if err := iter.Close(); err != nil {
-		return nil, fmt.Errorf("unable to parse rows: %w", err)
-	}
-	return out, nil
+	return source.RunSQL(ctx, newStatement, newParams)
 }
 
 // Manifest implements tools.Tool.
@@ -158,6 +142,12 @@ func (t Tool) McpManifest() tools.McpManifest {
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.AllParams, data, claims)
 }
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
+}
+
+var _ tools.Tool = Tool{}
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
