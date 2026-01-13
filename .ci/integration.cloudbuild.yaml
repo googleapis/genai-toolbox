@@ -325,12 +325,11 @@ steps:
     env:
       - "GOPATH=/gopath"
       - "COCKROACHDB_DATABASE=$_DATABASE_NAME"
-      - "COCKROACHDB_HOST=$_COCKROACHDB_HOST"
       - "COCKROACHDB_PORT=$_COCKROACHDB_PORT"
       - "COCKROACHDB_USER=root"
       - "COCKROACHDB_PASS="
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["CLIENT_ID"]
+    secretEnv: ["COCKROACHDB_USER", "COCKROACHDB_PASS", "COCKROACHDB_HOST","CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -1122,6 +1121,13 @@ availableSecrets:
       env: MARIADB_HOST
     - versionName: projects/$PROJECT_ID/secrets/mongodb_uri/versions/latest
       env: MONGODB_URI
+    - versionName: projects/$PROJECT_ID/secrets/cockroachdb_user/versions/latest
+      env: COCKROACHDB_USER
+    - versionName: projects/$PROJECT_ID/secrets/cockroachdb_pass/versions/latest
+      env: COCKROACHDB_PASS
+    - versionName: projects/$PROJECT_ID/secrets/cockroachdb_host/versions/latest
+      env: COCKROACHDB_HOST
+
 
 options:
   logging: CLOUD_LOGGING_ONLY
