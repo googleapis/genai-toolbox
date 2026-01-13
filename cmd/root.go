@@ -386,6 +386,7 @@ func NewCommand(opts ...Option) *Command {
 	// TODO: Insecure by default. Might consider updating this for v1.0.0
 	flags.StringSliceVar(&cmd.cfg.AllowedOrigins, "allowed-origins", []string{"*"}, "Specifies a list of origins permitted to access this server. Defaults to '*'.")
 	flags.StringSliceVar(&cmd.cfg.AllowedHosts, "allowed-hosts", []string{"*"}, "Specifies a list of hosts permitted to access this server. Defaults to '*'.")
+	flags.StringSliceVar(&cmd.cfg.UserAgentExtra, "user-agent-extra", []string{}, "Appends additional metadata to the User-Agent.")
 
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }
