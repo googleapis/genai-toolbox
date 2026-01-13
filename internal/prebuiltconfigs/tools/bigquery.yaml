@@ -18,6 +18,8 @@ sources:
     project: ${BIGQUERY_PROJECT}
     location: ${BIGQUERY_LOCATION:}
     useClientOAuth: ${BIGQUERY_USE_CLIENT_OAUTH:false}
+    scopes: ${BIGQUERY_SCOPES:}
+    maxQueryResultRows: ${BIGQUERY_MAX_QUERY_RESULT_ROWS:50}
 
 tools:
   analyze_contribution:
