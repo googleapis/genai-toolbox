@@ -1041,53 +1041,57 @@ func CleanupMSSQLTables(t *testing.T, ctx context.Context, pool *sql.DB) {
 
 // CleanupStaleNamespaces identifies and removes test schemas that have exceeded 
 func CleanupStaleNamespaces(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
-	query := "SELECT schema_name FROM information_schema.schemata WHERE schema_name LIKE 'test_%';"
+	query := `
+		SELECT table_name FROM information_schema.tables
+		WHERE table_schema = 'public' AND table_type = 'BASE TABLE';`
+
 	rows, err := pool.Query(ctx, query)
 	if err != nil {
-		t.Logf("Warning: failed to query schemas for cleanup: %v", err)
-		return
+		t.Fatalf("Failed to query for all tables in 'public' schema: %v", err)
 	}
 	defer rows.Close()
 
 	now := time.Now().Unix()
-	const staleThresholdSeconds = 2 * 60 * 60 
+	const staleThresholdSeconds = 2 * 60 * 60 // 2 hours
 
+	var tablesToDrop []string
 	for rows.Next() {
-		var namespace string
-		if err := rows.Scan(&namespace); err != nil {
+		var tableName string
+		if err := rows.Scan(&tableName); err != nil {
+			t.Errorf("Failed to scan table name: %v", err)
 			continue
 		}
 
-		// Expected format: test_<timestamp>_<uuid>
-		parts := strings.Split(namespace, "_")
-		if len(parts) < 2 {
-			continue
+		// Parse timestamp from names like "param_table_<ts>_<uuid>"
+		var tsString string
+		if strings.HasPrefix(tableName, "param_table_") || strings.HasPrefix(tableName, "auth_table_") {
+			parts := strings.Split(tableName, "_")
+			if len(parts) >= 3 {
+				tsString = parts[2]
+			}
+		} else if strings.HasPrefix(tableName, "template_param_table_") {
+			parts := strings.Split(tableName, "_")
+			if len(parts) >= 4 {
+				tsString = parts[3]
+			}
 		}
 
-		createdAt, err := strconv.ParseInt(parts[1], 10, 64)
-		if err == nil && (now-createdAt) > staleThresholdSeconds {
-			t.Logf("Reaping stale test namespace: %s", namespace)
-			_, _ = pool.Exec(ctx, fmt.Sprintf("DROP SCHEMA %q CASCADE;", namespace))
+		// drop if the table is older than 2 hours
+		if tsString != "" {
+			createdAt, err := strconv.ParseInt(tsString, 10, 64)
+			if err == nil && (now-createdAt) > staleThresholdSeconds {
+				tablesToDrop = append(tablesToDrop, fmt.Sprintf("public.%q", tableName))
+			}
 		}
+	}
+
+	if len(tablesToDrop) == 0 {
+		return
+	}
+
+	dropQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE;", strings.Join(tablesToDrop, ", "))
+	if _, err := pool.Exec(ctx, dropQuery); err != nil {
+		t.Fatalf("Failed to drop stale tables in 'public' schema: %v", err)
 	}
 }
 
-// SetupIsolatedNamespace creates a unique schema sandbox for the current test run.
-// It sets the search_path so all tables are created within this namespace.
-func SetupIsolatedNamespace(t *testing.T, ctx context.Context, pool *pgxpool.Pool) (string, func()) {
-	uuidSuffix := strings.ReplaceAll(uuid.New().String()[:8], "-", "")
-	namespace := fmt.Sprintf("test_%d_%s", time.Now().Unix(), uuidSuffix)
-
-	if _, err := pool.Exec(ctx, fmt.Sprintf("CREATE SCHEMA %q;", namespace)); err != nil {
-		t.Fatalf("failed to create isolated namespace %s: %v", namespace, err)
-	}
-
-	if _, err := pool.Exec(ctx, fmt.Sprintf("SET search_path TO %q, public;", namespace)); err != nil {
-		t.Fatalf("failed to set search path for %s: %v", namespace, err)
-	}
-
-	cleanup := func() {
-		_, _ = pool.Exec(context.Background(), fmt.Sprintf("DROP SCHEMA %q CASCADE;", namespace))
-	}
-	return namespace, cleanup
-}
