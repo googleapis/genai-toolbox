@@ -91,8 +91,8 @@ visible to the LLM.
     https://cloud.google.com/alloydb/docs/parameterized-secure-views-overview
 
 {{< notice tip >}} Make sure to enable the `parameterized_views` extension
-before running this tool. You can do so by running this command in the AlloyDB
-studio:
+to utilize PSV feature (`nlConfigParameters`) with this tool. You can do so by
+running this command in the AlloyDB studio:
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS parameterized_views;
