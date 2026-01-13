@@ -137,7 +137,7 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 
 	sourceConfig["schema"] = schemaName
 
-	// create table name with UUID
+	// create table name
 	tableNameParam := "param_table"
 	tableNameAuth := "auth_table"
 	tableNameTemplateParam := "template_param_table"
