@@ -138,8 +138,8 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	sourceConfig["schema"] = schemaName
 
 	// create table name
-	tableNameParam := "param_table"
-	tableNameAuth := "auth_table"
+	tableNameParam := fmt.Sprintf("%q.param_table", schemaName)
+	tableNameAuth := fmt.Sprintf("%q.auth_table", schemaName)
 	tableNameTemplateParam := "template_param_table"
 
 	// set up data for param tool
