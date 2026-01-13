@@ -16,9 +16,7 @@ package http
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"slices"
@@ -28,6 +26,7 @@ import (
 	"text/template"
 
 	yaml "github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
@@ -53,7 +52,7 @@ type compatibleSource interface {
 	HttpDefaultHeaders() map[string]string
 	HttpBaseURL() string
 	HttpQueryParams() map[string]string
-	Client() *http.Client
+	RunRequest(*http.Request) (any, error)
 }
 
 type Config struct {
@@ -258,33 +257,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	for k, v := range allHeaders {
 		req.Header.Set(k, v)
 	}
-
-	// Make request and fetch response
-	resp, err := source.Client().Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("error making HTTP request: %s", err)
-	}
-	defer resp.Body.Close()
-
-	var body []byte
-	body, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
-	}
-
-	var data any
-	if err = json.Unmarshal(body, &data); err != nil {
-		// if unable to unmarshal data, return result as string.
-		return string(body), nil
-	}
-	return data, nil
+	return source.RunRequest(req)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.AllParams, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.AllParams, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {
