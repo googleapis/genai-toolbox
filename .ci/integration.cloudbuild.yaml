@@ -342,14 +342,7 @@ steps:
           cockroachdbsql \
           cockroachdbexecutesql \
           cockroachdblisttables \
-          cockroachdblistschemas \
-          cockroachdbdescribetable \
-          cockroachdblistindexes \
-          cockroachdblistdatabases \
-          cockroachdbexplainquery \
-          cockroachdbshowrunningqueries \
-          cockroachdbcreatedatabase \
-          cockroachdbcreatetable
+          cockroachdblistschemas
 
   - id: "spanner"
     name: golang:1

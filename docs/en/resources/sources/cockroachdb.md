@@ -17,46 +17,17 @@ description: >
 
 ## Available Tools
 
-### Data Query Tools
-
 - [`cockroachdb-sql`](../tools/cockroachdb/cockroachdb-sql.md)
   Execute SQL queries as prepared statements in CockroachDB (alias for execute-sql).
 
 - [`cockroachdb-execute-sql`](../tools/cockroachdb/cockroachdb-execute-sql.md)
   Run parameterized SQL statements in CockroachDB.
 
-### Schema Discovery Tools
-
-- [`cockroachdb-list-databases`](../tools/cockroachdb/cockroachdb-list-databases.md)
-  List all databases in the cluster.
-
 - [`cockroachdb-list-schemas`](../tools/cockroachdb/cockroachdb-list-schemas.md)
   List schemas in a CockroachDB database.
 
 - [`cockroachdb-list-tables`](../tools/cockroachdb/cockroachdb-list-tables.md)
   List tables in a CockroachDB database.
-
-- [`cockroachdb-describe-table`](../tools/cockroachdb/cockroachdb-describe-table.md)
-  Describe table schema including column names, types, constraints, and generated columns.
-
-- [`cockroachdb-list-indexes`](../tools/cockroachdb/cockroachdb-list-indexes.md)
-  List all indexes on a table including index definitions.
-
-### Query Analysis Tools
-
-- [`cockroachdb-explain-query`](../tools/cockroachdb/cockroachdb-explain-query.md)
-  Explain query execution plans for performance optimization.
-
-- [`cockroachdb-show-running-queries`](../tools/cockroachdb/cockroachdb-show-running-queries.md)
-  Show currently running queries in the cluster for monitoring.
-
-### Write Operations (Requires Write Mode)
-
-- [`cockroachdb-create-database`](../tools/cockroachdb/cockroachdb-create-database.md)
-  Create a new database (requires `enableWriteMode: true`).
-
-- [`cockroachdb-create-table`](../tools/cockroachdb/cockroachdb-create-table.md)
-  Create a new table (requires `enableWriteMode: true`).
 
 ## Requirements
 
