@@ -117,7 +117,7 @@ implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/s
 We recommend looking at an [example tool
 implementation](https://github.com/googleapis/genai-toolbox/tree/main/internal/tools/postgres/postgressql).
 
-Remember to keep your PRs small. For example, if you are contributing a new Source, only inclue one or two core Tools within the same PR, the rest of the Tools can come in subsequent PRs. 
+Remember to keep your PRs small. For example, if you are contributing a new Source, only include one or two core Tools within the same PR, the rest of the Tools can come in subsequent PRs. 
 
 * **Create a new directory** under `internal/tools` for your tool type (e.g., `internal/tools/newdb/newdbtool`).
 * **Define a configuration struct** for your tool in a file named `newdbtool.go`.
@@ -172,7 +172,7 @@ tools.
             parameters][temp-param-doc]. Only run this test if template
             parameters apply to your tool.
 
-* **Add additional tests** for the tools that is not covered by the predefined tests. Every tool must be tested!
+* **Add additional tests** for the tools that are not covered by the predefined tests. Every tool must be tested!
 
 * **Add the new database to the integration test workflow** in
   [integration.cloudbuild.yaml](.ci/integration.cloudbuild.yaml).
