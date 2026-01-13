@@ -20,6 +20,7 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/trace v1.30.0
 	github.com/apache/cassandra-gocql-driver/v2 v2.0.0
 	github.com/cenkalti/backoff/v5 v5.0.3
+	github.com/cockroachdb/cockroach-go/v2 v2.4.2
 	github.com/couchbase/gocb/v2 v2.11.1
 	github.com/couchbase/tools-common/http v1.0.9
 	github.com/elastic/elastic-transport-go/v8 v8.8.0
@@ -126,7 +127,6 @@ require (
 	github.com/aws/smithy-go v1.23.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20250501225837-2ac532fd4443 // indirect
-	github.com/cockroachdb/cockroach-go/v2 v2.4.2 // indirect
 	github.com/couchbase/gocbcore/v10 v10.8.1 // indirect
 	github.com/couchbase/gocbcoreps v0.1.4 // indirect
 	github.com/couchbase/goprotostellar v1.0.2 // indirect

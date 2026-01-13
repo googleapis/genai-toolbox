@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cockroachdbexecutesql
+package cockroachdblistindexes
 
 import (
 	"context"
 	"fmt"
+	"time"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -29,7 +30,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-const kind string = "cockroachdb-execute-sql"
+const kind string = "cockroachdb-list-indexes"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -47,6 +48,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
+	IsReadOnlyMode() bool
+	EmitTelemetry(ctx context.Context, event cockroachdb.TelemetryEvent)
 }
 
 var compatibleSources = [...]string{cockroachdb.SourceKind}
@@ -76,8 +79,10 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	sqlParameter := parameters.NewStringParameter("sql", "The sql to execute.")
-	params := parameters.Parameters{sqlParameter}
+	// Define parameters for list_indexes
+	schemaParam := parameters.NewStringParameter("schema_name", "The schema name (e.g., 'public')")
+	tableParam := parameters.NewStringParameter("table_name", "The table name to list indexes for")
+	params := parameters.Parameters{schemaParam, tableParam}
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
@@ -101,32 +106,64 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	startTime := time.Now()
+
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
 	if err != nil {
 		return nil, err
 	}
 
 	paramsMap := params.AsMap()
-	sql, ok := paramsMap["sql"].(string)
+	schemaName, ok := paramsMap["schema_name"].(string)
 	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", paramsMap["sql"])
+		return nil, fmt.Errorf("schema_name parameter is required and must be a string")
 	}
+
+	tableName, ok := paramsMap["table_name"].(string)
+	if !ok {
+		return nil, fmt.Errorf("table_name parameter is required and must be a string")
+	}
+
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
 
-	results, err := source.Query(ctx, sql)
+	// CockroachDB v25.4.2 - Query to list indexes on a table
+	// Uses pg_indexes which is PostgreSQL-compatible
+	sql := `
+SELECT 
+    schemaname,
+    tablename,
+    indexname,
+    indexdef
+FROM pg_indexes
+WHERE schemaname = $1 AND tablename = $2
+ORDER BY indexname`
+
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query for schema=%s, table=%s", kind, schemaName, tableName))
+
+	results, err := source.Query(ctx, sql, schemaName, tableName)
 	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		source.EmitTelemetry(ctx, cockroachdb.TelemetryEvent{
+			Timestamp:   time.Now(),
+			ToolName:    kind,
+			SQLRedacted: cockroachdb.RedactSQL(sql),
+			Status:      "failure",
+			ErrorCode:   cockroachdb.ErrCodeQueryExecutionFailed,
+			ErrorMsg:    err.Error(),
+			LatencyMs:   time.Since(startTime).Milliseconds(),
+		})
+		return nil, fmt.Errorf("unable to list indexes: %w", err)
 	}
 	defer results.Close()
 
 	fields := results.FieldDescriptions()
 
 	var out []any
+	rowCount := int64(0)
 	for results.Next() {
+		rowCount++
 		v, err := results.Values()
 		if err != nil {
 			return nil, fmt.Errorf("unable to parse row: %w", err)
@@ -139,8 +176,26 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		source.EmitTelemetry(ctx, cockroachdb.TelemetryEvent{
+			Timestamp:   time.Now(),
+			ToolName:    kind,
+			SQLRedacted: cockroachdb.RedactSQL(sql),
+			Status:      "failure",
+			ErrorCode:   cockroachdb.ErrCodeQueryExecutionFailed,
+			ErrorMsg:    err.Error(),
+			LatencyMs:   time.Since(startTime).Milliseconds(),
+		})
+		return nil, fmt.Errorf("error iterating results: %w", err)
 	}
+
+	source.EmitTelemetry(ctx, cockroachdb.TelemetryEvent{
+		Timestamp:    time.Now(),
+		ToolName:     kind,
+		SQLRedacted:  cockroachdb.RedactSQL(sql),
+		Status:       "success",
+		LatencyMs:    time.Since(startTime).Milliseconds(),
+		RowsAffected: rowCount,
+	})
 
 	return out, nil
 }

@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cockroachdbexecutesql
+package cockroachdbcreatetable
 
 import (
 	"context"
 	"fmt"
+	"time"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -29,7 +30,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-const kind string = "cockroachdb-execute-sql"
+const kind string = "cockroachdb-create-table"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -47,6 +48,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
+	IsReadOnlyMode() bool
+	EmitTelemetry(ctx context.Context, event cockroachdb.TelemetryEvent)
 }
 
 var compatibleSources = [...]string{cockroachdb.SourceKind}
@@ -76,8 +79,9 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	sqlParameter := parameters.NewStringParameter("sql", "The sql to execute.")
-	params := parameters.Parameters{sqlParameter}
+	tableNameParam := parameters.NewStringParameter("table_name", "The name of the table to create")
+	createStatementParam := parameters.NewStringParameter("create_statement", "The full CREATE TABLE SQL statement")
+	params := parameters.Parameters{tableNameParam, createStatementParam}
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
@@ -101,48 +105,66 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	startTime := time.Now()
+
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
 	if err != nil {
 		return nil, err
 	}
 
-	paramsMap := params.AsMap()
-	sql, ok := paramsMap["sql"].(string)
-	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", paramsMap["sql"])
+	// Check if write mode is enabled
+	if source.IsReadOnlyMode() {
+		return nil, fmt.Errorf("create-table requires write mode to be enabled (set enableWriteMode: true)")
 	}
+
+	paramsMap := params.AsMap()
+	tableName, ok := paramsMap["table_name"].(string)
+	if !ok {
+		return nil, fmt.Errorf("table_name parameter is required and must be a string")
+	}
+
+	createStatement, ok := paramsMap["create_statement"].(string)
+	if !ok {
+		return nil, fmt.Errorf("create_statement parameter is required and must be a string")
+	}
+
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
 
-	results, err := source.Query(ctx, sql)
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool: creating table %s", kind, tableName))
+
+	results, err := source.Query(ctx, createStatement)
 	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
+		source.EmitTelemetry(ctx, cockroachdb.TelemetryEvent{
+			Timestamp:   time.Now(),
+			ToolName:    kind,
+			SQLRedacted: "CREATE TABLE ***",
+			Status:      "failure",
+			ErrorCode:   cockroachdb.ErrCodeQueryExecutionFailed,
+			ErrorMsg:    err.Error(),
+			LatencyMs:   time.Since(startTime).Milliseconds(),
+		})
+		return nil, fmt.Errorf("unable to create table: %w", err)
 	}
 	defer results.Close()
 
-	fields := results.FieldDescriptions()
+	source.EmitTelemetry(ctx, cockroachdb.TelemetryEvent{
+		Timestamp:    time.Now(),
+		ToolName:     kind,
+		SQLRedacted:  "CREATE TABLE ***",
+		Status:       "success",
+		LatencyMs:    time.Since(startTime).Milliseconds(),
+		RowsAffected: 1,
+	})
 
-	var out []any
-	for results.Next() {
-		v, err := results.Values()
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
-		}
-		row := orderedmap.Row{}
-		for i, f := range fields {
-			row.Add(f.Name, v[i])
-		}
-		out = append(out, row)
-	}
+	result := orderedmap.Row{}
+	result.Add("table_name", tableName)
+	result.Add("status", "created")
+	result.Add("message", fmt.Sprintf("Table '%s' created successfully", tableName))
 
-	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-
-	return out, nil
+	return []any{result}, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

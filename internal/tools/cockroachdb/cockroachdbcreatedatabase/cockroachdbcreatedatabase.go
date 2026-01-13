@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cockroachdbexecutesql
+package cockroachdbcreatedatabase
 
 import (
 	"context"
 	"fmt"
+	"time"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -29,7 +30,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-const kind string = "cockroachdb-execute-sql"
+const kind string = "cockroachdb-create-database"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
@@ -47,6 +48,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
+	IsReadOnlyMode() bool
+	EmitTelemetry(ctx context.Context, event cockroachdb.TelemetryEvent)
 }
 
 var compatibleSources = [...]string{cockroachdb.SourceKind}
@@ -76,8 +79,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 		return nil, fmt.Errorf("invalid source for %q tool: source kind must be one of %q", kind, compatibleSources)
 	}
 
-	sqlParameter := parameters.NewStringParameter("sql", "The sql to execute.")
-	params := parameters.Parameters{sqlParameter}
+	databaseParam := parameters.NewStringParameter("database_name", "The name of the database to create")
+	params := parameters.Parameters{databaseParam}
 
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, params, nil)
 
@@ -101,48 +104,62 @@ type Tool struct {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	startTime := time.Now()
+
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
 	if err != nil {
 		return nil, err
 	}
 
-	paramsMap := params.AsMap()
-	sql, ok := paramsMap["sql"].(string)
-	if !ok {
-		return nil, fmt.Errorf("unable to get cast %s", paramsMap["sql"])
+	// Check if write mode is enabled
+	if source.IsReadOnlyMode() {
+		return nil, fmt.Errorf("create-database requires write mode to be enabled (set enableWriteMode: true)")
 	}
+
+	paramsMap := params.AsMap()
+	databaseName, ok := paramsMap["database_name"].(string)
+	if !ok {
+		return nil, fmt.Errorf("database_name parameter is required and must be a string")
+	}
+
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
 
-	results, err := source.Query(ctx, sql)
+	createSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s", databaseName)
+
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool: creating database %s", kind, databaseName))
+
+	_, err = source.Query(ctx, createSQL)
 	if err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
-	defer results.Close()
-
-	fields := results.FieldDescriptions()
-
-	var out []any
-	for results.Next() {
-		v, err := results.Values()
-		if err != nil {
-			return nil, fmt.Errorf("unable to parse row: %w", err)
-		}
-		row := orderedmap.Row{}
-		for i, f := range fields {
-			row.Add(f.Name, v[i])
-		}
-		out = append(out, row)
+		source.EmitTelemetry(ctx, cockroachdb.TelemetryEvent{
+			Timestamp:   time.Now(),
+			ToolName:    kind,
+			SQLRedacted: "CREATE DATABASE IF NOT EXISTS ***",
+			Status:      "failure",
+			ErrorCode:   cockroachdb.ErrCodeQueryExecutionFailed,
+			ErrorMsg:    err.Error(),
+			LatencyMs:   time.Since(startTime).Milliseconds(),
+		})
+		return nil, fmt.Errorf("unable to create database: %w", err)
 	}
 
-	if err := results.Err(); err != nil {
-		return nil, fmt.Errorf("unable to execute query: %w", err)
-	}
+	source.EmitTelemetry(ctx, cockroachdb.TelemetryEvent{
+		Timestamp:    time.Now(),
+		ToolName:     kind,
+		SQLRedacted:  "CREATE DATABASE IF NOT EXISTS ***",
+		Status:       "success",
+		LatencyMs:    time.Since(startTime).Milliseconds(),
+		RowsAffected: 1,
+	})
 
-	return out, nil
+	result := orderedmap.Row{}
+	result.Add("database_name", databaseName)
+	result.Add("status", "created")
+	result.Add("message", fmt.Sprintf("Database '%s' created successfully", databaseName))
+
+	return []any{result}, nil
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

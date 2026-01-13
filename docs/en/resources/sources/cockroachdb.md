@@ -11,21 +11,52 @@ description: >
 
 [CockroachDB][crdb-docs] is a distributed SQL database designed for cloud-native applications. It provides strong consistency, horizontal scalability, and built-in resilience with automatic failover and recovery. CockroachDB uses the PostgreSQL wire protocol, making it compatible with many PostgreSQL tools and drivers while providing unique features like multi-region deployments and distributed transactions.
 
+**Minimum Version:** CockroachDB v25.1 or later is recommended for full tool compatibility.
+
 [crdb-docs]: https://www.cockroachlabs.com/docs/
 
 ## Available Tools
 
-- [`cockroachdb-sql`](../tools/cockroachdb-sql.md)
-  Execute SQL queries as prepared statements in CockroachDB.
+### Data Query Tools
 
-- [`cockroachdb-execute-sql`](../tools/cockroachdb-execute-sql.md)
+- [`cockroachdb-sql`](../tools/cockroachdb/cockroachdb-sql.md)
+  Execute SQL queries as prepared statements in CockroachDB (alias for execute-sql).
+
+- [`cockroachdb-execute-sql`](../tools/cockroachdb/cockroachdb-execute-sql.md)
   Run parameterized SQL statements in CockroachDB.
 
-- [`cockroachdb-list-tables`](../tools/cockroachdb-list-tables.md)
+### Schema Discovery Tools
+
+- [`cockroachdb-list-databases`](../tools/cockroachdb/cockroachdb-list-databases.md)
+  List all databases in the cluster.
+
+- [`cockroachdb-list-schemas`](../tools/cockroachdb/cockroachdb-list-schemas.md)
+  List schemas in a CockroachDB database.
+
+- [`cockroachdb-list-tables`](../tools/cockroachdb/cockroachdb-list-tables.md)
   List tables in a CockroachDB database.
 
-- [`cockroachdb-list-schemas`](../tools/cockroachdb-list-schemas.md)
-  List schemas in a CockroachDB database.
+- [`cockroachdb-describe-table`](../tools/cockroachdb/cockroachdb-describe-table.md)
+  Describe table schema including column names, types, constraints, and generated columns.
+
+- [`cockroachdb-list-indexes`](../tools/cockroachdb/cockroachdb-list-indexes.md)
+  List all indexes on a table including index definitions.
+
+### Query Analysis Tools
+
+- [`cockroachdb-explain-query`](../tools/cockroachdb/cockroachdb-explain-query.md)
+  Explain query execution plans for performance optimization.
+
+- [`cockroachdb-show-running-queries`](../tools/cockroachdb/cockroachdb-show-running-queries.md)
+  Show currently running queries in the cluster for monitoring.
+
+### Write Operations (Requires Write Mode)
+
+- [`cockroachdb-create-database`](../tools/cockroachdb/cockroachdb-create-database.md)
+  Create a new database (requires `enableWriteMode: true`).
+
+- [`cockroachdb-create-table`](../tools/cockroachdb/cockroachdb-create-table.md)
+  Create a new table (requires `enableWriteMode: true`).
 
 ## Requirements
 
@@ -59,6 +90,15 @@ sources:
     queryParams:
       sslmode: require
       application_name: my-app
+    
+    # MCP Security Settings (recommended for production)
+    readOnlyMode: true          # Read-only by default (MCP best practice)
+    enableWriteMode: false      # Set to true to allow write operations
+    maxRowLimit: 1000           # Limit query results
+    queryTimeoutSec: 30         # Prevent long-running queries
+    enableTelemetry: true       # Enable observability
+    telemetryVerbose: false     # Set true for detailed logs
+    clusterID: "my-cluster"     # Optional identifier
 
 tools:
   list_expenses:
@@ -70,6 +110,16 @@ tools:
       - name: user_id
         type: string
         description: The user's ID
+  
+  describe_expenses:
+    kind: cockroachdb-describe-table
+    source: my_cockroachdb
+    description: Describe the expenses table schema
+  
+  list_expenses_indexes:
+    kind: cockroachdb-list-indexes
+    source: my_cockroachdb
+    description: List indexes on the expenses table
 ```
 
 ## Configuration Parameters
@@ -93,6 +143,20 @@ tools:
 | `retryBaseDelay` | string | "500ms" | Base delay between retry attempts (exponential backoff) |
 | `queryParams` | map | {} | Additional connection parameters (e.g., SSL configuration) |
 
+### MCP Security Parameters
+
+CockroachDB integration includes security features following the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) specification:
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `readOnlyMode` | boolean | true | Enables read-only mode by default (MCP requirement) |
+| `enableWriteMode` | boolean | false | Explicitly enable write operations (INSERT/UPDATE/DELETE/CREATE/DROP) |
+| `maxRowLimit` | integer | 1000 | Maximum rows returned per SELECT query (auto-adds LIMIT clause) |
+| `queryTimeoutSec` | integer | 30 | Query timeout in seconds to prevent long-running queries |
+| `enableTelemetry` | boolean | true | Enable structured logging of tool invocations |
+| `telemetryVerbose` | boolean | false | Enable detailed JSON telemetry output |
+| `clusterID` | string | "" | Optional cluster identifier for telemetry |
+
 ### Query Parameters
 
 Common query parameters for CockroachDB connections:
@@ -106,6 +170,35 @@ Common query parameters for CockroachDB connections:
 | `application_name` | string | Application name for connection tracking |
 
 ## Best Practices
+
+### Security and MCP Compliance
+
+**Read-Only by Default**: The integration follows MCP best practices by defaulting to read-only mode. This prevents accidental data modifications:
+
+```yaml
+sources:
+  my_cockroachdb:
+    readOnlyMode: true        # Default behavior
+    enableWriteMode: false    # Explicit write opt-in required
+```
+
+To enable write operations:
+
+```yaml
+sources:
+  my_cockroachdb:
+    readOnlyMode: false       # Disable read-only protection
+    enableWriteMode: true     # Explicitly allow writes
+```
+
+**Query Limits**: Automatic row limits prevent excessive data retrieval:
+- SELECT queries automatically get `LIMIT 1000` appended (configurable via `maxRowLimit`)
+- Queries are terminated after 30 seconds (configurable via `queryTimeoutSec`)
+
+**Observability**: Structured telemetry provides visibility into tool usage:
+- Tool invocations are logged with status, latency, and row counts
+- SQL queries are redacted to protect sensitive values
+- Set `telemetryVerbose: true` for detailed JSON logs
 
 ### Use UUID Primary Keys
 

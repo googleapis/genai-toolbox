@@ -327,8 +327,10 @@ steps:
       - "COCKROACHDB_DATABASE=$_DATABASE_NAME"
       - "COCKROACHDB_HOST=$_COCKROACHDB_HOST"
       - "COCKROACHDB_PORT=$_COCKROACHDB_PORT"
+      - "COCKROACHDB_USER=root"
+      - "COCKROACHDB_PASS="
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["COCKROACHDB_USER", "COCKROACHDB_PASS", "CLIENT_ID"]
+    secretEnv: ["CLIENT_ID"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -341,7 +343,14 @@ steps:
           cockroachdbsql \
           cockroachdbexecutesql \
           cockroachdblisttables \
-          cockroachdblistschemas
+          cockroachdblistschemas \
+          cockroachdbdescribetable \
+          cockroachdblistindexes \
+          cockroachdblistdatabases \
+          cockroachdbexplainquery \
+          cockroachdbshowrunningqueries \
+          cockroachdbcreatedatabase \
+          cockroachdbcreatetable
 
   - id: "spanner"
     name: golang:1

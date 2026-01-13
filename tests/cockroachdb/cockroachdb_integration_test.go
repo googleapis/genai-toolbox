@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,14 +19,14 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
 
-	crdbpgx "github.com/cockroachdb/cockroach-go/v2/crdb/crdbpgxv5"
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -64,6 +64,13 @@ func getCockroachDBVars(t *testing.T) map[string]any {
 		"queryParams": map[string]string{
 			"sslmode": "disable",
 		},
+		// MCP Security Settings
+		"readOnlyMode":     true,
+		"enableWriteMode":  false,
+		"maxRowLimit":      1000,
+		"queryTimeoutSec":  30,
+		"enableTelemetry":  true,
+		"telemetryVerbose": false,
 	}
 }
 
@@ -84,9 +91,11 @@ func initCockroachDBConnectionPool(host, port, user, pass, dbname string) (*pgxp
 }
 
 func TestCockroachDB(t *testing.T) {
-	_ = getCockroachDBVars(t)
+	sourceConfig := getCockroachDBVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
+
+	var args []string
 
 	pool, err := initCockroachDBConnectionPool(CockroachDBHost, CockroachDBPort, CockroachDBUser, CockroachDBPass, CockroachDBDatabase)
 	if err != nil {
@@ -108,86 +117,64 @@ func TestCockroachDB(t *testing.T) {
 	// cleanup test environment
 	tests.CleanupPostgresTables(t, ctx, pool)
 
-	// create table name with UUID suffix
-	tableNameParam := "test_crdb_" + strings.ReplaceAll(uuid.New().String(), "-", "")[:8]
+	// create table names with UUID suffix
+	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
-	// Create test table with UUID primary key (CockroachDB best practice)
-	createTableSQL := fmt.Sprintf(`
-		CREATE TABLE %s (
-			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			name STRING NOT NULL,
-			value INT,
-			created_at TIMESTAMP DEFAULT now()
-		)
-	`, tableNameParam)
+	// set up data for param tool (using CockroachDB UUID primary keys)
+	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetPostgresSQLParamToolInfo(tableNameParam)
+	teardownTable1 := tests.SetupPostgresSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
+	defer teardownTable1(t)
 
-	_, err = pool.Exec(ctx, createTableSQL)
+	// set up data for auth tool
+	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := tests.GetPostgresSQLAuthToolInfo(tableNameAuth)
+	teardownTable2 := tests.SetupPostgresSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
+	defer teardownTable2(t)
+
+	// Write config into a file and pass it to command
+	toolsFile := tests.GetToolsConfig(sourceConfig, CockroachDBToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "cockroachdb-execute-sql")
+	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CockroachDBToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+
+	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
-		t.Fatalf("failed to create test table: %s", err)
+		t.Fatalf("command initialization returned an error: %s", err)
 	}
-	t.Logf("✅ Created test table: %s with UUID primary key", tableNameParam)
+	defer cleanup()
 
-	// Insert test data with UUIDs
-	insertSQL := fmt.Sprintf("INSERT INTO %s (name, value) VALUES ($1, $2), ($3, $4)", tableNameParam)
-	_, err = pool.Exec(ctx, insertSQL, "Alice", 100, "Bob", 200)
+	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
-		t.Fatalf("failed to insert test data: %s", err)
+		t.Logf("toolbox command logs: \n%s", out)
+		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
-	t.Logf("✅ Inserted test data with UUID primary keys")
 
-	// Test 1: cockroach-go ExecuteTx retry mechanism
-	t.Run("ExecuteTx_Retry", func(t *testing.T) {
-		var count int
-		err := crdbpgx.ExecuteTx(ctx, pool, pgx.TxOptions{}, func(tx pgx.Tx) error {
-			return tx.QueryRow(ctx, fmt.Sprintf("SELECT count(*) FROM %s", tableNameParam)).Scan(&count)
-		})
-		if err != nil {
-			t.Fatalf("ExecuteTx failed: %s", err)
-		}
-		if count != 2 {
-			t.Errorf("expected 2 rows, got %d", count)
-		}
-		t.Logf("✅ cockroach-go ExecuteTx with automatic retry successful")
+	// Get configs for tests
+	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := tests.GetPostgresWants()
+
+	// Run required integration test suites (per CONTRIBUTING.md)
+	t.Run("ToolGetTest", func(t *testing.T) {
+		tests.RunToolGetTest(t)
 	})
 
-	// Test 2: UUID primary key
-	t.Run("UUID_PrimaryKey", func(t *testing.T) {
-		rows, err := pool.Query(ctx, fmt.Sprintf("SELECT id, name FROM %s ORDER BY name", tableNameParam))
-		if err != nil {
-			t.Fatalf("failed to query: %s", err)
-		}
-		defer rows.Close()
-
-		var uuids []string
-		for rows.Next() {
-			var id uuid.UUID
-			var name string
-			if err := rows.Scan(&id, &name); err != nil {
-				t.Fatalf("scan failed: %s", err)
-			}
-			uuids = append(uuids, id.String())
-			t.Logf("  Row: name=%s, uuid=%s", name, id.String())
-		}
-
-		if len(uuids) != 2 {
-			t.Errorf("expected 2 UUIDs, got %d", len(uuids))
-		}
-		// Verify UUIDs are valid
-		for _, uuidStr := range uuids {
-			if _, err := uuid.Parse(uuidStr); err != nil {
-				t.Errorf("invalid UUID: %s", uuidStr)
-			}
-		}
-		t.Logf("✅ UUID primary keys working correctly (CockroachDB best practice)")
+	t.Run("ToolInvokeTest", func(t *testing.T) {
+		tests.RunToolInvokeTest(t, select1Want)
 	})
 
-	// Cleanup
-	_, err = pool.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s", tableNameParam))
-	if err != nil {
-		t.Logf("Warning: failed to cleanup test table: %s", err)
-	} else {
-		t.Logf("✅ Cleaned up test table")
-	}
+	t.Run("MCPToolCallMethod", func(t *testing.T) {
+		tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
+	})
+
+	t.Run("ExecuteSqlToolInvokeTest", func(t *testing.T) {
+		tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
+	})
+
+	t.Run("ToolInvokeWithTemplateParameters", func(t *testing.T) {
+		tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+	})
 
 	t.Logf("✅✅✅ All CockroachDB integration tests passed!")
 }
