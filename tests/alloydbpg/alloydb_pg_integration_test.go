@@ -25,7 +25,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/alloydbconn"
-	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -130,12 +129,18 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	}
 
 	// cleanup test environment
-	tests.CleanupPostgresTables(t, ctx, pool)
+	tests.CleanupStaleNamespaces(t, ctx, pool)
+
+	// Setup the isolated namespace for this run 
+	schemaName, schemaCleanup := tests.SetupIsolatedNamespace(t, ctx, pool)
+	defer schemaCleanup()
+
+	sourceConfig["schema"] = schemaName
 
 	// create table name with UUID
-	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameParam := "param_table"
+	tableNameAuth := "auth_table"
+	tableNameTemplateParam := "template_param_table"
 
 	// set up data for param tool
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetPostgresSQLParamToolInfo(tableNameParam)

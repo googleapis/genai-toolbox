@@ -23,9 +23,12 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"strconv"
+	"time"
 
 	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmysql"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -1034,4 +1037,57 @@ func CleanupMSSQLTables(t *testing.T, ctx context.Context, pool *sql.DB) {
 		t.Fatalf("Failed to drop all MSSQL tables: %v", err)
 	}
 
+}
+
+// CleanupStaleNamespaces identifies and removes test schemas that have exceeded 
+func CleanupStaleNamespaces(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
+	query := "SELECT schema_name FROM information_schema.schemata WHERE schema_name LIKE 'test_%';"
+	rows, err := pool.Query(ctx, query)
+	if err != nil {
+		t.Logf("Warning: failed to query schemas for cleanup: %v", err)
+		return
+	}
+	defer rows.Close()
+
+	now := time.Now().Unix()
+	const staleThresholdSeconds = 2 * 60 * 60 
+
+	for rows.Next() {
+		var namespace string
+		if err := rows.Scan(&namespace); err != nil {
+			continue
+		}
+
+		// Expected format: test_<timestamp>_<uuid>
+		parts := strings.Split(namespace, "_")
+		if len(parts) < 2 {
+			continue
+		}
+
+		createdAt, err := strconv.ParseInt(parts[1], 10, 64)
+		if err == nil && (now-createdAt) > staleThresholdSeconds {
+			t.Logf("Reaping stale test namespace: %s", namespace)
+			_, _ = pool.Exec(ctx, fmt.Sprintf("DROP SCHEMA %q CASCADE;", namespace))
+		}
+	}
+}
+
+// SetupIsolatedNamespace creates a unique schema sandbox for the current test run.
+// It sets the search_path so all tables are created within this namespace.
+func SetupIsolatedNamespace(t *testing.T, ctx context.Context, pool *pgxpool.Pool) (string, func()) {
+	uuidSuffix := strings.ReplaceAll(uuid.New().String()[:8], "-", "")
+	namespace := fmt.Sprintf("test_%d_%s", time.Now().Unix(), uuidSuffix)
+
+	if _, err := pool.Exec(ctx, fmt.Sprintf("CREATE SCHEMA %q;", namespace)); err != nil {
+		t.Fatalf("failed to create isolated namespace %s: %v", namespace, err)
+	}
+
+	if _, err := pool.Exec(ctx, fmt.Sprintf("SET search_path TO %q, public;", namespace)); err != nil {
+		t.Fatalf("failed to set search path for %s: %v", namespace, err)
+	}
+
+	cleanup := func() {
+		_, _ = pool.Exec(context.Background(), fmt.Sprintf("DROP SCHEMA %q CASCADE;", namespace))
+	}
+	return namespace, cleanup
 }
