@@ -102,7 +102,13 @@
  &lt;tr>
  &lt;td>&lt;/td>
  &lt;td>&lt;code>--allowed-origins&lt;/code>&lt;/td>
- &lt;td>Specifies a list of origins permitted to access this server.&lt;/td>
+ &lt;td>Specifies a list of origins permitted to access this server for CORs access.&lt;/td>
+ &lt;td>&lt;code>*&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;code>--allowed-hosts&lt;/code>&lt;/td>
+ &lt;td>Specifies a list of hosts permitted to access this server to prevent DNS rebinding attacks.&lt;/td>
  &lt;td>&lt;code>*&lt;/code>&lt;/td>
  &lt;/tr>
  &lt;tr>
