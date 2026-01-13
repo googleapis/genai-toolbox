@@ -46,6 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
+	ListCollections(context.Context, string) ([]any, error)
 }
 
 type Config struct {
@@ -102,47 +103,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	mapParams := params.AsMap()
 
-	var collectionRefs []*firestoreapi.CollectionRef
-
 	// Check if parentPath is provided
-	parentPath, hasParent := mapParams[parentPathKey].(string)
-
-	if hasParent && parentPath != "" {
+	parentPath, _ := mapParams[parentPathKey].(string)
+	if parentPath != "" {
 		// Validate parent document path
 		if err := util.ValidateDocumentPath(parentPath); err != nil {
 			return nil, fmt.Errorf("invalid parent document path: %w", err)
 		}
-
-		// List subcollections of the specified document
-		docRef := source.FirestoreClient().Doc(parentPath)
-		collectionRefs, err = docRef.Collections(ctx).GetAll()
-		if err != nil {
-			return nil, fmt.Errorf("failed to list subcollections of document %q: %w", parentPath, err)
-		}
-	} else {
-		// List root collections
-		collectionRefs, err = source.FirestoreClient().Collections(ctx).GetAll()
-		if err != nil {
-			return nil, fmt.Errorf("failed to list root collections: %w", err)
-		}
 	}
-
-	// Convert collection references to response data
-	results := make([]any, len(collectionRefs))
-	for i, collRef := range collectionRefs {
-		collData := make(map[string]any)
-		collData["id"] = collRef.ID
-		collData["path"] = collRef.Path
-
-		// If this is a subcollection, include parent information
-		if collRef.Parent != nil {
-			collData["parent"] = collRef.Parent.Path
-		}
-
-		results[i] = collData
-	}
-
-	return results, nil
+	return source.ListCollections(ctx, parentPath)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
