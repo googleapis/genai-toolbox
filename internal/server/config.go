@@ -16,6 +16,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
@@ -139,6 +140,10 @@ func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 	}
 
 	for name, u := range raw {
+		err := NameValidation(name)
+		if err != nil {
+			return err
+		}
 		// Unmarshal to a general type that ensure it capture all fields
 		var v map[string]any
 		if err := u.Unmarshal(&v); err != nil {
@@ -183,6 +188,10 @@ func (c *AuthServiceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(i
 	}
 
 	for name, u := range raw {
+		err := NameValidation(name)
+		if err != nil {
+			return err
+		}
 		var v map[string]any
 		if err := u.Unmarshal(&v); err != nil {
 			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
@@ -226,6 +235,10 @@ func (c *EmbeddingModelConfigs) UnmarshalYAML(ctx context.Context, unmarshal fun
 	}
 
 	for name, u := range raw {
+		err := NameValidation(name)
+		if err != nil {
+			return err
+		}
 		// Unmarshal to a general type that ensure it capture all fields
 		var v map[string]any
 		if err := u.Unmarshal(&v); err != nil {
@@ -270,6 +283,10 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 	}
 
 	for name, u := range raw {
+		err := NameValidation(name)
+		if err != nil {
+			return err
+		}
 		var v map[string]any
 		if err := u.Unmarshal(&v); err != nil {
 			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
@@ -323,6 +340,10 @@ func (c *ToolsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(inter
 	}
 
 	for name, toolList := range raw {
+		err := NameValidation(name)
+		if err != nil {
+			return err
+		}
 		(*c)[name] = tools.ToolsetConfig{Name: name, ToolNames: toolList}
 	}
 	return nil
@@ -342,6 +363,10 @@ func (c *PromptConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 	}
 
 	for name, u := range raw {
+		err := NameValidation(name)
+		if err != nil {
+			return err
+		}
 		var v map[string]any
 		if err := u.Unmarshal(&v); err != nil {
 			return fmt.Errorf("unable to unmarshal prompt %q: %w", name, err)
@@ -389,7 +414,31 @@ func (c *PromptsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(int
 	}
 
 	for name, promptList := range raw {
+		err := NameValidation(name)
+		if err != nil {
+			return err
+		}
 		(*c)[name] = prompts.PromptsetConfig{Name: name, PromptNames: promptList}
+	}
+	return nil
+}
+
+// Tools naming validation is added in the MCP v2025-11-25, but we'll be
+// implementing it across Toolbox
+// Tool names SHOULD be between 1 and 128 characters in length (inclusive).
+// Tool names SHOULD be considered case-sensitive.
+// The following SHOULD be the only allowed characters: uppercase and lowercase ASCII letters (A-Z, a-z), digits (0-9), underscore (_), hyphen (-), and dot (.)
+// Tool names SHOULD NOT contain spaces, commas, or other special characters.
+// Tool names SHOULD be unique within a server.
+func NameValidation(name string) error {
+	strLen := len(name)
+	if strLen < 1 || strLen > 128 {
+		return fmt.Errorf("resource name SHOULD be between 1 and 128 characters in length (inclusive)")
+	}
+	validChars := regexp.MustCompile("^[a-zA-Z0-9_.-]+$")
+	isValid := validChars.MatchString(name)
+	if !isValid {
+		return fmt.Errorf("invalid character for resource name; only uppercase and lowercase ASCII letters (A-Z, a-z), digits (0-9), underscore (_), hyphen (-), and dot (.) is allowed")
 	}
 	return nil
 }
