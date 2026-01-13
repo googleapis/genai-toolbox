@@ -67,6 +67,9 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	if c.AllowedOrigins == nil {
 		c.AllowedOrigins = []string{"*"}
 	}
+	if c.AllowedHosts == nil {
+		c.AllowedHosts = []string{"*"}
+	}
 	return c
 }
 
@@ -218,6 +221,13 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--allowed-origins", "http://foo.com,http://bar.com"},
 			want: withDefaults(server.ServerConfig{
 				AllowedOrigins: []string{"http://foo.com", "http://bar.com"},
+			}),
+		},
+		{
+			desc: "allowed hosts",
+			args: []string{"--allowed-hosts", "http://foo.com,http://bar.com"},
+			want: withDefaults(server.ServerConfig{
+				AllowedHosts: []string{"http://foo.com", "http://bar.com"},
 			}),
 		},
 	}
