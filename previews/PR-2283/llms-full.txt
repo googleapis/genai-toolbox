@@ -7026,6 +7026,7 @@ sources:
     # scopes: # Optional: List of OAuth scopes to request.
     #   - "https://www.googleapis.com/auth/bigquery"
     #   - "https://www.googleapis.com/auth/drive.readonly"
+    # maxQueryResultRows: 50 # Optional: Limits the number of rows returned by queries. Defaults to 50.
 ```
 
 Initialize a BigQuery source that uses the client's access token:
@@ -7045,6 +7046,7 @@ sources:
     # scopes: # Optional: List of OAuth scopes to request.
     #   - "https://www.googleapis.com/auth/bigquery"
     #   - "https://www.googleapis.com/auth/drive.readonly"
+    # maxQueryResultRows: 50 # Optional: Limits the number of rows returned by queries. Defaults to 50.
 ```
 
 ## Reference
@@ -7059,6 +7061,7 @@ sources:
 | useClientOAuth            |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries. **Note:** This cannot be used with `writeMode: protected`.                                                                                                                                                                                                                                                                                                                                                |
 | scopes                    | []string |    false     | A list of OAuth 2.0 scopes to use for the credentials. If not provided, default scopes are used.                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | impersonateServiceAccount |  string  |    false     | Service account email to impersonate when making BigQuery and Dataplex API calls. The authenticated principal must have the `roles/iam.serviceAccountTokenCreator` role on the target service account. [Learn More](https://cloud.google.com/iam/docs/service-account-impersonation)                                                                                                                                                                                                                                |
+| maxQueryResultRows             |   int    |    false     | The maximum number of rows to return from a query. Defaults to 50. |
 
 
 # Bigtable
