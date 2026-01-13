@@ -61,10 +61,10 @@ You can manually trigger the bot by commenting on your Pull Request:
 
 ## Guidelines for Pull Requests
 
-1. Please keep your PR in smaller sizes for more thorough review and easier updates. In case of regression, it also allows us to roll back a single feature instead of multiple ones.
-1. For non-trivial changes, consider opening an issue and discussing it with the code owners firs.
+1. Please keep your PR small for more thorough review and easier updates. In case of regression, it also allows us to roll back a single feature instead of multiple ones.
+1. For non-trivial changes, consider opening an issue and discussing it with the code owners first.
 1. Provide a good PR description as a record of what change is being made and why it was made. Link to a GitHub issue if it exists.
-1. Make sure your code is thoroughly tested with unit tests and integration tests. Remember to clean up the test instances properly in your code to avoid memory leak.
+1. Make sure your code is thoroughly tested with unit tests and integration tests. Remember to clean up the test instances properly in your code to avoid memory leaks.
 
 ## Adding a New Database Source or Tool
 
