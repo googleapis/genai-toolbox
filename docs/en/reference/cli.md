@@ -16,7 +16,7 @@ description: >
 |              | `--log-level`              | Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.                                                                                                     | `info`      |
 |              | `--logging-format`         | Specify logging format to use. Allowed: 'standard' or 'JSON'.                                                                                                                    | `standard`  |
 | `-p`         | `--port`                   | Port the server will listen on.                                                                                                                                                  | `5000`      |
-|              | `--prebuilt`               | Use a prebuilt tool configuration by source type. See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values.                                                          |             |
+|              | `--prebuilt`               | Use one or more prebuilt tool configuration by source type. See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values.                                                          |             |
 |              | `--stdio`                  | Listens via MCP STDIO instead of acting as a remote HTTP server.                                                                                                                 |             |
 |              | `--telemetry-gcp`          | Enable exporting directly to Google Cloud Monitoring.                                                                                                                            |             |
 |              | `--telemetry-otlp`         | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')                                                                    |             |
@@ -50,6 +50,11 @@ description: >
 
 # Server with prebuilt + custom tools configurations
 ./toolbox --tools-file tools.yaml --prebuilt alloydb-postgres
+
+# Server with multiple prebuilt tools configurations
+./toolbox --prebuilt alloydb-postgres,alloydb-postgres-admin
+# OR
+./toolbox --prebuilt alloydb-postgres --prebuilt alloydb-postgres-admin
 ```
 
 ### Tool Configuration Sources
@@ -70,7 +75,7 @@ The CLI supports multiple mutually exclusive ways to specify tool configurations
 
 **Prebuilt Configurations:**
 
-- `--prebuilt`: Use predefined configurations for specific database types (e.g.,
+- `--prebuilt`: Use one or more predefined configurations for specific database types (e.g.,
   'bigquery', 'postgres', 'spanner'). See [Prebuilt Tools
   Reference](prebuilt-tools.md) for allowed values.
 
