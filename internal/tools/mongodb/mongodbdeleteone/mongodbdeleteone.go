@@ -21,9 +21,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -47,6 +45,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	MongoClient() *mongo.Client
+	DeleteOne(context.Context, string, string, string) (any, error)
 }
 
 type Config struct {
@@ -119,22 +118,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, fmt.Errorf("error populating filter: %s", err)
 	}
-
-	opts := options.Delete()
-
-	var filter = bson.D{}
-	err = bson.UnmarshalExtJSON([]byte(filterString), false, &filter)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := source.MongoClient().Database(t.Database).Collection(t.Collection).DeleteOne(ctx, filter, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	// do not return an error when the count is 0, to mirror the delete many call result
-	return res.DeletedCount, nil
+	return source.DeleteOne(ctx, filterString, t.Database, t.Collection)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
