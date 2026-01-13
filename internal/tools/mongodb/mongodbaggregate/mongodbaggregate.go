@@ -15,14 +15,12 @@ package mongodbaggregate
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"slices"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -47,6 +45,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	MongoClient() *mongo.Client
+	Aggregate(context.Context, string, bool, bool, string, string) ([]any, error)
 }
 
 type Config struct {
@@ -110,57 +109,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-
 	pipelineString, err := parameters.PopulateTemplateWithJSON("MongoDBAggregatePipeline", t.PipelinePayload, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error populating pipeline: %s", err)
 	}
-
-	var pipeline = []bson.M{}
-	err = bson.UnmarshalExtJSON([]byte(pipelineString), t.Canonical, &pipeline)
-	if err != nil {
-		return nil, err
-	}
-
-	if t.ReadOnly {
-		//fail if we do a merge or an out
-		for _, stage := range pipeline {
-			for key := range stage {
-				if key == "$merge" || key == "$out" {
-					return nil, fmt.Errorf("this is not a read-only pipeline: %+v", stage)
-				}
-			}
-		}
-	}
-
-	cur, err := source.MongoClient().Database(t.Database).Collection(t.Collection).Aggregate(ctx, pipeline)
-	if err != nil {
-		return nil, err
-	}
-	defer cur.Close(ctx)
-
-	var data = []any{}
-	err = cur.All(ctx, &data)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(data) == 0 {
-		return []any{}, nil
-	}
-
-	var final []any
-	for _, item := range data {
-		tmp, _ := bson.MarshalExtJSON(item, false, false)
-		var tmp2 any
-		err = json.Unmarshal(tmp, &tmp2)
-		if err != nil {
-			return nil, err
-		}
-		final = append(final, tmp2)
-	}
-
-	return final, err
+	return source.Aggregate(ctx, pipelineString, t.Canonical, t.ReadOnly, t.Database, t.Collection)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
