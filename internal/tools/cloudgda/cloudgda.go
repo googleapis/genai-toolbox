@@ -19,11 +19,13 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"cloud.google.com/go/geminidataanalytics/apiv1beta/geminidataanalyticspb"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 const kind string = "cloud-gemini-data-analytics-query"
@@ -60,7 +62,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	GetProjectID() string
 	UseClientAuthorization() bool
-	RunQuery(context.Context, string, []byte) (any, error)
+	RunQuery(context.Context, string, *geminidataanalyticspb.QueryDataRequest) (*geminidataanalyticspb.QueryDataResponse, error)
 }
 
 type Config struct {
@@ -145,18 +147,36 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// The parent in the request payload uses the tool's configured location.
 	payloadParent := fmt.Sprintf("projects/%s/locations/%s", source.GetProjectID(), t.Location)
 
-	payload := &QueryDataRequest{
-		Parent:            payloadParent,
-		Prompt:            query,
-		Context:           t.Context,
-		GenerationOptions: t.GenerationOptions,
+	req := &geminidataanalyticspb.QueryDataRequest{
+		Parent: payloadParent,
+		Prompt: query,
 	}
 
-	bodyBytes, err := json.Marshal(payload)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal request payload: %w", err)
+	if t.Context != nil {
+		jsonBytes, err := json.Marshal(t.Context)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal context: %w", err)
+		}
+		protoContext := &geminidataanalyticspb.QueryDataContext{}
+		if err := protojson.Unmarshal(jsonBytes, protoContext); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal context to proto: %w", err)
+		}
+		req.Context = protoContext
 	}
-	return source.RunQuery(ctx, tokenStr, bodyBytes)
+
+	if t.GenerationOptions != nil {
+		jsonBytes, err := json.Marshal(t.GenerationOptions)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal generation options: %w", err)
+		}
+		protoOptions := &geminidataanalyticspb.GenerationOptions{}
+		if err := protojson.Unmarshal(jsonBytes, protoOptions); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal generation options to proto: %w", err)
+		}
+		req.GenerationOptions = protoOptions
+	}
+
+	return source.RunQuery(ctx, tokenStr, req)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
