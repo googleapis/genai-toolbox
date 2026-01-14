@@ -59,6 +59,13 @@ You can manually trigger the bot by commenting on your Pull Request:
 *   `/gemini summary`: Posts a summary of the changes in the pull request.
 *   `/gemini help`: Overview of the available commands
 
+## Guidelines for Pull Requests
+
+1. Please keep your PR small for more thorough review and easier updates. In case of regression, it also allows us to roll back a single feature instead of multiple ones.
+1. For non-trivial changes, consider opening an issue and discussing it with the code owners first.
+1. Provide a good PR description as a record of what change is being made and why it was made. Link to a GitHub issue if it exists.
+1. Make sure your code is thoroughly tested with unit tests and integration tests. Remember to clean up the test instances properly in your code to avoid memory leaks.
+
 ## Adding a New Database Source or Tool
 
 Please create an
@@ -109,6 +116,8 @@ implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/s
 
 We recommend looking at an [example tool
 implementation](https://github.com/googleapis/genai-toolbox/tree/main/internal/tools/postgres/postgressql).
+
+Remember to keep your PRs small. For example, if you are contributing a new Source, only include one or two core Tools within the same PR, the rest of the Tools can come in subsequent PRs. 
 
 * **Create a new directory** under `internal/tools` for your tool type (e.g., `internal/tools/newdb/newdbtool`).
 * **Define a configuration struct** for your tool in a file named `newdbtool.go`.
@@ -162,6 +171,8 @@ tools.
      5. (Optional) [RunToolInvokeWithTemplateParameters][temp-param]: tests for [template
             parameters][temp-param-doc]. Only run this test if template
             parameters apply to your tool.
+
+* **Add additional tests** for the tools that are not covered by the predefined tests. Every tool must be tested!
 
 * **Add the new database to the integration test workflow** in
   [integration.cloudbuild.yaml](.ci/integration.cloudbuild.yaml).

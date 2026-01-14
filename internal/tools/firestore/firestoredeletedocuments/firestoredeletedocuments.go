@@ -46,6 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirestoreClient() *firestoreapi.Client
+	DeleteDocuments(context.Context, []string) ([]any, error)
 }
 
 type Config struct {
@@ -104,7 +105,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected an array", documentPathsKey)
 	}
-
 	if len(documentPathsRaw) == 0 {
 		return nil, fmt.Errorf("'%s' parameter cannot be empty", documentPathsKey)
 	}
@@ -126,45 +126,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			return nil, fmt.Errorf("invalid document path at index %d: %w", i, err)
 		}
 	}
-
-	// Create a BulkWriter to handle multiple deletions efficiently
-	bulkWriter := source.FirestoreClient().BulkWriter(ctx)
-
-	// Keep track of jobs for each document
-	jobs := make([]*firestoreapi.BulkWriterJob, len(documentPaths))
-
-	// Add all delete operations to the BulkWriter
-	for i, path := range documentPaths {
-		docRef := source.FirestoreClient().Doc(path)
-		job, err := bulkWriter.Delete(docRef)
-		if err != nil {
-			return nil, fmt.Errorf("failed to add delete operation for document %q: %w", path, err)
-		}
-		jobs[i] = job
-	}
-
-	// End the BulkWriter to execute all operations
-	bulkWriter.End()
-
-	// Collect results
-	results := make([]any, len(documentPaths))
-	for i, job := range jobs {
-		docData := make(map[string]any)
-		docData["path"] = documentPaths[i]
-
-		// Wait for the job to complete and get the result
-		_, err := job.Results()
-		if err != nil {
-			docData["success"] = false
-			docData["error"] = err.Error()
-		} else {
-			docData["success"] = true
-		}
-
-		results[i] = docData
-	}
-
-	return results, nil
+	return source.DeleteDocuments(ctx, documentPaths)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
