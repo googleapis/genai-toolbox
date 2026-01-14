@@ -326,5 +326,15 @@ func (s *Source) GetSessionTemplate(ctx context.Context, name string) (map[strin
 		return nil, fmt.Errorf("failed to unmarshal session template JSON: %w", err)
 	}
 
-	return result, nil
+	consoleUrl, err := SessionTemplateConsoleURLFromProto(sessionTemplatePb)
+	if err != nil {
+		return nil, fmt.Errorf("error generating console url: %v", err)
+	}
+
+	wrappedResult := map[string]any{
+		"consoleUrl":		consoleUrl,
+		"sessionTemplate":	result,
+	}
+
+	return wrappedResult, nil
 }

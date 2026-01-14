@@ -24,6 +24,7 @@ import (
 )
 
 var batchFullNameRegex = regexp.MustCompile(`projects/(?P<project>[^/]+)/locations/(?P<location>[^/]+)/batches/(?P<batch_id>[^/]+)`)
+var sessionTemplateFullNameRegex = regexp.MustCompile(`projects/(?P<project>[^/]+)/locations/(?P<location>[^/]+)/sessionTemplates/(?P<template_id>[^/]+)`)
 
 const (
 	logTimeBufferBefore = 1 * time.Minute
@@ -88,4 +89,27 @@ func BatchLogsURLFromProto(batchPb *dataprocpb.Batch) (string, error) {
 	createTime := batchPb.GetCreateTime().AsTime()
 	stateTime := batchPb.GetStateTime().AsTime()
 	return BatchLogsURL(projectID, location, batchID, createTime, stateTime), nil
+}
+
+// ExtractSessionTemplateDetails extracts the project ID, location, and session template ID from a fully qualified sessionTemplateName.
+func ExtractSessionTemplateDetails(sessionTemplateName string) (projectID, location, batchID string, err error) {
+	matches := sessionTemplateFullNameRegex.FindStringSubmatch(sessionTemplateName)
+	if len(matches) < 4 {
+		return "", "", "", fmt.Errorf("failed to parse session template name: %s", sessionTemplateName)
+	}
+	return matches[1], matches[2], matches[3], nil
+}
+
+// SessionTemplateConsoleURL builds a URL to the Google Cloud Console linking to the session template summary page.
+func SessionTemplateConsoleURL(projectID, location, sessionTemplateID string) string {
+	return fmt.Sprintf("https://console.cloud.google.com/dataproc/sessionTemplates/%s/%s/summary?project=%s", location, sessionTemplateID, projectID)
+}
+
+// SessionTemplateConsoleURLFromProto builds a URL to the Google Cloud Console linking to the session template summary page.
+func SessionTemplateConsoleURLFromProto(sessionTemplatePb *dataprocpb.SessionTemplate) (string, error) {
+	projectID, location, sessionTemplateID, err := ExtractSessionTemplateDetails(sessionTemplatePb.GetName())
+	if err != nil {
+		return "", err
+	}
+	return SessionTemplateConsoleURL(projectID, location, sessionTemplateID), nil
 }

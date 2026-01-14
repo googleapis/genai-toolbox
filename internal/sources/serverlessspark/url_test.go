@@ -118,3 +118,55 @@ func TestBatchLogsURLFromProto(t *testing.T) {
 		t.Errorf("BatchLogsURLFromProto() = %v, want %v", got, want)
 	}
 }
+
+func TestExtractSessionTemplateDetails_Success(t *testing.T) {
+	sessionTemplateName := "projects/my-project/locations/us-central1/sessionTemplates/my-session-template"
+	projectID, location, sessionTemplateID, err := serverlessspark.ExtractSessionTemplateDetails(sessionTemplateName)
+	if err != nil {
+		t.Errorf("ExtractSessionTemplateDetails() error = %v, want no error", err)
+		return
+	}
+	wantProject := "my-project"
+	wantLocation := "us-central1"
+	wantSessionTemplateID := "my-session-template"
+	if projectID != wantProject {
+		t.Errorf("ExtractSessionTemplateDetails() projectID = %v, want %v", projectID, wantProject)
+	}
+	if location != wantLocation {
+		t.Errorf("ExtractSessionTemplateDetails() location = %v, want %v", location, wantLocation)
+	}
+	if sessionTemplateID != wantSessionTemplateID {
+		t.Errorf("ExtractSessionTemplateDetails() sessionTemplateID = %v, want %v", sessionTemplateID, wantSessionTemplateID)
+	}
+}
+
+func TestExtractSessionTemplateDetails_Failure(t *testing.T) {
+	sessionTemplateName := "invalid-name"
+	_, _, _, err := serverlessspark.ExtractSessionTemplateDetails(sessionTemplateName)
+	wantErr := "failed to parse session template name: invalid-name"
+	if err == nil || err.Error() != wantErr {
+		t.Errorf("ExtractSessionTemplateDetails() error = %v, want %v", err, wantErr)
+	}
+}
+
+func TestSessionTemplateConsoleURL(t *testing.T) {
+	got := serverlessspark.SessionTemplateConsoleURL("my-project", "us-central1", "my-session-template")
+	want := "https://console.cloud.google.com/dataproc/sessionTemplates/us-central1/my-session-template/summary?project=my-project"
+	if got != want {
+		t.Errorf("SessionTemplateConsoleURL() = %v, want %v", got, want)
+	}
+}
+
+func TestSessionTemplateConsoleURLFromProto(t *testing.T) {
+	sessionTemplatePb := &dataprocpb.SessionTemplate{
+		Name: "projects/my-project/locations/us-central1/sessionTemplates/my-session-template",
+	}
+	got, err := serverlessspark.SessionTemplateConsoleURLFromProto(sessionTemplatePb)
+	if err != nil {
+		t.Fatalf("SessionTemplateConsoleURLFromProto() error = %v", err)
+	}
+	want := "https://console.cloud.google.com/dataproc/sessionTemplates/us-central1/my-session-template/summary?project=my-project"
+	if got != want {
+		t.Errorf("SessionTemplateConsoleURLFromProto() = %v, want %v", got, want)
+	}
+}
