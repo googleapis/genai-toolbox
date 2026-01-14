@@ -132,6 +132,9 @@ func (s *Source) Close() error {
 	if err := s.BatchClient.Close(); err != nil {
 		return err
 	}
+	if err := s.SessionTemplateClient.Close(); err != nil {
+		return err
+	
 	if err := s.OpsClient.Close(); err != nil {
 		return err
 	}
@@ -163,9 +166,6 @@ func (s *Source) CreateBatch(ctx context.Context, batch *dataprocpb.Batch) (map[
 	op, err := client.CreateBatch(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create batch: %w", err)
-	}
-	if err := s.SessionTemplateClient.Close(); err != nil {
-		return err
 	}
 	meta, err := op.Metadata()
 	if err != nil {
