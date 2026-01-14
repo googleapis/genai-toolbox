@@ -49,7 +49,7 @@ func TestParseFromYamlPostgresGetColumnCardinality(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgresgetcolumncardinality.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-get-column-cardinality",
+					Type:         "postgres-get-column-cardinality",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
@@ -68,7 +68,7 @@ func TestParseFromYamlPostgresGetColumnCardinality(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgresgetcolumncardinality.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-get-column-cardinality",
+					Type:         "postgres-get-column-cardinality",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

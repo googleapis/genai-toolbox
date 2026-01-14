@@ -53,7 +53,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": bigquerysql.Config{
 					Name:         "example_tool",
-					Kind:         "bigquery-sql",
+					Type:         "bigquery-sql",
 					Source:       "my-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -122,7 +122,7 @@ func TestParseFromYamlWithTemplateBigQuery(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": bigquerysql.Config{
 					Name:         "example_tool",
-					Kind:         "bigquery-sql",
+					Type:         "bigquery-sql",
 					Source:       "my-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",

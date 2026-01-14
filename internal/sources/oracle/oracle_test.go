@@ -33,7 +33,7 @@ func TestParseFromYamlOracle(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-oracle-cs": oracle.Config{
 					Name:             "my-oracle-cs",
-					Kind:             oracle.SourceKind,
+					Type:             oracle.SourceType,
 					ConnectionString: "my-host:1521/XEPDB1",
 					User:             "my_user",
 					Password:         "my_pass",
@@ -56,7 +56,7 @@ func TestParseFromYamlOracle(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-oracle-host": oracle.Config{
 					Name:        "my-oracle-host",
-					Kind:        oracle.SourceKind,
+					Type:        oracle.SourceType,
 					Host:        "my-host",
 					Port:        1521,
 					ServiceName: "ORCLPDB",
@@ -81,7 +81,7 @@ func TestParseFromYamlOracle(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-oracle-tns-oci": oracle.Config{
 					Name:     "my-oracle-tns-oci",
-					Kind:     oracle.SourceKind,
+					Type:     oracle.SourceType,
 					TnsAlias: "FINANCE_DB",
 					TnsAdmin: "/opt/oracle/network/admin",
 					User:     "my_user",

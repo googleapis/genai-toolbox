@@ -31,7 +31,7 @@ import (
 )
 
 var (
-	DgraphSourceKind = "dgraph"
+	DgraphSourceType = "dgraph"
 	DgraphApiKey     = "api-key"
 	DgraphUrl        = os.Getenv("DGRAPH_URL")
 )
@@ -41,7 +41,7 @@ func getDgraphVars(t *testing.T) map[string]any {
 		t.Fatal("'DGRAPH_URL' not set")
 	}
 	return map[string]any{
-		"kind":      DgraphSourceKind,
+		"kind":      DgraphSourceType,
 		"dgraphUrl": DgraphUrl,
 		"apiKey":    DgraphApiKey,
 	}

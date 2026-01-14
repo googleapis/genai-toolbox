@@ -47,7 +47,7 @@ func TestParseFromYamlLookerRunDashboard(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": lkr.Config{
 					Name:         "example_tool",
-					Kind:         "looker-run-dashboard",
+					Type:         "looker-run-dashboard",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

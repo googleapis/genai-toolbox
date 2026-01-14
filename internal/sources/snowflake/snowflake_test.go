@@ -45,7 +45,7 @@ func TestParseFromYamlSnowflake(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-snowflake-instance": snowflake.Config{
 					Name:      "my-snowflake-instance",
-					Kind:      snowflake.SourceKind,
+					Type:      snowflake.SourceType,
 					Account:   "my-account",
 					User:      "my_user",
 					Password:  "my_pass",

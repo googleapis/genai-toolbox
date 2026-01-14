@@ -47,7 +47,7 @@ func TestParseFromYamlLookerGetDimensions(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": lkr.Config{
 					Name:         "example_tool",
-					Kind:         "looker-get-dimensions",
+					Type:         "looker-get-dimensions",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

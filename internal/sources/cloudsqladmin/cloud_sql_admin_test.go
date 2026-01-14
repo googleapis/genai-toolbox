@@ -42,7 +42,7 @@ func TestParseFromYamlCloudSQLAdmin(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-cloud-sql-admin-instance": cloudsqladmin.Config{
 					Name:           "my-cloud-sql-admin-instance",
-					Kind:           cloudsqladmin.SourceKind,
+					Type:           cloudsqladmin.SourceType,
 					UseClientOAuth: false,
 				},
 			},
@@ -58,7 +58,7 @@ func TestParseFromYamlCloudSQLAdmin(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-cloud-sql-admin-instance": cloudsqladmin.Config{
 					Name:           "my-cloud-sql-admin-instance",
-					Kind:           cloudsqladmin.SourceKind,
+					Type:           cloudsqladmin.SourceType,
 					UseClientOAuth: true,
 				},
 			},

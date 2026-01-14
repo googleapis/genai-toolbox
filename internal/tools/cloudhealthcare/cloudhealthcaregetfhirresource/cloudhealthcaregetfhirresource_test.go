@@ -46,7 +46,7 @@ func TestParseFromYamlHealthcareGetFHIRResource(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": getfhirresource.Config{
 					Name:         "example_tool",
-					Kind:         "cloud-healthcare-get-fhir-resource",
+					Type:         "cloud-healthcare-get-fhir-resource",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

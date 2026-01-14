@@ -31,8 +31,8 @@ import (
 )
 
 var (
-	SnowflakeSourceKind = "snowflake"
-	SnowflakeToolKind   = "snowflake-sql"
+	SnowflakeSourceType = "snowflake"
+	SnowflakeToolType   = "snowflake-sql"
 	SnowflakeAccount    = os.Getenv("SNOWFLAKE_ACCOUNT")
 	SnowflakeUser       = os.Getenv("SNOWFLAKE_USER")
 	SnowflakePassword   = os.Getenv("SNOWFLAKE_PASS")
@@ -65,7 +65,7 @@ func getSnowflakeVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":      SnowflakeSourceKind,
+		"kind":      SnowflakeSourceType,
 		"account":   SnowflakeAccount,
 		"user":      SnowflakeUser,
 		"password":  SnowflakePassword,
@@ -125,10 +125,10 @@ func TestSnowflake(t *testing.T) {
 	t.Logf("Test table setup complete.")
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, SnowflakeToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, SnowflakeToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addSnowflakeExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getSnowflakeTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SnowflakeToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SnowflakeToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

@@ -46,7 +46,7 @@ func TestParseFromYamlBigQueryForecast(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": bigqueryforecast.Config{
 					Name:         "example_tool",
-					Kind:         "bigquery-forecast",
+					Type:         "bigquery-forecast",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

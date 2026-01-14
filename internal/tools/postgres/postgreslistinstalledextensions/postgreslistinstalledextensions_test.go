@@ -49,7 +49,7 @@ func TestParseFromYamlPostgres(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslistinstalledextensions.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-installed-extensions",
+					Type:         "postgres-list-installed-extensions",
 					Source:       "my-pg-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
@@ -68,7 +68,7 @@ func TestParseFromYamlPostgres(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslistinstalledextensions.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-installed-extensions",
+					Type:         "postgres-list-installed-extensions",
 					Source:       "my-pg-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

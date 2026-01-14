@@ -41,7 +41,7 @@ func TestParseFromYamlAlloyDBAdmin(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-alloydb-admin-instance": alloydbadmin.Config{
 					Name:           "my-alloydb-admin-instance",
-					Kind:           alloydbadmin.SourceKind,
+					Type:           alloydbadmin.SourceType,
 					UseClientOAuth: false,
 				},
 			},
@@ -57,7 +57,7 @@ func TestParseFromYamlAlloyDBAdmin(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-alloydb-admin-instance": alloydbadmin.Config{
 					Name:           "my-alloydb-admin-instance",
-					Kind:           alloydbadmin.SourceKind,
+					Type:           alloydbadmin.SourceType,
 					UseClientOAuth: true,
 				},
 			},

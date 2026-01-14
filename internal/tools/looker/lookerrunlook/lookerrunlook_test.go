@@ -47,7 +47,7 @@ func TestParseFromYamlLookerRunLook(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": lkr.Config{
 					Name:         "example_tool",
-					Kind:         "looker-run-look",
+					Type:         "looker-run-look",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

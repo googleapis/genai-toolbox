@@ -50,7 +50,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"wait-for-thing": cloudsqlwaitforoperation.Config{
 					Name:         "wait-for-thing",
-					Kind:         "cloud-sql-wait-for-operation",
+					Type:         "cloud-sql-wait-for-operation",
 					Source:       "some-source",
 					Description:  "some description",
 					AuthRequired: []string{},

@@ -51,7 +51,7 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": Config{
 					Name:               "example_tool",
-					Kind:               "neo4j-schema",
+					Type:               "neo4j-schema",
 					Source:             "my-neo4j-instance",
 					Description:        "some tool description",
 					AuthRequired:       []string{"my-google-auth-service", "other-auth-service"},
@@ -72,7 +72,7 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": Config{
 					Name:               "example_tool",
-					Kind:               "neo4j-schema",
+					Type:               "neo4j-schema",
 					Source:             "my-neo4j-instance",
 					Description:        "some tool description",
 					AuthRequired:       []string{}, // Expect an empty slice, not nil.

@@ -46,7 +46,7 @@ func TestParseFromYamlHealthcareListDICOMStores(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": listdicomstores.Config{
 					Name:         "example_tool",
-					Kind:         "cloud-healthcare-list-dicom-stores",
+					Type:         "cloud-healthcare-list-dicom-stores",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

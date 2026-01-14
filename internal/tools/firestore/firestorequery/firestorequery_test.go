@@ -53,7 +53,7 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 			want: server.ToolConfigs{
 				"query_users_tool": firestorequery.Config{
 					Name:           "query_users_tool",
-					Kind:           "firestore-query",
+					Type:           "firestore-query",
 					Source:         "my-firestore-instance",
 					Description:    "Query users collection with parameterized path",
 					CollectionPath: "users/{{.userId}}/documents",
@@ -93,7 +93,7 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 			want: server.ToolConfigs{
 				"query_products_tool": firestorequery.Config{
 					Name:           "query_products_tool",
-					Kind:           "firestore-query",
+					Type:           "firestore-query",
 					Source:         "prod-firestore",
 					Description:    "Query products with dynamic filters",
 					CollectionPath: "products",
@@ -138,7 +138,7 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 			want: server.ToolConfigs{
 				"query_orders_tool": firestorequery.Config{
 					Name:           "query_orders_tool",
-					Kind:           "firestore-query",
+					Type:           "firestore-query",
 					Source:         "orders-firestore",
 					Description:    "Query orders with field selection",
 					CollectionPath: "orders",
@@ -197,7 +197,7 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 			want: server.ToolConfigs{
 				"secure_query_tool": firestorequery.Config{
 					Name:           "secure_query_tool",
-					Kind:           "firestore-query",
+					Type:           "firestore-query",
 					Source:         "secure-firestore",
 					Description:    "Query with authentication and complex filters",
 					CollectionPath: "{{.collection}}",
@@ -273,7 +273,7 @@ func TestParseFromYamlFirestoreQuery(t *testing.T) {
 			want: server.ToolConfigs{
 				"query_with_typed_values": firestorequery.Config{
 					Name:           "query_with_typed_values",
-					Kind:           "firestore-query",
+					Type:           "firestore-query",
 					Source:         "typed-firestore",
 					Description:    "Query with Firestore native JSON value types",
 					CollectionPath: "countries",
@@ -415,7 +415,7 @@ func TestParseFromYamlMultipleQueryTools(t *testing.T) {
 	want := server.ToolConfigs{
 		"query_user_posts": firestorequery.Config{
 			Name:           "query_user_posts",
-			Kind:           "firestore-query",
+			Type:           "firestore-query",
 			Source:         "social-firestore",
 			Description:    "Query user posts with filtering",
 			CollectionPath: "users/{{.userId}}/posts",
@@ -442,7 +442,7 @@ func TestParseFromYamlMultipleQueryTools(t *testing.T) {
 		},
 		"query_inventory": firestorequery.Config{
 			Name:           "query_inventory",
-			Kind:           "firestore-query",
+			Type:           "firestore-query",
 			Source:         "inventory-firestore",
 			Description:    "Query inventory items",
 			CollectionPath: "warehouses/{{.warehouseId}}/inventory",
@@ -457,7 +457,7 @@ func TestParseFromYamlMultipleQueryTools(t *testing.T) {
 		},
 		"query_transactions": firestorequery.Config{
 			Name:           "query_transactions",
-			Kind:           "firestore-query",
+			Type:           "firestore-query",
 			Source:         "finance-firestore",
 			Description:    "Query financial transactions",
 			CollectionPath: "accounts/{{.accountId}}/transactions",

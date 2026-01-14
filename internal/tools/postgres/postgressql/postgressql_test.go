@@ -61,7 +61,7 @@ func TestParseFromYamlPostgres(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgressql.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-sql",
+					Type:         "postgres-sql",
 					Source:       "my-pg-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -132,7 +132,7 @@ func TestParseFromYamlWithTemplateParamsPostgres(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgressql.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-sql",
+					Type:         "postgres-sql",
 					Source:       "my-pg-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",

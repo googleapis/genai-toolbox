@@ -41,22 +41,22 @@ import (
 )
 
 var (
-	healthcareSourceKind                  = "cloud-healthcare"
-	getDatasetToolKind                    = "cloud-healthcare-get-dataset"
-	listFHIRStoresToolKind                = "cloud-healthcare-list-fhir-stores"
-	listDICOMStoresToolKind               = "cloud-healthcare-list-dicom-stores"
-	getFHIRStoreToolKind                  = "cloud-healthcare-get-fhir-store"
-	getFHIRStoreMetricsToolKind           = "cloud-healthcare-get-fhir-store-metrics"
-	getFHIRResourceToolKind               = "cloud-healthcare-get-fhir-resource"
-	fhirPatientSearchToolKind             = "cloud-healthcare-fhir-patient-search"
-	fhirPatientEverythingToolKind         = "cloud-healthcare-fhir-patient-everything"
-	fhirFetchPageToolKind                 = "cloud-healthcare-fhir-fetch-page"
-	getDICOMStoreToolKind                 = "cloud-healthcare-get-dicom-store"
-	getDICOMStoreMetricsToolKind          = "cloud-healthcare-get-dicom-store-metrics"
-	searchDICOMStudiesToolKind            = "cloud-healthcare-search-dicom-studies"
-	searchDICOMSeriesToolKind             = "cloud-healthcare-search-dicom-series"
-	searchDICOMInstancesToolKind          = "cloud-healthcare-search-dicom-instances"
-	retrieveRenderedDICOMInstanceToolKind = "cloud-healthcare-retrieve-rendered-dicom-instance"
+	healthcareSourceType                  = "cloud-healthcare"
+	getDatasetToolType                    = "cloud-healthcare-get-dataset"
+	listFHIRStoresToolType                = "cloud-healthcare-list-fhir-stores"
+	listDICOMStoresToolType               = "cloud-healthcare-list-dicom-stores"
+	getFHIRStoreToolType                  = "cloud-healthcare-get-fhir-store"
+	getFHIRStoreMetricsToolType           = "cloud-healthcare-get-fhir-store-metrics"
+	getFHIRResourceToolType               = "cloud-healthcare-get-fhir-resource"
+	fhirPatientSearchToolType             = "cloud-healthcare-fhir-patient-search"
+	fhirPatientEverythingToolType         = "cloud-healthcare-fhir-patient-everything"
+	fhirFetchPageToolType                 = "cloud-healthcare-fhir-fetch-page"
+	getDICOMStoreToolType                 = "cloud-healthcare-get-dicom-store"
+	getDICOMStoreMetricsToolType          = "cloud-healthcare-get-dicom-store-metrics"
+	searchDICOMStudiesToolType            = "cloud-healthcare-search-dicom-studies"
+	searchDICOMSeriesToolType             = "cloud-healthcare-search-dicom-series"
+	searchDICOMInstancesToolType          = "cloud-healthcare-search-dicom-instances"
+	retrieveRenderedDICOMInstanceToolType = "cloud-healthcare-retrieve-rendered-dicom-instance"
 	healthcareProject                     = os.Getenv("HEALTHCARE_PROJECT")
 	healthcareRegion                      = os.Getenv("HEALTHCARE_REGION")
 	healthcareDataset                     = os.Getenv("HEALTHCARE_DATASET")
@@ -92,7 +92,7 @@ func getHealthcareVars(t *testing.T) map[string]any {
 		t.Fatal("'HEALTHCARE_PREPOPULATED_DICOM_STORE' not set")
 	}
 	return map[string]any{
-		"kind":    healthcareSourceKind,
+		"kind":    healthcareSourceType,
 		"project": healthcareProject,
 		"region":  healthcareRegion,
 		"dataset": healthcareDataset,
@@ -335,157 +335,157 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 		},
 		"tools": map[string]any{
 			"my-get-dataset-tool": map[string]any{
-				"kind":        getDatasetToolKind,
+				"kind":        getDatasetToolType,
 				"source":      "my-instance",
 				"description": "Tool to get a healthcare dataset",
 			},
 			"my-list-fhir-stores-tool": map[string]any{
-				"kind":        listFHIRStoresToolKind,
+				"kind":        listFHIRStoresToolType,
 				"source":      "my-instance",
 				"description": "Tool to list FHIR stores",
 			},
 			"my-list-dicom-stores-tool": map[string]any{
-				"kind":        listDICOMStoresToolKind,
+				"kind":        listDICOMStoresToolType,
 				"source":      "my-instance",
 				"description": "Tool to list DICOM stores",
 			},
 			"my-get-fhir-store-tool": map[string]any{
-				"kind":        getFHIRStoreToolKind,
+				"kind":        getFHIRStoreToolType,
 				"source":      "my-instance",
 				"description": "Tool to get a FHIR store",
 			},
 			"my-get-fhir-store-metrics-tool": map[string]any{
-				"kind":        getFHIRStoreMetricsToolKind,
+				"kind":        getFHIRStoreMetricsToolType,
 				"source":      "my-instance",
 				"description": "Tool to get FHIR store metrics",
 			},
 			"my-get-fhir-resource-tool": map[string]any{
-				"kind":        getFHIRResourceToolKind,
+				"kind":        getFHIRResourceToolType,
 				"source":      "my-instance",
 				"description": "Tool to get FHIR resource",
 			},
 			"my-fhir-patient-search-tool": map[string]any{
-				"kind":        fhirPatientSearchToolKind,
+				"kind":        fhirPatientSearchToolType,
 				"source":      "my-instance",
 				"description": "Tool to search for patients",
 			},
 			"my-fhir-patient-everything-tool": map[string]any{
-				"kind":        fhirPatientEverythingToolKind,
+				"kind":        fhirPatientEverythingToolType,
 				"source":      "my-instance",
 				"description": "Tool for patient everything",
 			},
 			"my-fhir-fetch-page-tool": map[string]any{
-				"kind":        fhirFetchPageToolKind,
+				"kind":        fhirFetchPageToolType,
 				"source":      "my-instance",
 				"description": "Tool to fetch a page of FHIR resources",
 			},
 			"my-get-dicom-store-tool": map[string]any{
-				"kind":        getDICOMStoreToolKind,
+				"kind":        getDICOMStoreToolType,
 				"source":      "my-instance",
 				"description": "Tool to get a DICOM store",
 			},
 			"my-get-dicom-store-metrics-tool": map[string]any{
-				"kind":        getDICOMStoreMetricsToolKind,
+				"kind":        getDICOMStoreMetricsToolType,
 				"source":      "my-instance",
 				"description": "Tool to get DICOM store metrics",
 			},
 			"my-search-dicom-studies-tool": map[string]any{
-				"kind":        searchDICOMStudiesToolKind,
+				"kind":        searchDICOMStudiesToolType,
 				"source":      "my-instance",
 				"description": "Tool to search DICOM studies",
 			},
 			"my-search-dicom-series-tool": map[string]any{
-				"kind":        searchDICOMSeriesToolKind,
+				"kind":        searchDICOMSeriesToolType,
 				"source":      "my-instance",
 				"description": "Tool to search DICOM series",
 			},
 			"my-search-dicom-instances-tool": map[string]any{
-				"kind":        searchDICOMInstancesToolKind,
+				"kind":        searchDICOMInstancesToolType,
 				"source":      "my-instance",
 				"description": "Tool to search DICOM instances",
 			},
 			"my-retrieve-rendered-dicom-instance-tool": map[string]any{
-				"kind":        retrieveRenderedDICOMInstanceToolKind,
+				"kind":        retrieveRenderedDICOMInstanceToolType,
 				"source":      "my-instance",
 				"description": "Tool to retrieve rendered DICOM instance",
 			},
 			"my-client-auth-get-dataset-tool": map[string]any{
-				"kind":        getDatasetToolKind,
+				"kind":        getDatasetToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to get a healthcare dataset",
 			},
 			"my-client-auth-list-fhir-stores-tool": map[string]any{
-				"kind":        listFHIRStoresToolKind,
+				"kind":        listFHIRStoresToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to list FHIR stores",
 			},
 			"my-client-auth-list-dicom-stores-tool": map[string]any{
-				"kind":        listDICOMStoresToolKind,
+				"kind":        listDICOMStoresToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to list DICOM stores",
 			},
 			"my-client-auth-get-fhir-store-tool": map[string]any{
-				"kind":        getFHIRStoreToolKind,
+				"kind":        getFHIRStoreToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to get a FHIR store",
 			},
 			"my-client-auth-get-fhir-store-metrics-tool": map[string]any{
-				"kind":        getFHIRStoreMetricsToolKind,
+				"kind":        getFHIRStoreMetricsToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to get FHIR store metrics",
 			},
 			"my-client-auth-get-fhir-resource-tool": map[string]any{
-				"kind":        getFHIRResourceToolKind,
+				"kind":        getFHIRResourceToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to get FHIR resource",
 			},
 			"my-client-auth-fhir-patient-search-tool": map[string]any{
-				"kind":        fhirPatientSearchToolKind,
+				"kind":        fhirPatientSearchToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to search for patients",
 			},
 			"my-client-auth-fhir-patient-everything-tool": map[string]any{
-				"kind":        fhirPatientEverythingToolKind,
+				"kind":        fhirPatientEverythingToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool for patient everything",
 			},
 			"my-client-auth-fhir-fetch-page-tool": map[string]any{
-				"kind":        fhirFetchPageToolKind,
+				"kind":        fhirFetchPageToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to fetch a page of FHIR resources",
 			},
 			"my-client-auth-get-dicom-store-tool": map[string]any{
-				"kind":        getDICOMStoreToolKind,
+				"kind":        getDICOMStoreToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to get a DICOM store",
 			},
 			"my-client-auth-get-dicom-store-metrics-tool": map[string]any{
-				"kind":        getDICOMStoreMetricsToolKind,
+				"kind":        getDICOMStoreMetricsToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to get DICOM store metrics",
 			},
 			"my-client-auth-search-dicom-studies-tool": map[string]any{
-				"kind":        searchDICOMStudiesToolKind,
+				"kind":        searchDICOMStudiesToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to search DICOM studies",
 			},
 			"my-client-auth-search-dicom-series-tool": map[string]any{
-				"kind":        searchDICOMSeriesToolKind,
+				"kind":        searchDICOMSeriesToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to search DICOM series",
 			},
 			"my-client-auth-search-dicom-instances-tool": map[string]any{
-				"kind":        searchDICOMInstancesToolKind,
+				"kind":        searchDICOMInstancesToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to search DICOM instances",
 			},
 			"my-client-auth-retrieve-rendered-dicom-instance-tool": map[string]any{
-				"kind":        retrieveRenderedDICOMInstanceToolKind,
+				"kind":        retrieveRenderedDICOMInstanceToolType,
 				"source":      "my-client-auth-source",
 				"description": "Tool to retrieve rendered DICOM instance",
 			},
 			"my-auth-get-dataset-tool": map[string]any{
-				"kind":        getDatasetToolKind,
+				"kind":        getDatasetToolType,
 				"source":      "my-instance",
 				"description": "Tool to get a healthcare dataset with auth",
 				"authRequired": []string{
@@ -493,7 +493,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-list-fhir-stores-tool": map[string]any{
-				"kind":        listFHIRStoresToolKind,
+				"kind":        listFHIRStoresToolType,
 				"source":      "my-instance",
 				"description": "Tool to list FHIR stores with auth",
 				"authRequired": []string{
@@ -501,7 +501,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-list-dicom-stores-tool": map[string]any{
-				"kind":        listDICOMStoresToolKind,
+				"kind":        listDICOMStoresToolType,
 				"source":      "my-instance",
 				"description": "Tool to list DICOM stores with auth",
 				"authRequired": []string{
@@ -509,7 +509,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-get-fhir-store-tool": map[string]any{
-				"kind":        getFHIRStoreToolKind,
+				"kind":        getFHIRStoreToolType,
 				"source":      "my-instance",
 				"description": "Tool to get a FHIR store",
 				"authRequired": []string{
@@ -517,7 +517,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-get-fhir-store-metrics-tool": map[string]any{
-				"kind":        getFHIRStoreMetricsToolKind,
+				"kind":        getFHIRStoreMetricsToolType,
 				"source":      "my-instance",
 				"description": "Tool to get FHIR store metrics",
 				"authRequired": []string{
@@ -525,7 +525,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-get-fhir-resource-tool": map[string]any{
-				"kind":        getFHIRResourceToolKind,
+				"kind":        getFHIRResourceToolType,
 				"source":      "my-instance",
 				"description": "Tool to get FHIR resource",
 				"authRequired": []string{
@@ -533,7 +533,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-fhir-patient-search-tool": map[string]any{
-				"kind":        fhirPatientSearchToolKind,
+				"kind":        fhirPatientSearchToolType,
 				"source":      "my-instance",
 				"description": "Tool to search for patients",
 				"authRequired": []string{
@@ -541,7 +541,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-fhir-patient-everything-tool": map[string]any{
-				"kind":        fhirPatientEverythingToolKind,
+				"kind":        fhirPatientEverythingToolType,
 				"source":      "my-instance",
 				"description": "Tool for patient everything",
 				"authRequired": []string{
@@ -549,7 +549,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-fhir-fetch-page-tool": map[string]any{
-				"kind":        fhirFetchPageToolKind,
+				"kind":        fhirFetchPageToolType,
 				"source":      "my-instance",
 				"description": "Tool to fetch a page of FHIR resources",
 				"authRequired": []string{
@@ -557,7 +557,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-get-dicom-store-tool": map[string]any{
-				"kind":        getDICOMStoreToolKind,
+				"kind":        getDICOMStoreToolType,
 				"source":      "my-instance",
 				"description": "Tool to get a DICOM store",
 				"authRequired": []string{
@@ -565,7 +565,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-get-dicom-store-metrics-tool": map[string]any{
-				"kind":        getDICOMStoreMetricsToolKind,
+				"kind":        getDICOMStoreMetricsToolType,
 				"source":      "my-instance",
 				"description": "Tool to get DICOM store metrics",
 				"authRequired": []string{
@@ -573,7 +573,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-search-dicom-studies-tool": map[string]any{
-				"kind":        searchDICOMStudiesToolKind,
+				"kind":        searchDICOMStudiesToolType,
 				"source":      "my-instance",
 				"description": "Tool to search DICOM studies",
 				"authRequired": []string{
@@ -581,7 +581,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-search-dicom-series-tool": map[string]any{
-				"kind":        searchDICOMSeriesToolKind,
+				"kind":        searchDICOMSeriesToolType,
 				"source":      "my-instance",
 				"description": "Tool to search DICOM series",
 				"authRequired": []string{
@@ -589,7 +589,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-search-dicom-instances-tool": map[string]any{
-				"kind":        searchDICOMInstancesToolKind,
+				"kind":        searchDICOMInstancesToolType,
 				"source":      "my-instance",
 				"description": "Tool to search DICOM instances",
 				"authRequired": []string{
@@ -597,7 +597,7 @@ func getToolsConfig(sourceConfig map[string]any) map[string]any {
 				},
 			},
 			"my-auth-retrieve-rendered-dicom-instance-tool": map[string]any{
-				"kind":        retrieveRenderedDICOMInstanceToolKind,
+				"kind":        retrieveRenderedDICOMInstanceToolType,
 				"source":      "my-instance",
 				"description": "Tool to retrieve rendered DICOM instance",
 				"authRequired": []string{
@@ -621,7 +621,7 @@ func addClientAuthSourceConfig(t *testing.T, config map[string]any) map[string]a
 		t.Fatalf("unable to get sources from config")
 	}
 	sources["my-client-auth-source"] = map[string]any{
-		"kind":           healthcareSourceKind,
+		"kind":           healthcareSourceType,
 		"project":        healthcareProject,
 		"region":         healthcareRegion,
 		"dataset":        healthcareDataset,

@@ -61,7 +61,7 @@ func TestParseFromYamlmindsdbsql(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": mindsdbsql.Config{
 					Name:         "example_tool",
-					Kind:         "mindsdb-sql",
+					Type:         "mindsdb-sql",
 					Source:       "my-mindsdbsql-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -139,7 +139,7 @@ func TestParseFromYamlWithTemplateParamsmindsdbsql(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": mindsdbsql.Config{
 					Name:         "example_tool",
-					Kind:         "mindsdb-sql",
+					Type:         "mindsdb-sql",
 					Source:       "my-mindsdbsql-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",

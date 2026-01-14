@@ -48,7 +48,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"precheck-upgrade-tool": cloudsqlpgupgradeprecheck.Config{
 					Name:         "precheck-upgrade-tool",
-					Kind:         "postgres-upgrade-precheck",
+					Type:         "postgres-upgrade-precheck",
 					Description:  "a precheck test description",
 					Source:       "some-admin-source",
 					AuthRequired: []string{"https://www.googleapis.com/auth/cloud-platform"},
@@ -67,7 +67,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"precheck-upgrade-tool-no-auth": cloudsqlpgupgradeprecheck.Config{
 					Name:         "precheck-upgrade-tool-no-auth",
-					Kind:         "postgres-upgrade-precheck",
+					Type:         "postgres-upgrade-precheck",
 					Description:  "a precheck test description no auth",
 					Source:       "other-admin-source",
 					AuthRequired: []string{},

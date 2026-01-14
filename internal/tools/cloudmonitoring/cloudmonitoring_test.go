@@ -34,7 +34,7 @@ type mockIncompatibleSource struct{ sources.Source }
 
 func TestInitialize(t *testing.T) {
 	t.Parallel()
-	testSource := &cloudmonitoringsrc.Source{Config: cloudmonitoringsrc.Config{Kind: "cloud-monitoring"}}
+	testSource := &cloudmonitoringsrc.Source{Config: cloudmonitoringsrc.Config{Type: "cloud-monitoring"}}
 	srcs := map[string]sources.Source{
 		"my-monitoring-source": testSource,
 		"incompatible-source":  &mockIncompatibleSource{},
@@ -55,7 +55,7 @@ func TestInitialize(t *testing.T) {
 			desc: "Success case with nil authRequired",
 			cfg: cloudmonitoring.Config{
 				Name:         "test-tool",
-				Kind:         "cloud-monitoring-query-prometheus",
+				Type:         "cloud-monitoring-query-prometheus",
 				Source:       "my-monitoring-source",
 				Description:  "A test description.",
 				AuthRequired: nil,
@@ -70,7 +70,7 @@ func TestInitialize(t *testing.T) {
 			desc: "Success case with specified authRequired",
 			cfg: cloudmonitoring.Config{
 				Name:         "test-tool-with-auth",
-				Kind:         "cloud-monitoring-query-prometheus",
+				Type:         "cloud-monitoring-query-prometheus",
 				Source:       "my-monitoring-source",
 				Description:  "Another test description.",
 				AuthRequired: []string{"google-auth-service"},
@@ -131,7 +131,7 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": cloudmonitoring.Config{
 					Name:         "example_tool",
-					Kind:         "cloud-monitoring-query-prometheus",
+					Type:         "cloud-monitoring-query-prometheus",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -153,7 +153,7 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": cloudmonitoring.Config{
 					Name:         "example_tool",
-					Kind:         "cloud-monitoring-query-prometheus",
+					Type:         "cloud-monitoring-query-prometheus",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
@@ -197,7 +197,7 @@ func TestFailParseFromYamlCloudMonitoring(t *testing.T) {
 					source: my-instance
 					description: some description
 			`,
-			err: `unknown tool kind: "invalid-kind"`,
+			err: `unknown tool type: "invalid-kind"`,
 		},
 		{
 			desc: "missing source",

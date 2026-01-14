@@ -42,7 +42,7 @@ func TestParseFromYamlGemini(t *testing.T) {
 			want: map[string]embeddingmodels.EmbeddingModelConfig{
 				"my-gemini-model": gemini.Config{
 					Name:  "my-gemini-model",
-					Kind:  gemini.EmbeddingModelKind,
+					Type:  gemini.EmbeddingModelType,
 					Model: "text-embedding-004",
 				},
 			},
@@ -60,7 +60,7 @@ func TestParseFromYamlGemini(t *testing.T) {
 			want: map[string]embeddingmodels.EmbeddingModelConfig{
 				"complex-gemini": gemini.Config{
 					Name:      "complex-gemini",
-					Kind:      gemini.EmbeddingModelKind,
+					Type:      gemini.EmbeddingModelType,
 					Model:     "text-embedding-004",
 					ApiKey:    "test-api-key",
 					Dimension: 768,

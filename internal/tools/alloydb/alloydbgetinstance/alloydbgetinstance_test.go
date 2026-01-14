@@ -46,7 +46,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"get-my-instance": alloydbgetinstance.Config{
 					Name:         "get-my-instance",
-					Kind:         "alloydb-get-instance",
+					Type:         "alloydb-get-instance",
 					Source:       "my-alloydb-admin-source",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -68,7 +68,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"get-my-instance-auth": alloydbgetinstance.Config{
 					Name:         "get-my-instance-auth",
-					Kind:         "alloydb-get-instance",
+					Type:         "alloydb-get-instance",
 					Source:       "my-alloydb-admin-source",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},

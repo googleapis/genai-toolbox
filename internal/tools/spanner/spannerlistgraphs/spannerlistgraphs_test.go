@@ -46,7 +46,7 @@ func TestParseFromYamlListGraphs(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": spannerlistgraphs.Config{
 					Name:         "example_tool",
-					Kind:         "spanner-list-graphs",
+					Type:         "spanner-list-graphs",
 					Source:       "my-spanner-instance",
 					Description:  "Lists graphs in the database",
 					AuthRequired: []string{},
@@ -68,7 +68,7 @@ func TestParseFromYamlListGraphs(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": spannerlistgraphs.Config{
 					Name:         "example_tool",
-					Kind:         "spanner-list-graphs",
+					Type:         "spanner-list-graphs",
 					Source:       "my-spanner-instance",
 					Description:  "Lists graphs in the database",
 					AuthRequired: []string{"auth1", "auth2"},
@@ -86,7 +86,7 @@ func TestParseFromYamlListGraphs(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": spannerlistgraphs.Config{
 					Name:         "example_tool",
-					Kind:         "spanner-list-graphs",
+					Type:         "spanner-list-graphs",
 					Source:       "my-spanner-instance",
 					Description:  "",
 					AuthRequired: []string{},

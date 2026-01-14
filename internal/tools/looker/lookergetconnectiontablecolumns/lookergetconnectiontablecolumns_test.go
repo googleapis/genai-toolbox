@@ -47,7 +47,7 @@ func TestParseFromYamlLookerGetConnectionTableColumns(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": lkr.Config{
 					Name:         "example_tool",
-					Kind:         "looker-get-connection-table-columns",
+					Type:         "looker-get-connection-table-columns",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

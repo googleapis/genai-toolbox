@@ -68,7 +68,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: map[string]tools.ToolConfig{
 				"my-gda-query-tool": cloudgdatool.Config{
 					Name:         "my-gda-query-tool",
-					Kind:         "cloud-gemini-data-analytics-query",
+					Type:         "cloud-gemini-data-analytics-query",
 					Source:       "gda-api-source",
 					Description:  "Test Description",
 					Location:     "us-central1",
@@ -141,7 +141,7 @@ type mockSource struct {
 	config  cloudgdasrc.Config // to return from ToConfig
 }
 
-func (m *mockSource) SourceKind() string             { return m.kind }
+func (m *mockSource) SourceType() string             { return m.kind }
 func (m *mockSource) ToConfig() sources.SourceConfig { return m.config }
 func (m *mockSource) GetClient(ctx context.Context, token string) (*http.Client, error) {
 	if m.client != nil {
@@ -166,7 +166,7 @@ func TestInitialize(t *testing.T) {
 
 	srcs := map[string]sources.Source{
 		"gda-api-source": &cloudgdasrc.Source{
-			Config:  cloudgdasrc.Config{Name: "gda-api-source", Kind: cloudgdasrc.SourceKind, ProjectID: "test-project"},
+			Config:  cloudgdasrc.Config{Name: "gda-api-source", Type: cloudgdasrc.SourceType, ProjectID: "test-project"},
 			Client:  &http.Client{},
 			BaseURL: cloudgdasrc.Endpoint,
 		},
@@ -180,7 +180,7 @@ func TestInitialize(t *testing.T) {
 			desc: "successful initialization",
 			cfg: cloudgdatool.Config{
 				Name:        "my-gda-query-tool",
-				Kind:        "cloud-gemini-data-analytics-query",
+				Type:        "cloud-gemini-data-analytics-query",
 				Source:      "gda-api-source",
 				Description: "Test Description",
 				Location:    "us-central1",
@@ -287,7 +287,7 @@ func TestInvoke(t *testing.T) {
 
 	// Create a real cloudgdasrc.Source but inject the authenticated client
 	mockGdaSource := &cloudgdasrc.Source{
-		Config:  cloudgdasrc.Config{Name: "mock-gda-source", Kind: cloudgdasrc.SourceKind, ProjectID: "test-project"},
+		Config:  cloudgdasrc.Config{Name: "mock-gda-source", Type: cloudgdasrc.SourceType, ProjectID: "test-project"},
 		Client:  authClient,
 		BaseURL: mockServer.URL,
 	}
@@ -298,7 +298,7 @@ func TestInvoke(t *testing.T) {
 	// Initialize the tool config with context
 	toolCfg := cloudgdatool.Config{
 		Name:        "query-data-tool",
-		Kind:        "cloud-gemini-data-analytics-query",
+		Type:        "cloud-gemini-data-analytics-query",
 		Source:      "mock-gda-source",
 		Description: "Query Gemini Data Analytics",
 		Location:    "us-central1", // Set location for the test

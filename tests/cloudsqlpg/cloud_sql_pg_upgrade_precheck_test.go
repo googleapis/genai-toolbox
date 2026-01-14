@@ -35,7 +35,7 @@ import (
 )
 
 var (
-	preCheckToolKind = "postgres-upgrade-precheck"
+	preCheckToolType = "postgres-upgrade-precheck"
 )
 
 type preCheckTransport struct {
@@ -373,7 +373,7 @@ func getPreCheckToolsConfig() map[string]any {
 		},
 		"tools": map[string]any{
 			"precheck-tool": map[string]any{
-				"kind":   preCheckToolKind,
+				"kind":   preCheckToolType,
 				"source": "my-cloud-sql-source",
 				"authRequired": []string{
 					"https://www.googleapis.com/auth/cloud-platform",

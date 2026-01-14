@@ -37,8 +37,8 @@ import (
 )
 
 var (
-	SpannerSourceKind = "spanner"
-	SpannerToolKind   = "spanner-sql"
+	SpannerSourceType = "spanner"
+	SpannerToolType   = "spanner-sql"
 	SpannerProject    = os.Getenv("SPANNER_PROJECT")
 	SpannerDatabase   = os.Getenv("SPANNER_DATABASE")
 	SpannerInstance   = os.Getenv("SPANNER_INSTANCE")
@@ -55,7 +55,7 @@ func getSpannerVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     SpannerSourceKind,
+		"kind":     SpannerSourceType,
 		"project":  SpannerProject,
 		"instance": SpannerInstance,
 		"database": SpannerDatabase,
@@ -163,7 +163,7 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	defer teardownGraph(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, SpannerToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, SpannerToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addSpannerExecuteSqlConfig(t, toolsFile)
 	toolsFile = addSpannerReadOnlyConfig(t, toolsFile)
 	toolsFile = addTemplateParamConfig(t, toolsFile)

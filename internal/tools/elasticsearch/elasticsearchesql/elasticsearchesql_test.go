@@ -49,7 +49,7 @@ func TestParseFromYamlElasticsearchEsql(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": Config{
 					Name:         "example_tool",
-					Kind:         "elasticsearch-esql",
+					Type:         "elasticsearch-esql",
 					Source:       "my-elasticsearch-instance",
 					Description:  "Elasticsearch ES|QL tool",
 					AuthRequired: []string{},
@@ -76,7 +76,7 @@ func TestParseFromYamlElasticsearchEsql(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": Config{
 					Name:         "example_tool",
-					Kind:         "elasticsearch-esql",
+					Type:         "elasticsearch-esql",
 					Source:       "my-elasticsearch-instance",
 					Description:  "Elasticsearch ES|QL tool with customizable limit",
 					AuthRequired: []string{},

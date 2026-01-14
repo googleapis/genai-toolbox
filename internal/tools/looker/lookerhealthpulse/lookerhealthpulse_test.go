@@ -47,7 +47,7 @@ func TestParseFromYamlLookerHealthPulse(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": lhp.Config{
 					Name:         "example_tool",
-					Kind:         "looker-health-pulse",
+					Type:         "looker-health-pulse",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

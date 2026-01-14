@@ -61,7 +61,7 @@ func TestParseFromYamlYugabyteDBSQL(t *testing.T) {
 			want: server.ToolConfigs{
 				"hotel_search": yugabytedbsql.Config{
 					Name:         "hotel_search",
-					Kind:         "yugabytedb-sql",
+					Type:         "yugabytedb-sql",
 					Source:       "yb-source",
 					Description:  "search hotels by city",
 					Statement:    "SELECT * FROM hotels WHERE city = $1;\n",
@@ -179,7 +179,7 @@ func TestParseFromYamlWithTemplateParamsYugabyteDB(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": yugabytedbsql.Config{
 					Name:         "example_tool",
-					Kind:         "yugabytedb-sql",
+					Type:         "yugabytedb-sql",
 					Source:       "my-yb-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",

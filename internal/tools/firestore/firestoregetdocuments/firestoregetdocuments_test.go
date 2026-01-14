@@ -46,7 +46,7 @@ func TestParseFromYamlFirestoreGetDocuments(t *testing.T) {
 			want: server.ToolConfigs{
 				"get_docs_tool": firestoregetdocuments.Config{
 					Name:         "get_docs_tool",
-					Kind:         "firestore-get-documents",
+					Type:         "firestore-get-documents",
 					Source:       "my-firestore-instance",
 					Description:  "Retrieve documents from Firestore by paths",
 					AuthRequired: []string{},
@@ -68,7 +68,7 @@ func TestParseFromYamlFirestoreGetDocuments(t *testing.T) {
 			want: server.ToolConfigs{
 				"secure_get_docs": firestoregetdocuments.Config{
 					Name:         "secure_get_docs",
-					Kind:         "firestore-get-documents",
+					Type:         "firestore-get-documents",
 					Source:       "prod-firestore",
 					Description:  "Get documents with authentication",
 					AuthRequired: []string{"google-auth-service", "api-key-service"},
@@ -121,21 +121,21 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 	want := server.ToolConfigs{
 		"get_user_docs": firestoregetdocuments.Config{
 			Name:         "get_user_docs",
-			Kind:         "firestore-get-documents",
+			Type:         "firestore-get-documents",
 			Source:       "users-firestore",
 			Description:  "Get user documents",
 			AuthRequired: []string{"user-auth"},
 		},
 		"get_product_docs": firestoregetdocuments.Config{
 			Name:         "get_product_docs",
-			Kind:         "firestore-get-documents",
+			Type:         "firestore-get-documents",
 			Source:       "products-firestore",
 			Description:  "Get product documents",
 			AuthRequired: []string{},
 		},
 		"get_order_docs": firestoregetdocuments.Config{
 			Name:         "get_order_docs",
-			Kind:         "firestore-get-documents",
+			Type:         "firestore-get-documents",
 			Source:       "orders-firestore",
 			Description:  "Get order documents",
 			AuthRequired: []string{"user-auth", "admin-auth"},
