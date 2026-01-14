@@ -190,7 +190,6 @@ tools.
 [temp-param-doc]:
     https://googleapis.github.io/genai-toolbox/resources/tools/#template-parameters
 
-
 ### Adding Documentation
 
 * **Update the documentation** to include information about your new data source
