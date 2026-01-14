@@ -53,9 +53,10 @@ type Config struct {
 	Source             string                `yaml:"source" validate:"required"`
 	Description        string                `yaml:"description" validate:"required"`
 	Statement          string                `yaml:"statement" validate:"required"`
-	AuthRequired       []string              `yaml:"authRequired"`
-	Parameters         parameters.Parameters `yaml:"parameters"`
-	TemplateParameters parameters.Parameters `yaml:"templateParameters"`
+	AuthRequired       []string               `yaml:"authRequired"`
+	Annotations        *tools.ToolAnnotations `yaml:"annotations,omitempty"`
+	Parameters         parameters.Parameters  `yaml:"parameters"`
+	TemplateParameters parameters.Parameters  `yaml:"templateParameters"`
 }
 
 var _ tools.ToolConfig = Config{}
@@ -72,7 +73,8 @@ func (c Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 		return nil, err
 	}
 
-	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, allParameters, nil)
+	annotations := tools.GetAnnotationsOrDefault(c.Annotations, tools.NewReadOnlyAnnotations)
+	mcpManifest := tools.GetMcpManifest(c.Name, c.Description, c.AuthRequired, allParameters, annotations)
 
 	t := Tool{
 		Config:      c,
