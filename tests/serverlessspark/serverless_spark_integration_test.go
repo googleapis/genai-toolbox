@@ -179,16 +179,16 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 	}
 
 	endpoint := fmt.Sprintf("%s-dataproc.googleapis.com:443", serverlessSparkLocation)
-	client, err := dataproc.NewBatchControllerClient(ctx, option.WithEndpoint(endpoint))
+	batchClient, err := dataproc.NewBatchControllerClient(ctx, option.WithEndpoint(endpoint))
 	if err != nil {
-		t.Fatalf("failed to create dataproc client: %v", err)
+		t.Fatalf("failed to create dataproc batch client: %v", err)
 	}
-	defer client.Close()
+	defer batchClient.Close()
 
 	t.Run("list-batches", func(t *testing.T) {
 		// list-batches is sensitive to state changes, so this test must run sequentially.
 		t.Run("success", func(t *testing.T) {
-			runListBatchesTest(t, client, ctx)
+			runListBatchesTest(t, batchClient, ctx)
 		})
 		t.Run("errors", func(t *testing.T) {
 			t.Parallel()
@@ -231,10 +231,10 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 	t.Run("parallel-tool-tests", func(t *testing.T) {
 		t.Run("get-batch", func(t *testing.T) {
 			t.Parallel()
-			fullName := listBatchesRpc(t, client, ctx, "", 1, true)[0].Name
+			fullName := listBatchesRpc(t, batchClient, ctx, "", 1, true)[0].Name
 			t.Run("success", func(t *testing.T) {
 				t.Parallel()
-				runGetBatchTest(t, client, ctx, fullName)
+				runGetBatchTest(t, batchClient, ctx, fullName)
 			})
 			t.Run("errors", func(t *testing.T) {
 				t.Parallel()
@@ -331,7 +331,7 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				for _, tc := range tcs {
 					t.Run(tc.name, func(t *testing.T) {
 						t.Parallel()
-						runCreateSparkBatchTest(t, client, ctx, tc.toolName, tc.request, tc.waitForSuccess, tc.validate)
+						runCreateSparkBatchTest(t, batchClient, ctx, tc.toolName, tc.request, tc.waitForSuccess, tc.validate)
 					})
 				}
 			})
@@ -436,7 +436,7 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				for _, tc := range tcs {
 					t.Run(tc.name, func(t *testing.T) {
 						t.Parallel()
-						runCreateSparkBatchTest(t, client, ctx, tc.toolName, tc.request, tc.waitForSuccess, tc.validate)
+						runCreateSparkBatchTest(t, batchClient, ctx, tc.toolName, tc.request, tc.waitForSuccess, tc.validate)
 					})
 				}
 			})
@@ -495,13 +495,13 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 					{
 						name: "running batch",
 						getBatchName: func(t *testing.T) string {
-							return createBatch(t, client, ctx)
+							return createBatch(t, batchClient, ctx)
 						},
 					},
 					{
 						name: "succeeded batch",
 						getBatchName: func(t *testing.T) string {
-							return listBatchesRpc(t, client, ctx, "state = SUCCEEDED", 1, true)[0].Name
+							return listBatchesRpc(t, batchClient, ctx, "state = SUCCEEDED", 1, true)[0].Name
 						},
 					},
 				}
@@ -509,14 +509,14 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				for _, tc := range tcs {
 					t.Run(tc.name, func(t *testing.T) {
 						t.Parallel()
-						runCancelBatchTest(t, client, ctx, tc.getBatchName(t))
+						runCancelBatchTest(t, batchClient, ctx, tc.getBatchName(t))
 					})
 				}
 			})
 			t.Run("errors", func(t *testing.T) {
 				t.Parallel()
 				// Find a batch that's already completed.
-				completedBatchOp := listBatchesRpc(t, client, ctx, "state = SUCCEEDED", 1, true)[0].Operation
+				completedBatchOp := listBatchesRpc(t, batchClient, ctx, "state = SUCCEEDED", 1, true)[0].Operation
 				fullOpName := fmt.Sprintf("projects/%s/locations/%s/operations/%s", serverlessSparkProject, serverlessSparkLocation, shortName(completedBatchOp))
 				tcs := []struct {
 					name     string
