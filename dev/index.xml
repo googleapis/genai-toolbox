@@ -8125,7 +8125,12 @@ other PostgreSQL client.&lt;/p>
 &lt;p>Enable the &lt;code>pgvector&lt;/code> and &lt;code>google_ml_integration&lt;/code>
 &lt;a href="https://cloud.google.com/alloydb/docs/ai">extensions&lt;/a>. These are required
 for Semantic Search and Natural Language to SQL tools. Run the following SQL
-commands:&lt;/p></description></item><item><title>redis</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/redis/redis/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/redis/redis/</guid><description>&lt;h2 id="about">About&lt;/h2>
+commands:&lt;/p></description></item><item><title>Quickstart (MCP with Neo4j)</title><link>https://googleapis.github.io/genai-toolbox/dev/samples/neo4j/mcp_quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/samples/neo4j/mcp_quickstart/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
+&lt;p>&lt;a href="https://modelcontextprotocol.io">Model Context Protocol&lt;/a> is an open protocol that standardizes how applications provide context to LLMs. Check out this page on how to &lt;a href="https://googleapis.github.io/genai-toolbox/dev/how-to/connect_via_mcp/">connect to Toolbox via MCP&lt;/a>.&lt;/p>
+&lt;h2 id="step-1-set-up-your-neo4j-database-and-data">Step 1: Set up your Neo4j Database and Data&lt;/h2>
+&lt;p>In this section, you&amp;rsquo;ll set up a database and populate it with sample data for a movies-related agent. This guide assumes you have a running Neo4j instance, either locally or in the cloud.&lt;/p>
+&lt;p>. &lt;strong>Populate the database with data.&lt;/strong>
+To make this quickstart straightforward, we&amp;rsquo;ll use the built-in Movies dataset available in Neo4j.&lt;/p></description></item><item><title>redis</title><link>https://googleapis.github.io/genai-toolbox/dev/resources/tools/redis/redis/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/resources/tools/redis/redis/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>A redis tool executes a series of pre-defined Redis commands against a
 Redis source.&lt;/p>
 &lt;p>The specified Redis commands are executed sequentially. Each command is
