@@ -41,8 +41,7 @@ const Guidance = `Tool guidance:
 
 Usage guidance:
   1. If ` + "`disambiguation_question`" + ` is produced, then solicit the needed inputs from the user and try the tool with a new ` + "`query`" + ` that has the needed clarification.
-  2. If ` + "`natural_language_answer`" + ` is produced, use ` + "`intent_explanation`" + ` and ` + "`generated_query`" + ` to see if you need to clarify any assumptions for the user.
-  3. If the tool output indicates failure or empty results, explain that clearly using the provided reasoning.`
+  2. If ` + "`natural_language_answer`" + ` is produced, use ` + "`intent_explanation`" + ` and ` + "`generated_query`" + ` to see if you need to clarify any assumptions for the user.`
 
 func init() {
 	if !tools.Register(kind, newConfig) {
