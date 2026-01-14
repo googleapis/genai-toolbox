@@ -17,7 +17,9 @@ package bigquery
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"net/http"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -26,17 +28,23 @@ import (
 	dataplexapi "cloud.google.com/go/dataplex/apiv1"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"github.com/googleapis/genai-toolbox/internal/util/orderedmap"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/impersonate"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
 const SourceKind string = "bigquery"
+
+// CloudPlatformScope is a broad scope for Google Cloud Platform services.
+const CloudPlatformScope = "https://www.googleapis.com/auth/cloud-platform"
 
 const (
 	// No write operations are allowed.
@@ -72,14 +80,43 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	// BigQuery configs
-	Name                      string   `yaml:"name" validate:"required"`
-	Kind                      string   `yaml:"kind" validate:"required"`
-	Project                   string   `yaml:"project" validate:"required"`
-	Location                  string   `yaml:"location"`
-	WriteMode                 string   `yaml:"writeMode"`
-	AllowedDatasets           []string `yaml:"allowedDatasets"`
-	UseClientOAuth            bool     `yaml:"useClientOAuth"`
-	ImpersonateServiceAccount string   `yaml:"impersonateServiceAccount"`
+	Name                      string              `yaml:"name" validate:"required"`
+	Kind                      string              `yaml:"kind" validate:"required"`
+	Project                   string              `yaml:"project" validate:"required"`
+	Location                  string              `yaml:"location"`
+	WriteMode                 string              `yaml:"writeMode"`
+	AllowedDatasets           StringOrStringSlice `yaml:"allowedDatasets"`
+	UseClientOAuth            bool                `yaml:"useClientOAuth"`
+	ImpersonateServiceAccount string              `yaml:"impersonateServiceAccount"`
+	Scopes                    StringOrStringSlice `yaml:"scopes"`
+	MaxQueryResultRows        int                 `yaml:"maxQueryResultRows"`
+}
+
+// StringOrStringSlice is a custom type that can unmarshal both a single string
+// (which it splits by comma) and a sequence of strings into a string slice.
+type StringOrStringSlice []string
+
+// UnmarshalYAML implements the yaml.Unmarshaler interface.
+func (s *StringOrStringSlice) UnmarshalYAML(unmarshal func(any) error) error {
+	var v any
+	if err := unmarshal(&v); err != nil {
+		return err
+	}
+	switch val := v.(type) {
+	case string:
+		*s = strings.Split(val, ",")
+		return nil
+	case []any:
+		for _, item := range val {
+			if str, ok := item.(string); ok {
+				*s = append(*s, str)
+			} else {
+				return fmt.Errorf("element in sequence is not a string: %v", item)
+			}
+		}
+		return nil
+	}
+	return fmt.Errorf("cannot unmarshal %T into StringOrStringSlice", v)
 }
 
 func (r Config) SourceConfigKind() string {
@@ -89,6 +126,10 @@ func (r Config) SourceConfigKind() string {
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	if r.WriteMode == "" {
 		r.WriteMode = WriteModeAllowed
+	}
+
+	if r.MaxQueryResultRows == 0 {
+		r.MaxQueryResultRows = 50
 	}
 
 	if r.WriteMode == WriteModeProtected && r.UseClientOAuth {
@@ -114,7 +155,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Client:             client,
 		RestService:        restService,
 		TokenSource:        tokenSource,
-		MaxQueryResultRows: 50,
+		MaxQueryResultRows: r.MaxQueryResultRows,
 		ClientCreator:      clientCreator,
 	}
 
@@ -128,7 +169,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	} else {
 		// Initializes a BigQuery Google SQL source
-		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.ImpersonateServiceAccount)
+		client, restService, tokenSource, err = initBigQueryConnection(ctx, tracer, r.Name, r.Project, r.Location, r.ImpersonateServiceAccount, r.Scopes)
 		if err != nil {
 			return nil, fmt.Errorf("error creating client from ADC: %w", err)
 		}
@@ -391,19 +432,26 @@ func (s *Source) BigQueryTokenSource() oauth2.TokenSource {
 	return s.TokenSource
 }
 
-func (s *Source) BigQueryTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error) {
+func (s *Source) BigQueryTokenSourceWithScope(ctx context.Context, scopes []string) (oauth2.TokenSource, error) {
+	if len(scopes) == 0 {
+		scopes = s.Scopes
+		if len(scopes) == 0 {
+			scopes = []string{CloudPlatformScope}
+		}
+	}
+
 	if s.ImpersonateServiceAccount != "" {
-		// Create impersonated credentials token source with the requested scope
+		// Create impersonated credentials token source with the requested scopes
 		ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
 			TargetPrincipal: s.ImpersonateServiceAccount,
-			Scopes:          []string{scope},
+			Scopes:          scopes,
 		})
 		if err != nil {
-			return nil, fmt.Errorf("failed to create impersonated credentials for %q with scope %q: %w", s.ImpersonateServiceAccount, scope, err)
+			return nil, fmt.Errorf("failed to create impersonated credentials for %q with scopes %v: %w", s.ImpersonateServiceAccount, scopes, err)
 		}
 		return ts, nil
 	}
-	return google.DefaultTokenSource(ctx, scope)
+	return google.DefaultTokenSource(ctx, scopes...)
 }
 
 func (s *Source) GetMaxQueryResultRows() int {
@@ -449,7 +497,7 @@ func (s *Source) lazyInitDataplexClient(ctx context.Context, tracer trace.Tracer
 
 	return func() (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
 		once.Do(func() {
-			c, cc, e := initDataplexConnection(ctx, tracer, s.Name, s.Project, s.UseClientOAuth, s.ImpersonateServiceAccount)
+			c, cc, e := initDataplexConnection(ctx, tracer, s.Name, s.Project, s.UseClientOAuth, s.ImpersonateServiceAccount, s.Scopes)
 			if e != nil {
 				err = fmt.Errorf("failed to initialize dataplex client: %w", e)
 				return
@@ -483,6 +531,131 @@ func (s *Source) lazyInitDataplexClient(ctx context.Context, tracer trace.Tracer
 	}
 }
 
+func (s *Source) RetrieveClientAndService(accessToken tools.AccessToken) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
+	bqClient := s.BigQueryClient()
+	restService := s.BigQueryRestService()
+
+	// Initialize new client if using user OAuth token
+	if s.UseClientAuthorization() {
+		tokenStr, err := accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, nil, fmt.Errorf("error parsing access token: %w", err)
+		}
+		bqClient, restService, err = s.BigQueryClientCreator()(tokenStr, true)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error creating client from OAuth access token: %w", err)
+		}
+	}
+	return bqClient, restService, nil
+}
+
+func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, statement, statementType string, params []bigqueryapi.QueryParameter, connProps []*bigqueryapi.ConnectionProperty) (any, error) {
+	query := bqClient.Query(statement)
+	query.Location = bqClient.Location
+	if params != nil {
+		query.Parameters = params
+	}
+	if connProps != nil {
+		query.ConnectionProperties = connProps
+	}
+
+	// This block handles SELECT statements, which return a row set.
+	// We iterate through the results, convert each row into a map of
+	// column names to values, and return the collection of rows.
+	job, err := query.Run(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to execute query: %w", err)
+	}
+	it, err := job.Read(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to read query results: %w", err)
+	}
+
+	var out []any
+	for s.MaxQueryResultRows <= 0 || len(out) < s.MaxQueryResultRows {
+		var val []bigqueryapi.Value
+		err = it.Next(&val)
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("unable to iterate through query results: %w", err)
+		}
+		schema := it.Schema
+		row := orderedmap.Row{}
+		for i, field := range schema {
+			row.Add(field.Name, NormalizeValue(val[i]))
+		}
+		out = append(out, row)
+	}
+	// If the query returned any rows, return them directly.
+	if len(out) > 0 {
+		return out, nil
+	}
+
+	// This handles the standard case for a SELECT query that successfully
+	// executes but returns zero rows.
+	if statementType == "SELECT" {
+		return "The query returned 0 rows.", nil
+	}
+	// This is the fallback for a successful query that doesn't return content.
+	// In most cases, this will be for DML/DDL statements like INSERT, UPDATE, CREATE, etc.
+	// However, it is also possible that this was a query that was expected to return rows
+	// but returned none, a case that we cannot distinguish here.
+	return "Query executed successfully and returned no content.", nil
+}
+
+// NormalizeValue converts BigQuery specific types to standard JSON-compatible types.
+// Specifically, it handles *big.Rat (used for NUMERIC/BIGNUMERIC) by converting
+// them to decimal strings with up to 38 digits of precision, trimming trailing zeros.
+// It recursively handles slices (arrays) and maps (structs) using reflection.
+func NormalizeValue(v any) any {
+	if v == nil {
+		return nil
+	}
+
+	// Handle *big.Rat specifically.
+	if rat, ok := v.(*big.Rat); ok {
+		// Convert big.Rat to a decimal string.
+		// Use a precision of 38 digits (enough for BIGNUMERIC and NUMERIC)
+		// and trim trailing zeros to match BigQuery's behavior.
+		s := rat.FloatString(38)
+		if strings.Contains(s, ".") {
+			s = strings.TrimRight(s, "0")
+			s = strings.TrimRight(s, ".")
+		}
+		return s
+	}
+
+	// Use reflection for slices and maps to handle various underlying types.
+	rv := reflect.ValueOf(v)
+	switch rv.Kind() {
+	case reflect.Slice, reflect.Array:
+		// Preserve []byte as is, so json.Marshal encodes it as Base64 string (BigQuery BYTES behavior).
+		if rv.Type().Elem().Kind() == reflect.Uint8 {
+			return v
+		}
+		newSlice := make([]any, rv.Len())
+		for i := 0; i < rv.Len(); i++ {
+			newSlice[i] = NormalizeValue(rv.Index(i).Interface())
+		}
+		return newSlice
+	case reflect.Map:
+		// Ensure keys are strings to produce a JSON-compatible map.
+		if rv.Type().Key().Kind() != reflect.String {
+			return v
+		}
+		newMap := make(map[string]any, rv.Len())
+		iter := rv.MapRange()
+		for iter.Next() {
+			newMap[iter.Key().String()] = NormalizeValue(iter.Value().Interface())
+		}
+		return newMap
+	}
+
+	return v
+}
+
 func initBigQueryConnection(
 	ctx context.Context,
 	tracer trace.Tracer,
@@ -490,6 +663,7 @@ func initBigQueryConnection(
 	project string,
 	location string,
 	impersonateServiceAccount string,
+	scopes []string,
 ) (*bigqueryapi.Client, *bigqueryrestapi.Service, oauth2.TokenSource, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
 	defer span.End()
@@ -502,12 +676,21 @@ func initBigQueryConnection(
 	var tokenSource oauth2.TokenSource
 	var opts []option.ClientOption
 
+	var credScopes []string
+	if len(scopes) > 0 {
+		credScopes = scopes
+	} else if impersonateServiceAccount != "" {
+		credScopes = []string{CloudPlatformScope}
+	} else {
+		credScopes = []string{bigqueryapi.Scope}
+	}
+
 	if impersonateServiceAccount != "" {
-		// Create impersonated credentials token source with cloud-platform scope
+		// Create impersonated credentials token source
 		// This broader scope is needed for tools like conversational analytics
 		cloudPlatformTokenSource, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
 			TargetPrincipal: impersonateServiceAccount,
-			Scopes:          []string{"https://www.googleapis.com/auth/cloud-platform"},
+			Scopes:          credScopes,
 		})
 		if err != nil {
 			return nil, nil, nil, fmt.Errorf("failed to create impersonated credentials for %q: %w", impersonateServiceAccount, err)
@@ -519,9 +702,9 @@ func initBigQueryConnection(
 		}
 	} else {
 		// Use default credentials
-		cred, err := google.FindDefaultCredentials(ctx, bigqueryapi.Scope)
+		cred, err := google.FindDefaultCredentials(ctx, credScopes...)
 		if err != nil {
-			return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scope %q: %w", bigqueryapi.Scope, err)
+			return nil, nil, nil, fmt.Errorf("failed to find default Google Cloud credentials with scopes %v: %w", credScopes, err)
 		}
 		tokenSource = cred.TokenSource
 		opts = []option.ClientOption{
@@ -612,6 +795,7 @@ func initDataplexConnection(
 	project string,
 	useClientOAuth bool,
 	impersonateServiceAccount string,
+	scopes []string,
 ) (*dataplexapi.CatalogClient, DataplexClientCreator, error) {
 	var client *dataplexapi.CatalogClient
 	var clientCreator DataplexClientCreator
@@ -630,11 +814,16 @@ func initDataplexConnection(
 	} else {
 		var opts []option.ClientOption
 
+		credScopes := scopes
+		if len(credScopes) == 0 {
+			credScopes = []string{CloudPlatformScope}
+		}
+
 		if impersonateServiceAccount != "" {
 			// Create impersonated credentials token source
 			ts, err := impersonate.CredentialsTokenSource(ctx, impersonate.CredentialsConfig{
 				TargetPrincipal: impersonateServiceAccount,
-				Scopes:          []string{"https://www.googleapis.com/auth/cloud-platform"},
+				Scopes:          credScopes,
 			})
 			if err != nil {
 				return nil, nil, fmt.Errorf("failed to create impersonated credentials for %q: %w", impersonateServiceAccount, err)
@@ -645,7 +834,7 @@ func initDataplexConnection(
 			}
 		} else {
 			// Use default credentials
-			cred, err := google.FindDefaultCredentials(ctx)
+			cred, err := google.FindDefaultCredentials(ctx, credScopes...)
 			if err != nil {
 				return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
 			}

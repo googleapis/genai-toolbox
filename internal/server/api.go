@@ -172,7 +172,14 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	accessToken := tools.AccessToken(r.Header.Get("Authorization"))
 
 	// Check if this specific tool requires the standard authorization header
-	if tool.RequiresClientAuthorization(s.ResourceMgr) {
+	clientAuth, err := tool.RequiresClientAuthorization(s.ResourceMgr)
+	if err != nil {
+		errMsg := fmt.Errorf("error during invocation: %w", err)
+		s.logger.DebugContext(ctx, errMsg.Error())
+		_ = render.Render(w, r, newErrResponse(errMsg, http.StatusNotFound))
+		return
+	}
+	if clientAuth {
 		if accessToken == "" {
 			err = fmt.Errorf("tool requires client authorization but access token is missing from the request header")
 			s.logger.DebugContext(ctx, err.Error())
@@ -239,6 +246,14 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	}
 	s.logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
+	params, err = tool.EmbedParams(ctx, params, s.ResourceMgr.GetEmbeddingModelMap())
+	if err != nil {
+		err = fmt.Errorf("error embedding parameters: %w", err)
+		s.logger.DebugContext(ctx, err.Error())
+		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
+		return
+	}
+
 	res, err := tool.Invoke(ctx, s.ResourceMgr, params, accessToken)
 
 	// Determine what error to return to the users.
@@ -255,7 +270,7 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		}
 
 		if statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
-			if tool.RequiresClientAuthorization(s.ResourceMgr) {
+			if clientAuth {
 				// Propagate the original 401/403 error.
 				s.logger.DebugContext(ctx, fmt.Sprintf("error invoking tool. Client credentials lack authorization to the source: %v", err))
 				_ = render.Render(w, r, newErrResponse(err, statusCode))

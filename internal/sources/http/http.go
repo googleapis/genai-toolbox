@@ -16,7 +16,9 @@ package http
 import (
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -107,7 +109,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Config: r,
-		Client: &client,
+		client: &client,
 	}
 	return s, nil
 
@@ -117,7 +119,7 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Config
-	Client *http.Client
+	client *http.Client
 }
 
 func (s *Source) SourceKind() string {
@@ -126,4 +128,45 @@ func (s *Source) SourceKind() string {
 
 func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
+}
+
+func (s *Source) HttpDefaultHeaders() map[string]string {
+	return s.DefaultHeaders
+}
+
+func (s *Source) HttpBaseURL() string {
+	return s.BaseURL
+}
+
+func (s *Source) HttpQueryParams() map[string]string {
+	return s.QueryParams
+}
+
+func (s *Source) Client() *http.Client {
+	return s.client
+}
+
+func (s *Source) RunRequest(req *http.Request) (any, error) {
+	// Make request and fetch response
+	resp, err := s.Client().Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("error making HTTP request: %s", err)
+	}
+	defer resp.Body.Close()
+
+	var body []byte
+	body, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return nil, fmt.Errorf("unexpected status code: %d, response body: %s", resp.StatusCode, string(body))
+	}
+
+	var data any
+	if err = json.Unmarshal(body, &data); err != nil {
+		// if unable to unmarshal data, return result as string.
+		return string(body), nil
+	}
+	return data, nil
 }

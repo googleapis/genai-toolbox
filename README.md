@@ -140,7 +140,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.23.0
+> export VERSION=0.25.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/linux/amd64/toolbox
 > chmod +x toolbox
 > ```
@@ -153,7 +153,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.23.0
+> export VERSION=0.25.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/arm64/toolbox
 > chmod +x toolbox
 > ```
@@ -166,7 +166,7 @@ To install Toolbox as a binary:
 >
 > ```sh
 > # see releases page for other versions
-> export VERSION=0.23.0
+> export VERSION=0.25.0
 > curl -L -o toolbox https://storage.googleapis.com/genai-toolbox/v$VERSION/darwin/amd64/toolbox
 > chmod +x toolbox
 > ```
@@ -179,7 +179,7 @@ To install Toolbox as a binary:
 >
 > ```cmd
 > :: see releases page for other versions
-> set VERSION=0.23.0
+> set VERSION=0.25.0
 > curl -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v%VERSION%/windows/amd64/toolbox.exe"
 > ```
 >
@@ -191,7 +191,7 @@ To install Toolbox as a binary:
 >
 > ```powershell
 > # see releases page for other versions
-> $VERSION = "0.23.0"
+> $VERSION = "0.25.0"
 > curl.exe -o toolbox.exe "https://storage.googleapis.com/genai-toolbox/v$VERSION/windows/amd64/toolbox.exe"
 > ```
 >
@@ -204,7 +204,7 @@ You can also install Toolbox as a container:
 
 ```sh
 # see releases page for other versions
-export VERSION=0.23.0
+export VERSION=0.25.0
 docker pull us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION
 ```
 
@@ -228,7 +228,7 @@ To install from source, ensure you have the latest version of
 [Go installed](https://go.dev/doc/install), and then run the following command:
 
 ```sh
-go install github.com/googleapis/genai-toolbox@v0.23.0
+go install github.com/googleapis/genai-toolbox@v0.25.0
 ```
 <!-- {x-release-please-end} -->
 
@@ -272,7 +272,7 @@ To run Toolbox from binary:
 To run the server after pulling the [container image](#installing-the-server):
 
 ```sh
-export VERSION=0.11.0 # Use the version you pulled
+export VERSION=0.24.0 # Use the version you pulled
 docker run -p 5000:5000 \
 -v $(pwd)/tools.yaml:/app/tools.yaml \
 us-central1-docker.pkg.dev/database-toolbox/toolbox/toolbox:$VERSION \
@@ -1035,12 +1035,12 @@ The version will be incremented  as follows:
 
 ### Post-1.0.0 Versioning
 
-Once the project reaches a stable `1.0.0` release, the versioning will follow
-the more common convention:
+Once the project reaches a stable `1.0.0` release, the version number
+**`MAJOR.MINOR.PATCH`** will follow the more common convention:
 
-- **`MAJOR.MINOR.PATCH`**: Incremented for incompatible API changes.
-- **`MAJOR.MINOR.PATCH`**: Incremented for new, backward-compatible functionality.
-- **`MAJOR.MINOR.PATCH`**: Incremented for backward-compatible bug fixes.
+- **`MAJOR`**: Incremented for incompatible API changes.
+- **`MINOR`**: Incremented for new, backward-compatible functionality.
+- **`PATCH`**: Incremented for backward-compatible bug fixes.
 
 The public API that this applies to is the CLI associated with Toolbox, the
 interactions with official SDKs, and the definitions in the `tools.yaml` file.

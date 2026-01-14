@@ -15,7 +15,9 @@ package looker
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -160,10 +162,6 @@ func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
 }
 
-func (s *Source) GetApiSettings() *rtl.ApiSettings {
-	return s.ApiSettings
-}
-
 func (s *Source) UseClientAuthorization() bool {
 	return strings.ToLower(s.UseClientOAuth) != "false"
 }
@@ -186,6 +184,73 @@ func (s *Source) GoogleCloudTokenSource() oauth2.TokenSource {
 
 func (s *Source) GoogleCloudTokenSourceWithScope(ctx context.Context, scope string) (oauth2.TokenSource, error) {
 	return google.DefaultTokenSource(ctx, scope)
+}
+
+func (s *Source) LookerClient() *v4.LookerSDK {
+	return s.Client
+}
+
+func (s *Source) LookerApiSettings() *rtl.ApiSettings {
+	return s.ApiSettings
+}
+
+func (s *Source) LookerShowHiddenFields() bool {
+	return s.ShowHiddenFields
+}
+
+func (s *Source) LookerShowHiddenModels() bool {
+	return s.ShowHiddenModels
+}
+
+func (s *Source) LookerShowHiddenExplores() bool {
+	return s.ShowHiddenExplores
+}
+
+func (s *Source) LookerSessionLength() int64 {
+	return s.SessionLength
+}
+
+// Make types for RoundTripper
+type transportWithAuthHeader struct {
+	Base      http.RoundTripper
+	AuthToken string
+}
+
+func (t *transportWithAuthHeader) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("x-looker-appid", "go-sdk")
+	req.Header.Set("Authorization", t.AuthToken)
+	return t.Base.RoundTrip(req)
+}
+
+func (s *Source) GetLookerSDK(accessToken string) (*v4.LookerSDK, error) {
+	if s.UseClientAuthorization() {
+		if accessToken == "" {
+			return nil, fmt.Errorf("no access token supplied with request")
+		}
+
+		session := rtl.NewAuthSession(*s.LookerApiSettings())
+		// Configure base transport with TLS
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: !s.LookerApiSettings().VerifySsl,
+			},
+		}
+
+		// Build transport for end user token
+		session.Client = http.Client{
+			Transport: &transportWithAuthHeader{
+				Base:      transport,
+				AuthToken: accessToken,
+			},
+		}
+		// return SDK with new Transport
+		return v4.NewLookerSDK(session), nil
+	}
+
+	if s.LookerClient() == nil {
+		return nil, fmt.Errorf("client id or client secret not valid")
+	}
+	return s.LookerClient(), nil
 }
 
 func initGoogleCloudConnection(ctx context.Context) (oauth2.TokenSource, error) {
