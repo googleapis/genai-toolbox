@@ -92,7 +92,7 @@ func BatchLogsURLFromProto(batchPb *dataprocpb.Batch) (string, error) {
 }
 
 // ExtractSessionTemplateDetails extracts the project ID, location, and session template ID from a fully qualified sessionTemplateName.
-func ExtractSessionTemplateDetails(sessionTemplateName string) (projectID, location, batchID string, err error) {
+func ExtractSessionTemplateDetails(sessionTemplateName string) (projectID, location, sessionTemplateID string, err error) {
 	matches := sessionTemplateFullNameRegex.FindStringSubmatch(sessionTemplateName)
 	if len(matches) < 4 {
 		return "", "", "", fmt.Errorf("failed to parse session template name: %s", sessionTemplateName)

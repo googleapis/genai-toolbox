@@ -163,11 +163,11 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 			},
 			"get-session-template": map[string]any{
 				"kind":   "serverless-spark-get-session-template",
-				"source": "my-session-template",
+				"source": "my-spark",
 			},
-			"get-batch-with-auth": map[string]any{
+			"get-session-template-with-auth": map[string]any{
 				"kind":         "serverless-spark-get-session-template",
-				"source":       "my-session-template",
+				"source":       "my-spark",
 				"authRequired": []string{"my-google-auth"},
 			},
 		},
