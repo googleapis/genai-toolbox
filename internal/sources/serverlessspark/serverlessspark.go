@@ -134,7 +134,7 @@ func (s *Source) Close() error {
 	}
 	if err := s.SessionTemplateClient.Close(); err != nil {
 		return err
-	
+	}
 	if err := s.OpsClient.Close(); err != nil {
 		return err
 	}
