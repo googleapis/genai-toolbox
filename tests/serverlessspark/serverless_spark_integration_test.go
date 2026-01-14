@@ -161,6 +161,15 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				"source":       "my-spark",
 				"authRequired": []string{"my-google-auth"},
 			},
+			"get-session-template": map[string]any{
+				"kind":   "serverless-spark-get-session-template",
+				"source": "my-session-template",
+			},
+			"get-batch-with-auth": map[string]any{
+				"kind":         "serverless-spark-get-session-template",
+				"source":       "my-session-template",
+				"authRequired": []string{"my-google-auth"},
+			},
 		},
 	}
 
@@ -184,6 +193,12 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 		t.Fatalf("failed to create dataproc batch client: %v", err)
 	}
 	defer batchClient.Close()
+
+	sessionTemplateClient, err := dataproc.NewSessionTemplateControllerClient(ctx, option.WithEndpoint(endpoint))
+	if err != nil {
+		t.Fatalf("failed to create dataproc session template client: %v", err)
+	}
+	defer sessionTemplateClient.Close()
 
 	t.Run("list-batches", func(t *testing.T) {
 		// list-batches is sensitive to state changes, so this test must run sequentially.
