@@ -16,17 +16,15 @@ package serverlesssparkgetsessiontemplate
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
-	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
+	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	"github.com/googleapis/genai-toolbox/internal/sources/serverlessspark"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 const kind = "serverless-spark-get-session-template"
@@ -43,6 +41,11 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 		return nil, err
 	}
 	return actual, nil
+}
+
+type compatibleSource interface {
+	GetSessionTemplateControllerClient() *dataproc.SessionTemplateControllerClient
+	GetSessionTemplate(context.Context, string) (map[string]any, error)
 }
 
 type Config struct {
@@ -63,16 +66,6 @@ func (cfg Config) ToolConfigKind() string {
 
 // Initialize creates a new Tool instance.
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	rawS, ok := srcs[cfg.Source]
-	if !ok {
-		return nil, fmt.Errorf("source %q not found", cfg.Source)
-	}
-
-	ds, ok := rawS.(*serverlessspark.Source)
-	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `%s`", kind, serverlessspark.SourceKind)
-	}
-
 	desc := cfg.Description
 	if desc == "" {
 		desc = "Gets a Serverless Spark (aka Dataproc Serverless) session template"
@@ -91,7 +84,6 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	return Tool{
 		Config:      cfg,
-		Source:      ds,
 		manifest:    tools.Manifest{Description: desc, Parameters: allParameters.Manifest()},
 		mcpManifest: mcpManifest,
 		Parameters:  allParameters,
@@ -101,52 +93,33 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 // Tool is the implementation of the tool.
 type Tool struct {
 	Config
-
-	Source *serverlessspark.Source
-
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
 	Parameters  parameters.Parameters
 }
 
 // Invoke executes the tool's operation.
-func (t Tool) Invoke(ctx context.Context, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	client := t.Source.GetSessionTemplateControllerClient()
-
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	if err != nil {
+		return nil, err
+	}
 	paramMap := params.AsMap()
 	name, ok := paramMap["name"].(string)
 	if !ok {
 		return nil, fmt.Errorf("missing required parameter: name")
 	}
-	
 	if strings.Contains(name, "/") {
 		return nil, fmt.Errorf("name must be a short session template name without '/': %s", name)
 	}
-
-	req := &dataprocpb.GetSessionTemplateRequest{
-		Name: fmt.Sprintf("projects/%s/locations/%s/sessionTemplates/%s", t.Source.Project, t.Source.Location, name),
-	}
-
-	sessionTemplatePb, err := client.GetSessionTemplate(ctx, req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get session template: %w", err)
-	}
-
-	jsonBytes, err := protojson.Marshal(sessionTemplatePb)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal session template to JSON: %w", err)
-	}
-
-	var result map[string]any
-	if err := json.Unmarshal(jsonBytes, &result); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal session template JSON: %w", err)
-	}
-
-	return result, nil
+	return source.GetSessionTemplate(ctx, name)
 }
-
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.Parameters, data, claims)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return parameters.EmbedParams(ctx, t.Parameters, paramValues, embeddingModelsMap, nil)
 }
 
 func (t Tool) Manifest() tools.Manifest {
@@ -161,15 +134,15 @@ func (t Tool) Authorized(services []string) bool {
 	return tools.IsAuthorized(t.AuthRequired, services)
 }
 
-func (t Tool) RequiresClientAuthorization() bool {
+func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
 	// Client OAuth not supported, rely on ADCs.
-	return false
+	return false, nil
 }
 
 func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) GetAuthTokenHeaderName() string {
-	return "Authorization"
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+	return "Authorization", nil
 }

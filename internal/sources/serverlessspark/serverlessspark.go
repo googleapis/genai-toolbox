@@ -305,3 +305,26 @@ func (s *Source) GetBatch(ctx context.Context, name string) (map[string]any, err
 
 	return wrappedResult, nil
 }
+func (s *Source) GetSessionTemplate(ctx context.Context, name string) (map[string]any, error) {
+	client := s.GetSessionTemplateControllerClient()
+	req := &dataprocpb.GetSessionTemplateRequest{
+		Name: fmt.Sprintf("projects/%s/locations/%s/sessionTemplates/%s", s.GetProject(), s.GetLocation(), name),
+	}
+	
+	sessionTemplatePb, err := client.GetSessionTemplate(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get session template: %w", err)
+	}
+
+	jsonBytes, err := protojson.Marshal(sessionTemplatePb)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal session template to JSON: %w", err)
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal(jsonBytes, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal session template JSON: %w", err)
+	}
+
+	return result, nil
+}
