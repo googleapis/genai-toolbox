@@ -69,9 +69,9 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		return nil, fmt.Errorf("error in User Agent retrieval: %s", err)
 	}
 	endpoint := fmt.Sprintf("%s-dataproc.googleapis.com:443", r.Location)
-	client, err := dataproc.NewBatchControllerClient(ctx, option.WithEndpoint(endpoint), option.WithUserAgent(ua))
+	batchClient, err := dataproc.NewBatchControllerClient(ctx, option.WithEndpoint(endpoint), option.WithUserAgent(ua))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create dataproc client: %w", err)
+		return nil, fmt.Errorf("failed to create dataproc batch client: %w", err)
 	}
 	opsClient, err := longrunning.NewOperationsClient(ctx, option.WithEndpoint(endpoint), option.WithUserAgent(ua))
 	if err != nil {
@@ -80,7 +80,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 
 	s := &Source{
 		Config:    r,
-		Client:    client,
+		BatchClient:    batchClient,
 		OpsClient: opsClient,
 	}
 	return s, nil
@@ -90,7 +90,7 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Config
-	Client    *dataproc.BatchControllerClient
+	BatchClient    *dataproc.BatchControllerClient
 	OpsClient *longrunning.OperationsClient
 }
 
@@ -111,7 +111,7 @@ func (s *Source) GetLocation() string {
 }
 
 func (s *Source) GetBatchControllerClient() *dataproc.BatchControllerClient {
-	return s.Client
+	return s.BatchClient
 }
 
 func (s *Source) GetOperationsClient(ctx context.Context) (*longrunning.OperationsClient, error) {
@@ -119,7 +119,7 @@ func (s *Source) GetOperationsClient(ctx context.Context) (*longrunning.Operatio
 }
 
 func (s *Source) Close() error {
-	if err := s.Client.Close(); err != nil {
+	if err := s.BatchClient.Close(); err != nil {
 		return err
 	}
 	if err := s.OpsClient.Close(); err != nil {
