@@ -105,25 +105,29 @@ func (s *Source) UseClientAuthorization() bool {
 }
 
 func (s *Source) RunQuery(ctx context.Context, tokenStr string, req *geminidataanalyticspb.QueryDataRequest) (*geminidataanalyticspb.QueryDataResponse, error) {
-	var client *geminidataanalytics.DataChatClient
-	var err error
+	client, cleanup, err := s.GetClient(ctx, tokenStr)
+	if err != nil {
+		return nil, err
+	}
+	defer cleanup()
 
+	return client.QueryData(ctx, req)
+}
+
+func (s *Source) GetClient(ctx context.Context, tokenStr string) (*geminidataanalytics.DataChatClient, func(), error) {
 	if s.UseClientOAuth {
 		if tokenStr == "" {
-			return nil, fmt.Errorf("client-side OAuth is enabled but no access token was provided")
+			return nil, nil, fmt.Errorf("client-side OAuth is enabled but no access token was provided")
 		}
 		token := &oauth2.Token{AccessToken: tokenStr}
-		client, err = geminidataanalytics.NewDataChatClient(ctx,
+		client, err := geminidataanalytics.NewDataChatClient(ctx,
 			option.WithUserAgent(s.userAgent),
 			option.WithTokenSource(oauth2.StaticTokenSource(token)),
 		)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create per-request DataChatClient: %w", err)
+			return nil, nil, fmt.Errorf("failed to create per-request DataChatClient: %w", err)
 		}
-		defer client.Close()
-	} else {
-		client = s.Client
+		return client, func() { client.Close() }, nil
 	}
-
-	return client.QueryData(ctx, req)
+	return s.Client, func() {}, nil
 }
