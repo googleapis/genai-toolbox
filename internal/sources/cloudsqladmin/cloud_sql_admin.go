@@ -352,6 +352,28 @@ func (s *Source) GetWaitForOperations(ctx context.Context, service *sqladmin.Ser
 	return nil, nil
 }
 
+func (s *Source) InsertBackupRun(ctx context.Context, project, instance, location, backupDescription, accessToken string) (any, error) {
+	backupRun := &sqladmin.BackupRun{}
+	if location != "" {
+		backupRun.Location = location
+	}
+	if backupDescription != "" {
+		backupRun.Description = backupDescription
+	}
+
+	service, err := s.GetService(ctx, string(accessToken))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := service.BackupRuns.Insert(project, instance, backupRun).Do()
+	if err != nil {
+		return nil, fmt.Errorf("error creating backup: %w", err)
+	}
+
+	return resp, nil
+}
+
 func generateCloudSQLConnectionMessage(ctx context.Context, source *Source, logger log.Logger, opResponse map[string]any, connectionMessageTemplate string) (string, bool) {
 	operationType, ok := opResponse["operationType"].(string)
 	if !ok || operationType != "CREATE_DATABASE" {

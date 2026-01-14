@@ -187,6 +187,7 @@ See [Usage Examples](../reference/cli.md#examples).
         manage existing resources.
         * All `viewer` tools
         * `create_database`
+        * `create_backup`
     *   **Cloud SQL Admin** (`roles/cloudsql.admin`): Provides full control over
         all resources.
         * All `editor` and `viewer` tools
@@ -203,6 +204,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
     *   `clone_instance`: Creates a clone for an existing Cloud SQL for MySQL instance.
+    *   `create_backup`: Creates a backup on a Cloud SQL instance.
 
 ## Cloud SQL for PostgreSQL
 
@@ -275,6 +277,7 @@ See [Usage Examples](../reference/cli.md#examples).
         manage existing resources.
         * All `viewer` tools
         * `create_database`
+        * `create_backup`
     *   **Cloud SQL Admin** (`roles/cloudsql.admin`): Provides full control over
         all resources.
         * All `editor` and `viewer` tools
@@ -290,6 +293,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
     *   `clone_instance`: Creates a clone for an existing Cloud SQL for PostgreSQL instance.
+    *   `create_backup`: Creates a backup on a Cloud SQL instance.
 
 ## Cloud SQL for SQL Server
 
@@ -336,6 +340,7 @@ See [Usage Examples](../reference/cli.md#examples).
         manage existing resources.
         * All `viewer` tools
         * `create_database`
+        * `create_backup`
     *   **Cloud SQL Admin** (`roles/cloudsql.admin`): Provides full control over
         all resources.
         * All `editor` and `viewer` tools
@@ -351,6 +356,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
     *   `clone_instance`: Creates a clone for an existing Cloud SQL for SQL Server instance.
+    *   `create_backup`: Creates a backup on a Cloud SQL instance.
 
 ## Dataplex
 
