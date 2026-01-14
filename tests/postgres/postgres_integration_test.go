@@ -111,12 +111,20 @@ func TestPostgres(t *testing.T) {
 	teardownTable2 := tests.SetupPostgresSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
 	defer teardownTable2(t)
 
+	// Set up table for semanti search
+	tearDownVectorTable := tests.SetupPostgresVectorTable(t, ctx, pool)
+	defer tearDownVectorTable(t)
+
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, PostgresToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "postgres-execute-sql")
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, PostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
+	// Add semantic search tool config
+	insertStmt := "INSERT INTO documents (content, embedding) VALUES ($1, $2)"
+	searchStmt := "SELECT id, content, embedding <-> $1 AS distance FROM documents ORDER BY distance LIMIT 1"
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, PostgresToolKind, insertStmt, searchStmt)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -165,4 +173,5 @@ func TestPostgres(t *testing.T) {
 	tests.RunPostgresListDatabaseStatsTest(t, ctx, pool)
 	tests.RunPostgresListRolesTest(t, ctx, pool)
 	tests.RunPostgresListStoredProcedureTest(t, ctx, pool)
+	tests.RunSemanticSearchToolInvokeTest(t, "null", "The quick brown fox")
 }
