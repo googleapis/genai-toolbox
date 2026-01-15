@@ -87,7 +87,7 @@ steps:
       - "CLOUD_SQL_POSTGRES_REGION=$_REGION"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
     secretEnv:
-      ["CLOUD_SQL_POSTGRES_USER", "CLOUD_SQL_POSTGRES_PASS", "CLIENT_ID"]
+      ["CLOUD_SQL_POSTGRES_USER", "CLOUD_SQL_POSTGRES_PASS", "CLIENT_ID", "API_KEY"]
     volumes:
       - name: "go"
         path: "/gopath"
@@ -134,7 +134,7 @@ steps:
       - "ALLOYDB_POSTGRES_DATABASE=$_DATABASE_NAME"
       - "ALLOYDB_POSTGRES_REGION=$_REGION"
       - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
-    secretEnv: ["ALLOYDB_POSTGRES_USER", "ALLOYDB_POSTGRES_PASS", "CLIENT_ID"]
+    secretEnv: ["ALLOYDB_POSTGRES_USER", "ALLOYDB_POSTGRES_PASS", "CLIENT_ID", "API_KEY"]
     volumes:
       - name: "go"
         path: "/gopath"
