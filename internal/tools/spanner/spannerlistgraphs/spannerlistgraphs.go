@@ -163,6 +163,10 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 	return "Authorization", nil
 }
 
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.AllParams
+}
+
 // GoogleSQL statement for listing graphs
 const googleSQLStatement = `
 WITH FilterGraphNames AS (

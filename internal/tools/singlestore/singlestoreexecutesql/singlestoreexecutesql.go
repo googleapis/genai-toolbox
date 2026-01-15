@@ -143,6 +143,10 @@ func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (boo
 	return false, nil
 }
 
-func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
+func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.sourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

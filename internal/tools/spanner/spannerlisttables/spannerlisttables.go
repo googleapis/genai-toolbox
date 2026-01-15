@@ -189,6 +189,10 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 	return "Authorization", nil
 }
 
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.AllParams
+}
+
 // PostgreSQL statement for listing tables
 const postgresqlStatement = `
 WITH table_info_cte AS (
