@@ -70,6 +70,22 @@ tools:
             FROM   pg_settings
             WHERE  category = 'Autovacuum';
 
+    list_columnar_configurations:
+        kind: postgres-sql
+        source: alloydb-omni-source
+        description: "List AlloyDB Omni columnar-related configurations (name and current setting) from pg_settings."
+        statement: |
+            SELECT name,
+                setting
+            FROM   pg_settings
+            WHERE  name like 'google_columnar_engine.%';
+
+    list_columnar_recommended_columns:
+        kind: postgres-sql
+        source: alloydb-omni-source
+        description: "List AlloyDB Omni columnar-related configurations (name and current setting) from pg_settings."
+        statement: select * from g_columnar_recommended_columns;
+
     list_memory_configurations:
         kind: postgres-sql
         source: alloydb-omni-source
@@ -227,13 +243,15 @@ tools:
         source: alloydb-omni-source
 
 toolsets:
-    alloydb_postgres_database_tools:
+    alloydb_omni_database_tools:
         - execute_sql
         - list_tables
         - list_active_queries
         - list_available_extensions
         - list_installed_extensions
         - list_autovacuum_configurations
+        - list_columnar_configurations
+        - list_columnar_recommended_columns
         - list_memory_configurations
         - list_top_bloated_tables
         - list_replication_slots
