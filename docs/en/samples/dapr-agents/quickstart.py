@@ -14,8 +14,6 @@ from dapr_agents.storage.daprstores.stateservice import StateStoreService
 from dapr_agents.workflow.runners import AgentRunner
 from toolbox_core import ToolboxSyncClient
 
-# TODO(developer): To run a DurableAgent you'll need to serve a durable statestore. See the "Dapr Agents Documentation" below for more details.
-
 queries = [
     "Find hotels in Basel with Basel in its name.",
     "Please book the hotel Hilton Basel for me.",
@@ -42,7 +40,7 @@ def main() -> None:
                 "Don't ask for confirmations from the user.",
                 "If at any point your tools return an error, correct the error based on the error message and try again.",
             ],
-            tools=AgentTool.from_toolbox_many(toolbox_client.load_toolset("my-toolset")), # TODO(developer): Replace "my-toolset" with your actual toolset name.
+            tools=AgentTool.from_toolbox_many(toolbox_client.load_toolset("my-toolset")),
             llm=OpenAIChatClient(model="gpt-4.1-2025-04-14", api_key=os.environ.get("OPENAI_API_KEY", "")),
             state=AgentStateConfig(
                 store=StateStoreService(store_name="statestore"),
@@ -97,19 +95,3 @@ def main() -> None:
 
 
 main()
-
-# TODO(developer): To run this example, you need to write the following file:
-# components/statestore.yaml
-# with the following content:
-"""
-apiVersion: dapr.io/v1alpha1
-kind: Component
-metadata:
-  name: statestore
-spec:
-  type: state.in-memory
-  version: v1
-  metadata:
-  - name: actorStateStore
-    value: "true"
-"""

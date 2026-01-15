@@ -67,10 +67,6 @@ pip install toolbox-llamaindex
 pip install toolbox-core
 {{< /tab >}}
 
-{{< tab header="Dapr Agents" lang="bash" >}}
-
-pip install dapr-agents
-{{< /tab >}}
 {{< /tabpane >}}
 
 1. Install other required dependencies:
@@ -105,10 +101,6 @@ pip install llama-index-llms-google-genai
 pip install google-genai
 {{< /tab >}}
 
-{{< tab header="Dapr Agents" lang="bash" >}}
-curl -fsSL https://raw.githubusercontent.com/dapr/cli/master/install/install.sh | /bin/bash
-# TODO(developer): Make sure to install the correct version: https://docs.dapr.io/getting-started/install-dapr-cli/
-{{< /tab >}}
 {{< /tabpane >}}
 
 1. Create the agent:
@@ -153,12 +145,6 @@ Create a new file named `agent.py` and copy the following code:
 ```
 {{% /tab %}}
 
-{{% tab header="Dapr Agents" text=true %}}
-Create a new file named `agent.py` and copy the following code:
-```py
-{{< include "quickstart/python/dapr-agents/quickstart.py" >}}
-```
-{{% /tab %}}
 {{< /tabpane >}}
 
     {{< tabpane text=true persist=header >}}
@@ -179,10 +165,6 @@ Documentation](https://docs.llamaindex.ai/en/stable/examples/agent/agent_workflo
 To learn more about tool calling with Google GenAI, check out the
 [Google GenAI
 Documentation](https://github.com/googleapis/python-genai?tab=readme-ov-file#manually-declare-and-invoke-a-function-for-function-calling).
-{{% /tab %}}
-{{% tab header="Dapr Agents" lang="en" %}}
-To learn more about Dapr Agents, check out the
-[Dapr Agents Documentation](https://docs.dapr.io/developing-applications/dapr-agents/dapr-agents-introduction/).
 {{% /tab %}}
 {{< /tabpane >}}
 
@@ -215,9 +197,6 @@ python agent.py
 {{< /tab >}}
 {{< tab header="Core" lang="bash" >}}
 python agent.py
-{{< /tab >}}
-{{< tab header="Dapr Agents" lang="bash" >}}
-dapr run --resources-path components python agent.py
 {{< /tab >}}
 {{< /tabpane >}}
 
