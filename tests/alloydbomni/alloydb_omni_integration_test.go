@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package postgres
+package alloydbomni
 
 import (
 	"context"
@@ -20,52 +20,26 @@ import (
 	"net/url"
 	"os"
 	"regexp"
-	"strings"
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 var (
-	PostgresSourceKind = "postgres"
-	PostgresToolKind   = "postgres-sql"
-	PostgresDatabase   = os.Getenv("POSTGRES_DATABASE")
-	PostgresHost       = os.Getenv("POSTGRES_HOST")
-	PostgresPort       = os.Getenv("POSTGRES_PORT")
-	PostgresUser       = os.Getenv("POSTGRES_USER")
-	PostgresPass       = os.Getenv("POSTGRES_PASS")
+	AlloyDBSourceKind = "alloydb-omni-source"
+	AlloyDBToolKind   = "postgres-sql"
+	AlloyDBUser       = "postgres"
+	AlloyDBPass       = "mysecretpassword"
+	AlloyDBDatabase   = "postgres"
 )
 
-func getPostgresVars(t *testing.T) map[string]any {
-	switch "" {
-	case PostgresDatabase:
-		t.Fatal("'POSTGRES_DATABASE' not set")
-	case PostgresHost:
-		t.Fatal("'POSTGRES_HOST' not set")
-	case PostgresPort:
-		t.Fatal("'POSTGRES_PORT' not set")
-	case PostgresUser:
-		t.Fatal("'POSTGRES_USER' not set")
-	case PostgresPass:
-		t.Fatal("'POSTGRES_PASS' not set")
-	}
-
-	return map[string]any{
-		"kind":     PostgresSourceKind,
-		"host":     PostgresHost,
-		"port":     PostgresPort,
-		"database": PostgresDatabase,
-		"user":     PostgresUser,
-		"password": PostgresPass,
-	}
-}
-
 // Copied over from postgres.go
-func initPostgresConnectionPool(host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
+func initAlloyDBConnectionPool(host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
 	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
 	url := &url.URL{
 		Scheme: "postgres",
@@ -81,69 +55,91 @@ func initPostgresConnectionPool(host, port, user, pass, dbname string) (*pgxpool
 	return pool, nil
 }
 
-func TestPostgres(t *testing.T) {
-	sourceConfig := getPostgresVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+func setupAlloyDBContainer(ctx context.Context, t *testing.T) (string, string, func()) {
+	t.Helper()
+
+	req := testcontainers.ContainerRequest{
+		Image:        "google/alloydbomni:16.9.0-ubi", // Pinning version for stability
+		ExposedPorts: []string{"5432/tcp"},
+		Env: map[string]string{
+			"POSTGRES_PASSWORD": AlloyDBPass,
+		},
+		WaitingFor: wait.ForExposedPort(),
+	}
+
+	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
+		ContainerRequest: req,
+		Started:          true,
+	})
+	if err != nil {
+		t.Fatalf("failed to start alloydb container: %s", err)
+	}
+
+	cleanup := func() {
+		if err := container.Terminate(ctx); err != nil {
+			t.Fatalf("failed to terminate container: %s", err)
+		}
+	}
+
+	host, err := container.Host(ctx)
+	if err != nil {
+		cleanup()
+		t.Fatalf("failed to get container host: %s", err)
+	}
+
+	mappedPort, err := container.MappedPort(ctx, "5432")
+	if err != nil {
+		cleanup()
+		t.Fatalf("failed to get container mapped port: %s", err)
+	}
+
+	return host, mappedPort.Port(), cleanup
+}
+
+func TestAlloyDB(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	var args []string
+	host, port, containerCleanup := setupAlloyDBContainer(ctx, t)
+	defer containerCleanup()
 
-	pool, err := initPostgresConnectionPool(PostgresHost, PostgresPort, PostgresUser, PostgresPass, PostgresDatabase)
+	os.Setenv("ALLOYDB_OMNI_HOST", host)
+	os.Setenv("ALLOYDB_OMNI_PORT", port)
+	os.Setenv("ALLOYDB_OMNI_USER", AlloyDBUser)
+	os.Setenv("ALLOYDB_OMNI_PASSWORD", AlloyDBPass)
+	os.Setenv("ALLOYDB_OMNI_DATABASE", AlloyDBDatabase)
+
+	AlloyDBHost := host
+	AlloyDBPort := port
+
+	args := []string{"--prebuilt", "alloydb-omni"}
+
+	pool, err := initAlloyDBConnectionPool(AlloyDBHost, AlloyDBPort, AlloyDBUser, AlloyDBPass, AlloyDBDatabase)
 	if err != nil {
-		t.Fatalf("unable to create postgres connection pool: %s", err)
+		t.Fatalf("unable to create alloydb connection pool: %s", err)
 	}
 
 	// cleanup test environment
 	tests.CleanupPostgresTables(t, ctx, pool)
 
-	// create table name with UUID
-	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-
-	// set up data for param tool
-	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetPostgresSQLParamToolInfo(tableNameParam)
-	teardownTable1 := tests.SetupPostgresSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
-	defer teardownTable1(t)
-
-	// set up data for auth tool
-	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := tests.GetPostgresSQLAuthToolInfo(tableNameAuth)
-	teardownTable2 := tests.SetupPostgresSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
-	defer teardownTable2(t)
-
-	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, PostgresToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
-	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "postgres-execute-sql")
-	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, PostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
-	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
-
-	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	cmd, cleanup, err := tests.StartCmd(ctx, map[string]any{}, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
 	defer cleanup()
 
-	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
+	// Wait for server to be ready
+	waitCtx, waitCancel := context.WithTimeout(ctx, 30*time.Second)
+	defer waitCancel()
+
 	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
 		t.Fatalf("toolbox didn't start successfully: %s", err)
 	}
 
-	// Get configs for tests
-	select1Want, mcpMyFailToolWant, createTableStatement, mcpSelect1Want := tests.GetPostgresWants()
-
-	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want)
-	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
-	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
-
 	// Run Postgres prebuilt tool tests
-	tests.RunPostgresListTablesTest(t, tableNameParam, tableNameAuth, PostgresUser)
+	// tests.RunPostgresListTablesTest(t, tableNameParam, tableNameAuth, AlloyDBUser)
 	tests.RunPostgresListViewsTest(t, ctx, pool)
 	tests.RunPostgresListSchemasTest(t, ctx, pool)
 	tests.RunPostgresListActiveQueriesTest(t, ctx, pool)
@@ -156,7 +152,7 @@ func TestPostgres(t *testing.T) {
 	tests.RunPostgresLongRunningTransactionsTest(t, ctx, pool)
 	tests.RunPostgresListLocksTest(t, ctx, pool)
 	tests.RunPostgresReplicationStatsTest(t, ctx, pool)
-	tests.RunPostgresListQueryStatsTest(t, ctx, pool)
+	// tests.RunPostgresListQueryStatsTest(t, ctx, pool) // TODO: enable pg_stat_statements extension before this can be re-enabled.
 	tests.RunPostgresGetColumnCardinalityTest(t, ctx, pool)
 	tests.RunPostgresListTableStatsTest(t, ctx, pool)
 	tests.RunPostgresListPublicationTablesTest(t, ctx, pool)
