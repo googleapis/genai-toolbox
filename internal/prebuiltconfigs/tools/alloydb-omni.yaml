@@ -13,58 +13,56 @@
 # limitations under the License.
 
 sources:
-    alloydb-pg-source:
-        kind: "alloydb-postgres"
-        project: ${ALLOYDB_POSTGRES_PROJECT}
-        region: ${ALLOYDB_POSTGRES_REGION}
-        cluster: ${ALLOYDB_POSTGRES_CLUSTER}
-        instance: ${ALLOYDB_POSTGRES_INSTANCE}
-        database: ${ALLOYDB_POSTGRES_DATABASE}
-        user: ${ALLOYDB_POSTGRES_USER:}
-        password: ${ALLOYDB_POSTGRES_PASSWORD:}
-        ipType: ${ALLOYDB_POSTGRES_IP_TYPE:public}
+    alloydb-omni-source:
+        kind: postgres
+        host: ${ALLOYDB_OMNI_HOST:localhost}
+        port: ${ALLOYDB_OMNI_PORT:5432}
+        database: ${ALLOYDB_OMNI_DATABASE}
+        user: ${ALLOYDB_OMNI_USER}
+        password: ${ALLOYDB_OMNI_PASSWORD:}
+        queryParams: ${ALLOYDB_OMNI_QUERY_PARAMS:}
 
 tools:
     execute_sql:
         kind: postgres-execute-sql
-        source: alloydb-pg-source
+        source: alloydb-omni-source
         description: Use this tool to execute sql.
 
     list_tables:
         kind: postgres-list-tables
-        source: alloydb-pg-source
+        source: alloydb-omni-source
         description: "Lists detailed schema information (object type, columns, constraints, indexes, triggers, owner, comment) as JSON for user-created tables (ordinary or partitioned). Filters by a comma-separated list of names. If names are omitted, lists all tables in user schemas."
 
     list_active_queries:
         kind: postgres-list-active-queries
-        source: alloydb-pg-source
+        source: alloydb-omni-source
         description: "List the top N (default 50) currently running queries (state='active') from pg_stat_activity, ordered by longest-running first. Returns pid, user, database, application_name, client_addr, state, wait_event_type/wait_event, backend/xact/query start times, computed query_duration, and the SQL text."
 
     list_available_extensions:
         kind: postgres-list-available-extensions
-        source: alloydb-pg-source
+        source: alloydb-omni-source
         description: "Discover all PostgreSQL extensions available for installation on this server, returning name, default_version, and description."
 
     list_installed_extensions:
         kind: postgres-list-installed-extensions
-        source: alloydb-pg-source
+        source: alloydb-omni-source
         description: "List all installed PostgreSQL extensions with their name, version, schema, owner, and description."
 
     long_running_transactions:
         kind: postgres-long-running-transactions
-        source: alloydb-pg-source
+        source: alloydb-omni-source
 
     list_locks:
         kind: postgres-list-locks
-        source: alloydb-pg-source
+        source: alloydb-omni-source
 
     replication_stats:
         kind: postgres-replication-stats
-        source: alloydb-pg-source
+        source: alloydb-omni-source
 
     list_autovacuum_configurations:
         kind: postgres-sql
-        source: alloydb-pg-source
+        source: alloydb-omni-source
         description: "List PostgreSQL autovacuum-related configurations (name and current setting) from pg_settings."
         statement: |
             SELECT name,
@@ -74,7 +72,7 @@ tools:
 
     list_memory_configurations:
         kind: postgres-sql
-        source: alloydb-pg-source
+        source: alloydb-omni-source
         description: "List PostgreSQL memory-related configurations (name and current setting) from pg_settings."
         statement: |
             (
@@ -96,7 +94,7 @@ tools:
 
     list_top_bloated_tables:
         kind: postgres-sql
-        source: alloydb-pg-source
+        source: alloydb-omni-source
         description: |
             List the top tables by dead-tuple (approximate bloat signal), returning schema, table, live/dead tuples, percentage, and last vacuum/analyze times.
         statement: |
@@ -121,7 +119,7 @@ tools:
 
     list_replication_slots:
         kind: postgres-sql
-        source: alloydb-pg-source
+        source: alloydb-omni-source
         description: "List key details for all PostgreSQL replication slots (e.g., type, database, active status) and calculates the size of the outstanding WAL that is being prevented from removal by the slot."
         statement: |
             SELECT
@@ -140,7 +138,7 @@ tools:
 
     list_invalid_indexes:
         kind: postgres-sql
-        source: alloydb-pg-source
+        source: alloydb-omni-source
         description: "Lists all invalid PostgreSQL indexes which are taking up disk space but are unusable by the query planner. Typically created by failed CREATE INDEX CONCURRENTLY operations."
         statement: |
             SELECT
@@ -158,7 +156,7 @@ tools:
 
     get_query_plan:
         kind: postgres-sql
-        source: alloydb-pg-source
+        source: alloydb-omni-source
         description: "Generate a PostgreSQL EXPLAIN plan in JSON format for a single SQL statement—without executing it. This returns the optimizer's estimated plan, costs, and rows (no ANALYZE, no extra options). Use in production safely for plan inspection, regression checks, and query tuning workflows."
         statement: |
             EXPLAIN (FORMAT JSON) {{.query}};
@@ -170,63 +168,63 @@ tools:
 
     list_views:
         kind: postgres-list-views
-        source: alloydb-pg-source
+        source: alloydb-omni-source
 
     list_schemas:
         kind: postgres-list-schemas
-        source: alloydb-pg-source
+        source: alloydb-omni-source
 
     list_indexes:
         kind: postgres-list-indexes
-        source: alloydb-pg-source
+        source: alloydb-omni-source
 
     list_sequences:
         kind: postgres-list-sequences
-        source: alloydb-pg-source
+        source: alloydb-omni-source
 
     database_overview:
         kind: postgres-database-overview
-        source: alloydb-pg-source
-    
+        source: alloydb-omni-source
+
     list_triggers:
         kind: postgres-list-triggers
-        source: alloydb-pg-source
+        source: alloydb-omni-source
 
     list_query_stats:
         kind: postgres-list-query-stats
-        source: alloydb-pg-source
+        source: alloydb-omni-source
 
     get_column_cardinality:
         kind: postgres-get-column-cardinality
-        source: alloydb-pg-source
+        source: alloydb-omni-source
 
     list_table_stats:
         kind: postgres-list-table-stats
-        source: alloydb-pg-source
+        source: alloydb-omni-source
 
     list_publication_tables:
         kind: postgres-list-publication-tables
-        source: alloydb-pg-source
+        source: alloydb-omni-source
 
     list_tablespaces:
         kind: postgres-list-tablespaces
-        source: alloydb-pg-source
+        source: alloydb-omni-source
 
     list_pg_settings:
         kind: postgres-list-pg-settings
-        source: alloydb-pg-source
+        source: alloydb-omni-source
 
     list_database_stats:
         kind: postgres-list-database-stats
-        source: alloydb-pg-source
+        source: alloydb-omni-source
 
     list_roles:
         kind: postgres-list-roles
-        source: alloydb-pg-source
+        source: alloydb-omni-source
 
     list_stored_procedure:
         kind: postgres-list-stored-procedure
-        source: alloydb-pg-source
+        source: alloydb-omni-source
 
 toolsets:
     alloydb_postgres_database_tools:
