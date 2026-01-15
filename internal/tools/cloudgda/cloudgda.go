@@ -28,6 +28,21 @@ import (
 
 const kind string = "cloud-gemini-data-analytics-query"
 
+// Guidance is the tool guidance string.
+const Guidance = `Tool guidance:
+  Inputs:
+    1. query: A natural language formulation of a database query.
+  Outputs: (all optional)
+    1. disambiguation_question: Clarification questions or comments where the tool needs the users' input.
+    2. generated_query: The generated query for the user query.
+    3. intent_explanation: An explanation for why the tool produced ` + "`generated_query`" + `.
+    4. query_result: The result of executing ` + "`generated_query`" + `.
+    5. natural_language_answer: The natural language answer that summarizes the ` + "`query`" + ` and ` + "`query_result`" + `.
+
+Usage guidance:
+  1. If ` + "`disambiguation_question`" + ` is produced, then solicit the needed inputs from the user and try the tool with a new ` + "`query`" + ` that has the needed clarification.
+  2. If ` + "`natural_language_answer`" + ` is produced, use ` + "`intent_explanation`" + ` and ` + "`generated_query`" + ` to see if you need to clarify any assumptions for the user.`
+
 func init() {
 	if !tools.Register(kind, newConfig) {
 		panic(fmt.Sprintf("tool kind %q already registered", kind))
@@ -68,11 +83,18 @@ func (cfg Config) ToolConfigKind() string {
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	// Define the parameters for the Gemini Data Analytics Query API
-	// The prompt is the only input parameter.
+	// The query is the only input parameter.
 	allParameters := parameters.Parameters{
-		parameters.NewStringParameterWithRequired("prompt", "The natural language question to ask.", true),
+		parameters.NewStringParameterWithRequired("query", "A natural language formulation of a database query.", true),
 	}
+	// The input and outputs are for tool guidance, usage guidance is for multi-turn interaction.
+	guidance := Guidance
 
+	if cfg.Description != "" {
+		cfg.Description += "\n\n" + guidance
+	} else {
+		cfg.Description = guidance
+	}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
 	return Tool{
@@ -105,9 +127,9 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-	prompt, ok := paramsMap["prompt"].(string)
+	query, ok := paramsMap["query"].(string)
 	if !ok {
-		return nil, fmt.Errorf("prompt parameter not found or not a string")
+		return nil, fmt.Errorf("query parameter not found or not a string")
 	}
 
 	// Parse the access token if provided
@@ -125,7 +147,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	payload := &QueryDataRequest{
 		Parent:            payloadParent,
-		Prompt:            prompt,
+		Prompt:            query,
 		Context:           t.Context,
 		GenerationOptions: t.GenerationOptions,
 	}

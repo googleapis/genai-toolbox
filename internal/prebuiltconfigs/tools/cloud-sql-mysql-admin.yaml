@@ -43,6 +43,9 @@ tools:
   clone_instance:
     kind: cloud-sql-clone-instance
     source: cloud-sql-admin-source
+  create_backup:
+    kind: cloud-sql-create-backup
+    source: cloud-sql-admin-source
 
 toolsets:
   cloud_sql_mysql_admin_tools:
@@ -54,3 +57,4 @@ toolsets:
     - create_user
     - wait_for_operation
     - clone_instance
+    - create_backup
