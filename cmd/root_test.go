@@ -23,12 +23,14 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"runtime"
 	"strings"
 	"testing"
 	"time"
 
+	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
@@ -491,6 +493,235 @@ func TestDefaultLogLevel(t *testing.T) {
 	want := "info"
 	if got != want {
 		t.Fatalf("unexpected default log level flag: got %v, want %v", got, want)
+	}
+}
+
+func TestConvertToolsFile(t *testing.T) {
+	ctx, cancelCtx := context.WithTimeout(context.Background(), time.Minute)
+	defer cancelCtx()
+	pr, pw := io.Pipe()
+	defer pw.Close()
+	defer pr.Close()
+
+	logger, err := log.NewStdLogger(pw, pw, "DEBUG")
+	if err != nil {
+		t.Fatalf("failed to setup logger %s", err)
+	}
+	ctx = util.WithLogger(ctx, logger)
+
+	tcs := []struct {
+		desc   string
+		in     string
+		want   string
+		isErr  bool
+		errStr string
+	}{
+		{
+			desc: "basic convert",
+			in: `
+            sources:
+                my-pg-instance:
+                    kind: cloud-sql-postgres
+                    project: my-project
+                    region: my-region
+                    instance: my-instance
+                    database: my_db
+                    user: my_user
+                    password: my_pass
+            tools:
+                example_tool:
+                    kind: postgres-sql
+                    source: my-pg-instance
+                    description: some description
+                    statement: |
+                      SELECT * FROM SQL_STATEMENT;
+                    parameters:
+                        - name: country
+                          type: string
+                          description: some description
+            toolsets:
+                example_toolset:
+                    - example_tool`,
+			want: `
+kind: sources
+name: my-pg-instance
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: my_user
+password: my_pass
+---
+kind: tools
+name: example_tool
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: |
+    SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
+kind: toolsets
+name: example_toolset
+tools:
+- example_tool`,
+		},
+		{
+			desc: "rearrange resource order",
+			in: `
+            tools:
+                example_tool:
+                    kind: postgres-sql
+                    source: my-pg-instance
+                    description: some description
+                    statement: |
+                        SELECT * FROM SQL_STATEMENT;
+                    parameters:
+                        - name: country
+                          type: string
+                          description: some description
+            sources:
+                my-pg-instance:
+                    kind: cloud-sql-postgres
+                    project: my-project
+                    region: my-region
+                    instance: my-instance
+                    database: my_db
+                    user: my_user
+                    password: my_pass
+            toolsets:
+                example_toolset:
+                    - example_tool`,
+			want: `
+kind: sources
+name: my-pg-instance
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: my_user
+password: my_pass
+---
+kind: tools
+name: example_tool
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: |
+    SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
+kind: toolsets
+name: example_toolset
+tools:
+- example_tool`,
+		},
+		{
+			desc: "no convertion needed",
+			in: `
+kind: sources
+name: my-pg-instance
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: my_user
+password: my_pass
+---
+kind: tools
+name: example_tool
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: |
+    SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
+kind: toolsets
+name: example_toolset
+tools:
+- example_tool`,
+			want: `
+kind: sources
+name: my-pg-instance
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: my_user
+password: my_pass
+---
+kind: tools
+name: example_tool
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: |
+    SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
+kind: toolsets
+name: example_toolset
+tools:
+- example_tool`,
+		},
+		{
+			desc:   "invalid source",
+			in:     `sources: invalid`,
+			isErr:  true,
+			errStr: "'sources' is not a map",
+		},
+		{
+			desc:   "invalid toolset",
+			in:     `toolsets: invalid`,
+			isErr:  true,
+			errStr: "'toolsets' is not a map",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			output, err := convertToolsFile(ctx, []byte(tc.in))
+			if tc.isErr {
+				if err == nil {
+					t.Fatalf("missing error: %s", tc.errStr)
+				}
+				if err.Error() != tc.errStr {
+					t.Fatalf("invalid error string: got %s, want %s", err, tc.errStr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+
+			// ensures that the order is correct
+			var doc1, doc2 yaml.MapSlice
+			if err := yaml.Unmarshal(output, &doc1); err != nil {
+				t.Fatalf("unable to unmarshal output: %s", string(output))
+			}
+			if err := yaml.Unmarshal([]byte(tc.want), &doc2); err != nil {
+				t.Fatalf("unable to unmarshal output: %s", tc.want)
+			}
+			if !reflect.DeepEqual(doc1, doc2) {
+				t.Fatalf("incorrect output: got %s, want %s", doc1, doc2)
+			}
+		})
 	}
 }
 

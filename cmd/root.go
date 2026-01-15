@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
 	"fmt"
@@ -423,6 +424,103 @@ func parseEnv(input string) (string, error) {
 		return ""
 	})
 	return output, err
+}
+
+func convertToolsFile(ctx context.Context, raw []byte) ([]byte, error) {
+	logger, err := util.LoggerFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: add embeddingmodels when available
+	keysToCheck := []string{"sources", "authServices", "authSources", "tools", "prompts", "toolsets"}
+	var input yaml.MapSlice
+	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
+	if err := decoder.Decode(&input); err != nil {
+		return nil, err
+	}
+
+	// Convert raw MapSlice to a helper map for quick lookup
+	// while keeping the values as MapSlices to preserve internal order
+	lookup := make(map[string]yaml.MapSlice)
+	for _, item := range input {
+		key := item.Key.(string)
+		if slice, ok := item.Value.(yaml.MapSlice); ok {
+			// convert authSources to authServices
+			if key == "authSources" {
+				logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")
+				key = "authServices"
+			}
+			// works even if lookup[key] is nil
+			lookup[key] = append(lookup[key], slice...)
+		} else {
+			// toolsfile is already v2
+			if key == "kind" {
+				return raw, nil
+			}
+			return nil, fmt.Errorf("'%s' is not a map", key)
+		}
+	}
+	// convert to tools file v2
+	var buf bytes.Buffer
+	encoder := yaml.NewEncoder(&buf)
+	for _, kind := range keysToCheck {
+		data, exists := lookup[kind]
+		if !exists {
+			// if this is skipped for all keys, the tools file is in v2
+			continue
+		}
+		// Transform each entry
+		for _, entry := range data {
+			entryName := entry.Key.(string)
+			entryBody := ProcessValue(entry.Value, kind == "toolsets")
+
+			transformed := yaml.MapSlice{
+				{Key: "kind", Value: kind},
+				{Key: "name", Value: entryName},
+			}
+
+			// Merge the transformed body into our result
+			if bodySlice, ok := entryBody.(yaml.MapSlice); ok {
+				transformed = append(transformed, bodySlice...)
+			} else {
+				return nil, fmt.Errorf("unable to convert entryBody to MapSlice")
+			}
+
+			if err := encoder.Encode(transformed); err != nil {
+				return nil, err
+			}
+		}
+	}
+	return buf.Bytes(), nil
+}
+
+// ProcessValue recursively looks for MapSlices to rename 'kind' -> 'type'
+func ProcessValue(v any, isToolset bool) any {
+	switch val := v.(type) {
+	case yaml.MapSlice:
+		for i := range val {
+			// Perform renaming
+			if val[i].Key == "kind" {
+				val[i].Key = "type"
+			}
+			// Recursive call for nested values (e.g., nested objects or lists)
+			val[i].Value = ProcessValue(val[i].Value, false)
+		}
+		return val
+	case []any:
+		// Process lists: If it's a toolset top-level list, wrap it.
+		if isToolset {
+			return yaml.MapSlice{{Key: "tools", Value: val}}
+		}
+		// Otherwise, recurse into list items (to catch nested objects)
+		for i := range val {
+			val[i] = ProcessValue(val[i], false)
+		}
+		return val
+	default:
+		return val
+	}
 }
 
 // parseToolsFile parses the provided yaml into appropriate configs.
