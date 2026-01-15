@@ -71,23 +71,29 @@ func TestParseFromYaml(t *testing.T) {
 					Location:     "us-central1",
 					AuthRequired: []string{},
 					Context: &cloudgdatool.QueryDataContext{
-						DatasourceReferences: &cloudgdatool.DatasourceReferences{
-							SpannerReference: &cloudgdatool.SpannerReference{
-								DatabaseReference: &cloudgdatool.SpannerDatabaseReference{
-									ProjectID:  "cloud-db-nl2sql",
-									Region:     "us-central1",
-									InstanceID: "evalbench",
-									DatabaseID: "financial",
-									Engine:     cloudgdatool.SpannerEngineGoogleSQL,
-								},
-								AgentContextReference: &cloudgdatool.AgentContextReference{
-									ContextSetID: "projects/cloud-db-nl2sql/locations/us-east1/contextSets/bdf_gsql_gemini_all_templates",
+						QueryDataContext: &geminidataanalyticspb.QueryDataContext{
+							DatasourceReferences: &geminidataanalyticspb.DatasourceReferences{
+								References: &geminidataanalyticspb.DatasourceReferences_SpannerReference{
+									SpannerReference: &geminidataanalyticspb.SpannerReference{
+										DatabaseReference: &geminidataanalyticspb.SpannerDatabaseReference{
+											ProjectId:  "cloud-db-nl2sql",
+											Region:     "us-central1",
+											InstanceId: "evalbench",
+											DatabaseId: "financial",
+											Engine:     geminidataanalyticspb.SpannerDatabaseReference_GOOGLE_SQL,
+										},
+										AgentContextReference: &geminidataanalyticspb.AgentContextReference{
+											ContextSetId: "projects/cloud-db-nl2sql/locations/us-east1/contextSets/bdf_gsql_gemini_all_templates",
+										},
+									},
 								},
 							},
 						},
 					},
 					GenerationOptions: &cloudgdatool.GenerationOptions{
-						GenerateQueryResult: true,
+						GenerationOptions: &geminidataanalyticspb.GenerationOptions{
+							GenerateQueryResult: true,
+						},
 					},
 				},
 			},
@@ -105,8 +111,8 @@ func TestParseFromYaml(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Tools) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Tools)
+			if !cmp.Equal(tc.want, got.Tools, cmpopts.IgnoreUnexported(geminidataanalyticspb.QueryDataContext{}, geminidataanalyticspb.DatasourceReferences{}, geminidataanalyticspb.SpannerReference{}, geminidataanalyticspb.SpannerDatabaseReference{}, geminidataanalyticspb.AgentContextReference{}, geminidataanalyticspb.GenerationOptions{}, geminidataanalyticspb.DatasourceReferences_SpannerReference{})) {
+				t.Errorf("incorrect parse: want %v, got %v", tc.want, got.Tools)
 			}
 		})
 	}
@@ -227,23 +233,29 @@ func TestInvoke(t *testing.T) {
 		Description: "Query Gemini Data Analytics",
 		Location:    location,
 		Context: &cloudgdatool.QueryDataContext{
-			DatasourceReferences: &cloudgdatool.DatasourceReferences{
-				SpannerReference: &cloudgdatool.SpannerReference{
-					DatabaseReference: &cloudgdatool.SpannerDatabaseReference{
-						ProjectID:  "cloud-db-nl2sql",
-						Region:     "us-central1",
-						InstanceID: "evalbench",
-						DatabaseID: "financial",
-						Engine:     cloudgdatool.SpannerEngineGoogleSQL,
-					},
-					AgentContextReference: &cloudgdatool.AgentContextReference{
-						ContextSetID: "projects/cloud-db-nl2sql/locations/us-east1/contextSets/bdf_gsql_gemini_all_templates",
+			QueryDataContext: &geminidataanalyticspb.QueryDataContext{
+				DatasourceReferences: &geminidataanalyticspb.DatasourceReferences{
+					References: &geminidataanalyticspb.DatasourceReferences_SpannerReference{
+						SpannerReference: &geminidataanalyticspb.SpannerReference{
+							DatabaseReference: &geminidataanalyticspb.SpannerDatabaseReference{
+								ProjectId:  "cloud-db-nl2sql",
+								Region:     "us-central1",
+								InstanceId: "evalbench",
+								DatabaseId: "financial",
+								Engine:     geminidataanalyticspb.SpannerDatabaseReference_GOOGLE_SQL,
+							},
+							AgentContextReference: &geminidataanalyticspb.AgentContextReference{
+								ContextSetId: "projects/cloud-db-nl2sql/locations/us-east1/contextSets/bdf_gsql_gemini_all_templates",
+							},
+						},
 					},
 				},
 			},
 		},
 		GenerationOptions: &cloudgdatool.GenerationOptions{
-			GenerateQueryResult: true,
+			GenerationOptions: &geminidataanalyticspb.GenerationOptions{
+				GenerateQueryResult: true,
+			},
 		},
 	}
 
@@ -266,12 +278,6 @@ func TestInvoke(t *testing.T) {
 	if err != nil {
 		t.Fatalf("tool invocation failed: %v", err)
 	}
-
-	// The result should be exactly the *geminidataanalyticspb.QueryDataResponse
-	// We check it using cmp with Protobuf comparison options would be ideal,
-	// but standard cmp.Equal might work for structs if no internal fields are messy.
-	// Typically for protos, we should use "google.golang.org/protobuf/testing/protocmp".
-	// But let's see if simple cast works.
 
 	gotResp, ok := result.(*geminidataanalyticspb.QueryDataResponse)
 	if !ok {

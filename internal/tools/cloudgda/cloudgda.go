@@ -65,6 +65,48 @@ type compatibleSource interface {
 	RunQuery(context.Context, string, *geminidataanalyticspb.QueryDataRequest) (*geminidataanalyticspb.QueryDataResponse, error)
 }
 
+// QueryDataContext wraps geminidataanalyticspb.QueryDataContext to support YAML decoding via protojson.
+type QueryDataContext struct {
+	*geminidataanalyticspb.QueryDataContext
+}
+
+func (q *QueryDataContext) UnmarshalYAML(b []byte) error {
+	var raw map[string]any
+	if err := yaml.Unmarshal(b, &raw); err != nil {
+		return fmt.Errorf("failed to unmarshal context from yaml: %w", err)
+	}
+	jsonBytes, err := json.Marshal(raw)
+	if err != nil {
+		return fmt.Errorf("failed to marshal context map: %w", err)
+	}
+	q.QueryDataContext = &geminidataanalyticspb.QueryDataContext{}
+	if err := protojson.Unmarshal(jsonBytes, q.QueryDataContext); err != nil {
+		return fmt.Errorf("failed to unmarshal context to proto: %w", err)
+	}
+	return nil
+}
+
+// GenerationOptions wraps geminidataanalyticspb.GenerationOptions to support YAML decoding via protojson.
+type GenerationOptions struct {
+	*geminidataanalyticspb.GenerationOptions
+}
+
+func (g *GenerationOptions) UnmarshalYAML(b []byte) error {
+	var raw map[string]any
+	if err := yaml.Unmarshal(b, &raw); err != nil {
+		return fmt.Errorf("failed to unmarshal generation options from yaml: %w", err)
+	}
+	jsonBytes, err := json.Marshal(raw)
+	if err != nil {
+		return fmt.Errorf("failed to marshal generation options map: %w", err)
+	}
+	g.GenerationOptions = &geminidataanalyticspb.GenerationOptions{}
+	if err := protojson.Unmarshal(jsonBytes, g.GenerationOptions); err != nil {
+		return fmt.Errorf("failed to unmarshal generation options to proto: %w", err)
+	}
+	return nil
+}
+
 type Config struct {
 	Name              string             `yaml:"name" validate:"required"`
 	Kind              string             `yaml:"kind" validate:"required"`
@@ -99,12 +141,14 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
 
-	return Tool{
+	t := Tool{
 		Config:      cfg,
 		AllParams:   allParameters,
 		manifest:    tools.Manifest{Description: cfg.Description, Parameters: allParameters.Manifest(), AuthRequired: cfg.AuthRequired},
 		mcpManifest: mcpManifest,
-	}, nil
+	}
+
+	return t, nil
 }
 
 // validate interface
@@ -153,27 +197,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	if t.Context != nil {
-		jsonBytes, err := json.Marshal(t.Context)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal context: %w", err)
-		}
-		protoContext := &geminidataanalyticspb.QueryDataContext{}
-		if err := protojson.Unmarshal(jsonBytes, protoContext); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal context to proto: %w", err)
-		}
-		req.Context = protoContext
+		req.Context = t.Context.QueryDataContext
 	}
 
 	if t.GenerationOptions != nil {
-		jsonBytes, err := json.Marshal(t.GenerationOptions)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal generation options: %w", err)
-		}
-		protoOptions := &geminidataanalyticspb.GenerationOptions{}
-		if err := protojson.Unmarshal(jsonBytes, protoOptions); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal generation options to proto: %w", err)
-		}
-		req.GenerationOptions = protoOptions
+		req.GenerationOptions = t.GenerationOptions.GenerationOptions
 	}
 
 	return source.RunQuery(ctx, tokenStr, req)
