@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@ package cloudloggingadmin
 import (
 	"context"
 	"fmt"
+	"slices"
+	"strings"
+	"time"
 
 	"cloud.google.com/go/logging"
 	"cloud.google.com/go/logging/logadmin"
@@ -26,6 +29,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/impersonate"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
@@ -132,6 +136,192 @@ func (s *Source) LogAdminTokenSource() oauth2.TokenSource {
 
 func (s *Source) LogAdminClientCreator() LogAdminClientCreator {
 	return s.ClientCreator
+}
+
+func (s *Source) GetProject() string {
+	return s.Project
+}
+
+// getClient returns the appropriate client based on authentication mode
+func (s *Source) getClient(accessToken string) (*logadmin.Client, error) {
+	if s.UseClientOAuth {
+		if s.ClientCreator == nil {
+			return nil, fmt.Errorf("client creator is not initialized")
+		}
+		return s.ClientCreator(accessToken)
+	}
+	if s.Client == nil {
+		return nil, fmt.Errorf("source client is not initialized")
+	}
+	return s.Client, nil
+}
+
+// ListLogNames lists all log names in the project
+func (s *Source) ListLogNames(ctx context.Context, limit int, accessToken string) ([]string, error) {
+	client, err := s.getClient(accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	it := client.Logs(ctx)
+	var logNames []string
+	for len(logNames) < limit {
+		logName, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		logNames = append(logNames, logName)
+	}
+	return logNames, nil
+}
+
+// ListResourceTypes lists all resource types in the project
+func (s *Source) ListResourceTypes(ctx context.Context, accessToken string) ([]string, error) {
+	client, err := s.getClient(accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	it := client.ResourceDescriptors(ctx)
+	var types []string
+	for {
+		desc, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to list resource descriptors: %w", err)
+		}
+		types = append(types, desc.Type)
+	}
+	slices.Sort(types)
+	return types, nil
+}
+
+// QueryLogsParams contains the parameters for querying logs
+type QueryLogsParams struct {
+	Filter      string
+	NewestFirst bool
+	StartTime   string
+	EndTime     string
+	Verbose     bool
+	Limit       int
+}
+
+// QueryLogs queries log entries based on the provided parameters
+func (s *Source) QueryLogs(ctx context.Context, params QueryLogsParams, accessToken string) ([]map[string]any, error) {
+	client, err := s.getClient(accessToken)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build filter
+	var filterParts []string
+	if params.Filter != "" {
+		filterParts = append(filterParts, params.Filter)
+	}
+
+	// Add timestamp filter
+	startTime := params.StartTime
+	if startTime != "" {
+		filterParts = append(filterParts, fmt.Sprintf(`timestamp>="%s"`, startTime))
+	}
+
+	if params.EndTime != "" {
+		filterParts = append(filterParts, fmt.Sprintf(`timestamp<="%s"`, params.EndTime))
+	}
+
+	combinedFilter := strings.Join(filterParts, " AND ")
+
+	// Add opts
+	opts := []logadmin.EntriesOption{
+		logadmin.Filter(combinedFilter),
+	}
+
+	// Set order
+	if params.NewestFirst {
+		opts = append(opts, logadmin.NewestFirst())
+	}
+
+	// Set up iterator
+	it := client.Entries(ctx, opts...)
+
+	var results []map[string]any
+	for len(results) < params.Limit {
+		entry, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to iterate entries: %w", err)
+		}
+
+		result := map[string]any{
+			"logName":   entry.LogName,
+			"timestamp": entry.Timestamp.Format(time.RFC3339),
+			"severity":  entry.Severity.String(),
+			"resource": map[string]any{
+				"type":   entry.Resource.Type,
+				"labels": entry.Resource.Labels,
+			},
+		}
+
+		if entry.Payload != nil {
+			result["payload"] = entry.Payload
+		}
+
+		if params.Verbose {
+			result["insertId"] = entry.InsertID
+
+			if len(entry.Labels) > 0 {
+				result["labels"] = entry.Labels
+			}
+
+			if entry.HTTPRequest != nil {
+				httpRequestMap := map[string]any{
+					"status":   entry.HTTPRequest.Status,
+					"latency":  entry.HTTPRequest.Latency.String(),
+					"remoteIp": entry.HTTPRequest.RemoteIP,
+				}
+				if req := entry.HTTPRequest.Request; req != nil {
+					httpRequestMap["requestMethod"] = req.Method
+					httpRequestMap["requestUrl"] = req.URL.String()
+					httpRequestMap["userAgent"] = req.UserAgent()
+				}
+				result["httpRequest"] = httpRequestMap
+			}
+
+			if entry.Trace != "" {
+				result["trace"] = entry.Trace
+			}
+
+			if entry.SpanID != "" {
+				result["spanId"] = entry.SpanID
+			}
+
+			if entry.Operation != nil {
+				result["operation"] = map[string]any{
+					"id":       entry.Operation.Id,
+					"producer": entry.Operation.Producer,
+					"first":    entry.Operation.First,
+					"last":     entry.Operation.Last,
+				}
+			}
+
+			if entry.SourceLocation != nil {
+				result["sourceLocation"] = map[string]any{
+					"file":     entry.SourceLocation.File,
+					"line":     entry.SourceLocation.Line,
+					"function": entry.SourceLocation.Function,
+				}
+			}
+		}
+		results = append(results, result)
+	}
+	return results, nil
 }
 
 func setupClientCaching(s *Source, baseCreator LogAdminClientCreator) {

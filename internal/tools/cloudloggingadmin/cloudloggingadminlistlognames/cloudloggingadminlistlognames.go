@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,13 +17,11 @@ import (
 	"context"
 	"fmt"
 
-	"cloud.google.com/go/logging/logadmin"
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	cla "github.com/googleapis/genai-toolbox/internal/sources/cloudloggingadmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/iterator"
 )
 
 const kind string = "cloud-logging-admin-list-log-names"
@@ -45,9 +43,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	LogAdminClient() *logadmin.Client
-	LogAdminClientCreator() cla.LogAdminClientCreator
 	UseClientAuthorization() bool
+	ListLogNames(ctx context.Context, limit int, accessToken string) ([]string, error)
 }
 
 type Config struct {
@@ -66,7 +63,7 @@ func (cfg Config) ToolConfigKind() string {
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
-	limitDescription := fmt.Sprintf("Maximum number of log entries to return (default: %d).", defaultLimit)
+	limitDescription := fmt.Sprintf("Maximum number of log entries to return. Default: %d.", defaultLimit)
 	params := parameters.Parameters{
 		parameters.NewIntParameterWithRequired("limit", limitDescription, false),
 	}
@@ -99,24 +96,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, err
 	}
 
-	var client *logadmin.Client
-
-	if source.UseClientAuthorization() {
-		tokenString, err := accessToken.ParseBearerToken()
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse access token: %w", err)
-		}
-		client, err = source.LogAdminClientCreator()(tokenString)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create client: %w", err)
-		}
-	} else {
-		client = source.LogAdminClient()
-		if client == nil {
-			return nil, fmt.Errorf("source client is not initialized")
-		}
-	}
-
 	limit := defaultLimit
 	paramsMap := params.AsMap()
 	if val, ok := paramsMap["limit"].(int); ok && val > 0 {
@@ -125,25 +104,23 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("limit must be greater than or equal to 1")
 	}
 
-	it := client.Logs(ctx)
-	var logNames []string
-	for len(logNames) < limit {
-		logName, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
+	tokenString := ""
+	if source.UseClientAuthorization() {
+		tokenString, err = accessToken.ParseBearerToken()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to parse access token: %w", err)
 		}
-
-		logNames = append(logNames, logName)
 	}
 
-	return logNames, nil
+	return source.ListLogNames(ctx, limit, tokenString)
 }
 
 func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.params, data, claimsMap)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return paramValues, nil
 }
 
 func (t Tool) Manifest() tools.Manifest {

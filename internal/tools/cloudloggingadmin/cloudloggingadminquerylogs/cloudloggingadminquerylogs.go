@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,16 +16,14 @@ package cloudloggingadminquerylogs
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
-	"cloud.google.com/go/logging/logadmin"
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	cla "github.com/googleapis/genai-toolbox/internal/sources/cloudloggingadmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/iterator"
 )
 
 const (
@@ -50,9 +48,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	LogAdminClient() *logadmin.Client
-	LogAdminClientCreator() cla.LogAdminClientCreator
 	UseClientAuthorization() bool
+	QueryLogs(ctx context.Context, params cla.QueryLogsParams, accessToken string) ([]map[string]any, error)
 }
 
 type Config struct {
@@ -72,7 +69,7 @@ func (cfg Config) ToolConfigKind() string {
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
 	startTimeDescription := fmt.Sprintf("Start time in RFC3339 format (e.g., 2025-12-09T00:00:00Z). Defaults to %d days ago.", defaultStartTimeOffsetDays)
-	limitDescription := fmt.Sprintf("Maximum number of log entries to return (default: %d).", defaultLimit)
+	limitDescription := fmt.Sprintf("Maximum number of log entries to return. Default: %d.", defaultLimit)
 	params := parameters.Parameters{
 		parameters.NewStringParameterWithRequired(
 			"filter",
@@ -114,48 +111,31 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, err
 	}
 
-	var client *logadmin.Client
-
-	if source.UseClientAuthorization() {
-		tokenString, err := accessToken.ParseBearerToken()
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse access token: %w", err)
-		}
-		client, err = source.LogAdminClientCreator()(tokenString)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create client: %w", err)
-		}
-	} else {
-		client = source.LogAdminClient()
-		if client == nil {
-			return nil, fmt.Errorf("source client is not initialized")
-		}
-	}
-
-	// build filter and opts.
+	// Parse parameters
 	limit := defaultLimit
 	paramsMap := params.AsMap()
 	newestFirst, _ := paramsMap["newestFirst"].(bool)
 
-	// check and set limit
+	// Check and set limit
 	if val, ok := paramsMap["limit"].(int); ok && val > 0 {
 		limit = val
 	} else if ok && val < 0 {
 		return nil, fmt.Errorf("limit must be greater than or equal to 1")
 	}
 
-	// check for verbosity of output
+	// Check for verbosity of output
 	verbose, _ := paramsMap["verbose"].(bool)
 
-	// build filter
-	var filterParts []string
-	if filter, ok := paramsMap["filter"].(string); ok {
-		if len(filter) == 0 {
+	// Build filter
+	var filter string
+	if f, ok := paramsMap["filter"].(string); ok {
+		if len(f) == 0 {
 			return nil, fmt.Errorf("filter cannot be empty if provided")
 		}
-		filterParts = append(filterParts, filter)
+		filter = f
 	}
 
+	// Parse start time
 	var startTime string
 	if val, ok := paramsMap["startTime"].(string); ok && val != "" {
 		if _, err := time.Parse(time.RFC3339, val); err != nil {
@@ -165,105 +145,42 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	} else {
 		startTime = time.Now().AddDate(0, 0, -defaultStartTimeOffsetDays).Format(time.RFC3339)
 	}
-	filterParts = append(filterParts, fmt.Sprintf(`timestamp>="%s"`, startTime))
 
-	if endTime, ok := paramsMap["endTime"].(string); ok && endTime != "" {
-		if _, err := time.Parse(time.RFC3339, endTime); err != nil {
+	// Parse end time
+	var endTime string
+	if val, ok := paramsMap["endTime"].(string); ok && val != "" {
+		if _, err := time.Parse(time.RFC3339, val); err != nil {
 			return nil, fmt.Errorf("endTime must be in RFC3339 format (e.g., 2025-12-09T23:59:59Z): %w", err)
 		}
-		filterParts = append(filterParts, fmt.Sprintf(`timestamp<="%s"`, endTime))
-	}
-	combinedFilter := strings.Join(filterParts, " AND ")
-
-	// add opts.
-	opts := []logadmin.EntriesOption{
-		logadmin.Filter(combinedFilter),
+		endTime = val
 	}
 
-	// set order.
-	if newestFirst {
-		opts = append(opts, logadmin.NewestFirst())
-	}
-
-	// set up iterator.
-	it := client.Entries(ctx, opts...)
-
-	var results []map[string]any
-	for len(results) < limit {
-		entry, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
+	tokenString := ""
+	if source.UseClientAuthorization() {
+		tokenString, err = accessToken.ParseBearerToken()
 		if err != nil {
-			return nil, fmt.Errorf("failed to iterate entries: %w", err)
+			return nil, fmt.Errorf("failed to parse access token: %w", err)
 		}
-
-		result := map[string]any{
-			"logName":   entry.LogName,
-			"timestamp": entry.Timestamp.Format(time.RFC3339),
-			"severity":  entry.Severity.String(),
-			"resource": map[string]any{
-				"type":   entry.Resource.Type,
-				"labels": entry.Resource.Labels,
-			},
-		}
-
-		if entry.Payload != nil {
-			result["payload"] = entry.Payload
-		}
-		if verbose {
-			result["insertId"] = entry.InsertID
-
-			if len(entry.Labels) > 0 {
-				result["labels"] = entry.Labels
-			}
-
-			if entry.HTTPRequest != nil {
-				httpRequestMap := map[string]any{
-					"status":   entry.HTTPRequest.Status,
-					"latency":  entry.HTTPRequest.Latency.String(),
-					"remoteIp": entry.HTTPRequest.RemoteIP,
-				}
-				if req := entry.HTTPRequest.Request; req != nil {
-					httpRequestMap["requestMethod"] = req.Method
-					httpRequestMap["requestUrl"] = req.URL.String()
-					httpRequestMap["userAgent"] = req.UserAgent()
-				}
-				result["httpRequest"] = httpRequestMap
-			}
-
-			if entry.Trace != "" {
-				result["trace"] = entry.Trace
-			}
-
-			if entry.SpanID != "" {
-				result["spanId"] = entry.SpanID
-			}
-
-			if entry.Operation != nil {
-				result["operation"] = map[string]any{
-					"id":       entry.Operation.Id,
-					"producer": entry.Operation.Producer,
-					"first":    entry.Operation.First,
-					"last":     entry.Operation.Last,
-				}
-			}
-
-			if entry.SourceLocation != nil {
-				result["sourceLocation"] = map[string]any{
-					"file":     entry.SourceLocation.File,
-					"line":     entry.SourceLocation.Line,
-					"function": entry.SourceLocation.Function,
-				}
-			}
-		}
-		results = append(results, result)
 	}
-	return results, nil
+
+	queryParams := cla.QueryLogsParams{
+		Filter:      filter,
+		NewestFirst: newestFirst,
+		StartTime:   startTime,
+		EndTime:     endTime,
+		Verbose:     verbose,
+		Limit:       limit,
+	}
+
+	return source.QueryLogs(ctx, queryParams, tokenString)
 }
 
 func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParseParams(t.params, data, claimsMap)
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return paramValues, nil
 }
 
 func (t Tool) Manifest() tools.Manifest {

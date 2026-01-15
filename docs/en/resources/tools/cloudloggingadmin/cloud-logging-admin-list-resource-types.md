@@ -32,6 +32,3 @@ tools:
 | source      |  string  |     true     | Name of the cloud-logging-admin source.            |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 
-### Parameters
-
-This tool has no parameters.

@@ -41,4 +41,4 @@ tools:
 | startTime | string | false | Start time in RFC3339 format (e.g., 2025-12-09T00:00:00Z). Defaults to 30 days ago. |
 | endTime | string | false | End time in RFC3339 format (e.g., 2025-12-09T23:59:59Z). Defaults to now. |
 | verbose | boolean | false | Include additional fields (insertId, trace, spanId, httpRequest, labels, operation, sourceLocation). Defaults to false. |
-| limit | integer | false | Maximum number of log entries to return (default: 200). |
+| limit | integer | false | Maximum number of log entries to return. Default: `200`. |

@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,15 +16,12 @@ package cloudloggingadminlistresourcetypes
 import (
 	"context"
 	"fmt"
-	"slices"
 
-	"cloud.google.com/go/logging/logadmin"
 	"github.com/goccy/go-yaml"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	cla "github.com/googleapis/genai-toolbox/internal/sources/cloudloggingadmin"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/iterator"
 )
 
 const kind string = "cloud-logging-admin-list-resource-types"
@@ -44,9 +41,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	LogAdminClient() *logadmin.Client
-	LogAdminClientCreator() cla.LogAdminClientCreator
 	UseClientAuthorization() bool
+	ListResourceTypes(ctx context.Context, accessToken string) ([]string, error)
 }
 
 type Config struct {
@@ -93,42 +89,23 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, err
 	}
 
-	var client *logadmin.Client
-
+	tokenString := ""
 	if source.UseClientAuthorization() {
-		tokenString, err := accessToken.ParseBearerToken()
+		tokenString, err = accessToken.ParseBearerToken()
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse access token: %w", err)
 		}
-		client, err = source.LogAdminClientCreator()(tokenString)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create client: %w", err)
-		}
-	} else {
-		client = source.LogAdminClient()
-		if client == nil {
-			return nil, fmt.Errorf("source client is not initialized")
-		}
 	}
 
-	it := client.ResourceDescriptors(ctx)
-	var types []string
-	for {
-		desc, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("failed to list resource descriptors: %w", err)
-		}
-		types = append(types, desc.Type)
-	}
-	slices.Sort(types)
-	return types, nil
+	return source.ListResourceTypes(ctx, tokenString)
 }
 
 func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
 	return parameters.ParamValues{}, nil
+}
+
+func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
+	return paramValues, nil
 }
 
 func (t Tool) Manifest() tools.Manifest {

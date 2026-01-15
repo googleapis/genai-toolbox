@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,8 +38,8 @@ import (
 )
 
 var (
-	LogAdminProject    = os.Getenv("LOGADMIN_PROJECT")
 	LogAdminSourceKind = "cloud-logging-admin"
+	LogAdminProject    = os.Getenv("LOGADMIN_PROJECT")
 )
 
 func getLogAdminVars(t *testing.T) map[string]any {
@@ -207,14 +207,7 @@ func getCloudLoggingAdminToolsConfig(sourceConfig map[string]any) map[string]any
 
 func runListLogNamesTest(t *testing.T, expectedLogName string) {
 	t.Run("list-log-names", func(t *testing.T) {
-		resp, err := http.Post(
-			"http://127.0.0.1:5000/api/tool/list-log-names/invoke",
-			"application/json",
-			bytes.NewBuffer([]byte(`{}`)),
-		)
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
+		resp, respBody := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/list-log-names/invoke", bytes.NewBuffer([]byte(`{}`)), nil)
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
@@ -222,7 +215,9 @@ func runListLogNamesTest(t *testing.T, expectedLogName string) {
 		}
 
 		var body map[string]interface{}
-		json.NewDecoder(resp.Body).Decode(&body)
+		if err := json.Unmarshal(respBody, &body); err != nil {
+			t.Fatalf("error parsing response body")
+		}
 
 		result, ok := body["result"].(string)
 		if !ok {
@@ -237,22 +232,16 @@ func runListLogNamesTest(t *testing.T, expectedLogName string) {
 
 func runListResourceTypesTest(t *testing.T) {
 	t.Run("list-resource-types", func(t *testing.T) {
-		resp, err := http.Post(
-			"http://127.0.0.1:5000/api/tool/list-resource-types/invoke",
-			"application/json",
-			bytes.NewBuffer([]byte(`{}`)),
-		)
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		defer resp.Body.Close()
+		resp, respBody := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/list-resource-types/invoke", bytes.NewBuffer([]byte(`{}`)), nil)
 
 		if resp.StatusCode != 200 {
 			t.Fatalf("expected status 200, got %d", resp.StatusCode)
 		}
 
 		var body map[string]interface{}
-		json.NewDecoder(resp.Body).Decode(&body)
+		if err := json.Unmarshal(respBody, &body); err != nil {
+			t.Fatalf("error parsing response body")
+		}
 
 		result, ok := body["result"].(string)
 		if !ok {
@@ -311,14 +300,7 @@ func runQueryLogsTest(t *testing.T, logName string) {
 
 func invokeQueryTool(t *testing.T, requestBody string) string {
 	t.Helper()
-	resp, err := http.Post(
-		"http://127.0.0.1:5000/api/tool/query-logs/invoke",
-		"application/json",
-		bytes.NewBuffer([]byte(requestBody)),
-	)
-	if err != nil {
-		t.Fatalf("request failed: %v", err)
-	}
+	resp, respBody := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/query-logs/invoke", bytes.NewBuffer([]byte(requestBody)), nil)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
@@ -326,7 +308,9 @@ func invokeQueryTool(t *testing.T, requestBody string) string {
 	}
 
 	var body map[string]interface{}
-	json.NewDecoder(resp.Body).Decode(&body)
+	if err := json.Unmarshal(respBody, &body); err != nil {
+		t.Fatalf("error parsing response body")
+	}
 
 	result, ok := body["result"].(string)
 	if !ok {
@@ -337,16 +321,7 @@ func invokeQueryTool(t *testing.T, requestBody string) string {
 
 func runAuthListLogNamesTest(t *testing.T, expectedLogName string) {
 	t.Run("auth-list-log-names", func(t *testing.T) {
-		resp, err := http.Post(
-			"http://127.0.0.1:5000/api/tool/auth-list-log-names/invoke",
-			"application/json",
-			bytes.NewBuffer([]byte(`{}`)),
-		)
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		defer resp.Body.Close()
-
+		resp, _ := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/auth-list-log-names/invoke", bytes.NewBuffer([]byte(`{}`)), nil)
 		if resp.StatusCode != 401 {
 			t.Fatalf("expected status 401 (Unauthorized), got %d", resp.StatusCode)
 		}
@@ -356,16 +331,7 @@ func runAuthListLogNamesTest(t *testing.T, expectedLogName string) {
 func runQueryLogsErrorTest(t *testing.T) {
 	t.Run("query-logs-error", func(t *testing.T) {
 		requestBody := `{"filter": "INVALID_FILTER_SYNTAX :::", "limit": 10}`
-
-		resp, err := http.Post(
-			"http://127.0.0.1:5000/api/tool/query-logs/invoke",
-			"application/json",
-			bytes.NewBuffer([]byte(requestBody)),
-		)
-		if err != nil {
-			t.Fatalf("request failed: %v", err)
-		}
-		defer resp.Body.Close()
+		resp, _ := tests.RunRequest(t, http.MethodPost, "http://127.0.0.1:5000/api/tool/query-logs/invoke", bytes.NewBuffer([]byte(requestBody)), nil)
 		if resp.StatusCode == 200 {
 			t.Errorf("expected error status code, got 200 OK")
 		}
