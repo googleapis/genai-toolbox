@@ -528,6 +528,10 @@ func TestConvertToolsFile(t *testing.T) {
                     database: my_db
                     user: my_user
                     password: my_pass
+            authServices:
+                my-google-auth:
+                    kind: google
+                    clientId: testing-id
             tools:
                 example_tool:
                     kind: postgres-sql
@@ -541,7 +545,21 @@ func TestConvertToolsFile(t *testing.T) {
                           description: some description
             toolsets:
                 example_toolset:
-                    - example_tool`,
+                    - example_tool
+            prompts:
+                code_review:
+                    description: ask llm to analyze code quality
+                    messages:
+                      - content: "please review the following code for quality: {{.code}}"
+                    arguments:
+                        - name: code
+                          description: the code to review
+            embeddingModels:
+                gemini-model:
+                    kind: gemini
+                    model: gemini-embedding-001
+                    apiKey: some-key
+                    dimension: 768`,
 			want: `
 kind: sources
 name: my-pg-instance
@@ -552,6 +570,11 @@ instance: my-instance
 database: my_db
 user: my_user
 password: my_pass
+---
+kind: authServices
+name: my-google-auth
+type: google
+clientId: testing-id
 ---
 kind: tools
 name: example_tool
@@ -568,10 +591,26 @@ parameters:
 kind: toolsets
 name: example_toolset
 tools:
-- example_tool`,
+- example_tool
+---
+kind: prompts
+name: code_review
+description: ask llm to analyze code quality
+messages:
+- content: "please review the following code for quality: {{.code}}"
+arguments:
+- name: code
+  description: the code to review
+---
+kind: embeddingModels
+name: gemini-model
+type: gemini
+model: gemini-embedding-001
+apiKey: some-key
+dimension: 768`,
 		},
 		{
-			desc: "rearrange resource order",
+			desc: "preserve resource order with grouping",
 			in: `
             tools:
                 example_tool:
@@ -593,20 +632,18 @@ tools:
                     database: my_db
                     user: my_user
                     password: my_pass
+            authServices:
+                my-google-auth:
+                    kind: google
+                    clientId: testing-id
             toolsets:
                 example_toolset:
-                    - example_tool`,
+                    - example_tool
+            authSources:
+                my-google-auth:
+                    kind: google
+                    clientId: testing-id`,
 			want: `
-kind: sources
-name: my-pg-instance
-type: cloud-sql-postgres
-project: my-project
-region: my-region
-instance: my-instance
-database: my_db
-user: my_user
-password: my_pass
----
 kind: tools
 name: example_tool
 type: postgres-sql
@@ -618,6 +655,26 @@ parameters:
 - name: country
   type: string
   description: some description
+---
+kind: sources
+name: my-pg-instance
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: my_user
+password: my_pass
+---
+kind: authServices
+name: my-google-auth
+type: google
+clientId: testing-id
+---
+kind: authServices
+name: my-google-auth
+type: google
+clientId: testing-id
 ---
 kind: toolsets
 name: example_toolset
@@ -710,19 +767,36 @@ tools:
 				t.Fatalf("unexpected error: %s", err)
 			}
 
-			// ensures that the order is correct
-			var doc1, doc2 yaml.MapSlice
-			if err := yaml.Unmarshal(output, &doc1); err != nil {
-				t.Fatalf("unable to unmarshal output: %s", string(output))
+			var docs1, docs2 []yaml.MapSlice
+			if docs1, err = decodeToMapSlice(string(output)); err != nil {
+				t.Fatalf("error decoding output: %s", err)
 			}
-			if err := yaml.Unmarshal([]byte(tc.want), &doc2); err != nil {
-				t.Fatalf("unable to unmarshal output: %s", tc.want)
+			if docs2, err = decodeToMapSlice(tc.want); err != nil {
+				t.Fatalf("Error decoding want: %s", err)
 			}
-			if !reflect.DeepEqual(doc1, doc2) {
-				t.Fatalf("incorrect output: got %s, want %s", doc1, doc2)
+			if !reflect.DeepEqual(docs1, docs2) {
+				t.Fatalf("incorrect output: got %s, want %s", string(output), tc.want)
 			}
 		})
 	}
+}
+
+func decodeToMapSlice(data string) ([]yaml.MapSlice, error) {
+	// ensures that the order is correct
+	var docs []yaml.MapSlice
+	decoder := yaml.NewDecoder(strings.NewReader(data))
+	for {
+		var doc yaml.MapSlice
+		err := decoder.Decode(&doc)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		docs = append(docs, doc)
+	}
+	return docs, nil
 }
 
 func TestParseToolFile(t *testing.T) {

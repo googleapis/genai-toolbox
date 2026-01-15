@@ -427,13 +427,6 @@ func parseEnv(input string) (string, error) {
 }
 
 func convertToolsFile(ctx context.Context, raw []byte) ([]byte, error) {
-	logger, err := util.LoggerFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: add embeddingmodels when available
-	keysToCheck := []string{"sources", "authServices", "authSources", "tools", "prompts", "toolsets"}
 	var input yaml.MapSlice
 	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
 	if err := decoder.Decode(&input); err != nil {
@@ -442,17 +435,24 @@ func convertToolsFile(ctx context.Context, raw []byte) ([]byte, error) {
 
 	// Convert raw MapSlice to a helper map for quick lookup
 	// while keeping the values as MapSlices to preserve internal order
+	resourceOrder := []string{}
 	lookup := make(map[string]yaml.MapSlice)
 	for _, item := range input {
-		key := item.Key.(string)
+		key, ok := item.Key.(string)
+		if !ok {
+			return nil, fmt.Errorf("unexpected non-string key in input: %v", item.Key)
+		}
 		if slice, ok := item.Value.(yaml.MapSlice); ok {
 			// convert authSources to authServices
 			if key == "authSources" {
-				logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")
 				key = "authServices"
 			}
 			// works even if lookup[key] is nil
 			lookup[key] = append(lookup[key], slice...)
+			// preserving the resource's order of original toolsFile
+			if !slices.Contains(resourceOrder, key) {
+				resourceOrder = append(resourceOrder, key)
+			}
 		} else {
 			// toolsfile is already v2
 			if key == "kind" {
@@ -464,7 +464,7 @@ func convertToolsFile(ctx context.Context, raw []byte) ([]byte, error) {
 	// convert to tools file v2
 	var buf bytes.Buffer
 	encoder := yaml.NewEncoder(&buf)
-	for _, kind := range keysToCheck {
+	for _, kind := range resourceOrder {
 		data, exists := lookup[kind]
 		if !exists {
 			// if this is skipped for all keys, the tools file is in v2
@@ -472,7 +472,10 @@ func convertToolsFile(ctx context.Context, raw []byte) ([]byte, error) {
 		}
 		// Transform each entry
 		for _, entry := range data {
-			entryName := entry.Key.(string)
+			entryName, ok := entry.Key.(string)
+			if !ok {
+				return nil, fmt.Errorf("unexpected non-string key for entry in '%s': %v", kind, entry.Key)
+			}
 			entryBody := ProcessValue(entry.Value, kind == "toolsets")
 
 			transformed := yaml.MapSlice{
