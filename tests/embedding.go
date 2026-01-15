@@ -93,7 +93,7 @@ func AddSemanticSearchConfig(t *testing.T, config map[string]any, toolKind, inse
 
 // RunSemanticSearchToolInvokeTest runs the insert_docs and search_docs tools
 // via both HTTP and MCP endpoints and verifies the output.
-func RunSemanticSearchToolInvokeTest(t *testing.T, insertWant, searchWant string) {
+func RunSemanticSearchToolInvokeTest(t *testing.T, insertWant, mcpInsertWant, searchWant string) {
 	// Initialize MCP session once for the MCP test cases
 	sessionId := RunInitialize(t, "2024-11-05")
 
@@ -242,4 +242,10 @@ func SetupPostgresVectorTable(t *testing.T, ctx context.Context, pool *pgxpool.P
 			t.Errorf("failed to drop table %s: %v", tableName, err)
 		}
 	}
+}
+
+func GetPostgresVectorSearchStmts(vectorTableName string) (string, string) {
+	insertStmt := fmt.Sprintf("INSERT INTO %s (content, embedding) VALUES ($1, $2)", vectorTableName)
+	searchStmt := fmt.Sprintf("SELECT id, content, embedding <-> $1 AS distance FROM %s ORDER BY distance LIMIT 1", vectorTableName)
+	return insertStmt, searchStmt
 }
