@@ -219,7 +219,7 @@ func RunSemanticSearchToolInvokeTest(t *testing.T, insertWant, searchWant string
 }
 
 // SetupPostgresVectorTable sets up the vector extension and a vector table
-func SetupPostgresVectorTable(t *testing.T, ctx context.Context, pool *pgxpool.Pool) func(*testing.T) {
+func SetupPostgresVectorTable(t *testing.T, ctx context.Context, pool *pgxpool.Pool) (string, func(*testing.T)) {
 	t.Helper()
 	if _, err := pool.Exec(ctx, "CREATE EXTENSION IF NOT EXISTS vector"); err != nil {
 		t.Fatalf("failed to create vector extension: %v", err)
@@ -237,7 +237,7 @@ func SetupPostgresVectorTable(t *testing.T, ctx context.Context, pool *pgxpool.P
 		t.Fatalf("failed to create table %s: %v", tableName, err)
 	}
 
-	return func(t *testing.T) {
+	return tableName, func(t *testing.T) {
 		if _, err := pool.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s", tableName)); err != nil {
 			t.Errorf("failed to drop table %s: %v", tableName, err)
 		}

@@ -112,7 +112,7 @@ func TestPostgres(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Set up table for semanti search
-	tearDownVectorTable := tests.SetupPostgresVectorTable(t, ctx, pool)
+	vectorTableName, tearDownVectorTable := tests.SetupPostgresVectorTable(t, ctx, pool)
 	defer tearDownVectorTable(t)
 
 	// Write config into a file and pass it to command
@@ -122,8 +122,8 @@ func TestPostgres(t *testing.T) {
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, PostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
 	// Add semantic search tool config
-	insertStmt := "INSERT INTO documents (content, embedding) VALUES ($1, $2)"
-	searchStmt := "SELECT id, content, embedding <-> $1 AS distance FROM documents ORDER BY distance LIMIT 1"
+	insertStmt := fmt.Sprintf("INSERT INTO %s (content, embedding) VALUES ($1, $2)", vectorTableName)
+	searchStmt := fmt.Sprintf("SELECT id, content, embedding <-> $1 AS distance FROM %s ORDER BY distance LIMIT 1", vectorTableName)
 	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, PostgresToolKind, insertStmt, searchStmt)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
