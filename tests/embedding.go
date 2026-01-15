@@ -136,7 +136,7 @@ func RunSemanticSearchToolInvokeTest(t *testing.T, insertWant, mcpInsertWant, se
 					},
 				},
 			},
-			want: insertWant,
+			want: mcpInsertWant,
 		},
 		{
 			name:  "MCP invoke search_docs",
