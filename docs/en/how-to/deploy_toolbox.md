@@ -283,3 +283,5 @@ contain the specific error message needed to diagnose the problem.
   Manager, it means the Toolbox service account is missing permissions.
   - Ensure the `toolbox-identity` service account has the **Secret Manager
       Secret Accessor** (`roles/secretmanager.secretAccessor`) IAM role.
+
+- **Cloud Run Connections via IAP:** Currently we do not support Cloud Run connections via [IAP](https://docs.cloud.google.com/iap/docs/concepts-overview). Please disable IAP if you are using it.
