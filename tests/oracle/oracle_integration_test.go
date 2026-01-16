@@ -18,34 +18,36 @@ import (
 )
 
 var (
-	OracleSourceKind = "oracle"
-	OracleToolKind   = "oracle-sql"
-	OracleHost       = os.Getenv("ORACLE_HOST")
-	OracleUser       = os.Getenv("ORACLE_USER")
-	OraclePass       = os.Getenv("ORACLE_PASS")
-	OracleServerName = os.Getenv("ORACLE_SERVER_NAME")
-	OracleConnStr    = fmt.Sprintf(
-		"%s:%s/%s", OracleHost, "1521", OracleServerName)
+	oracleSourceKind = "oracle"
+	oracleToolKind   = "oracle-sql"
+	oracleHost       = os.Getenv("ORACLE_HOST")
+	oracleUser       = os.Getenv("ORACLE_USER")
+	oraclePassword   = os.Getenv("ORACLE_PASSWORD")
+	oracleService    = os.Getenv("ORACLE_SERVICE")
+	oraclePort       = os.Getenv("ORACLE_PORT")
 )
 
 func getOracleVars(t *testing.T) map[string]any {
 	switch "" {
-	case OracleHost:
+	case oracleHost:
 		t.Fatal("'ORACLE_HOST not set")
-	case OracleUser:
+	case oracleUser:
 		t.Fatal("'ORACLE_USER' not set")
-	case OraclePass:
-		t.Fatal("'ORACLE_PASS' not set")
-	case OracleServerName:
-		t.Fatal("'ORACLE_SERVER_NAME' not set")
+	case oraclePassword:
+		t.Fatal("'ORACLE_PASSWORD' not set")
+	case oraclePort:
+		t.Fatal("'ORACLE_PORT' not set")
+	case oracleService:
+		t.Fatal("'ORACLE_SERVICE' not set")
 	}
 
 	return map[string]any{
-		"kind":             OracleSourceKind,
-		"connectionString": OracleConnStr,
-		"useOCI":           true,
-		"user":             OracleUser,
-		"password":         OraclePass,
+		"kind":     oracleSourceKind,
+		"user":     oracleUser,
+		"password": oraclePassword,
+		"host":     oracleHost,
+		"port":     oraclePort,
+		"service":  oracleService,
 	}
 }
 
@@ -53,7 +55,7 @@ func getOracleVars(t *testing.T) map[string]any {
 func initOracleConnection(ctx context.Context, user, pass, connStr string) (*sql.DB, error) {
 	// Build the full Oracle connection string for godror driver
 	fullConnStr := fmt.Sprintf(`user="%s" password="%s" connectString="%s"`,
-		user, pass, connStr)
+		user, pass, fmt.Sprintf("%s:%s/%s", oracleHost, oraclePort, oracleService))
 
 	db, err := sql.Open("godror", fullConnStr)
 	if err != nil {
@@ -68,14 +70,15 @@ func initOracleConnection(ctx context.Context, user, pass, connStr string) (*sql
 	return db, nil
 }
 
-func TestOracleSimpleToolEndpoints(t *testing.T) {
+func TestOracleTools(t *testing.T) {
 	sourceConfig := getOracleVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	db, err := initOracleConnection(ctx, OracleUser, OraclePass, OracleConnStr)
+	connStr := fmt.Sprintf("%s:%s/%s", oracleHost, oraclePort, oracleService)
+	db, err := initOracleConnection(ctx, oracleUser, oraclePassword, connStr)
 	if err != nil {
 		t.Fatalf("unable to create Oracle connection pool: %s", err)
 	}
@@ -98,10 +101,10 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, OracleToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, oracleToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "oracle-execute-sql")
-	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, OracleToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	tmplSelectCombined, tmplSelectFilterCombined := tests.GetTmplToolStatement()
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, oracleToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -118,21 +121,33 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 	}
 
 	// Get configs for tests
-	select1Want := "[{\"1\":1}]"
+	select1Want := `[{"1":1}]`
 	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: dpiStmt_execute: ORA-00900: invalid SQL statement"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id NUMBER GENERATED AS IDENTITY PRIMARY KEY, name VARCHAR2(255))"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
 
-	// Run tests
-	tests.RunToolGetTest(t)
-	tests.RunToolInvokeTest(t, select1Want,
-		tests.DisableOptionalNullParamTest(),
-		tests.WithMyToolById4Want("[{\"id\":4,\"name\":\"\"}]"),
-		tests.DisableArrayTest(),
-	)
-	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
-	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
-	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+	t.Run("oracle-source-parsing", func(t *testing.T) {
+		// This test implicitly checks if the Oracle source configuration
+		// is parsed correctly by the toolbox server at startup.
+		// A failure in StartCmd or WaitForString would indicate a parsing issue.
+		if err != nil {
+			t.Errorf("Oracle source configuration failed to parse: %v", err)
+		} else {
+			fmt.Println("Oracle source configuration parsed successfully.")
+		}
+	})
+
+	t.Run("tool-endpoints", func(t *testing.T) {
+		tests.RunToolGetTest(t)
+		tests.RunToolInvokeTest(t, select1Want,
+			tests.DisableOptionalNullParamTest(),
+			tests.WithMyToolById4Want(`[{"id":4,"name":""}]`),
+			tests.DisableArrayTest(),
+		)
+		tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
+		tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
+		tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
+	})
 }
 
 func setupOracleTable(t *testing.T, ctx context.Context, pool *sql.DB, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
@@ -202,7 +217,7 @@ func getOracleAuthToolInfo(tableName string) (string, string, string, []any) {
 
 	toolStatement := fmt.Sprintf(`SELECT "name" FROM %s WHERE "email" = :1`, tableName)
 
-	params := []any{"Alice", tests.ServiceAccountEmail, "Jane", "janedoe@gmail.com"}
+	params := []any{"Alice", tests.GetTestServiceAccountEmail(t), "Jane", "janedoe@gmail.com"}
 
 	return createStatement, insertStatement, toolStatement, params
 }
