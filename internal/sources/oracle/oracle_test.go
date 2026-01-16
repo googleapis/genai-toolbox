@@ -91,6 +91,28 @@ func TestParseFromYamlOracle(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "connection string and walletLocation",
+			in: `
+            sources:
+                my-oracle-wallet:
+                    kind: oracle
+                    connectionString: "my-host:1521/XEPDB1"
+                    user: my_user
+                    password: my_pass
+                    walletLocation: "/path/to/wallet"
+            `,
+			want: server.SourceConfigs{
+				"my-oracle-wallet": oracle.Config{
+					Name:             "my-oracle-wallet",
+					Kind:             oracle.SourceKind,
+					ConnectionString: "my-host:1521/XEPDB1",
+					User:             "my_user",
+					Password:         "my_pass",
+					WalletLocation:   "/path/to/wallet",
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
@@ -175,6 +197,20 @@ func TestFailParseFromYaml(t *testing.T) {
 			useOCI: false
 			`,
 			err: "error unmarshaling sources: unable to parse source \"my-oracle-fail\" as \"oracle\": invalid Oracle configuration: `tnsAdmin` can only be used when `UseOCI` is true, or use `walletLocation` instead",
+		},
+		{
+			desc: "fail on walletLocation with useOCI=true",
+			in: `
+			sources:
+				my-oracle-fail:
+					kind: oracle
+					connectionString: "my-host:1521/XEPDB1"
+					user: my_user
+					password: my_pass
+					walletLocation: "/path/to/wallet"
+					useOCI: true
+			`,
+			err: "unable to parse source \"my-oracle-fail\" as \"oracle\": invalid Oracle configuration: when using an OCI driver, use `tnsAdmin` to specify credentials file location instead",
 		},
 	}
 	for _, tc := range tcs {
