@@ -11,6 +11,10 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/oracle/oraclesql"
 )
 
+func boolPtr(b bool) *bool {
+	return &b
+}
+
 func TestParseFromYamlOracleSql(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -61,6 +65,29 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 					Source:       "db-prod",
 					Description:  "Gets orders for a customer with optional filtering.",
 					Statement:    "SELECT * FROM ${SCHEMA}.ORDERS WHERE customer_id = :customer_id AND status = :status",
+					AuthRequired: []string{},
+				},
+			},
+		},
+		{
+			desc: "example with readonly flag set to false (DML)",
+			in: `
+            tools:
+                update_user:
+                    kind: oracle-sql
+                    source: db-prod
+                    description: Updates user email.
+                    readonly: false   # <--- We are testing this specific line
+                    statement: "UPDATE users SET email = :1 WHERE id = :2"
+            `,
+			want: server.ToolConfigs{
+				"update_user": oraclesql.Config{
+					Name:        "update_user",
+					Kind:        "oracle-sql",
+					Source:      "db-prod",
+					Description: "Updates user email.",
+					Statement:   "UPDATE users SET email = :1 WHERE id = :2",
+					ReadOnly:    boolPtr(false), 
 					AuthRequired: []string{},
 				},
 			},
