@@ -1063,8 +1063,9 @@ func CleanupStaleNamespaces(t *testing.T, ctx context.Context, pool *pgxpool.Poo
 
 		// Parse timestamp from names like "param_table_<ts>_<uuid>"
 		var tsString string
+		parts := strings.Split(tableName, "_")
+
 		if strings.HasPrefix(tableName, "param_table_") || strings.HasPrefix(tableName, "auth_table_") {
-			parts := strings.Split(tableName, "_")
 			if len(parts) >= 3 {
 				tsString = parts[2]
 			}
@@ -1078,7 +1079,7 @@ func CleanupStaleNamespaces(t *testing.T, ctx context.Context, pool *pgxpool.Poo
 		// drop if the table is older than 2 hours
 		if tsString != "" {
 			createdAt, err := strconv.ParseInt(tsString, 10, 64)
-			if err == nil && (now-createdAt) > staleThresholdSeconds {
+			if err != nil && (now-createdAt) > staleThresholdSeconds {
 				tablesToDrop = append(tablesToDrop, fmt.Sprintf("public.%q", tableName))
 			}
 		}
