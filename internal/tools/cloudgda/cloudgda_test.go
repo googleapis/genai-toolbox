@@ -328,9 +328,9 @@ func TestInvoke(t *testing.T) {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
 
-	// Prepare parameters for invocation - ONLY prompt
+	// Prepare parameters for invocation - ONLY query
 	params := parameters.ParamValues{
-		{Name: "prompt", Value: "How many accounts who have region in Prague are eligible for loans?"},
+		{Name: "query", Value: "How many accounts who have region in Prague are eligible for loans?"},
 	}
 
 	resourceMgr := resources.NewResourceManager(srcs, nil, nil, nil, nil, nil, nil)
