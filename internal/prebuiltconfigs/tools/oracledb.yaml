@@ -20,20 +20,20 @@ sources:
         walletLocation: $ORACLE_WALLET
         user: $ORACLE_USER
         password: $ORACLE_PASSWORD
-        useoci: $USE_OCI:false
+        useOCI: $USE_OCI:false
 tools:
     execute_sql:
-        kind: oracle-execute-sql
+        kind: oracle-sql
         source: oracle-source
         description: Use this tool to execute a single SQL query or DML statement.
 
     list_tables:
-        kind: oracle-execute-sql
+        kind: oracle-sql
         source: oracle-source
         description: "Lists all user tables in the connected schema, including segment size, row count, and last analyzed date. Filters by a comma-separated list of names. If names are omitted, lists all tables in the current user's schema. SELECT table_name from user_tables;"
                 
     list_active_sessions:
-        kind: oracle-execute-sql
+        kind: oracle-sql
         source: oracle-source
         description: "List the top N (default 50) currently running database sessions (STATUS='ACTIVE'), showing SID, OS User, Program, and the current SQL statement text.
             SELECT
@@ -63,7 +63,7 @@ tools:
             SELECT PLAN_TABLE_OUTPUT FROM TABLE(DBMS_XPLAN.DISPLAY());"
 
     list_top_sql_by_resource:
-        kind: oracle-execute-sql
+        kind: oracle-sql
         source: oracle-source
         description: "List the top N SQL statements from the library cache based on a chosen resource metric (CPU, I/O, or Elapsed Time), following is an example of the sql 
             SELECT
@@ -78,7 +78,7 @@ tools:
             FETCH FIRST 5 ROWS ONLY;"
             
     list_tablespace_usage:
-        kind: oracle-execute-sql
+        kind: oracle-sql
         source: oracle-source
         description: "List tablespace names, total size, free space, and used percentage to monitor storage utilization.
             SELECT
@@ -97,22 +97,22 @@ tools:
                 used_pct DESC"
 
     list_invalid_objects:
-        kind: oracle-execute-sql
-        source: oracle-source
-        description: "Lists all database objects that are in an invalid state, requiring recompilation (e.g., procedures, functions, views).
-        statement: |
-            SELECT
-                owner,
-                object_type,
-                object_name,
-                status
-            FROM
-                dba_objects
-            WHERE
-                status = 'INVALID'
-                AND owner NOT IN ('SYS', 'SYSTEM') -- Exclude system schemas for clarity
-            ORDER BY
-                owner, object_type, object_name;"
+        kind: oracle-sql  
+        source: oracle-source  
+        description: "Lists all database objects that are in an invalid state, requiring recompilation (e.g., procedures, functions, views)."  
+        statement: |  
+            SELECT  
+                owner,  
+                object_type,  
+                object_name,  
+                status  
+            FROM  
+                dba_objects  
+            WHERE  
+                status = 'INVALID'  
+                AND owner NOT IN ('SYS', 'SYSTEM') -- Exclude system schemas for clarity  
+            ORDER BY  
+                owner, object_type, object_name;          
 
 toolsets:
     oracle_database_tools:

@@ -54,8 +54,8 @@ func getOracleVars(t *testing.T) map[string]any {
 // Copied over from oracle.go
 func initOracleConnection(ctx context.Context, user, pass, connStr string) (*sql.DB, error) {
 	// Build the full Oracle connection string for godror driver
-	fullConnStr := fmt.Sprintf(`user="%s" password="%s" connectString="%s"`,
-		user, pass, fmt.Sprintf("%s:%s/%s", oracleHost, oraclePort, oracleService))
+ 	fullConnStr := fmt.Sprintf(`user="%s" password="%s" connectString="%s"`,
+ 		user, pass, connStr)
 
 	db, err := sql.Open("godror", fullConnStr)
 	if err != nil {

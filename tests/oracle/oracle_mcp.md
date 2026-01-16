@@ -244,9 +244,9 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
             "ORACLE_PORT": "1521",
             "ORACLE_SERVICE": "",
             "ORACLE_USER": "",
-            "ORACLE_PASSWORD": ""
+            "ORACLE_PASSWORD": "",
             "ORACLE_WALLET": "",
-            "ORACLE_WALLET_PASSWORD": "
+            "ORACLE_WALLET_PASSWORD": ""
           }
         }
       }
