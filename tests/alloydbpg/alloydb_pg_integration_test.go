@@ -138,6 +138,10 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	tableNameAuth := fmt.Sprintf("auth_table_%d_%s", timestamp, strings.ReplaceAll(uuid.New().String(), "-", ""))
 	tableNameTemplateParam := fmt.Sprintf("template_param_table_%d_%s", timestamp, strings.ReplaceAll(uuid.New().String(), "-", ""))
 
+	t.Logf("RUNNING TEST WITH TABLE: %s", tableNameParam)
+	t.Logf("RUNNING TEST WITH TABLE: %s", tableNameAuth)
+	t.Logf("RUNNING TEST WITH TABLE: %s", tableNameTemplateParam)
+
 	// set up data for param tool
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetPostgresSQLParamToolInfo(tableNameParam)
 	teardownTable1 := tests.SetupPostgresSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
