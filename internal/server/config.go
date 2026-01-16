@@ -140,10 +140,6 @@ func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 	}
 
 	for name, u := range raw {
-		err := NameValidation(name)
-		if err != nil {
-			return err
-		}
 		// Unmarshal to a general type that ensure it capture all fields
 		var v map[string]any
 		if err := u.Unmarshal(&v); err != nil {
@@ -188,10 +184,6 @@ func (c *AuthServiceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(i
 	}
 
 	for name, u := range raw {
-		err := NameValidation(name)
-		if err != nil {
-			return err
-		}
 		var v map[string]any
 		if err := u.Unmarshal(&v); err != nil {
 			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
@@ -235,10 +227,6 @@ func (c *EmbeddingModelConfigs) UnmarshalYAML(ctx context.Context, unmarshal fun
 	}
 
 	for name, u := range raw {
-		err := NameValidation(name)
-		if err != nil {
-			return err
-		}
 		// Unmarshal to a general type that ensure it capture all fields
 		var v map[string]any
 		if err := u.Unmarshal(&v); err != nil {
@@ -340,10 +328,6 @@ func (c *ToolsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(inter
 	}
 
 	for name, toolList := range raw {
-		err := NameValidation(name)
-		if err != nil {
-			return err
-		}
 		(*c)[name] = tools.ToolsetConfig{Name: name, ToolNames: toolList}
 	}
 	return nil
@@ -363,10 +347,6 @@ func (c *PromptConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interf
 	}
 
 	for name, u := range raw {
-		err := NameValidation(name)
-		if err != nil {
-			return err
-		}
 		var v map[string]any
 		if err := u.Unmarshal(&v); err != nil {
 			return fmt.Errorf("unable to unmarshal prompt %q: %w", name, err)
@@ -414,10 +394,6 @@ func (c *PromptsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(int
 	}
 
 	for name, promptList := range raw {
-		err := NameValidation(name)
-		if err != nil {
-			return err
-		}
 		(*c)[name] = prompts.PromptsetConfig{Name: name, PromptNames: promptList}
 	}
 	return nil
