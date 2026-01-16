@@ -82,12 +82,12 @@ func TestParseFromYamlOracleSql(t *testing.T) {
             `,
 			want: server.ToolConfigs{
 				"update_user": oraclesql.Config{
-					Name:        "update_user",
-					Kind:        "oracle-sql",
-					Source:      "db-prod",
-					Description: "Updates user email.",
-					Statement:   "UPDATE users SET email = :1 WHERE id = :2",
-					ReadOnly:    boolPtr(false), 
+					Name:         "update_user",
+					Kind:         "oracle-sql",
+					Source:       "db-prod",
+					Description:  "Updates user email.",
+					Statement:    "UPDATE users SET email = :1 WHERE id = :2",
+					ReadOnly:     boolPtr(false),
 					AuthRequired: []string{},
 				},
 			},

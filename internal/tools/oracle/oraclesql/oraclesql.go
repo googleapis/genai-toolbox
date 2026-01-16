@@ -105,8 +105,8 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 	fmt.Printf("\n")
 	isReadOnly := true
-	if t.Config.ReadOnly != nil {
-		isReadOnly = *t.Config.ReadOnly
+	if t.ReadOnly != nil {
+		isReadOnly = *t.ReadOnly
 	}
 	return source.RunSQL(ctx, newStatement, sliceParams, isReadOnly)
 }
