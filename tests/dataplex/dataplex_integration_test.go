@@ -85,13 +85,66 @@ func initDataplexConnection(ctx context.Context) (*dataplex.CatalogClient, error
 	return client, nil
 }
 
+// cleanupOldAspectTypes Deletes AspectTypes older than the specified duration.
+func cleanupOldAspectTypes(t *testing.T, ctx context.Context, client *dataplex.CatalogClient, oldThreshold time.Duration) {
+	parent := fmt.Sprintf("projects/%s/locations/us", DataplexProject)
+	olderThanTime := time.Now().Add(-oldThreshold)
+
+	listReq := &dataplexpb.ListAspectTypesRequest{
+		Parent:   parent,
+		PageSize: 100,               // Fetch up to 100 items
+		OrderBy:  "create_time asc", // Order by creation time
+	}
+
+	const maxDeletes = 8 // Explicitly limit the number of deletions
+	it := client.ListAspectTypes(ctx, listReq)
+	var aspectTypesToDelete []string
+	for len(aspectTypesToDelete) < maxDeletes {
+		aspectType, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			t.Logf("Warning: Failed to list aspect types during cleanup: %v", err)
+			return
+		}
+		// Perform time-based filtering in memory
+		if aspectType.CreateTime != nil {
+			createTime := aspectType.CreateTime.AsTime()
+			if createTime.Before(olderThanTime) {
+				aspectTypesToDelete = append(aspectTypesToDelete, aspectType.GetName())
+			}
+		} else {
+			t.Logf("Warning: AspectType %s has no CreateTime", aspectType.GetName())
+		}
+	}
+	if len(aspectTypesToDelete) == 0 {
+		t.Logf("cleanupOldAspectTypes: No aspect types found older than %s to delete.", oldThreshold.String())
+		return
+	}
+
+	for _, aspectTypeName := range aspectTypesToDelete {
+		deleteReq := &dataplexpb.DeleteAspectTypeRequest{Name: aspectTypeName}
+		op, err := client.DeleteAspectType(ctx, deleteReq)
+		if err != nil {
+			t.Logf("Warning: Failed to delete aspect type %s: %v", aspectTypeName, err)
+			continue // Skip to the next item if initiation fails
+		}
+
+		if err := op.Wait(ctx); err != nil {
+			t.Logf("Warning: Failed to delete aspect type %s, operation error: %v", aspectTypeName, err)
+		} else {
+			t.Logf("cleanupOldAspectTypes: Successfully deleted %s", aspectTypeName)
+		}
+	}
+}
+
 func TestDataplexToolEndpoints(t *testing.T) {
 	sourceConfig := getDataplexVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
 	var args []string
-
 	bigqueryClient, err := initBigQueryConnection(ctx, DataplexProject)
 	if err != nil {
 		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
@@ -101,6 +154,9 @@ func TestDataplexToolEndpoints(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to create Dataplex connection: %s", err)
 	}
+
+	// Cleanup older aspecttypes
+	cleanupOldAspectTypes(t, ctx, dataplexClient, 1*time.Hour)
 
 	// create resources with UUID
 	datasetName := fmt.Sprintf("temp_toolbox_test_%s", strings.ReplaceAll(uuid.New().String(), "-", ""))

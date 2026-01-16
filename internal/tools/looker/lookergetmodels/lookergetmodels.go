@@ -21,7 +21,6 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/looker/lookercommon"
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
@@ -48,8 +47,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	UseClientAuthorization() bool
 	GetAuthTokenHeaderName() string
-	LookerClient() *v4.LookerSDK
 	LookerApiSettings() *rtl.ApiSettings
+	GetLookerSDK(string) (*v4.LookerSDK, error)
 	LookerShowHiddenModels() bool
 }
 
@@ -124,7 +123,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	excludeHidden := !source.LookerShowHiddenModels()
 	includeInternal := true
 
-	sdk, err := lookercommon.GetLookerSDK(source.UseClientAuthorization(), source.LookerApiSettings(), source.LookerClient(), accessToken)
+	sdk, err := source.GetLookerSDK(string(accessToken))
 	if err != nil {
 		return nil, fmt.Errorf("error getting sdk: %w", err)
 	}

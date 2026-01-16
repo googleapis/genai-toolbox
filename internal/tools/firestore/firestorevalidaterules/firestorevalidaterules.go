@@ -17,7 +17,6 @@ package firestorevalidaterules
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
@@ -50,7 +49,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	FirebaseRulesClient() *firebaserules.Service
-	GetProjectId() string
+	ValidateRules(context.Context, string) (any, error)
 }
 
 type Config struct {
@@ -107,30 +106,6 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-// Issue represents a validation issue in the rules
-type Issue struct {
-	SourcePosition SourcePosition `json:"sourcePosition"`
-	Description    string         `json:"description"`
-	Severity       string         `json:"severity"`
-}
-
-// SourcePosition represents the location of an issue in the source
-type SourcePosition struct {
-	FileName      string `json:"fileName,omitempty"`
-	Line          int64  `json:"line"`          // 1-based
-	Column        int64  `json:"column"`        // 1-based
-	CurrentOffset int64  `json:"currentOffset"` // 0-based, inclusive start
-	EndOffset     int64  `json:"endOffset"`     // 0-based, exclusive end
-}
-
-// ValidationResult represents the result of rules validation
-type ValidationResult struct {
-	Valid           bool    `json:"valid"`
-	IssueCount      int     `json:"issueCount"`
-	FormattedIssues string  `json:"formattedIssues,omitempty"`
-	RawIssues       []Issue `json:"rawIssues,omitempty"`
-}
-
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
 	if err != nil {
@@ -144,114 +119,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok || sourceParam == "" {
 		return nil, fmt.Errorf("invalid or missing '%s' parameter", sourceKey)
 	}
-
-	// Create test request
-	testRequest := &firebaserules.TestRulesetRequest{
-		Source: &firebaserules.Source{
-			Files: []*firebaserules.File{
-				{
-					Name:    "firestore.rules",
-					Content: sourceParam,
-				},
-			},
-		},
-		// We don't need test cases for validation only
-		TestSuite: &firebaserules.TestSuite{
-			TestCases: []*firebaserules.TestCase{},
-		},
-	}
-
-	// Call the test API
-	projectName := fmt.Sprintf("projects/%s", source.GetProjectId())
-	response, err := source.FirebaseRulesClient().Projects.Test(projectName, testRequest).Context(ctx).Do()
-	if err != nil {
-		return nil, fmt.Errorf("failed to validate rules: %w", err)
-	}
-
-	// Process the response
-	result := t.processValidationResponse(response, sourceParam)
-
-	return result, nil
-}
-
-func (t Tool) processValidationResponse(response *firebaserules.TestRulesetResponse, source string) ValidationResult {
-	if len(response.Issues) == 0 {
-		return ValidationResult{
-			Valid:           true,
-			IssueCount:      0,
-			FormattedIssues: "✓ No errors detected. Rules are valid.",
-		}
-	}
-
-	// Convert issues to our format
-	issues := make([]Issue, len(response.Issues))
-	for i, issue := range response.Issues {
-		issues[i] = Issue{
-			Description: issue.Description,
-			Severity:    issue.Severity,
-			SourcePosition: SourcePosition{
-				FileName:      issue.SourcePosition.FileName,
-				Line:          issue.SourcePosition.Line,
-				Column:        issue.SourcePosition.Column,
-				CurrentOffset: issue.SourcePosition.CurrentOffset,
-				EndOffset:     issue.SourcePosition.EndOffset,
-			},
-		}
-	}
-
-	// Format issues
-	formattedIssues := t.formatRulesetIssues(issues, source)
-
-	return ValidationResult{
-		Valid:           false,
-		IssueCount:      len(issues),
-		FormattedIssues: formattedIssues,
-		RawIssues:       issues,
-	}
-}
-
-// formatRulesetIssues formats validation issues into a human-readable string with code snippets
-func (t Tool) formatRulesetIssues(issues []Issue, rulesSource string) string {
-	sourceLines := strings.Split(rulesSource, "\n")
-	var formattedOutput []string
-
-	formattedOutput = append(formattedOutput, fmt.Sprintf("Found %d issue(s) in rules source:\n", len(issues)))
-
-	for _, issue := range issues {
-		issueString := fmt.Sprintf("%s: %s [Ln %d, Col %d]",
-			issue.Severity,
-			issue.Description,
-			issue.SourcePosition.Line,
-			issue.SourcePosition.Column)
-
-		if issue.SourcePosition.Line > 0 {
-			lineIndex := int(issue.SourcePosition.Line - 1) // 0-based index
-			if lineIndex >= 0 && lineIndex < len(sourceLines) {
-				errorLine := sourceLines[lineIndex]
-				issueString += fmt.Sprintf("\n```\n%s", errorLine)
-
-				// Add carets if we have column and offset information
-				if issue.SourcePosition.Column > 0 &&
-					issue.SourcePosition.CurrentOffset >= 0 &&
-					issue.SourcePosition.EndOffset > issue.SourcePosition.CurrentOffset {
-
-					startColumn := int(issue.SourcePosition.Column - 1) // 0-based
-					errorTokenLength := int(issue.SourcePosition.EndOffset - issue.SourcePosition.CurrentOffset)
-
-					if startColumn >= 0 && errorTokenLength > 0 && startColumn <= len(errorLine) {
-						padding := strings.Repeat(" ", startColumn)
-						carets := strings.Repeat("^", errorTokenLength)
-						issueString += fmt.Sprintf("\n%s%s", padding, carets)
-					}
-				}
-				issueString += "\n```"
-			}
-		}
-
-		formattedOutput = append(formattedOutput, issueString)
-	}
-
-	return strings.Join(formattedOutput, "\n\n")
+	return source.ValidateRules(ctx, sourceParam)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

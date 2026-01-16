@@ -53,8 +53,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 type compatibleSource interface {
 	UseClientAuthorization() bool
 	GetAuthTokenHeaderName() string
-	LookerClient() *v4.LookerSDK
 	LookerApiSettings() *rtl.ApiSettings
+	GetLookerSDK(string) (*v4.LookerSDK, error)
 }
 
 type Config struct {
@@ -136,7 +136,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
 	}
 
-	sdk, err := lookercommon.GetLookerSDK(source.UseClientAuthorization(), source.LookerApiSettings(), source.LookerClient(), accessToken)
+	sdk, err := source.GetLookerSDK(string(accessToken))
 	if err != nil {
 		return nil, fmt.Errorf("error getting sdk: %w", err)
 	}
