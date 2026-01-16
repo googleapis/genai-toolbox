@@ -70,8 +70,8 @@ type ServerConfig struct {
 	AllowedOrigins []string
 	// Specifies a list of hosts permitted to access this server.
 	AllowedHosts []string
-	// UserAgentExtra specifies additional metadata to append to the User-Agent string.
-	UserAgentExtra []string
+	// UserAgentMetadata specifies additional metadata to append to the User-Agent string.
+	UserAgentMetadata []string
 }
 
 type logFormat string

@@ -65,8 +65,8 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	error,
 ) {
 	metadataStr := cfg.Version
-	if len(cfg.UserAgentExtra) > 0 {
-		metadataStr += "+" + strings.Join(cfg.UserAgentExtra, ".")
+	if len(cfg.UserAgentMetadata) > 0 {
+		metadataStr += "+" + strings.Join(cfg.UserAgentMetadata, "+")
 	}
 	ctx = util.WithUserAgent(ctx, metadataStr)
 	instrumentation, err := util.InstrumentationFromContext(ctx)
