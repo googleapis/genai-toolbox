@@ -59,6 +59,37 @@ func (s *mockDataChatServer) QueryData(ctx context.Context, req *geminidataanaly
 	}, nil
 }
 
+func getCloudGdaToolsConfig() map[string]any {
+	return map[string]any{
+		"sources": map[string]any{
+			"my-gda-source": map[string]any{
+				"kind":      "cloud-gemini-data-analytics",
+				"projectId": "test-project",
+			},
+		},
+		"tools": map[string]any{
+			"cloud-gda-query": map[string]any{
+				"kind":        cloudGdaToolKind,
+				"source":      "my-gda-source",
+				"description": "Test GDA Tool",
+				"location":    "us-central1",
+				"context": map[string]any{
+					"datasourceReferences": map[string]any{
+						"spannerReference": map[string]any{
+							"databaseReference": map[string]any{
+								"projectId":  "test-project",
+								"instanceId": "test-instance",
+								"databaseId": "test-db",
+								"engine":     "GOOGLE_SQL",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func TestCloudGdaToolEndpoints(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
@@ -171,36 +202,5 @@ func TestCloudGdaToolEndpoints(t *testing.T) {
 	respStr := string(respBody)
 	if !strings.Contains(respStr, "SELECT * FROM table;") {
 		t.Errorf("MCP response does not contain expected query result: %s", respStr)
-	}
-}
-
-func getCloudGdaToolsConfig() map[string]any {
-	return map[string]any{
-		"sources": map[string]any{
-			"my-gda-source": map[string]any{
-				"kind":      "cloud-gemini-data-analytics",
-				"projectId": "test-project",
-			},
-		},
-		"tools": map[string]any{
-			"cloud-gda-query": map[string]any{
-				"kind":        cloudGdaToolKind,
-				"source":      "my-gda-source",
-				"description": "Test GDA Tool",
-				"location":    "us-central1",
-				"context": map[string]any{
-					"datasourceReferences": map[string]any{
-						"spannerReference": map[string]any{
-							"databaseReference": map[string]any{
-								"projectId":  "test-project",
-								"instanceId": "test-instance",
-								"databaseId": "test-db",
-								"engine":     "GOOGLE_SQL",
-							},
-						},
-					},
-				},
-			},
-		},
 	}
 }
