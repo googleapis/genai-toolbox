@@ -29,6 +29,9 @@ import (
 
 const SourceKind string = "cloud-gemini-data-analytics"
 
+// NewDataChatClient can be overridden for testing.
+var NewDataChatClient = geminidataanalytics.NewDataChatClient
+
 // validate interface
 var _ sources.SourceConfig = Config{}
 
@@ -70,7 +73,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	}
 
 	if !r.UseClientOAuth {
-		client, err := geminidataanalytics.NewDataChatClient(ctx, option.WithUserAgent(ua))
+		client, err := NewDataChatClient(ctx, option.WithUserAgent(ua))
 		if err != nil {
 			return nil, fmt.Errorf("failed to create DataChatClient: %w", err)
 		}
@@ -104,6 +107,26 @@ func (s *Source) UseClientAuthorization() bool {
 	return s.UseClientOAuth
 }
 
+func (s *Source) GetClient(ctx context.Context, tokenStr string) (*geminidataanalytics.DataChatClient, func(), error) {
+	if s.UseClientOAuth {
+		if tokenStr == "" {
+			return nil, nil, fmt.Errorf("client-side OAuth is enabled but no access token was provided")
+		}
+		token := &oauth2.Token{AccessToken: tokenStr}
+		opts := []option.ClientOption{
+			option.WithUserAgent(s.userAgent),
+			option.WithTokenSource(oauth2.StaticTokenSource(token)),
+		}
+
+		client, err := NewDataChatClient(ctx, opts...)
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to create per-request DataChatClient: %w", err)
+		}
+		return client, func() { client.Close() }, nil
+	}
+	return s.Client, func() {}, nil
+}
+
 func (s *Source) RunQuery(ctx context.Context, tokenStr string, req *geminidataanalyticspb.QueryDataRequest) (*geminidataanalyticspb.QueryDataResponse, error) {
 	client, cleanup, err := s.GetClient(ctx, tokenStr)
 	if err != nil {
@@ -112,22 +135,4 @@ func (s *Source) RunQuery(ctx context.Context, tokenStr string, req *geminidataa
 	defer cleanup()
 
 	return client.QueryData(ctx, req)
-}
-
-func (s *Source) GetClient(ctx context.Context, tokenStr string) (*geminidataanalytics.DataChatClient, func(), error) {
-	if s.UseClientOAuth {
-		if tokenStr == "" {
-			return nil, nil, fmt.Errorf("client-side OAuth is enabled but no access token was provided")
-		}
-		token := &oauth2.Token{AccessToken: tokenStr}
-		client, err := geminidataanalytics.NewDataChatClient(ctx,
-			option.WithUserAgent(s.userAgent),
-			option.WithTokenSource(oauth2.StaticTokenSource(token)),
-		)
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to create per-request DataChatClient: %w", err)
-		}
-		return client, func() { client.Close() }, nil
-	}
-	return s.Client, func() {}, nil
 }
