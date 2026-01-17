@@ -204,4 +204,3 @@ func getCloudGdaToolsConfig() map[string]any {
 		},
 	}
 }
-
