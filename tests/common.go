@@ -1089,6 +1089,8 @@ func CleanupStaleNamespaces(t *testing.T, ctx context.Context, pool *pgxpool.Poo
 		return
 	}
 
+	t.Logf("REAPER: Found %d stale tables to delete: %v", len(tablesToDrop), tablesToDrop)
+
 	dropQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE;", strings.Join(tablesToDrop, ", "))
 	if _, err := pool.Exec(ctx, dropQuery); err != nil {
 		t.Fatalf("Failed to drop stale tables in 'public' schema: %v", err)
