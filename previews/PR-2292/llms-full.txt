@@ -13157,12 +13157,6 @@ To get started using Toolbox tools with an application, follow these general ste
 
 [Github](https://github.com/googleapis/mcp-toolbox-sdk-go)
 
-# Samples
-
-## Go SDK Samples
-Explore how to integrate the Go SDK with various orchestration frameworks.
-
-
 # JS SDK
 JS SDKs to connect to the MCP Toolbox server.
 
