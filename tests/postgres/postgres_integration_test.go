@@ -97,9 +97,10 @@ func TestPostgres(t *testing.T) {
 	tests.CleanupPostgresTables(t, ctx, pool)
 
 	// create table name with UUID
-	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
-	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	timestamp := time.Now().Unix()
+	tableNameParam := fmt.Sprintf("param_table_%d_%s", timestamp, strings.ReplaceAll(uuid.New().String(), "-", ""))
+	tableNameAuth := fmt.Sprintf("auth_table_%d_%s", timestamp, strings.ReplaceAll(uuid.New().String(), "-", ""))
+	tableNameTemplateParam := fmt.Sprintf("template_param_table_%d_%s", timestamp, strings.ReplaceAll(uuid.New().String(), "-", ""))
 
 	// set up data for param tool
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetPostgresSQLParamToolInfo(tableNameParam)

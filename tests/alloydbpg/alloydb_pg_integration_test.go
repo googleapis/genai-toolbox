@@ -130,17 +130,13 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	}
 
 	// cleanup test environment
-	tests.CleanupStaleNamespaces(t, ctx, pool)
+	tests.CleanupPostgresTables(t, ctx, pool)
 
 	// create table name with UUID
 	timestamp := time.Now().Unix()
 	tableNameParam := fmt.Sprintf("param_table_%d_%s", timestamp, strings.ReplaceAll(uuid.New().String(), "-", ""))
 	tableNameAuth := fmt.Sprintf("auth_table_%d_%s", timestamp, strings.ReplaceAll(uuid.New().String(), "-", ""))
 	tableNameTemplateParam := fmt.Sprintf("template_param_table_%d_%s", timestamp, strings.ReplaceAll(uuid.New().String(), "-", ""))
-
-	t.Logf("RUNNING TEST WITH TABLE: %s", tableNameParam)
-	t.Logf("RUNNING TEST WITH TABLE: %s", tableNameAuth)
-	t.Logf("RUNNING TEST WITH TABLE: %s", tableNameTemplateParam)
 
 	// set up data for param tool
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetPostgresSQLParamToolInfo(tableNameParam)

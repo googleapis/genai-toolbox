@@ -946,15 +946,17 @@ func TestCloudSQLMySQL_IPTypeParsingFromYAML(t *testing.T) {
 // Finds and drops all tables in a postgres database.
 func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
 	query := `
-	SELECT table_name FROM information_schema.tables
-	WHERE table_schema = 'public' AND table_type = 'BASE TABLE';`
+		SELECT table_name FROM information_schema.tables
+		WHERE table_schema = 'public' AND table_type = 'BASE TABLE';`
 
 	rows, err := pool.Query(ctx, query)
 	if err != nil {
-		t.Fatalf("Failed to query for all tables in 'public' schema: %v", err)
+		t.Fatalf("Failed to query for tables in 'public' schema: %v", err)
 	}
 	defer rows.Close()
 
+	now := time.Now().Unix()
+	const staleThresholdSeconds = 2 * 60 * 60 // 2 hours
 	var tablesToDrop []string
 	for rows.Next() {
 		var tableName string
@@ -962,7 +964,29 @@ func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool
 			t.Errorf("Failed to scan table name: %v", err)
 			continue
 		}
-		tablesToDrop = append(tablesToDrop, fmt.Sprintf("public.%q", tableName))
+
+		// Parse timestamp from names like "param_table_<ts>_<uuid>"
+		var tsString string
+		parts := strings.Split(tableName, "_")
+
+		if strings.HasPrefix(tableName, "param_table_") || strings.HasPrefix(tableName, "auth_table_") {
+			if len(parts) >= 3 {
+				tsString = parts[2]
+			}
+		} else if strings.HasPrefix(tableName, "template_param_table_") {
+			parts := strings.Split(tableName, "_")
+			if len(parts) >= 4 {
+				tsString = parts[3]
+			}
+		}
+
+		// drop if the table is older than 2 hours
+		if tsString != "" {
+			createdAt, err := strconv.ParseInt(tsString, 10, 64)
+			if err != nil || (now-createdAt) > staleThresholdSeconds {
+				tablesToDrop = append(tablesToDrop, fmt.Sprintf("public.%q", tableName))
+			}
+		}
 	}
 
 	if len(tablesToDrop) == 0 {
@@ -970,9 +994,8 @@ func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool
 	}
 
 	dropQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE;", strings.Join(tablesToDrop, ", "))
-
 	if _, err := pool.Exec(ctx, dropQuery); err != nil {
-		t.Fatalf("Failed to drop all tables in 'public' schema: %v", err)
+		t.Fatalf("Failed to drop stale tables in 'public' schema: %v", err)
 	}
 }
 
@@ -1037,63 +1060,3 @@ func CleanupMSSQLTables(t *testing.T, ctx context.Context, pool *sql.DB) {
 	}
 
 }
-
-// CleanupStaleNamespaces identifies and removes test schemas that have exceeded 
-func CleanupStaleNamespaces(t *testing.T, ctx context.Context, pool *pgxpool.Pool) {
-	query := `
-		SELECT table_name FROM information_schema.tables
-		WHERE table_schema = 'public' AND table_type = 'BASE TABLE';`
-
-	rows, err := pool.Query(ctx, query)
-	if err != nil {
-		t.Fatalf("Failed to query for all tables in 'public' schema: %v", err)
-	}
-	defer rows.Close()
-
-	now := time.Now().Unix()
-	const staleThresholdSeconds = 2 * 60 * 60 // 2 hours
-
-	var tablesToDrop []string
-	for rows.Next() {
-		var tableName string
-		if err := rows.Scan(&tableName); err != nil {
-			t.Errorf("Failed to scan table name: %v", err)
-			continue
-		}
-
-		// Parse timestamp from names like "param_table_<ts>_<uuid>"
-		var tsString string
-		parts := strings.Split(tableName, "_")
-
-		if strings.HasPrefix(tableName, "param_table_") || strings.HasPrefix(tableName, "auth_table_") {
-			if len(parts) >= 3 {
-				tsString = parts[2]
-			}
-		} else if strings.HasPrefix(tableName, "template_param_table_") {
-			parts := strings.Split(tableName, "_")
-			if len(parts) >= 4 {
-				tsString = parts[3]
-			}
-		}
-
-		// drop if the table is older than 2 hours
-		if tsString != "" {
-			createdAt, err := strconv.ParseInt(tsString, 10, 64)
-			if err != nil && (now-createdAt) > staleThresholdSeconds {
-				tablesToDrop = append(tablesToDrop, fmt.Sprintf("public.%q", tableName))
-			}
-		}
-	}
-
-	if len(tablesToDrop) == 0 {
-		return
-	}
-
-	t.Logf("REAPER: Found %d stale tables to delete: %v", len(tablesToDrop), tablesToDrop)
-
-	dropQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE;", strings.Join(tablesToDrop, ", "))
-	if _, err := pool.Exec(ctx, dropQuery); err != nil {
-		t.Fatalf("Failed to drop stale tables in 'public' schema: %v", err)
-	}
-}
-
