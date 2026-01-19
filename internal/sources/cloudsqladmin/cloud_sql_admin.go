@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -36,7 +37,10 @@ import (
 
 const SourceKind string = "cloud-sql-admin"
 
-var targetLinkRegex = regexp.MustCompile(`/projects/([^/]+)/instances/([^/]+)/databases/([^/]+)`)
+var (
+	targetLinkRegex = regexp.MustCompile(`/projects/([^/]+)/instances/([^/]+)/databases/([^/]+)`)
+	backupDRRegex   = regexp.MustCompile(`^projects/([^/]+)/locations/([^/]+)/backupVaults/([^/]+)/dataSources/([^/]+)/backups/([^/]+)$`)
+)
 
 // validate interface
 var _ sources.SourceConfig = Config{}
@@ -369,6 +373,48 @@ func (s *Source) InsertBackupRun(ctx context.Context, project, instance, locatio
 	resp, err := service.BackupRuns.Insert(project, instance, backupRun).Do()
 	if err != nil {
 		return nil, fmt.Errorf("error creating backup: %w", err)
+	}
+
+	return resp, nil
+}
+
+func (s *Source) RestoreBackup(ctx context.Context, targetProject, targetInstance, sourceProject, sourceInstance, backupID, accessToken string) (any, error) {
+	request := &sqladmin.InstancesRestoreBackupRequest{}
+
+	// There are 3 scenarios for the backup identifier:
+	// 1. The identifier is an int64 containing the timestamp of the BackupRun.
+	//    This is used to restore standard backups, and the RestoreBackupContext
+	//    field should be populated with the backup ID and source instance info.
+	// 2. The identifier is a string of the format
+	//    'projects/{project-id}/locations/{location}/backupVaults/{backupvault}/dataSources/{datasource}/backups/{backup-uid}'.
+	//    This is used to restore BackupDR backups, and the BackupdrBackup field
+	//    should be populated.
+	// 3. The identifer is a string of the format
+	//    'projects/{project-id}/backups/{backup-uid}'. In this case, the Backup
+	//    field should be populated.
+	if backupRunID, err := strconv.ParseInt(backupID, 10, 64); err == nil {
+		if sourceProject == "" || targetInstance == "" {
+			return nil, fmt.Errorf("source project and instance are required when restoring via backup ID")
+		}
+		request.RestoreBackupContext = &sqladmin.RestoreBackupContext{
+			Project:     sourceProject,
+			InstanceId:  sourceInstance,
+			BackupRunId: backupRunID,
+		}
+	} else if backupDRRegex.MatchString(backupID) {
+		request.BackupdrBackup = backupID
+	} else {
+		request.Backup = backupID
+	}
+
+	service, err := s.GetService(ctx, string(accessToken))
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := service.Instances.RestoreBackup(targetProject, targetInstance, request).Do()
+	if err != nil {
+		return nil, fmt.Errorf("error restoring backup: %w", err)
 	}
 
 	return resp, nil
