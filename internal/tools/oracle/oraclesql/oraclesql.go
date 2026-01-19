@@ -41,7 +41,7 @@ type Config struct {
 	Source             string                `yaml:"source" validate:"required"`
 	Description        string                `yaml:"description" validate:"required"`
 	Statement          string                `yaml:"statement" validate:"required"`
-	ReadOnly           *bool                 `yaml:"readonly"`
+	ReadOnly           *bool                 `yaml:"readOnly"`
 	AuthRequired       []string              `yaml:"authRequired"`
 	Parameters         parameters.Parameters `yaml:"parameters"`
 	TemplateParameters parameters.Parameters `yaml:"templateParameters"`
