@@ -41,7 +41,7 @@ func TestParseFromYamlDataplex(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-instance": dataplex.Config{
 					Name:    "my-instance",
-					Kind:    dataplex.SourceKind,
+					Type:    dataplex.SourceType,
 					Project: "my-project",
 				},
 			},

@@ -46,7 +46,7 @@ authRequired:
 `,
 			want: Config{
 				Name:         "test-update-document",
-				Kind:         "firestore-update-document",
+				Type:         "firestore-update-document",
 				Source:       "test-firestore",
 				Description:  "Update a document in Firestore",
 				AuthRequired: []string{"google-oauth"},
@@ -63,7 +63,7 @@ description: Update a document
 `,
 			want: Config{
 				Name:        "test-update-document",
-				Kind:        "firestore-update-document",
+				Type:        "firestore-update-document",
 				Source:      "test-firestore",
 				Description: "Update a document",
 			},
@@ -102,12 +102,12 @@ kind: [invalid
 	}
 }
 
-func TestConfig_ToolConfigKind(t *testing.T) {
+func TestConfig_ToolConfigType(t *testing.T) {
 	cfg := Config{}
-	got := cfg.ToolConfigKind()
+	got := cfg.ToolConfigType()
 	want := "firestore-update-document"
 	if got != want {
-		t.Fatalf("ToolConfigKind() = %v, want %v", got, want)
+		t.Fatalf("ToolConfigType() = %v, want %v", got, want)
 	}
 }
 
@@ -123,7 +123,7 @@ func TestConfig_Initialize(t *testing.T) {
 			name: "valid initialization",
 			config: Config{
 				Name:        "test-update-document",
-				Kind:        "firestore-update-document",
+				Type:        "firestore-update-document",
 				Source:      "test-firestore",
 				Description: "Update a document",
 			},
@@ -161,8 +161,8 @@ func TestConfig_Initialize(t *testing.T) {
 			if actualTool.Name != tt.config.Name {
 				t.Fatalf("tool.Name = %v, want %v", actualTool.Name, tt.config.Name)
 			}
-			if actualTool.Kind != "firestore-update-document" {
-				t.Fatalf("tool.Kind = %v, want %v", actualTool.Kind, "firestore-update-document")
+			if actualTool.Type != "firestore-update-document" {
+				t.Fatalf("tool.Type = %v, want %v", actualTool.Type, "firestore-update-document")
 			}
 			if diff := cmp.Diff(tt.config.AuthRequired, actualTool.AuthRequired); diff != "" {
 				t.Fatalf("AuthRequired mismatch (-want +got):\n%s", diff)

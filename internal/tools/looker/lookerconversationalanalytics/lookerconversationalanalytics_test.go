@@ -46,7 +46,7 @@ func TestParseFromYamlLookerConversationalAnalytics(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": lookerconversationalanalytics.Config{
 					Name:         "example_tool",
-					Kind:         "looker-conversational-analytics",
+					Type:         "looker-conversational-analytics",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

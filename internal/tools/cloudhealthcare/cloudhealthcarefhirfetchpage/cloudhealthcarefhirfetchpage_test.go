@@ -46,7 +46,7 @@ func TestParseFromYamlHealthcareFHIRFetchPage(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": fhirfetchpage.Config{
 					Name:         "example_tool",
-					Kind:         "cloud-healthcare-fhir-fetch-page",
+					Type:         "cloud-healthcare-fhir-fetch-page",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

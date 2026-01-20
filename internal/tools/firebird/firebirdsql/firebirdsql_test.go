@@ -61,7 +61,7 @@ func TestParseFromYamlFirebird(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": firebirdsql.Config{
 					Name:         "example_tool",
-					Kind:         "firebird-sql",
+					Type:         "firebird-sql",
 					Source:       "my-fdb-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -132,7 +132,7 @@ func TestParseFromYamlWithTemplateParamsFirebird(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": firebirdsql.Config{
 					Name:         "example_tool",
-					Kind:         "firebird-sql",
+					Type:         "firebird-sql",
 					Source:       "my-fdb-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",

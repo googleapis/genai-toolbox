@@ -32,8 +32,8 @@ import (
 )
 
 var (
-	OceanBaseSourceKind = "oceanbase"
-	OceanBaseToolKind   = "oceanbase-sql"
+	OceanBaseSourceType = "oceanbase"
+	OceanBaseToolType   = "oceanbase-sql"
 	OceanBaseDatabase   = os.Getenv("OCEANBASE_DATABASE")
 	OceanBaseHost       = os.Getenv("OCEANBASE_HOST")
 	OceanBasePort       = os.Getenv("OCEANBASE_PORT")
@@ -56,7 +56,7 @@ func getOceanBaseVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     OceanBaseSourceKind,
+		"kind":     OceanBaseSourceType,
 		"host":     OceanBaseHost,
 		"port":     OceanBasePort,
 		"database": OceanBaseDatabase,
@@ -105,10 +105,10 @@ func TestOceanBaseToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, OceanBaseToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, OceanBaseToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addOceanBaseExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getOceanBaseTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, OceanBaseToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, OceanBaseToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

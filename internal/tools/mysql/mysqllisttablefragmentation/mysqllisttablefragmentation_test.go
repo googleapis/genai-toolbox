@@ -49,7 +49,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": mysqllisttablefragmentation.Config{
 					Name:         "example_tool",
-					Kind:         "mysql-list-table-fragmentation",
+					Type:         "mysql-list-table-fragmentation",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},

@@ -54,7 +54,7 @@ const listStoredProcedure = `
 
 func init() {
 	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+		panic(fmt.Sprintf("tool type %q already registered", kind))
 	}
 }
 
@@ -75,11 +75,11 @@ var _ compatibleSource = &alloydbpg.Source{}
 var _ compatibleSource = &cloudsqlpg.Source{}
 var _ compatibleSource = &postgres.Source{}
 
-var compatibleSources = [...]string{alloydbpg.SourceKind, cloudsqlpg.SourceKind, postgres.SourceKind}
+var compatibleSources = [...]string{alloydbpg.SourceType, cloudsqlpg.SourceType, postgres.SourceType}
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"kind" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -88,7 +88,7 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
+func (cfg Config) ToolConfigType() string {
 	return kind
 }
 
@@ -121,7 +121,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// finish tool setup
 	return Tool{
 		name:         cfg.Name,
-		kind:         cfg.Kind,
+		kind:         cfg.Type,
 		authRequired: cfg.AuthRequired,
 		allParams:    allParameters,
 		pool:         s.PostgresPool(),

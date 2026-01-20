@@ -47,7 +47,7 @@ func TestParseFromYamlLookerAddDashboardFilter(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": lkr.Config{
 					Name:         "example_tool",
-					Kind:         "looker-add-dashboard-filter",
+					Type:         "looker-add-dashboard-filter",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

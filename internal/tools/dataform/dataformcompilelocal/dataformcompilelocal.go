@@ -31,7 +31,7 @@ const kind string = "dataform-compile-local"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+		panic(fmt.Sprintf("tool type %q already registered", kind))
 	}
 }
 
@@ -45,14 +45,14 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Kind         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"kind" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
 }
 
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
+func (cfg Config) ToolConfigType() string {
 	return kind
 }
 

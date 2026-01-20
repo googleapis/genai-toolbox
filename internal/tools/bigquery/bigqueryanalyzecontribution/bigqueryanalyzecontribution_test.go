@@ -46,7 +46,7 @@ func TestParseFromYamlBigQueryAnalyzeContribution(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": bigqueryanalyzecontribution.Config{
 					Name:         "example_tool",
-					Kind:         "bigquery-analyze-contribution",
+					Type:         "bigquery-analyze-contribution",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

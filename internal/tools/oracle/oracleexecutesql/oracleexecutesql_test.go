@@ -36,7 +36,7 @@ func TestParseFromYamlOracleExecuteSql(t *testing.T) {
 			want: server.ToolConfigs{
 				"run_adhoc_query": oracleexecutesql.Config{
 					Name:         "run_adhoc_query",
-					Kind:         "oracle-execute-sql",
+					Type:         "oracle-execute-sql",
 					Source:       "my-oracle-instance",
 					Description:  "Executes arbitrary SQL statements like INSERT or UPDATE.",
 					AuthRequired: []string{"my-google-auth-service"},
@@ -55,7 +55,7 @@ func TestParseFromYamlOracleExecuteSql(t *testing.T) {
 			want: server.ToolConfigs{
 				"run_simple_update": oracleexecutesql.Config{
 					Name:         "run_simple_update",
-					Kind:         "oracle-execute-sql",
+					Type:         "oracle-execute-sql",
 					Source:       "db-dev",
 					Description:  "Runs a simple update operation.",
 					AuthRequired: []string{},

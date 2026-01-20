@@ -49,7 +49,7 @@ func TestParseFromYamlPostgresListRoles(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslistroles.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-roles",
+					Type:         "postgres-list-roles",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
@@ -68,7 +68,7 @@ func TestParseFromYamlPostgresListRoles(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslistroles.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-roles",
+					Type:         "postgres-list-roles",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

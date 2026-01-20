@@ -55,7 +55,7 @@ func RunParseFromYAMLTests(t *testing.T, kind string, newConfig func(c createbat
 			want: server.ToolConfigs{
 				"example_tool": newConfig(createbatch.Config{
 					Name:         "example_tool",
-					Kind:         kind,
+					Type:         kind,
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -80,7 +80,7 @@ func RunParseFromYAMLTests(t *testing.T, kind string, newConfig func(c createbat
 			want: server.ToolConfigs{
 				"example_tool": newConfig(createbatch.Config{
 					Name:        "example_tool",
-					Kind:        kind,
+					Type:        kind,
 					Source:      "my-instance",
 					Description: "some description",
 					RuntimeConfig: &dataproc.RuntimeConfig{

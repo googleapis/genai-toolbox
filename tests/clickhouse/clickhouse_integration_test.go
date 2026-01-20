@@ -35,8 +35,8 @@ import (
 )
 
 var (
-	ClickHouseSourceKind = "clickhouse"
-	ClickHouseToolKind   = "clickhouse-sql"
+	ClickHouseSourceType = "clickhouse"
+	ClickHouseToolType   = "clickhouse-sql"
 	ClickHouseDatabase   = os.Getenv("CLICKHOUSE_DATABASE")
 	ClickHouseHost       = os.Getenv("CLICKHOUSE_HOST")
 	ClickHousePort       = os.Getenv("CLICKHOUSE_PORT")
@@ -64,7 +64,7 @@ func getClickHouseVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     ClickHouseSourceKind,
+		"kind":     ClickHouseSourceType,
 		"host":     ClickHouseHost,
 		"port":     ClickHousePort,
 		"database": ClickHouseDatabase,
@@ -126,10 +126,10 @@ func TestClickHouse(t *testing.T) {
 	teardownTable2 := setupClickHouseSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
 	defer teardownTable2(t)
 
-	toolsFile := tests.GetToolsConfig(sourceConfig, ClickHouseToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, ClickHouseToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addClickHouseExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getClickHouseSQLTmplToolStatement()
-	toolsFile = addClickHouseTemplateParamConfig(t, toolsFile, ClickHouseToolKind, tmplSelectCombined, tmplSelectFilterCombined)
+	toolsFile = addClickHouseTemplateParamConfig(t, toolsFile, ClickHouseToolType, tmplSelectCombined, tmplSelectFilterCombined)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -178,7 +178,7 @@ func addClickHouseExecuteSqlConfig(t *testing.T, config map[string]any) map[stri
 	return config
 }
 
-func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolKind, tmplSelectCombined, tmplSelectFilterCombined string) map[string]any {
+func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolType, tmplSelectCombined, tmplSelectFilterCombined string) map[string]any {
 	toolsMap, ok := config["tools"].(map[string]any)
 	if !ok {
 		t.Fatalf("unable to get tools from config")
@@ -186,7 +186,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 
 	// ClickHouse-specific template parameter tools with compatible syntax
 	toolsMap["create-table-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "CREATE TABLE {{.tableName}} ({{array .columns}}) ORDER BY id",
@@ -196,7 +196,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		},
 	}
 	toolsMap["insert-table-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Insert table tool with template parameters",
 		"statement":   "INSERT INTO {{.tableName}} ({{array .columns}}) VALUES ({{.values}})",
@@ -207,7 +207,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		},
 	}
 	toolsMap["select-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Select table tool with template parameters",
 		"statement":   "SELECT id AS \"id\", name AS \"name\", age AS \"age\" FROM {{.tableName}} ORDER BY id",
@@ -216,7 +216,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		},
 	}
 	toolsMap["select-templateParams-combined-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Select table tool with combined template parameters",
 		"statement":   tmplSelectCombined,
@@ -228,7 +228,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		},
 	}
 	toolsMap["select-fields-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Select specific fields tool with template parameters",
 		"statement":   "SELECT name AS \"name\" FROM {{.tableName}} ORDER BY id",
@@ -237,7 +237,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 		},
 	}
 	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Select table tool with filter template parameters",
 		"statement":   tmplSelectFilterCombined,
@@ -251,7 +251,7 @@ func addClickHouseTemplateParamConfig(t *testing.T, config map[string]any, toolK
 	}
 	// Firebird uses simple DROP TABLE syntax without IF EXISTS
 	toolsMap["drop-table-templateParams-tool"] = map[string]any{
-		"kind":        toolKind,
+		"kind":        toolType,
 		"source":      "my-instance",
 		"description": "Drop table tool with template parameters",
 		"statement":   "DROP TABLE {{.tableName}}",
@@ -310,7 +310,7 @@ func TestClickHouseBasicConnection(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        ClickHouseToolKind,
+				"kind":        ClickHouseToolType,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "SELECT 1;",
@@ -386,13 +386,13 @@ func TestClickHouseSQLTool(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"test-select": map[string]any{
-				"kind":        ClickHouseToolKind,
+				"kind":        ClickHouseToolType,
 				"source":      "my-instance",
 				"description": "Test select query",
 				"statement":   fmt.Sprintf("SELECT * FROM %s ORDER BY id", tableName),
 			},
 			"test-param-query": map[string]any{
-				"kind":        ClickHouseToolKind,
+				"kind":        ClickHouseToolType,
 				"source":      "my-instance",
 				"description": "Test parameterized query",
 				"statement":   fmt.Sprintf("SELECT * FROM %s WHERE age > ? ORDER BY id", tableName),
@@ -401,7 +401,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 				},
 			},
 			"test-empty-result": map[string]any{
-				"kind":        ClickHouseToolKind,
+				"kind":        ClickHouseToolType,
 				"source":      "my-instance",
 				"description": "Test query with no results",
 				"statement":   fmt.Sprintf("SELECT * FROM %s WHERE id = ?", tableName),
@@ -410,7 +410,7 @@ func TestClickHouseSQLTool(t *testing.T) {
 				},
 			},
 			"test-invalid-sql": map[string]any{
-				"kind":        ClickHouseToolKind,
+				"kind":        ClickHouseToolType,
 				"source":      "my-instance",
 				"description": "Test invalid SQL",
 				"statement":   "SELEC * FROM nonexistent_table", // Typo in SELECT

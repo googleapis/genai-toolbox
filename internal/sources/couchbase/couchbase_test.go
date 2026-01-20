@@ -45,7 +45,7 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-couchbase-instance": couchbase.Config{
 					Name:             "my-couchbase-instance",
-					Kind:             couchbase.SourceKind,
+					Type:             couchbase.SourceType,
 					ConnectionString: "localhost",
 					Username:         "Administrator",
 					Password:         "password",
@@ -74,7 +74,7 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-couchbase-instance": couchbase.Config{
 					Name:                 "my-couchbase-instance",
-					Kind:                 couchbase.SourceKind,
+					Type:                 couchbase.SourceType,
 					ConnectionString:     "couchbases://localhost",
 					Bucket:               "travel-sample",
 					Scope:                "inventory",

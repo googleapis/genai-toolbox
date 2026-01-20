@@ -49,7 +49,7 @@ func TestParseFromYamlPostgresListTablespaces(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslisttablespaces.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-tablespaces",
+					Type:         "postgres-list-tablespaces",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
@@ -68,7 +68,7 @@ func TestParseFromYamlPostgresListTablespaces(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslisttablespaces.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-tablespaces",
+					Type:         "postgres-list-tablespaces",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

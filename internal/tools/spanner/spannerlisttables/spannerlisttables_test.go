@@ -46,7 +46,7 @@ func TestParseFromYamlListTables(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": spannerlisttables.Config{
 					Name:         "example_tool",
-					Kind:         "spanner-list-tables",
+					Type:         "spanner-list-tables",
 					Source:       "my-spanner-instance",
 					Description:  "Lists tables in the database",
 					AuthRequired: []string{},
@@ -68,7 +68,7 @@ func TestParseFromYamlListTables(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": spannerlisttables.Config{
 					Name:         "example_tool",
-					Kind:         "spanner-list-tables",
+					Type:         "spanner-list-tables",
 					Source:       "my-spanner-instance",
 					Description:  "Lists tables in the database",
 					AuthRequired: []string{"auth1", "auth2"},
@@ -86,7 +86,7 @@ func TestParseFromYamlListTables(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": spannerlisttables.Config{
 					Name:         "example_tool",
-					Kind:         "spanner-list-tables",
+					Type:         "spanner-list-tables",
 					Source:       "my-spanner-instance",
 					Description:  "",
 					AuthRequired: []string{},

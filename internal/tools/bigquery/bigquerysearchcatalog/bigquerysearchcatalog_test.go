@@ -46,7 +46,7 @@ func TestParseFromYamlBigQuerySearch(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": bigquerysearchcatalog.Config{
 					Name:         "example_tool",
-					Kind:         "bigquery-search-catalog",
+					Type:         "bigquery-search-catalog",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

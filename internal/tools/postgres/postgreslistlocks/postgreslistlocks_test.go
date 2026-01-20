@@ -49,7 +49,7 @@ func TestParseFromYamlPostgresListLocks(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslistlocks.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-locks",
+					Type:         "postgres-list-locks",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
@@ -68,7 +68,7 @@ func TestParseFromYamlPostgresListLocks(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslistlocks.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-locks",
+					Type:         "postgres-list-locks",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

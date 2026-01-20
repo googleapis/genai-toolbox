@@ -43,7 +43,7 @@ func TestParseFromYamlCloudHealthcare(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-instance": cloudhealthcare.Config{
 					Name:           "my-instance",
-					Kind:           cloudhealthcare.SourceKind,
+					Type:           cloudhealthcare.SourceType,
 					Project:        "my-project",
 					Region:         "us-central1",
 					Dataset:        "my-dataset",
@@ -65,7 +65,7 @@ func TestParseFromYamlCloudHealthcare(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-instance": cloudhealthcare.Config{
 					Name:           "my-instance",
-					Kind:           cloudhealthcare.SourceKind,
+					Type:           cloudhealthcare.SourceType,
 					Project:        "my-project",
 					Region:         "us",
 					Dataset:        "my-dataset",
@@ -91,7 +91,7 @@ func TestParseFromYamlCloudHealthcare(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-instance": cloudhealthcare.Config{
 					Name:               "my-instance",
-					Kind:               cloudhealthcare.SourceKind,
+					Type:               cloudhealthcare.SourceType,
 					Project:            "my-project",
 					Region:             "us",
 					Dataset:            "my-dataset",

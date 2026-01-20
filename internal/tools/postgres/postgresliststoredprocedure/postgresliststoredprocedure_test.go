@@ -49,7 +49,7 @@ func TestParseFromYamlPostgresListStoredProcedure(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgresliststoredprocedure.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-stored-procedure",
+					Type:         "postgres-list-stored-procedure",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
@@ -68,7 +68,7 @@ func TestParseFromYamlPostgresListStoredProcedure(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgresliststoredprocedure.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-stored-procedure",
+					Type:         "postgres-list-stored-procedure",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

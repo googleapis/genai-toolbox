@@ -47,7 +47,7 @@ func TestParseFromYamlLookerUpdateProjectFile(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": lkr.Config{
 					Name:         "example_tool",
-					Kind:         "looker-update-project-file",
+					Type:         "looker-update-project-file",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

@@ -54,7 +54,7 @@ func TestParseFromYamlRedis(t *testing.T) {
 			want: server.ToolConfigs{
 				"redis_tool": redis.Config{
 					Name:         "redis_tool",
-					Kind:         "redis",
+					Type:         "redis",
 					Source:       "my-redis-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

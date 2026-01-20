@@ -42,7 +42,7 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-cloud-monitoring-instance": cloudmonitoring.Config{
 					Name:           "my-cloud-monitoring-instance",
-					Kind:           cloudmonitoring.SourceKind,
+					Type:           cloudmonitoring.SourceType,
 					UseClientOAuth: false,
 				},
 			},
@@ -58,7 +58,7 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-cloud-monitoring-instance": cloudmonitoring.Config{
 					Name:           "my-cloud-monitoring-instance",
-					Kind:           cloudmonitoring.SourceKind,
+					Type:           cloudmonitoring.SourceType,
 					UseClientOAuth: true,
 				},
 			},

@@ -28,8 +28,8 @@ import (
 )
 
 var (
-	RedisSourceKind = "redis"
-	RedisToolKind   = "redis"
+	RedisSourceType = "redis"
+	RedisToolType   = "redis"
 	RedisAddress    = os.Getenv("REDIS_ADDRESS")
 	RedisPass       = os.Getenv("REDIS_PASS")
 )
@@ -42,7 +42,7 @@ func getRedisVars(t *testing.T) map[string]any {
 		t.Fatal("'REDIS_PASS' not set")
 	}
 	return map[string]any{
-		"kind":     RedisSourceKind,
+		"kind":     RedisSourceType,
 		"address":  []string{RedisAddress},
 		"password": RedisPass,
 	}
@@ -81,7 +81,7 @@ func TestRedisToolEndpoints(t *testing.T) {
 	defer teardownDB(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetRedisValkeyToolsConfig(sourceConfig, RedisToolKind)
+	toolsFile := tests.GetRedisValkeyToolsConfig(sourceConfig, RedisToolType)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

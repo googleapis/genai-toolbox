@@ -33,7 +33,7 @@ import (
 )
 
 var (
-	cloudGdaToolKind = "cloud-gemini-data-analytics-query"
+	cloudGdaToolType = "cloud-gemini-data-analytics-query"
 )
 
 type cloudGdaTransport struct {
@@ -211,7 +211,7 @@ func getCloudGdaToolsConfig() map[string]any {
 		},
 		"tools": map[string]any{
 			"cloud-gda-query": map[string]any{
-				"kind":        cloudGdaToolKind,
+				"kind":        cloudGdaToolType,
 				"source":      "my-gda-source",
 				"description": "Test GDA Tool",
 				"location":    "us-central1",

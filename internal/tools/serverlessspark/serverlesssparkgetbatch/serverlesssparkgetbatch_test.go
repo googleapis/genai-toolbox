@@ -46,7 +46,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": serverlesssparkgetbatch.Config{
 					Name:         "example_tool",
-					Kind:         "serverless-spark-get-batch",
+					Type:         "serverless-spark-get-batch",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

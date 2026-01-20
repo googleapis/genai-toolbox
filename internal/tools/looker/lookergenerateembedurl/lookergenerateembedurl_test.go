@@ -47,7 +47,7 @@ func TestParseFromYamlLookerGenerateEmbedUrl(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": lkr.Config{
 					Name:         "example_tool",
-					Kind:         "looker-generate-embed-url",
+					Type:         "looker-generate-embed-url",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

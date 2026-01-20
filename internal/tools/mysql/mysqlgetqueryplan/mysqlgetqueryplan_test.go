@@ -49,7 +49,7 @@ func TestParseFromYamlGetQueryPlan(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": mysqlgetqueryplan.Config{
 					Name:         "example_tool",
-					Kind:         "mysql-get-query-plan",
+					Type:         "mysql-get-query-plan",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},

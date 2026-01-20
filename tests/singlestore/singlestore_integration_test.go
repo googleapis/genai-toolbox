@@ -30,8 +30,8 @@ import (
 )
 
 var (
-	SingleStoreSourceKind = "singlestore"
-	SingleStoreToolKind   = "singlestore-sql"
+	SingleStoreSourceType = "singlestore"
+	SingleStoreToolType   = "singlestore-sql"
 	SingleStoreDatabase   = os.Getenv("SINGLESTORE_DATABASE")
 	SingleStoreHost       = os.Getenv("SINGLESTORE_HOST")
 	SingleStorePort       = os.Getenv("SINGLESTORE_PORT")
@@ -54,7 +54,7 @@ func getSingleStoreVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     SingleStoreSourceKind,
+		"kind":     SingleStoreSourceType,
 		"host":     SingleStoreHost,
 		"port":     SingleStorePort,
 		"database": SingleStoreDatabase,
@@ -130,8 +130,8 @@ func setupSingleStoreTable(t *testing.T, ctx context.Context, pool *sql.DB, crea
 	}
 }
 
-func getSingleStoreToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
-	toolsFile := tests.GetToolsConfig(sourceConfig, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement)
+func getSingleStoreToolsConfig(sourceConfig map[string]any, toolType, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
+	toolsFile := tests.GetToolsConfig(sourceConfig, toolType, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement)
 
 	toolsMap, ok := toolsFile["tools"].(map[string]any)
 	if !ok {
@@ -207,10 +207,10 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := getSingleStoreToolsConfig(sourceConfig, SingleStoreToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := getSingleStoreToolsConfig(sourceConfig, SingleStoreToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addSingleStoreExecuteSQLConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getSingleStoreTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SingleStoreToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, SingleStoreToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
