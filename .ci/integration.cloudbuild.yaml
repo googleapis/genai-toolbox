@@ -293,7 +293,7 @@ steps:
         .ci/test_with_coverage.sh \
           "Cloud Healthcare API" \
           cloudhealthcare \
-          cloudhealthcare || echo "Integration tests failed."
+          cloudhealthcare
 
   - id: "postgres"
     name: golang:1
