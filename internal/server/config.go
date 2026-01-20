@@ -64,12 +64,14 @@ type ServerConfig struct {
 	Stdio bool
 	// DisableReload indicates if the user has disabled dynamic reloading for Toolbox.
 	DisableReload bool
-	// UI indicates if Toolbox UI endpoints (/ui) are available
+	// UI indicates if Toolbox UI endpoints (/ui) are available.
 	UI bool
 	// Specifies a list of origins permitted to access this server.
 	AllowedOrigins []string
-	// Specifies a list of hosts permitted to access this server
+	// Specifies a list of hosts permitted to access this server.
 	AllowedHosts []string
+	// UserAgentMetadata specifies additional metadata to append to the User-Agent string.
+	UserAgentMetadata []string
 }
 
 type logFormat string

@@ -27,19 +27,21 @@ import (
 	v20241105 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20241105"
 	v20250326 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20250326"
 	v20250618 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20250618"
+	v20251125 "github.com/googleapis/genai-toolbox/internal/server/mcp/v20251125"
 	"github.com/googleapis/genai-toolbox/internal/server/resources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 )
 
 // LATEST_PROTOCOL_VERSION is the latest version of the MCP protocol supported.
 // Update the version used in InitializeResponse when this value is updated.
-const LATEST_PROTOCOL_VERSION = v20250618.PROTOCOL_VERSION
+const LATEST_PROTOCOL_VERSION = v20251125.PROTOCOL_VERSION
 
 // SUPPORTED_PROTOCOL_VERSIONS is the MCP protocol versions that are supported.
 var SUPPORTED_PROTOCOL_VERSIONS = []string{
 	v20241105.PROTOCOL_VERSION,
 	v20250326.PROTOCOL_VERSION,
 	v20250618.PROTOCOL_VERSION,
+	v20251125.PROTOCOL_VERSION,
 }
 
 // InitializeResponse runs capability negotiation and protocol version agreement.
@@ -102,6 +104,8 @@ func NotificationHandler(ctx context.Context, body []byte) error {
 // This is the Operation phase of the lifecycle for MCP client-server connections.
 func ProcessMethod(ctx context.Context, mcpVersion string, id jsonrpc.RequestId, method string, toolset tools.Toolset, promptset prompts.Promptset, resourceMgr *resources.ResourceManager, body []byte, header http.Header) (any, error) {
 	switch mcpVersion {
+	case v20251125.PROTOCOL_VERSION:
+		return v20251125.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
 	case v20250618.PROTOCOL_VERSION:
 		return v20250618.ProcessMethod(ctx, id, method, toolset, promptset, resourceMgr, body, header)
 	case v20250326.PROTOCOL_VERSION:
