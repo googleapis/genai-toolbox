@@ -4117,6 +4117,7 @@ instance, database and users:
         * `create_instance`
         * `create_user`
         * `clone_instance`
+        * `restore_backup`
 
 ## Install MCP Toolbox
 
@@ -4364,6 +4365,7 @@ instances and interacting with your database:
 * **wait_for_operation**: Waits for a Cloud SQL operation to complete.
 * **clone_instance**: Creates a clone of an existing Cloud SQL for PostgreSQL instance.
 * **create_backup**: Creates a backup on a Cloud SQL instance.
+* **restore_backup**: Restores a backup of a Cloud SQL instance.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
@@ -4423,6 +4425,7 @@ database and users:
         * `create_instance`
         * `create_user`
         * `clone_instance`
+        * `restore_backup`
 
 ## Install MCP Toolbox
 
@@ -4670,6 +4673,7 @@ instances and interacting with your database:
 * **wait_for_operation**: Waits for a Cloud SQL operation to complete.
 * **clone_instance**: Creates a clone of an existing Cloud SQL for MySQL instance.
 * **create_backup**: Creates a backup on a Cloud SQL instance.
+* **restore_backup**: Restores a backup of a Cloud SQL instance.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
@@ -4729,6 +4733,7 @@ instance, database and users:
         * `create_instance`
         * `create_user`
         * `clone_instance`
+        * `restore_backup`
 
 ## Install MCP Toolbox
 
@@ -4976,6 +4981,7 @@ instances and interacting with your database:
 * **wait_for_operation**: Waits for a Cloud SQL operation to complete.
 * **clone_instance**: Creates a clone of an existing Cloud SQL for SQL Server instance.
 * **create_backup**: Creates a backup on a Cloud SQL instance.
+* **restore_backup**: Restores a backup of a Cloud SQL instance.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs
@@ -5533,6 +5539,7 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 {{< tab header="Python" lang="python" >}}
 import asyncio
 from toolbox_core import ToolboxClient, auth_methods
+from toolbox_core.protocol import Protocol
 
 # Replace with the Cloud Run service URL generated in the previous step
 URL = "https://cloud-run-url.app"
@@ -5543,6 +5550,7 @@ async def main():
   async with ToolboxClient(
       URL,
       client_headers={"Authorization": auth_token_provider},
+      protocol=Protocol.TOOLBOX,
   ) as toolbox:
     toolset = await toolbox.load_toolset()
     # ...
@@ -5608,6 +5616,7 @@ contain the specific error message needed to diagnose the problem.
   - Ensure the `toolbox-identity` service account has the **Secret Manager
       Secret Accessor** (`roles/secretmanager.secretAccessor`) IAM role.
 
+- **Cloud Run Connections via IAP:** Currently we do not support Cloud Run connections via [IAP](https://docs.cloud.google.com/iap/docs/concepts-overview). Please disable IAP if you are using it.
 
 # Deploy ADK Agent and MCP Toolbox
 How to deploy your ADK Agent to Vertex AI Agent Engine and connect it to an MCP Toolbox deployed on Cloud Run.
@@ -13762,6 +13771,7 @@ See [Usage Examples](../reference/cli.md#examples).
         * `create_instance`
         * `create_user`
         * `clone_instance`
+        * `restore_backup`
 
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for MySQL instance.
@@ -13773,6 +13783,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
     *   `clone_instance`: Creates a clone for an existing Cloud SQL for MySQL instance.
     *   `create_backup`: Creates a backup on a Cloud SQL instance.
+    *   `restore_backup`: Restores a backup of a Cloud SQL instance.
 
 ## Cloud SQL for PostgreSQL
 
@@ -13852,6 +13863,7 @@ See [Usage Examples](../reference/cli.md#examples).
         * `create_instance`
         * `create_user`
         * `clone_instance`
+        * `restore_backup`
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for PostgreSQL instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -13862,6 +13874,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
     *   `clone_instance`: Creates a clone for an existing Cloud SQL for PostgreSQL instance.
     *   `create_backup`: Creates a backup on a Cloud SQL instance.
+    *   `restore_backup`: Restores a backup of a Cloud SQL instance.
 
 ## Cloud SQL for SQL Server
 
@@ -13915,6 +13928,7 @@ See [Usage Examples](../reference/cli.md#examples).
         * `create_instance`
         * `create_user`
         * `clone_instance`
+        * `restore_backup`
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for SQL Server instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -13925,6 +13939,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
     *   `clone_instance`: Creates a clone for an existing Cloud SQL for SQL Server instance.
     *   `create_backup`: Creates a backup on a Cloud SQL instance.
+    *   `restore_backup`: Restores a backup of a Cloud SQL instance.
 
 ## Dataplex
 
