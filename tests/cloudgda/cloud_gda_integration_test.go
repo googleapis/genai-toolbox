@@ -139,12 +139,12 @@ func TestCloudGdaToolEndpoints(t *testing.T) {
 	// 1. RunToolGetTestByName
 	expectedManifest := map[string]any{
 		toolName: map[string]any{
-			"description": "Test GDA Tool",
+			"description": "Test GDA Tool\n\n" + cloudgda.Guidance,
 			"parameters": []any{
 				map[string]any{
-					"name":        "prompt",
+					"name":        "query",
 					"type":        "string",
-					"description": "The natural language question to ask.",
+					"description": "A natural language formulation of a database query.",
 					"required":    true,
 					"authSources": []any{},
 				},
@@ -155,7 +155,7 @@ func TestCloudGdaToolEndpoints(t *testing.T) {
 	tests.RunToolGetTestByName(t, toolName, expectedManifest)
 
 	// 2. RunToolInvokeParametersTest
-	params := []byte(`{"prompt": "test question"}`)
+	params := []byte(`{"query": "test question"}`)
 	tests.RunToolInvokeParametersTest(t, toolName, params, "\"queryResult\":\"SELECT * FROM table;\"")
 
 	// 3. Manual MCP Tool Call Test
@@ -172,7 +172,7 @@ func TestCloudGdaToolEndpoints(t *testing.T) {
 		Params: map[string]any{
 			"name": toolName,
 			"arguments": map[string]any{
-				"prompt": "test question",
+				"query": "test question",
 			},
 		},
 	}
