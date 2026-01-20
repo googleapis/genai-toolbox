@@ -70,6 +70,9 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	if c.AllowedHosts == nil {
 		c.AllowedHosts = []string{"*"}
 	}
+	if c.UserAgentMetadata == nil {
+		c.UserAgentMetadata = []string{}
+	}
 	return c
 }
 
@@ -228,6 +231,13 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--allowed-hosts", "http://foo.com,http://bar.com"},
 			want: withDefaults(server.ServerConfig{
 				AllowedHosts: []string{"http://foo.com", "http://bar.com"},
+			}),
+		},
+		{
+			desc: "user agent metadata",
+			args: []string{"--user-agent-metadata", "foo,bar"},
+			want: withDefaults(server.ServerConfig{
+				UserAgentMetadata: []string{"foo", "bar"},
 			}),
 		},
 	}

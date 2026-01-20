@@ -64,7 +64,11 @@ func InitializeConfigs(ctx context.Context, cfg ServerConfig) (
 	map[string]prompts.Promptset,
 	error,
 ) {
-	ctx = util.WithUserAgent(ctx, cfg.Version)
+	metadataStr := cfg.Version
+	if len(cfg.UserAgentMetadata) > 0 {
+		metadataStr += "+" + strings.Join(cfg.UserAgentMetadata, "+")
+	}
+	ctx = util.WithUserAgent(ctx, metadataStr)
 	instrumentation, err := util.InstrumentationFromContext(ctx)
 	if err != nil {
 		panic(err)
