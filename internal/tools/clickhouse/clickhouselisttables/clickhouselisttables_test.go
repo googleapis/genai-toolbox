@@ -24,10 +24,10 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-func TestListTablesConfigToolConfigKind(t *testing.T) {
+func TestListTablesConfigToolConfigType(t *testing.T) {
 	cfg := Config{}
-	if cfg.ToolConfigKind() != listTablesKind {
-		t.Errorf("expected %q, got %q", listTablesKind, cfg.ToolConfigKind())
+	if cfg.ToolConfigType() != listTablesType {
+		t.Errorf("expected %q, got %q", listTablesType, cfg.ToolConfigType())
 	}
 }
 
@@ -53,7 +53,7 @@ func TestParseFromYamlClickHouseListTables(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": Config{
 					Name:         "example_tool",
-					Kind:         "clickhouse-list-tables",
+					Type:         "clickhouse-list-tables",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

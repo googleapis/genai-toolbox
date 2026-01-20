@@ -141,7 +141,7 @@ func TestUpdateServer(t *testing.T) {
 		"example-source": &alloydbpg.Source{
 			Config: alloydbpg.Config{
 				Name: "example-alloydb-source",
-				Kind: "alloydb-postgres",
+				Type: "alloydb-postgres",
 			},
 		},
 	}

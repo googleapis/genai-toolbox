@@ -61,7 +61,7 @@ func TestParseFromYamlCassandra(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": cassandracql.Config{
 					Name:         "example_tool",
-					Kind:         "cassandra-cql",
+					Type:         "cassandra-cql",
 					Source:       "my-cassandra-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM CQL_STATEMENT;\n",
@@ -111,7 +111,7 @@ func TestParseFromYamlCassandra(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": cassandracql.Config{
 					Name:         "example_tool",
-					Kind:         "cassandra-cql",
+					Type:         "cassandra-cql",
 					Source:       "my-cassandra-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM CQL_STATEMENT;\n",
@@ -142,7 +142,7 @@ func TestParseFromYamlCassandra(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": cassandracql.Config{
 					Name:               "example_tool",
-					Kind:               "cassandra-cql",
+					Type:               "cassandra-cql",
 					Source:             "my-cassandra-instance",
 					Description:        "some description",
 					Statement:          "SELECT * FROM CQL_STATEMENT;\n",

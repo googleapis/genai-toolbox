@@ -27,10 +27,10 @@ type Message = prompts.Message
 
 const kind = "custom"
 
-// init registers this prompt kind with the prompt framework.
+// init registers this prompt type with the prompt framework.
 func init() {
 	if !prompts.Register(kind, newConfig) {
-		panic(fmt.Sprintf("prompt kind %q already registered", kind))
+		panic(fmt.Sprintf("prompt type %q already registered", kind))
 	}
 }
 
@@ -56,7 +56,7 @@ type Config struct {
 var _ prompts.PromptConfig = Config{}
 var _ prompts.Prompt = Prompt{}
 
-func (c Config) PromptConfigKind() string {
+func (c Config) PromptConfigType() string {
 	return kind
 }
 

@@ -47,7 +47,7 @@ func TestParseFromYamlLookerHealthAnalyze(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": lha.Config{
 					Name:         "example_tool",
-					Kind:         "looker-health-analyze",
+					Type:         "looker-health-analyze",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

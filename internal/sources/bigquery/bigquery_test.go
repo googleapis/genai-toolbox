@@ -46,7 +46,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-instance": bigquery.Config{
 					Name:      "my-instance",
-					Kind:      bigquery.SourceKind,
+					Type:      bigquery.SourceType,
 					Project:   "my-project",
 					Location:  "",
 					WriteMode: "",
@@ -66,7 +66,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-instance": bigquery.Config{
 					Name:           "my-instance",
-					Kind:           bigquery.SourceKind,
+					Type:           bigquery.SourceType,
 					Project:        "my-project",
 					Location:       "asia",
 					WriteMode:      "blocked",
@@ -87,7 +87,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-instance": bigquery.Config{
 					Name:           "my-instance",
-					Kind:           bigquery.SourceKind,
+					Type:           bigquery.SourceType,
 					Project:        "my-project",
 					Location:       "us",
 					UseClientOAuth: true,
@@ -108,7 +108,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-instance": bigquery.Config{
 					Name:            "my-instance",
-					Kind:            bigquery.SourceKind,
+					Type:            bigquery.SourceType,
 					Project:         "my-project",
 					Location:        "us",
 					AllowedDatasets: []string{"my_dataset"},
@@ -128,7 +128,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-instance": bigquery.Config{
 					Name:                      "my-instance",
-					Kind:                      bigquery.SourceKind,
+					Type:                      bigquery.SourceType,
 					Project:                   "my-project",
 					Location:                  "us",
 					ImpersonateServiceAccount: "service-account@my-project.iam.gserviceaccount.com",
@@ -150,7 +150,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-instance": bigquery.Config{
 					Name:     "my-instance",
-					Kind:     bigquery.SourceKind,
+					Type:     bigquery.SourceType,
 					Project:  "my-project",
 					Location: "us",
 					Scopes:   []string{"https://www.googleapis.com/auth/bigquery", "https://www.googleapis.com/auth/cloud-platform"},
@@ -170,7 +170,7 @@ func TestParseFromYamlBigQuery(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-instance": bigquery.Config{
 					Name:               "my-instance",
-					Kind:               bigquery.SourceKind,
+					Type:               bigquery.SourceType,
 					Project:            "my-project",
 					Location:           "us",
 					MaxQueryResultRows: 10,
@@ -260,7 +260,7 @@ func TestInitialize_MaxQueryResultRows(t *testing.T) {
 			desc: "default value",
 			cfg: bigquery.Config{
 				Name:           "test-default",
-				Kind:           bigquery.SourceKind,
+				Type:           bigquery.SourceType,
 				Project:        "test-project",
 				UseClientOAuth: true,
 			},
@@ -270,7 +270,7 @@ func TestInitialize_MaxQueryResultRows(t *testing.T) {
 			desc: "configured value",
 			cfg: bigquery.Config{
 				Name:               "test-configured",
-				Kind:               bigquery.SourceKind,
+				Type:               bigquery.SourceType,
 				Project:            "test-project",
 				UseClientOAuth:     true,
 				MaxQueryResultRows: 100,

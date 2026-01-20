@@ -49,7 +49,7 @@ func TestParseFromYamlPostgresListTables(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslistactivequeries.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-active-queries",
+					Type:         "postgres-list-active-queries",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
@@ -68,7 +68,7 @@ func TestParseFromYamlPostgresListTables(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslistactivequeries.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-active-queries",
+					Type:         "postgres-list-active-queries",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

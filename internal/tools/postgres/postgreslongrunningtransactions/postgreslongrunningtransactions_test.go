@@ -49,7 +49,7 @@ func TestParseFromYamlPostgresLongRunningTransactions(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslongrunningtransactions.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-long-running-transactions",
+					Type:         "postgres-long-running-transactions",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
@@ -68,7 +68,7 @@ func TestParseFromYamlPostgresLongRunningTransactions(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslongrunningtransactions.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-long-running-transactions",
+					Type:         "postgres-long-running-transactions",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

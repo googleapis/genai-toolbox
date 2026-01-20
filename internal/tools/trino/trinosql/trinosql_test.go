@@ -61,7 +61,7 @@ func TestParseFromYamlTrino(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": trinosql.Config{
 					Name:         "example_tool",
-					Kind:         "trino-sql",
+					Type:         "trino-sql",
 					Source:       "my-trino-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM catalog.schema.table WHERE id = ?;\n",
@@ -145,7 +145,7 @@ func TestParseFromYamlWithTemplateParamsTrino(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": trinosql.Config{
 					Name:         "example_tool",
-					Kind:         "trino-sql",
+					Type:         "trino-sql",
 					Source:       "my-trino-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM {{ .catalog }}.{{ .schema }}.{{ .tableName }} WHERE country = ?;\n",

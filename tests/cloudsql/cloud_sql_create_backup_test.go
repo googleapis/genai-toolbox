@@ -36,7 +36,7 @@ import (
 )
 
 var (
-	createBackupToolKind = "cloud-sql-create-backup"
+	createBackupToolType = "cloud-sql-create-backup"
 )
 
 type createBackupTransport struct {
@@ -224,7 +224,7 @@ func getCreateBackupToolsConfig() map[string]any {
 		},
 		"tools": map[string]any{
 			"create-backup": map[string]any{
-				"kind":   createBackupToolKind,
+				"kind":   createBackupToolType,
 				"source": "my-cloud-sql-source",
 			},
 		},

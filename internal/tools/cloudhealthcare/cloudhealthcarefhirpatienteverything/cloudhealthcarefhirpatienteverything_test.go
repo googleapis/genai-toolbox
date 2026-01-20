@@ -46,7 +46,7 @@ func TestParseFromYamlHealthcareFHIRPatientEverything(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": fhirpatienteverything.Config{
 					Name:         "example_tool",
-					Kind:         "cloud-healthcare-fhir-patient-everything",
+					Type:         "cloud-healthcare-fhir-patient-everything",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

@@ -49,7 +49,7 @@ func TestParseFromYamlPostgreslistPgSettings(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslistpgsettings.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-pg-settings",
+					Type:         "postgres-list-pg-settings",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
@@ -68,7 +68,7 @@ func TestParseFromYamlPostgreslistPgSettings(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslistpgsettings.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-pg-settings",
+					Type:         "postgres-list-pg-settings",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

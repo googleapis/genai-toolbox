@@ -46,7 +46,7 @@ func TestParseFromYamlBigQueryListDatasetIds(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": bigquerylistdatasetids.Config{
 					Name:         "example_tool",
-					Kind:         "bigquery-list-dataset-ids",
+					Type:         "bigquery-list-dataset-ids",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

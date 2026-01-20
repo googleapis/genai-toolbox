@@ -36,7 +36,7 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 			want: server.ToolConfigs{
 				"get_user_by_id": oraclesql.Config{
 					Name:         "get_user_by_id",
-					Kind:         "oracle-sql",
+					Type:         "oracle-sql",
 					Source:       "my-oracle-instance",
 					Description:  "Retrieves user details by ID.",
 					Statement:    "SELECT id, name, email FROM users WHERE id = :1",
@@ -57,7 +57,7 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 			want: server.ToolConfigs{
 				"get_orders": oraclesql.Config{
 					Name:         "get_orders",
-					Kind:         "oracle-sql",
+					Type:         "oracle-sql",
 					Source:       "db-prod",
 					Description:  "Gets orders for a customer with optional filtering.",
 					Statement:    "SELECT * FROM ${SCHEMA}.ORDERS WHERE customer_id = :customer_id AND status = :status",

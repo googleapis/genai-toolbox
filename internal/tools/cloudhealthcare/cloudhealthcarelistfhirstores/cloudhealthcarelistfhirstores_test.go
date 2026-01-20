@@ -46,7 +46,7 @@ func TestParseFromYamlHealthcareListFHIRStores(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": listfhirstores.Config{
 					Name:         "example_tool",
-					Kind:         "cloud-healthcare-list-fhir-stores",
+					Type:         "cloud-healthcare-list-fhir-stores",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

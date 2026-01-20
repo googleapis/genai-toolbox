@@ -50,7 +50,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"wait-for-thing": alloydbwaitforoperation.Config{
 					Name:         "wait-for-thing",
-					Kind:         "alloydb-wait-for-operation",
+					Type:         "alloydb-wait-for-operation",
 					Source:       "some-source",
 					Description:  "some description",
 					AuthRequired: []string{},

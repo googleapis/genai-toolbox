@@ -35,7 +35,7 @@ import (
 )
 
 var (
-	createUserToolKind = "cloud-sql-create-users"
+	createUserToolType = "cloud-sql-create-users"
 )
 
 type createUsersTransport struct {
@@ -234,7 +234,7 @@ func getCreateUsersToolsConfig() map[string]any {
 		},
 		"tools": map[string]any{
 			"create-user": map[string]any{
-				"kind":   createUserToolKind,
+				"kind":   createUserToolType,
 				"source": "my-cloud-sql-source",
 			},
 		},

@@ -30,7 +30,7 @@ const kind = "serverless-spark-create-pyspark-batch"
 
 func init() {
 	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+		panic(fmt.Sprintf("tool type %q already registered", kind))
 	}
 }
 
@@ -49,8 +49,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the unique name for this tool.
-func (cfg Config) ToolConfigKind() string {
+// ToolConfigType returns the unique name for this tool.
+func (cfg Config) ToolConfigType() string {
 	return kind
 }
 

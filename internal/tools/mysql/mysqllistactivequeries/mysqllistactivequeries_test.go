@@ -49,7 +49,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": mysqllistactivequeries.Config{
 					Name:         "example_tool",
-					Kind:         "mysql-list-active-queries",
+					Type:         "mysql-list-active-queries",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},

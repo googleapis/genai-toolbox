@@ -46,7 +46,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"create-my-cluster": alloydbcreatecluster.Config{
 					Name:         "create-my-cluster",
-					Kind:         "alloydb-create-cluster",
+					Type:         "alloydb-create-cluster",
 					Source:       "my-alloydb-admin-source",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -68,7 +68,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"create-my-cluster-auth": alloydbcreatecluster.Config{
 					Name:         "create-my-cluster-auth",
-					Kind:         "alloydb-create-cluster",
+					Type:         "alloydb-create-cluster",
 					Source:       "my-alloydb-admin-source",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},

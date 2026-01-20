@@ -42,7 +42,7 @@ func TestParseFromYamlServerlessSpark(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-instance": serverlessspark.Config{
 					Name:     "my-instance",
-					Kind:     serverlessspark.SourceKind,
+					Type:     serverlessspark.SourceType,
 					Project:  "my-project",
 					Location: "my-location",
 				},

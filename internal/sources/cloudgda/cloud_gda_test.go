@@ -47,7 +47,7 @@ func TestParseFromYamlCloudGDA(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-gda-instance": cloudgda.Config{
 					Name:           "my-gda-instance",
-					Kind:           cloudgda.SourceKind,
+					Type:           cloudgda.SourceType,
 					ProjectID:      "test-project-id",
 					UseClientOAuth: false,
 				},
@@ -65,7 +65,7 @@ func TestParseFromYamlCloudGDA(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-gda-instance": cloudgda.Config{
 					Name:           "my-gda-instance",
-					Kind:           cloudgda.SourceKind,
+					Type:           cloudgda.SourceType,
 					ProjectID:      "another-project",
 					UseClientOAuth: true,
 				},
@@ -153,12 +153,12 @@ func TestInitialize(t *testing.T) {
 	}{
 		{
 			desc:            "initialize with ADC",
-			cfg:             cloudgda.Config{Name: "test-gda", Kind: cloudgda.SourceKind, ProjectID: "test-proj"},
+			cfg:             cloudgda.Config{Name: "test-gda", Type: cloudgda.SourceType, ProjectID: "test-proj"},
 			wantClientOAuth: false,
 		},
 		{
 			desc:            "initialize with client OAuth",
-			cfg:             cloudgda.Config{Name: "test-gda-oauth", Kind: cloudgda.SourceKind, ProjectID: "test-proj", UseClientOAuth: true},
+			cfg:             cloudgda.Config{Name: "test-gda-oauth", Type: cloudgda.SourceType, ProjectID: "test-proj", UseClientOAuth: true},
 			wantClientOAuth: true,
 		},
 	}

@@ -28,8 +28,8 @@ import (
 )
 
 var (
-	ValkeySourceKind = "valkey"
-	ValkeyToolKind   = "valkey"
+	ValkeySourceType = "valkey"
+	ValkeyToolType   = "valkey"
 	ValkeyAddress    = os.Getenv("VALKEY_ADDRESS")
 )
 
@@ -39,7 +39,7 @@ func getValkeyVars(t *testing.T) map[string]any {
 		t.Fatal("'VALKEY_ADDRESS' not set")
 	}
 	return map[string]any{
-		"kind":         ValkeySourceKind,
+		"kind":         ValkeySourceType,
 		"address":      []string{ValkeyAddress},
 		"disableCache": true,
 	}
@@ -84,7 +84,7 @@ func TestValkeyToolEndpoints(t *testing.T) {
 	defer teardownDB(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetRedisValkeyToolsConfig(sourceConfig, ValkeyToolKind)
+	toolsFile := tests.GetRedisValkeyToolsConfig(sourceConfig, ValkeyToolType)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

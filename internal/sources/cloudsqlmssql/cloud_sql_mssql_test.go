@@ -46,7 +46,7 @@ func TestParseFromYamlCloudSQLMssql(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-instance": cloudsqlmssql.Config{
 					Name:     "my-instance",
-					Kind:     cloudsqlmssql.SourceKind,
+					Type:     cloudsqlmssql.SourceType,
 					Project:  "my-project",
 					Region:   "my-region",
 					Instance: "my-instance",
@@ -74,7 +74,7 @@ func TestParseFromYamlCloudSQLMssql(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-instance": cloudsqlmssql.Config{
 					Name:     "my-instance",
-					Kind:     cloudsqlmssql.SourceKind,
+					Type:     cloudsqlmssql.SourceType,
 					Project:  "my-project",
 					Region:   "my-region",
 					Instance: "my-instance",
@@ -102,7 +102,7 @@ func TestParseFromYamlCloudSQLMssql(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-instance": cloudsqlmssql.Config{
 					Name:      "my-instance",
-					Kind:      cloudsqlmssql.SourceKind,
+					Type:      cloudsqlmssql.SourceType,
 					Project:   "my-project",
 					Region:    "my-region",
 					Instance:  "my-instance",

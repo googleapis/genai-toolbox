@@ -46,7 +46,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": serverlesssparkcancelbatch.Config{
 					Name:         "example_tool",
-					Kind:         "serverless-spark-cancel-batch",
+					Type:         "serverless-spark-cancel-batch",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
