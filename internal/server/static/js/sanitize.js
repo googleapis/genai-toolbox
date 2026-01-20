@@ -22,20 +22,22 @@
  * @param {*} input The value to escape.
  * @return {string} The escaped string safe for HTML rendering.
  */
+const htmlEscapes = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#x27;',
+    '`': '&#x60;'
+};
+
+const escapeCharsRegex = /[&<>"'`]/g;
+
 export function escapeHtml(input) {
     if (input === null || input === undefined) {
         return '';
     }
 
     const str = String(input);
-    const htmlEscapes = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#x27;',
-        '`': '&#x60;'
-    };
-
-    return str.replace(/[&<>"'`]/g, (char) => htmlEscapes[char]);
+    return str.replace(escapeCharsRegex, (char) => htmlEscapes[char]);
 }
