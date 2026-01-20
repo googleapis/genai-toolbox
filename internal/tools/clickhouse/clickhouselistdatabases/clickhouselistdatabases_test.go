@@ -24,10 +24,10 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-func TestListDatabasesConfigToolConfigKind(t *testing.T) {
+func TestListDatabasesConfigToolConfigType(t *testing.T) {
 	cfg := Config{}
-	if cfg.ToolConfigKind() != listDatabasesKind {
-		t.Errorf("expected %q, got %q", listDatabasesKind, cfg.ToolConfigKind())
+	if cfg.ToolConfigType() != listDatabasesType {
+		t.Errorf("expected %q, got %q", listDatabasesType, cfg.ToolConfigType())
 	}
 }
 
@@ -53,7 +53,7 @@ func TestParseFromYamlClickHouseListDatabases(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": Config{
 					Name:         "example_tool",
-					Kind:         "clickhouse-list-databases",
+					Type:         "clickhouse-list-databases",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

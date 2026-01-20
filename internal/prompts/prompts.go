@@ -52,7 +52,7 @@ func DecodeConfig(ctx context.Context, kind, name string, decoder *yaml.Decoder)
 	}
 
 	if !found {
-		return nil, fmt.Errorf("unknown prompt kind: %q", kind)
+		return nil, fmt.Errorf("unknown prompt type: %q", kind)
 	}
 
 	promptConfig, err := factory(ctx, name, decoder)
@@ -63,7 +63,7 @@ func DecodeConfig(ctx context.Context, kind, name string, decoder *yaml.Decoder)
 }
 
 type PromptConfig interface {
-	PromptConfigKind() string
+	PromptConfigType() string
 	Initialize() (Prompt, error)
 }
 

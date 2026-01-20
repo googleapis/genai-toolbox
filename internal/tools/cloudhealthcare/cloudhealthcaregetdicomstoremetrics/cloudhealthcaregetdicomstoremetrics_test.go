@@ -46,7 +46,7 @@ func TestParseFromYamlHealthcareGetDICOMStoreMetrics(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": getdicomstoremetrics.Config{
 					Name:         "example_tool",
-					Kind:         "cloud-healthcare-get-dicom-store-metrics",
+					Type:         "cloud-healthcare-get-dicom-store-metrics",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

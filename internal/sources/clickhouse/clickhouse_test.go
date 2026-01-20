@@ -25,10 +25,10 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func TestConfigSourceConfigKind(t *testing.T) {
+func TestConfigSourceConfigType(t *testing.T) {
 	config := Config{}
-	if config.SourceConfigKind() != SourceKind {
-		t.Errorf("Expected %s, got %s", SourceKind, config.SourceConfigKind())
+	if config.SourceConfigType() != SourceType {
+		t.Errorf("Expected %s, got %s", SourceType, config.SourceConfigType())
 	}
 }
 
@@ -53,7 +53,7 @@ func TestNewConfig(t *testing.T) {
 			`,
 			expected: Config{
 				Name:     "test-clickhouse",
-				Kind:     "clickhouse",
+				Type:     "clickhouse",
 				Host:     "localhost",
 				Port:     "8443",
 				User:     "default",
@@ -75,7 +75,7 @@ func TestNewConfig(t *testing.T) {
 			`,
 			expected: Config{
 				Name:     "minimal-clickhouse",
-				Kind:     "clickhouse",
+				Type:     "clickhouse",
 				Host:     "127.0.0.1",
 				Port:     "8123",
 				User:     "testuser",
@@ -100,7 +100,7 @@ func TestNewConfig(t *testing.T) {
 			`,
 			expected: Config{
 				Name:     "http-clickhouse",
-				Kind:     "clickhouse",
+				Type:     "clickhouse",
 				Host:     "clickhouse.example.com",
 				Port:     "8123",
 				User:     "analytics",
@@ -125,7 +125,7 @@ func TestNewConfig(t *testing.T) {
 			`,
 			expected: Config{
 				Name:     "secure-clickhouse",
-				Kind:     "clickhouse",
+				Type:     "clickhouse",
 				Host:     "secure.clickhouse.io",
 				Port:     "8443",
 				User:     "secureuser",
@@ -196,10 +196,10 @@ func TestNewConfigInvalidYAML(t *testing.T) {
 	}
 }
 
-func TestSource_SourceKind(t *testing.T) {
+func TestSource_SourceType(t *testing.T) {
 	source := &Source{}
-	if source.SourceKind() != SourceKind {
-		t.Errorf("Expected %s, got %s", SourceKind, source.SourceKind())
+	if source.SourceType() != SourceType {
+		t.Errorf("Expected %s, got %s", SourceType, source.SourceType())
 	}
 }
 

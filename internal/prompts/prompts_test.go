@@ -29,16 +29,16 @@ import (
 
 type mockPromptConfig struct {
 	name string
-	kind string
+	Type string
 }
 
-func (m *mockPromptConfig) PromptConfigKind() string            { return m.kind }
+func (m *mockPromptConfig) PromptConfigType() string            { return m.Type }
 func (m *mockPromptConfig) Initialize() (prompts.Prompt, error) { return nil, nil }
 
 var errMockFactory = errors.New("mock factory error")
 
 func mockFactory(ctx context.Context, name string, decoder *yaml.Decoder) (prompts.PromptConfig, error) {
-	return &mockPromptConfig{name: name, kind: "mockKind"}, nil
+	return &mockPromptConfig{name: name, Type: "mockType"}, nil
 }
 
 func mockErrorFactory(ctx context.Context, name string, decoder *yaml.Decoder) (prompts.PromptConfig, error) {
@@ -50,7 +50,7 @@ func TestRegistry(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("RegisterAndDecodeSuccess", func(t *testing.T) {
-		kind := "testKindSuccess"
+		kind := "testTypeSuccess"
 		if !prompts.Register(kind, mockFactory) {
 			t.Fatal("expected registration to succeed")
 		}
@@ -69,19 +69,19 @@ func TestRegistry(t *testing.T) {
 		}
 	})
 
-	t.Run("DecodeUnknownKind", func(t *testing.T) {
+	t.Run("DecodeUnknownType", func(t *testing.T) {
 		decoder := yaml.NewDecoder(strings.NewReader(""))
-		_, err := prompts.DecodeConfig(ctx, "unregisteredKind", "testPrompt", decoder)
+		_, err := prompts.DecodeConfig(ctx, "unregisteredType", "testPrompt", decoder)
 		if err == nil {
 			t.Fatal("expected an error for unknown kind, but got nil")
 		}
-		if !strings.Contains(err.Error(), "unknown prompt kind") {
-			t.Errorf("expected error to contain 'unknown prompt kind', but got: %v", err)
+		if !strings.Contains(err.Error(), "unknown prompt type") {
+			t.Errorf("expected error to contain 'unknown prompt type', but got: %v", err)
 		}
 	})
 
 	t.Run("FactoryReturnsError", func(t *testing.T) {
-		kind := "testKindError"
+		kind := "testTypeError"
 		if !prompts.Register(kind, mockErrorFactory) {
 			t.Fatal("expected registration to succeed")
 		}
@@ -105,8 +105,8 @@ func TestRegistry(t *testing.T) {
 		if config == nil {
 			t.Fatal("expected a non-nil config for default kind")
 		}
-		if config.PromptConfigKind() != "custom" {
-			t.Errorf("expected default kind to be 'custom', but got %q", config.PromptConfigKind())
+		if config.PromptConfigType() != "custom" {
+			t.Errorf("expected default kind to be 'custom', but got %q", config.PromptConfigType())
 		}
 	})
 }

@@ -25,11 +25,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const listDatabasesKind string = "clickhouse-list-databases"
+const listDatabasesType string = "clickhouse-list-databases"
 
 func init() {
-	if !tools.Register(listDatabasesKind, newListDatabasesConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", listDatabasesKind))
+	if !tools.Register(listDatabasesType, newListDatabasesConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", listDatabasesType))
 	}
 }
 
@@ -47,7 +47,7 @@ type compatibleSource interface {
 
 type Config struct {
 	Name         string                `yaml:"name" validate:"required"`
-	Kind         string                `yaml:"kind" validate:"required"`
+	Type         string                `yaml:"kind" validate:"required"`
 	Source       string                `yaml:"source" validate:"required"`
 	Description  string                `yaml:"description" validate:"required"`
 	AuthRequired []string              `yaml:"authRequired"`
@@ -56,8 +56,8 @@ type Config struct {
 
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return listDatabasesKind
+func (cfg Config) ToolConfigType() string {
+	return listDatabasesType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -87,7 +87,7 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, token tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return nil, err
 	}

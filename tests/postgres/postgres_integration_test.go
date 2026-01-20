@@ -31,8 +31,8 @@ import (
 )
 
 var (
-	PostgresSourceKind = "postgres"
-	PostgresToolKind   = "postgres-sql"
+	PostgresSourceType = "postgres"
+	PostgresToolType   = "postgres-sql"
 	PostgresDatabase   = os.Getenv("POSTGRES_DATABASE")
 	PostgresHost       = os.Getenv("POSTGRES_HOST")
 	PostgresPort       = os.Getenv("POSTGRES_PORT")
@@ -55,7 +55,7 @@ func getPostgresVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     PostgresSourceKind,
+		"kind":     PostgresSourceType,
 		"host":     PostgresHost,
 		"port":     PostgresPort,
 		"database": PostgresDatabase,
@@ -116,10 +116,10 @@ func TestPostgres(t *testing.T) {
 	defer tearDownVectorTable(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, PostgresToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, PostgresToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "postgres-execute-sql")
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, PostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, PostgresToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
 
 	// Add semantic search tool config

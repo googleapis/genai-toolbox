@@ -45,7 +45,7 @@ func TestParseFromYamlFirebird(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-fdb-instance": firebird.Config{
 					Name:     "my-fdb-instance",
-					Kind:     firebird.SourceKind,
+					Type:     firebird.SourceType,
 					Host:     "my-host",
 					Port:     "my-port",
 					Database: "my_db",

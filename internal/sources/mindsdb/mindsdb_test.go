@@ -45,7 +45,7 @@ func TestParseFromYamlMindsDB(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-mindsdb-instance": mindsdb.Config{
 					Name:     "my-mindsdb-instance",
-					Kind:     mindsdb.SourceKind,
+					Type:     mindsdb.SourceType,
 					Host:     "0.0.0.0",
 					Port:     "my-port",
 					Database: "my_db",
@@ -70,7 +70,7 @@ func TestParseFromYamlMindsDB(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-mindsdb-instance": mindsdb.Config{
 					Name:         "my-mindsdb-instance",
-					Kind:         mindsdb.SourceKind,
+					Type:         mindsdb.SourceType,
 					Host:         "0.0.0.0",
 					Port:         "my-port",
 					Database:     "my_db",

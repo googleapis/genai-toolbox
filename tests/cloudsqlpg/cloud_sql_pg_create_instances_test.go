@@ -36,7 +36,7 @@ import (
 )
 
 var (
-	createInstanceToolKind = "cloud-sql-postgres-create-instance"
+	createInstanceToolType = "cloud-sql-postgres-create-instance"
 )
 
 type createInstanceTransport struct {
@@ -267,11 +267,11 @@ func getCreateInstanceToolsConfig() map[string]any {
 		},
 		"tools": map[string]any{
 			"create-instance-prod": map[string]any{
-				"kind":   createInstanceToolKind,
+				"kind":   createInstanceToolType,
 				"source": "my-cloud-sql-source",
 			},
 			"create-instance-dev": map[string]any{
-				"kind":   createInstanceToolKind,
+				"kind":   createInstanceToolType,
 				"source": "my-cloud-sql-source",
 			},
 		},

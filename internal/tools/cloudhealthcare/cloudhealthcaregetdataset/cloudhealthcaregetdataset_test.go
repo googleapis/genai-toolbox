@@ -46,7 +46,7 @@ func TestParseFromYamlGetHealthcareDataset(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": getdataset.Config{
 					Name:         "example_tool",
-					Kind:         "cloud-healthcare-get-dataset",
+					Type:         "cloud-healthcare-get-dataset",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

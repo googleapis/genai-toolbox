@@ -43,7 +43,7 @@ func TestParseFromYamlCassandra(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-cassandra-instance": cassandra.Config{
 					Name:                   "my-cassandra-instance",
-					Kind:                   cassandra.SourceKind,
+					Type:                   cassandra.SourceType,
 					Hosts:                  []string{"my-host1", "my-host2"},
 					Username:               "",
 					Password:               "",
@@ -77,7 +77,7 @@ func TestParseFromYamlCassandra(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-cassandra-instance": cassandra.Config{
 					Name:                   "my-cassandra-instance",
-					Kind:                   cassandra.SourceKind,
+					Type:                   cassandra.SourceType,
 					Hosts:                  []string{"my-host1", "my-host2"},
 					Username:               "user",
 					Password:               "pass",

@@ -49,7 +49,7 @@ func TestParseFromYamlMySQLListTables(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": mysqllisttables.Config{
 					Name:         "example_tool",
-					Kind:         "mysql-list-tables",
+					Type:         "mysql-list-tables",
 					Source:       "my-mysql-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},

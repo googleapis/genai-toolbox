@@ -46,7 +46,7 @@ func TestParseFromYamlDataplexSearchAspectTypes(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": dataplexsearchaspecttypes.Config{
 					Name:         "example_tool",
-					Kind:         "dataplex-search-aspect-types",
+					Type:         "dataplex-search-aspect-types",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

@@ -43,7 +43,7 @@ func TestParseFromYamlElasticsearch(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-es-instance": elasticsearch.Config{
 					Name:      "my-es-instance",
-					Kind:      elasticsearch.SourceKind,
+					Type:      elasticsearch.SourceType,
 					Addresses: []string{"http://localhost:9200"},
 					APIKey:    "somekey",
 				},

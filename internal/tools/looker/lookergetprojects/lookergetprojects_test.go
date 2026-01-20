@@ -47,7 +47,7 @@ func TestParseFromYamlLookerGetProjects(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": lkr.Config{
 					Name:         "example_tool",
-					Kind:         "looker-get-projects",
+					Type:         "looker-get-projects",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

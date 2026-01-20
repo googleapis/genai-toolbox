@@ -31,8 +31,8 @@ import (
 )
 
 var (
-	TrinoSourceKind = "trino"
-	TrinoToolKind   = "trino-sql"
+	TrinoSourceType = "trino"
+	TrinoToolType   = "trino-sql"
 	TrinoHost       = os.Getenv("TRINO_HOST")
 	TrinoPort       = os.Getenv("TRINO_PORT")
 	TrinoUser       = os.Getenv("TRINO_USER")
@@ -55,7 +55,7 @@ func getTrinoVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     TrinoSourceKind,
+		"kind":     TrinoSourceType,
 		"host":     TrinoHost,
 		"port":     TrinoPort,
 		"user":     TrinoUser,
@@ -236,10 +236,10 @@ func TestTrinoToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, TrinoToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, TrinoToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addTrinoExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getTrinoTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, TrinoToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, TrinoToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

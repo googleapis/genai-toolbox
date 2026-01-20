@@ -49,7 +49,7 @@ func TestParseFromYamlPostgreslistSchemas(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslistschemas.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-schemas",
+					Type:         "postgres-list-schemas",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
@@ -68,7 +68,7 @@ func TestParseFromYamlPostgreslistSchemas(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslistschemas.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-schemas",
+					Type:         "postgres-list-schemas",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

@@ -61,7 +61,7 @@ func TestParseFromYamlSingleStore(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": singlestoresql.Config{
 					Name:         "example_tool",
-					Kind:         "singlestore-sql",
+					Type:         "singlestore-sql",
 					Source:       "my-singlestore-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -139,7 +139,7 @@ func TestParseFromYamlWithTemplateParamsSingleStore(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": singlestoresql.Config{
 					Name:         "example_tool",
-					Kind:         "singlestore-sql",
+					Type:         "singlestore-sql",
 					Source:       "my-singlestore-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",

@@ -201,7 +201,7 @@ func (c *AuthServiceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(i
 			return fmt.Errorf("error creating decoder: %w", err)
 		}
 		switch kind {
-		case google.AuthServiceKind:
+		case google.AuthServiceType:
 			actual := google.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)
@@ -245,7 +245,7 @@ func (c *EmbeddingModelConfigs) UnmarshalYAML(ctx context.Context, unmarshal fun
 			return fmt.Errorf("error creating decoder: %w", err)
 		}
 		switch kind {
-		case gemini.EmbeddingModelKind:
+		case gemini.EmbeddingModelType:
 			actual := gemini.Config{Name: name}
 			if err := dec.DecodeContext(ctx, &actual); err != nil {
 				return fmt.Errorf("unable to parse as %q: %w", kind, err)

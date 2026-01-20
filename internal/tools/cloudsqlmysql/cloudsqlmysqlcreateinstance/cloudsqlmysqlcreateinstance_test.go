@@ -46,7 +46,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"create-instance-tool": cloudsqlmysqlcreateinstance.Config{
 					Name:         "create-instance-tool",
-					Kind:         "cloud-sql-mysql-create-instance",
+					Type:         "cloud-sql-mysql-create-instance",
 					Description:  "a test description",
 					Source:       "a-source",
 					AuthRequired: []string{},

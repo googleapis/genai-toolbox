@@ -45,7 +45,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-s2-instance": singlestore.Config{
 					Name:     "my-s2-instance",
-					Kind:     singlestore.SourceKind,
+					Type:     singlestore.SourceType,
 					Host:     "0.0.0.0",
 					Port:     "my-port",
 					Database: "my_db",
@@ -70,7 +70,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-s2-instance": singlestore.Config{
 					Name:         "my-s2-instance",
-					Kind:         singlestore.SourceKind,
+					Type:         singlestore.SourceType,
 					Host:         "0.0.0.0",
 					Port:         "my-port",
 					Database:     "my_db",

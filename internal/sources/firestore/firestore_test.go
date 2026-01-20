@@ -42,7 +42,7 @@ func TestParseFromYamlFirestore(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-firestore": firestore.Config{
 					Name:     "my-firestore",
-					Kind:     firestore.SourceKind,
+					Type:     firestore.SourceType,
 					Project:  "my-project",
 					Database: "",
 				},
@@ -60,7 +60,7 @@ func TestParseFromYamlFirestore(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-firestore": firestore.Config{
 					Name:     "my-firestore",
-					Kind:     firestore.SourceKind,
+					Type:     firestore.SourceType,
 					Project:  "my-project",
 					Database: "my-database",
 				},

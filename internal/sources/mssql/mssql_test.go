@@ -45,7 +45,7 @@ func TestParseFromYamlMssql(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-mssql-instance": mssql.Config{
 					Name:     "my-mssql-instance",
-					Kind:     mssql.SourceKind,
+					Type:     mssql.SourceType,
 					Host:     "0.0.0.0",
 					Port:     "my-port",
 					Database: "my_db",
@@ -70,7 +70,7 @@ func TestParseFromYamlMssql(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-mssql-instance": mssql.Config{
 					Name:     "my-mssql-instance",
-					Kind:     mssql.SourceKind,
+					Type:     mssql.SourceType,
 					Host:     "0.0.0.0",
 					Port:     "my-port",
 					Database: "my_db",

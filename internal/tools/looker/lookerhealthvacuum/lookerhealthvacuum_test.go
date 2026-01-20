@@ -47,7 +47,7 @@ func TestParseFromYamlLookerHealthVacuum(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": lhv.Config{
 					Name:         "example_tool",
-					Kind:         "looker-health-vacuum",
+					Type:         "looker-health-vacuum",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

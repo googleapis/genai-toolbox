@@ -49,7 +49,7 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-yb-instance": yugabytedb.Config{
 					Name:     "my-yb-instance",
-					Kind:     "yugabytedb",
+					Type:     "yugabytedb",
 					Host:     "yb-host",
 					Port:     "yb-port",
 					User:     "yb_user",
@@ -75,7 +75,7 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-yb-instance": yugabytedb.Config{
 					Name:        "my-yb-instance",
-					Kind:        "yugabytedb",
+					Type:        "yugabytedb",
 					Host:        "yb-host",
 					Port:        "yb-port",
 					User:        "yb_user",
@@ -103,7 +103,7 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-yb-instance": yugabytedb.Config{
 					Name:         "my-yb-instance",
-					Kind:         "yugabytedb",
+					Type:         "yugabytedb",
 					Host:         "yb-host",
 					Port:         "yb-port",
 					User:         "yb_user",
@@ -133,7 +133,7 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-yb-instance": yugabytedb.Config{
 					Name:                       "my-yb-instance",
-					Kind:                       "yugabytedb",
+					Type:                       "yugabytedb",
 					Host:                       "yb-host",
 					Port:                       "yb-port",
 					User:                       "yb_user",
@@ -164,7 +164,7 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-yb-instance": yugabytedb.Config{
 					Name:                            "my-yb-instance",
-					Kind:                            "yugabytedb",
+					Type:                            "yugabytedb",
 					Host:                            "yb-host",
 					Port:                            "yb-port",
 					User:                            "yb_user",
@@ -197,7 +197,7 @@ func TestParseFromYamlYugabyteDB(t *testing.T) {
 			want: server.SourceConfigs{
 				"my-yb-instance": yugabytedb.Config{
 					Name:                            "my-yb-instance",
-					Kind:                            "yugabytedb",
+					Type:                            "yugabytedb",
 					Host:                            "yb-host",
 					Port:                            "yb-port",
 					User:                            "yb_user",

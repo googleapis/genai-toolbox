@@ -49,7 +49,7 @@ func TestParseFromYamlPostgresListPublicationTables(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslistpublicationtables.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-publication-tables",
+					Type:         "postgres-list-publication-tables",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
@@ -68,7 +68,7 @@ func TestParseFromYamlPostgresListPublicationTables(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslistpublicationtables.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-publication-tables",
+					Type:         "postgres-list-publication-tables",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

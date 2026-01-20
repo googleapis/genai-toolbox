@@ -45,7 +45,7 @@ func TestParseFromYamlDataformCompile(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": dataformcompilelocal.Config{
 					Name:         "example_tool",
-					Kind:         "dataform-compile-local",
+					Type:         "dataform-compile-local",
 					Description:  "some description",
 					AuthRequired: []string{},
 				},

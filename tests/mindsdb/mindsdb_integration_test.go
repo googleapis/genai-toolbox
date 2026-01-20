@@ -33,8 +33,8 @@ import (
 )
 
 var (
-	MindsDBSourceKind = "mindsdb"
-	MindsDBToolKind   = "mindsdb-sql"
+	MindsDBSourceType = "mindsdb"
+	MindsDBToolType   = "mindsdb-sql"
 	MindsDBDatabase   = os.Getenv("MINDSDB_DATABASE")
 	MindsDBHost       = os.Getenv("MINDSDB_HOST")
 	MindsDBPort       = os.Getenv("MINDSDB_PORT")
@@ -66,7 +66,7 @@ func getMindsDBVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     MindsDBSourceKind,
+		"kind":     MindsDBSourceType,
 		"host":     MindsDBHost,
 		"port":     MindsDBPort,
 		"database": MindsDBDatabase,
@@ -113,13 +113,13 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        MindsDBToolKind,
+				"kind":        MindsDBToolType,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "SELECT 1",
 			},
 			"my-tool": map[string]any{
-				"kind":        MindsDBToolKind,
+				"kind":        MindsDBToolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"statement":   paramToolStmt,
@@ -137,7 +137,7 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 				},
 			},
 			"my-tool-by-id": map[string]any{
-				"kind":        MindsDBToolKind,
+				"kind":        MindsDBToolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"statement":   idParamToolStmt,
@@ -150,7 +150,7 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 				},
 			},
 			"my-tool-by-name": map[string]any{
-				"kind":        MindsDBToolKind,
+				"kind":        MindsDBToolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"statement":   nameParamToolStmt,
@@ -164,13 +164,13 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 				},
 			},
 			"my-array-tool": map[string]any{
-				"kind":        MindsDBToolKind,
+				"kind":        MindsDBToolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with array params.",
 				"statement":   "SELECT 1 as id, 'Alice' as name UNION SELECT 3 as id, 'Sid' as name",
 			},
 			"my-auth-tool": map[string]any{
-				"kind":        MindsDBToolKind,
+				"kind":        MindsDBToolType,
 				"source":      "my-instance",
 				"description": "Tool to test authenticated parameters.",
 				"statement":   authToolStmt,
@@ -189,7 +189,7 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 				},
 			},
 			"my-auth-required-tool": map[string]any{
-				"kind":        MindsDBToolKind,
+				"kind":        MindsDBToolType,
 				"source":      "my-instance",
 				"description": "Tool to test auth required invocation.",
 				"statement":   "SELECT 1",
@@ -198,7 +198,7 @@ func TestMindsDBToolEndpoints(t *testing.T) {
 				},
 			},
 			"my-fail-tool": map[string]any{
-				"kind":        MindsDBToolKind,
+				"kind":        MindsDBToolType,
 				"source":      "my-instance",
 				"description": "Tool to test statement with incorrect syntax.",
 				"statement":   "INVALID SQL STATEMENT",

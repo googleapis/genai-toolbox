@@ -48,7 +48,7 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-pg-instance": alloydbpg.Config{
 					Name:     "my-pg-instance",
-					Kind:     alloydbpg.SourceKind,
+					Type:     alloydbpg.SourceType,
 					Project:  "my-project",
 					Region:   "my-region",
 					Cluster:  "my-cluster",
@@ -78,7 +78,7 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-pg-instance": alloydbpg.Config{
 					Name:     "my-pg-instance",
-					Kind:     alloydbpg.SourceKind,
+					Type:     alloydbpg.SourceType,
 					Project:  "my-project",
 					Region:   "my-region",
 					Cluster:  "my-cluster",
@@ -108,7 +108,7 @@ func TestParseFromYamlAlloyDBPg(t *testing.T) {
 			want: map[string]sources.SourceConfig{
 				"my-pg-instance": alloydbpg.Config{
 					Name:     "my-pg-instance",
-					Kind:     alloydbpg.SourceKind,
+					Type:     alloydbpg.SourceType,
 					Project:  "my-project",
 					Region:   "my-region",
 					Cluster:  "my-cluster",

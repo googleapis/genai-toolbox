@@ -46,7 +46,7 @@ func TestParseFromYamlHealthcareRetrieveRenderedDICOMInstance(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": retrieverendereddicominstance.Config{
 					Name:         "example_tool",
-					Kind:         "cloud-healthcare-retrieve-rendered-dicom-instance",
+					Type:         "cloud-healthcare-retrieve-rendered-dicom-instance",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

@@ -49,7 +49,7 @@ func TestParseFromYamlPostgresListIndexes(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslistindexes.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-indexes",
+					Type:         "postgres-list-indexes",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
@@ -68,7 +68,7 @@ func TestParseFromYamlPostgresListIndexes(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgreslistindexes.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-indexes",
+					Type:         "postgres-list-indexes",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

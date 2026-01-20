@@ -49,7 +49,7 @@ func TestParseFromYamlExecuteSql(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": mindsdbexecutesql.Config{
 					Name:         "example_tool",
-					Kind:         "mindsdb-execute-sql",
+					Type:         "mindsdb-execute-sql",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},

@@ -35,7 +35,7 @@ import (
 )
 
 var (
-	createDatabaseToolKind = "cloud-sql-create-database"
+	createDatabaseToolType = "cloud-sql-create-database"
 )
 
 type createDatabaseTransport struct {
@@ -222,7 +222,7 @@ func getCreateDatabaseToolsConfig() map[string]any {
 		},
 		"tools": map[string]any{
 			"create-database": map[string]any{
-				"kind":   createDatabaseToolKind,
+				"kind":   createDatabaseToolType,
 				"source": "my-cloud-sql-source",
 			},
 		},

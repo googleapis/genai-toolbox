@@ -46,7 +46,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"my-snowflake-tool": snowflakeexecutesql.Config{
 					Name:         "my-snowflake-tool",
-					Kind:         "snowflake-execute-sql",
+					Type:         "snowflake-execute-sql",
 					Source:       "my-snowflake-source",
 					Description:  "Execute SQL on Snowflake",
 					AuthRequired: []string{},

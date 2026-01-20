@@ -53,7 +53,7 @@ func Register(kind string, factory ToolConfigFactory) bool {
 func DecodeConfig(ctx context.Context, kind string, name string, decoder *yaml.Decoder) (ToolConfig, error) {
 	factory, found := toolRegistry[kind]
 	if !found {
-		return nil, fmt.Errorf("unknown tool kind: %q", kind)
+		return nil, fmt.Errorf("unknown tool type: %q", kind)
 	}
 	toolConfig, err := factory(ctx, name, decoder)
 	if err != nil {
@@ -63,7 +63,7 @@ func DecodeConfig(ctx context.Context, kind string, name string, decoder *yaml.D
 }
 
 type ToolConfig interface {
-	ToolConfigKind() string
+	ToolConfigType() string
 	Initialize(map[string]sources.Source) (Tool, error)
 }
 
@@ -160,7 +160,7 @@ func IsAuthorized(authRequiredSources []string, verifiedAuthServices []string) b
 	return false
 }
 
-func GetCompatibleSource[T any](resourceMgr SourceProvider, sourceName, toolName, toolKind string) (T, error) {
+func GetCompatibleSource[T any](resourceMgr SourceProvider, sourceName, toolName, toolType string) (T, error) {
 	var zero T
 	s, ok := resourceMgr.GetSource(sourceName)
 	if !ok {
@@ -168,7 +168,7 @@ func GetCompatibleSource[T any](resourceMgr SourceProvider, sourceName, toolName
 	}
 	source, ok := s.(T)
 	if !ok {
-		return zero, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", toolKind, sourceName)
+		return zero, fmt.Errorf("invalid source for %q tool: source %q is not a compatible type", toolType, sourceName)
 	}
 	return source, nil
 }

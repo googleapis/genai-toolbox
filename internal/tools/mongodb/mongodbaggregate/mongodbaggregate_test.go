@@ -58,7 +58,7 @@ func TestParseFromYamlMongoQuery(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": mongodbaggregate.Config{
 					Name:            "example_tool",
-					Kind:            "mongodb-aggregate",
+					Type:            "mongodb-aggregate",
 					Source:          "my-instance",
 					AuthRequired:    []string{},
 					Database:        "test_db",

@@ -49,7 +49,7 @@ func TestParseFromYamlPostgresReplicationStats(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgresreplicationstats.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-replication-stats",
+					Type:         "postgres-replication-stats",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
@@ -68,7 +68,7 @@ func TestParseFromYamlPostgresReplicationStats(t *testing.T) {
 			want: server.ToolConfigs{
 				"example_tool": postgresreplicationstats.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-replication-stats",
+					Type:         "postgres-replication-stats",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{},

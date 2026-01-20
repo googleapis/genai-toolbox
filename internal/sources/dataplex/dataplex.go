@@ -31,14 +31,14 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 )
 
-const SourceKind string = "dataplex"
+const SourceType string = "dataplex"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -53,13 +53,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	// Dataplex configs
 	Name    string `yaml:"name" validate:"required"`
-	Kind    string `yaml:"kind" validate:"required"`
+	Type    string `yaml:"kind" validate:"required"`
 	Project string `yaml:"project" validate:"required"`
 }
 
-func (r Config) SourceConfigKind() string {
+func (r Config) SourceConfigType() string {
 	// Returns Dataplex source kind
-	return SourceKind
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -83,9 +83,9 @@ type Source struct {
 	Client *dataplexapi.CatalogClient
 }
 
-func (s *Source) SourceKind() string {
+func (s *Source) SourceType() string {
 	// Returns Dataplex source kind
-	return SourceKind
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -106,7 +106,7 @@ func initDataplexConnection(
 	name string,
 	project string,
 ) (*dataplexapi.CatalogClient, error) {
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	cred, err := google.FindDefaultCredentials(ctx)

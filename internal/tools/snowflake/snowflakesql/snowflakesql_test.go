@@ -47,7 +47,7 @@ func TestParseFromYaml(t *testing.T) {
 			want: server.ToolConfigs{
 				"my-snowflake-tool": snowflakesql.Config{
 					Name:               "my-snowflake-tool",
-					Kind:               "snowflake-sql",
+					Type:               "snowflake-sql",
 					Source:             "my-snowflake-source",
 					Description:        "Execute parameterized SQL on Snowflake",
 					Statement:          "SELECT * FROM my_table WHERE id = $1",
