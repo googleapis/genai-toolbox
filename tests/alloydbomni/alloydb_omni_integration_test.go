@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -139,7 +139,6 @@ func TestAlloyDB(t *testing.T) {
 	}
 
 	// Run Postgres prebuilt tool tests
-	// tests.RunPostgresListTablesTest(t, tableNameParam, tableNameAuth, AlloyDBUser)
 	tests.RunPostgresListViewsTest(t, ctx, pool)
 	tests.RunPostgresListSchemasTest(t, ctx, pool)
 	tests.RunPostgresListActiveQueriesTest(t, ctx, pool)
@@ -152,7 +151,6 @@ func TestAlloyDB(t *testing.T) {
 	tests.RunPostgresLongRunningTransactionsTest(t, ctx, pool)
 	tests.RunPostgresListLocksTest(t, ctx, pool)
 	tests.RunPostgresReplicationStatsTest(t, ctx, pool)
-	// tests.RunPostgresListQueryStatsTest(t, ctx, pool) // TODO: enable pg_stat_statements extension before this can be re-enabled.
 	tests.RunPostgresGetColumnCardinalityTest(t, ctx, pool)
 	tests.RunPostgresListTableStatsTest(t, ctx, pool)
 	tests.RunPostgresListPublicationTablesTest(t, ctx, pool)
