@@ -183,6 +183,13 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
+	embeddingModels := resourceMgr.GetEmbeddingModelMap()
+	params, err = tool.EmbedParams(ctx, params, embeddingModels)
+	if err != nil {
+		err = fmt.Errorf("error embedding parameters: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+	}
+
 	// run tool invocation and generate response.
 	results, err := tool.Invoke(ctx, resourceMgr, params, accessToken)
 	if err != nil {
