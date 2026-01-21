@@ -27,6 +27,7 @@ description: >
 |              | `--ui`                     | Launches the Toolbox UI web server.                                                                                                                                              |             |
 |              | `--allowed-origins`        | Specifies a list of origins permitted to access this server for CORs access.                                                                                                     | `*`         |
 |              | `--allowed-hosts`          | Specifies a list of hosts permitted to access this server to prevent DNS rebinding attacks.                                                                                      | `*`         |
+|              | `--user-agent-extra`       | Appends additional metadata to the User-Agent.                                                                                                                                   |             |
 | `-v`         | `--version`                | version for toolbox                                                                                                                                                              |             |
 
 ## Examples

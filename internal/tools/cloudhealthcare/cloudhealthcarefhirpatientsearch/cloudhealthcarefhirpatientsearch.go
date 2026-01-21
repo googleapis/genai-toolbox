@@ -161,9 +161,12 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, err
 	}
 
-	tokenStr, err := accessToken.ParseBearerToken()
-	if err != nil {
-		return nil, fmt.Errorf("error parsing access token: %w", err)
+	var tokenStr string
+	if source.UseClientAuthorization() {
+		tokenStr, err = accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
 	}
 
 	var summary bool
