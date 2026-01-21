@@ -171,6 +171,23 @@ steps:
           alloydbainl \
           alloydbainl
 
+  - id: "alloydb-omni"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "AlloyDB Omni" \
+          alloydbomni \
+          postgressql
+
   - id: "bigtable"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -657,7 +674,7 @@ steps:
           "Looker" \
           looker \
           looker
-    
+
   - id: "mindsdb"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -845,7 +862,7 @@ steps:
           "Snowflake" \
           snowflake \
           snowflake
- 
+
   - id: "cassandra"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -890,7 +907,7 @@ steps:
         go test -v ./internal/sources/oracle/... \
           -coverprofile=oracle_coverage.out \
           -coverpkg=./internal/sources/oracle/...,./internal/tools/oracle/...
-        
+
         # Coverage check
         total_coverage=$(go tool cover -func=oracle_coverage.out | grep "total:" | awk '{print $3}')
         echo "Oracle total coverage: $total_coverage"

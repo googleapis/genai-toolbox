@@ -21,6 +21,7 @@ import (
 )
 
 var expectedToolSources = []string{
+	"alloydb-omni",
 	"alloydb-postgres-admin",
 	"alloydb-postgres-observability",
 	"alloydb-postgres",
@@ -99,6 +100,7 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 }
 
 func TestGetPrebuiltTool(t *testing.T) {
+	alloydb_omni_config, _ := Get("alloydb-omni")
 	alloydb_admin_config, _ := Get("alloydb-postgres-admin")
 	alloydb_observability_config, _ := Get("alloydb-postgres-observability")
 	alloydb_config, _ := Get("alloydb-postgres")
@@ -129,6 +131,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	neo4jconfig, _ := Get("neo4j")
 	healthcare_config, _ := Get("cloud-healthcare")
 	snowflake_config, _ := Get("snowflake")
+	if len(alloydb_omni_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch alloydb omni prebuilt tools yaml")
+	}
 	if len(alloydb_admin_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb admin prebuilt tools yaml")
 	}

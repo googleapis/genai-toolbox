@@ -59,12 +59,15 @@ func setupAlloyDBContainer(ctx context.Context, t *testing.T) (string, string, f
 	t.Helper()
 
 	req := testcontainers.ContainerRequest{
-		Image:        "google/alloydbomni:16.9.0-ubi", // Pinning version for stability
+		Image:        "google/alloydbomni:16.9.0-ubi9", // Pinning version for stability
 		ExposedPorts: []string{"5432/tcp"},
 		Env: map[string]string{
 			"POSTGRES_PASSWORD": AlloyDBPass,
 		},
-		WaitingFor: wait.ForExposedPort(),
+		WaitingFor: wait.ForAll(
+			wait.ForLog("Post Startup: Successfully reinstalled extensions"),
+			wait.ForExposedPort(),
+		),
 	}
 
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
@@ -100,17 +103,14 @@ func TestAlloyDB(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	host, port, containerCleanup := setupAlloyDBContainer(ctx, t)
+	AlloyDBHost, AlloyDBPort, containerCleanup := setupAlloyDBContainer(ctx, t)
 	defer containerCleanup()
 
-	os.Setenv("ALLOYDB_OMNI_HOST", host)
-	os.Setenv("ALLOYDB_OMNI_PORT", port)
+	os.Setenv("ALLOYDB_OMNI_HOST", AlloyDBHost)
+	os.Setenv("ALLOYDB_OMNI_PORT", AlloyDBPort)
 	os.Setenv("ALLOYDB_OMNI_USER", AlloyDBUser)
 	os.Setenv("ALLOYDB_OMNI_PASSWORD", AlloyDBPass)
 	os.Setenv("ALLOYDB_OMNI_DATABASE", AlloyDBDatabase)
-
-	AlloyDBHost := host
-	AlloyDBPort := port
 
 	args := []string{"--prebuilt", "alloydb-omni"}
 
