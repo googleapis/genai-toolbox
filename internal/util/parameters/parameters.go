@@ -137,7 +137,7 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 
 		sourceParamName := p.GetValueFromParam()
 		if sourceParamName != "" {
-			v, _ = data[sourceParamName]
+			v = data[sourceParamName]
 
 		} else if len(paramAuthServices) == 0 {
 			// parse non auth-required parameter

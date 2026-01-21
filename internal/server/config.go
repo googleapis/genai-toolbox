@@ -322,7 +322,7 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 					if refName != "" {
 						// Check if the referenced parameter exists
 						if !validParamNames[refName] {
-							return fmt.Errorf("tool %q config error: parameter %q (index %d) references '%q' in the 'valueFromParam' field, which is not a defined parameter.", name, pName, i, refName)
+							return fmt.Errorf("tool %q config error: parameter %q (index %d) references '%q' in the 'valueFromParam' field, which is not a defined parameter", name, pName, i, refName)
 						}
 
 						// Check for self-reference
