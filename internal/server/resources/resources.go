@@ -158,3 +158,4 @@ func (r *ResourceManager) GetPromptsMap() map[string]prompts.Prompt {
 	}
 	return copiedMap
 }
+
