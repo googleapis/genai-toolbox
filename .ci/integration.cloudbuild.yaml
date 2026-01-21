@@ -186,7 +186,7 @@ steps:
         .ci/test_with_coverage.sh \
           "AlloyDB Omni" \
           alloydbomni \
-          postgressql
+          postgres
 
   - id: "bigtable"
     name: golang:1
