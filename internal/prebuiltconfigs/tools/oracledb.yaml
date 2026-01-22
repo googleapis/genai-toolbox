@@ -22,7 +22,7 @@ sources:
         useOCI: $USE_OCI:false
 tools:
     execute_sql:
-        kind: oracle-sql
+        kind: oracle-execute-sql
         source: oracle-source
         description: Use this tool to execute a single SQL query or DML statement.
 
