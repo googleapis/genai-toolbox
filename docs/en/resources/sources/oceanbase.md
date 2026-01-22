@@ -14,7 +14,7 @@ consistency. It's designed to handle large-scale data processing and is
 compatible with MySQL, making it easy for developers to migrate from MySQL to
 OceanBase.
 
-[oceanbase-docs]: https://www.en.oceanbase.com/
+[oceanbase-docs]: https://en.oceanbase.com/
 
 ## Requirements
 
