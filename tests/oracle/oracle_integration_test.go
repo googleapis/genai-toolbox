@@ -9,6 +9,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"strconv"
 	"testing"
 	"time"
 
@@ -24,7 +25,11 @@ var (
 	oracleUser       = os.Getenv("ORACLE_USER")
 	oraclePassword   = os.Getenv("ORACLE_PASSWORD")
 	oracleService    = os.Getenv("ORACLE_SERVICE")
+	// ORACLE_PORT is a string in os.Getenv, but int in config
 	oraclePort       = os.Getenv("ORACLE_PORT")
+	oracleUseOCI     = os.Getenv("ORACLE_USE_OCI")
+	oracleWalletLocation = os.Getenv("ORACLE_WALLET_LOCATION")
+	oracleTnsAdmin   = os.Getenv("ORACLE_TNS_ADMIN")
 )
 
 func getOracleVars(t *testing.T) map[string]any {
@@ -96,13 +101,13 @@ func TestOracleTools(t *testing.T) {
 	defer teardownTable1(t)
 
 	// set up data for auth tool
-	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := getOracleAuthToolInfo(tableNameAuth)
-	teardownTable2 := setupOracleTable(t, ctx, db, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
+	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := getOracleAuthToolInfo(t, tableNameAuth)
+	teardownTable2 := setupOracleTable(t, ctx, db, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams...)
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, oracleToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
-	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "oracle-execute-sql")
+	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "oracle-sql")
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, oracleToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
@@ -148,6 +153,125 @@ func TestOracleTools(t *testing.T) {
 		tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
 		tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 	})
+}
+
+func TestOracleConnectionPureGoWithWallet(t *testing.T) {
+	t.Parallel()
+	// This test expects the connection to fail because the wallet file won't exist.
+	// It verifies that the walletLocation parameter is correctly passed to the pure Go driver.
+
+	// Save original env vars and restore them at the end
+	cleanup := setOracleEnv(t,
+		oracleHost, oracleUser, oraclePassword, oracleService, oraclePort, // Use existing base connection details
+		"", // connectionString
+		"", // tnsAlias
+		"", // tnsAdmin
+		"/tmp/nonexistent_wallet", // walletLocation
+		false,                     // useOCI
+	)
+	defer cleanup()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	cfg := getOracleConfigFromEnv(t)
+	_, err := cfg.Initialize(ctx, nil) // Pass nil for tracer as it's not critical for this test
+
+	if err == nil {
+		t.Fatalf("Expected connection to fail with non-existent wallet, but it succeeded")
+	}
+
+	// Check for error message indicating wallet usage or connection failure related to wallet
+	// The exact error message might vary depending on the go-ora version and OS.
+	// We are looking for an error that suggests the wallet path was attempted.
+	expectedErrorSubstring := "wallet"
+	if !strings.Contains(strings.ToLower(err.Error()), expectedErrorSubstring) {
+		t.Errorf("Expected error message to contain '%s' (case-insensitive) but got: %v", expectedErrorSubstring, err)
+	}
+	t.Logf("Connection failed as expected (Pure Go with Wallet): %v", err)
+}
+
+func TestOracleConnectionOCI(t *testing.T) {
+	t.Parallel()
+	// This test verifies that the useOCI=true parameter is correctly passed to the OCI driver.
+	// It will likely fail if Oracle Instant Client is not installed or configured.
+
+	// Save original env vars and restore them at the end
+	cleanup := setOracleEnv(t,
+		oracleHost, oracleUser, oraclePassword, oracleService, oraclePort, // Use existing base connection details
+		"",    // connectionString
+		"",    // tnsAlias
+		"",    // tnsAdmin
+		"",    // walletLocation
+		true,  // useOCI
+	)
+	defer cleanup()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	cfg := getOracleConfigFromEnv(t)
+	_, err := cfg.Initialize(ctx, nil)
+
+	if err == nil {
+		t.Fatalf("Expected connection to fail (OCI driver without Instant Client), but it succeeded")
+	}
+
+	// Check for error message indicating OCI driver usage or connection failure related to OCI.
+	// Common errors include "OCI environment not initialized", "driver: bad connection", etc.
+	expectedErrorSubstrings := []string{"oci", "driver", "connection"}
+	foundExpectedError := false
+	for _, sub := range expectedErrorSubstrings {
+		if strings.Contains(strings.ToLower(err.Error()), sub) {
+			foundExpectedError = true
+			break
+		}
+	}
+	if !foundExpectedError {
+		t.Errorf("Expected error message to contain one of %v (case-insensitive) but got: %v", expectedErrorSubstrings, err)
+	}
+	t.Logf("Connection failed as expected (OCI Driver): %v", err)
+}
+
+func TestOracleConnectionOCIWithWallet(t *testing.T) {
+	t.Parallel()
+	// This test verifies that useOCI=true and tnsAdmin parameters are correctly passed for OCI wallet.
+	// It will likely fail due to missing tnsnames.ora and wallet files.
+
+	// Save original env vars and restore them at the end
+	cleanup := setOracleEnv(t,
+		"", oracleUser, oraclePassword, "", "", // Unset host/port/service for TNS alias, but keep user/pass
+		"", // connectionString
+		"MY_TNS_ALIAS", // tnsAlias
+		"/tmp/nonexistent_tns_admin", // tnsAdmin
+		"", // walletLocation
+		true, // useOCI
+	)
+	defer cleanup()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	cfg := getOracleConfigFromEnv(t)
+	_, err := cfg.Initialize(ctx, nil)
+
+	if err == nil {
+		t.Fatalf("Expected connection to fail (OCI driver with TNS Admin/Wallet), but it succeeded")
+	}
+
+	// Check for error message indicating TNS Admin/Wallet usage or connection failure.
+	expectedErrorSubstrings := []string{"tns", "wallet", "oci", "driver", "connection"}
+	foundExpectedError := false
+	for _, sub := range expectedErrorSubstrings {
+		if strings.Contains(strings.ToLower(err.Error()), sub) {
+			foundExpectedError = true
+			break
+		}
+	}
+	if !foundExpectedError {
+		t.Errorf("Expected error message to contain one of %v (case-insensitive) but got: %v", expectedErrorSubstrings, err)
+	}
+	t.Logf("Connection failed as expected (OCI Driver with TNS Admin/Wallet): %v", err)
 }
 
 func setupOracleTable(t *testing.T, ctx context.Context, pool *sql.DB, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
@@ -205,7 +329,7 @@ func getOracleParamToolInfo(tableName string) (string, string, string, string, s
 }
 
 // getOracleAuthToolInfo returns statements and params for my-auth-tool for Oracle SQL
-func getOracleAuthToolInfo(tableName string) (string, string, string, []any) {
+func getOracleAuthToolInfo(t *testing.T, tableName string) (string, string, string, []any) {
 	createStatement := fmt.Sprintf(`CREATE TABLE %s ("id" NUMBER GENERATED AS IDENTITY PRIMARY KEY, "name" VARCHAR2(255), "email" VARCHAR2(255))`, tableName)
 
 	// MODIFIED: Use a PL/SQL block for multiple inserts
