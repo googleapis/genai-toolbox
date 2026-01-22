@@ -70,6 +70,9 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	if c.AllowedHosts == nil {
 		c.AllowedHosts = []string{"*"}
 	}
+	if c.UserAgentMetadata == nil {
+		c.UserAgentMetadata = []string{}
+	}
 	return c
 }
 
@@ -228,6 +231,13 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--allowed-hosts", "http://foo.com,http://bar.com"},
 			want: withDefaults(server.ServerConfig{
 				AllowedHosts: []string{"http://foo.com", "http://bar.com"},
+			}),
+		},
+		{
+			desc: "user agent metadata",
+			args: []string{"--user-agent-metadata", "foo,bar"},
+			want: withDefaults(server.ServerConfig{
+				UserAgentMetadata: []string{"foo", "bar"},
 			}),
 		},
 	}
@@ -2166,6 +2176,118 @@ func TestDefaultToolsFileBehavior(t *testing.T) {
 				}
 				if !strings.Contains(err.Error(), tc.errString) {
 					t.Errorf("expected error message to contain %q, but got %q", tc.errString, err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestParameterReferenceValidation(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	// Base template
+	baseYaml := `
+sources:
+  dummy-source:
+    kind: http
+    baseUrl: http://example.com
+tools:
+  test-tool:
+    kind: postgres-sql
+    source: dummy-source
+    description: test tool
+    statement: SELECT 1;
+    parameters:
+%s`
+
+	tcs := []struct {
+		desc      string
+		params    string
+		wantErr   bool
+		errSubstr string
+	}{
+		{
+			desc: "valid backward reference",
+			params: `
+      - name: source_param
+        type: string
+        description: source
+      - name: copy_param
+        type: string
+        description: copy
+        valueFromParam: source_param`,
+			wantErr: false,
+		},
+		{
+			desc: "valid forward reference (out of order)",
+			params: `
+      - name: copy_param
+        type: string
+        description: copy
+        valueFromParam: source_param
+      - name: source_param
+        type: string
+        description: source`,
+			wantErr: false,
+		},
+		{
+			desc: "invalid missing reference",
+			params: `
+      - name: copy_param
+        type: string
+        description: copy
+        valueFromParam: non_existent_param`,
+			wantErr:   true,
+			errSubstr: "references '\"non_existent_param\"' in the 'valueFromParam' field",
+		},
+		{
+			desc: "invalid self reference",
+			params: `
+      - name: myself
+        type: string
+        description: self
+        valueFromParam: myself`,
+			wantErr:   true,
+			errSubstr: "parameter \"myself\" cannot copy value from itself",
+		},
+		{
+			desc: "multiple valid references",
+			params: `
+      - name: a
+        type: string
+        description: a
+      - name: b
+        type: string
+        description: b
+        valueFromParam: a
+      - name: c
+        type: string
+        description: c
+        valueFromParam: a`,
+			wantErr: false,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			// Indent parameters to match YAML structure
+			yamlContent := fmt.Sprintf(baseYaml, tc.params)
+
+			_, err := parseToolsFile(ctx, []byte(yamlContent))
+
+			if tc.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				if !strings.Contains(err.Error(), tc.errSubstr) {
+					t.Errorf("error %q does not contain expected substring %q", err.Error(), tc.errSubstr)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
 				}
 			}
 		})

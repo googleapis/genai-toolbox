@@ -65,12 +65,14 @@ type ServerConfig struct {
 	Stdio bool
 	// DisableReload indicates if the user has disabled dynamic reloading for Toolbox.
 	DisableReload bool
-	// UI indicates if Toolbox UI endpoints (/ui) are available
+	// UI indicates if Toolbox UI endpoints (/ui) are available.
 	UI bool
 	// Specifies a list of origins permitted to access this server.
 	AllowedOrigins []string
-	// Specifies a list of hosts permitted to access this server
+	// Specifies a list of hosts permitted to access this server.
 	AllowedHosts []string
+	// UserAgentMetadata specifies additional metadata to append to the User-Agent string.
+	UserAgentMetadata []string
 }
 
 type logFormat string
@@ -299,6 +301,43 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 			return fmt.Errorf("invalid 'kind' field for tool %q (must be a string)", name)
 		}
 
+		// validify parameter references
+		if rawParams, ok := v["parameters"]; ok {
+			if paramsList, ok := rawParams.([]any); ok {
+				// Turn params into a map
+				validParamNames := make(map[string]bool)
+				for _, rawP := range paramsList {
+					if pMap, ok := rawP.(map[string]any); ok {
+						if pName, ok := pMap["name"].(string); ok && pName != "" {
+							validParamNames[pName] = true
+						}
+					}
+				}
+
+				// Validate references
+				for i, rawP := range paramsList {
+					pMap, ok := rawP.(map[string]any)
+					if !ok {
+						continue
+					}
+
+					pName, _ := pMap["name"].(string)
+					refName, _ := pMap["valueFromParam"].(string)
+
+					if refName != "" {
+						// Check if the referenced parameter exists
+						if !validParamNames[refName] {
+							return fmt.Errorf("tool %q config error: parameter %q (index %d) references '%q' in the 'valueFromParam' field, which is not a defined parameter", name, pName, i, refName)
+						}
+
+						// Check for self-reference
+						if refName == pName {
+							return fmt.Errorf("tool %q config error: parameter %q cannot copy value from itself", name, pName)
+						}
+					}
+				}
+			}
+		}
 		yamlDecoder, err := util.NewStrictDecoder(v)
 		if err != nil {
 			return fmt.Errorf("error creating YAML decoder for tool %q: %w", name, err)
