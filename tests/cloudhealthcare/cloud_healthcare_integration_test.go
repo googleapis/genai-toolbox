@@ -112,8 +112,7 @@ func TestHealthcareToolEndpoints(t *testing.T) {
 	fhirStoreID := "fhir-store-" + uuid.New().String()
 	dicomStoreID := "dicom-store-" + uuid.New().String()
 
-	patient1ID, patient2ID, teardown := setupHealthcareResources(t, healthcareService, healthcareDataset, fhirStoreID, dicomStoreID)
-	defer teardown(t)
+	patient1ID, patient2ID := setupHealthcareResources(t, healthcareService, healthcareDataset, fhirStoreID, dicomStoreID)
 
 	toolsFile := getToolsConfig(sourceConfig)
 	toolsFile = addClientAuthSourceConfig(t, toolsFile)
@@ -173,10 +172,8 @@ func TestHealthcareToolWithStoreRestriction(t *testing.T) {
 	disallowedFHIRStoreID := "fhir-store-disallowed-" + uuid.New().String()
 	disallowedDICOMStoreID := "dicom-store-disallowed-" + uuid.New().String()
 
-	_, _, teardownAllowedStores := setupHealthcareResources(t, healthcareService, healthcareDataset, allowedFHIRStoreID, allowedDICOMStoreID)
-	defer teardownAllowedStores(t)
-	_, _, teardownDisallowedStores := setupHealthcareResources(t, healthcareService, healthcareDataset, disallowedFHIRStoreID, disallowedDICOMStoreID)
-	defer teardownDisallowedStores(t)
+	setupHealthcareResources(t, healthcareService, healthcareDataset, allowedFHIRStoreID, allowedDICOMStoreID)
+	setupHealthcareResources(t, healthcareService, healthcareDataset, disallowedFHIRStoreID, disallowedDICOMStoreID)
 
 	// Configure source with dataset restriction.
 	sourceConfig["allowedFhirStores"] = []string{allowedFHIRStoreID}
@@ -257,7 +254,7 @@ func newHealthcareService(ctx context.Context) (*healthcare.Service, error) {
 	return healthcareService, nil
 }
 
-func setupHealthcareResources(t *testing.T, service *healthcare.Service, datasetID, fhirStoreID, dicomStoreID string) (string, string, func(*testing.T)) {
+func setupHealthcareResources(t *testing.T, service *healthcare.Service, datasetID, fhirStoreID, dicomStoreID string) (string, string) {
 	datasetName := fmt.Sprintf("projects/%s/locations/%s/datasets/%s", healthcareProject, healthcareRegion, datasetID)
 	var err error
 
@@ -266,12 +263,24 @@ func setupHealthcareResources(t *testing.T, service *healthcare.Service, dataset
 	if fhirStore, err = service.Projects.Locations.Datasets.FhirStores.Create(datasetName, fhirStore).FhirStoreId(fhirStoreID).Do(); err != nil {
 		t.Fatalf("failed to create fhir store: %v", err)
 	}
+	// Register cleanup
+	t.Cleanup(func() {
+		if _, err := service.Projects.Locations.Datasets.FhirStores.Delete(fhirStore.Name).Do(); err != nil {
+			t.Logf("failed to delete fhir store: %v", err)
+		}
+	})
 
 	// Create DICOM store
 	dicomStore := &healthcare.DicomStore{}
 	if dicomStore, err = service.Projects.Locations.Datasets.DicomStores.Create(datasetName, dicomStore).DicomStoreId(dicomStoreID).Do(); err != nil {
 		t.Fatalf("failed to create dicom store: %v", err)
 	}
+	// Register cleanup
+	t.Cleanup(func() {
+		if _, err := service.Projects.Locations.Datasets.DicomStores.Delete(dicomStore.Name).Do(); err != nil {
+			t.Logf("failed to delete dicom store: %v", err)
+		}
+	})
 
 	// Create Patient 1
 	patient1Body := bytes.NewBuffer([]byte(`{
@@ -317,15 +326,7 @@ func setupHealthcareResources(t *testing.T, service *healthcare.Service, dataset
 		createFHIRResource(t, service, fhirStore.Name, "Observation", observation2Body)
 	}
 
-	teardown := func(t *testing.T) {
-		if _, err := service.Projects.Locations.Datasets.FhirStores.Delete(fhirStore.Name).Do(); err != nil {
-			t.Logf("failed to delete fhir store: %v", err)
-		}
-		if _, err := service.Projects.Locations.Datasets.DicomStores.Delete(dicomStore.Name).Do(); err != nil {
-			t.Logf("failed to delete dicom store: %v", err)
-		}
-	}
-	return patient1ID, patient2ID, teardown
+	return patient1ID, patient2ID
 }
 
 func getToolsConfig(sourceConfig map[string]any) map[string]any {

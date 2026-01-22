@@ -116,9 +116,12 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, err
 	}
-	tokenStr, err := accessToken.ParseBearerToken()
-	if err != nil {
-		return nil, fmt.Errorf("error parsing access token: %w", err)
+	var tokenStr string
+	if source.UseClientAuthorization() {
+		tokenStr, err = accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
 	}
 	return source.GetDICOMStore(storeID, tokenStr)
 }
