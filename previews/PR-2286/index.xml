@@ -1194,7 +1194,7 @@ names, or other parts of the query.&lt;/p></description></item><item><title>CLI<
  &lt;tr>
  &lt;td>&lt;/td>
  &lt;td>&lt;code>--prebuilt&lt;/code>&lt;/td>
- &lt;td>Use a prebuilt tool configuration by source type. See &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2286/reference/prebuilt-tools/">Prebuilt Tools Reference&lt;/a> for allowed values.&lt;/td>
+ &lt;td>Use one or more prebuilt tool configuration by source type. See &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2286/reference/prebuilt-tools/">Prebuilt Tools Reference&lt;/a> for allowed values.&lt;/td>
  &lt;td>&lt;/td>
  &lt;/tr>
  &lt;tr>
