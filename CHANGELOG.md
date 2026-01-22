@@ -5,38 +5,25 @@
 
 ### ⚠ BREAKING CHANGES
 
-* validate tool naming ([#2305](https://github.com/googleapis/genai-toolbox/issues/2305))
-* **tools/cloudgda:** update description and parameter name for cloudgda tool ([#2288](https://github.com/googleapis/genai-toolbox/issues/2288))
+* validate tool naming ([#2305](https://github.com/googleapis/genai-toolbox/issues/2305)) ([5054212](https://github.com/googleapis/genai-toolbox/commit/5054212fa43017207fe83275d27b9fbab96e8ab5))
+* **tools/cloudgda:** update description and parameter name for cloudgda tool ([#2288](https://github.com/googleapis/genai-toolbox/issues/2288)) ([6b02591](https://github.com/googleapis/genai-toolbox/commit/6b025917032394a66840488259db8ff2c3063016))
 
 ### Features
 
 * Add new `user-agent-metadata` flag ([#2302](https://github.com/googleapis/genai-toolbox/issues/2302)) ([adc9589](https://github.com/googleapis/genai-toolbox/commit/adc9589766904d9e3cbe0a6399222f8d4bb9d0cc))
-* Add new v20251125 version ([#2303](https://github.com/googleapis/genai-toolbox/issues/2303)) ([4d23a3b](https://github.com/googleapis/genai-toolbox/commit/4d23a3bbf2797b1f7fe328aeb5789e778121da23))
-* Add remaining toolbox server flag ([#2272](https://github.com/googleapis/genai-toolbox/issues/2272)) ([5e0999e](https://github.com/googleapis/genai-toolbox/commit/5e0999ebf5cdd9046e96857738254b2e0561b6d2))
-* **bigquery:** Make maximum rows returned from queries configurable ([#2262](https://github.com/googleapis/genai-toolbox/issues/2262)) ([4abf0c3](https://github.com/googleapis/genai-toolbox/commit/4abf0c39e717d53b22cc61efb65e09928c598236))
+* Add remaining flag to Toolbox server in MCP registry ([#2272](https://github.com/googleapis/genai-toolbox/issues/2272)) ([5e0999e](https://github.com/googleapis/genai-toolbox/commit/5e0999ebf5cdd9046e96857738254b2e0561b6d2))
+* **embeddingModel:** Add embedding model to MCP handler ([#2310](https://github.com/googleapis/genai-toolbox/issues/2310)) ([e4f60e5](https://github.com/googleapis/genai-toolbox/commit/e4f60e56335b755ef55b9553d3f40b31858ec8d9))
+* **sources/bigquery:** Make maximum rows returned from queries configurable ([#2262](https://github.com/googleapis/genai-toolbox/issues/2262)) ([4abf0c3](https://github.com/googleapis/genai-toolbox/commit/4abf0c39e717d53b22cc61efb65e09928c598236))
 * **prebuilt/cloud-sql:** Add create backup tool for Cloud SQL ([#2141](https://github.com/googleapis/genai-toolbox/issues/2141)) ([8e0fb03](https://github.com/googleapis/genai-toolbox/commit/8e0fb0348315a80f63cb47b3c7204869482448f4))
-* **prebuilt/cloud-sql:** Add restore backup tool for cloud sql ([#2171](https://github.com/googleapis/genai-toolbox/issues/2171)) ([00c3e6d](https://github.com/googleapis/genai-toolbox/commit/00c3e6d8cba54e2ab6cb271c7e6b378895df53e1))
+* **prebuilt/cloud-sql:** Add restore backup tool for Cloud SQL ([#2171](https://github.com/googleapis/genai-toolbox/issues/2171)) ([00c3e6d](https://github.com/googleapis/genai-toolbox/commit/00c3e6d8cba54e2ab6cb271c7e6b378895df53e1))
 * Support combining multiple prebuilt configurations ([#2295](https://github.com/googleapis/genai-toolbox/issues/2295)) ([e535b37](https://github.com/googleapis/genai-toolbox/commit/e535b372ea81864d644a67135a1b07e4e519b4b4))
+* Support MCP specs version 2025-11-25 ([#2303](https://github.com/googleapis/genai-toolbox/issues/2303)) ([4d23a3b](https://github.com/googleapis/genai-toolbox/commit/4d23a3bbf2797b1f7fe328aeb5789e778121da23))
 * **tools:** Add `valueFromParam` support to Tool config ([#2333](https://github.com/googleapis/genai-toolbox/issues/2333)) ([15101b1](https://github.com/googleapis/genai-toolbox/commit/15101b1edbe2b85a4a5f9f819c23cf83138f4ee1))
-* Validate tool naming ([#2305](https://github.com/googleapis/genai-toolbox/issues/2305)) ([5054212](https://github.com/googleapis/genai-toolbox/commit/5054212fa43017207fe83275d27b9fbab96e8ab5))
 
 
 ### Bug Fixes
 
-* Add check for client authorization before retrieving token string ([#2327](https://github.com/googleapis/genai-toolbox/issues/2327)) ([c25a233](https://github.com/googleapis/genai-toolbox/commit/c25a2330fea2ac382a398842c9e572e4e19bcb08))
-* **embeddingModel:** Add embedding model to MCP handler ([#2310](https://github.com/googleapis/genai-toolbox/issues/2310)) ([e4f60e5](https://github.com/googleapis/genai-toolbox/commit/e4f60e56335b755ef55b9553d3f40b31858ec8d9))
-* Https://github.com/googleapis/genai-toolbox/issues/2293 ([1f15a11](https://github.com/googleapis/genai-toolbox/commit/1f15a111f1fc5729cd98470d79d5086f57e8170e))
-* **looker:** Upgrade go sdk to v0.25.22 ([#2350](https://github.com/googleapis/genai-toolbox/issues/2350)) ([93ca457](https://github.com/googleapis/genai-toolbox/commit/93ca4578daf8dc013a467f784fd84bdbc5df8128))
-
-
-### Miscellaneous Chores
-
-* Release 0.26.0 ([#2355](https://github.com/googleapis/genai-toolbox/issues/2355)) ([ad2893d](https://github.com/googleapis/genai-toolbox/commit/ad2893d80932bab728515367fb9f02fb7b1f0408))
-
-
-### Code Refactoring
-
-* **tools/cloudgda:** Update description and parameter name for cloudgda tool ([#2288](https://github.com/googleapis/genai-toolbox/issues/2288)) ([6b02591](https://github.com/googleapis/genai-toolbox/commit/6b025917032394a66840488259db8ff2c3063016))
+* **tools/cloudhealthcare:** Add check for client authorization before retrieving token string ([#2327](https://github.com/googleapis/genai-toolbox/issues/2327)) ([c25a233](https://github.com/googleapis/genai-toolbox/commit/c25a2330fea2ac382a398842c9e572e4e19bcb08))
 
 ## [0.25.0](https://github.com/googleapis/genai-toolbox/compare/v0.24.0...v0.25.0) (2026-01-08)
 
