@@ -43,3 +43,6 @@ https://www.npmjs.com/package/@toolbox-sdk/adk
 
 # Ignore social media and blog profiles to reduce external request overhead
 https://medium.com/@mcp_toolbox
+
+# Oceanbase main website
+https://www.oceanbase.com/
