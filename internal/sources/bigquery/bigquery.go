@@ -81,7 +81,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	// BigQuery configs
 	Name                      string              `yaml:"name" validate:"required"`
-	Type                      string              `yaml:"kind" validate:"required"`
+	Type                      string              `yaml:"type" validate:"required"`
 	Project                   string              `yaml:"project" validate:"required"`
 	Location                  string              `yaml:"location"`
 	WriteMode                 string              `yaml:"writeMode"`
@@ -120,7 +120,7 @@ func (s *StringOrStringSlice) UnmarshalYAML(unmarshal func(any) error) error {
 }
 
 func (r Config) SourceConfigType() string {
-	// Returns BigQuery source kind
+	// Returns BigQuery source type
 	return SourceType
 }
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -303,7 +303,7 @@ type Session struct {
 }
 
 func (s *Source) SourceType() string {
-	// Returns BigQuery Google SQL source kind
+	// Returns BigQuery Google SQL source type
 	return SourceType
 }
 

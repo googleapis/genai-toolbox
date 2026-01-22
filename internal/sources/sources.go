@@ -29,22 +29,22 @@ type SourceConfigFactory func(ctx context.Context, name string, decoder *yaml.De
 
 var sourceRegistry = make(map[string]SourceConfigFactory)
 
-// Register registers a new source kind with its factory.
-// It returns false if the kind is already registered.
+// Register registers a new source type with its factory.
+// It returns false if the type is already registered.
 func Register(sourceType string, factory SourceConfigFactory) bool {
 	if _, exists := sourceRegistry[sourceType]; exists {
-		// Source with this kind already exists, do not overwrite.
+		// Source with this type already exists, do not overwrite.
 		return false
 	}
 	sourceRegistry[sourceType] = factory
 	return true
 }
 
-// DecodeConfig decodes a source configuration using the registered factory for the given kind.
+// DecodeConfig decodes a source configuration using the registered factory for the given type.
 func DecodeConfig(ctx context.Context, sourceType string, name string, decoder *yaml.Decoder) (SourceConfig, error) {
 	factory, found := sourceRegistry[sourceType]
 	if !found {
-		return nil, fmt.Errorf("unknown source kind: %q", sourceType)
+		return nil, fmt.Errorf("unknown source type: %q", sourceType)
 	}
 	sourceConfig, err := factory(ctx, name, decoder)
 	if err != nil {

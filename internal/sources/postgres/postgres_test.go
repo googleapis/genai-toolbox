@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,13 +15,14 @@
 package postgres_test
 
 import (
+	"context"
 	"sort"
 	"strings"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/postgres"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
@@ -35,16 +36,16 @@ func TestParseFromYamlPostgres(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-pg-instance:
-					kind: postgres
-					host: my-host
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: sources
+			name: my-pg-instance
+			type: postgres
+			host: my-host
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-pg-instance": postgres.Config{
 					Name:     "my-pg-instance",
 					Type:     postgres.SourceType,
@@ -59,19 +60,19 @@ func TestParseFromYamlPostgres(t *testing.T) {
 		{
 			desc: "example with query params",
 			in: `
-			sources:
-				my-pg-instance:
-					kind: postgres
-					host: my-host
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
-					queryParams:
-						sslmode: verify-full
-						sslrootcert: /tmp/ca.crt
+			kind: sources
+			name: my-pg-instance
+			type: postgres
+			host: my-host
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			queryParams:
+				sslmode: verify-full
+				sslrootcert: /tmp/ca.crt
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-pg-instance": postgres.Config{
 					Name:     "my-pg-instance",
 					Type:     postgres.SourceType,
@@ -90,16 +91,12 @@ func TestParseFromYamlPostgres(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -115,39 +112,35 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-pg-instance:
-					kind: postgres
-					host: my-host
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
-					foo: bar
+			kind: sources
+			name: my-pg-instance
+			type: postgres
+			host: my-host
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			foo: bar
 			`,
-			err: "unable to parse source \"my-pg-instance\" as \"postgres\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: my-host\n   4 | kind: postgres\n   5 | password: my_pass\n   6 | ",
+			err: "error unmarshaling sources: unable to parse source \"my-pg-instance\" as \"postgres\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: my-host\n   4 | name: my-pg-instance\n   5 | password: my_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-pg-instance:
-					kind: postgres
-					host: my-host
-					port: my-port
-					database: my_db
-					user: my_user
+			kind: sources
+			name: my-pg-instance
+			type: postgres
+			host: my-host
+			port: my-port
+			database: my_db
+			user: my_user
 			`,
-			err: "unable to parse source \"my-pg-instance\" as \"postgres\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-pg-instance\" as \"postgres\": Key: 'Config.Password' Error:Field validation for 'Password' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}
