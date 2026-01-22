@@ -175,6 +175,7 @@ func (s *Source) SearchAspectTypes(ctx context.Context, query string, pageSize i
 	var results []*dataplexpb.AspectType
 	for {
 		entry, err := it.Next()
+<<<<<<< HEAD
 		if err == iterator.Done {
 			break
 		}
@@ -185,6 +186,10 @@ func (s *Source) SearchAspectTypes(ctx context.Context, query string, pageSize i
 				return nil, fmt.Errorf("Failed to search aspect types with error code: '%s' message: %s", errorCode.String(), errorMessage)
 			}
 			return nil, fmt.Errorf("Failed to search aspect types with error: %w", err)
+=======
+		if err != nil {
+			break
+>>>>>>> ccd30af9d6 (refactor: move source implementation in Invoke() function to Source (#2274))
 		}
 
 		// Create an instance of exponential backoff with default values for retrying GetAspectType calls
@@ -224,6 +229,7 @@ func (s *Source) SearchEntries(ctx context.Context, query string, pageSize int, 
 	var results []*dataplexpb.SearchEntriesResult
 	for {
 		entry, err := it.Next()
+<<<<<<< HEAD
 		if err == iterator.Done {
 			break
 		}
@@ -234,6 +240,10 @@ func (s *Source) SearchEntries(ctx context.Context, query string, pageSize int, 
 				return nil, fmt.Errorf("Failed to search entries with error code: '%s' message: %s", errorCode.String(), errorMessage)
 			}
 			return nil, fmt.Errorf("Failed to search entries with error: %w", err)
+=======
+		if err != nil {
+			break
+>>>>>>> ccd30af9d6 (refactor: move source implementation in Invoke() function to Source (#2274))
 		}
 		results = append(results, entry)
 	}
