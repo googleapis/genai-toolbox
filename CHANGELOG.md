@@ -5,8 +5,8 @@
 
 ### ⚠ BREAKING CHANGES
 
-* validate tool naming ([#2305](https://github.com/googleapis/genai-toolbox/issues/2305)) ([5054212](https://github.com/googleapis/genai-toolbox/commit/5054212fa43017207fe83275d27b9fbab96e8ab5))
-* **tools/cloudgda:** update description and parameter name for cloudgda tool ([#2288](https://github.com/googleapis/genai-toolbox/issues/2288)) ([6b02591](https://github.com/googleapis/genai-toolbox/commit/6b025917032394a66840488259db8ff2c3063016))
+* Validate tool naming ([#2305](https://github.com/googleapis/genai-toolbox/issues/2305)) ([5054212](https://github.com/googleapis/genai-toolbox/commit/5054212fa43017207fe83275d27b9fbab96e8ab5))
+* **tools/cloudgda:** Update description and parameter name for cloudgda tool ([#2288](https://github.com/googleapis/genai-toolbox/issues/2288)) ([6b02591](https://github.com/googleapis/genai-toolbox/commit/6b025917032394a66840488259db8ff2c3063016))
 
 ### Features
 
