@@ -657,11 +657,6 @@ See [Usage Examples](../reference/cli.md#examples).
 *   **Environment Variables:**
     *   `ORACLE_HOST`: The hostname or IP address of the Oracle server.
     *   `ORACLE_PORT`: The port number for the Oracle server (Default: 1521).
-    *   `list_active_sessions`: Lists active database sessions.
-    *   `get_query_plan`: Gets the execution plan for a SQL statement.
-    *   `list_top_sql_by_resource`: Lists top SQL statements by resource usage.
-    *   `list_tablespace_usage`: Lists tablespace usage.
-    *   `list_invalid_objects`: Lists invalid objects.
 
 *   **Permissions:**
     *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to
