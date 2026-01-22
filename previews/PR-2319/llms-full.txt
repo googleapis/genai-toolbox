@@ -5539,6 +5539,7 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 {{< tab header="Python" lang="python" >}}
 import asyncio
 from toolbox_core import ToolboxClient, auth_methods
+from toolbox_core.protocol import Protocol
 
 # Replace with the Cloud Run service URL generated in the previous step
 URL = "https://cloud-run-url.app"
@@ -5549,6 +5550,7 @@ async def main():
   async with ToolboxClient(
       URL,
       client_headers={"Authorization": auth_token_provider},
+      protocol=Protocol.TOOLBOX,
   ) as toolbox:
     toolset = await toolbox.load_toolset()
     # ...
@@ -5614,6 +5616,7 @@ contain the specific error message needed to diagnose the problem.
   - Ensure the `toolbox-identity` service account has the **Secret Manager
       Secret Accessor** (`roles/secretmanager.secretAccessor`) IAM role.
 
+- **Cloud Run Connections via IAP:** Currently we do not support Cloud Run connections via [IAP](https://docs.cloud.google.com/iap/docs/concepts-overview). Please disable IAP if you are using it.
 
 # Deploy ADK Agent and MCP Toolbox
 How to deploy your ADK Agent to Vertex AI Agent Engine and connect it to an MCP Toolbox deployed on Cloud Run.
@@ -10478,9 +10481,9 @@ EmbeddingModels represent services that transform text into vector embeddings fo
 
 
 EmbeddingModels represent services that generate vector representations of text
-data. In the MCP Toolbox, these models enable **Semantic Queries**,
-allowing [Tools](../tools/) to automatically convert human-readable text into
-numerical vectors before using them in a query.
+data. In the MCP Toolbox, these models enable **Semantic Queries**, allowing
+[Tools](../tools/) to automatically convert human-readable text into numerical
+vectors before using them in a query.
 
 This is primarily used in two scenarios:
 
@@ -10490,14 +10493,33 @@ This is primarily used in two scenarios:
 - **Semantic Search**: Converting a natural language query into a vector to
   perform similarity searches.
 
+## Hidden Parameter Duplication (valueFromParam)
+
+When building tools for vector ingestion, you often need the same input string
+twice:
+
+1. To store the original text in a TEXT column.
+1. To generate the vector embedding for a VECTOR column.
+
+Requesting an Agent (LLM) to output the exact same string twice is inefficient
+and error-prone. The `valueFromParam` field solves this by allowing a parameter
+to inherit its value from another parameter in the same tool.
+
+### Key Behaviors
+
+1. Hidden from Manifest: Parameters with valueFromParam set are excluded from
+   the tool definition sent to the Agent. The Agent does not know this parameter
+   exists.
+1. Auto-Filled: When the tool is executed, the Toolbox automatically copies the
+   value from the referenced parameter before processing embeddings.
+
 ## Example
 
 The following configuration defines an embedding model and applies it to
 specific tool parameters.
 
-{{< notice tip >}}
-Use environment variable replacement with the format ${ENV_NAME}
-instead of hardcoding your API keys into the configuration file.
+{{< notice tip >}} Use environment variable replacement with the format
+${ENV_NAME} instead of hardcoding your API keys into the configuration file.
 {{< /notice >}}
 
 ### Step 1 - Define an Embedding Model
@@ -10511,14 +10533,12 @@ embeddingModels:
     model: gemini-embedding-001
     apiKey: ${GOOGLE_API_KEY}
     dimension: 768
-
 ```
 
 ### Step 2 - Embed Tool Parameters
 
 Use the defined embedding model, embed your query parameters using the
-`embeddedBy` field. Only string-typed
-parameters can be embedded:
+`embeddedBy` field. Only string-typed parameters can be embedded:
 
 ```yaml
 tools:
@@ -10532,10 +10552,13 @@ tools:
     parameters:
       - name: content
         type: string
+        description: The raw text content to be stored in the database.
       - name: vector_string
         type: string
-        description: The text to be vectorized and stored.
-        embeddedBy: gemini-model # refers to the name of a defined embedding model
+        # This parameter is hidden from the LLM.
+        # It automatically copies the value from 'content' and embeds it.
+        valueFromParam: content
+        embeddedBy: gemini-model
 
   # Semantic search tool
   search_embedding:
@@ -13521,6 +13544,7 @@ This page describes the `toolbox` command-line options.
 |              | `--ui`                     | Launches the Toolbox UI web server.                                                                                                                                              |             |
 |              | `--allowed-origins`        | Specifies a list of origins permitted to access this server for CORs access.                                                                                                     | `*`         |
 |              | `--allowed-hosts`          | Specifies a list of hosts permitted to access this server to prevent DNS rebinding attacks.                                                                                      | `*`         |
+|              | `--user-agent-extra`       | Appends additional metadata to the User-Agent.                                                                                                                                   |             |
 | `-v`         | `--version`                | version for toolbox                                                                                                                                                              |             |
 
 ## Examples
