@@ -30,6 +30,10 @@ following config for example:
     - name: userNames
       type: array
       description: The user names to be set.  
+      items:
+          name: userName # the item name doesn't matter but it has to exist
+          type: string 
+          description: username
 ```
 
 If the input is an array of strings `["Alice", "Sid", "Bob"]`,  The final command
