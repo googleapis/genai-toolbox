@@ -39,7 +39,7 @@ https://dev.mysql.com/doc/refman/8.4/en/user-names.html
 # npmjs links can occasionally trigger rate limiting during high-frequency CI builds
 https://www.npmjs.com/package/@toolbox-sdk/core
 https://www.npmjs.com/package/@toolbox-sdk/adk
-
+https://www.oceanbase.com/
 
 # Ignore social media and blog profiles to reduce external request overhead
 https://medium.com/@mcp_toolbox
