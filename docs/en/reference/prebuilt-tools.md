@@ -689,7 +689,9 @@ See [Usage Examples](../reference/cli.md#examples).
 *   **Permissions:**
     *   **Database-level permissions** are required to execute Cypher queries.
 *   **Tools:**
-    
+    *   `execute_cypher`: Executes a Cypher query.
+    *   `get_schema`: Retrieves the schema of the Neo4j database.
+
 
 ## Oracle
 
@@ -698,14 +700,12 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `ORACLE_HOST`: The hostname or IP address of the Oracle server.
     *   `ORACLE_PORT`: The port number for the Oracle server (Default: 1521).
     *   `ORACLE_CONNECTION_STRING`: The
-    *   `ORACLE_USER`: The
-    *   `ORACLE_PASSWORD`: The
+    *   `ORACLE_USER`: The username for the Oracle DB instance.
+    *   `ORACLE_PASSWORD`: The password for the Oracle DB instance
     *   `ORACLE_WALLET`: The path to Oracle DB Wallet file for the databases that support this authentication type
-    *   `ORACLE_USE_OCI`: true or false, The flag if the Oracle Database is deployed in cloud deployment
-
+    *   `ORACLE_USE_OCI`: true or false, The flag if the Oracle Database is deployed in cloud deployment. Default is false.
 *   **Permissions:**
-    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to
-        execute queries.
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
 *   **Tools:**
     *   `execute_sql`: Executes a SQL query.
     *   `list_tables`: Lists tables in the database.
