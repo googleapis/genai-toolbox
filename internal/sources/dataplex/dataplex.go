@@ -26,7 +26,9 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
 const SourceKind string = "dataplex"
@@ -173,8 +175,17 @@ func (s *Source) SearchAspectTypes(ctx context.Context, query string, pageSize i
 	var results []*dataplexpb.AspectType
 	for {
 		entry, err := it.Next()
-		if err != nil {
+
+		if err == iterator.Done {
 			break
+		}
+		if err != nil {
+			if st, ok := grpcstatus.FromError(err); ok {
+				errorCode := st.Code()
+				errorMessage := st.Message()
+				return nil, fmt.Errorf("failed to search aspect types with error code: %q message: %s", errorCode.String(), errorMessage)
+			}
+			return nil, fmt.Errorf("failed to search aspect types: %w", err)
 		}
 
 		// Create an instance of exponential backoff with default values for retrying GetAspectType calls
@@ -214,8 +225,16 @@ func (s *Source) SearchEntries(ctx context.Context, query string, pageSize int, 
 	var results []*dataplexpb.SearchEntriesResult
 	for {
 		entry, err := it.Next()
-		if err != nil {
+		if err == iterator.Done {
 			break
+		}
+		if err != nil {
+			if st, ok := grpcstatus.FromError(err); ok {
+				errorCode := st.Code()
+				errorMessage := st.Message()
+				return nil, fmt.Errorf("failed to search entries with error code: %q message: %s", errorCode.String(), errorMessage)
+			}
+			return nil, fmt.Errorf("failed to search entries: %w", err)
 		}
 		results = append(results, entry)
 	}

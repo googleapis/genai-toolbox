@@ -39,6 +39,7 @@ jobs:
             --no-progress
             --cache
             --max-cache-age 1d
+            --exclude '^neo4j\+.*' --exclude '^bolt://.*'
             README.md
             docs/
           output: /tmp/foo.txt
