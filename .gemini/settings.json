@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "oracle": {
+      "command": "go",
+      "args": ["run", "main.go", "--prebuilt", "oracledb", "--stdio"],
+      "env": {
+        "ORACLE_CONNECTION_STRING": "(description=(retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=gcp-europe-west3.adb.eu-frankfurt-1.oraclecloud.com))(connect_data=(service_name=g7fc8bfc0a44b0c_jdatpai02_medium.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))",
+        "ORACLE_USER": "ADMIN",
+        "ORACLE_PASSWORD": "Software00.01!",
+        "ORACLE_USE_OCI": "false",
+        "ORACLE_WALLET": "/Users/jdumitru/Downloads/Wallet_jdatpai02.zip"
+      }
+    }
+  }
+}
