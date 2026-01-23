@@ -430,17 +430,27 @@ func TestPrebuiltFlag(t *testing.T) {
 	tcs := []struct {
 		desc string
 		args []string
-		want string
+		want []string
 	}{
 		{
 			desc: "default value",
 			args: []string{},
-			want: "",
+			want: []string{},
 		},
 		{
-			desc: "custom pre built flag",
-			args: []string{"--tools-file", "alloydb"},
-			want: "alloydb",
+			desc: "single prebuilt flag",
+			args: []string{"--prebuilt", "alloydb"},
+			want: []string{"alloydb"},
+		},
+		{
+			desc: "multiple prebuilt flags",
+			args: []string{"--prebuilt", "alloydb", "--prebuilt", "bigquery"},
+			want: []string{"alloydb", "bigquery"},
+		},
+		{
+			desc: "comma separated prebuilt flags",
+			args: []string{"--prebuilt", "alloydb,bigquery"},
+			want: []string{"alloydb", "bigquery"},
 		},
 	}
 	for _, tc := range tcs {
@@ -449,8 +459,8 @@ func TestPrebuiltFlag(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error invoking command: %s", err)
 			}
-			if c.tools_file != tc.want {
-				t.Fatalf("got %v, want %v", c.cfg, tc.want)
+			if diff := cmp.Diff(c.prebuiltConfigs, tc.want); diff != "" {
+				t.Fatalf("got %v, want %v, diff %s", c.prebuiltConfigs, tc.want, diff)
 			}
 		})
 	}
@@ -2072,6 +2082,12 @@ authSources:
 				}
 				return nil
 			},
+		},
+		{
+			desc:      "sqlite called twice error",
+			args:      []string{"--prebuilt", "sqlite", "--prebuilt", "sqlite"},
+			wantErr:   true,
+			errString: "resource conflicts detected",
 		},
 		{
 			desc:      "tool conflict error",
