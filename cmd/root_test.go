@@ -430,17 +430,27 @@ func TestPrebuiltFlag(t *testing.T) {
 	tcs := []struct {
 		desc string
 		args []string
-		want string
+		want []string
 	}{
 		{
 			desc: "default value",
 			args: []string{},
-			want: "",
+			want: []string{},
 		},
 		{
-			desc: "custom pre built flag",
-			args: []string{"--tools-file", "alloydb"},
-			want: "alloydb",
+			desc: "single prebuilt flag",
+			args: []string{"--prebuilt", "alloydb"},
+			want: []string{"alloydb"},
+		},
+		{
+			desc: "multiple prebuilt flags",
+			args: []string{"--prebuilt", "alloydb", "--prebuilt", "bigquery"},
+			want: []string{"alloydb", "bigquery"},
+		},
+		{
+			desc: "comma separated prebuilt flags",
+			args: []string{"--prebuilt", "alloydb,bigquery"},
+			want: []string{"alloydb", "bigquery"},
 		},
 	}
 	for _, tc := range tcs {
@@ -449,8 +459,8 @@ func TestPrebuiltFlag(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error invoking command: %s", err)
 			}
-			if c.tools_file != tc.want {
-				t.Fatalf("got %v, want %v", c.cfg, tc.want)
+			if diff := cmp.Diff(c.prebuiltConfigs, tc.want); diff != "" {
+				t.Fatalf("got %v, want %v, diff %s", c.prebuiltConfigs, tc.want, diff)
 			}
 		})
 	}
@@ -2074,6 +2084,12 @@ authSources:
 			},
 		},
 		{
+			desc:      "sqlite called twice error",
+			args:      []string{"--prebuilt", "sqlite", "--prebuilt", "sqlite"},
+			wantErr:   true,
+			errString: "resource conflicts detected",
+		},
+		{
 			desc:      "tool conflict error",
 			args:      []string{"--prebuilt", "sqlite", "--tools-file", toolConflictFile},
 			wantErr:   true,
@@ -2176,6 +2192,118 @@ func TestDefaultToolsFileBehavior(t *testing.T) {
 				}
 				if !strings.Contains(err.Error(), tc.errString) {
 					t.Errorf("expected error message to contain %q, but got %q", tc.errString, err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestParameterReferenceValidation(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	// Base template
+	baseYaml := `
+sources:
+  dummy-source:
+    kind: http
+    baseUrl: http://example.com
+tools:
+  test-tool:
+    kind: postgres-sql
+    source: dummy-source
+    description: test tool
+    statement: SELECT 1;
+    parameters:
+%s`
+
+	tcs := []struct {
+		desc      string
+		params    string
+		wantErr   bool
+		errSubstr string
+	}{
+		{
+			desc: "valid backward reference",
+			params: `
+      - name: source_param
+        type: string
+        description: source
+      - name: copy_param
+        type: string
+        description: copy
+        valueFromParam: source_param`,
+			wantErr: false,
+		},
+		{
+			desc: "valid forward reference (out of order)",
+			params: `
+      - name: copy_param
+        type: string
+        description: copy
+        valueFromParam: source_param
+      - name: source_param
+        type: string
+        description: source`,
+			wantErr: false,
+		},
+		{
+			desc: "invalid missing reference",
+			params: `
+      - name: copy_param
+        type: string
+        description: copy
+        valueFromParam: non_existent_param`,
+			wantErr:   true,
+			errSubstr: "references '\"non_existent_param\"' in the 'valueFromParam' field",
+		},
+		{
+			desc: "invalid self reference",
+			params: `
+      - name: myself
+        type: string
+        description: self
+        valueFromParam: myself`,
+			wantErr:   true,
+			errSubstr: "parameter \"myself\" cannot copy value from itself",
+		},
+		{
+			desc: "multiple valid references",
+			params: `
+      - name: a
+        type: string
+        description: a
+      - name: b
+        type: string
+        description: b
+        valueFromParam: a
+      - name: c
+        type: string
+        description: c
+        valueFromParam: a`,
+			wantErr: false,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			// Indent parameters to match YAML structure
+			yamlContent := fmt.Sprintf(baseYaml, tc.params)
+
+			_, err := parseToolsFile(ctx, []byte(yamlContent))
+
+			if tc.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				if !strings.Contains(err.Error(), tc.errSubstr) {
+					t.Errorf("error %q does not contain expected substring %q", err.Error(), tc.errSubstr)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
 				}
 			}
 		})

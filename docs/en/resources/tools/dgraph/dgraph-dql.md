@@ -9,6 +9,17 @@ aliases:
 - /resources/tools/dgraph-dql
 ---
 
+{{< notice note >}}
+**⚠️ Best Effort Maintenance**
+
+This integration is maintained on a best-effort basis by the project
+team/community. While we strive to address issues and provide workarounds when
+resources are available, there are no guaranteed response times or code fixes.
+
+The automated integration tests for this module are currently non-functional or
+failing.
+{{< /notice >}}
+
 ## About
 
 A `dgraph-dql` tool executes a pre-defined DQL statement against a Dgraph
