@@ -23,7 +23,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/server/resources"
@@ -36,6 +35,10 @@ import (
 )
 
 func TestParseFromYaml(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 	t.Parallel()
 	tcs := []struct {
 		desc string
@@ -45,25 +48,25 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				my-gda-query-tool:
-					kind: cloud-gemini-data-analytics-query
-					source: gda-api-source
-					description: Test Description
-					location: us-central1
-					context:
-						datasourceReferences:
-							spannerReference:
-								databaseReference:
-									projectId:  "cloud-db-nl2sql"
-									region:     "us-central1"
-									instanceId: "evalbench"
-									databaseId: "financial"
-									engine:     "GOOGLE_SQL"
-								agentContextReference:
-									contextSetId: "projects/cloud-db-nl2sql/locations/us-east1/contextSets/bdf_gsql_gemini_all_templates"
-					generationOptions:
-						generateQueryResult: true
+			kind: tools
+			name: my-gda-query-tool
+			type: cloud-gemini-data-analytics-query
+			source: gda-api-source
+			description: Test Description
+			location: us-central1
+			context:
+				datasourceReferences:
+					spannerReference:
+						databaseReference:
+							projectId:  "cloud-db-nl2sql"
+							region:     "us-central1"
+							instanceId: "evalbench"
+							databaseId: "financial"
+							engine:     "GOOGLE_SQL"
+						agentContextReference:
+							contextSetId: "projects/cloud-db-nl2sql/locations/us-east1/contextSets/bdf_gsql_gemini_all_templates"
+			generationOptions:
+				generateQueryResult: true
 			`,
 			want: map[string]tools.ToolConfig{
 				"my-gda-query-tool": cloudgdatool.Config{
@@ -100,16 +103,12 @@ func TestParseFromYaml(t *testing.T) {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Tools) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Tools)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -135,13 +134,13 @@ func (rt *authRoundTripper) RoundTrip(req *http.Request) (*http.Response, error)
 }
 
 type mockSource struct {
-	kind    string
+	Type    string
 	client  *http.Client       // Can be used to inject a specific client
 	baseURL string             // BaseURL is needed to implement sources.Source.BaseURL
 	config  cloudgdasrc.Config // to return from ToConfig
 }
 
-func (m *mockSource) SourceType() string             { return m.kind }
+func (m *mockSource) SourceType() string             { return m.Type }
 func (m *mockSource) ToConfig() sources.SourceConfig { return m.config }
 func (m *mockSource) GetClient(ctx context.Context, token string) (*http.Client, error) {
 	if m.client != nil {
@@ -189,7 +188,7 @@ func TestInitialize(t *testing.T) {
 	}
 
 	// Add an incompatible source for testing
-	srcs["incompatible-source"] = &mockSource{kind: "another-kind"}
+	srcs["incompatible-source"] = &mockSource{Type: "another-type"}
 
 	for _, tc := range tcs {
 		tc := tc

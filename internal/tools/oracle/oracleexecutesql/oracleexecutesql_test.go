@@ -5,7 +5,6 @@ package oracleexecutesql_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -25,13 +24,13 @@ func TestParseFromYamlOracleExecuteSql(t *testing.T) {
 		{
 			desc: "basic example with auth",
 			in: `
-            tools:
-                run_adhoc_query:
-                    kind: oracle-execute-sql
-                    source: my-oracle-instance
-                    description: Executes arbitrary SQL statements like INSERT or UPDATE.
-                    authRequired:
-                        - my-google-auth-service
+            kind: tools
+            name: run_adhoc_query
+            type: oracle-execute-sql
+            source: my-oracle-instance
+            description: Executes arbitrary SQL statements like INSERT or UPDATE.
+            authRequired:
+                - my-google-auth-service
             `,
 			want: server.ToolConfigs{
 				"run_adhoc_query": oracleexecutesql.Config{
@@ -46,11 +45,11 @@ func TestParseFromYamlOracleExecuteSql(t *testing.T) {
 		{
 			desc: "example without authRequired",
 			in: `
-            tools:
-                run_simple_update:
-                    kind: oracle-execute-sql
-                    source: db-dev
-                    description: Runs a simple update operation.
+            kind: tools
+            name: run_simple_update
+            type: oracle-execute-sql
+            source: db-dev
+            description: Runs a simple update operation.
             `,
 			want: server.ToolConfigs{
 				"run_simple_update": oracleexecutesql.Config{
@@ -65,15 +64,12 @@ func TestParseFromYamlOracleExecuteSql(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			// Parse contents
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
