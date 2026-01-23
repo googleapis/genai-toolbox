@@ -207,6 +207,30 @@ variables for each source.
 * SQLite -  setup in the integration test, where we create a temporary database
   file
 
+### Link Checking and Fixing with Lychee
+
+We use **[lychee](https://github.com/lycheeverse/lychee-action)** for repository link checks.
+
+* To run the checker **locally**, see the [command-line usage guide](https://github.com/lycheeverse/lychee?tab=readme-ov-file#commandline-usage).
+
+####  Fixing Broken Links
+
+1.  **Update the Link:** Correct the broken URL or update the content where it is used.
+2.  **Ignore the Link:** If you can't fix the link (e.g., due to **external rate-limits** or if it's a **local-only URL**), tell Lychee to **ignore** it.
+
+    * List **regular expressions** or **direct links** in the **[.lycheeignore](https://github.com/googleapis/genai-toolbox/blob/main/.lycheeignore)** file, one entry per line.
+    * **Always add a comment** explaining **why** the link is being skipped to prevent link rot. **Example `.lycheeignore`:**
+       ```text
+       # These are email addresses, not standard web URLs, and usually cause check failures.
+       ^mailto:.*
+       ```
+> [!NOTE]
+> To avoid build failures in GitHub Actions, follow the linking pattern demonstrated here: <br>
+> **Avoid:** (Works in Hugo, breaks Link Checker): `[Read more](docs/setup)` or `[Read more](docs/setup/)` <br>
+> **Reason:** The link checker cannot find a file named "setup" or a directory with that name containing an index. <br>
+> **Preferred:** `[Read more](docs/setup.md)` <br>
+> **Reason:** The GitHub Action finds the physical file. Hugo then uses its internal logic (or render hooks) to resolve this to the correct `/docs/setup/` web URL. <br>
+
 ### Other GitHub Checks
 
 * License header check (`.github/header-checker-lint.yml`) - Ensures files have
@@ -279,6 +303,7 @@ There are 3 GHA workflows we use to achieve document versioning:
 
 Request a repo owner to run the preview deployment workflow on your PR. A
 preview link will be automatically added as a comment to your PR.
+
 
 #### Maintainers
 
@@ -353,6 +378,23 @@ can create branches and approve test runs. But they do not have the ability
 to approve PRs for main. TeamSync is used to create this team from the MDB
 Group `toolbox-contributors`. Googlers who are developing for MCP-Toolbox
 but aren't part of the core team should join this group.
+
+### Issue/PR Triage and SLO
+After an issue is created, maintainers will assign the following labels:
+* `Priority` (defaulted to P0)
+* `Type` (if applicable)
+* `Product` (if applicable)
+
+All incoming issues and PRs will follow the following SLO:
+| Type            | Priority | Objective                                                              |
+|-----------------|----------|------------------------------------------------------------------------|
+| Feature Request | P0       | Must respond within **5 days**                                         |
+| Process         | P0       | Must respond within **5 days**                                         |
+| Bugs            | P0       | Must respond within **5 days**, and resolve/closure within **14 days** |
+| Bugs            | P1       | Must respond within **7 days**, and resolve/closure within **90 days** |
+| Bugs            | P2       | Must respond within **30 days**
+
+_Types that are not listed in the table do not adhere to any SLO._
 
 ### Releasing
 

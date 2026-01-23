@@ -14,8 +14,11 @@
 package cloudgda
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/goccy/go-yaml"
@@ -28,26 +31,6 @@ import (
 
 const SourceKind string = "cloud-gemini-data-analytics"
 const Endpoint string = "https://geminidataanalytics.googleapis.com"
-
-type userAgentRoundTripper struct {
-	userAgent string
-	next      http.RoundTripper
-}
-
-func (rt *userAgentRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	newReq := *req
-	newReq.Header = make(http.Header)
-	for k, v := range req.Header {
-		newReq.Header[k] = v
-	}
-	ua := newReq.Header.Get("User-Agent")
-	if ua == "" {
-		newReq.Header.Set("User-Agent", rt.userAgent)
-	} else {
-		newReq.Header.Set("User-Agent", ua+" "+rt.userAgent)
-	}
-	return rt.next.RoundTrip(&newReq)
-}
 
 // validate interface
 var _ sources.SourceConfig = Config{}
@@ -87,10 +70,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	var client *http.Client
 	if r.UseClientOAuth {
 		client = &http.Client{
-			Transport: &userAgentRoundTripper{
-				userAgent: ua,
-				next:      http.DefaultTransport,
-			},
+			Transport: util.NewUserAgentRoundTripper(ua, http.DefaultTransport),
 		}
 	} else {
 		// Use Application Default Credentials
@@ -100,10 +80,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 			return nil, fmt.Errorf("failed to find default credentials: %w", err)
 		}
 		baseClient := oauth2.NewClient(ctx, creds.TokenSource)
-		baseClient.Transport = &userAgentRoundTripper{
-			userAgent: ua,
-			next:      baseClient.Transport,
-		}
+		baseClient.Transport = util.NewUserAgentRoundTripper(ua, baseClient.Transport)
 		client = baseClient
 	}
 
@@ -133,6 +110,14 @@ func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
 }
 
+func (s *Source) GetProjectID() string {
+	return s.ProjectID
+}
+
+func (s *Source) GetBaseURL() string {
+	return s.BaseURL
+}
+
 func (s *Source) GetClient(ctx context.Context, accessToken string) (*http.Client, error) {
 	if s.UseClientOAuth {
 		if accessToken == "" {
@@ -140,10 +125,7 @@ func (s *Source) GetClient(ctx context.Context, accessToken string) (*http.Clien
 		}
 		token := &oauth2.Token{AccessToken: accessToken}
 		baseClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
-		baseClient.Transport = &userAgentRoundTripper{
-			userAgent: s.userAgent,
-			next:      baseClient.Transport,
-		}
+		baseClient.Transport = util.NewUserAgentRoundTripper(s.userAgent, baseClient.Transport)
 		return baseClient, nil
 	}
 	return s.Client, nil
@@ -151,4 +133,44 @@ func (s *Source) GetClient(ctx context.Context, accessToken string) (*http.Clien
 
 func (s *Source) UseClientAuthorization() bool {
 	return s.UseClientOAuth
+}
+
+func (s *Source) RunQuery(ctx context.Context, tokenStr string, bodyBytes []byte) (any, error) {
+	// The API endpoint itself always uses the "global" location.
+	apiLocation := "global"
+	apiParent := fmt.Sprintf("projects/%s/locations/%s", s.GetProjectID(), apiLocation)
+	apiURL := fmt.Sprintf("%s/v1beta/%s:queryData", s.GetBaseURL(), apiParent)
+
+	client, err := s.GetClient(ctx, tokenStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get HTTP client: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API request failed with status %d: %s", resp.StatusCode, string(respBody))
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	return result, nil
 }

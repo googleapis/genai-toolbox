@@ -16,11 +16,14 @@ package server
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels/gemini"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
@@ -38,6 +41,8 @@ type ServerConfig struct {
 	SourceConfigs SourceConfigs
 	// AuthServiceConfigs defines what sources of authentication are available for tools.
 	AuthServiceConfigs AuthServiceConfigs
+	// EmbeddingModelConfigs defines a models used to embed parameters.
+	EmbeddingModelConfigs EmbeddingModelConfigs
 	// ToolConfigs defines what tools are available.
 	ToolConfigs ToolConfigs
 	// ToolsetConfigs defines what tools are available.
@@ -60,10 +65,14 @@ type ServerConfig struct {
 	Stdio bool
 	// DisableReload indicates if the user has disabled dynamic reloading for Toolbox.
 	DisableReload bool
-	// UI indicates if Toolbox UI endpoints (/ui) are available
+	// UI indicates if Toolbox UI endpoints (/ui) are available.
 	UI bool
 	// Specifies a list of origins permitted to access this server.
 	AllowedOrigins []string
+	// Specifies a list of hosts permitted to access this server.
+	AllowedHosts []string
+	// UserAgentMetadata specifies additional metadata to append to the User-Agent string.
+	UserAgentMetadata []string
 }
 
 type logFormat string
@@ -205,6 +214,50 @@ func (c *AuthServiceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(i
 	return nil
 }
 
+// EmbeddingModelConfigs is a type used to allow unmarshal of the embedding model config map
+type EmbeddingModelConfigs map[string]embeddingmodels.EmbeddingModelConfig
+
+// validate interface
+var _ yaml.InterfaceUnmarshalerContext = &EmbeddingModelConfigs{}
+
+func (c *EmbeddingModelConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
+	*c = make(EmbeddingModelConfigs)
+	// Parse the 'kind' fields for each embedding model
+	var raw map[string]util.DelayedUnmarshaler
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+
+	for name, u := range raw {
+		// Unmarshal to a general type that ensure it capture all fields
+		var v map[string]any
+		if err := u.Unmarshal(&v); err != nil {
+			return fmt.Errorf("unable to unmarshal embedding model %q: %w", name, err)
+		}
+
+		kind, ok := v["kind"]
+		if !ok {
+			return fmt.Errorf("missing 'kind' field for embedding model %q", name)
+		}
+
+		dec, err := util.NewStrictDecoder(v)
+		if err != nil {
+			return fmt.Errorf("error creating decoder: %w", err)
+		}
+		switch kind {
+		case gemini.EmbeddingModelKind:
+			actual := gemini.Config{Name: name}
+			if err := dec.DecodeContext(ctx, &actual); err != nil {
+				return fmt.Errorf("unable to parse as %q: %w", kind, err)
+			}
+			(*c)[name] = actual
+		default:
+			return fmt.Errorf("%q is not a valid kind of auth source", kind)
+		}
+	}
+	return nil
+}
+
 // ToolConfigs is a type used to allow unmarshal of the tool configs
 type ToolConfigs map[string]tools.ToolConfig
 
@@ -220,6 +273,10 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 	}
 
 	for name, u := range raw {
+		err := NameValidation(name)
+		if err != nil {
+			return err
+		}
 		var v map[string]any
 		if err := u.Unmarshal(&v); err != nil {
 			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
@@ -244,6 +301,43 @@ func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interfac
 			return fmt.Errorf("invalid 'kind' field for tool %q (must be a string)", name)
 		}
 
+		// validify parameter references
+		if rawParams, ok := v["parameters"]; ok {
+			if paramsList, ok := rawParams.([]any); ok {
+				// Turn params into a map
+				validParamNames := make(map[string]bool)
+				for _, rawP := range paramsList {
+					if pMap, ok := rawP.(map[string]any); ok {
+						if pName, ok := pMap["name"].(string); ok && pName != "" {
+							validParamNames[pName] = true
+						}
+					}
+				}
+
+				// Validate references
+				for i, rawP := range paramsList {
+					pMap, ok := rawP.(map[string]any)
+					if !ok {
+						continue
+					}
+
+					pName, _ := pMap["name"].(string)
+					refName, _ := pMap["valueFromParam"].(string)
+
+					if refName != "" {
+						// Check if the referenced parameter exists
+						if !validParamNames[refName] {
+							return fmt.Errorf("tool %q config error: parameter %q (index %d) references '%q' in the 'valueFromParam' field, which is not a defined parameter", name, pName, i, refName)
+						}
+
+						// Check for self-reference
+						if refName == pName {
+							return fmt.Errorf("tool %q config error: parameter %q cannot copy value from itself", name, pName)
+						}
+					}
+				}
+			}
+		}
 		yamlDecoder, err := util.NewStrictDecoder(v)
 		if err != nil {
 			return fmt.Errorf("error creating YAML decoder for tool %q: %w", name, err)
@@ -340,6 +434,26 @@ func (c *PromptsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(int
 
 	for name, promptList := range raw {
 		(*c)[name] = prompts.PromptsetConfig{Name: name, PromptNames: promptList}
+	}
+	return nil
+}
+
+// Tools naming validation is added in the MCP v2025-11-25, but we'll be
+// implementing it across Toolbox
+// Tool names SHOULD be between 1 and 128 characters in length (inclusive).
+// Tool names SHOULD be considered case-sensitive.
+// The following SHOULD be the only allowed characters: uppercase and lowercase ASCII letters (A-Z, a-z), digits (0-9), underscore (_), hyphen (-), and dot (.)
+// Tool names SHOULD NOT contain spaces, commas, or other special characters.
+// Tool names SHOULD be unique within a server.
+func NameValidation(name string) error {
+	strLen := len(name)
+	if strLen < 1 || strLen > 128 {
+		return fmt.Errorf("resource name SHOULD be between 1 and 128 characters in length (inclusive)")
+	}
+	validChars := regexp.MustCompile("^[a-zA-Z0-9_.-]+$")
+	isValid := validChars.MatchString(name)
+	if !isValid {
+		return fmt.Errorf("invalid character for resource name; only uppercase and lowercase ASCII letters (A-Z, a-z), digits (0-9), underscore (_), hyphen (-), and dot (.) is allowed")
 	}
 	return nil
 }

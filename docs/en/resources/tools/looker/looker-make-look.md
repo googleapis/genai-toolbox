@@ -18,7 +18,7 @@ It's compatible with the following sources:
 
 - [looker](../../sources/looker.md)
 
-`looker-make-look` takes eleven parameters:
+`looker-make-look` takes twelve parameters:
 
 1. the `model`
 2. the `explore`
@@ -31,6 +31,7 @@ It's compatible with the following sources:
 9. an optional `vis_config`
 10. the `title`
 11. an optional `description`
+12. an optional `folder` id. If not provided, the user's default folder will be used.
 
 ## Example
 

@@ -37,6 +37,7 @@ const jsonrpcVersion = "2.0"
 const protocolVersion20241105 = "2024-11-05"
 const protocolVersion20250326 = "2025-03-26"
 const protocolVersion20250618 = "2025-06-18"
+const protocolVersion20251125 = "2025-11-25"
 const serverName = "Toolbox"
 
 var basicInputSchema = map[string]any{
@@ -485,6 +486,23 @@ func TestMcpEndpoint(t *testing.T) {
 				},
 			},
 		},
+		{
+			name:     "version 2025-11-25",
+			protocol: protocolVersion20251125,
+			idHeader: false,
+			initWant: map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "mcp-initialize",
+				"result": map[string]any{
+					"protocolVersion": "2025-11-25",
+					"capabilities": map[string]any{
+						"tools":   map[string]any{"listChanged": false},
+						"prompts": map[string]any{"listChanged": false},
+					},
+					"serverInfo": map[string]any{"name": serverName, "version": fakeVersionString},
+				},
+			},
+		},
 	}
 	for _, vtc := range versTestCases {
 		t.Run(vtc.name, func(t *testing.T) {
@@ -494,8 +512,7 @@ func TestMcpEndpoint(t *testing.T) {
 			if sessionId != "" {
 				header["Mcp-Session-Id"] = sessionId
 			}
-
-			if vtc.protocol == protocolVersion20250618 {
+			if vtc.protocol != protocolVersion20241105 && vtc.protocol != protocolVersion20250326 {
 				header["MCP-Protocol-Version"] = vtc.protocol
 			}
 
@@ -1107,7 +1124,7 @@ func TestStdioSession(t *testing.T) {
 
 	sseManager := newSseManager(ctx)
 
-	resourceManager := resources.NewResourceManager(nil, nil, toolsMap, toolsets, promptsMap, promptsets)
+	resourceManager := resources.NewResourceManager(nil, nil, nil, toolsMap, toolsets, promptsMap, promptsets)
 
 	server := &Server{
 		version:         fakeVersionString,

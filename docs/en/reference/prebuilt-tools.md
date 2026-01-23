@@ -13,6 +13,15 @@ allowing developers to interact with and take action on databases.
 See guides, [Connect from your IDE](../how-to/connect-ide/_index.md), for
 details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 
+{{< notice tip >}}
+You can now use `--prebuilt` along `--tools-file`, `--tools-files`, or
+`--tools-folder` to combine prebuilt configs with custom tools.
+
+You can also combine multiple prebuilt configs.
+
+See [Usage Examples](../reference/cli.md#examples).
+{{< /notice >}}
+
 ## AlloyDB Postgres
 
 *   `--prebuilt` value: `alloydb-postgres`
@@ -99,6 +108,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `BIGQUERY_LOCATION`: (Optional) The dataset location.
     *   `BIGQUERY_USE_CLIENT_OAUTH`: (Optional) If `true`, forwards the client's
         OAuth access token for authentication. Defaults to `false`.
+    *   `BIGQUERY_SCOPES`: (Optional) A comma-separated list of OAuth scopes to
+        use for authentication.
 *   **Permissions:**
     *   **BigQuery User** (`roles/bigquery.user`) to execute queries and view
         metadata.
@@ -179,12 +190,14 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
         manage existing resources.
         * All `viewer` tools
         * `create_database`
+        * `create_backup`
     *   **Cloud SQL Admin** (`roles/cloudsql.admin`): Provides full control over
         all resources.
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
         * `clone_instance`
+        * `restore_backup`
 
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for MySQL instance.
@@ -195,6 +208,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
     *   `clone_instance`: Creates a clone for an existing Cloud SQL for MySQL instance.
+    *   `create_backup`: Creates a backup on a Cloud SQL instance.
+    *   `restore_backup`: Restores a backup of a Cloud SQL instance.
 
 ## Cloud SQL for PostgreSQL
 
@@ -267,12 +282,14 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
         manage existing resources.
         * All `viewer` tools
         * `create_database`
+        * `create_backup`
     *   **Cloud SQL Admin** (`roles/cloudsql.admin`): Provides full control over
         all resources.
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
         * `clone_instance`
+        * `restore_backup`
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for PostgreSQL instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -282,6 +299,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
     *   `clone_instance`: Creates a clone for an existing Cloud SQL for PostgreSQL instance.
+    *   `create_backup`: Creates a backup on a Cloud SQL instance.
+    *   `restore_backup`: Restores a backup of a Cloud SQL instance.
 
 ## Cloud SQL for SQL Server
 
@@ -328,12 +347,14 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
         manage existing resources.
         * All `viewer` tools
         * `create_database`
+        * `create_backup`
     *   **Cloud SQL Admin** (`roles/cloudsql.admin`): Provides full control over
         all resources.
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
         * `clone_instance`
+        * `restore_backup`
 *   **Tools:**
     *   `create_instance`: Creates a new Cloud SQL for SQL Server instance.
     *   `get_instance`: Gets information about a Cloud SQL instance.
@@ -343,6 +364,8 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
     *   `create_user`: Creates a new user in a Cloud SQL instance.
     *   `wait_for_operation`: Waits for a Cloud SQL operation to complete.
     *   `clone_instance`: Creates a clone for an existing Cloud SQL for SQL Server instance.
+    *   `create_backup`: Creates a backup on a Cloud SQL instance.
+    *   `restore_backup`: Restores a backup of a Cloud SQL instance.
 
 ## Dataplex
 

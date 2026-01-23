@@ -213,6 +213,7 @@ func AddPostgresPrebuiltConfig(t *testing.T, config map[string]any) map[string]a
 		PostgresListPGSettingsToolKind          = "postgres-list-pg-settings"
 		PostgresListDatabaseStatsToolKind       = "postgres-list-database-stats"
 		PostgresListRolesToolKind               = "postgres-list-roles"
+		PostgresListStoredProcedureToolKind     = "postgres-list-stored-procedure"
 	)
 
 	tools, ok := config["tools"].(map[string]any)
@@ -308,6 +309,11 @@ func AddPostgresPrebuiltConfig(t *testing.T, config map[string]any) map[string]a
 
 	tools["list_roles"] = map[string]any{
 		"kind":   PostgresListRolesToolKind,
+		"source": "my-instance",
+	}
+
+	tools["list_stored_procedure"] = map[string]any{
+		"kind":   PostgresListStoredProcedureToolKind,
 		"source": "my-instance",
 	}
 	config["tools"] = tools
@@ -447,6 +453,11 @@ func AddMySQLPrebuiltToolConfig(t *testing.T, config map[string]any) map[string]
 		"kind":        "mysql-list-table-fragmentation",
 		"source":      "my-instance",
 		"description": "Lists table fragmentation in the database.",
+	}
+	tools["get_query_plan"] = map[string]any{
+		"kind":        "mysql-get-query-plan",
+		"source":      "my-instance",
+		"description": "Gets the query plan for a SQL statement.",
 	}
 	config["tools"] = tools
 	return config

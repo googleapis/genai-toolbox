@@ -142,14 +142,18 @@ deployment will time out.
 
 ### Update deployed server to be secure
 
-To prevent DNS rebinding attack, use the `--allowed-origins` flag to specify a
-list of origins permitted to access the server. In order to do that, you will
+To prevent DNS rebinding attack, use the `--allowed-hosts` flag to specify a
+list of hosts. In order to do that, you will
 have to re-deploy the cloud run service with the new flag.
+
+To implement CORs checks, use the `--allowed-origins` flag to specify a list of
+origins permitted to access the server.
 
 1. Set an environment variable to the cloud run url: 
 
     ```bash
     export URL=<cloud run url>
+    export HOST=<cloud run host>
     ```
 
 2. Redeploy Toolbox:
@@ -160,7 +164,7 @@ have to re-deploy the cloud run service with the new flag.
         --service-account toolbox-identity \
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
-        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL"
+        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL","--allowed-hosts=$HOST"
         # --allow-unauthenticated # https://cloud.google.com/run/docs/authenticating/public#gcloud
     ```
 
@@ -172,7 +176,7 @@ have to re-deploy the cloud run service with the new flag.
         --service-account toolbox-identity \
         --region us-central1 \
         --set-secrets "/app/tools.yaml=tools:latest" \
-        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL" \
+        --args="--tools-file=/app/tools.yaml","--address=0.0.0.0","--port=8080","--allowed-origins=$URL","--allowed-hosts=$HOST" \
         # TODO(dev): update the following to match your VPC if necessary
         --network default \
         --subnet default
@@ -203,6 +207,7 @@ You can connect to Toolbox Cloud Run instances directly through the SDK.
 {{< tab header="Python" lang="python" >}}
 import asyncio
 from toolbox_core import ToolboxClient, auth_methods
+from toolbox_core.protocol import Protocol
 
 # Replace with the Cloud Run service URL generated in the previous step
 URL = "https://cloud-run-url.app"
@@ -213,6 +218,7 @@ async def main():
   async with ToolboxClient(
       URL,
       client_headers={"Authorization": auth_token_provider},
+      protocol=Protocol.TOOLBOX,
   ) as toolbox:
     toolset = await toolbox.load_toolset()
     # ...
@@ -277,3 +283,5 @@ contain the specific error message needed to diagnose the problem.
   Manager, it means the Toolbox service account is missing permissions.
   - Ensure the `toolbox-identity` service account has the **Secret Manager
       Secret Accessor** (`roles/secretmanager.secretAccessor`) IAM role.
+
+- **Cloud Run Connections via IAP:** Currently we do not support Cloud Run connections via [IAP](https://docs.cloud.google.com/iap/docs/concepts-overview). Please disable IAP if you are using it.

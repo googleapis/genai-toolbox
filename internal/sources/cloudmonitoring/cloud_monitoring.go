@@ -15,7 +15,9 @@ package cloudmonitoring
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/goccy/go-yaml"
@@ -28,26 +30,6 @@ import (
 )
 
 const SourceKind string = "cloud-monitoring"
-
-type userAgentRoundTripper struct {
-	userAgent string
-	next      http.RoundTripper
-}
-
-func (rt *userAgentRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
-	newReq := *req
-	newReq.Header = make(http.Header)
-	for k, v := range req.Header {
-		newReq.Header[k] = v
-	}
-	ua := newReq.Header.Get("User-Agent")
-	if ua == "" {
-		newReq.Header.Set("User-Agent", rt.userAgent)
-	} else {
-		newReq.Header.Set("User-Agent", ua+" "+rt.userAgent)
-	}
-	return rt.next.RoundTrip(&newReq)
-}
 
 // validate interface
 var _ sources.SourceConfig = Config{}
@@ -86,10 +68,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	var client *http.Client
 	if r.UseClientOAuth {
 		client = &http.Client{
-			Transport: &userAgentRoundTripper{
-				userAgent: ua,
-				next:      http.DefaultTransport,
-			},
+			Transport: util.NewUserAgentRoundTripper(ua, http.DefaultTransport),
 		}
 	} else {
 		// Use Application Default Credentials
@@ -98,18 +77,15 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 			return nil, fmt.Errorf("failed to find default credentials: %w", err)
 		}
 		baseClient := oauth2.NewClient(ctx, creds.TokenSource)
-		baseClient.Transport = &userAgentRoundTripper{
-			userAgent: ua,
-			next:      baseClient.Transport,
-		}
+		baseClient.Transport = util.NewUserAgentRoundTripper(ua, baseClient.Transport)
 		client = baseClient
 	}
 
 	s := &Source{
 		Config:    r,
-		BaseURL:   "https://monitoring.googleapis.com",
-		Client:    client,
-		UserAgent: ua,
+		baseURL:   "https://monitoring.googleapis.com",
+		client:    client,
+		userAgent: ua,
 	}
 	return s, nil
 }
@@ -118,9 +94,9 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Config
-	BaseURL   string `yaml:"baseUrl"`
-	Client    *http.Client
-	UserAgent string
+	baseURL   string
+	client    *http.Client
+	userAgent string
 }
 
 func (s *Source) SourceKind() string {
@@ -131,6 +107,18 @@ func (s *Source) ToConfig() sources.SourceConfig {
 	return s.Config
 }
 
+func (s *Source) BaseURL() string {
+	return s.baseURL
+}
+
+func (s *Source) Client() *http.Client {
+	return s.client
+}
+
+func (s *Source) UserAgent() string {
+	return s.userAgent
+}
+
 func (s *Source) GetClient(ctx context.Context, accessToken string) (*http.Client, error) {
 	if s.UseClientOAuth {
 		if accessToken == "" {
@@ -139,9 +127,50 @@ func (s *Source) GetClient(ctx context.Context, accessToken string) (*http.Clien
 		token := &oauth2.Token{AccessToken: accessToken}
 		return oauth2.NewClient(ctx, oauth2.StaticTokenSource(token)), nil
 	}
-	return s.Client, nil
+	return s.client, nil
 }
 
 func (s *Source) UseClientAuthorization() bool {
 	return s.UseClientOAuth
+}
+
+func (s *Source) RunQuery(projectID, query string) (any, error) {
+	url := fmt.Sprintf("%s/v1/projects/%s/location/global/prometheus/api/v1/query", s.BaseURL(), projectID)
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	q := req.URL.Query()
+	q.Add("query", query)
+	req.URL.RawQuery = q.Encode()
+
+	req.Header.Set("User-Agent", s.UserAgent())
+
+	resp, err := s.Client().Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("request failed: %s, body: %s", resp.Status, string(body))
+	}
+
+	if len(body) == 0 {
+		return nil, nil
+	}
+
+	var result map[string]any
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal json: %w, body: %s", err, string(body))
+	}
+
+	return result, nil
 }

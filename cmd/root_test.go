@@ -32,6 +32,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
+	"github.com/googleapis/genai-toolbox/internal/embeddingmodels/gemini"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
 	"github.com/googleapis/genai-toolbox/internal/prompts"
@@ -66,6 +67,12 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	if c.AllowedOrigins == nil {
 		c.AllowedOrigins = []string{"*"}
 	}
+	if c.AllowedHosts == nil {
+		c.AllowedHosts = []string{"*"}
+	}
+	if c.UserAgentMetadata == nil {
+		c.UserAgentMetadata = []string{}
+	}
 	return c
 }
 
@@ -89,6 +96,21 @@ func invokeCommand(args []string) (*Command, string, error) {
 
 	err := c.Execute()
 
+	return c, buf.String(), err
+}
+
+// invokeCommandWithContext executes the command with a context and returns the captured output.
+func invokeCommandWithContext(ctx context.Context, args []string) (*Command, string, error) {
+	// Capture output using a buffer
+	buf := new(bytes.Buffer)
+	c := NewCommand(WithStreams(buf, buf))
+
+	c.SetArgs(args)
+	c.SilenceUsage = true
+	c.SilenceErrors = true
+	c.SetContext(ctx)
+
+	err := c.Execute()
 	return c, buf.String(), err
 }
 
@@ -202,6 +224,20 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--allowed-origins", "http://foo.com,http://bar.com"},
 			want: withDefaults(server.ServerConfig{
 				AllowedOrigins: []string{"http://foo.com", "http://bar.com"},
+			}),
+		},
+		{
+			desc: "allowed hosts",
+			args: []string{"--allowed-hosts", "http://foo.com,http://bar.com"},
+			want: withDefaults(server.ServerConfig{
+				AllowedHosts: []string{"http://foo.com", "http://bar.com"},
+			}),
+		},
+		{
+			desc: "user agent metadata",
+			args: []string{"--user-agent-metadata", "foo,bar"},
+			want: withDefaults(server.ServerConfig{
+				UserAgentMetadata: []string{"foo", "bar"},
 			}),
 		},
 	}
@@ -394,17 +430,27 @@ func TestPrebuiltFlag(t *testing.T) {
 	tcs := []struct {
 		desc string
 		args []string
-		want string
+		want []string
 	}{
 		{
 			desc: "default value",
 			args: []string{},
-			want: "",
+			want: []string{},
 		},
 		{
-			desc: "custom pre built flag",
-			args: []string{"--tools-file", "alloydb"},
-			want: "alloydb",
+			desc: "single prebuilt flag",
+			args: []string{"--prebuilt", "alloydb"},
+			want: []string{"alloydb"},
+		},
+		{
+			desc: "multiple prebuilt flags",
+			args: []string{"--prebuilt", "alloydb", "--prebuilt", "bigquery"},
+			want: []string{"alloydb", "bigquery"},
+		},
+		{
+			desc: "comma separated prebuilt flags",
+			args: []string{"--prebuilt", "alloydb,bigquery"},
+			want: []string{"alloydb", "bigquery"},
 		},
 	}
 	for _, tc := range tcs {
@@ -413,8 +459,8 @@ func TestPrebuiltFlag(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error invoking command: %s", err)
 			}
-			if c.tools_file != tc.want {
-				t.Fatalf("got %v, want %v", c.cfg, tc.want)
+			if diff := cmp.Diff(c.prebuiltConfigs, tc.want); diff != "" {
+				t.Fatalf("got %v, want %v, diff %s", c.prebuiltConfigs, tc.want, diff)
 			}
 		})
 	}
@@ -1336,6 +1382,7 @@ func TestPrebuiltTools(t *testing.T) {
 	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
 	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
 	cloudhealthcare_config, _ := prebuiltconfigs.Get("cloud-healthcare")
+	snowflake_config, _ := prebuiltconfigs.Get("snowflake")
 
 	// Set environment variables
 	t.Setenv("API_KEY", "your_api_key")
@@ -1433,6 +1480,14 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("CLOUD_HEALTHCARE_REGION", "your_gcp_region")
 	t.Setenv("CLOUD_HEALTHCARE_DATASET", "your_healthcare_dataset")
 
+	t.Setenv("SNOWFLAKE_ACCOUNT", "your_account")
+	t.Setenv("SNOWFLAKE_USER", "your_username")
+	t.Setenv("SNOWFLAKE_PASSWORD", "your_pass")
+	t.Setenv("SNOWFLAKE_DATABASE", "your_db")
+	t.Setenv("SNOWFLAKE_SCHEMA", "your_schema")
+	t.Setenv("SNOWFLAKE_WAREHOUSE", "your_wh")
+	t.Setenv("SNOWFLAKE_ROLE", "your_role")
+
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
@@ -1458,7 +1513,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "postgres_upgrade_precheck", "clone_instance"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "postgres_upgrade_precheck", "clone_instance", "create_backup", "restore_backup"},
 				},
 			},
 		},
@@ -1468,7 +1523,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_mysql_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mysql_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance", "create_backup", "restore_backup"},
 				},
 			},
 		},
@@ -1478,7 +1533,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_mssql_admin_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_mssql_admin_tools",
-					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance"},
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance", "create_backup", "restore_backup"},
 				},
 			},
 		},
@@ -1488,7 +1543,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"alloydb_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "alloydb_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats", "list_stored_procedure"},
 				},
 			},
 		},
@@ -1518,7 +1573,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"cloud_sql_postgres_database_tools": tools.ToolsetConfig{
 					Name:      "cloud_sql_postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats", "list_stored_procedure"},
 				},
 			},
 		},
@@ -1618,7 +1673,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"postgres_database_tools": tools.ToolsetConfig{
 					Name:      "postgres_database_tools",
-					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats"},
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats", "list_stored_procedure"},
 				},
 			},
 		},
@@ -1730,6 +1785,16 @@ func TestPrebuiltTools(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Snowflake prebuilt tool",
+			in:   snowflake_config,
+			wantToolset: server.ToolsetConfigs{
+				"snowflake_tools": tools.ToolsetConfig{
+					Name:      "snowflake_tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
 	}
 
 	for _, tc := range tcs {
@@ -1755,11 +1820,6 @@ func TestMutuallyExclusiveFlags(t *testing.T) {
 		args      []string
 		errString string
 	}{
-		{
-			desc:      "--prebuilt and --tools-file",
-			args:      []string{"--prebuilt", "alloydb", "--tools-file", "my.yaml"},
-			errString: "--prebuilt and --tools-file/--tools-files/--tools-folder flags cannot be used simultaneously",
-		},
 		{
 			desc:      "--tools-file and --tools-files",
 			args:      []string{"--tools-file", "my.yaml", "--tools-files", "a.yaml,b.yaml"},
@@ -1820,9 +1880,10 @@ func TestFileLoadingErrors(t *testing.T) {
 
 func TestMergeToolsFiles(t *testing.T) {
 	file1 := ToolsFile{
-		Sources:  server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
-		Tools:    server.ToolConfigs{"tool1": http.Config{Name: "tool1"}},
-		Toolsets: server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}},
+		Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
+		Tools:           server.ToolConfigs{"tool1": http.Config{Name: "tool1"}},
+		Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}},
+		EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
 	}
 	file2 := ToolsFile{
 		AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
@@ -1844,11 +1905,12 @@ func TestMergeToolsFiles(t *testing.T) {
 			name:  "merge two distinct files",
 			files: []ToolsFile{file1, file2},
 			want: ToolsFile{
-				Sources:      server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
-				AuthServices: server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
-				Tools:        server.ToolConfigs{"tool1": http.Config{Name: "tool1"}, "tool2": http.Config{Name: "tool2"}},
-				Toolsets:     server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}, "set2": tools.ToolsetConfig{Name: "set2"}},
-				Prompts:      server.PromptConfigs{},
+				Sources:         server.SourceConfigs{"source1": httpsrc.Config{Name: "source1"}},
+				AuthServices:    server.AuthServiceConfigs{"auth1": google.Config{Name: "auth1"}},
+				Tools:           server.ToolConfigs{"tool1": http.Config{Name: "tool1"}, "tool2": http.Config{Name: "tool2"}},
+				Toolsets:        server.ToolsetConfigs{"set1": tools.ToolsetConfig{Name: "set1"}, "set2": tools.ToolsetConfig{Name: "set2"}},
+				Prompts:         server.PromptConfigs{},
+				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
 			},
 			wantErr: false,
 		},
@@ -1861,22 +1923,24 @@ func TestMergeToolsFiles(t *testing.T) {
 			name:  "merge single file",
 			files: []ToolsFile{file1},
 			want: ToolsFile{
-				Sources:      file1.Sources,
-				AuthServices: make(server.AuthServiceConfigs),
-				Tools:        file1.Tools,
-				Toolsets:     file1.Toolsets,
-				Prompts:      server.PromptConfigs{},
+				Sources:         file1.Sources,
+				AuthServices:    make(server.AuthServiceConfigs),
+				EmbeddingModels: server.EmbeddingModelConfigs{"model1": gemini.Config{Name: "gemini-text"}},
+				Tools:           file1.Tools,
+				Toolsets:        file1.Toolsets,
+				Prompts:         server.PromptConfigs{},
 			},
 		},
 		{
 			name:  "merge empty list",
 			files: []ToolsFile{},
 			want: ToolsFile{
-				Sources:      make(server.SourceConfigs),
-				AuthServices: make(server.AuthServiceConfigs),
-				Tools:        make(server.ToolConfigs),
-				Toolsets:     make(server.ToolsetConfigs),
-				Prompts:      server.PromptConfigs{},
+				Sources:         make(server.SourceConfigs),
+				AuthServices:    make(server.AuthServiceConfigs),
+				EmbeddingModels: make(server.EmbeddingModelConfigs),
+				Tools:           make(server.ToolConfigs),
+				Toolsets:        make(server.ToolsetConfigs),
+				Prompts:         server.PromptConfigs{},
 			},
 		},
 	}
@@ -1897,6 +1961,349 @@ func TestMergeToolsFiles(t *testing.T) {
 				}
 				if !strings.Contains(err.Error(), "resource conflicts detected") {
 					t.Errorf("expected conflict error, but got: %v", err)
+				}
+			}
+		})
+	}
+}
+func TestPrebuiltAndCustomTools(t *testing.T) {
+	t.Setenv("SQLITE_DATABASE", "test.db")
+	// Setup custom tools file
+	customContent := `
+tools:
+  custom_tool:
+    kind: http
+    source: my-http
+    method: GET
+    path: /
+    description: "A custom tool for testing"
+sources:
+  my-http:
+    kind: http
+    baseUrl: http://example.com
+`
+	customFile := filepath.Join(t.TempDir(), "custom.yaml")
+	if err := os.WriteFile(customFile, []byte(customContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Tool Conflict File
+	// SQLite prebuilt has a tool named 'list_tables'
+	toolConflictContent := `
+tools:
+  list_tables:
+    kind: http
+    source: my-http
+    method: GET
+    path: /
+    description: "Conflicting tool"
+sources:
+  my-http:
+    kind: http
+    baseUrl: http://example.com
+`
+	toolConflictFile := filepath.Join(t.TempDir(), "tool_conflict.yaml")
+	if err := os.WriteFile(toolConflictFile, []byte(toolConflictContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Source Conflict File
+	// SQLite prebuilt has a source named 'sqlite-source'
+	sourceConflictContent := `
+sources:
+  sqlite-source:
+    kind: http
+    baseUrl: http://example.com
+tools:
+  dummy_tool:
+    kind: http
+    source: sqlite-source
+    method: GET
+    path: /
+    description: "Dummy"
+`
+	sourceConflictFile := filepath.Join(t.TempDir(), "source_conflict.yaml")
+	if err := os.WriteFile(sourceConflictFile, []byte(sourceConflictContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Toolset Conflict File
+	// SQLite prebuilt has a toolset named 'sqlite_database_tools'
+	toolsetConflictContent := `
+sources:
+  dummy-src:
+    kind: http
+    baseUrl: http://example.com
+tools:
+  dummy_tool:
+    kind: http
+    source: dummy-src
+    method: GET
+    path: /
+    description: "Dummy"
+toolsets:
+  sqlite_database_tools:
+    - dummy_tool
+`
+	toolsetConflictFile := filepath.Join(t.TempDir(), "toolset_conflict.yaml")
+	if err := os.WriteFile(toolsetConflictFile, []byte(toolsetConflictContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	//Legacy Auth File
+	authContent := `
+authSources:
+  legacy-auth:
+    kind: google
+    clientId: "test-client-id"
+`
+	authFile := filepath.Join(t.TempDir(), "auth.yaml")
+	if err := os.WriteFile(authFile, []byte(authContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	testCases := []struct {
+		desc      string
+		args      []string
+		wantErr   bool
+		errString string
+		cfgCheck  func(server.ServerConfig) error
+	}{
+		{
+			desc:    "success mixed",
+			args:    []string{"--prebuilt", "sqlite", "--tools-file", customFile},
+			wantErr: false,
+			cfgCheck: func(cfg server.ServerConfig) error {
+				if _, ok := cfg.ToolConfigs["custom_tool"]; !ok {
+					return fmt.Errorf("custom tool not found")
+				}
+				if _, ok := cfg.ToolConfigs["list_tables"]; !ok {
+					return fmt.Errorf("prebuilt tool 'list_tables' not found")
+				}
+				return nil
+			},
+		},
+		{
+			desc:      "sqlite called twice error",
+			args:      []string{"--prebuilt", "sqlite", "--prebuilt", "sqlite"},
+			wantErr:   true,
+			errString: "resource conflicts detected",
+		},
+		{
+			desc:      "tool conflict error",
+			args:      []string{"--prebuilt", "sqlite", "--tools-file", toolConflictFile},
+			wantErr:   true,
+			errString: "resource conflicts detected",
+		},
+		{
+			desc:      "source conflict error",
+			args:      []string{"--prebuilt", "sqlite", "--tools-file", sourceConflictFile},
+			wantErr:   true,
+			errString: "resource conflicts detected",
+		},
+		{
+			desc:      "toolset conflict error",
+			args:      []string{"--prebuilt", "sqlite", "--tools-file", toolsetConflictFile},
+			wantErr:   true,
+			errString: "resource conflicts detected",
+		},
+		{
+			desc:    "legacy auth additive",
+			args:    []string{"--prebuilt", "sqlite", "--tools-file", authFile},
+			wantErr: false,
+			cfgCheck: func(cfg server.ServerConfig) error {
+				if _, ok := cfg.AuthServiceConfigs["legacy-auth"]; !ok {
+					return fmt.Errorf("legacy auth source not merged into auth services")
+				}
+				return nil
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+			defer cancel()
+
+			cmd, output, err := invokeCommandWithContext(ctx, tc.args)
+
+			if tc.wantErr {
+				if err == nil {
+					t.Fatalf("expected an error but got none")
+				}
+				if !strings.Contains(err.Error(), tc.errString) {
+					t.Errorf("expected error message to contain %q, but got %q", tc.errString, err.Error())
+				}
+			} else {
+				if err != nil && err != context.DeadlineExceeded && err != context.Canceled {
+					t.Fatalf("unexpected error: %v", err)
+				}
+				if !strings.Contains(output, "Server ready to serve!") {
+					t.Errorf("server did not start successfully (no ready message found). Output:\n%s", output)
+				}
+				if tc.cfgCheck != nil {
+					if err := tc.cfgCheck(cmd.cfg); err != nil {
+						t.Errorf("config check failed: %v", err)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestDefaultToolsFileBehavior(t *testing.T) {
+	t.Setenv("SQLITE_DATABASE", "test.db")
+	testCases := []struct {
+		desc      string
+		args      []string
+		expectRun bool
+		errString string
+	}{
+		{
+			desc:      "no flags (defaults to tools.yaml)",
+			args:      []string{},
+			expectRun: false,
+			errString: "tools.yaml", // Expect error because tools.yaml doesn't exist in test env
+		},
+		{
+			desc:      "prebuilt only (skips tools.yaml)",
+			args:      []string{"--prebuilt", "sqlite"},
+			expectRun: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			ctx, cancel := context.WithTimeout(context.Background(), 500*time.Millisecond)
+			defer cancel()
+			_, output, err := invokeCommandWithContext(ctx, tc.args)
+
+			if tc.expectRun {
+				if err != nil && err != context.DeadlineExceeded && err != context.Canceled {
+					t.Fatalf("expected server start, got error: %v", err)
+				}
+				// Verify it actually started
+				if !strings.Contains(output, "Server ready to serve!") {
+					t.Errorf("server did not start successfully (no ready message found). Output:\n%s", output)
+				}
+			} else {
+				if err == nil {
+					t.Fatalf("expected error reading default file, got nil")
+				}
+				if !strings.Contains(err.Error(), tc.errString) {
+					t.Errorf("expected error message to contain %q, but got %q", tc.errString, err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestParameterReferenceValidation(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	// Base template
+	baseYaml := `
+sources:
+  dummy-source:
+    kind: http
+    baseUrl: http://example.com
+tools:
+  test-tool:
+    kind: postgres-sql
+    source: dummy-source
+    description: test tool
+    statement: SELECT 1;
+    parameters:
+%s`
+
+	tcs := []struct {
+		desc      string
+		params    string
+		wantErr   bool
+		errSubstr string
+	}{
+		{
+			desc: "valid backward reference",
+			params: `
+      - name: source_param
+        type: string
+        description: source
+      - name: copy_param
+        type: string
+        description: copy
+        valueFromParam: source_param`,
+			wantErr: false,
+		},
+		{
+			desc: "valid forward reference (out of order)",
+			params: `
+      - name: copy_param
+        type: string
+        description: copy
+        valueFromParam: source_param
+      - name: source_param
+        type: string
+        description: source`,
+			wantErr: false,
+		},
+		{
+			desc: "invalid missing reference",
+			params: `
+      - name: copy_param
+        type: string
+        description: copy
+        valueFromParam: non_existent_param`,
+			wantErr:   true,
+			errSubstr: "references '\"non_existent_param\"' in the 'valueFromParam' field",
+		},
+		{
+			desc: "invalid self reference",
+			params: `
+      - name: myself
+        type: string
+        description: self
+        valueFromParam: myself`,
+			wantErr:   true,
+			errSubstr: "parameter \"myself\" cannot copy value from itself",
+		},
+		{
+			desc: "multiple valid references",
+			params: `
+      - name: a
+        type: string
+        description: a
+      - name: b
+        type: string
+        description: b
+        valueFromParam: a
+      - name: c
+        type: string
+        description: c
+        valueFromParam: a`,
+			wantErr: false,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			// Indent parameters to match YAML structure
+			yamlContent := fmt.Sprintf(baseYaml, tc.params)
+
+			_, err := parseToolsFile(ctx, []byte(yamlContent))
+
+			if tc.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				if !strings.Contains(err.Error(), tc.errSubstr) {
+					t.Errorf("error %q does not contain expected substring %q", err.Error(), tc.errSubstr)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
 				}
 			}
 		})

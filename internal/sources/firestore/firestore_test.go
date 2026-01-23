@@ -16,6 +16,7 @@ package firestore_test
 
 import (
 	"testing"
+	"time"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
@@ -126,5 +127,39 @@ func TestFailParseFromYamlFirestore(t *testing.T) {
 				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
 			}
 		})
+	}
+}
+
+func TestFirestoreValueToJSON_RoundTrip(t *testing.T) {
+	// Test round-trip conversion
+	original := map[string]any{
+		"name":   "Test",
+		"count":  int64(42),
+		"price":  19.99,
+		"active": true,
+		"tags":   []any{"tag1", "tag2"},
+		"metadata": map[string]any{
+			"created": time.Now(),
+		},
+		"nullField": nil,
+	}
+
+	// Convert to JSON representation
+	jsonRepresentation := firestore.FirestoreValueToJSON(original)
+
+	// Verify types are simplified
+	jsonMap, ok := jsonRepresentation.(map[string]any)
+	if !ok {
+		t.Fatalf("Expected map, got %T", jsonRepresentation)
+	}
+
+	// Time should be converted to string
+	metadata, ok := jsonMap["metadata"].(map[string]any)
+	if !ok {
+		t.Fatalf("metadata should be a map, got %T", jsonMap["metadata"])
+	}
+	_, ok = metadata["created"].(string)
+	if !ok {
+		t.Errorf("created should be a string, got %T", metadata["created"])
 	}
 }

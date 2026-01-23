@@ -26,6 +26,7 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/server/resources"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	cloudgdasrc "github.com/googleapis/genai-toolbox/internal/sources/cloudgda"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -172,9 +173,8 @@ func TestInitialize(t *testing.T) {
 	}
 
 	tcs := []struct {
-		desc      string
-		cfg       cloudgdatool.Config
-		expectErr bool
+		desc string
+		cfg  cloudgdatool.Config
 	}{
 		{
 			desc: "successful initialization",
@@ -185,29 +185,6 @@ func TestInitialize(t *testing.T) {
 				Description: "Test Description",
 				Location:    "us-central1",
 			},
-			expectErr: false,
-		},
-		{
-			desc: "missing source",
-			cfg: cloudgdatool.Config{
-				Name:        "my-gda-query-tool",
-				Kind:        "cloud-gemini-data-analytics-query",
-				Source:      "non-existent-source",
-				Description: "Test Description",
-				Location:    "us-central1",
-			},
-			expectErr: true,
-		},
-		{
-			desc: "incompatible source kind",
-			cfg: cloudgdatool.Config{
-				Name:        "my-gda-query-tool",
-				Kind:        "cloud-gemini-data-analytics-query",
-				Source:      "incompatible-source",
-				Description: "Test Description",
-				Location:    "us-central1",
-			},
-			expectErr: true,
 		},
 	}
 
@@ -219,16 +196,11 @@ func TestInitialize(t *testing.T) {
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
 			tool, err := tc.cfg.Initialize(srcs)
-			if tc.expectErr && err == nil {
-				t.Fatalf("expected an error but got none")
-			}
-			if !tc.expectErr && err != nil {
+			if err != nil {
 				t.Fatalf("did not expect an error but got: %v", err)
 			}
-			if !tc.expectErr {
-				// Basic sanity check on the returned tool
-				_ = tool // Avoid unused variable error
-			}
+			// Basic sanity check on the returned tool
+			_ = tool // Avoid unused variable error
 		})
 	}
 }
@@ -356,13 +328,15 @@ func TestInvoke(t *testing.T) {
 		t.Fatalf("failed to initialize tool: %v", err)
 	}
 
-	// Prepare parameters for invocation - ONLY prompt
+	// Prepare parameters for invocation - ONLY query
 	params := parameters.ParamValues{
-		{Name: "prompt", Value: "How many accounts who have region in Prague are eligible for loans?"},
+		{Name: "query", Value: "How many accounts who have region in Prague are eligible for loans?"},
 	}
 
+	resourceMgr := resources.NewResourceManager(srcs, nil, nil, nil, nil, nil, nil)
+
 	// Invoke the tool
-	result, err := tool.Invoke(ctx, nil, params, "") // No accessToken needed for ADC client
+	result, err := tool.Invoke(ctx, resourceMgr, params, "") // No accessToken needed for ADC client
 	if err != nil {
 		t.Fatalf("tool invocation failed: %v", err)
 	}

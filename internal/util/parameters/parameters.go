@@ -25,6 +25,7 @@ import (
 	"strings"
 	"text/template"
 
+	embeddingmodels "github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/util"
 )
 
@@ -133,7 +134,12 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 		var err error
 		paramAuthServices := p.GetAuthServices()
 		name := p.GetName()
-		if len(paramAuthServices) == 0 {
+
+		sourceParamName := p.GetValueFromParam()
+		if sourceParamName != "" {
+			v = data[sourceParamName]
+
+		} else if len(paramAuthServices) == 0 {
 			// parse non auth-required parameter
 			var ok bool
 			v, ok = data[name]
@@ -160,6 +166,76 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 		params = append(params, ParamValue{Name: name, Value: newV})
 	}
 	return params, nil
+}
+
+func EmbedParams(ctx context.Context, ps Parameters, paramValues ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel, formatter embeddingmodels.VectorFormatter) (ParamValues, error) {
+
+	type ParamToEmbed struct {
+		OriginalValue string
+		Index         int // The index in the original Parameters slice
+	}
+
+	// Map: modelName -> list of ParamToEmbed
+	parametersToEmbed := make(map[string][]ParamToEmbed)
+
+	for i, p := range ps {
+		modelName := p.GetEmbeddedBy()
+		if modelName == "" {
+			continue
+		}
+
+		// Get parameter's value to be embedded
+		valueStr, ok := paramValues[i].Value.(string)
+		if !ok {
+			return nil, fmt.Errorf("parameter '%s' is marked for embedding but has a non-string value (type: %T)", p.GetName(), paramValues[i].Value)
+		}
+
+		parametersToEmbed[modelName] = append(parametersToEmbed[modelName], ParamToEmbed{
+			OriginalValue: valueStr,
+			Index:         i,
+		})
+	}
+
+	// Batch embedding request sent to each model
+	for modelName, params := range parametersToEmbed {
+		model, ok := embeddingModelsMap[modelName]
+		if !ok {
+			return nil, fmt.Errorf("embedding model does not exist: %s", modelName)
+		}
+
+		// Extract only the string values for the API call
+		stringBatch := make([]string, len(params))
+		for i, paramStr := range params {
+			stringBatch[i] = paramStr.OriginalValue
+		}
+
+		embeddings, err := model.EmbedParameters(ctx, stringBatch)
+		if err != nil {
+			return nil, fmt.Errorf("error embedding parameters with model %s: %w", modelName, err)
+		}
+
+		if len(embeddings) != len(stringBatch) {
+			return nil, fmt.Errorf("model %s returned %d embeddings for %d inputs", modelName, len(embeddings), len(stringBatch))
+		}
+
+		for i, rawVector := range embeddings {
+
+			item := params[i]
+
+			// Call vector formatter
+			var finalValue any = rawVector
+
+			if formatter == nil {
+				paramValues[item.Index].Value = finalValue
+				continue
+			}
+
+			formattedVector := formatter(rawVector)
+			finalValue = formattedVector
+			paramValues[item.Index].Value = finalValue
+		}
+	}
+	return paramValues, nil
 }
 
 // helper function to convert a string array parameter to a comma separated string
@@ -246,6 +322,8 @@ type Parameter interface {
 	GetDefault() any
 	GetRequired() bool
 	GetAuthServices() []ParamAuthService
+	GetEmbeddedBy() string
+	GetValueFromParam() string
 	Parse(any) (any, error)
 	Manifest() ParameterManifest
 	McpManifest() (ParameterMcpManifest, []string)
@@ -321,6 +399,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
 		}
+		if a.GetEmbeddedBy() != "" {
+			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
+		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
 			a.AuthServices = append(a.AuthServices, a.AuthSources...)
@@ -331,6 +412,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		a := &FloatParameter{}
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
+		}
+		if a.GetEmbeddedBy() != "" {
+			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
 		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
@@ -343,6 +427,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
 		}
+		if a.GetEmbeddedBy() != "" {
+			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
+		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
 			a.AuthServices = append(a.AuthServices, a.AuthSources...)
@@ -354,6 +441,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
 		}
+		if a.GetEmbeddedBy() != "" {
+			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
+		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
 			a.AuthServices = append(a.AuthServices, a.AuthSources...)
@@ -364,6 +454,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 		a := &MapParameter{}
 		if err := dec.DecodeContext(ctx, a); err != nil {
 			return nil, fmt.Errorf("unable to parse as %q: %w", paramType, err)
+		}
+		if a.GetEmbeddedBy() != "" {
+			return nil, fmt.Errorf("parameter type %q cannot specify 'embeddedBy'", paramType)
 		}
 		if a.AuthSources != nil {
 			logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` for parameters instead")
@@ -378,6 +471,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 func (ps Parameters) Manifest() []ParameterManifest {
 	rtn := make([]ParameterManifest, 0, len(ps))
 	for _, p := range ps {
+		if p.GetValueFromParam() != "" {
+			continue
+		}
 		rtn = append(rtn, p.Manifest())
 	}
 	return rtn
@@ -389,11 +485,20 @@ func (ps Parameters) McpManifest() (McpToolsSchema, map[string][]string) {
 	authParam := make(map[string][]string)
 
 	for _, p := range ps {
+		// If the parameter is sourced from another param, skip it in the MCP manifest
+		if p.GetValueFromParam() != "" {
+			continue
+		}
+
 		name := p.GetName()
 		paramManifest, authParamList := p.McpManifest()
+		defaultV := p.GetDefault()
+		if defaultV != nil {
+			paramManifest.Default = defaultV
+		}
 		properties[name] = paramManifest
 		// parameters that doesn't have a default value are added to the required field
-		if CheckParamRequired(p.GetRequired(), p.GetDefault()) {
+		if CheckParamRequired(p.GetRequired(), defaultV) {
 			required = append(required, name)
 		}
 		if len(authParamList) > 0 {
@@ -415,7 +520,10 @@ type ParameterManifest struct {
 	Description          string             `json:"description"`
 	AuthServices         []string           `json:"authSources"`
 	Items                *ParameterManifest `json:"items,omitempty"`
+	Default              any                `json:"default,omitempty"`
 	AdditionalProperties any                `json:"additionalProperties,omitempty"`
+	EmbeddedBy           string             `json:"embeddedBy,omitempty"`
+	ValueFromParam       string             `json:"valueFromParam,omitempty"`
 }
 
 // ParameterMcpManifest represents properties when served as part of a ToolMcpManifest.
@@ -423,6 +531,7 @@ type ParameterMcpManifest struct {
 	Type                 string                `json:"type"`
 	Description          string                `json:"description"`
 	Items                *ParameterMcpManifest `json:"items,omitempty"`
+	Default              any                   `json:"default,omitempty"`
 	AdditionalProperties any                   `json:"additionalProperties,omitempty"`
 }
 
@@ -436,6 +545,8 @@ type CommonParameter struct {
 	ExcludedValues []any              `yaml:"excludedValues"`
 	AuthServices   []ParamAuthService `yaml:"authServices"`
 	AuthSources    []ParamAuthService `yaml:"authSources"` // Deprecated: Kept for compatibility.
+	EmbeddedBy     string             `yaml:"embeddedBy"`
+	ValueFromParam string             `yaml:"valueFromParam"`
 }
 
 // GetName returns the name specified for the Parameter.
@@ -491,6 +602,16 @@ func (p *CommonParameter) IsExcludedValues(v any) bool {
 		}
 	}
 	return false
+}
+
+// GetEmbeddedBy returns the embedding model name for the Parameter.
+func (p *CommonParameter) GetEmbeddedBy() string {
+	return p.EmbeddedBy
+}
+
+// GetValueFromParam returns the param value to copy from.
+func (p *CommonParameter) GetValueFromParam() string {
+	return p.ValueFromParam
 }
 
 // MatchStringOrRegex checks if the input matches the target
@@ -695,6 +816,7 @@ func (p *StringParameter) Manifest() ParameterManifest {
 		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authServiceNames,
+		Default:      p.GetDefault(),
 	}
 }
 
@@ -853,6 +975,7 @@ func (p *IntParameter) Manifest() ParameterManifest {
 		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authServiceNames,
+		Default:      p.GetDefault(),
 	}
 }
 
@@ -1009,6 +1132,7 @@ func (p *FloatParameter) Manifest() ParameterManifest {
 		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authServiceNames,
+		Default:      p.GetDefault(),
 	}
 }
 
@@ -1142,6 +1266,7 @@ func (p *BooleanParameter) Manifest() ParameterManifest {
 		Required:     r,
 		Description:  p.Desc,
 		AuthServices: authServiceNames,
+		Default:      p.GetDefault(),
 	}
 }
 
@@ -1337,6 +1462,7 @@ func (p *ArrayParameter) Manifest() ParameterManifest {
 		Description:  p.Desc,
 		AuthServices: authServiceNames,
 		Items:        &items,
+		Default:      p.GetDefault(),
 	}
 }
 
@@ -1582,7 +1708,10 @@ func (p *MapParameter) Manifest() ParameterManifest {
 		// If no valueType is given, allow any properties.
 		additionalProperties = true
 	}
-
+	var defaultV any
+	if p.Default != nil {
+		defaultV = *p.Default
+	}
 	return ParameterManifest{
 		Name:                 p.Name,
 		Type:                 "object",
@@ -1590,6 +1719,7 @@ func (p *MapParameter) Manifest() ParameterManifest {
 		Description:          p.Desc,
 		AuthServices:         authServiceNames,
 		AdditionalProperties: additionalProperties,
+		Default:              defaultV,
 	}
 }
 

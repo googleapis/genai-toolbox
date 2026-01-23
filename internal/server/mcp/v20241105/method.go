@@ -108,10 +108,20 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	}
 
 	// Get access token
-	accessToken := tools.AccessToken(header.Get(tool.GetAuthTokenHeaderName()))
+	authTokenHeadername, err := tool.GetAuthTokenHeaderName(resourceMgr)
+	if err != nil {
+		errMsg := fmt.Errorf("error during invocation: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, errMsg.Error(), nil), errMsg
+	}
+	accessToken := tools.AccessToken(header.Get(authTokenHeadername))
 
 	// Check if this specific tool requires the standard authorization header
-	if tool.RequiresClientAuthorization(resourceMgr) {
+	clientAuth, err := tool.RequiresClientAuthorization(resourceMgr)
+	if err != nil {
+		errMsg := fmt.Errorf("error during invocation: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, errMsg.Error(), nil), errMsg
+	}
+	if clientAuth {
 		if accessToken == "" {
 			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, "missing access token in the 'Authorization' header", nil), util.ErrUnauthorized
 		}
@@ -173,6 +183,13 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	}
 	logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))
 
+	embeddingModels := resourceMgr.GetEmbeddingModelMap()
+	params, err = tool.EmbedParams(ctx, params, embeddingModels)
+	if err != nil {
+		err = fmt.Errorf("error embedding parameters: %w", err)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_PARAMS, err.Error(), nil), err
+	}
+
 	// run tool invocation and generate response.
 	results, err := tool.Invoke(ctx, resourceMgr, params, accessToken)
 	if err != nil {
@@ -183,7 +200,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 		}
 		// Upstream auth error
 		if strings.Contains(errStr, "Error 401") || strings.Contains(errStr, "Error 403") {
-			if tool.RequiresClientAuthorization(resourceMgr) {
+			if clientAuth {
 				// Error with client credentials should pass down to the client
 				return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 			}

@@ -15,7 +15,9 @@
 package elasticsearch
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -148,4 +150,81 @@ func (s *Source) ToConfig() sources.SourceConfig {
 
 func (s *Source) ElasticsearchClient() EsClient {
 	return s.Client
+}
+
+type EsqlColumn struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+
+type EsqlResult struct {
+	Columns []EsqlColumn `json:"columns"`
+	Values  [][]any      `json:"values"`
+}
+
+func (s *Source) RunSQL(ctx context.Context, format, query string, params []map[string]any) (any, error) {
+	bodyStruct := struct {
+		Query  string           `json:"query"`
+		Params []map[string]any `json:"params,omitempty"`
+	}{
+		Query:  query,
+		Params: params,
+	}
+	body, err := json.Marshal(bodyStruct)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal query body: %w", err)
+	}
+
+	res, err := esapi.EsqlQueryRequest{
+		Body:       bytes.NewReader(body),
+		Format:     format,
+		FilterPath: []string{"columns", "values"},
+		Instrument: s.ElasticsearchClient().InstrumentationEnabled(),
+	}.Do(ctx, s.ElasticsearchClient())
+
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.IsError() {
+		// Try to extract error message from response
+		var esErr json.RawMessage
+		err = util.DecodeJSON(res.Body, &esErr)
+		if err != nil {
+			return nil, fmt.Errorf("elasticsearch error: status %s", res.Status())
+		}
+		return esErr, nil
+	}
+
+	var result EsqlResult
+	err = util.DecodeJSON(res.Body, &result)
+	if err != nil {
+		return nil, fmt.Errorf("failed to decode response body: %w", err)
+	}
+
+	output := EsqlToMap(result)
+
+	return output, nil
+}
+
+// EsqlToMap converts the esqlResult to a slice of maps.
+func EsqlToMap(result EsqlResult) []map[string]any {
+	output := make([]map[string]any, 0, len(result.Values))
+	for _, value := range result.Values {
+		row := make(map[string]any)
+		if value == nil {
+			output = append(output, row)
+			continue
+		}
+		for i, col := range result.Columns {
+			if i < len(value) {
+				row[col.Name] = value[i]
+			} else {
+				row[col.Name] = nil
+			}
+		}
+		output = append(output, row)
+	}
+	return output
 }
