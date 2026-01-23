@@ -117,20 +117,20 @@ federated database capabilities.
 Here's a complete working configuration that has been tested:
 
 ```yaml
-sources:
-  my-pg-source:
-    kind: mindsdb
-    host: 127.0.0.1
-    port: 47335
-    database: files
-    user: mindsdb
-
-tools:
-  mindsdb-execute-sql:
-    kind: mindsdb-execute-sql
-    source: my-pg-source
-    description: |
-      Execute SQL queries directly on MindsDB database.
-      Use this tool to run any SQL statement against your MindsDB instance.
-      Example: SELECT * FROM my_table LIMIT 10
+kind: sources
+name: my-pg-source
+type: mindsdb
+host: 127.0.0.1
+port: 47335
+database: files
+user: mindsdb
+---
+kind: tools
+name: mindsdb-execute-sql
+type: mindsdb-execute-sql
+source: my-pg-source
+description: |
+  Execute SQL queries directly on MindsDB database.
+  Use this tool to run any SQL statement against your MindsDB instance.
+  Example: SELECT * FROM my_table LIMIT 10
 ```

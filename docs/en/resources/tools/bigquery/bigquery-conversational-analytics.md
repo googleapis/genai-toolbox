@@ -53,19 +53,19 @@ dataset specified in the `table_references` parameter.
 ## Example
 
 ```yaml
-tools:
-  ask_data_insights:
-    kind: bigquery-conversational-analytics
-    source: my-bigquery-source
-    description: |
-      Use this tool to perform data analysis, get insights, or answer complex 
-      questions about the contents of specific BigQuery tables.
+kind: tools
+name: ask_data_insights
+type: bigquery-conversational-analytics
+source: my-bigquery-source
+description: |
+  Use this tool to perform data analysis, get insights, or answer complex 
+  questions about the contents of specific BigQuery tables.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "bigquery-conversational-analytics".       |
+| type        |  string  |     true     | Must be "bigquery-conversational-analytics".       |
 | source      |  string  |     true     | Name of the source for chat.                       |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

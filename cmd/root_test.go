@@ -989,14 +989,14 @@ func TestParseToolFile(t *testing.T) {
 		{
 			description: "only prompts",
 			in: `
-            prompts:
-                my-prompt:
-                    description: A prompt template for data analysis.
-                    arguments:
-                        - name: country
-                          description: The country to analyze.
-                    messages:
-                        - content: Analyze the data for {{.country}}.
+            kind: prompts
+            name: my-prompt
+			description: A prompt template for data analysis.
+			arguments:
+				- name: country
+					description: The country to analyze.
+			messages:
+				- content: Analyze the data for {{.country}}.
             `,
 			wantToolsFile: ToolsFile{
 				Sources:      nil,
@@ -1057,52 +1057,56 @@ func TestParseToolFileWithAuth(t *testing.T) {
 		{
 			description: "basic example",
 			in: `
-			sources:
-				my-pg-instance:
-					kind: cloud-sql-postgres
-					project: my-project
-					region: my-region
-					instance: my-instance
-					database: my_db
-					user: my_user
-					password: my_pass
-			authServices:
-				my-google-service:
-					kind: google
-					clientId: my-client-id
-				other-google-service:
-					kind: google
-					clientId: other-client-id
-
-			tools:
-				example_tool:
-					kind: postgres-sql
-					source: my-pg-instance
+			kind: sources
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+			---
+			kind: authServices
+			name: my-google-service
+			type: google
+			clientId: my-client-id
+			---
+			kind: authServices
+			name: other-google-service
+			type: google
+			clientId: other-client-id
+			---
+			kind: tools
+			name: example_tool
+			type: postgres-sql
+			source: my-pg-instance
+			description: some description
+			statement: |
+				SELECT * FROM SQL_STATEMENT;
+			parameters:
+				- name: country
+					type: string
 					description: some description
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
-						- name: id
-						  type: integer
-						  description: user id
-						  authServices:
-							- name: my-google-service
-								field: user_id
-						- name: email
-							type: string
-							description: user email
-							authServices:
-							- name: my-google-service
-							  field: email
-							- name: other-google-service
-							  field: other_email
-
-			toolsets:
-				example_toolset:
-					- example_tool
+				- name: id
+					type: integer
+					description: user id
+					authServices:
+					- name: my-google-service
+						field: user_id
+				- name: email
+					type: string
+					description: user email
+					authServices:
+					- name: my-google-service
+						field: email
+					- name: other-google-service
+						field: other_email
+			---
+			kind: toolsets
+			name: example_toolset
+			tools:
+				- example_tool
 			`,
 			wantToolsFile: ToolsFile{
 				Sources: server.SourceConfigs{
@@ -1257,54 +1261,58 @@ func TestParseToolFileWithAuth(t *testing.T) {
 		{
 			description: "basic example with authRequired",
 			in: `
-			sources:
-				my-pg-instance:
-					kind: cloud-sql-postgres
-					project: my-project
-					region: my-region
-					instance: my-instance
-					database: my_db
-					user: my_user
-					password: my_pass
-			authServices:
-				my-google-service:
-					kind: google
-					clientId: my-client-id
-				other-google-service:
-					kind: google
-					clientId: other-client-id
-
-			tools:
-				example_tool:
-					kind: postgres-sql
-					source: my-pg-instance
+			kind: sources
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+			---
+			kind: authServices
+			name: my-google-service
+			type: google
+			clientId: my-client-id
+			---
+			kind: authServices
+			name: other-google-service
+			type: google
+			clientId: other-client-id
+			---
+			kind: tools
+			name: example_tool
+			type: postgres-sql
+			source: my-pg-instance
+			description: some description
+			statement: |
+				SELECT * FROM SQL_STATEMENT;
+			authRequired:
+				- my-google-service
+			parameters:
+				- name: country
+					type: string
 					description: some description
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					authRequired:
-						- my-google-service
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
-						- name: id
-						  type: integer
-						  description: user id
-						  authServices:
-							- name: my-google-service
-								field: user_id
-						- name: email
-							type: string
-							description: user email
-							authServices:
-							- name: my-google-service
-							  field: email
-							- name: other-google-service
-							  field: other_email
-
-			toolsets:
-				example_toolset:
-					- example_tool
+				- name: id
+					type: integer
+					description: user id
+					authServices:
+					- name: my-google-service
+						field: user_id
+				- name: email
+					type: string
+					description: user email
+					authServices:
+					- name: my-google-service
+						field: email
+					- name: other-google-service
+						field: other_email
+			---
+			kind: toolsets
+			name: example_toolset
+			tools:
+				- example_tool
 			`,
 			wantToolsFile: ToolsFile{
 				Sources: server.SourceConfigs{
@@ -1476,6 +1484,152 @@ func TestEnvVarReplacement(t *testing.T) {
 					messages:
 						- role: user
 						  content: ${prompt_content}
+			`,
+			wantToolsFile: ToolsFile{
+				Sources: server.SourceConfigs{
+					"my-http-instance": httpsrc.Config{
+						Name:           "my-http-instance",
+						Type:           httpsrc.SourceType,
+						BaseURL:        "http://test_server/",
+						Timeout:        "10s",
+						DefaultHeaders: map[string]string{"Authorization": "ACTUAL_HEADER"},
+						QueryParams:    map[string]string{"api-key": "ACTUAL_API_KEY"},
+					},
+				},
+				AuthServices: server.AuthServiceConfigs{
+					"my-google-service": google.Config{
+						Name:     "my-google-service",
+						Type:     google.AuthServiceType,
+						ClientID: "ACTUAL_CLIENT_ID",
+					},
+					"other-google-service": google.Config{
+						Name:     "other-google-service",
+						Type:     google.AuthServiceType,
+						ClientID: "ACTUAL_CLIENT_ID_2",
+					},
+				},
+				Tools: server.ToolConfigs{
+					"example_tool": http.Config{
+						Name:         "example_tool",
+						Type:         "http",
+						Source:       "my-instance",
+						Method:       "GET",
+						Path:         "search?name=alice&pet=cat",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+						QueryParams: []parameters.Parameter{
+							parameters.NewStringParameterWithAuth("country", "some description",
+								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
+									{Name: "other-auth-service", Field: "user_id"}}),
+						},
+						RequestBody: `{
+  "age": {{.age}},
+  "city": "{{.city}}",
+  "food": "food",
+  "other": "$OTHER"
+}
+`,
+						BodyParams:   []parameters.Parameter{parameters.NewIntParameter("age", "age num"), parameters.NewStringParameter("city", "city string")},
+						Headers:      map[string]string{"Authorization": "API_KEY", "Content-Type": "application/json"},
+						HeaderParams: []parameters.Parameter{parameters.NewStringParameter("Language", "language string")},
+					},
+				},
+				Toolsets: server.ToolsetConfigs{
+					"ACTUAL_TOOLSET_NAME": tools.ToolsetConfig{
+						Name:      "ACTUAL_TOOLSET_NAME",
+						ToolNames: []string{"example_tool"},
+					},
+				},
+				Prompts: server.PromptConfigs{
+					"ACTUAL_PROMPT_NAME": &custom.Config{
+						Name:        "ACTUAL_PROMPT_NAME",
+						Description: "A test prompt for {{.name}}.",
+						Messages: []prompts.Message{
+							{
+								Role:    "user",
+								Content: "ACTUAL_CONTENT",
+							},
+						},
+						Arguments: nil,
+					},
+				},
+			},
+		},
+		{
+			description: "file with env var example toolsfile v2",
+			in: `
+			kind: sources
+			name: my-http-instance
+			type: http
+			baseUrl: http://test_server/
+			timeout: 10s
+			headers:
+				Authorization: ${TestHeader}
+			queryParams:
+				api-key: ${API_KEY}
+			---
+			kind: authServices
+			name: my-google-service
+			type: google
+			clientId: ${clientId}
+			---
+			kind: authServices
+			name: other-google-service
+			type: google
+			clientId: ${clientId2}
+			---
+			kind: tools
+			name: example_tool
+			type: http
+			source: my-instance
+			method: GET
+			path: "search?name=alice&pet=${cat_string}"
+			description: some description
+			authRequired:
+				- my-google-auth-service
+				- other-auth-service
+			queryParams:
+				- name: country
+					type: string
+					description: some description
+					authServices:
+					- name: my-google-auth-service
+						field: user_id
+					- name: other-auth-service
+						field: user_id
+			requestBody: |
+					{
+						"age": {{.age}},
+						"city": "{{.city}}",
+						"food": "${food_string}",
+						"other": "$OTHER"
+					}
+			bodyParams:
+				- name: age
+					type: integer
+					description: age num
+				- name: city
+					type: string
+					description: city string
+			headers:
+				Authorization: API_KEY
+				Content-Type: application/json
+			headerParams:
+				- name: Language
+					type: string
+					description: language string
+			---
+			kind: toolsets
+			name: ${toolset_name}
+			tools:
+				- example_tool
+			---
+			kind: prompts
+			name: ${prompt_name}
+			description: A test prompt for {{.name}}.
+			messages:
+				- role: user
+					content: ${prompt_content}
 			`,
 			wantToolsFile: ToolsFile{
 				Sources: server.SourceConfigs{
@@ -2369,17 +2523,18 @@ func TestPrebuiltAndCustomTools(t *testing.T) {
 	t.Setenv("SQLITE_DATABASE", "test.db")
 	// Setup custom tools file
 	customContent := `
-tools:
-  custom_tool:
-    kind: http
-    source: my-http
-    method: GET
-    path: /
-    description: "A custom tool for testing"
-sources:
-  my-http:
-    kind: http
-    baseUrl: http://example.com
+kind: tools
+name: custom_tool
+type: http
+source: my-http
+method: GET
+path: /
+description: "A custom tool for testing"
+---
+kind: sources
+name: my-http
+type: http
+baseUrl: http://example.com
 `
 	customFile := filepath.Join(t.TempDir(), "custom.yaml")
 	if err := os.WriteFile(customFile, []byte(customContent), 0644); err != nil {
@@ -2389,17 +2544,18 @@ sources:
 	// Tool Conflict File
 	// SQLite prebuilt has a tool named 'list_tables'
 	toolConflictContent := `
-tools:
-  list_tables:
-    kind: http
-    source: my-http
-    method: GET
-    path: /
-    description: "Conflicting tool"
-sources:
-  my-http:
-    kind: http
-    baseUrl: http://example.com
+kind: tools
+name: list_tables
+type: http
+source: my-http
+method: GET
+path: /
+description: "Conflicting tool"
+---
+kind: sources
+name: my-http
+type: http
+baseUrl: http://example.com
 `
 	toolConflictFile := filepath.Join(t.TempDir(), "tool_conflict.yaml")
 	if err := os.WriteFile(toolConflictFile, []byte(toolConflictContent), 0644); err != nil {
@@ -2409,17 +2565,18 @@ sources:
 	// Source Conflict File
 	// SQLite prebuilt has a source named 'sqlite-source'
 	sourceConflictContent := `
-sources:
-  sqlite-source:
-    kind: http
-    baseUrl: http://example.com
-tools:
-  dummy_tool:
-    kind: http
-    source: sqlite-source
-    method: GET
-    path: /
-    description: "Dummy"
+kind: sources
+name: sqlite-source
+type: http
+baseUrl: http://example.com
+---
+kind: tools
+name: dummy_tool
+type: http
+source: sqlite-source
+method: GET
+path: /
+description: "Dummy"
 `
 	sourceConflictFile := filepath.Join(t.TempDir(), "source_conflict.yaml")
 	if err := os.WriteFile(sourceConflictFile, []byte(sourceConflictContent), 0644); err != nil {
@@ -2429,20 +2586,22 @@ tools:
 	// Toolset Conflict File
 	// SQLite prebuilt has a toolset named 'sqlite_database_tools'
 	toolsetConflictContent := `
-sources:
-  dummy-src:
-    kind: http
-    baseUrl: http://example.com
-tools:
-  dummy_tool:
-    kind: http
-    source: dummy-src
-    method: GET
-    path: /
-    description: "Dummy"
-toolsets:
-  sqlite_database_tools:
-    - dummy_tool
+kind: sources
+name: dummy-src
+type: http
+baseUrl: http://example.com
+---
+kind: tools
+name: dummy_tool
+type: http
+source: dummy-src
+method: GET
+path: /
+description: "Dummy"
+---
+kind: toolsets
+name: sqlite_database_tools
+- dummy_tool
 `
 	toolsetConflictFile := filepath.Join(t.TempDir(), "toolset_conflict.yaml")
 	if err := os.WriteFile(toolsetConflictFile, []byte(toolsetConflictContent), 0644); err != nil {

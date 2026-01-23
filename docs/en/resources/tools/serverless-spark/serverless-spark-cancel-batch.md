@@ -30,11 +30,11 @@ The tool inherits the `project` and `location` from the source configuration.
 ## Example
 
 ```yaml
-tools:
-  cancel_spark_batch:
-    kind: serverless-spark-cancel-batch
-    source: my-serverless-spark-source
-    description: Use this tool to cancel a running serverless spark batch operation.
+kind: tools
+name: cancel_spark_batch
+type: serverless-spark-cancel-batch
+source: my-serverless-spark-source
+description: Use this tool to cancel a running serverless spark batch operation.
 ```
 
 ## Response Format
@@ -47,7 +47,7 @@ tools:
 
 | **field**    | **type** | **required** | **description**                                    |
 | ------------ | :------: | :----------: | -------------------------------------------------- |
-| kind         |  string  |     true     | Must be "serverless-spark-cancel-batch".           |
+| type         |  string  |     true     | Must be "serverless-spark-cancel-batch".           |
 | source       |  string  |     true     | Name of the source the tool should use.            |
 | description  |  string  |     true     | Description of the tool that is passed to the LLM. |
 | authRequired | string[] |    false     | List of auth services required to invoke this tool |
