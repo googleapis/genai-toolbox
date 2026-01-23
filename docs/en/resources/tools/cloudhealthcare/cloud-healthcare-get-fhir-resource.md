@@ -23,18 +23,18 @@ by its type and ID.
 ## Example
 
 ```yaml
-tools:
-  get_fhir_resource:
-    kind: cloud-healthcare-get-fhir-resource
-    source: my-healthcare-source
-    description: Use this tool to retrieve a specific FHIR resource.
+kind: tools
+name: get_fhir_resource
+type: cloud-healthcare-get-fhir-resource
+source: my-healthcare-source
+description: Use this tool to retrieve a specific FHIR resource.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "cloud-healthcare-get-fhir-resource".      |
+| type        |  string  |     true     | Must be "cloud-healthcare-get-fhir-resource".      |
 | source      |  string  |     true     | Name of the healthcare source.                     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 

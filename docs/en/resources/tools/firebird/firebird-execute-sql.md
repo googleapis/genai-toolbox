@@ -25,17 +25,17 @@ statement against the `source`.
 ## Example
 
 ```yaml
-tools:
-  execute_sql_tool:
-    kind: firebird-execute-sql
-    source: my_firebird_db
-    description: Use this tool to execute a SQL statement against the Firebird database.
+kind: tools
+name: execute_sql_tool
+type: firebird-execute-sql
+source: my_firebird_db
+description: Use this tool to execute a SQL statement against the Firebird database.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "firebird-execute-sql".                    |
+| type        |  string  |     true     | Must be "firebird-execute-sql".                    |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
