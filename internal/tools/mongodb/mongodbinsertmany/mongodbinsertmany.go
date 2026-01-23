@@ -23,9 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const kind string = "mongodb-insert-many"
@@ -48,6 +46,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	MongoClient() *mongo.Client
+	InsertMany(context.Context, string, bool, string, string) ([]any, error)
 }
 
 type Config struct {
@@ -117,19 +116,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, errors.New("no input found")
 	}
-
-	var data = []any{}
-	err = bson.UnmarshalExtJSON([]byte(jsonData), t.Canonical, &data)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := source.MongoClient().Database(t.Database).Collection(t.Collection).InsertMany(ctx, data, options.InsertMany())
-	if err != nil {
-		return nil, err
-	}
-
-	return res.InsertedIDs, nil
+	return source.InsertMany(ctx, jsonData, t.Canonical, t.Database, t.Collection)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

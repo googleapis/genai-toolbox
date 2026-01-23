@@ -23,9 +23,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const kind string = "mongodb-update-many"
@@ -46,6 +44,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	MongoClient() *mongo.Client
+	UpdateMany(context.Context, string, bool, string, string, string, bool) ([]any, error)
 }
 
 type Config struct {
@@ -117,35 +116,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-
 	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBUpdateManyFilter", t.FilterPayload, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("error populating filter: %s", err)
 	}
-
-	var filter = bson.D{}
-	err = bson.UnmarshalExtJSON([]byte(filterString), t.Canonical, &filter)
-	if err != nil {
-		return nil, fmt.Errorf("unable to unmarshal filter string: %w", err)
-	}
-
 	updateString, err := parameters.PopulateTemplateWithJSON("MongoDBUpdateMany", t.UpdatePayload, paramsMap)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get update: %w", err)
 	}
-
-	var update = bson.D{}
-	err = bson.UnmarshalExtJSON([]byte(updateString), false, &update)
-	if err != nil {
-		return nil, fmt.Errorf("unable to unmarshal update string: %w", err)
-	}
-
-	res, err := source.MongoClient().Database(t.Database).Collection(t.Collection).UpdateMany(ctx, filter, update, options.Update().SetUpsert(t.Upsert))
-	if err != nil {
-		return nil, fmt.Errorf("error updating collection: %w", err)
-	}
-
-	return []any{res.ModifiedCount, res.UpsertedCount, res.MatchedCount}, nil
+	return source.UpdateMany(ctx, filterString, t.Canonical, updateString, t.Database, t.Collection, t.Upsert)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

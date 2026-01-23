@@ -19,8 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	longrunning "cloud.google.com/go/longrunning/autogen"
-	"cloud.google.com/go/longrunning/autogen/longrunningpb"
+	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -45,9 +44,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	GetOperationsClient(context.Context) (*longrunning.OperationsClient, error)
-	GetProject() string
-	GetLocation() string
+	GetBatchControllerClient() *dataproc.BatchControllerClient
+	CancelOperation(context.Context, string) (any, error)
 }
 
 type Config struct {
@@ -106,32 +104,15 @@ func (t *Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, par
 	if err != nil {
 		return nil, err
 	}
-
-	client, err := source.GetOperationsClient(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get operations client: %w", err)
-	}
-
 	paramMap := params.AsMap()
 	operation, ok := paramMap["operation"].(string)
 	if !ok {
 		return nil, fmt.Errorf("missing required parameter: operation")
 	}
-
 	if strings.Contains(operation, "/") {
 		return nil, fmt.Errorf("operation must be a short operation name without '/': %s", operation)
 	}
-
-	req := &longrunningpb.CancelOperationRequest{
-		Name: fmt.Sprintf("projects/%s/locations/%s/operations/%s", source.GetProject(), source.GetLocation(), operation),
-	}
-
-	err = client.CancelOperation(ctx, req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to cancel operation: %w", err)
-	}
-
-	return fmt.Sprintf("Cancelled [%s].", operation), nil
+	return source.CancelOperation(ctx, operation)
 }
 
 func (t *Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

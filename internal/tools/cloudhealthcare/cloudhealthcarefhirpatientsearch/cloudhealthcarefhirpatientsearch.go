@@ -16,20 +16,16 @@ package fhirpatientsearch
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	healthcareds "github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/common"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/googleapi"
-	"google.golang.org/api/healthcare/v1"
 )
 
 const kind string = "cloud-healthcare-fhir-patient-search"
@@ -70,13 +66,9 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	Project() string
-	Region() string
-	DatasetID() string
 	AllowedFHIRStores() map[string]struct{}
-	Service() *healthcare.Service
-	ServiceCreator() healthcareds.HealthcareServiceCreator
 	UseClientAuthorization() bool
+	FHIRPatientSearch(string, string, []googleapi.CallOption) (any, error)
 }
 
 type Config struct {
@@ -169,16 +161,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, err
 	}
 
-	svc := source.Service()
-	// Initialize new service if using user OAuth token
+	var tokenStr string
 	if source.UseClientAuthorization() {
-		tokenStr, err := accessToken.ParseBearerToken()
+		tokenStr, err = accessToken.ParseBearerToken()
 		if err != nil {
 			return nil, fmt.Errorf("error parsing access token: %w", err)
-		}
-		svc, err = source.ServiceCreator()(tokenStr)
-		if err != nil {
-			return nil, fmt.Errorf("error creating service from OAuth access token: %w", err)
 		}
 	}
 
@@ -248,26 +235,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if summary {
 		opts = append(opts, googleapi.QueryParameter("_summary", "text"))
 	}
-
-	name := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/fhirStores/%s", source.Project(), source.Region(), source.DatasetID(), storeID)
-	resp, err := svc.Projects.Locations.Datasets.FhirStores.Fhir.SearchType(name, "Patient", &healthcare.SearchResourcesRequest{ResourceType: "Patient"}).Do(opts...)
-	if err != nil {
-		return nil, fmt.Errorf("failed to search patient resources: %w", err)
-	}
-	defer resp.Body.Close()
-
-	respBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("could not read response: %w", err)
-	}
-	if resp.StatusCode > 299 {
-		return nil, fmt.Errorf("search: status %d %s: %s", resp.StatusCode, resp.Status, respBytes)
-	}
-	var jsonMap map[string]interface{}
-	if err := json.Unmarshal([]byte(string(respBytes)), &jsonMap); err != nil {
-		return nil, fmt.Errorf("could not unmarshal response as json: %w", err)
-	}
-	return jsonMap, nil
+	return source.FHIRPatientSearch(storeID, tokenStr, opts)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
