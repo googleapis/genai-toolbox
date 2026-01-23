@@ -18,7 +18,7 @@ with filters, ordering, and limit capabilities.
 To use this tool, you need to configure it in your YAML configuration file:
 
 ```yaml
-kind: source
+kind: sources
 name: my-firestore
 type: firestore
 project: my-gcp-project

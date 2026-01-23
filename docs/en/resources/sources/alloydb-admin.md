@@ -27,7 +27,7 @@ Authentication can be handled in two ways:
 ```yaml
 kind: sources
 name: my-alloydb-admin
-type: alloy-admin
+type: alloydb-admin
 ---
 kind: sources
 name: my-oauth-alloydb-admin
