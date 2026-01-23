@@ -46,7 +46,7 @@ with the necessary configuration for deployment to Vertex AI Agent Engine.
     process will generate deployment configuration files (like a `Makefile` and
     `Dockerfile`) in your project directory.
 
-4.  Add `toolbox-core` as a dependency to the new project:
+4.  Add `toolbox-adk` as a dependency to the new project:
 
     ```bash
     uv add toolbox-adk
