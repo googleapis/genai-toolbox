@@ -4,11 +4,11 @@ package oracle
 
 import (
 	"bytes"
-	"io"
-	"net/http"
 	"context"
 	"database/sql"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"regexp"
 	"strings"
@@ -121,7 +121,7 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 	// Add the new update tool to the configuration
 	toolsMap["my-update-tool"] = map[string]any{
 		"kind":        OracleToolKind,
-		"source":      "test-db", // Uses the existing test database source
+		"source":      "my-instance", // Uses the existing test database source
 		"statement":   updateStmt,
 		"readonly":    false, // This flag triggers the DML execution path in oracle.go
 		"description": "Update user name by ID.",
@@ -284,7 +284,7 @@ func runInvokeToolTest(t *testing.T, toolName, paramsJSON, wantResponseSubStr st
 	t.Helper()
 
 	// The test server typically runs on port 8080
-	url := "http://localhost:8080/rpc"
+	url := "http://localhost:5000/rpc"
 
 	// Construct the JSON-RPC request body
 	reqBody := fmt.Sprintf(`{
@@ -317,9 +317,7 @@ func runInvokeToolTest(t *testing.T, toolName, paramsJSON, wantResponseSubStr st
 
 	// Verify that the response contains the expected success message (e.g., "rows_affected")
 	if !strings.Contains(string(body), wantResponseSubStr) {
-		t.Errorf("Tool invocation '%s' failed.\nGot response: %s\nExpected substring: %s", 
+		t.Errorf("Tool invocation '%s' failed.\nGot response: %s\nExpected substring: %s",
 			toolName, string(body), wantResponseSubStr)
 	}
 }
-
-

@@ -11,15 +11,15 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/oracle/oraclesql"
 )
 
-func boolPtr(b bool) *bool {
-	return &b
-}
-
 func TestParseFromYamlOracleSql(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
+
+	valTrue := true
+	valFalse := false
+
 	tcs := []struct {
 		desc string
 		in   string
@@ -89,7 +89,7 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 					Source:       "db-prod",
 					Description:  "Safe read operation.",
 					Statement:    "SELECT * FROM orders",
-					ReadOnly:     boolPtr(true),
+					ReadOnly:     &valTrue,
 					AuthRequired: []string{},
 				},
 			},
@@ -112,7 +112,7 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 					Source:       "db-prod",
 					Description:  "Updates user email.",
 					Statement:    "UPDATE users SET email = :1 WHERE id = :2",
-					ReadOnly:     boolPtr(false),
+					ReadOnly:     &valFalse,
 					AuthRequired: []string{},
 				},
 			},
