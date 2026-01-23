@@ -41,7 +41,7 @@ func getOracleVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":             OracleSourceType,
+		"type":             OracleSourceType,
 		"connectionString": OracleConnStr,
 		"useOCI":           true,
 		"user":             OracleUser,

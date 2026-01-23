@@ -55,7 +55,7 @@ func getTrinoVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     TrinoSourceType,
+		"type":     TrinoSourceType,
 		"host":     TrinoHost,
 		"port":     TrinoPort,
 		"user":     TrinoUser,
@@ -119,7 +119,7 @@ func buildTrinoDSN(host, port, user, password, catalog, schema, queryTimeout, ac
 	return dsn, nil
 }
 
-// getTrinoParamToolInfo returns statements and param for my-tool trino-sql kind
+// getTrinoParamToolInfo returns statements and param for my-tool trino-sql type
 func getTrinoParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id BIGINT NOT NULL, name VARCHAR(255))", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, ?), (2, ?), (3, ?), (4, ?)", tableName)
@@ -131,7 +131,7 @@ func getTrinoParamToolInfo(tableName string) (string, string, string, string, st
 	return createStatement, insertStatement, toolStatement, idParamStatement, nameParamStatement, arrayToolStatement, params
 }
 
-// getTrinoAuthToolInfo returns statements and param of my-auth-tool for trino-sql kind
+// getTrinoAuthToolInfo returns statements and param of my-auth-tool for trino-sql type
 func getTrinoAuthToolInfo(tableName string) (string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id BIGINT NOT NULL, name VARCHAR(255), email VARCHAR(255))", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name, email) VALUES (1, ?, ?), (2, ?, ?)", tableName)
@@ -140,7 +140,7 @@ func getTrinoAuthToolInfo(tableName string) (string, string, string, []any) {
 	return createStatement, insertStatement, toolStatement, params
 }
 
-// getTrinoTmplToolStatement returns statements and param for template parameter test cases for trino-sql kind
+// getTrinoTmplToolStatement returns statements and param for template parameter test cases for trino-sql type
 func getTrinoTmplToolStatement() (string, string) {
 	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ?"
 	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"
@@ -192,12 +192,12 @@ func addTrinoExecuteSqlConfig(t *testing.T, config map[string]any) map[string]an
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "trino-execute-sql",
+		"type":        "trino-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "trino-execute-sql",
+		"type":        "trino-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{

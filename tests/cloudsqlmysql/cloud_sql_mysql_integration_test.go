@@ -60,7 +60,7 @@ func getCloudSQLMySQLVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     CloudSQLMySQLSourceType,
+		"type":     CloudSQLMySQLSourceType,
 		"project":  CloudSQLMySQLProject,
 		"instance": CloudSQLMySQLInstance,
 		"region":   CloudSQLMySQLRegion,
@@ -200,7 +200,7 @@ func TestCloudSQLMySQLIAMConnection(t *testing.T) {
 	serviceAccountEmail, _, _ := strings.Cut(tests.ServiceAccountEmail, "@")
 
 	noPassSourceConfig := map[string]any{
-		"kind":     CloudSQLMySQLSourceType,
+		"type":     CloudSQLMySQLSourceType,
 		"project":  CloudSQLMySQLProject,
 		"instance": CloudSQLMySQLInstance,
 		"region":   CloudSQLMySQLRegion,
@@ -208,7 +208,7 @@ func TestCloudSQLMySQLIAMConnection(t *testing.T) {
 		"user":     serviceAccountEmail,
 	}
 	noUserSourceConfig := map[string]any{
-		"kind":     CloudSQLMySQLSourceType,
+		"type":     CloudSQLMySQLSourceType,
 		"project":  CloudSQLMySQLProject,
 		"instance": CloudSQLMySQLInstance,
 		"region":   CloudSQLMySQLRegion,
@@ -216,7 +216,7 @@ func TestCloudSQLMySQLIAMConnection(t *testing.T) {
 		"password": "random",
 	}
 	noUserNoPassSourceConfig := map[string]any{
-		"kind":     CloudSQLMySQLSourceType,
+		"type":     CloudSQLMySQLSourceType,
 		"project":  CloudSQLMySQLProject,
 		"instance": CloudSQLMySQLInstance,
 		"region":   CloudSQLMySQLRegion,
@@ -260,7 +260,7 @@ func TestCloudSQLMySQLIAMConnection(t *testing.T) {
 				},
 				"tools": map[string]any{
 					"my-simple-tool": map[string]any{
-						"kind":        CloudSQLMySQLToolType,
+						"type":        CloudSQLMySQLToolType,
 						"source":      uniqueSourceName,
 						"description": "Simple tool to test end to end functionality.",
 						"statement":   "SELECT 1;",
