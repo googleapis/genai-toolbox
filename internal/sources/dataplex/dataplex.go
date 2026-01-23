@@ -183,9 +183,9 @@ func (s *Source) SearchAspectTypes(ctx context.Context, query string, pageSize i
 			if st, ok := grpcstatus.FromError(err); ok {
 				errorCode := st.Code()
 				errorMessage := st.Message()
-				return nil, fmt.Errorf("Failed to search aspect types with error code: '%s' message: %s", errorCode.String(), errorMessage)
+				return nil, fmt.Errorf("failed to search aspect types with error code: %q message: %s", errorCode.String(), errorMessage)
 			}
-			return nil, fmt.Errorf("Failed to search aspect types with error: %w", err)
+			return nil, fmt.Errorf("failed to search aspect types: %w", err)
 		}
 
 		// Create an instance of exponential backoff with default values for retrying GetAspectType calls
@@ -232,9 +232,9 @@ func (s *Source) SearchEntries(ctx context.Context, query string, pageSize int, 
 			if st, ok := grpcstatus.FromError(err); ok {
 				errorCode := st.Code()
 				errorMessage := st.Message()
-				return nil, fmt.Errorf("Failed to search entries with error code: '%s' message: %s", errorCode.String(), errorMessage)
+				return nil, fmt.Errorf("failed to search entries with error code: %q message: %s", errorCode.String(), errorMessage)
 			}
-			return nil, fmt.Errorf("Failed to search entries with error: %w", err)
+			return nil, fmt.Errorf("failed to search entries: %w", err)
 		}
 		results = append(results, entry)
 	}
