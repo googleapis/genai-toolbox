@@ -83,8 +83,8 @@ Tool type serves as a category or type that a user can assign to a tool.
 
 The following guidelines apply to tool types:
 
-* Should user hyphens over underscores (e.g. `firestore-list-collections` or
-  `firestore_list_colelctions`).
+* Should use hyphens over underscores (e.g. `firestore-list-collections` or
+  `firestore_list_collections`).
 * Should use product name in name (e.g. `firestore-list-collections` over
   `list-collections`).
 * Changes to tool type are breaking changes and should be avoided.
