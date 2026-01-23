@@ -25,11 +25,11 @@ capabilities for monitoring and debugging purposes.
 ## Example
 
 ```yaml
-kind: tools
-name: execute_sql_tool
-type: clickhouse-execute-sql
-source: my-clickhouse-instance
-description: Use this tool to execute SQL statements against ClickHouse.
+tools:
+  execute_sql_tool:
+    kind: clickhouse-execute-sql
+    source: my-clickhouse-instance
+    description: Use this tool to execute SQL statements against ClickHouse.
 ```
 
 ## Parameters
@@ -42,6 +42,6 @@ description: Use this tool to execute SQL statements against ClickHouse.
 
 | **field**   | **type** | **required** | **description**                                       |
 |-------------|:--------:|:------------:|-------------------------------------------------------|
-| type        |  string  |     true     | Must be "clickhouse-execute-sql".                     |
+| kind        |  string  |     true     | Must be "clickhouse-execute-sql".                     |
 | source      |  string  |     true     | Name of the ClickHouse source to execute SQL against. |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.    |

@@ -54,17 +54,17 @@ layer of security by controlling which datasets can be accessed:
 ## Example
 
 ```yaml
-kind: tools
-name: execute_sql_tool
-type: bigquery-execute-sql
-source: my-bigquery-source
-description: Use this tool to execute sql statement.
+tools:
+ execute_sql_tool:
+    kind: bigquery-execute-sql
+    source: my-bigquery-source
+    description: Use this tool to execute sql statement.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "bigquery-execute-sql".                    |
+| kind        |  string  |     true     | Must be "bigquery-execute-sql".                    |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

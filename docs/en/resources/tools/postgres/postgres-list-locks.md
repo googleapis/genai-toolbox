@@ -49,11 +49,11 @@ GROUP BY
 ## Example
 
 ```yaml
-kind: tools
-name: list_locks
-type: postgres-list-locks
-source: postgres-source
-description: "Lists active locks with associated process and query information."
+tools:
+  list_locks:
+    kind: postgres-list-locks
+    source: postgres-source
+    description: "Lists active locks with associated process and query information."
 ```
 
 Example response element (aggregated per process):

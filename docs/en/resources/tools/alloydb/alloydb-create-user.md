@@ -39,17 +39,17 @@ The tool takes the following input parameters:
 ## Example
 
 ```yaml
-kind: tools
-name: create_user
-type: alloydb-create-user
-source: alloydb-admin-source
-description: Use this tool to create a new database user for an AlloyDB cluster.
+tools:
+  create_user:
+    kind: alloydb-create-user
+    source: alloydb-admin-source
+    description: Use this tool to create a new database user for an AlloyDB cluster.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                      |
 | ----------- | :------: | :----------: | ---------------------------------------------------- |
-| type        |  string  |     true     | Must be alloydb-create-user.                         |
+| kind        |  string  |     true     | Must be alloydb-create-user.                         |
 | source      |  string  |     true     | The name of an `alloydb-admin` source.               |
 | description |  string  |     false    | Description of the tool that is passed to the agent. |

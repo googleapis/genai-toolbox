@@ -24,17 +24,17 @@ statement against the `source`.
 ## Example
 
 ```yaml
-kind: tools
-name: execute_sql_tool
-type: oceanbase-execute-sql
-source: my-oceanbase-instance
-description: Use this tool to execute sql statement.
+tools:
+  execute_sql_tool:
+    kind: oceanbase-execute-sql
+    source: my-oceanbase-instance
+    description: Use this tool to execute sql statement.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "oceanbase-execute-sql".                   |
+| kind        |  string  |     true     | Must be "oceanbase-execute-sql".                   |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

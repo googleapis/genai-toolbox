@@ -25,17 +25,17 @@ This tool is designed for direct execution of SQL statements. It takes a single
 ## Example
 
 ```yaml
-kind: tools
-name: execute_sql_tool
-type: sqlite-execute-sql
-source: my-sqlite-db
-description: Use this tool to execute a SQL statement.
+tools:
+ execute_sql_tool:
+    kind: sqlite-execute-sql
+    source: my-sqlite-db
+    description: Use this tool to execute a SQL statement.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "sqlite-execute-sql".                      |
+| kind        |  string  |     true     | Must be "sqlite-execute-sql".                      |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

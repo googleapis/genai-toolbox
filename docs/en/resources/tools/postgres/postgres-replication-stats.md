@@ -23,11 +23,11 @@ This tool takes no parameters. It returns a JSON array; each element represents 
 ## Example
 
 ```yaml
-kind: tools
-name: replication_stats
-type: postgres-replication-stats
-source: postgres-source
-description: "Lists replication connections and readable WAL lag metrics."
+tools:
+  replication_stats:
+    kind: postgres-replication-stats
+    source: postgres-source
+    description: "Lists replication connections and readable WAL lag metrics."
 ```
 
 Example response element:

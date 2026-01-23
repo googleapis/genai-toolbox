@@ -23,17 +23,17 @@ statement against the `source`.
 ## Example
 
 ```yaml
-kind: tools
-name: get_query_plan_tool
-type: mysql-get-query-plan
-source: my-mysql-instance
-description: Use this tool to get the execution plan for a sql statement.
+tools:
+ get_query_plan_tool:
+    kind: mysql-get-query-plan
+    source: my-mysql-instance
+    description: Use this tool to get the execution plan for a sql statement.
 ```
 
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| type        |                   string                   |     true     | Must be "mysql-get-query-plan".                                                                     |
+| kind        |                   string                   |     true     | Must be "mysql-get-query-plan".                                                                     |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

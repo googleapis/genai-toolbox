@@ -21,27 +21,27 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-kind: tools
-name: get_projects
-type: looker-get-projects
-source: looker-source
-description: |
-  This tool retrieves a list of all LookML projects available on the Looker instance.
-  It is useful for identifying projects before performing actions like retrieving
-  project files or making modifications.
+tools:
+    get_projects:
+        kind: looker-get-projects
+        source: looker-source
+        description: |
+          This tool retrieves a list of all LookML projects available on the Looker instance.
+          It is useful for identifying projects before performing actions like retrieving
+          project files or making modifications.
 
-  Parameters:
-  This tool takes no parameters.
+          Parameters:
+          This tool takes no parameters.
 
-  Output:
-  A JSON array of objects, each containing the `project_id` and `project_name`
-  for a LookML project.
+          Output:
+          A JSON array of objects, each containing the `project_id` and `project_name`
+          for a LookML project.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "looker-get-projects".                     |
+| kind        |  string  |     true     | Must be "looker-get-projects".                     |
 | source      |  string  |     true     | Name of the source Looker instance.                |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

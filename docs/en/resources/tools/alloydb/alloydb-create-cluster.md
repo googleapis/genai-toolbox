@@ -40,17 +40,17 @@ The tool takes the following input parameters:
 ## Example
 
 ```yaml
-kind: tools
-name: create_cluster
-type: alloydb-create-cluster
-source: alloydb-admin-source
-description: Use this tool to create a new AlloyDB cluster in a given project and location.
+tools:
+  create_cluster:
+    kind: alloydb-create-cluster
+    source: alloydb-admin-source
+    description: Use this tool to create a new AlloyDB cluster in a given project and location.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
-| type        |  string  |     true     | Must be alloydb-create-cluster.                      |
+| kind        |  string  |     true     | Must be alloydb-create-cluster.                      |
 | source      |  string  |     true     | The name of an `alloydb-admin` source.               |
 | description |  string  |    false     | Description of the tool that is passed to the agent. |

@@ -17,11 +17,11 @@ reporting with source positions and code snippets.
 ## Configuration
 
 ```yaml
-kind: tools
-name: firestore-validate-rules
-type: firestore-validate-rules
-source: <firestore-source-name>
-description: "Checks the provided Firestore Rules source for syntax and validation errors"
+tools:
+  firestore-validate-rules:
+    kind: firestore-validate-rules
+    source: <firestore-source-name>
+    description: "Checks the provided Firestore Rules source for syntax and validation errors"
 ```
 
 ## Authentication

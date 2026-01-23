@@ -17,23 +17,23 @@ compatibility.
 ## Example
 
 ```yaml
-kind: sources
-name: my-yb-source
-type: yugabytedb
-host: 127.0.0.1
-port: 5433
-database: yugabyte
-user: ${USER_NAME}
-password: ${PASSWORD}
-loadBalance: true
-topologyKeys: cloud.region.zone1:1,cloud.region.zone2:2
+sources:
+    my-yb-source:
+        kind: yugabytedb
+        host: 127.0.0.1
+        port: 5433
+        database: yugabyte
+        user: ${USER_NAME}
+        password: ${PASSWORD}
+        loadBalance: true
+        topologyKeys: cloud.region.zone1:1,cloud.region.zone2:2
 ```
 
 ## Reference
 
 | **field**                    | **type** | **required** | **description**                                                                                                                                                       |
 |------------------------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| type                         |  string  |     true     | Must be "yugabytedb".                                                                                                                                                 |
+| kind                         |  string  |     true     | Must be "yugabytedb".                                                                                                                                                 |
 | host                         |  string  |     true     | IP address to connect to.                                                                                                                                             |
 | port                         | integer  |     true     | Port to connect to. The default port is 5433.                                                                                                                         |
 | database                     |  string  |     true     | Name of the YugabyteDB database to connect to. The default database name is yugabyte.                                                                                 |

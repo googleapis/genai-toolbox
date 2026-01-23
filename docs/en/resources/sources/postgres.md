@@ -107,14 +107,14 @@ PostgreSQL user][pg-users] to login to the database with.
 ## Example
 
 ```yaml
-kind: sources
-name: my-pg-source
-type: postgres
-host: 127.0.0.1
-port: 5432
-database: my_db
-user: ${USER_NAME}
-password: ${PASSWORD}
+sources:
+    my-pg-source:
+        kind: postgres
+        host: 127.0.0.1
+        port: 5432
+        database: my_db
+        user: ${USER_NAME}
+        password: ${PASSWORD}
 ```
 
 {{< notice tip >}}
@@ -126,7 +126,7 @@ instead of hardcoding your secrets into the configuration file.
 
 |  **field**  |      **type**      | **required** | **description**                                                        |
 |-------------|:------------------:|:------------:|------------------------------------------------------------------------|
-| type        |       string       |     true     | Must be "postgres".                                                    |
+| kind        |       string       |     true     | Must be "postgres".                                                    |
 | host        |       string       |     true     | IP address to connect to (e.g. "127.0.0.1")                            |
 | port        |       string       |     true     | Port to connect to (e.g. "5432")                                       |
 | database    |       string       |     true     | Name of the Postgres database to connect to (e.g. "my_db").            |

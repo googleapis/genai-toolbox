@@ -20,18 +20,18 @@ store. It's compatible with the following sources:
 ## Example
 
 ```yaml
-kind: tools
-name: get_dicom_store_metrics
-type: cloud-healthcare-get-dicom-store-metrics
-source: my-healthcare-source
-description: Use this tool to get metrics for a DICOM store.
+tools:
+  get_dicom_store_metrics:
+    kind: cloud-healthcare-get-dicom-store-metrics
+    source: my-healthcare-source
+    description: Use this tool to get metrics for a DICOM store.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                     |
 |-------------|:--------:|:------------:|-----------------------------------------------------|
-| type        |  string  |     true     | Must be "cloud-healthcare-get-dicom-store-metrics". |
+| kind        |  string  |     true     | Must be "cloud-healthcare-get-dicom-store-metrics". |
 | source      |  string  |     true     | Name of the healthcare source.                      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.  |
 

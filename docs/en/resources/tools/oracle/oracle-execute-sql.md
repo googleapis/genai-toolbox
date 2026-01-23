@@ -24,9 +24,8 @@ statement against the `source`.
 ## Example
 
 ```yaml
-kind: tools
-name: execute_sql_tool
-type: oracle-execute-sql
-source: my-oracle-instance
-description: Use this tool to execute sql statement.
-```
+tools:
+  execute_sql_tool:
+    kind: oracle-execute-sql
+    source: my-oracle-instance
+    description: Use this tool to execute sql statement.

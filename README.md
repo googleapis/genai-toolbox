@@ -938,14 +938,14 @@ Toolbox should have access to. Most tools will have at least one source to
 execute against.
 
 ```yaml
-kind: sources
-name: my-pg-source
-type: postgres
-host: 127.0.0.1
-port: 5432
-database: toolbox_db
-user: toolbox_user
-password: my-password
+sources:
+  my-pg-source:
+    kind: postgres
+    host: 127.0.0.1
+    port: 5432
+    database: toolbox_db
+    user: toolbox_user
+    password: my-password
 ```
 
 For more details on configuring different types of sources, see the
@@ -957,16 +957,16 @@ The `tools` section of a `tools.yaml` define the actions an agent can take: what
 type of tool it is, which source(s) it affects, what parameters it uses, etc.
 
 ```yaml
-kind: tools
-name: search-hotels-by-name
-type: postgres-sql
-source: my-pg-source
-description: Search for hotels based on name.
-parameters:
-  - name: name
-    type: string
-    description: The name of the hotel.
-statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
+tools:
+  search-hotels-by-name:
+    kind: postgres-sql
+    source: my-pg-source
+    description: Search for hotels based on name.
+    parameters:
+      - name: name
+        type: string
+        description: The name of the hotel.
+    statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
 ```
 
 For more details on configuring different types of tools, see the

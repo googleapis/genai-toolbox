@@ -29,16 +29,16 @@ parameters:
 ## Example
 
 ```yaml
-kind: tools
-name: list_views
-type: postgres-list-views
-source: cloudsql-pg-source
+tools:
+  list_views:
+    kind: postgres-list-views
+    source: cloudsql-pg-source
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
-| type        |  string  |     true     | Must be "postgres-list-views".                       |
+| kind        |  string  |     true     | Must be "postgres-list-views".                       |
 | source      |  string  |     true     | Name of the source the SQL should execute on.        |
 | description |  string  |    false     | Description of the tool that is passed to the agent. |

@@ -48,19 +48,19 @@ You need a SQLite database file. This can be:
 ## Example
 
 ```yaml
-kind: sources
-name: my-sqlite-db
-type: "sqlite"
-database: "/path/to/database.db"
+sources:
+    my-sqlite-db:
+        kind: "sqlite"
+        database: "/path/to/database.db"
 ```
 
 For an in-memory database:
 
 ```yaml
-kind: sources
-name: my-sqlite-memory-db
-type: "sqlite"
-database: ":memory:"
+sources:
+    my-sqlite-memory-db:
+        kind: "sqlite"
+        database: ":memory:"
 ```
 
 ## Reference
@@ -69,7 +69,7 @@ database: ":memory:"
 
 | **field** | **type** | **required** | **description**                                                                                                     |
 |-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------|
-| type      |  string  |     true     | Must be "sqlite".                                                                                                   |
+| kind      |  string  |     true     | Must be "sqlite".                                                                                                   |
 | database  |  string  |     true     | Path to SQLite database file, or ":memory:" for an in-memory database.                                              |
 
 ### Connection Properties

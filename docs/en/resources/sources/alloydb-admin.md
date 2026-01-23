@@ -25,20 +25,19 @@ Authentication can be handled in two ways:
 ## Example
 
 ```yaml
-kind: sources
-name: my-alloydb-admin
-type: alloydb-admin
----
-kind: sources
-name: my-oauth-alloydb-admin
-type: alloydb-admin
-useClientOAuth: true
+sources:
+    my-alloydb-admin:
+        kind: alloy-admin
+
+    my-oauth-alloydb-admin:
+        kind: alloydb-admin
+        useClientOAuth: true
 ```
 
 ## Reference
 
 | **field**      | **type** | **required** | **description**                                                                                                                                |
 | -------------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| type           |  string  |     true     | Must be "alloydb-admin".                                                                                                                       |
+| kind           |  string  |     true     | Must be "alloydb-admin".                                                                                                                       |
 | defaultProject |  string  |     false    | The Google Cloud project ID to use for AlloyDB infrastructure tools.                                                                           |
 | useClientOAuth |  boolean |     false    | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |

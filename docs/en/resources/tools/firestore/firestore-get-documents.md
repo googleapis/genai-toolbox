@@ -23,17 +23,17 @@ such as existence status, creation time, update time, and read time.
 ## Example
 
 ```yaml
-kind: tools
-name: get_user_documents
-type: firestore-get-documents
-source: my-firestore-source
-description: Use this tool to retrieve multiple documents from Firestore.
+tools:
+  get_user_documents:
+    kind: firestore-get-documents
+    source: my-firestore-source
+    description: Use this tool to retrieve multiple documents from Firestore.
 ```
 
 ## Reference
 
 | **field**   |    **type**    | **required** | **description**                                            |
 |-------------|:--------------:|:------------:|------------------------------------------------------------|
-| type        |     string     |     true     | Must be "firestore-get-documents".                         |
+| kind        |     string     |     true     | Must be "firestore-get-documents".                         |
 | source      |     string     |     true     | Name of the Firestore source to retrieve documents from.   |
 | description |     string     |     true     | Description of the tool that is passed to the LLM.         |

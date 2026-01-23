@@ -30,19 +30,19 @@ DDL statements.
 > names, or other parts of the query.
 
 ```yaml
-kind: tools
-name: search-users
-type: sqlite-sql
-source: my-sqlite-db
-description: Search users by name and age
-parameters:
-  - name: name
-    type: string
-    description: The name to search for
-  - name: min_age
-    type: integer
-    description: Minimum age
-statement: SELECT * FROM users WHERE name LIKE ? AND age >= ?
+tools:
+  search-users:
+    kind: sqlite-sql
+    source: my-sqlite-db
+    description: Search users by name and age
+    parameters:
+      - name: name
+        type: string
+        description: The name to search for
+      - name: min_age
+        type: integer
+        description: Minimum age
+    statement: SELECT * FROM users WHERE name LIKE ? AND age >= ?
 ```
 
 ### Example with Template Parameters
@@ -54,29 +54,29 @@ statement: SELECT * FROM users WHERE name LIKE ? AND age >= ?
 > [templateParameters](..#template-parameters).
 
 ```yaml
-kind: tools
-name: list_table
-type: sqlite-sql
-source: my-sqlite-db
-statement: |
-  SELECT * FROM {{.tableName}};
-description: |
-  Use this tool to list all information from a specific table.
-  Example:
-  {{
-      "tableName": "flights",
-  }}
-templateParameters:
-  - name: tableName
-    type: string
-    description: Table to select from
+tools:
+ list_table:
+    kind: sqlite-sql
+    source: my-sqlite-db
+    statement: |
+      SELECT * FROM {{.tableName}};
+    description: |
+      Use this tool to list all information from a specific table.
+      Example:
+      {{
+          "tableName": "flights",
+      }}
+    templateParameters:
+      - name: tableName
+        type: string
+        description: Table to select from
 ```
 
 ## Reference
 
 | **field**          |                   **type**                   | **required** | **description**                                                                                                                        |
 |--------------------|:--------------------------------------------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------|
-| type               |                    string                    |     true     | Must be "sqlite-sql".                                                                                                                  |
+| kind               |                    string                    |     true     | Must be "sqlite-sql".                                                                                                                  |
 | source             |                    string                    |     true     | Name of the source the SQLite source configuration.                                                                                    |
 | description        |                    string                    |     true     | Description of the tool that is passed to the LLM.                                                                                     |
 | statement          |                    string                    |     true     | The SQL statement to execute.                                                                                                          |

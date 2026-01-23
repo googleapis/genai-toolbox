@@ -47,13 +47,12 @@ Before you begin, ensure you have the following:
 ### Tool Naming Conventions
 
 This section details the purpose and conventions for MCP Toolbox's tools naming
-properties, **tool name** and **tool type**.
+properties, **tool name** and **tool kind**.
 
 ```
-kind: tools
-name: cancel_hotel <- tool name
-type: postgres-sql  <- tool type
-source: my_pg_source
+cancel_hotel: <- tool name
+    kind: postgres-sql  <- tool kind
+    source: my_pg_source
 ```
 
 #### Tool Name
@@ -77,17 +76,17 @@ The following guidelines apply to tool names:
   to a function) until they can be validated through extensive testing to ensure
   they do not negatively impact agent's performances.
 
-#### Tool Type
+#### Tool Kind
 
-Tool type serves as a category or type that a user can assign to a tool.
+Tool kind serves as a category or type that a user can assign to a tool.
 
-The following guidelines apply to tool types:
+The following guidelines apply to tool kinds:
 
-* Should use hyphens over underscores (e.g. `firestore-list-collections` or
-  `firestore_list_collections`).
+* Should user hyphens over underscores (e.g. `firestore-list-collections` or
+  `firestore_list_colelctions`).
 * Should use product name in name (e.g. `firestore-list-collections` over
   `list-collections`).
-* Changes to tool type are breaking changes and should be avoided.
+* Changes to tool kind are breaking changes and should be avoided.
 
 ## Testing
 

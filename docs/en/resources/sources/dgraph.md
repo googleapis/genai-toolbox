@@ -40,14 +40,14 @@ and user credentials for that namespace.
 ## Example
 
 ```yaml
-kind: sources
-name: my-dgraph-source
-type: dgraph
-dgraphUrl: https://xxxx.cloud.dgraph.io
-user: ${USER_NAME}
-password: ${PASSWORD}
-apiKey: ${API_KEY}
-namespace : 0
+sources:
+    my-dgraph-source:
+        kind: dgraph
+        dgraphUrl: https://xxxx.cloud.dgraph.io
+        user: ${USER_NAME}
+        password: ${PASSWORD}
+        apiKey: ${API_KEY}
+        namespace : 0
 ```
 
 {{< notice tip >}}
@@ -59,7 +59,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **Field**   | **Type** | **Required** | **Description**                                                                                  |
 |-------------|:--------:|:------------:|--------------------------------------------------------------------------------------------------|
-| type        |  string  |     true     | Must be "dgraph".                                                                                |
+| kind        |  string  |     true     | Must be "dgraph".                                                                                |
 | dgraphUrl   |  string  |     true     | Connection URI (e.g. "<https://xxx.cloud.dgraph.io>", "<https://localhost:8080>").               |
 | user        |  string  |     false    | Name of the Dgraph user to connect as (e.g., "groot").                                           |
 | password    |  string  |     false    | Password of the Dgraph user (e.g., "password").                                                  |

@@ -44,15 +44,15 @@ for more details.
 ## Example
 
 ```yaml
-kind: tools
-name: my_dataform_compiler
-type: dataform-compile-local
-description: Use this tool to compile a local Dataform project.
+tools:  
+  my_dataform_compiler:  
+    kind: dataform-compile-local  
+    description: Use this tool to compile a local Dataform project.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |:------------|:---------|:-------------|:---------------------------------------------------|
-| type        | string   | true         | Must be "dataform-compile-local".                  |
+| kind        | string   | true         | Must be "dataform-compile-local".                  |
 | description | string   | true         | Description of the tool that is passed to the LLM. |

@@ -23,17 +23,17 @@ efficient batch deletion and returns the success status for each document.
 ## Example
 
 ```yaml
-kind: tools
-name: delete_user_documents
-type: firestore-delete-documents
-source: my-firestore-source
-description: Use this tool to delete multiple documents from Firestore.
+tools:
+  delete_user_documents:
+    kind: firestore-delete-documents
+    source: my-firestore-source
+    description: Use this tool to delete multiple documents from Firestore.
 ```
 
 ## Reference
 
 | **field**   |     **type**   | **required** | **description**                                          |
 |-------------|:--------------:|:------------:|----------------------------------------------------------|
-| type        |     string     |     true     | Must be "firestore-delete-documents".                    |
+| kind        |     string     |     true     | Must be "firestore-delete-documents".                    |
 | source      |     string     |     true     | Name of the Firestore source to delete documents from.   |
 | description |     string     |     true     | Description of the tool that is passed to the LLM.       |

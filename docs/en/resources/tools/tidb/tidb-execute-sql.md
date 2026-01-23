@@ -25,17 +25,17 @@ statement against the `source`.
 ## Example
 
 ```yaml
-kind: tools
-name: execute_sql_tool
-type: tidb-execute-sql
-source: my-tidb-instance
-description: Use this tool to execute sql statement.
+tools:
+ execute_sql_tool:
+    kind: tidb-execute-sql
+    source: my-tidb-instance
+    description: Use this tool to execute sql statement.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "tidb-execute-sql".                        |
+| kind        |  string  |     true     | Must be "tidb-execute-sql".                        |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

@@ -23,10 +23,10 @@ applying artificial intelligence and machine learning.
 ## Example
 
 ```yaml
-kind: sources
-name: my-dataplex-source
-type: "dataplex"
-project: "my-project-id"
+sources:
+  my-dataplex-source:
+    kind: "dataplex"
+    project: "my-project-id"
 ```
 
 ## Sample System Prompt
@@ -355,5 +355,5 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 
 | **field** | **type** | **required** | **description**                                                                  |
 |-----------|:--------:|:------------:|----------------------------------------------------------------------------------|
-| type      |  string  |     true     | Must be "dataplex".                                                              |
+| kind      |  string  |     true     | Must be "dataplex".                                                              |
 | project   |  string  |     true     | ID of the GCP project used for quota and billing purposes (e.g. "my-project-id").|

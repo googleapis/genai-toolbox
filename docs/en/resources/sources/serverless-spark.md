@@ -49,17 +49,17 @@ set up your ADC.
 ## Example
 
 ```yaml
-kind: sources
-name: my-serverless-spark-source
-type: serverless-spark
-project: my-project-id
-location: us-central1
+sources:
+  my-serverless-spark-source:
+    kind: serverless-spark
+    project: my-project-id
+    location: us-central1
 ```
 
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                   |
 | --------- | :------: | :----------: | ----------------------------------------------------------------- |
-| type      |  string  |     true     | Must be "serverless-spark".                                       |
+| kind      |  string  |     true     | Must be "serverless-spark".                                       |
 | project   |  string  |     true     | ID of the GCP project with Serverless for Apache Spark resources. |
 | location  |  string  |     true     | Location containing Serverless for Apache Spark resources.        |

@@ -27,16 +27,16 @@ the [official Valkey website](https://valkey.io/topics/quickstart/).
 ## Example
 
 ```yaml
-kind: sources
-name: my-valkey-instance
-type: valkey
-address:
-  - 127.0.0.1:6379
-username: ${YOUR_USERNAME}
-password: ${YOUR_PASSWORD}
-# database: 0
-# useGCPIAM: false
-# disableCache: false
+sources:
+    my-valkey-instance:
+     kind: valkey
+     address:
+       - 127.0.0.1:6379
+     username: ${YOUR_USERNAME}
+     password: ${YOUR_PASSWORD}
+     # database: 0
+     # useGCPIAM: false
+     # disableCache: false
 ```
 
 {{< notice tip >}}
@@ -51,12 +51,12 @@ authentication. Grant your account the required [IAM role][iam] and set
 `useGCPIAM` to `true`:
 
 ```yaml
-kind: sources
-name: my-valkey-instance
-type: valkey
-address:
-  - 127.0.0.1:6379
-useGCPIAM: true
+sources:
+    my-valkey-instance:
+     kind: valkey
+     address:
+       - 127.0.0.1:6379
+     useGCPIAM: true
 ```
 
 [iam]: https://cloud.google.com/memorystore/docs/valkey/about-iam-auth
@@ -65,7 +65,7 @@ useGCPIAM: true
 
 | **field**    | **type** | **required** | **description**                                                                                                                  |
 |--------------|:--------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------|
-| type         |  string  |     true     | Must be "valkey".                                                                                                                |
+| kind         |  string  |     true     | Must be "valkey".                                                                                                                |
 | address      | []string |     true     | Endpoints for the Valkey instance to connect to.                                                                                 |
 | username     |  string  |    false     | If you are using a non-default user, specify the user name here. If you are using Memorystore for Valkey, leave this field blank |
 | password     |  string  |    false     | Password for the Valkey instance                                                                                                 |

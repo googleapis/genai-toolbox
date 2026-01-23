@@ -32,17 +32,17 @@ The tool takes the following input parameters:
 ## Example
 
 ```yaml
-kind: tools
-name: mssql_list_tables
-type: mssql-list-tables
-source: mssql-source
-description: Use this tool to retrieve schema information for all or specified tables. Output format can be simple (only table names) or detailed.
+tools:
+  mssql_list_tables:
+    kind: mssql-list-tables
+    source: mssql-source
+    description: Use this tool to retrieve schema information for all or specified tables. Output format can be simple (only table names) or detailed.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
-| type        |  string  |     true     | Must be "mssql-list-tables".                         |
+| kind        |  string  |     true     | Must be "mssql-list-tables".                         |
 | source      |  string  |     true     | Name of the source the SQL should execute on.        |
 | description |  string  |     true     | Description of the tool that is passed to the agent. |

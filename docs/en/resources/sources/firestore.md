@@ -61,17 +61,17 @@ database named `(default)` will be used.
 ## Example
 
 ```yaml
-kind: sources
-name: my-firestore-source
-type: "firestore"
-project: "my-project-id"
-# database: "my-database"  # Optional, defaults to "(default)"
+sources:
+  my-firestore-source:
+    kind: "firestore"
+    project: "my-project-id"
+    # database: "my-database"  # Optional, defaults to "(default)"
 ```
 
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                                                          |
 |-----------|:--------:|:------------:|----------------------------------------------------------------------------------------------------------|
-| type      |  string  |     true     | Must be "firestore".                                                                                     |
+| kind      |  string  |     true     | Must be "firestore".                                                                                     |
 | project   |  string  |     true     | Id of the GCP project that contains the Firestore database (e.g. "my-project-id").                       |
 | database  |  string  |     false    | Name of the Firestore database to connect to. Defaults to "(default)" if not specified.                  |

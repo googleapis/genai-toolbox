@@ -22,18 +22,18 @@ criteria.
 ## Example
 
 ```yaml
-kind: tools
-name: search_dicom_instances
-type: cloud-healthcare-search-dicom-instances
-source: my-healthcare-source
-description: Use this tool to search for DICOM instances in the DICOM store.
+tools:
+  search_dicom_instances:
+    kind: cloud-healthcare-search-dicom-instances
+    source: my-healthcare-source
+    description: Use this tool to search for DICOM instances in the DICOM store.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| type        |  string  |     true     | Must be "cloud-healthcare-search-dicom-instances". |
+| kind        |  string  |     true     | Must be "cloud-healthcare-search-dicom-instances". |
 | source      |  string  |     true     | Name of the healthcare source.                     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 

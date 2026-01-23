@@ -176,17 +176,17 @@ To connect using IAM authentication:
 ## Example
 
 ```yaml
-kind: sources
-name: my-alloydb-pg-source
-type: alloydb-postgres
-project: my-project-id
-region: us-central1
-cluster: my-cluster
-instance: my-instance
-database: my_db
-user: ${USER_NAME}
-password: ${PASSWORD}
-# ipType: "public"
+sources:
+    my-alloydb-pg-source:
+        kind: alloydb-postgres
+        project: my-project-id
+        region: us-central1
+        cluster: my-cluster
+        instance: my-instance
+        database: my_db
+        user: ${USER_NAME}
+        password: ${PASSWORD}
+        # ipType: "public"
 ```
 
 {{< notice tip >}}
@@ -198,7 +198,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                                                                          |
 |-----------|:--------:|:------------:|--------------------------------------------------------------------------------------------------------------------------|
-| type      |  string  |     true     | Must be "alloydb-postgres".                                                                                              |
+| kind      |  string  |     true     | Must be "alloydb-postgres".                                                                                              |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                            |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                                             |
 | cluster   |  string  |     true     | Name of the AlloyDB cluster (e.g. "my-cluster").                                                                         |
