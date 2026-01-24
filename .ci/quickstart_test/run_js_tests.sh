@@ -77,11 +77,24 @@ run_orch_test() {
     setup_orch_table
 
     cd "$orch_dir"
+
+    echo "--- Debugging npm config for $orch_name ---"
+    npm config list
+
+    echo "--- Active Registry for $orch_name ---"
+    npm config get registry
+
+    echo "--- Inspecting .npmrc files ---"
+    [ -f ".npmrc" ] && echo "Local .npmrc content:" && cat .npmrc
+    [ -f "$HOME/.npmrc" ] && echo "Global .npmrc content:" && cat "$HOME/.npmrc"
+
+    export GPKG_DEBUG=1
+
     echo "Installing dependencies for $orch_name..."
     if [ -f "package-lock.json" ]; then
-      npm ci
+      npm ci --loglevel verbose
     else
-      npm install
+      npm install --loglevel verbose
     fi
 
     cd ..
