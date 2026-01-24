@@ -123,7 +123,7 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 		"kind":        OracleToolKind,
 		"source":      "my-instance", // Uses the existing test database source
 		"statement":   updateStmt,
-		"readonly":    false, // This flag triggers the DML execution path in oracle.go
+		"readOnly":    false, // This flag triggers the DML execution path in oracle.go
 		"description": "Update user name by ID.",
 		"parameters": []map[string]any{
 			{"name": "name", "type": "string"},

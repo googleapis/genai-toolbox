@@ -19,6 +19,10 @@ The specified SQL statement is executed using [prepared statements][oracle-stmt]
 for security and performance. It expects parameter placeholders in the SQL query
 to be in the native Oracle format (e.g., `:1`, `:2`).
 
+By default, tools are configured as **read-only** (SAFE mode). To execute data modification 
+statements (INSERT, UPDATE, DELETE), you must explicitly set the `readOnly` 
+field to `false`.
+
 [oracle-stmt]: https://docs.oracle.com/javase/tutorial/jdbc/basics/prepared.html
 
 ## Example
@@ -54,4 +58,21 @@ tools:
       - name: flight_number
         type: string
         description: 1 to 4 digit number
+
+  update_flight_status:
+    kind: oracle-sql
+    source: my-oracle-instance
+    readOnly: false  # Required for INSERT/UPDATE/DELETE
+    statement: |
+      UPDATE flights 
+      SET status = :1 
+      WHERE airline = :2 AND flight_number = :3
+    description: Updates the status of a specific flight.
+    parameters:
+      - name: status
+        type: string
+      - name: airline
+        type: string
+      - name: flight_number
+        type: string
 ```
