@@ -87,28 +87,41 @@ using a TNS (Transparent Network Substrate) alias.
 
 ## Examples
 
-This example demonstrates the four connection methods you could choose from:
+### 1. Basic Connection (Host, Port, and Service Name)
 
 ```yaml
-kind: sources
-name: my-oracle-source
-type: oracle
+sources:
+    my-oracle-source:
+        kind: oracle
+        host: 127.0.0.1
+        port: 1521
+        serviceName: XEPDB1
+        user: ${USER_NAME}
+        password: ${PASSWORD}
+```
 
-# --- Choose one connection method ---
-# 1. Host, Port, and Service Name
-host: 127.0.0.1
-port: 1521
-serviceName: XEPDB1
+### 2. Direct Connection String
 
-# 2. Direct Connection String
-connectionString: "127.0.0.1:1521/XEPDB1"
+```yaml
+sources:
+    my-oracle-source:
+        kind: oracle
+        connectionString: "127.0.0.1:1521/XEPDB1"
+        user: ${USER_NAME}
+        password: ${PASSWORD}
+```
 
-# 3. TNS Alias (requires tnsnames.ora)
-tnsAlias: "MY_DB_ALIAS"
-tnsAdmin: "/opt/oracle/network/admin" # Optional: overrides TNS_ADMIN env var
+### 3. TNS Alias (requires tnsnames.ora)
 
-user: ${USER_NAME}
-password: ${PASSWORD}
+```yaml
+sources:
+    my-oracle-source:
+        kind: oracle
+        tnsAlias: "MY_DB_ALIAS"
+        tnsAdmin: "/opt/oracle/network/admin" # Optional: overrides TNS_ADMIN env var
+        user: ${USER_NAME}
+        password: ${PASSWORD}
+        useOCI: true # tnsAlias requires useOCI to be true
 
 # Optional: Set to true to use the OCI-based driver for advanced features (Requires Oracle Instant Client)
 ```
@@ -168,3 +181,4 @@ instead of hardcoding your secrets into the configuration file.
 | tnsAlias         |  string  |    false     | A TNS alias from a `tnsnames.ora` file. Use as an alternative to `host`/`port` or `connectionString`.                                                                                   |
 | tnsAdmin         |  string  |    false     | Path to the directory containing the `tnsnames.ora` file. This overrides the `TNS_ADMIN` environment variable if it is set.                                                             |
 | useOCI           |   bool   |    false     | If true, uses the OCI-based driver (godror) which supports Oracle Wallet/Kerberos but requires the Oracle Instant Client libraries to be installed. Defaults to false (pure Go driver). |
+| walletLocation   |  string  |    false     | Path to the directory containing the wallet files for the pure Go driver (`useOCI: false`).                                                                                             |

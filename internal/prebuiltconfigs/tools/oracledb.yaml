@@ -33,8 +33,7 @@ tools:
         kind: oracle-sql
         source: oracle-source
         description: "List the top N (default 50) currently running database sessions (STATUS='ACTIVE'), showing SID, OS User, Program, and the current SQL statement text."
-        statement:  | 
-         SELECT
+        statement:  SELECT
                 s.sid,
                 s.serial#,
                 s.username,
@@ -64,8 +63,7 @@ tools:
         kind: oracle-sql
         source: oracle-source
         description: "List the top N SQL statements from the library cache based on a chosen resource metric (CPU, I/O, or Elapsed Time), following is an example of the sql" 
-        statement: | 
-            SELECT
+        statement: SELECT
                 sql_id,
                 executions,
                 buffer_gets,
@@ -80,8 +78,7 @@ tools:
         kind: oracle-sql
         source: oracle-source
         description: "List tablespace names, total size, free space, and used percentage to monitor storage utilization."
-        statement: |
-            SELECT
+        statement: SELECT
                 t.tablespace_name,
                 TO_CHAR(t.total_bytes / 1024 / 1024, '99,999.00') AS total_mb,
                 TO_CHAR(SUM(d.bytes) / 1024 / 1024, '99,999.00') AS free_mb,
