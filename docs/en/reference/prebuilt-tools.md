@@ -377,10 +377,10 @@ See [Usage Examples](../reference/cli.md#examples).
         entries.
     *   **Dataplex Editor** (`roles/dataplex.editor`) to modify entries.
 *   **Tools:**
-    *   `dataplex_search_entries`: Searches for entries in Dataplex Catalog.
-    *   `dataplex_lookup_entry`: Retrieves a specific entry from Dataplex
+    *   `search_entries`: Searches for entries in Dataplex Catalog.
+    *   `lookup_entry`: Retrieves a specific entry from Dataplex
         Catalog.
-    *   `dataplex_search_aspect_types`: Finds aspect types relevant to the
+    *   `search_aspect_types`: Finds aspect types relevant to the
         query.
 
 ## Firestore
