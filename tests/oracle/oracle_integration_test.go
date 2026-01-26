@@ -26,7 +26,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/googleapis/genai-toolbox/internal/sources/oracle"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/tests"
 )
 
@@ -37,8 +39,7 @@ var (
 	oracleUser       = os.Getenv("ORACLE_USER")
 	oraclePassword   = os.Getenv("ORACLE_PASSWORD")
 	oracleService    = os.Getenv("ORACLE_SERVICE")
-	// ORACLE_PORT is a string in os.Getenv, but int in config
-	oraclePort       = os.Getenv("ORACLE_PORT")
+	oraclePort       = os.Getenv("ORACLE_PORT") // ORACLE_PORT is a string in os.Getenv, but int in config
 	oracleUseOCI     = os.Getenv("ORACLE_USE_OCI")
 	oracleWalletLocation = os.Getenv("ORACLE_WALLET_LOCATION")
 	oracleTnsAdmin   = os.Getenv("ORACLE_TNS_ADMIN")
@@ -71,25 +72,6 @@ func getOracleVars(t *testing.T) map[string]any {
 	}
 }
 
-// Copied over from oracle.go
-func initOracleConnection(ctx context.Context, user, pass, connStr string) (*sql.DB, error) {
-	// Build the full Oracle connection string for godror driver
- 	fullConnStr := fmt.Sprintf(`user="%s" password="%s" connectString="%s"`,
- 		user, pass, connStr)
-
-	db, err := sql.Open("godror", fullConnStr)
-	if err != nil {
-		return nil, fmt.Errorf("unable to open Oracle connection: %w", err)
-	}
-
-	err = db.PingContext(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("unable to ping Oracle connection: %w", err)
-	}
-
-	return db, nil
-}
-
 func TestOracleTools(t *testing.T) {
 	sourceConfig := getOracleVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
@@ -97,8 +79,19 @@ func TestOracleTools(t *testing.T) {
 
 	var args []string
 
-	connStr := fmt.Sprintf("%s:%s/%s", oracleHost, oraclePort, oracleService)
-	db, err := initOracleConnection(ctx, oracleUser, oraclePassword, connStr)
+	logger, err := util.NewLogger(os.Stderr, "info")
+	if err != nil {
+		t.Fatalf("unable to create logger: %v", err)
+	}
+	ctx = util.ContextWithLogger(ctx, logger)
+
+	cfg := getOracleConfigFromEnv(t)
+	source, err := cfg.Initialize(ctx, nil)
+	if err != nil {
+		t.Fatalf("unable to initialize oracle source: %v", err)
+	}
+	db := source.(*oracle.Source).DB
+
 	if err != nil {
 		t.Fatalf("unable to create Oracle connection pool: %s", err)
 	}
@@ -170,6 +163,33 @@ func TestOracleTools(t *testing.T) {
 	})
 }
 
+func getOracleConfigFromEnv(t *testing.T) oracle.Config {
+	t.Helper()
+	vars := getOracleVars(t)
+	port, err := strconv.Atoi(vars["port"].(string))
+	if err != nil && vars["port"].(string) != "" {
+		t.Fatalf("invalid ORACLE_PORT: %v", err)
+	}
+
+	useOCI, err := strconv.ParseBool(vars["useOCI"].(string))
+	if err != nil && vars["useOCI"].(string) != "" {
+		useOCI = false
+	}
+
+	return oracle.Config{
+		Name:             "test-oracle-instance",
+		Kind:             vars["kind"].(string),
+		User:             vars["user"].(string),
+		Password:         vars["password"].(string),
+		Host:             vars["host"].(string),
+		Port:             port,
+		ServiceName:      vars["service"].(string),
+		WalletLocation:   vars["walletLocation"].(string),
+		TnsAdmin:         vars["tnsAdmin"].(string),
+		UseOCI:           useOCI,
+	}
+}
+
 func TestOracleConnectionPureGoWithWallet(t *testing.T) {
 	t.Parallel()
 	// This test expects the connection to fail because the wallet file won't exist.
@@ -180,9 +200,9 @@ func TestOracleConnectionPureGoWithWallet(t *testing.T) {
 		oracleHost, oracleUser, oraclePassword, oracleService, oraclePort, // Use existing base connection details
 		"", // connectionString
 		"", // tnsAlias
-		"", // tnsAdmin
+		"",                        // tnsAdmin
 		"/tmp/nonexistent_wallet", // walletLocation
-		oracleUseOCI,                     // useOCI
+		false,                     // useOCI
 	)
 	defer cleanup()
 
@@ -206,6 +226,36 @@ func TestOracleConnectionPureGoWithWallet(t *testing.T) {
 	t.Logf("Connection failed as expected (Pure Go with Wallet): %v", err)
 }
 
+func setOracleEnv(t *testing.T, host, user, password, service, port, connStr, tnsAlias, tnsAdmin, walletLocation string, useOCI bool) func() {
+	t.Helper()
+
+	original := map[string]string{
+		"ORACLE_HOST":            os.Getenv("ORACLE_HOST"),
+		"ORACLE_USER":            os.Getenv("ORACLE_USER"),
+		"ORACLE_PASSWORD":        os.Getenv("ORACLE_PASSWORD"),
+		"ORACLE_SERVICE":         os.Getenv("ORACLE_SERVICE"),
+		"ORACLE_PORT":            os.Getenv("ORACLE_PORT"),
+		"ORACLE_TNS_ADMIN":       os.Getenv("ORACLE_TNS_ADMIN"),
+		"ORACLE_WALLET_LOCATION": os.Getenv("ORACLE_WALLET_LOCATION"),
+		"ORACLE_USE_OCI":         os.Getenv("ORACLE_USE_OCI"),
+	}
+
+	os.Setenv("ORACLE_HOST", host)
+	os.Setenv("ORACLE_USER", user)
+	os.Setenv("ORACLE_PASSWORD", password)
+	os.Setenv("ORACLE_SERVICE", service)
+	os.Setenv("ORACLE_PORT", port)
+	os.Setenv("ORACLE_TNS_ADMIN", tnsAdmin)
+	os.Setenv("ORACLE_WALLET_LOCATION", walletLocation)
+	os.Setenv("ORACLE_USE_OCI", fmt.Sprintf("%v", useOCI))
+
+	return func() {
+		for k, v := range original {
+			os.Setenv(k, v)
+		}
+	}
+}
+
 func TestOracleConnectionOCI(t *testing.T) {
 	t.Parallel()
 	// This test verifies that the useOCI=true parameter is correctly passed to the OCI driver.
@@ -217,8 +267,8 @@ func TestOracleConnectionOCI(t *testing.T) {
 		"",    // connectionString
 		"",    // tnsAlias
 		"",    // tnsAdmin
-		"",    // walletLocation
-		true,  // useOCI
+		"", // walletLocation
+		"true",  // useOCI
 	)
 	defer cleanup()
 
