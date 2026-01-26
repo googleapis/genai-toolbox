@@ -23,14 +23,12 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"reflect"
 	"regexp"
 	"runtime"
 	"strings"
 	"testing"
 	"time"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 
 	"github.com/googleapis/genai-toolbox/internal/auth/google"
@@ -497,18 +495,6 @@ func TestDefaultLogLevel(t *testing.T) {
 }
 
 func TestConvertToolsFile(t *testing.T) {
-	ctx, cancelCtx := context.WithTimeout(context.Background(), time.Minute)
-	defer cancelCtx()
-	pr, pw := io.Pipe()
-	defer pw.Close()
-	defer pr.Close()
-
-	logger, err := log.NewStdLogger(pw, pw, "DEBUG")
-	if err != nil {
-		t.Fatalf("failed to setup logger %s", err)
-	}
-	ctx = util.WithLogger(ctx, logger)
-
 	tcs := []struct {
 		desc   string
 		in     string
@@ -537,8 +523,7 @@ func TestConvertToolsFile(t *testing.T) {
                     kind: postgres-sql
                     source: my-pg-instance
                     description: some description
-                    statement: |
-                      SELECT * FROM SQL_STATEMENT;
+                    statement: SELECT * FROM SQL_STATEMENT;
                     parameters:
                         - name: country
                           type: string
@@ -560,8 +545,7 @@ func TestConvertToolsFile(t *testing.T) {
                     model: gemini-embedding-001
                     apiKey: some-key
                     dimension: 768`,
-			want: `
-kind: sources
+			want: `kind: sources
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -581,8 +565,7 @@ name: example_tool
 type: postgres-sql
 source: my-pg-instance
 description: some description
-statement: |
-    SELECT * FROM SQL_STATEMENT;
+statement: SELECT * FROM SQL_STATEMENT;
 parameters:
 - name: country
   type: string
@@ -607,18 +590,18 @@ name: gemini-model
 type: gemini
 model: gemini-embedding-001
 apiKey: some-key
-dimension: 768`,
+dimension: 768
+`,
 		},
 		{
-			desc: "preserve resource order with grouping",
+			desc: "preserve resource order",
 			in: `
             tools:
                 example_tool:
                     kind: postgres-sql
                     source: my-pg-instance
                     description: some description
-                    statement: |
-                        SELECT * FROM SQL_STATEMENT;
+                    statement: SELECT * FROM SQL_STATEMENT;
                     parameters:
                         - name: country
                           type: string
@@ -640,17 +623,15 @@ dimension: 768`,
                 example_toolset:
                     - example_tool
             authSources:
-                my-google-auth:
+                my-google-auth2:
                     kind: google
                     clientId: testing-id`,
-			want: `
-kind: tools
+			want: `kind: tools
 name: example_tool
 type: postgres-sql
 source: my-pg-instance
 description: some description
-statement: |
-    SELECT * FROM SQL_STATEMENT;
+statement: SELECT * FROM SQL_STATEMENT;
 parameters:
 - name: country
   type: string
@@ -671,20 +652,203 @@ name: my-google-auth
 type: google
 clientId: testing-id
 ---
+kind: toolsets
+name: example_toolset
+tools:
+- example_tool
+---
+kind: authServices
+name: my-google-auth2
+type: google
+clientId: testing-id
+`,
+		},
+		{
+			desc: "convert combination of v1 and v2",
+			in: `
+            sources:
+                my-pg-instance:
+                    kind: cloud-sql-postgres
+                    project: my-project
+                    region: my-region
+                    instance: my-instance
+                    database: my_db
+                    user: my_user
+                    password: my_pass
+            authServices:
+                my-google-auth:
+                    kind: google
+                    clientId: testing-id
+            tools:
+                example_tool:
+                    kind: postgres-sql
+                    source: my-pg-instance
+                    description: some description
+                    statement: SELECT * FROM SQL_STATEMENT;
+                    parameters:
+                        - name: country
+                          type: string
+                          description: some description
+            toolsets:
+                example_toolset:
+                    - example_tool
+            prompts:
+                code_review:
+                    description: ask llm to analyze code quality
+                    messages:
+                      - content: "please review the following code for quality: {{.code}}"
+                    arguments:
+                        - name: code
+                          description: the code to review
+            embeddingModels:
+                gemini-model:
+                    kind: gemini
+                    model: gemini-embedding-001
+                    apiKey: some-key
+                    dimension: 768
+---
+            kind: sources
+            name: my-pg-instance2
+            type: cloud-sql-postgres
+            project: my-project
+            region: my-region
+            instance: my-instance
+---
+            kind: authServices
+            name: my-google-auth2
+            type: google
+            clientId: testing-id
+---
+            kind: tools
+            name: example_tool2
+            type: postgres-sql
+            source: my-pg-instance
+            description: some description
+            statement: SELECT * FROM SQL_STATEMENT;
+            parameters:
+            - name: country
+              type: string
+              description: some description
+---
+            kind: toolsets
+            name: example_toolset2
+            tools:
+            - example_tool
+---
+            tools:
+            - example_tool
+            kind: toolsets
+            name: example_toolset3
+---
+            kind: prompts
+            name: code_review2
+            description: ask llm to analyze code quality
+            messages:
+            - content: "please review the following code for quality: {{.code}}"
+            arguments:
+            - name: code
+              description: the code to review
+---
+            kind: embeddingModels
+            name: gemini-model2
+            type: gemini`,
+			want: `kind: sources
+name: my-pg-instance
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: my_user
+password: my_pass
+---
 kind: authServices
 name: my-google-auth
 type: google
 clientId: testing-id
 ---
+kind: tools
+name: example_tool
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
 kind: toolsets
 name: example_toolset
 tools:
-- example_tool`,
+- example_tool
+---
+kind: prompts
+name: code_review
+description: ask llm to analyze code quality
+messages:
+- content: "please review the following code for quality: {{.code}}"
+arguments:
+- name: code
+  description: the code to review
+---
+kind: embeddingModels
+name: gemini-model
+type: gemini
+model: gemini-embedding-001
+apiKey: some-key
+dimension: 768
+---
+kind: sources
+name: my-pg-instance2
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+---
+kind: authServices
+name: my-google-auth2
+type: google
+clientId: testing-id
+---
+kind: tools
+name: example_tool2
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
+kind: toolsets
+name: example_toolset2
+tools:
+- example_tool
+---
+tools:
+- example_tool
+kind: toolsets
+name: example_toolset3
+---
+kind: prompts
+name: code_review2
+description: ask llm to analyze code quality
+messages:
+- content: "please review the following code for quality: {{.code}}"
+arguments:
+- name: code
+  description: the code to review
+---
+kind: embeddingModels
+name: gemini-model2
+type: gemini
+`,
 		},
 		{
 			desc: "no convertion needed",
-			in: `
-kind: sources
+			in: `kind: sources
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -699,8 +863,7 @@ name: example_tool
 type: postgres-sql
 source: my-pg-instance
 description: some description
-statement: |
-    SELECT * FROM SQL_STATEMENT;
+statement: SELECT * FROM SQL_STATEMENT;
 parameters:
 - name: country
   type: string
@@ -710,8 +873,7 @@ kind: toolsets
 name: example_toolset
 tools:
 - example_tool`,
-			want: `
-kind: sources
+			want: `kind: sources
 name: my-pg-instance
 type: cloud-sql-postgres
 project: my-project
@@ -726,8 +888,7 @@ name: example_tool
 type: postgres-sql
 source: my-pg-instance
 description: some description
-statement: |
-    SELECT * FROM SQL_STATEMENT;
+statement: SELECT * FROM SQL_STATEMENT;
 parameters:
 - name: country
   type: string
@@ -736,67 +897,32 @@ parameters:
 kind: toolsets
 name: example_toolset
 tools:
-- example_tool`,
+- example_tool
+`,
 		},
 		{
-			desc:   "invalid source",
-			in:     `sources: invalid`,
-			isErr:  true,
-			errStr: "'sources' is not a map",
+			desc: "invalid source",
+			in:   `sources: invalid`,
+			want: "",
 		},
 		{
-			desc:   "invalid toolset",
-			in:     `toolsets: invalid`,
-			isErr:  true,
-			errStr: "'toolsets' is not a map",
+			desc: "invalid toolset",
+			in:   `toolsets: invalid`,
+			want: "",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			output, err := convertToolsFile(ctx, []byte(tc.in))
-			if tc.isErr {
-				if err == nil {
-					t.Fatalf("missing error: %s", tc.errStr)
-				}
-				if err.Error() != tc.errStr {
-					t.Fatalf("invalid error string: got %s, want %s", err, tc.errStr)
-				}
-				return
-			}
+			output, err := convertToolsFile([]byte(tc.in))
 			if err != nil {
 				t.Fatalf("unexpected error: %s", err)
 			}
 
-			var docs1, docs2 []yaml.MapSlice
-			if docs1, err = decodeToMapSlice(string(output)); err != nil {
-				t.Fatalf("error decoding output: %s", err)
-			}
-			if docs2, err = decodeToMapSlice(tc.want); err != nil {
-				t.Fatalf("Error decoding want: %s", err)
-			}
-			if !reflect.DeepEqual(docs1, docs2) {
-				t.Fatalf("incorrect output: got %s, want %s", string(output), tc.want)
+			if diff := cmp.Diff(string(output), tc.want); diff != "" {
+				t.Fatalf("incorrect toolsets parse: diff %v", diff)
 			}
 		})
 	}
-}
-
-func decodeToMapSlice(data string) ([]yaml.MapSlice, error) {
-	// ensures that the order is correct
-	var docs []yaml.MapSlice
-	decoder := yaml.NewDecoder(strings.NewReader(data))
-	for {
-		var doc yaml.MapSlice
-		err := decoder.Decode(&doc)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-		docs = append(docs, doc)
-	}
-	return docs, nil
 }
 
 func TestParseToolFile(t *testing.T) {
