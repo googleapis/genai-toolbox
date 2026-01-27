@@ -54,7 +54,7 @@ func getSingleStoreVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     SingleStoreSourceType,
+		"type":     SingleStoreSourceType,
 		"host":     SingleStoreHost,
 		"port":     SingleStorePort,
 		"database": SingleStoreDatabase,
@@ -85,7 +85,7 @@ func getSingleStoreAuthToolInfo(tableName string) (string, string, string, []any
 	return createStatement, insertStatement, toolStatement, params
 }
 
-// getSingleStoreTmplToolStatement returns statements and param for template parameter test cases for singlestore-sql kind
+// getSingleStoreTmplToolStatement returns statements and param for template parameter test cases for singlestore-sql type
 func getSingleStoreTmplToolStatement() (string, string) {
 	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ?"
 	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"
@@ -151,12 +151,12 @@ func addSingleStoreExecuteSQLConfig(t *testing.T, config map[string]any) map[str
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "singlestore-execute-sql",
+		"type":        "singlestore-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "singlestore-execute-sql",
+		"type":        "singlestore-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{

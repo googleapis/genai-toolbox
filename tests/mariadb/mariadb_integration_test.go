@@ -60,7 +60,7 @@ func getMariaDBVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     MariaDBSourceType,
+		"type":     MariaDBSourceType,
 		"host":     MariaDBHost,
 		"port":     MariaDBPort,
 		"database": MariaDBDatabase,

@@ -46,7 +46,7 @@ func getHTTPSourceConfig(t *testing.T) map[string]any {
 	idToken = "Bearer " + idToken
 
 	return map[string]any{
-		"kind":    HttpSourceType,
+		"type":    HttpSourceType,
 		"headers": map[string]string{"Authorization": idToken},
 	}
 }
@@ -491,13 +491,13 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 		},
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
-				"kind":     "google",
+				"type":     "google",
 				"clientId": tests.ClientId,
 			},
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        toolType,
+				"type":        toolType,
 				"path":        "/tool0",
 				"method":      "POST",
 				"source":      "my-instance",
@@ -505,7 +505,7 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 				"description": "Simple tool to test end to end functionality.",
 			},
 			"my-tool": map[string]any{
-				"kind":        toolType,
+				"type":        toolType,
 				"source":      "my-instance",
 				"method":      "GET",
 				"path":        "/tool1",
@@ -521,7 +521,7 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 				"headers":    map[string]string{"Content-Type": "application/json"},
 			},
 			"my-tool-by-id": map[string]any{
-				"kind":        toolType,
+				"type":        toolType,
 				"source":      "my-instance",
 				"method":      "GET",
 				"path":        "/tool1id",
@@ -531,7 +531,7 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 				"headers": map[string]string{"Content-Type": "application/json"},
 			},
 			"my-tool-by-name": map[string]any{
-				"kind":        toolType,
+				"type":        toolType,
 				"source":      "my-instance",
 				"method":      "GET",
 				"path":        "/tool1name",
@@ -541,7 +541,7 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 				"headers": map[string]string{"Content-Type": "application/json"},
 			},
 			"my-query-param-tool": map[string]any{
-				"kind":        toolType,
+				"type":        toolType,
 				"source":      "my-instance",
 				"method":      "GET",
 				"path":        "/toolQueryTest",
@@ -553,7 +553,7 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 				},
 			},
 			"my-auth-tool": map[string]any{
-				"kind":        toolType,
+				"type":        toolType,
 				"source":      "my-instance",
 				"method":      "GET",
 				"path":        "/tool2",
@@ -565,7 +565,7 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 				},
 			},
 			"my-auth-required-tool": map[string]any{
-				"kind":         toolType,
+				"type":         toolType,
 				"source":       "my-instance",
 				"method":       "POST",
 				"path":         "/tool0",
@@ -574,7 +574,7 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 				"authRequired": []string{"my-google-auth"},
 			},
 			"my-advanced-tool": map[string]any{
-				"kind":        toolType,
+				"type":        toolType,
 				"source":      "other-instance",
 				"method":      "get",
 				"path":        "/{{.path}}?id=2",

@@ -61,7 +61,7 @@ func getAlloyDBPgVars(t *testing.T) map[string]any {
 		t.Fatal("'ALLOYDB_POSTGRES_PASS' not set")
 	}
 	return map[string]any{
-		"kind":     AlloyDBPostgresSourceType,
+		"type":     AlloyDBPostgresSourceType,
 		"project":  AlloyDBPostgresProject,
 		"cluster":  AlloyDBPostgresCluster,
 		"instance": AlloyDBPostgresInstance,
@@ -239,7 +239,7 @@ func TestAlloyDBPgIAMConnection(t *testing.T) {
 	serviceAccountEmail := strings.TrimSuffix(tests.ServiceAccountEmail, ".gserviceaccount.com")
 
 	noPassSourceConfig := map[string]any{
-		"kind":     AlloyDBPostgresSourceType,
+		"type":     AlloyDBPostgresSourceType,
 		"project":  AlloyDBPostgresProject,
 		"cluster":  AlloyDBPostgresCluster,
 		"instance": AlloyDBPostgresInstance,
@@ -249,7 +249,7 @@ func TestAlloyDBPgIAMConnection(t *testing.T) {
 	}
 
 	noUserSourceConfig := map[string]any{
-		"kind":     AlloyDBPostgresSourceType,
+		"type":     AlloyDBPostgresSourceType,
 		"project":  AlloyDBPostgresProject,
 		"cluster":  AlloyDBPostgresCluster,
 		"instance": AlloyDBPostgresInstance,
@@ -259,7 +259,7 @@ func TestAlloyDBPgIAMConnection(t *testing.T) {
 	}
 
 	noUserNoPassSourceConfig := map[string]any{
-		"kind":     AlloyDBPostgresSourceType,
+		"type":     AlloyDBPostgresSourceType,
 		"project":  AlloyDBPostgresProject,
 		"cluster":  AlloyDBPostgresCluster,
 		"instance": AlloyDBPostgresInstance,

@@ -39,7 +39,7 @@ func getValkeyVars(t *testing.T) map[string]any {
 		t.Fatal("'VALKEY_ADDRESS' not set")
 	}
 	return map[string]any{
-		"kind":         ValkeySourceType,
+		"type":         ValkeySourceType,
 		"address":      []string{ValkeyAddress},
 		"disableCache": true,
 	}

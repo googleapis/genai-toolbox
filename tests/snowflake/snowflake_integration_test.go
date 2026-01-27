@@ -65,7 +65,7 @@ func getSnowflakeVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":      SnowflakeSourceType,
+		"type":      SnowflakeSourceType,
 		"account":   SnowflakeAccount,
 		"user":      SnowflakeUser,
 		"password":  SnowflakePassword,
@@ -173,13 +173,13 @@ func addSnowflakeExecuteSqlConfig(t *testing.T, config map[string]any) map[strin
 	}
 
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "snowflake-execute-sql",
+		"type":        "snowflake-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "snowflake-execute-sql",
+		"type":        "snowflake-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{
@@ -190,7 +190,7 @@ func addSnowflakeExecuteSqlConfig(t *testing.T, config map[string]any) map[strin
 	return config
 }
 
-// getSnowflakeParamToolInfo returns statements and param for my-param-tool snowflake-sql kind
+// getSnowflakeParamToolInfo returns statements and param for my-param-tool snowflake-sql type
 func getSnowflakeParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INTEGER AUTOINCREMENT PRIMARY KEY, name STRING);", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name) VALUES (?), (?), (?), (?);", tableName)
@@ -202,7 +202,7 @@ func getSnowflakeParamToolInfo(tableName string) (string, string, string, string
 	return createStatement, insertStatement, toolStatement, idParamStatement, nameParamStatement, arrayToolStatement, params
 }
 
-// getSnowflakeAuthToolInfo returns statements and param of my-auth-tool for snowflake-sql kind
+// getSnowflakeAuthToolInfo returns statements and param of my-auth-tool for snowflake-sql type
 func getSnowflakeAuthToolInfo(tableName string) (string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INTEGER AUTOINCREMENT PRIMARY KEY, name STRING, email STRING);", tableName)
 	insertStatement := fmt.Sprintf("INSERT INTO %s (name, email) VALUES (?, ?), (?, ?)", tableName)
@@ -211,7 +211,7 @@ func getSnowflakeAuthToolInfo(tableName string) (string, string, string, []any) 
 	return createStatement, insertStatement, toolStatement, params
 }
 
-// getSnowflakeTmplToolStatement returns statements and param for template parameter test cases for snowflake-sql kind
+// getSnowflakeTmplToolStatement returns statements and param for template parameter test cases for snowflake-sql type
 func getSnowflakeTmplToolStatement() (string, string) {
 	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ?"
 	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ?"

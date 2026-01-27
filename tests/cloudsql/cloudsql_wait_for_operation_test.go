@@ -291,22 +291,22 @@ func getCloudSQLWaitToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 		},
 		"tools": map[string]any{
 			"wait-for-op1": map[string]any{
-				"kind":        cloudsqlWaitToolType,
+				"type":        cloudsqlWaitToolType,
 				"source":      "my-cloud-sql-source",
 				"description": "wait for op1",
 			},
 			"wait-for-op2": map[string]any{
-				"kind":        cloudsqlWaitToolType,
+				"type":        cloudsqlWaitToolType,
 				"source":      "my-cloud-sql-source",
 				"description": "wait for op2",
 			},
 			"wait-for-op3": map[string]any{
-				"kind":        cloudsqlWaitToolType,
+				"type":        cloudsqlWaitToolType,
 				"source":      "my-cloud-sql-source",
 				"description": "wait for op3",
 			},
