@@ -253,12 +253,11 @@ func TestApplyQueryLimits(t *testing.T) {
 			source := &Source{
 				Config: Config{
 					MaxRowLimit:     tt.maxRowLimit,
-					QueryTimeoutSec: 0, // Don't test timeout here
+					QueryTimeoutSec: 0, // Timeout now managed by caller
 				},
 			}
 
-			ctx := context.Background()
-			_, modifiedSQL, err := source.ApplyQueryLimits(ctx, tt.sql)
+			modifiedSQL, err := source.ApplyQueryLimits(tt.sql)
 
 			if err != nil {
 				t.Errorf("Unexpected error: %v", err)
@@ -272,25 +271,29 @@ func TestApplyQueryLimits(t *testing.T) {
 	}
 }
 
-// TestApplyQueryTimeout tests timeout application
+// TestApplyQueryTimeout tests that timeout is managed by caller (not source)
 func TestApplyQueryTimeout(t *testing.T) {
 	source := &Source{
 		Config: Config{
-			QueryTimeoutSec: 5,
+			QueryTimeoutSec: 5, // Documented recommended timeout
 			MaxRowLimit:     0, // Don't add LIMIT
 		},
 	}
 
+	// Caller creates timeout context (following Go best practices)
 	ctx := context.Background()
-	newCtx, _, err := source.ApplyQueryLimits(ctx, "SELECT * FROM users")
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(source.QueryTimeoutSec)*time.Second)
+	defer cancel()
 
+	// Apply query limits (doesn't modify context anymore)
+	modifiedSQL, err := source.ApplyQueryLimits("SELECT * FROM users")
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 		return
 	}
 
-	// Check that deadline was set
-	deadline, ok := newCtx.Deadline()
+	// Verify context has deadline (managed by caller)
+	deadline, ok := ctx.Deadline()
 	if !ok {
 		t.Error("Expected deadline to be set but it wasn't")
 		return
@@ -306,6 +309,11 @@ func TestApplyQueryTimeout(t *testing.T) {
 	// Allow 1 second tolerance
 	if diff > time.Second {
 		t.Errorf("Deadline diff too large: %v", diff)
+	}
+
+	// Verify SQL is unchanged (LIMIT not added since MaxRowLimit=0)
+	if modifiedSQL != "SELECT * FROM users" {
+		t.Errorf("Expected SQL unchanged, got: %s", modifiedSQL)
 	}
 }
 

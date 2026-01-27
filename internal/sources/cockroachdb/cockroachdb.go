@@ -147,19 +147,20 @@ func (s *Source) ExecuteTxWithRetry(ctx context.Context, fn func(pgx.Tx) error) 
 // Query executes a query using the connection pool with MCP security enforcement.
 // For read-only queries, connection-level retry is sufficient.
 // For write operations requiring transaction retry, use ExecuteTxWithRetry directly.
+// Note: Callers should manage context timeouts as needed.
 func (s *Source) Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error) {
 	// MCP Security Check 1: Enforce write operation restrictions
 	if err := s.CanExecuteWrite(sql); err != nil {
 		return nil, err
 	}
 
-	// MCP Security Check 2: Apply query limits and timeout
-	modifiedCtx, modifiedSQL, err := s.ApplyQueryLimits(ctx, sql)
+	// MCP Security Check 2: Apply query limits (row limit)
+	modifiedSQL, err := s.ApplyQueryLimits(sql)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.Pool.Query(modifiedCtx, modifiedSQL, args...)
+	return s.Pool.Query(ctx, modifiedSQL, args...)
 }
 
 // ============================================================================
@@ -298,18 +299,11 @@ func (s *Source) CanExecuteWrite(sql string) error {
 	return nil
 }
 
-// ApplyQueryLimits applies row limits and timeout to a SQL query
-// Returns modified context with timeout and potentially modified SQL with LIMIT clause
-func (s *Source) ApplyQueryLimits(ctx context.Context, sql string) (context.Context, string, error) {
+// ApplyQueryLimits applies row limits to a SQL query for MCP security compliance.
+// Context timeout management is the responsibility of the caller (following Go best practices).
+// Returns potentially modified SQL with LIMIT clause for SELECT queries.
+func (s *Source) ApplyQueryLimits(sql string) (string, error) {
 	sqlType := ClassifySQL(sql)
-
-	// Apply timeout
-	if s.QueryTimeoutSec > 0 {
-		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, time.Duration(s.QueryTimeoutSec)*time.Second)
-		// Note: caller should defer cancel()
-		_ = cancel // Prevent unused warning, caller must handle
-	}
 
 	// Apply row limit only to SELECT queries
 	if sqlType == SQLTypeSelect && s.MaxRowLimit > 0 {
@@ -323,7 +317,7 @@ func (s *Source) ApplyQueryLimits(ctx context.Context, sql string) (context.Cont
 		}
 	}
 
-	return ctx, sql, nil
+	return sql, nil
 }
 
 // RedactSQL redacts sensitive values from SQL for telemetry
