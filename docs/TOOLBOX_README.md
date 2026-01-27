@@ -12,7 +12,11 @@ The MCP Toolbox for Databases Server gives AI-powered development tools the abil
 ## Install & Configuration
 
 1.  In the Antigravity MCP Store, click the **Install** button. A configuration window will appear.
-    > **Note**: Installation always runs the latest available [toolbox server npm package](https://www.npmjs.com/package/@toolbox-sdk/server). This means that you will automatically receive updates each time you click the Install button. While this keeps you up-to-date, there is a small chance that a new version could introduce unexpected changes or issues. Although it is recommended to use the latest versions, you may [run the server manually](https://github.com/googleapis/genai-toolbox?tab=readme-ov-file#non-production-running-toolbox) if you wish to use a specific version. 
+    > [!NOTE]
+    > Installation automatically uses the latest
+    > [toolbox server package](https://www.npmjs.com/package/@toolbox-sdk/server).
+    > This keeps you up-to-date, but if you need a specific version, you can
+    > [run the server manually](https://github.com/googleapis/genai-toolbox?tab=readme-ov-file#non-production-running-toolbox). 
 
 3.  Create your [`tools.yaml` configuration file](https://googleapis.github.io/genai-toolbox/getting-started/configure/).
 
@@ -32,7 +36,7 @@ Interact with your custom tools using natural language.
   "mcpServers": {
     "mcp-toolbox": {
       "command": "npx",
-      "args": ["-y", "@toolbox-sdk/server", "--tools-file", "your-tool-file.yaml"],
+      "args": ["-y", "@toolbox-sdk/server@latest", "--tools-file", "your-tool-file.yaml"],
       "env": {
         "ENV_VAR_NAME": "ENV_VAR_VALUE",
       }

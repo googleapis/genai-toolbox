@@ -23,6 +23,12 @@ To connect to the database to explore and query data, search the MCP store for t
 
 In the Antigravity MCP Store, click the "Install" button.
 
+> [!NOTE]
+> Installation automatically uses the latest
+> [toolbox server package](https://www.npmjs.com/package/@toolbox-sdk/server).
+> This keeps you up-to-date, but if you need a specific version, you can
+> [run the server manually](https://github.com/googleapis/genai-toolbox?tab=readme-ov-file#non-production-running-toolbox).
+
 You'll now be able to see all enabled tools in the "Tools" tab.
 
 > [!NOTE]
@@ -62,7 +68,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
   "mcpServers": {
     "alloydb-admin": {
       "command": "npx",
-      "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "alloydb-postgres-admin", "--stdio"]
+      "args": ["-y", "@toolbox-sdk/server@latest", "--prebuilt", "alloydb-postgres-admin", "--stdio"]
     }
   }
 }

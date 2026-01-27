@@ -20,6 +20,11 @@ An editor configured to use the Dataplex MCP server can use its AI capabilities 
 ## Install & Configuration
 
 1. In the Antigravity MCP Store, click the "Install" button.
+    > [!NOTE]
+    > Installation automatically uses the latest
+    > [toolbox server package](https://www.npmjs.com/package/@toolbox-sdk/server).
+    > This keeps you up-to-date, but if you need a specific version, you can
+    > [run the server manually](https://github.com/googleapis/genai-toolbox?tab=readme-ov-file#non-production-running-toolbox).
 
 2. Add the required inputs in the configuration pop-up, then click "Save". You can update this configuration at any time in the "Configure" tab.
 
@@ -60,7 +65,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
   "mcpServers": {
     "dataplex": {
       "command": "npx",
-      "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "dataplex", "--stdio"],
+      "args": ["-y", "@toolbox-sdk/server@latest", "--prebuilt", "dataplex", "--stdio"],
       "env": {
         "DATAPLEX_PROJECT": "your-project-id"
       }

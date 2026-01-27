@@ -21,6 +21,11 @@ An editor configured to use the Looker MCP server can use its AI capabilities to
 ## Install & Configuration
 
 1. In the Antigravity MCP Store, click the "Install" button.
+    > [!NOTE]
+    > Installation automatically uses the latest
+    > [toolbox server package](https://www.npmjs.com/package/@toolbox-sdk/server).
+    > This keeps you up-to-date, but if you need a specific version, you can
+    > [run the server manually](https://github.com/googleapis/genai-toolbox?tab=readme-ov-file#non-production-running-toolbox).
 
 2. Add the required inputs for your [instance](https://docs.cloud.google.com/looker/docs/set-up-and-administer-looker) in the configuration pop-up, then click "Save". You can update this configuration at any time in the "Configure" tab.
 
@@ -76,7 +81,7 @@ Add the following configuration to your MCP client (e.g., `settings.json` for Ge
   "mcpServers": {
     "looker": {
       "command": "npx",
-      "args": ["-y", "@toolbox-sdk/server", "--prebuilt", "looker", "--stdio"],
+      "args": ["-y", "@toolbox-sdk/server@latest", "--prebuilt", "looker", "--stdio"],
       "env": {
         "LOOKER_BASE_URL": "https://your.looker.instance.com",
         "LOOKER_CLIENT_ID": "your-client-id",
