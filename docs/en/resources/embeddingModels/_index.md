@@ -35,7 +35,7 @@ Define an embedding model in the `embeddingModels` section:
 
 ```yaml
 kind: embeddingModels
-name: gemini-model: # Name of the embedding model
+name: gemini-model # Name of the embedding model
 type: gemini
 model: gemini-embedding-001
 apiKey: ${GOOGLE_API_KEY}
