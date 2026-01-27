@@ -131,9 +131,12 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		return nil, fmt.Errorf("invalid or missing '%s' parameter; expected a string", patientIDKey)
 	}
 
-	tokenStr, err := accessToken.ParseBearerToken()
-	if err != nil {
-		return nil, fmt.Errorf("error parsing access token: %w", err)
+	var tokenStr string
+	if source.UseClientAuthorization() {
+		tokenStr, err = accessToken.ParseBearerToken()
+		if err != nil {
+			return nil, fmt.Errorf("error parsing access token: %w", err)
+		}
 	}
 
 	var opts []googleapi.CallOption
