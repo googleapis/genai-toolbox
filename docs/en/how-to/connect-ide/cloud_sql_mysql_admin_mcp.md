@@ -48,11 +48,13 @@ database and users:
     * `roles/cloudsql.editor`: Provides permissions to manage existing resources.
         * All `viewer` tools
         * `create_database`
+        * `create_backup`
     * `roles/cloudsql.admin`: Provides full control over all resources.
         * All `editor` and `viewer` tools
         * `create_instance`
         * `create_user`
         * `clone_instance`
+        * `restore_backup`
 
 ## Install MCP Toolbox
 
@@ -299,6 +301,8 @@ instances and interacting with your database:
 * **create_user**: Creates a new user in a Cloud SQL instance.
 * **wait_for_operation**: Waits for a Cloud SQL operation to complete.
 * **clone_instance**: Creates a clone of an existing Cloud SQL for MySQL instance.
+* **create_backup**: Creates a backup on a Cloud SQL instance.
+* **restore_backup**: Restores a backup of a Cloud SQL instance.
 
 {{< notice note >}}
 Prebuilt tools are pre-1.0, so expect some tool changes between versions. LLMs

@@ -134,7 +134,12 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 		var err error
 		paramAuthServices := p.GetAuthServices()
 		name := p.GetName()
-		if len(paramAuthServices) == 0 {
+
+		sourceParamName := p.GetValueFromParam()
+		if sourceParamName != "" {
+			v = data[sourceParamName]
+
+		} else if len(paramAuthServices) == 0 {
 			// parse non auth-required parameter
 			var ok bool
 			v, ok = data[name]
@@ -318,6 +323,7 @@ type Parameter interface {
 	GetRequired() bool
 	GetAuthServices() []ParamAuthService
 	GetEmbeddedBy() string
+	GetValueFromParam() string
 	Parse(any) (any, error)
 	Manifest() ParameterManifest
 	McpManifest() (ParameterMcpManifest, []string)
@@ -465,6 +471,9 @@ func ParseParameter(ctx context.Context, p map[string]any, paramType string) (Pa
 func (ps Parameters) Manifest() []ParameterManifest {
 	rtn := make([]ParameterManifest, 0, len(ps))
 	for _, p := range ps {
+		if p.GetValueFromParam() != "" {
+			continue
+		}
 		rtn = append(rtn, p.Manifest())
 	}
 	return rtn
@@ -476,6 +485,11 @@ func (ps Parameters) McpManifest() (McpToolsSchema, map[string][]string) {
 	authParam := make(map[string][]string)
 
 	for _, p := range ps {
+		// If the parameter is sourced from another param, skip it in the MCP manifest
+		if p.GetValueFromParam() != "" {
+			continue
+		}
+
 		name := p.GetName()
 		paramManifest, authParamList := p.McpManifest()
 		defaultV := p.GetDefault()
@@ -509,6 +523,7 @@ type ParameterManifest struct {
 	Default              any                `json:"default,omitempty"`
 	AdditionalProperties any                `json:"additionalProperties,omitempty"`
 	EmbeddedBy           string             `json:"embeddedBy,omitempty"`
+	ValueFromParam       string             `json:"valueFromParam,omitempty"`
 }
 
 // ParameterMcpManifest represents properties when served as part of a ToolMcpManifest.
@@ -531,6 +546,7 @@ type CommonParameter struct {
 	AuthServices   []ParamAuthService `yaml:"authServices"`
 	AuthSources    []ParamAuthService `yaml:"authSources"` // Deprecated: Kept for compatibility.
 	EmbeddedBy     string             `yaml:"embeddedBy"`
+	ValueFromParam string             `yaml:"valueFromParam"`
 }
 
 // GetName returns the name specified for the Parameter.
@@ -588,8 +604,14 @@ func (p *CommonParameter) IsExcludedValues(v any) bool {
 	return false
 }
 
+// GetEmbeddedBy returns the embedding model name for the Parameter.
 func (p *CommonParameter) GetEmbeddedBy() string {
 	return p.EmbeddedBy
+}
+
+// GetValueFromParam returns the param value to copy from.
+func (p *CommonParameter) GetValueFromParam() string {
+	return p.ValueFromParam
 }
 
 // MatchStringOrRegex checks if the input matches the target

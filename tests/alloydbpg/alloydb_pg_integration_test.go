@@ -152,6 +152,10 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	vectorTableName, tearDownVectorTable := tests.SetupPostgresVectorTable(t, ctx, pool)
 	t.Cleanup(func() { tearDownVectorTable(t) })
 
+	// Set up table for semanti search
+	vectorTableName, tearDownVectorTable := tests.SetupPostgresVectorTable(t, ctx, pool)
+	defer tearDownVectorTable(t)
+
 	// Write config into a file and pass it to command
 	toolsFile = tests.GetToolsConfig(sourceConfig, AlloyDBPostgresToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "postgres-execute-sql")
