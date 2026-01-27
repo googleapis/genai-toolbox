@@ -120,7 +120,7 @@ func initAlloyDBPgConnectionPool(project, region, cluster, instance, ipType, use
 func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	sourceConfig := getAlloyDBPgVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
+	t.Cleanup(cancel)
 
 	var args []string
 
@@ -130,23 +130,27 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	}
 
 	// cleanup test environment
-	tests.CleanupPostgresTables(t, ctx, pool)
+	//tests.CleanupPostgresTables(t, ctx, pool)
 
 	// create table name with UUID
-	timestamp := time.Now().Unix()
-	tableNameParam := fmt.Sprintf("param_table_%d_%s", timestamp, strings.ReplaceAll(uuid.New().String(), "-", ""))
-	tableNameAuth := fmt.Sprintf("auth_table_%d_%s", timestamp, strings.ReplaceAll(uuid.New().String(), "-", ""))
-	tableNameTemplateParam := fmt.Sprintf("template_param_table_%d_%s", timestamp, strings.ReplaceAll(uuid.New().String(), "-", ""))
+	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameAuth := "auth_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	tableNameTemplateParam := "template_param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	// set up data for param tool
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetPostgresSQLParamToolInfo(tableNameParam)
 	teardownTable1 := tests.SetupPostgresSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
-	defer teardownTable1(t)
+	t.Cleanup(func() { teardownTable1(t) })
+
 
 	// set up data for auth tool
 	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := tests.GetPostgresSQLAuthToolInfo(tableNameAuth)
 	teardownTable2 := tests.SetupPostgresSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
-	defer teardownTable2(t)
+	t.Cleanup(func() { teardownTable2(t) })
+
+	// Set up table for semanti search
+	vectorTableName, tearDownVectorTable := tests.SetupPostgresVectorTable(t, ctx, pool)
+	t.Cleanup(func() { tearDownVectorTable(t) })
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, AlloyDBPostgresToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
@@ -154,16 +158,20 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, AlloyDBPostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
+	// Add semantic search tool config
+	insertStmt, searchStmt := tests.GetPostgresVectorSearchStmts(vectorTableName)
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, AlloyDBPostgresToolKind, insertStmt, searchStmt)
+
 	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
 
-	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
+	cmd, cleanupCmd, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
-	defer cleanup()
+	t.Cleanup(cleanupCmd)
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
+	t.Cleanup(waitCancel)
 	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
