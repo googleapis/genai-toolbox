@@ -153,7 +153,7 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	t.Cleanup(func() { tearDownVectorTable(t) })
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, AlloyDBPostgresToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile = tests.GetToolsConfig(sourceConfig, AlloyDBPostgresToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "postgres-execute-sql")
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, AlloyDBPostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
@@ -171,7 +171,7 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	t.Cleanup(cleanupCmd)
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	t.Cleanup(waitCancel)
+	t.Cleanup(cancel)
 	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
 	if err != nil {
 		t.Logf("toolbox command logs: \n%s", out)
