@@ -17,7 +17,6 @@ package neo4jexecutecypher
 import (
 	"testing"
 
-	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -36,14 +35,14 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: neo4j-execute-cypher
-					source: my-neo4j-instance
-					description: some tool description
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
+            kind: tools
+            name: example_tool
+            type: neo4j-execute-cypher
+            source: my-neo4j-instance
+            description: some tool description
+            authRequired:
+                - my-google-auth-service
+                - other-auth-service
 			`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
@@ -58,15 +57,15 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 		{
 			desc: "readonly example",
 			in: `
-			tools:
-				example_tool:
-					kind: neo4j-execute-cypher
-					source: my-neo4j-instance
-					description: some tool description
-					readOnly: true
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
+            kind: tools
+            name: example_tool
+            type: neo4j-execute-cypher
+            source: my-neo4j-instance
+            description: some tool description
+            readOnly: true
+            authRequired:
+                - my-google-auth-service
+                - other-auth-service
 			`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
@@ -82,15 +81,12 @@ func TestParseFromYamlNeo4j(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err = yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

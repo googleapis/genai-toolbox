@@ -17,7 +17,6 @@ package firestorelistcollections_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -37,11 +36,11 @@ func TestParseFromYamlFirestoreListCollections(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				list_collections_tool:
-					kind: firestore-list-collections
-					source: my-firestore-instance
-					description: List collections in Firestore
+			kind: tools
+			name: list_collections_tool
+			type: firestore-list-collections
+			source: my-firestore-instance
+			description: List collections in Firestore
 			`,
 			want: server.ToolConfigs{
 				"list_collections_tool": firestorelistcollections.Config{
@@ -56,14 +55,14 @@ func TestParseFromYamlFirestoreListCollections(t *testing.T) {
 		{
 			desc: "with auth requirements",
 			in: `
-			tools:
-				secure_list_collections:
-					kind: firestore-list-collections
-					source: prod-firestore
-					description: List collections with authentication
-					authRequired:
-						- google-auth-service
-						- api-key-service
+			kind: tools
+			name: secure_list_collections
+			type: firestore-list-collections
+			source: prod-firestore
+			description: List collections with authentication
+			authRequired:
+				- google-auth-service
+				- api-key-service
 			`,
 			want: server.ToolConfigs{
 				"secure_list_collections": firestorelistcollections.Config{
@@ -78,15 +77,11 @@ func TestParseFromYamlFirestoreListCollections(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -99,24 +94,28 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	in := `
-	tools:
-		list_user_collections:
-			kind: firestore-list-collections
-			source: users-firestore
-			description: List user-related collections
-			authRequired:
-				- user-auth
-		list_product_collections:
-			kind: firestore-list-collections
-			source: products-firestore
-			description: List product-related collections
-		list_admin_collections:
-			kind: firestore-list-collections
-			source: admin-firestore
-			description: List administrative collections
-			authRequired:
-				- user-auth
-				- admin-auth
+	kind: tools
+	name: list_user_collections
+	type: firestore-list-collections
+	source: users-firestore
+	description: List user-related collections
+	authRequired:
+		- user-auth
+---
+	kind: tools
+	name: list_product_collections
+	type: firestore-list-collections
+	source: products-firestore
+	description: List product-related collections
+---
+	kind: tools
+	name: list_admin_collections
+	type: firestore-list-collections
+	source: admin-firestore
+	description: List administrative collections
+	authRequired:
+		- user-auth
+		- admin-auth
 	`
 	want := server.ToolConfigs{
 		"list_user_collections": firestorelistcollections.Config{
@@ -142,15 +141,11 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 		},
 	}
 
-	got := struct {
-		Tools server.ToolConfigs `yaml:"tools"`
-	}{}
-	// Parse contents
-	err = yaml.UnmarshalContext(ctx, testutils.FormatYaml(in), &got)
+	_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(in))
 	if err != nil {
 		t.Fatalf("unable to unmarshal: %s", err)
 	}
-	if diff := cmp.Diff(want, got.Tools); diff != "" {
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("incorrect parse: diff %v", diff)
 	}
 }

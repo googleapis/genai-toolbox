@@ -27,11 +27,11 @@ import (
 	sqladmin "google.golang.org/api/sqladmin/v1"
 )
 
-const kind string = "postgres-upgrade-precheck"
+const resourceType string = "postgres-upgrade-precheck"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool type %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -51,7 +51,7 @@ type compatibleSource interface {
 // Config defines the configuration for the precheck-upgrade tool.
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Type         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Description  string   `yaml:"description"`
 	Source       string   `yaml:"source" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -60,9 +60,9 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigType returns the kind of the tool.
+// ToolConfigType returns the type of the tool.
 func (cfg Config) ToolConfigType() string {
-	return kind
+	return resourceType
 }
 
 // Initialize initializes the tool from the configuration.
