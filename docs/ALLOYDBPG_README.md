@@ -31,7 +31,8 @@ For AlloyDB infrastructure management, search the MCP store for the AlloyDB for 
     > Installation automatically uses the latest
     > [toolbox server package](https://www.npmjs.com/package/@toolbox-sdk/server).
     > This keeps you up-to-date, but if you need a specific version, you can
-    > [run the server manually](https://github.com/googleapis/genai-toolbox?tab=readme-ov-file#non-production-running-toolbox).
+    > run the server manually with command
+    > ```npx -y @toolbox-sdk/server@<version> --prebuilt alloydb-postgres```.
 
 2. Add the required inputs for your [cluster](https://docs.cloud.google.com/alloydb/docs/cluster-list) in the configuration pop-up, then click "Save". You can update this configuration at any time in the "Configure" tab.
 

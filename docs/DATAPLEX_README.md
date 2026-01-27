@@ -24,7 +24,8 @@ An editor configured to use the Dataplex MCP server can use its AI capabilities 
     > Installation automatically uses the latest
     > [toolbox server package](https://www.npmjs.com/package/@toolbox-sdk/server).
     > This keeps you up-to-date, but if you need a specific version, you can
-    > [run the server manually](https://github.com/googleapis/genai-toolbox?tab=readme-ov-file#non-production-running-toolbox).
+    > run the server manually with command
+    > ```npx -y @toolbox-sdk/server@<version> --prebuilt dataplex```.
 
 2. Add the required inputs in the configuration pop-up, then click "Save". You can update this configuration at any time in the "Configure" tab.
 

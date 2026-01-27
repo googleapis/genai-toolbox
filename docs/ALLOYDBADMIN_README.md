@@ -27,7 +27,8 @@ In the Antigravity MCP Store, click the "Install" button.
 > Installation automatically uses the latest
 > [toolbox server package](https://www.npmjs.com/package/@toolbox-sdk/server).
 > This keeps you up-to-date, but if you need a specific version, you can
-> [run the server manually](https://github.com/googleapis/genai-toolbox?tab=readme-ov-file#non-production-running-toolbox).
+> run the server manually with command
+> ```npx -y @toolbox-sdk/server@<version> --prebuilt alloydb-postgres-admin```.
 
 You'll now be able to see all enabled tools in the "Tools" tab.
 

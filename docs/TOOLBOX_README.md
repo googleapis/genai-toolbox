@@ -16,7 +16,8 @@ The MCP Toolbox for Databases Server gives AI-powered development tools the abil
     > Installation automatically uses the latest
     > [toolbox server package](https://www.npmjs.com/package/@toolbox-sdk/server).
     > This keeps you up-to-date, but if you need a specific version, you can
-    > [run the server manually](https://github.com/googleapis/genai-toolbox?tab=readme-ov-file#non-production-running-toolbox). 
+    > run the server manually with command
+    > ```npx -y @toolbox-sdk/server@<version>```. 
 
 3.  Create your [`tools.yaml` configuration file](https://googleapis.github.io/genai-toolbox/getting-started/configure/).
 
