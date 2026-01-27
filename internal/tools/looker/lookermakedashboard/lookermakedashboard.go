@@ -232,3 +232,7 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 	}
 	return source.GetAuthTokenHeaderName(), nil
 }
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
+}

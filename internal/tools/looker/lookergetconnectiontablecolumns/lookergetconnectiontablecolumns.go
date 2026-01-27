@@ -8,7 +8,7 @@
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 package lookergetconnectiontablecolumns
@@ -209,4 +209,8 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 		return "", err
 	}
 	return source.GetAuthTokenHeaderName(), nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }

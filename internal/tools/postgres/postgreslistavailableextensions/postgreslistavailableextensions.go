@@ -20,7 +20,7 @@ import (
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
-	"github.comcom/googleapis/genai-toolbox/internal/sources"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"github.com/jackc/pgx/v5/pgxpool"
