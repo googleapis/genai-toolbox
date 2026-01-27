@@ -50,7 +50,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	// Cloud SQL MSSQL configs
 	Name     string `yaml:"name" validate:"required"`
-	Type     string `yaml:"kind" validate:"required"`
+	Type     string `yaml:"type" validate:"required"`
 	Host     string `yaml:"host" validate:"required"`
 	Port     string `yaml:"port" validate:"required"`
 	User     string `yaml:"user" validate:"required"`
@@ -60,7 +60,7 @@ type Config struct {
 }
 
 func (r Config) SourceConfigType() string {
-	// Returns Cloud SQL MSSQL source kind
+	// Returns Cloud SQL MSSQL source type
 	return SourceType
 }
 
@@ -92,7 +92,7 @@ type Source struct {
 }
 
 func (s *Source) SourceType() string {
-	// Returns Cloud SQL MSSQL source kind
+	// Returns Cloud SQL MSSQL source type
 	return SourceType
 }
 
