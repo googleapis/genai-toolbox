@@ -1194,7 +1194,7 @@ names, or other parts of the query.&lt;/p></description></item><item><title>CLI<
  &lt;tr>
  &lt;td>&lt;/td>
  &lt;td>&lt;code>--prebuilt&lt;/code>&lt;/td>
- &lt;td>Use a prebuilt tool configuration by source type. See &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2053/reference/prebuilt-tools/">Prebuilt Tools Reference&lt;/a> for allowed values.&lt;/td>
+ &lt;td>Use one or more prebuilt tool configuration by source type. See &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2053/reference/prebuilt-tools/">Prebuilt Tools Reference&lt;/a> for allowed values.&lt;/td>
  &lt;td>&lt;/td>
  &lt;/tr>
  &lt;tr>
@@ -1256,6 +1256,12 @@ names, or other parts of the query.&lt;/p></description></item><item><title>CLI<
  &lt;td>&lt;code>--allowed-hosts&lt;/code>&lt;/td>
  &lt;td>Specifies a list of hosts permitted to access this server to prevent DNS rebinding attacks.&lt;/td>
  &lt;td>&lt;code>*&lt;/code>&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>&lt;/td>
+ &lt;td>&lt;code>--user-agent-extra&lt;/code>&lt;/td>
+ &lt;td>Appends additional metadata to the User-Agent.&lt;/td>
+ &lt;td>&lt;/td>
  &lt;/tr>
  &lt;tr>
  &lt;td>&lt;code>-v&lt;/code>&lt;/td>
@@ -3293,37 +3299,249 @@ following parameters:&lt;/p>
 &lt;p>Dataplex uses &lt;a href="https://cloud.google.com/dataplex/docs/iam-and-access-control">Identity and Access Management (IAM)&lt;/a> to control
 user and group access to Dataplex resources. Toolbox will use your
 &lt;a href="https://cloud.google.com/docs/authentication#adc">Application Default Credentials (ADC)&lt;/a> to authorize and authenticate when
-interacting with &lt;a href="https://cloud.google.com/dataplex">Dataplex&lt;/a>.&lt;/p></description></item><item><title>Dgraph</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/sources/dgraph/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/sources/dgraph/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>&lt;a href="https://dgraph.io/docs">Dgraph&lt;/a> is an open-source graph database. It is designed for
-real-time workloads, horizontal scalability, and data flexibility. Implemented
-as a distributed system, Dgraph processes queries in parallel to deliver the
-fastest result.&lt;/p>
-&lt;p>This source can connect to either a self-managed Dgraph cluster or one hosted on
-Dgraph Cloud. If you&amp;rsquo;re new to Dgraph, the fastest way to get started is to
-&lt;a href="https://cloud.dgraph.io/login">sign up for Dgraph Cloud&lt;/a>.&lt;/p>
-&lt;h2 id="available-tools">Available Tools&lt;/h2>
-&lt;ul>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/tools/dgraph/dgraph-dql/">&lt;code>dgraph-dql&lt;/code>&lt;/a>&lt;br>
-Run DQL (Dgraph Query Language) queries.&lt;/li>
-&lt;/ul>
-&lt;h2 id="requirements">Requirements&lt;/h2>
-&lt;h3 id="database-user">Database User&lt;/h3>
-&lt;p>When &lt;strong>connecting to a hosted Dgraph database&lt;/strong>, this source uses the API key
-for access. If you are using a dedicated environment, you will additionally need
-the namespace and user credentials for that namespace.&lt;/p></description></item><item><title>dgraph-dql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/tools/dgraph/dgraph-dql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/tools/dgraph/dgraph-dql/</guid><description>&lt;h2 id="about">About&lt;/h2>
-&lt;p>A &lt;code>dgraph-dql&lt;/code> tool executes a pre-defined DQL statement against a Dgraph
-database. It&amp;rsquo;s compatible with any of the following sources:&lt;/p>
-&lt;ul>
-&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/sources/dgraph/">dgraph&lt;/a>&lt;/li>
-&lt;/ul>
-&lt;p>To run a statement as a query, you need to set the config &lt;code>isQuery=true&lt;/code>. For
-upserts or mutations, set &lt;code>isQuery=false&lt;/code>. You can also configure timeout for a
-query.&lt;/p>
-&lt;blockquote>
-&lt;p>&lt;strong>Note:&lt;/strong> This tool uses parameterized queries to prevent SQL injections.
-Query parameters can be used as substitutes for arbitrary expressions.
-Parameters cannot be used as substitutes for identifiers, column names, table
-names, or other parts of the query.&lt;/p></description></item><item><title>Elasticsearch</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/sources/elasticsearch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/sources/elasticsearch/</guid><description>&lt;h1 id="elasticsearch-source">Elasticsearch Source&lt;/h1>
+interacting with &lt;a href="https://cloud.google.com/dataplex">Dataplex&lt;/a>.&lt;/p></description></item><item><title>Dgraph</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/sources/dgraph/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/sources/dgraph/</guid><description>&lt;style type="text/css">
+ 
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #6be;
+ --content-color: #444;
+ --content-background-color: #e7f2fa;
+ }
+
+ .notice.info {
+ --title-background-color: #fb7;
+ --content-background-color: #fec;
+ }
+
+ .notice.tip {
+ --title-background-color: #5a5;
+ --content-background-color: #efe;
+ }
+
+ .notice.warning {
+ --title-background-color: #c33;
+ --content-background-color: #fee;
+ }
+
+ 
+ @media (prefers-color-scheme:dark) {
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+ }
+
+ body.dark .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ body.dark .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ body.dark .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ body.dark .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+
+ 
+ .notice {
+ padding: 18px;
+ line-height: 24px;
+ margin-bottom: 24px;
+ border-radius: 4px;
+ color: var(--content-color);
+ background: var(--content-background-color);
+ }
+
+ .notice p:last-child {
+ margin-bottom: 0
+ }
+
+ 
+ .notice-title {
+ margin: -18px -18px 12px;
+ padding: 4px 18px;
+ border-radius: 4px 4px 0 0;
+ font-weight: 700;
+ color: var(--title-color);
+ background: var(--title-background-color);
+ }
+
+ 
+ .icon-notice {
+ display: inline-flex;
+ align-self: center;
+ margin-right: 8px;
+ }
+
+ .icon-notice img,
+ .icon-notice svg {
+ height: 1em;
+ width: 1em;
+ fill: currentColor;
+ }
+
+ .icon-notice img,
+ .icon-notice.baseline svg {
+ top: .125em;
+ position: relative;
+ }
+&lt;/style>&lt;div class="notice note" >
+ &lt;p class="notice-title">
+ &lt;span class="icon-notice baseline">
+ &lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 128 300 300">
+ &lt;path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/>
+&lt;/svg>
+
+ &lt;/span>Note&lt;/p></description></item><item><title>dgraph-dql</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/tools/dgraph/dgraph-dql/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/tools/dgraph/dgraph-dql/</guid><description>&lt;style type="text/css">
+ 
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #6be;
+ --content-color: #444;
+ --content-background-color: #e7f2fa;
+ }
+
+ .notice.info {
+ --title-background-color: #fb7;
+ --content-background-color: #fec;
+ }
+
+ .notice.tip {
+ --title-background-color: #5a5;
+ --content-background-color: #efe;
+ }
+
+ .notice.warning {
+ --title-background-color: #c33;
+ --content-background-color: #fee;
+ }
+
+ 
+ @media (prefers-color-scheme:dark) {
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+ }
+
+ body.dark .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ body.dark .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ body.dark .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ body.dark .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+
+ 
+ .notice {
+ padding: 18px;
+ line-height: 24px;
+ margin-bottom: 24px;
+ border-radius: 4px;
+ color: var(--content-color);
+ background: var(--content-background-color);
+ }
+
+ .notice p:last-child {
+ margin-bottom: 0
+ }
+
+ 
+ .notice-title {
+ margin: -18px -18px 12px;
+ padding: 4px 18px;
+ border-radius: 4px 4px 0 0;
+ font-weight: 700;
+ color: var(--title-color);
+ background: var(--title-background-color);
+ }
+
+ 
+ .icon-notice {
+ display: inline-flex;
+ align-self: center;
+ margin-right: 8px;
+ }
+
+ .icon-notice img,
+ .icon-notice svg {
+ height: 1em;
+ width: 1em;
+ fill: currentColor;
+ }
+
+ .icon-notice img,
+ .icon-notice.baseline svg {
+ top: .125em;
+ position: relative;
+ }
+&lt;/style>&lt;div class="notice note" >
+ &lt;p class="notice-title">
+ &lt;span class="icon-notice baseline">
+ &lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="0 128 300 300">
+ &lt;path d="M150 128c82.813 0 150 67.188 150 150 0 82.813-67.188 150-150 150C67.187 428 0 360.812 0 278c0-82.813 67.188-150 150-150Zm25 243.555v-37.11c0-3.515-2.734-6.445-6.055-6.445h-37.5c-3.515 0-6.445 2.93-6.445 6.445v37.11c0 3.515 2.93 6.445 6.445 6.445h37.5c3.32 0 6.055-2.93 6.055-6.445Zm-.39-67.188 3.515-121.289c0-1.367-.586-2.734-1.953-3.516-1.172-.976-2.93-1.562-4.688-1.562h-42.968c-1.758 0-3.516.586-4.688 1.563-1.367.78-1.953 2.148-1.953 3.515l3.32 121.29c0 2.734 2.93 4.882 6.64 4.882h36.134c3.515 0 6.445-2.148 6.64-4.883Z"/>
+&lt;/svg>
+
+ &lt;/span>Note&lt;/p></description></item><item><title>Elasticsearch</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/sources/elasticsearch/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/sources/elasticsearch/</guid><description>&lt;h1 id="elasticsearch-source">Elasticsearch Source&lt;/h1>
 &lt;p>&lt;a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html">Elasticsearch&lt;/a> is a distributed, free and open search and
 analytics engine for all types of data, including textual, numerical,
 geospatial, structured, and unstructured.&lt;/p>
@@ -3853,6 +4071,9 @@ reporting with source positions and code snippets.&lt;/p>
  &lt;/tbody>
 &lt;/table></description></item><item><title>Gemini Data Analytics QueryData</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/tools/cloudgda/cloud-gda-query/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/tools/cloudgda/cloud-gda-query/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>The &lt;code>cloud-gemini-data-analytics-query&lt;/code> tool allows you to send natural language questions to the Gemini Data Analytics API and receive structured responses containing SQL queries, natural language answers, and explanations. For details on defining data agent context for database data sources, see the official &lt;a href="https://docs.cloud.google.com/gemini/docs/conversational-analytics-api/data-agent-authored-context-databases">documentation&lt;/a>.&lt;/p>
+&lt;blockquote>
+&lt;p>[!NOTE]
+Only &lt;code>alloydb&lt;/code>, &lt;code>spannerReference&lt;/code>, and &lt;code>cloudSqlReference&lt;/code> are supported as &lt;a href="https://clouddocs.devsite.corp.google.com/gemini/docs/conversational-analytics-api/reference/rest/v1beta/projects.locations.dataAgents#DatasourceReferences">datasource references&lt;/a>.&lt;/p>&lt;/blockquote>
 &lt;h2 id="example">Example&lt;/h2>
 &lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">my-gda-query-tool&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
@@ -3877,7 +4098,7 @@ reporting with source positions and code snippets.&lt;/p>
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">generateExplanation&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">true&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">generateDisambiguationQuestion&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">true&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h3 id="usage-flow">Usage Flow&lt;/h3>
-&lt;p>When using this tool, a &lt;code>prompt&lt;/code> parameter containing a natural language query is provided to the tool (typically by an agent). The tool then interacts with the Gemini Data Analytics API using the context defined in your configuration.&lt;/p></description></item><item><title>Gemini Embedding</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/embeddingmodels/gemini/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/embeddingmodels/gemini/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>When using this tool, a &lt;code>query&lt;/code> parameter containing a natural language query is provided to the tool (typically by an agent). The tool then interacts with the Gemini Data Analytics API using the context defined in your configuration.&lt;/p></description></item><item><title>Gemini Embedding</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/embeddingmodels/gemini/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/embeddingmodels/gemini/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>Google Gemini provides state-of-the-art embedding models that convert text into
 high-dimensional vectors.&lt;/p>
 &lt;h3 id="authentication">Authentication&lt;/h3>
@@ -11035,6 +11256,128 @@ exponential backoff. It is compatible with
  &lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
 &lt;/svg>
 
+ &lt;/span>Info&lt;/p></description></item><item><title>cloud-sql-create-backup</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/tools/cloudsql/cloudsqlcreatebackup/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/tools/cloudsql/cloudsqlcreatebackup/</guid><description>&lt;p>The &lt;code>cloud-sql-create-backup&lt;/code> tool creates an on-demand backup on a Cloud SQL instance using the Cloud SQL Admin API.&lt;/p>
+&lt;style type="text/css">
+ 
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #6be;
+ --content-color: #444;
+ --content-background-color: #e7f2fa;
+ }
+
+ .notice.info {
+ --title-background-color: #fb7;
+ --content-background-color: #fec;
+ }
+
+ .notice.tip {
+ --title-background-color: #5a5;
+ --content-background-color: #efe;
+ }
+
+ .notice.warning {
+ --title-background-color: #c33;
+ --content-background-color: #fee;
+ }
+
+ 
+ @media (prefers-color-scheme:dark) {
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+ }
+
+ body.dark .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ body.dark .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ body.dark .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ body.dark .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+
+ 
+ .notice {
+ padding: 18px;
+ line-height: 24px;
+ margin-bottom: 24px;
+ border-radius: 4px;
+ color: var(--content-color);
+ background: var(--content-background-color);
+ }
+
+ .notice p:last-child {
+ margin-bottom: 0
+ }
+
+ 
+ .notice-title {
+ margin: -18px -18px 12px;
+ padding: 4px 18px;
+ border-radius: 4px 4px 0 0;
+ font-weight: 700;
+ color: var(--title-color);
+ background: var(--title-background-color);
+ }
+
+ 
+ .icon-notice {
+ display: inline-flex;
+ align-self: center;
+ margin-right: 8px;
+ }
+
+ .icon-notice img,
+ .icon-notice svg {
+ height: 1em;
+ width: 1em;
+ fill: currentColor;
+ }
+
+ .icon-notice img,
+ .icon-notice.baseline svg {
+ top: .125em;
+ position: relative;
+ }
+&lt;/style>&lt;div class="notice info" id="dd" >
+ &lt;p class="notice-title">
+ &lt;span class="icon-notice baseline">
+ &lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="92 59.5 300 300">
+ &lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
+&lt;/svg>
+
  &lt;/span>Info&lt;/p></description></item><item><title>cloud-sql-create-database</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/tools/cloudsql/cloudsqlcreatedatabase/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/tools/cloudsql/cloudsqlcreatedatabase/</guid><description>&lt;p>The &lt;code>cloud-sql-create-database&lt;/code> tool creates a new database in a specified Cloud
 SQL instance.&lt;/p>
 &lt;style type="text/css">
@@ -11644,6 +11987,128 @@ instance using the Cloud SQL Admin API.&lt;/p>
  position: relative;
  }
 &lt;/style>&lt;div class="notice info" >
+ &lt;p class="notice-title">
+ &lt;span class="icon-notice baseline">
+ &lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="92 59.5 300 300">
+ &lt;path d="M292 303.25V272c0-3.516-2.734-6.25-6.25-6.25H267v-100c0-3.516-2.734-6.25-6.25-6.25h-62.5c-3.516 0-6.25 2.734-6.25 6.25V197c0 3.516 2.734 6.25 6.25 6.25H217v62.5h-18.75c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h87.5c3.516 0 6.25-2.734 6.25-6.25Zm-25-175V97c0-3.516-2.734-6.25-6.25-6.25h-37.5c-3.516 0-6.25 2.734-6.25 6.25v31.25c0 3.516 2.734 6.25 6.25 6.25h37.5c3.516 0 6.25-2.734 6.25-6.25Zm125 81.25c0 82.813-67.188 150-150 150-82.813 0-150-67.188-150-150 0-82.813 67.188-150 150-150 82.813 0 150 67.188 150 150Z"/>
+&lt;/svg>
+
+ &lt;/span>Info&lt;/p></description></item><item><title>cloud-sql-restore-backup</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/tools/cloudsql/cloudsqlrestorebackup/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2053/resources/tools/cloudsql/cloudsqlrestorebackup/</guid><description>&lt;p>The &lt;code>cloud-sql-restore-backup&lt;/code> tool restores a backup on a Cloud SQL instance using the Cloud SQL Admin API.&lt;/p>
+&lt;style type="text/css">
+ 
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #6be;
+ --content-color: #444;
+ --content-background-color: #e7f2fa;
+ }
+
+ .notice.info {
+ --title-background-color: #fb7;
+ --content-background-color: #fec;
+ }
+
+ .notice.tip {
+ --title-background-color: #5a5;
+ --content-background-color: #efe;
+ }
+
+ .notice.warning {
+ --title-background-color: #c33;
+ --content-background-color: #fee;
+ }
+
+ 
+ @media (prefers-color-scheme:dark) {
+ .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+ }
+
+ body.dark .notice {
+ --title-color: #fff;
+ --title-background-color: #069;
+ --content-color: #ddd;
+ --content-background-color: #023;
+ }
+
+ body.dark .notice.info {
+ --title-background-color: #a50;
+ --content-background-color: #420;
+ }
+
+ body.dark .notice.tip {
+ --title-background-color: #363;
+ --content-background-color: #121;
+ }
+
+ body.dark .notice.warning {
+ --title-background-color: #800;
+ --content-background-color: #400;
+ }
+
+ 
+ .notice {
+ padding: 18px;
+ line-height: 24px;
+ margin-bottom: 24px;
+ border-radius: 4px;
+ color: var(--content-color);
+ background: var(--content-background-color);
+ }
+
+ .notice p:last-child {
+ margin-bottom: 0
+ }
+
+ 
+ .notice-title {
+ margin: -18px -18px 12px;
+ padding: 4px 18px;
+ border-radius: 4px 4px 0 0;
+ font-weight: 700;
+ color: var(--title-color);
+ background: var(--title-background-color);
+ }
+
+ 
+ .icon-notice {
+ display: inline-flex;
+ align-self: center;
+ margin-right: 8px;
+ }
+
+ .icon-notice img,
+ .icon-notice svg {
+ height: 1em;
+ width: 1em;
+ fill: currentColor;
+ }
+
+ .icon-notice img,
+ .icon-notice.baseline svg {
+ top: .125em;
+ position: relative;
+ }
+&lt;/style>&lt;div class="notice info" id="dd" >
  &lt;p class="notice-title">
  &lt;span class="icon-notice baseline">
  &lt;svg xmlns="http://www.w3.org/2000/svg" viewBox="92 59.5 300 300">
