@@ -568,3 +568,7 @@ func appendMessage(messages []map[string]any, newMessage map[string]any) []map[s
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
 }
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
+}

@@ -149,3 +149,7 @@ func (t Tool) ToConfig() tools.ToolConfig {
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
 }
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
+}

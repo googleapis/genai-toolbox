@@ -85,6 +85,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 			AuthRequired: cfg.AuthRequired,
 		},
 		mcpManifest: mcpManifest,
+		Parameters:  params,
 	}
 	return t, nil
 }
@@ -96,6 +97,7 @@ type Tool struct {
 	Config
 	manifest    tools.Manifest
 	mcpManifest tools.McpManifest
+	Parameters  parameters.Parameters
 }
 
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
@@ -136,4 +138,8 @@ func (t Tool) ToConfig() tools.ToolConfig {
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+func (t Tool) GetParameters() parameters.Parameters {
+	return t.Parameters
 }
