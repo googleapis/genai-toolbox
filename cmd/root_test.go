@@ -956,7 +956,7 @@ func TestParseToolFile(t *testing.T) {
 		wantToolsFile ToolsFile
 	}{
 		{
-			description: "basic example",
+			description: "basic example tools file v1",
 			in: `
 			sources:
 				my-pg-instance:
@@ -1019,7 +1019,121 @@ func TestParseToolFile(t *testing.T) {
 			},
 		},
 		{
-			description: "with prompts example",
+			description: "basic example tools file v2",
+			in: `
+			kind: sources
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+---
+			kind: authServices
+			name: my-google-auth
+			type: google
+			clientId: testing-id
+---
+			kind: embeddingModels
+			name: gemini-model
+			type: gemini
+			model: gemini-embedding-001
+			apiKey: some-key
+			dimension: 768
+---
+			kind: tools
+			name: example_tool
+			type: postgres-sql
+			source: my-pg-instance
+			description: some description
+			statement: |
+				SELECT * FROM SQL_STATEMENT;
+			parameters:
+			- name: country
+			  type: string
+			  description: some description
+---
+			kind: toolsets
+			name: example_toolset
+			tools:
+			- example_tool
+---
+			kind: prompts
+			name: code_review
+			description: ask llm to analyze code quality
+			messages:
+			- content: "please review the following code for quality: {{.code}}"
+			arguments:
+			- name: code
+			  description: the code to review
+			`,
+			wantToolsFile: ToolsFile{
+				Sources: server.SourceConfigs{
+					"my-pg-instance": cloudsqlpgsrc.Config{
+						Name:     "my-pg-instance",
+						Type:     cloudsqlpgsrc.SourceType,
+						Project:  "my-project",
+						Region:   "my-region",
+						Instance: "my-instance",
+						IPType:   "public",
+						Database: "my_db",
+						User:     "my_user",
+						Password: "my_pass",
+					},
+				},
+				AuthServices: server.AuthServiceConfigs{
+					"my-google-auth": google.Config{
+						Name:     "my-google-auth",
+						Type:     google.AuthServiceType,
+						ClientID: "testing-id",
+					},
+				},
+				EmbeddingModels: server.EmbeddingModelConfigs{
+					"gemini-model": gemini.Config{
+						Name:      "gemini-model",
+						Type:      gemini.EmbeddingModelType,
+						Model:     "gemini-embedding-001",
+						ApiKey:    "some-key",
+						Dimension: 768,
+					},
+				},
+				Tools: server.ToolConfigs{
+					"example_tool": postgressql.Config{
+						Name:        "example_tool",
+						Type:        "postgres-sql",
+						Source:      "my-pg-instance",
+						Description: "some description",
+						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						Parameters: []parameters.Parameter{
+							parameters.NewStringParameter("country", "some description"),
+						},
+						AuthRequired: []string{},
+					},
+				},
+				Toolsets: server.ToolsetConfigs{
+					"example_toolset": tools.ToolsetConfig{
+						Name:      "example_toolset",
+						ToolNames: []string{"example_tool"},
+					},
+				},
+				Prompts: server.PromptConfigs{
+					"code_review": custom.Config{
+						Name:        "code_review",
+						Description: "ask llm to analyze code quality",
+						Arguments: prompts.Arguments{
+							{Parameter: parameters.NewStringParameter("code", "the code to review")},
+						},
+						Messages: []prompts.Message{
+							{Role: "user", Content: "please review the following code for quality: {{.code}}"},
+						},
+					},
+				},
+			},
+		},
+		{
+			description: "only prompts",
 			in: `
             prompts:
                 my-prompt:
@@ -1250,7 +1364,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						Password: "my_pass",
 					},
 				},
-				AuthSources: server.AuthServiceConfigs{
+				AuthServices: server.AuthServiceConfigs{
 					"my-google-service": google.Config{
 						Name:     "my-google-service",
 						Type:     google.AuthServiceType,
