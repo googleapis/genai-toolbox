@@ -59,17 +59,17 @@ applying IAM permissions and roles to an identity.
 ## Example
 
 ```yaml
-sources:
-  my-bigtable-source:
-    kind: "bigtable"
-    project: "my-project-id"
-    instance: "test-instance"
+kind: sources
+name: my-bigtable-source
+type: "bigtable"
+project: "my-project-id"
+instance: "test-instance"
 ```
 
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                               |
 |-----------|:--------:|:------------:|-------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "bigtable".                                                           |
+| type      |  string  |     true     | Must be "bigtable".                                                           |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id"). |
 | instance  |  string  |     true     | Name of the Bigtable instance.                                                |

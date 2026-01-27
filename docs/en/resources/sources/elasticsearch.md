@@ -59,18 +59,18 @@ applying permissions to an API key.
 ## Example
 
 ```yaml
-sources:
-  my-elasticsearch-source:
-    kind: "elasticsearch"
-    addresses:
-      - "http://localhost:9200"
-    apikey: "my-api-key"
+kind: sources
+name: my-elasticsearch-source
+type: "elasticsearch"
+addresses:
+  - "http://localhost:9200"
+apikey: "my-api-key"
 ```
 
 ## Reference
 
 | **field** | **type** | **required** | **description**                            |
 |-----------|:--------:|:------------:|--------------------------------------------|
-| kind      |  string  |     true     | Must be "elasticsearch".                   |
+| type      |  string  |     true     | Must be "elasticsearch".                   |
 | addresses | []string |     true     | List of Elasticsearch hosts to connect to. |
 | apikey    |  string  |     true     | The API key to use for authentication.     |
