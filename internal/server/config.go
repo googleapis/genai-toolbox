@@ -136,12 +136,12 @@ type PromptsetConfigs map[string]prompts.PromptsetConfig
 
 func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, AuthServiceConfigs, EmbeddingModelConfigs, ToolConfigs, ToolsetConfigs, PromptConfigs, error) {
 	// prepare configs map
-	sourceConfigs := make(map[string]sources.SourceConfig)
-	authServiceConfigs := make(AuthServiceConfigs)
-	embeddingModelConfigs := make(EmbeddingModelConfigs)
-	toolConfigs := make(ToolConfigs)
-	toolsetConfigs := make(ToolsetConfigs)
-	promptConfigs := make(PromptConfigs)
+	var sourceConfigs SourceConfigs
+	var authServiceConfigs AuthServiceConfigs
+	var embeddingModelConfigs EmbeddingModelConfigs
+	var toolConfigs ToolConfigs
+	var toolsetConfigs ToolsetConfigs
+	var promptConfigs PromptConfigs
 	// promptset configs is not yet supported
 
 	decoder := yaml.NewDecoder(bytes.NewReader(raw))
@@ -171,11 +171,17 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 			if err != nil {
 				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
 			}
+			if sourceConfigs == nil {
+				sourceConfigs = make(SourceConfigs)
+			}
 			sourceConfigs[name] = c
 		case "authServices":
 			c, err := UnmarshalYAMLAuthServiceConfig(ctx, name, resource)
 			if err != nil {
 				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+			}
+			if authServiceConfigs == nil {
+				authServiceConfigs = make(AuthServiceConfigs)
 			}
 			authServiceConfigs[name] = c
 		case "tools":
@@ -183,11 +189,17 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 			if err != nil {
 				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
 			}
+			if toolConfigs == nil {
+				toolConfigs = make(ToolConfigs)
+			}
 			toolConfigs[name] = c
 		case "toolsets":
 			c, err := UnmarshalYAMLToolsetConfig(ctx, name, resource)
 			if err != nil {
 				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+			}
+			if toolsetConfigs == nil {
+				toolsetConfigs = make(ToolsetConfigs)
 			}
 			toolsetConfigs[name] = c
 		case "embeddingModels":
@@ -195,11 +207,17 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 			if err != nil {
 				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
 			}
+			if embeddingModelConfigs == nil {
+				embeddingModelConfigs = make(EmbeddingModelConfigs)
+			}
 			embeddingModelConfigs[name] = c
 		case "prompts":
 			c, err := UnmarshalYAMLPromptConfig(ctx, name, resource)
 			if err != nil {
 				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+			}
+			if promptConfigs == nil {
+				promptConfigs = make(PromptConfigs)
 			}
 			promptConfigs[name] = c
 		default:
@@ -289,7 +307,7 @@ func UnmarshalYAMLToolConfig(ctx context.Context, name string, r map[string]any)
 
 func UnmarshalYAMLToolsetConfig(ctx context.Context, name string, r map[string]any) (tools.ToolsetConfig, error) {
 	var toolsetConfig tools.ToolsetConfig
-	toolList, ok := r["tools"].([]string)
+	toolList, ok := r["tools"].([]any)
 	if !ok {
 		return toolsetConfig, fmt.Errorf("tools is missing or not a list of strings: %v", r)
 	}

@@ -53,7 +53,7 @@ func (t *getInstancesTransport) RoundTrip(req *http.Request) (*http.Response, er
 
 type instance struct {
 	Name string `json:"name"`
-	Type string `json:"type"`
+	Kind string `json:"kind"`
 }
 
 type handler struct {
@@ -95,7 +95,7 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func TestGetInstancesToolEndpoints(t *testing.T) {
 	h := &handler{
 		instances: map[string]*instance{
-			"instance-1": {Name: "instance-1", Type: "sql#instance"},
+			"instance-1": {Name: "instance-1", Kind: "sql#instance"},
 		},
 		t: t,
 	}
@@ -151,7 +151,7 @@ func TestGetInstancesToolEndpoints(t *testing.T) {
 			name:     "successful get instance",
 			toolName: "get-instance-1",
 			body:     `{"projectId": "p1", "instanceId": "instance-1"}`,
-			want:     `{"name":"instance-1","type":"sql#instance"}`,
+			want:     `{"name":"instance-1","kind":"sql#instance"}`,
 		},
 		{
 			name:        "failed get instance",

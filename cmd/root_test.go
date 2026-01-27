@@ -995,7 +995,8 @@ func TestParseToolFile(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
-				Prompts: nil,
+				AuthServices: nil,
+				Prompts:      nil,
 			},
 		},
 		{
@@ -1099,7 +1100,7 @@ func TestParseToolFile(t *testing.T) {
 					},
 				},
 				Prompts: server.PromptConfigs{
-					"code_review": custom.Config{
+					"code_review": &custom.Config{
 						Name:        "code_review",
 						Description: "ask llm to analyze code quality",
 						Arguments: prompts.Arguments{
@@ -1192,17 +1193,17 @@ func TestParseToolFileWithAuth(t *testing.T) {
 			database: my_db
 			user: my_user
 			password: my_pass
-			---
+---
 			kind: authServices
 			name: my-google-service
 			type: google
 			clientId: my-client-id
-			---
+---
 			kind: authServices
 			name: other-google-service
 			type: google
 			clientId: other-client-id
-			---
+---
 			kind: tools
 			name: example_tool
 			type: postgres-sql
@@ -1228,7 +1229,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						field: email
 					- name: other-google-service
 						field: other_email
-			---
+---
 			kind: toolsets
 			name: example_toolset
 			tools:
@@ -1396,17 +1397,17 @@ func TestParseToolFileWithAuth(t *testing.T) {
 			database: my_db
 			user: my_user
 			password: my_pass
-			---
+---
 			kind: authServices
 			name: my-google-service
 			type: google
 			clientId: my-client-id
-			---
+---
 			kind: authServices
 			name: other-google-service
 			type: google
 			clientId: other-client-id
-			---
+---
 			kind: tools
 			name: example_tool
 			type: postgres-sql
@@ -1434,7 +1435,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						field: email
 					- name: other-google-service
 						field: other_email
-			---
+---
 			kind: toolsets
 			name: example_toolset
 			tools:
@@ -1693,17 +1694,17 @@ func TestEnvVarReplacement(t *testing.T) {
 				Authorization: ${TestHeader}
 			queryParams:
 				api-key: ${API_KEY}
-			---
+---
 			kind: authServices
 			name: my-google-service
 			type: google
 			clientId: ${clientId}
-			---
+---
 			kind: authServices
 			name: other-google-service
 			type: google
 			clientId: ${clientId2}
-			---
+---
 			kind: tools
 			name: example_tool
 			type: http
@@ -1744,12 +1745,12 @@ func TestEnvVarReplacement(t *testing.T) {
 				- name: Language
 					type: string
 					description: language string
-			---
+---
 			kind: toolsets
 			name: ${toolset_name}
 			tools:
 				- example_tool
-			---
+---
 			kind: prompts
 			name: ${prompt_name}
 			description: A test prompt for {{.name}}.
@@ -2727,6 +2728,7 @@ description: "Dummy"
 ---
 kind: toolsets
 name: sqlite_database_tools
+tools:
 - dummy_tool
 `
 	toolsetConflictFile := filepath.Join(t.TempDir(), "toolset_conflict.yaml")
