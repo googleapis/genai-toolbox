@@ -170,7 +170,7 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 		var kind, name string
 		var ok bool
 		if kind, ok = resource["kind"].(string); !ok {
-			return nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'kind' field or it is not a string")
+			return nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'kind' field or it is not a string: %v", resource)
 		}
 		if name, ok = resource["name"].(string); !ok {
 			return nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'name' field or it is not a string")
@@ -302,7 +302,11 @@ func UnmarshalYAMLToolConfig(ctx context.Context, name string, r map[string]any)
 
 func UnmarshalYAMLToolsetConfig(ctx context.Context, name string, r map[string]any) (tools.ToolsetConfig, error) {
 	var toolsetConfig tools.ToolsetConfig
-	justTools := map[string]any{"tools": r["tools"]}
+	toolList, ok := r["tools"].([]string)
+	if !ok {
+		return toolsetConfig, fmt.Errorf("tools is missing or not a list of strings: %v", r)
+	}
+	justTools := map[string]any{"tools": toolList}
 	dec, err := util.NewStrictDecoder(justTools)
 	if err != nil {
 		return toolsetConfig, fmt.Errorf("error creating decoder: %s", err)
