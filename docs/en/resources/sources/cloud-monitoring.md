@@ -25,18 +25,19 @@ Authentication can be handled in two ways:
 ## Example
 
 ```yaml
-sources:
-    my-cloud-monitoring:
-        kind: cloud-monitoring
-
-    my-oauth-cloud-monitoring:
-        kind: cloud-monitoring
-        useClientOAuth: true
+kind: sources
+name: my-cloud-monitoring
+type: cloud-monitoring
+---
+kind: sources
+name: my-oauth-cloud-monitoring
+type: cloud-monitoring
+useClientOAuth: true
 ```
 
 ## Reference
 
 | **field**      | **type** | **required** | **description**                                                                                                                                |
 |----------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind           |  string  |     true     | Must be "cloud-monitoring".                                                                                                                    |
+| type           |  string  |     true     | Must be "cloud-monitoring".                                                                                                                    |
 | useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |

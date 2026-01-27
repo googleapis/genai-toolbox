@@ -12,41 +12,41 @@ statement. You can define Tools as a map in the `tools` section of your
 `tools.yaml` file. Typically, a tool will require a source to act on:
 
 ```yaml
-tools:
- search_flights_by_number:
-    kind: postgres-sql
-    source: my-pg-instance
-    statement: |
-      SELECT * FROM flights
-      WHERE airline = $1
-      AND flight_number = $2
-      LIMIT 10
-    description: |
-      Use this tool to get information for a specific flight.
-      Takes an airline code and flight number and returns info on the flight.
-      Do NOT use this tool with a flight id. Do NOT guess an airline code or flight number.
-      An airline code is a code for an airline service consisting of a two-character
-      airline designator and followed by a flight number, which is a 1 to 4 digit number.
-      For example, if given CY 0123, the airline is "CY", and flight_number is "123".
-      Another example for this is DL 1234, the airline is "DL", and flight_number is "1234".
-      If the tool returns more than one option choose the date closest to today.
-      Example:
-      {{
-          "airline": "CY",
-          "flight_number": "888",
-      }}
-      Example:
-      {{
-          "airline": "DL",
-          "flight_number": "1234",
-      }}
-    parameters:
-      - name: airline
-        type: string
-        description: Airline unique 2 letter identifier
-      - name: flight_number
-        type: string
-        description: 1 to 4 digit number
+kind: tools
+name: search_flights_by_number
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  SELECT * FROM flights
+  WHERE airline = $1
+  AND flight_number = $2
+  LIMIT 10
+description: |
+  Use this tool to get information for a specific flight.
+  Takes an airline code and flight number and returns info on the flight.
+  Do NOT use this tool with a flight id. Do NOT guess an airline code or flight number.
+  An airline code is a code for an airline service consisting of a two-character
+  airline designator and followed by a flight number, which is a 1 to 4 digit number.
+  For example, if given CY 0123, the airline is "CY", and flight_number is "123".
+  Another example for this is DL 1234, the airline is "DL", and flight_number is "1234".
+  If the tool returns more than one option choose the date closest to today.
+  Example:
+  {{
+      "airline": "CY",
+      "flight_number": "888",
+  }}
+  Example:
+  {{
+      "airline": "DL",
+      "flight_number": "1234",
+  }}
+parameters:
+  - name: airline
+    type: string
+    description: Airline unique 2 letter identifier
+  - name: flight_number
+    type: string
+    description: 1 to 4 digit number
 ```
 
 ## Specifying Parameters
@@ -55,13 +55,13 @@ Parameters for each Tool will define what inputs the agent will need to provide
 to invoke them. Parameters should be pass as a list of Parameter objects:
 
 ```yaml
-    parameters:
-      - name: airline
-        type: string
-        description: Airline unique 2 letter identifier
-      - name: flight_number
-        type: string
-        description: 1 to 4 digit number
+parameters:
+  - name: airline
+    type: string
+    description: Airline unique 2 letter identifier
+  - name: flight_number
+    type: string
+    description: 1 to 4 digit number
 ```
 
 ### Basic Parameters
@@ -71,10 +71,10 @@ most cases, the description will be provided to the LLM as context on specifying
 the parameter.
 
 ```yaml
-    parameters:
-      - name: airline
-        type: string
-        description: Airline unique 2 letter identifier
+parameters:
+  - name: airline
+    type: string
+    description: Airline unique 2 letter identifier
 ```
 
 | **field**      |    **type**    | **required** | **description**                                                                                                                                                                                                                        |
@@ -97,16 +97,16 @@ To use the `array` type, you must also specify what kind of items are
 in the list using the items field:
 
 ```yaml
-    parameters:
-      - name: preferred_airlines
-        type: array
-        description: A list of airline, ordered by preference.
-        items:
-          name: name
-          type: string
-          description: Name of the airline.
-    statement: |
-      SELECT * FROM airlines WHERE preferred_airlines = ANY($1);
+parameters:
+  - name: preferred_airlines
+    type: array
+    description: A list of airline, ordered by preference.
+    items:
+      name: name
+      type: string
+      description: Name of the airline.
+statement: |
+  SELECT * FROM airlines WHERE preferred_airlines = ANY($1);
 ```
 
 | **field**      |     **type**     | **required** | **description**                                                            |
@@ -141,10 +141,10 @@ This is the default behavior when valueType is omitted. It's useful for passing
 a flexible group of settings.
 
 ```yaml
-    parameters:
-          - name: execution_context
-            type: map
-            description: A flexible set of key-value pairs for the execution environment.
+parameters:
+  - name: execution_context
+    type: map
+    description: A flexible set of key-value pairs for the execution environment.
 ```
 
 #### Typed Map
@@ -153,11 +153,11 @@ Specify valueType to ensure all values in the map are of the same type. An error
 will be thrown in case of value type mismatch.
 
 ```yaml
- parameters:
-      - name: user_scores
-        type: map
-        description: A map of user IDs to their scores. All scores must be integers.
-        valueType: integer # This enforces the value type for all entries.
+parameters:
+  - name: user_scores
+    type: map
+    description: A map of user IDs to their scores. All scores must be integers.
+    valueType: integer # This enforces the value type for all entries.
 ```
 
 ### Authenticated Parameters
@@ -171,21 +171,21 @@ the required [authServices](../authServices/) to specific claims within the
 user's ID token.
 
 ```yaml
-  tools:
-    search_flights_by_user_id:
-        kind: postgres-sql
-        source: my-pg-instance
-        statement: |
-          SELECT * FROM flights WHERE user_id = $1
-        parameters:
-          - name: user_id
-            type: string
-            description: Auto-populated from Google login
-            authServices:
-              # Refer to one of the `authServices` defined
-              - name: my-google-auth
-              # `sub` is the OIDC claim field for user ID
-                field: sub
+kind: tools
+name: search_flights_by_user_id
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  SELECT * FROM flights WHERE user_id = $1
+parameters:
+  - name: user_id
+    type: string
+    description: Auto-populated from Google login
+    authServices:
+      # Refer to one of the `authServices` defined
+      - name: my-google-auth
+        # `sub` is the OIDC claim field for user ID
+        field: sub
 ```
 
 | **field** | **type** | **required** | **description**                                                                  |
@@ -222,31 +222,31 @@ can use `minValue` and `maxValue` to define the allowable range.
 {{< /notice >}}
 
 ```yaml
-tools:
- select_columns_from_table:
-    kind: postgres-sql
-    source: my-pg-instance
-    statement: |
-      SELECT {{array .columnNames}} FROM {{.tableName}}
-    description: |
-      Use this tool to list all information from a specific table.
-      Example:
-      {{
-          "tableName": "flights",
-          "columnNames": ["id", "name"]
-      }}
-    templateParameters:
-      - name: tableName
-        type: string
-        description: Table to select from
-      - name: columnNames
-        type: array
-        description: The columns to select
-        items:
-          name: column
-          type: string
-          description: Name of a column to select
-          escape: double-quotes # with this, the statement will resolve to `SELECT "id", "name" FROM flights`
+kind: tools
+name: select_columns_from_table
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  SELECT {{array .columnNames}} FROM {{.tableName}}
+description: |
+  Use this tool to list all information from a specific table.
+  Example:
+  {{
+      "tableName": "flights",
+      "columnNames": ["id", "name"]
+  }}
+templateParameters:
+  - name: tableName
+    type: string
+    description: Table to select from
+  - name: columnNames
+    type: array
+    description: The columns to select
+    items:
+      name: column
+      type: string
+      description: Name of a column to select
+      escape: double-quotes # with this, the statement will resolve to `SELECT "id", "name" FROM flights`
 ```
 
 | **field**      |     **type**     |  **required**   | **description**                                                                     |
@@ -267,16 +267,16 @@ specifying an `authRequired` field. Specify a list of
 [authServices](../authServices/) defined in the previous section.
 
 ```yaml
-tools:
-  search_all_flight:
-      kind: postgres-sql
-      source: my-pg-instance
-      statement: |
-        SELECT * FROM flights
-      # A list of `authServices` defined previously
-      authRequired:
-        - my-google-auth
-        - other-auth-service
+kind: tools
+name: search_all_flight
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  SELECT * FROM flights
+# A list of `authServices` defined previously
+authRequired:
+  - my-google-auth
+  - other-auth-service
 ```
 
 ## Kinds of tools

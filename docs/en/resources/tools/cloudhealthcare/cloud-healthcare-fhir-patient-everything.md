@@ -22,18 +22,18 @@ types, or only resources that have been updated after a given time.
 ## Example
 
 ```yaml
-tools:
-  fhir_patient_everything:
-    kind: cloud-healthcare-fhir-patient-everything
-    source: my-healthcare-source
-    description: Use this tool to retrieve all the information about a given patient.
+kind: tools
+name: fhir_patient_everything
+type: cloud-healthcare-fhir-patient-everything
+source: my-healthcare-source
+description: Use this tool to retrieve all the information about a given patient.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                     |
 |-------------|:--------:|:------------:|-----------------------------------------------------|
-| kind        |  string  |     true     | Must be "cloud-healthcare-fhir-patient-everything". |
+| type        |  string  |     true     | Must be "cloud-healthcare-fhir-patient-everything". |
 | source      |  string  |     true     | Name of the healthcare source.                      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.  |
 

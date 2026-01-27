@@ -23,18 +23,18 @@ response bundle.
 ## Example
 
 ```yaml
-tools:
-  get_fhir_store:
-    kind: cloud-healthcare-fhir-fetch-page
-    source: my-healthcare-source
-    description: Use this tool to fetch a page of FHIR resources from a FHIR Bundle's entry.link.url
+kind: tools
+name: get_fhir_store
+type: cloud-healthcare-fhir-fetch-page
+source: my-healthcare-source
+description: Use this tool to fetch a page of FHIR resources from a FHIR Bundle's entry.link.url
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "cloud-healthcare-fhir-fetch-page".        |
+| type        |  string  |     true     | Must be "cloud-healthcare-fhir-fetch-page".        |
 | source      |  string  |     true     | Name of the healthcare source.                     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 

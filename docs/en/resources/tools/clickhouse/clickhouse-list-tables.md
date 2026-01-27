@@ -21,11 +21,11 @@ user, making it useful for schema exploration and table discovery tasks.
 ## Example
 
 ```yaml
-tools:
-  list_clickhouse_tables:
-    kind: clickhouse-list-tables
-    source: my-clickhouse-instance
-    description: List all tables in a specific ClickHouse database
+kind: tools
+name: list_clickhouse_tables
+type: clickhouse-list-tables
+source: my-clickhouse-instance
+description: List all tables in a specific ClickHouse database
 ```
 
 ## Parameters
@@ -56,7 +56,7 @@ Example response:
 
 | **field**    |      **type**      | **required** | **description**                                         |
 |--------------|:------------------:|:------------:|---------------------------------------------------------|
-| kind         |       string       |     true     | Must be "clickhouse-list-tables".                       |
+| type         |       string       |     true     | Must be "clickhouse-list-tables".                       |
 | source       |       string       |     true     | Name of the ClickHouse source to list tables from.      |
 | description  |       string       |     true     | Description of the tool that is passed to the LLM.      |
 | authRequired |  array of string   |    false     | Authentication services required to use this tool.      |

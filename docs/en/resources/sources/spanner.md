@@ -64,20 +64,20 @@ applying IAM permissions and roles to an identity.
 ## Example
 
 ```yaml
-sources:
-    my-spanner-source:
-        kind: "spanner"
-        project: "my-project-id"
-        instance: "my-instance"
-        database: "my_db"
-        # dialect: "googlesql"
+kind: sources
+name: my-spanner-source
+type: "spanner"
+project: "my-project-id"
+instance: "my-instance"
+database: "my_db"
+# dialect: "googlesql"
 ```
 
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                                                                     |
 |-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "spanner".                                                                                                  |
+| type      |  string  |     true     | Must be "spanner".                                                                                                  |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                       |
 | instance  |  string  |     true     | Name of the Spanner instance.                                                                                       |
 | database  |  string  |     true     | Name of the database on the Spanner instance                                                                        |

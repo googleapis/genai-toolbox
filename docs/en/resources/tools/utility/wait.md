@@ -24,17 +24,17 @@ and shouldn't be used for production agents.
 ## Example
 
 ```yaml
-tools:
-  wait_for_tool:
-    kind: wait
-    description: Use this tool to pause execution for a specified duration.
-    timeout: 30s
+kind: tools
+name: wait_for_tool
+type: wait
+description: Use this tool to pause execution for a specified duration.
+timeout: 30s
 ```
 
 ## Reference
 
 | **field**   |    **type**    | **required** | **description**                                       |
 |-------------|:--------------:|:------------:|-------------------------------------------------------|
-| kind        |     string     |     true     | Must be "wait".                                       |
+| type        |     string     |     true     | Must be "wait".                                       |
 | description |     string     |     true     | Description of the tool that is passed to the LLM.    |
 | timeout     |     string     |     true     | The default duration the tool can wait for.           |
