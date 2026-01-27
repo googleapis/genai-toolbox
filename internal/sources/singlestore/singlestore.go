@@ -52,7 +52,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 // Config holds the configuration parameters for connecting to a SingleStore database.
 type Config struct {
 	Name         string `yaml:"name" validate:"required"`
-	Type         string `yaml:"kind" validate:"required"`
+	Type         string `yaml:"type" validate:"required"`
 	Host         string `yaml:"host" validate:"required"`
 	Port         string `yaml:"port" validate:"required"`
 	User         string `yaml:"user" validate:"required"`
@@ -61,7 +61,7 @@ type Config struct {
 	QueryTimeout string `yaml:"queryTimeout"`
 }
 
-// SourceConfigType returns the kind of the source configuration.
+// SourceConfigType returns the type of the source configuration.
 func (r Config) SourceConfigType() string {
 	return SourceType
 }
@@ -93,7 +93,7 @@ type Source struct {
 	Pool *sql.DB
 }
 
-// SourceType returns the kind of the source configuration.
+// SourceType returns the type of the source configuration.
 func (s *Source) SourceType() string {
 	return SourceType
 }
