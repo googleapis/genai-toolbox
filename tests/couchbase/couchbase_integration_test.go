@@ -58,7 +58,7 @@ func getCouchbaseVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":                 couchbaseSourceType,
+		"type":                 couchbaseSourceType,
 		"connectionString":     couchbaseConnection,
 		"bucket":               couchbaseBucket,
 		"scope":                couchbaseScope,
@@ -231,7 +231,7 @@ func setupCouchbaseCollection(t *testing.T, ctx context.Context, cluster *gocb.C
 	}
 }
 
-// getCouchbaseParamToolInfo returns statements and params for my-tool couchbase-sql kind
+// getCouchbaseParamToolInfo returns statements and params for my-tool couchbase-sql type
 func getCouchbaseParamToolInfo(collectionName string) (string, string, string, string, []map[string]any) {
 	// N1QL uses positional or named parameters with $ prefix
 	toolStatement := fmt.Sprintf("SELECT TONUMBER(meta().id) as id, "+
@@ -254,7 +254,7 @@ func getCouchbaseParamToolInfo(collectionName string) (string, string, string, s
 	return toolStatement, idToolStatement, nameToolStatement, arrayToolStatemnt, params
 }
 
-// getCouchbaseAuthToolInfo returns statements and param of my-auth-tool for couchbase-sql kind
+// getCouchbaseAuthToolInfo returns statements and param of my-auth-tool for couchbase-sql type
 func getCouchbaseAuthToolInfo(collectionName string) (string, []map[string]any) {
 	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = $email", collectionName)
 

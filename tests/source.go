@@ -43,7 +43,7 @@ func RunSourceConnectionTest(t *testing.T, sourceConfig map[string]any, toolType
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        toolType,
+				"type":        toolType,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "SELECT 1;",

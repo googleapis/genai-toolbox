@@ -56,7 +56,7 @@ func getOceanBaseVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     OceanBaseSourceType,
+		"type":     OceanBaseSourceType,
 		"host":     OceanBaseHost,
 		"port":     OceanBasePort,
 		"database": OceanBaseDatabase,
@@ -179,12 +179,12 @@ func addOceanBaseExecuteSqlConfig(t *testing.T, config map[string]any) map[strin
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "oceanbase-execute-sql",
+		"type":        "oceanbase-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "oceanbase-execute-sql",
+		"type":        "oceanbase-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{

@@ -53,7 +53,7 @@ func (t *getInstancesTransport) RoundTrip(req *http.Request) (*http.Response, er
 
 type instance struct {
 	Name string `json:"name"`
-	Type string `json:"kind"`
+	Type string `json:"type"`
 }
 
 type handler struct {
@@ -151,7 +151,7 @@ func TestGetInstancesToolEndpoints(t *testing.T) {
 			name:     "successful get instance",
 			toolName: "get-instance-1",
 			body:     `{"projectId": "p1", "instanceId": "instance-1"}`,
-			want:     `{"name":"instance-1","kind":"sql#instance"}`,
+			want:     `{"name":"instance-1","type":"sql#instance"}`,
 		},
 		{
 			name:        "failed get instance",
@@ -231,21 +231,21 @@ func getToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 			"my-invalid-cloud-sql-source": map[string]any{
-				"kind":           "cloud-sql-admin",
+				"type":           "cloud-sql-admin",
 				"useClientOAuth": true,
 			},
 		},
 		"tools": map[string]any{
 			"get-instance-1": map[string]any{
-				"kind":        getInstancesToolType,
+				"type":        getInstancesToolType,
 				"description": "get instance 1",
 				"source":      "my-cloud-sql-source",
 			},
 			"get-instance-2": map[string]any{
-				"kind":        getInstancesToolType,
+				"type":        getInstancesToolType,
 				"description": "get instance 2",
 				"source":      "my-invalid-cloud-sql-source",
 			},

@@ -39,7 +39,7 @@ var (
 
 func getSQLiteVars(t *testing.T) map[string]any {
 	return map[string]any{
-		"kind":     SQLiteSourceType,
+		"type":     SQLiteSourceType,
 		"database": SQLiteDatabase,
 	}
 }
@@ -191,7 +191,7 @@ func TestSQLiteExecuteSqlTool(t *testing.T) {
 	toolConfig := map[string]any{
 		"tools": map[string]any{
 			"my-exec-sql-tool": map[string]any{
-				"kind":        "sqlite-execute-sql",
+				"type":        "sqlite-execute-sql",
 				"source":      "my-instance",
 				"description": "Tool to execute SQL statements",
 			},
