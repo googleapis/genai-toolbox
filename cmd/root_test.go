@@ -494,6 +494,437 @@ func TestDefaultLogLevel(t *testing.T) {
 	}
 }
 
+func TestConvertToolsFile(t *testing.T) {
+	tcs := []struct {
+		desc   string
+		in     string
+		want   string
+		isErr  bool
+		errStr string
+	}{
+		{
+			desc: "basic convert",
+			in: `
+            sources:
+                my-pg-instance:
+                    kind: cloud-sql-postgres
+                    project: my-project
+                    region: my-region
+                    instance: my-instance
+                    database: my_db
+                    user: my_user
+                    password: my_pass
+            authServices:
+                my-google-auth:
+                    kind: google
+                    clientId: testing-id
+            tools:
+                example_tool:
+                    kind: postgres-sql
+                    source: my-pg-instance
+                    description: some description
+                    statement: SELECT * FROM SQL_STATEMENT;
+                    parameters:
+                        - name: country
+                          type: string
+                          description: some description
+            toolsets:
+                example_toolset:
+                    - example_tool
+            prompts:
+                code_review:
+                    description: ask llm to analyze code quality
+                    messages:
+                      - content: "please review the following code for quality: {{.code}}"
+                    arguments:
+                        - name: code
+                          description: the code to review
+            embeddingModels:
+                gemini-model:
+                    kind: gemini
+                    model: gemini-embedding-001
+                    apiKey: some-key
+                    dimension: 768`,
+			want: `kind: sources
+name: my-pg-instance
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: my_user
+password: my_pass
+---
+kind: authServices
+name: my-google-auth
+type: google
+clientId: testing-id
+---
+kind: tools
+name: example_tool
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
+kind: toolsets
+name: example_toolset
+tools:
+- example_tool
+---
+kind: prompts
+name: code_review
+description: ask llm to analyze code quality
+messages:
+- content: "please review the following code for quality: {{.code}}"
+arguments:
+- name: code
+  description: the code to review
+---
+kind: embeddingModels
+name: gemini-model
+type: gemini
+model: gemini-embedding-001
+apiKey: some-key
+dimension: 768
+`,
+		},
+		{
+			desc: "preserve resource order",
+			in: `
+            tools:
+                example_tool:
+                    kind: postgres-sql
+                    source: my-pg-instance
+                    description: some description
+                    statement: SELECT * FROM SQL_STATEMENT;
+                    parameters:
+                        - name: country
+                          type: string
+                          description: some description
+            sources:
+                my-pg-instance:
+                    kind: cloud-sql-postgres
+                    project: my-project
+                    region: my-region
+                    instance: my-instance
+                    database: my_db
+                    user: my_user
+                    password: my_pass
+            authServices:
+                my-google-auth:
+                    kind: google
+                    clientId: testing-id
+            toolsets:
+                example_toolset:
+                    - example_tool
+            authSources:
+                my-google-auth2:
+                    kind: google
+                    clientId: testing-id`,
+			want: `kind: tools
+name: example_tool
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
+kind: sources
+name: my-pg-instance
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: my_user
+password: my_pass
+---
+kind: authServices
+name: my-google-auth
+type: google
+clientId: testing-id
+---
+kind: toolsets
+name: example_toolset
+tools:
+- example_tool
+---
+kind: authServices
+name: my-google-auth2
+type: google
+clientId: testing-id
+`,
+		},
+		{
+			desc: "convert combination of v1 and v2",
+			in: `
+            sources:
+                my-pg-instance:
+                    kind: cloud-sql-postgres
+                    project: my-project
+                    region: my-region
+                    instance: my-instance
+                    database: my_db
+                    user: my_user
+                    password: my_pass
+            authServices:
+                my-google-auth:
+                    kind: google
+                    clientId: testing-id
+            tools:
+                example_tool:
+                    kind: postgres-sql
+                    source: my-pg-instance
+                    description: some description
+                    statement: SELECT * FROM SQL_STATEMENT;
+                    parameters:
+                        - name: country
+                          type: string
+                          description: some description
+            toolsets:
+                example_toolset:
+                    - example_tool
+            prompts:
+                code_review:
+                    description: ask llm to analyze code quality
+                    messages:
+                      - content: "please review the following code for quality: {{.code}}"
+                    arguments:
+                        - name: code
+                          description: the code to review
+            embeddingModels:
+                gemini-model:
+                    kind: gemini
+                    model: gemini-embedding-001
+                    apiKey: some-key
+                    dimension: 768
+---
+            kind: sources
+            name: my-pg-instance2
+            type: cloud-sql-postgres
+            project: my-project
+            region: my-region
+            instance: my-instance
+---
+            kind: authServices
+            name: my-google-auth2
+            type: google
+            clientId: testing-id
+---
+            kind: tools
+            name: example_tool2
+            type: postgres-sql
+            source: my-pg-instance
+            description: some description
+            statement: SELECT * FROM SQL_STATEMENT;
+            parameters:
+            - name: country
+              type: string
+              description: some description
+---
+            kind: toolsets
+            name: example_toolset2
+            tools:
+            - example_tool
+---
+            tools:
+            - example_tool
+            kind: toolsets
+            name: example_toolset3
+---
+            kind: prompts
+            name: code_review2
+            description: ask llm to analyze code quality
+            messages:
+            - content: "please review the following code for quality: {{.code}}"
+            arguments:
+            - name: code
+              description: the code to review
+---
+            kind: embeddingModels
+            name: gemini-model2
+            type: gemini`,
+			want: `kind: sources
+name: my-pg-instance
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: my_user
+password: my_pass
+---
+kind: authServices
+name: my-google-auth
+type: google
+clientId: testing-id
+---
+kind: tools
+name: example_tool
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
+kind: toolsets
+name: example_toolset
+tools:
+- example_tool
+---
+kind: prompts
+name: code_review
+description: ask llm to analyze code quality
+messages:
+- content: "please review the following code for quality: {{.code}}"
+arguments:
+- name: code
+  description: the code to review
+---
+kind: embeddingModels
+name: gemini-model
+type: gemini
+model: gemini-embedding-001
+apiKey: some-key
+dimension: 768
+---
+kind: sources
+name: my-pg-instance2
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+---
+kind: authServices
+name: my-google-auth2
+type: google
+clientId: testing-id
+---
+kind: tools
+name: example_tool2
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
+kind: toolsets
+name: example_toolset2
+tools:
+- example_tool
+---
+tools:
+- example_tool
+kind: toolsets
+name: example_toolset3
+---
+kind: prompts
+name: code_review2
+description: ask llm to analyze code quality
+messages:
+- content: "please review the following code for quality: {{.code}}"
+arguments:
+- name: code
+  description: the code to review
+---
+kind: embeddingModels
+name: gemini-model2
+type: gemini
+`,
+		},
+		{
+			desc: "no convertion needed",
+			in: `kind: sources
+name: my-pg-instance
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: my_user
+password: my_pass
+---
+kind: tools
+name: example_tool
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
+kind: toolsets
+name: example_toolset
+tools:
+- example_tool`,
+			want: `kind: sources
+name: my-pg-instance
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: my_user
+password: my_pass
+---
+kind: tools
+name: example_tool
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
+kind: toolsets
+name: example_toolset
+tools:
+- example_tool
+`,
+		},
+		{
+			desc: "invalid source",
+			in:   `sources: invalid`,
+			want: "",
+		},
+		{
+			desc: "invalid toolset",
+			in:   `toolsets: invalid`,
+			want: "",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			output, err := convertToolsFile([]byte(tc.in))
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+
+			if diff := cmp.Diff(string(output), tc.want); diff != "" {
+				t.Fatalf("incorrect toolsets parse: diff %v", diff)
+			}
+		})
+	}
+}
+
 func TestParseToolFile(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {

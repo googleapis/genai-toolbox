@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
 	"fmt"
@@ -423,6 +424,129 @@ func parseEnv(input string) (string, error) {
 		return ""
 	})
 	return output, err
+}
+
+func convertToolsFile(raw []byte) ([]byte, error) {
+	var input yaml.MapSlice
+	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
+
+	// convert to tools file v2
+	var buf bytes.Buffer
+	encoder := yaml.NewEncoder(&buf)
+
+	v1keys := []string{"sources", "authSources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
+	for {
+		if err := decoder.Decode(&input); err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+		for _, item := range input {
+			key, ok := item.Key.(string)
+			if !ok {
+				return nil, fmt.Errorf("unexpected non-string key in input: %v", item.Key)
+			}
+			// check if the key is config file v1's key
+			if slices.Contains(v1keys, key) {
+				// check if value conversion to yaml.MapSlice successfully
+				// fields such as "tools" in toolsets might pass the first check but
+				// fail to convert to MapSlice
+				if slice, ok := item.Value.(yaml.MapSlice); ok {
+					// convert authSources to authServices
+					if key == "authSources" {
+						key = "authServices"
+					}
+					transformed, err := transformDocs(key, slice)
+					if err != nil {
+						return nil, err
+					}
+					// encode per-doc
+					for _, doc := range transformed {
+						if err := encoder.Encode(doc); err != nil {
+							return nil, err
+						}
+					}
+				} else {
+					// invalid input will be ignored
+					// we don't want to throw error here since the config could
+					// be valid but with a different order such as:
+					// ---
+					// tools:
+					// - tool_a
+					// kind: toolsets
+					// ---
+					continue
+				}
+			} else {
+				// this doc is already v2, encode to buf
+				if err := encoder.Encode(input); err != nil {
+					return nil, err
+				}
+				break
+			}
+		}
+	}
+	return buf.Bytes(), nil
+}
+
+// transformDocs transforms the configuration file from v1 format to v2
+// yaml.MapSlice will preserve the order in a map
+func transformDocs(kind string, input yaml.MapSlice) ([]yaml.MapSlice, error) {
+	var transformed []yaml.MapSlice
+	for _, entry := range input {
+		entryName, ok := entry.Key.(string)
+		if !ok {
+			return nil, fmt.Errorf("unexpected non-string key for entry in '%s': %v", kind, entry.Key)
+		}
+		entryBody := ProcessValue(entry.Value, kind == "toolsets")
+
+		currentTransformed := yaml.MapSlice{
+			{Key: "kind", Value: kind},
+			{Key: "name", Value: entryName},
+		}
+
+		// Merge the transformed body into our result
+		if bodySlice, ok := entryBody.(yaml.MapSlice); ok {
+			currentTransformed = append(currentTransformed, bodySlice...)
+		} else {
+			return nil, fmt.Errorf("unable to convert entryBody to MapSlice")
+		}
+		transformed = append(transformed, currentTransformed)
+	}
+	return transformed, nil
+}
+
+// ProcessValue recursively looks for MapSlices to rename 'kind' -> 'type'
+func ProcessValue(v any, isToolset bool) any {
+	switch val := v.(type) {
+	case yaml.MapSlice:
+		// creating a new MapSlice is safer for recursive transformation
+		newVal := make(yaml.MapSlice, len(val))
+		for i, item := range val {
+			// Perform renaming
+			if item.Key == "kind" {
+				item.Key = "type"
+			}
+			// Recursive call for nested values (e.g., nested objects or lists)
+			item.Value = ProcessValue(item.Value, false)
+			newVal[i] = item
+		}
+		return newVal
+	case []any:
+		// Process lists: If it's a toolset top-level list, wrap it.
+		if isToolset {
+			return yaml.MapSlice{{Key: "tools", Value: val}}
+		}
+		// Otherwise, recurse into list items (to catch nested objects)
+		newVal := make([]any, len(val))
+		for i := range val {
+			newVal[i] = ProcessValue(val[i], false)
+		}
+		return newVal
+	default:
+		return val
+	}
 }
 
 // parseToolsFile parses the provided yaml into appropriate configs.
