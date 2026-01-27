@@ -13,3 +13,5 @@ npm publish --access public
 cd ../server-win32-x64
 npm pack .
 npm publish --access public
+
+cd ..

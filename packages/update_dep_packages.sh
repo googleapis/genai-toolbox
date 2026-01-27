@@ -19,3 +19,5 @@ cd ../server-win32-x64
 npm install --force
 rm -rf bin/ 
 git add version.txt package.json package-lock.json
+
+cd ..
