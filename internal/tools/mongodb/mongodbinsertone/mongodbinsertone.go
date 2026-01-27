@@ -117,10 +117,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	return source.InsertOne(ctx, jsonData, t.Canonical, t.Database, t.Collection)
 }
 
-func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParseParams(t.PayloadParams, data, claims)
-}
-
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
 	return parameters.EmbedParams(ctx, t.PayloadParams, paramValues, embeddingModelsMap, nil)
 }
