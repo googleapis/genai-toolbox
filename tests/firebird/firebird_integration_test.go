@@ -56,7 +56,7 @@ func getFirebirdVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     FirebirdSourceType,
+		"type":     FirebirdSourceType,
 		"host":     FirebirdHost,
 		"port":     FirebirdPort,
 		"database": FirebirdDatabase,
@@ -358,7 +358,7 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolTyp
 
 	// Firebird-specific template parameter tools with compatible syntax
 	toolsMap["create-table-templateParams-tool"] = map[string]any{
-		"kind":        toolType,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Create table tool with template parameters",
 		"statement":   "CREATE TABLE {{.tableName}} ({{array .columns}})",
@@ -368,7 +368,7 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolTyp
 		},
 	}
 	toolsMap["insert-table-templateParams-tool"] = map[string]any{
-		"kind":        toolType,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Insert table tool with template parameters",
 		"statement":   "INSERT INTO {{.tableName}} ({{array .columns}}) VALUES ({{.values}})",
@@ -379,7 +379,7 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolTyp
 		},
 	}
 	toolsMap["select-templateParams-tool"] = map[string]any{
-		"kind":        toolType,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Select table tool with template parameters",
 		"statement":   "SELECT id AS \"id\", name AS \"name\", age AS \"age\" FROM {{.tableName}}",
@@ -388,7 +388,7 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolTyp
 		},
 	}
 	toolsMap["select-templateParams-combined-tool"] = map[string]any{
-		"kind":        toolType,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Select table tool with combined template parameters",
 		"statement":   tmplSelectCombined,
@@ -400,7 +400,7 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolTyp
 		},
 	}
 	toolsMap["select-fields-templateParams-tool"] = map[string]any{
-		"kind":        toolType,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Select specific fields tool with template parameters",
 		"statement":   "SELECT name AS \"name\" FROM {{.tableName}}",
@@ -409,7 +409,7 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolTyp
 		},
 	}
 	toolsMap["select-filter-templateParams-combined-tool"] = map[string]any{
-		"kind":        toolType,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Select table tool with filter template parameters",
 		"statement":   tmplSelectFilterCombined,
@@ -423,7 +423,7 @@ func addFirebirdTemplateParamConfig(t *testing.T, config map[string]any, toolTyp
 	}
 	// Firebird uses simple DROP TABLE syntax without IF EXISTS
 	toolsMap["drop-table-templateParams-tool"] = map[string]any{
-		"kind":        toolType,
+		"type":        toolType,
 		"source":      "my-instance",
 		"description": "Drop table tool with template parameters",
 		"statement":   "DROP TABLE {{.tableName}}",
@@ -441,12 +441,12 @@ func addFirebirdExecuteSqlConfig(t *testing.T, config map[string]any) map[string
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "firebird-execute-sql",
+		"type":        "firebird-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "firebird-execute-sql",
+		"type":        "firebird-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{

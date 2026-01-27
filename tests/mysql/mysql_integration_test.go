@@ -54,7 +54,7 @@ func getMySQLVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     MySQLSourceType,
+		"type":     MySQLSourceType,
 		"host":     MySQLHost,
 		"port":     MySQLPort,
 		"database": MySQLDatabase,

@@ -49,7 +49,7 @@ func getCassandraVars(t *testing.T) map[string]any {
 		t.Fatal("'Password' not set")
 	}
 	return map[string]any{
-		"kind":     CassandraSourceType,
+		"type":     CassandraSourceType,
 		"hosts":    strings.Split(Hosts, ","),
 		"keyspace": Keyspace,
 		"username": Username,

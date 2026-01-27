@@ -59,7 +59,7 @@ func getCloudSQLPgVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     CloudSQLPostgresSourceType,
+		"type":     CloudSQLPostgresSourceType,
 		"project":  CloudSQLPostgresProject,
 		"instance": CloudSQLPostgresInstance,
 		"region":   CloudSQLPostgresRegion,
@@ -231,7 +231,7 @@ func TestCloudSQLPgIAMConnection(t *testing.T) {
 	serviceAccountEmail := strings.TrimSuffix(tests.ServiceAccountEmail, ".gserviceaccount.com")
 
 	noPassSourceConfig := map[string]any{
-		"kind":     CloudSQLPostgresSourceType,
+		"type":     CloudSQLPostgresSourceType,
 		"project":  CloudSQLPostgresProject,
 		"instance": CloudSQLPostgresInstance,
 		"region":   CloudSQLPostgresRegion,
@@ -240,7 +240,7 @@ func TestCloudSQLPgIAMConnection(t *testing.T) {
 	}
 
 	noUserSourceConfig := map[string]any{
-		"kind":     CloudSQLPostgresSourceType,
+		"type":     CloudSQLPostgresSourceType,
 		"project":  CloudSQLPostgresProject,
 		"instance": CloudSQLPostgresInstance,
 		"region":   CloudSQLPostgresRegion,
@@ -249,7 +249,7 @@ func TestCloudSQLPgIAMConnection(t *testing.T) {
 	}
 
 	noUserNoPassSourceConfig := map[string]any{
-		"kind":     CloudSQLPostgresSourceType,
+		"type":     CloudSQLPostgresSourceType,
 		"project":  CloudSQLPostgresProject,
 		"instance": CloudSQLPostgresInstance,
 		"region":   CloudSQLPostgresRegion,

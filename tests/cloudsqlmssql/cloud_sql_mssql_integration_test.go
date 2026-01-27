@@ -61,7 +61,7 @@ func getCloudSQLMSSQLVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     CloudSQLMSSQLSourceType,
+		"type":     CloudSQLMSSQLSourceType,
 		"project":  CloudSQLMSSQLProject,
 		"instance": CloudSQLMSSQLInstance,
 		"region":   CloudSQLMSSQLRegion,
