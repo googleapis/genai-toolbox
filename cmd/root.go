@@ -395,7 +395,6 @@ func NewCommand(opts ...Option) *Command {
 
 type ToolsFile struct {
 	Sources         server.SourceConfigs         `yaml:"sources"`
-	AuthSources     server.AuthServiceConfigs    `yaml:"authSources"` // Deprecated: Kept for compatibility.
 	AuthServices    server.AuthServiceConfigs    `yaml:"authServices"`
 	EmbeddingModels server.EmbeddingModelConfigs `yaml:"embeddingModels"`
 	Tools           server.ToolConfigs           `yaml:"tools"`
@@ -453,7 +452,7 @@ func convertToolsFile(raw []byte) ([]byte, error) {
 				// fields such as "tools" in toolsets might pass the first check but
 				// fail to convert to MapSlice
 				if slice, ok := item.Value.(yaml.MapSlice); ok {
-					// convert authSources to authServices
+					// Deprecated: convert authSources to authServices
 					if key == "authSources" {
 						key = "authServices"
 					}
@@ -559,8 +558,13 @@ func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	}
 	raw = []byte(output)
 
+	raw, err = convertToolsFile(raw)
+	if err != nil {
+		return toolsFile, fmt.Errorf("error converting tools file: %s", err)
+	}
+
 	// Parse contents
-	err = yaml.UnmarshalContext(ctx, raw, &toolsFile, yaml.Strict())
+	toolsFile.Sources, toolsFile.AuthServices, toolsFile.EmbeddingModels, toolsFile.Tools, toolsFile.Toolsets, toolsFile.Prompts, err = server.UnmarshalResourceConfig(ctx, raw)
 	if err != nil {
 		return toolsFile, err
 	}
@@ -589,18 +593,6 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 				conflicts = append(conflicts, fmt.Sprintf("source '%s' (file #%d)", name, fileIndex+1))
 			} else {
 				merged.Sources[name] = source
-			}
-		}
-
-		// Check for conflicts and merge authSources (deprecated, but still support)
-		for name, authSource := range file.AuthSources {
-			if _, exists := merged.AuthSources[name]; exists {
-				conflicts = append(conflicts, fmt.Sprintf("authSource '%s' (file #%d)", name, fileIndex+1))
-			} else {
-				if merged.AuthSources == nil {
-					merged.AuthSources = make(server.AuthServiceConfigs)
-				}
-				merged.AuthSources[name] = authSource
 			}
 		}
 
@@ -1078,20 +1070,6 @@ func run(cmd *Command) error {
 	cmd.cfg.ToolConfigs = finalToolsFile.Tools
 	cmd.cfg.ToolsetConfigs = finalToolsFile.Toolsets
 	cmd.cfg.PromptConfigs = finalToolsFile.Prompts
-
-	authSourceConfigs := finalToolsFile.AuthSources
-	if authSourceConfigs != nil {
-		cmd.logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")
-
-		for k, v := range authSourceConfigs {
-			if _, exists := cmd.cfg.AuthServiceConfigs[k]; exists {
-				errMsg := fmt.Errorf("resource conflict detected: authSource '%s' has the same name as an existing authService. Please rename your authSource", k)
-				cmd.logger.ErrorContext(ctx, errMsg.Error())
-				return errMsg
-			}
-			cmd.cfg.AuthServiceConfigs[k] = v
-		}
-	}
 
 	instrumentation, err := telemetry.CreateTelemetryInstrumentation(versionString)
 	if err != nil {
