@@ -64,7 +64,7 @@ The structured logging outputs log as JSON:
   "timestamp":"2024-11-04T16:45:11.987299-08:00",
   "severity":"ERROR",
   "logging.googleapis.com/sourceLocation":{...},
-  "message":"unable to parse tool file at \"tools.yaml\": \"cloud-sql-postgres1\" is not a valid kind of data source"
+  "message":"unable to parse tool file at \"tools.yaml\": \"cloud-sql-postgres1\" is not a valid type of data source"
 }
 ```
 

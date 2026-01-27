@@ -34,13 +34,12 @@ instead of hardcoding your API keys into the configuration file.
 Define an embedding model in the `embeddingModels` section:
 
 ```yaml
-embeddingModels:
-  gemini-model: # Name of the embedding model
-    kind: gemini
-    model: gemini-embedding-001
-    apiKey: ${GOOGLE_API_KEY}
-    dimension: 768
-
+kind: embeddingModels
+name: gemini-model: # Name of the embedding model
+type: gemini
+model: gemini-embedding-001
+apiKey: ${GOOGLE_API_KEY}
+dimension: 768
 ```
 
 ### Step 2 - Embed Tool Parameters
@@ -50,35 +49,36 @@ Use the defined embedding model, embed your query parameters using the
 parameters can be embedded:
 
 ```yaml
-tools:
-  # Vector ingestion tool
-  insert_embedding:
-    kind: postgres-sql
-    source: my-pg-instance
-    statement: |
-      INSERT INTO documents (content, embedding) 
-      VALUES ($1, $2);
-    parameters:
-      - name: content
-        type: string
-      - name: vector_string
-        type: string
-        description: The text to be vectorized and stored.
-        embeddedBy: gemini-model # refers to the name of a defined embedding model
-
-  # Semantic search tool
-  search_embedding:
-    kind: postgres-sql
-    source: my-pg-instance
-    statement: |
-      SELECT id, content, embedding <-> $1 AS distance 
-      FROM documents
-      ORDER BY distance LIMIT 1
-    parameters:
-      - name: semantic_search_string
-        type: string
-        description: The search query that will be converted to a vector.
-        embeddedBy: gemini-model # refers to the name of a defined embedding model
+# Vector ingestion tool
+kind: tools
+name: insert_embedding
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  INSERT INTO documents (content, embedding) 
+  VALUES ($1, $2);
+parameters:
+  - name: content
+    type: string
+  - name: vector_string
+    type: string
+    description: The text to be vectorized and stored.
+    embeddedBy: gemini-model # refers to the name of a defined embedding model
+---
+# Semantic search tool
+kind: tools
+name: search_embedding
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  SELECT id, content, embedding <-> $1 AS distance 
+  FROM documents
+  ORDER BY distance LIMIT 1
+parameters:
+  - name: semantic_search_string
+    type: string
+    description: The search query that will be converted to a vector.
+    embeddedBy: gemini-model # refers to the name of a defined embedding model
 ```
 
 ## Kinds of Embedding Models
