@@ -32,11 +32,11 @@ import (
 	bigqueryrestapi "google.golang.org/api/bigquery/v2"
 )
 
-const kind string = "bigquery-execute-sql"
+const resourceType string = "bigquery-execute-sql"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool type %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -61,7 +61,7 @@ type compatibleSource interface {
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Type         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -71,7 +71,7 @@ type Config struct {
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigType() string {
-	return kind
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -84,7 +84,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, cfg.Source)
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
 	}
 
 	var sqlDescriptionBuilder strings.Builder
@@ -277,7 +277,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, fmt.Errorf("error getting logger: %s", err)
 	}
-	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", kind, sql))
+	logger.DebugContext(ctx, fmt.Sprintf("executing `%s` tool query: %s", resourceType, sql))
 	return source.RunSQL(ctx, bqClient, sql, statementType, nil, connProps)
 }
 

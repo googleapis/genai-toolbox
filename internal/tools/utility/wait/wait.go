@@ -26,11 +26,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "wait"
+const resourceType string = "wait"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool type %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -44,7 +44,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Type         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	Timeout      string   `yaml:"timeout" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -53,7 +53,7 @@ type Config struct {
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigType() string {
-	return kind
+	return resourceType
 }
 
 func (cfg Config) Initialize(_ map[string]sources.Source) (tools.Tool, error) {

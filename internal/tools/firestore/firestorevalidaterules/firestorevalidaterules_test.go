@@ -17,7 +17,6 @@ package firestorevalidaterules_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -37,11 +36,11 @@ func TestParseFromYamlFirestoreValidateRules(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				validate_rules_tool:
-					kind: firestore-validate-rules
-					source: my-firestore-instance
-					description: Validate Firestore security rules
+			kind: tools
+			name: validate_rules_tool
+			type: firestore-validate-rules
+			source: my-firestore-instance
+			description: Validate Firestore security rules
 			`,
 			want: server.ToolConfigs{
 				"validate_rules_tool": firestorevalidaterules.Config{
@@ -56,14 +55,14 @@ func TestParseFromYamlFirestoreValidateRules(t *testing.T) {
 		{
 			desc: "with auth requirements",
 			in: `
-			tools:
-				secure_validate_rules:
-					kind: firestore-validate-rules
-					source: prod-firestore
-					description: Validate rules with authentication
-					authRequired:
-						- google-auth-service
-						- api-key-service
+			kind: tools
+			name: secure_validate_rules
+			type: firestore-validate-rules
+			source: prod-firestore
+			description: Validate rules with authentication
+			authRequired:
+				- google-auth-service
+				- api-key-service
 			`,
 			want: server.ToolConfigs{
 				"secure_validate_rules": firestorevalidaterules.Config{
@@ -78,15 +77,11 @@ func TestParseFromYamlFirestoreValidateRules(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -99,24 +94,28 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	in := `
-	tools:
-		validate_dev_rules:
-			kind: firestore-validate-rules
-			source: dev-firestore
-			description: Validate development environment rules
-			authRequired:
-				- dev-auth
-		validate_staging_rules:
-			kind: firestore-validate-rules
-			source: staging-firestore
-			description: Validate staging environment rules
-		validate_prod_rules:
-			kind: firestore-validate-rules
-			source: prod-firestore
-			description: Validate production environment rules
-			authRequired:
-				- prod-auth
-				- admin-auth
+	kind: tools
+	name: validate_dev_rules
+	type: firestore-validate-rules
+	source: dev-firestore
+	description: Validate development environment rules
+	authRequired:
+		- dev-auth
+---
+	kind: tools
+	name: validate_staging_rules
+	type: firestore-validate-rules
+	source: staging-firestore
+	description: Validate staging environment rules
+---
+	kind: tools
+	name: validate_prod_rules
+	type: firestore-validate-rules
+	source: prod-firestore
+	description: Validate production environment rules
+	authRequired:
+		- prod-auth
+		- admin-auth
 	`
 	want := server.ToolConfigs{
 		"validate_dev_rules": firestorevalidaterules.Config{
@@ -142,15 +141,11 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 		},
 	}
 
-	got := struct {
-		Tools server.ToolConfigs `yaml:"tools"`
-	}{}
-	// Parse contents
-	err = yaml.UnmarshalContext(ctx, testutils.FormatYaml(in), &got)
+	_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(in))
 	if err != nil {
 		t.Fatalf("unable to unmarshal: %s", err)
 	}
-	if diff := cmp.Diff(want, got.Tools); diff != "" {
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("incorrect parse: diff %v", diff)
 	}
 }

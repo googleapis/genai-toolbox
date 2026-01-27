@@ -25,11 +25,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "alloydb-create-instance"
+const resourceType string = "alloydb-create-instance"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool type %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -50,7 +50,7 @@ type compatibleSource interface {
 // Configuration for the create-instance tool.
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Type         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -59,9 +59,9 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigType returns the kind of the tool.
+// ToolConfigType returns the type of the tool.
 func (cfg Config) ToolConfigType() string {
-	return kind
+	return resourceType
 }
 
 // Initialize initializes the tool from the configuration.
@@ -73,7 +73,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", kind, cfg.Source)
+		return nil, fmt.Errorf("invalid source for %q tool: source %q not compatible", resourceType, cfg.Source)
 	}
 
 	project := s.GetDefaultProject()

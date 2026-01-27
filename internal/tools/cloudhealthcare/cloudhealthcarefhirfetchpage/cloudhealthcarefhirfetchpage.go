@@ -25,14 +25,14 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "cloud-healthcare-fhir-fetch-page"
+const resourceType string = "cloud-healthcare-fhir-fetch-page"
 const (
 	pageURLKey = "pageURL"
 )
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool type %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -51,7 +51,7 @@ type compatibleSource interface {
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Type         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description" validate:"required"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -61,7 +61,7 @@ type Config struct {
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigType() string {
-	return kind
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {

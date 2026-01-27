@@ -32,11 +32,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "http"
+const resourceType string = "http"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool type %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -57,7 +57,7 @@ type compatibleSource interface {
 
 type Config struct {
 	Name         string                `yaml:"name" validate:"required"`
-	Type         string                `yaml:"kind" validate:"required"`
+	Type         string                `yaml:"type" validate:"required"`
 	Source       string                `yaml:"source" validate:"required"`
 	Description  string                `yaml:"description" validate:"required"`
 	AuthRequired []string              `yaml:"authRequired"`
@@ -75,7 +75,7 @@ type Config struct {
 var _ tools.ToolConfig = Config{}
 
 func (cfg Config) ToolConfigType() string {
-	return kind
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -88,7 +88,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	// verify the source is compatible
 	s, ok := rawS.(compatibleSource)
 	if !ok {
-		return nil, fmt.Errorf("invalid source for %q tool: source kind must be `http`", kind)
+		return nil, fmt.Errorf("invalid source for %q tool: source type must be `http`", resourceType)
 	}
 
 	// Combine Source and Tool headers.
