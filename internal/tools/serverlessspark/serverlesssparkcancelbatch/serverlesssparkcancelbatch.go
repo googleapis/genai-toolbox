@@ -27,11 +27,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind = "serverless-spark-cancel-batch"
+const resourceType = "serverless-spark-cancel-batch"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool type %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -50,7 +50,7 @@ type compatibleSource interface {
 
 type Config struct {
 	Name         string   `yaml:"name" validate:"required"`
-	Type         string   `yaml:"kind" validate:"required"`
+	Type         string   `yaml:"type" validate:"required"`
 	Source       string   `yaml:"source" validate:"required"`
 	Description  string   `yaml:"description"`
 	AuthRequired []string `yaml:"authRequired"`
@@ -61,7 +61,7 @@ var _ tools.ToolConfig = Config{}
 
 // ToolConfigType returns the unique name for this tool.
 func (cfg Config) ToolConfigType() string {
-	return kind
+	return resourceType
 }
 
 // Initialize creates a new Tool instance.

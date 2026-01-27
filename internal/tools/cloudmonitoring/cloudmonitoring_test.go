@@ -18,7 +18,6 @@ import (
 	"strings"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -29,7 +28,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-// mockIncompatibleSource is a source of a different kind to test error paths.
+// mockIncompatibleSource is a source of a different type to test error paths.
 type mockIncompatibleSource struct{ sources.Source }
 
 func TestInitialize(t *testing.T) {
@@ -122,12 +121,12 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: cloud-monitoring-query-prometheus
-					source: my-instance
-					description: some description
-				`,
+			kind: tools
+			name: example_tool
+			type: cloud-monitoring-query-prometheus
+			source: my-instance
+			description: some description
+			`,
 			want: server.ToolConfigs{
 				"example_tool": cloudmonitoring.Config{
 					Name:         "example_tool",
@@ -141,14 +140,14 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 		{
 			desc: "advanced example",
 			in: `
-			tools:
-				example_tool:
-					kind: cloud-monitoring-query-prometheus
-					source: my-instance
-					description: some description
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
+			kind: tools
+			name: example_tool
+			type: cloud-monitoring-query-prometheus
+			source: my-instance
+			description: some description
+			authRequired:
+				- my-google-auth-service
+				- other-auth-service
 			`,
 			want: server.ToolConfigs{
 				"example_tool": cloudmonitoring.Config{
@@ -163,15 +162,11 @@ func TestParseFromYamlCloudMonitoring(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools, cmp.AllowUnexported(cloudmonitoring.Config{})); diff != "" {
+			if diff := cmp.Diff(tc.want, got, cmp.AllowUnexported(cloudmonitoring.Config{})); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -189,44 +184,40 @@ func TestFailParseFromYamlCloudMonitoring(t *testing.T) {
 		err  string
 	}{
 		{
-			desc: "Invalid kind",
+			desc: "Invalid type",
 			in: `
-			tools:
-				example_tool:
-					kind: invalid-kind
-					source: my-instance
-					description: some description
+			kind: tools
+			name: example_tool
+			type: invalid-type
+			source: my-instance
+			description: some description
 			`,
-			err: `unknown tool type: "invalid-kind"`,
+			err: `unknown tool type: "invalid-type"`,
 		},
 		{
 			desc: "missing source",
 			in: `
-			tools:
-				example_tool:
-					kind: cloud-monitoring-query-prometheus
-					description: some description
+			kind: tools
+			name: example_tool
+			type: cloud-monitoring-query-prometheus
+			description: some description
 			`,
 			err: `Key: 'Config.Source' Error:Field validation for 'Source' failed on the 'required' tag`,
 		},
 		{
 			desc: "missing description",
 			in: `
-			tools:
-				example_tool:
-					kind: cloud-monitoring-query-prometheus
-					source: my-instance
+			kind: tools
+			name: example_tool
+			type: cloud-monitoring-query-prometheus
+			source: my-instance
 			`,
 			err: `Key: 'Config.Description' Error:Field validation for 'Description' failed on the 'required' tag`,
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}
