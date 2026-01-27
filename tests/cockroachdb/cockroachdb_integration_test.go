@@ -101,7 +101,9 @@ func TestCockroachDB(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to create cockroachdb connection pool: %s", err)
 	}
-	defer pool.Close()
+	// Note: Don't defer pool.Close() here - the pool is only used for test setup/teardown.
+	// Closing it explicitly can cause hangs if the server's pool is still active.
+	// The pool will be cleaned up when the test exits.
 
 	// Verify CockroachDB version
 	var version string
