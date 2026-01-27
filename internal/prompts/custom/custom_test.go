@@ -42,7 +42,7 @@ func TestConfig(t *testing.T) {
 		Arguments: testArgs,
 	}
 
-	// initialize and check kind
+	// initialize and check type
 	p, err := cfg.Initialize()
 	if err != nil {
 		t.Fatalf("Initialize() failed: %v", err)

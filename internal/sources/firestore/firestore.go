@@ -53,13 +53,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	// Firestore configs
 	Name     string `yaml:"name" validate:"required"`
-	Type     string `yaml:"kind" validate:"required"`
+	Type     string `yaml:"type" validate:"required"`
 	Project  string `yaml:"project" validate:"required"`
 	Database string `yaml:"database"` // Optional, defaults to "(default)"
 }
 
 func (r Config) SourceConfigType() string {
-	// Returns Firestore source kind
+	// Returns Firestore source type
 	return SourceType
 }
 
@@ -93,7 +93,7 @@ type Source struct {
 }
 
 func (s *Source) SourceType() string {
-	// Returns Firestore source kind
+	// Returns Firestore source type
 	return SourceType
 }
 

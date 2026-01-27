@@ -51,12 +51,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	// Dataplex configs
 	Name    string `yaml:"name" validate:"required"`
-	Type    string `yaml:"kind" validate:"required"`
+	Type    string `yaml:"type" validate:"required"`
 	Project string `yaml:"project" validate:"required"`
 }
 
 func (r Config) SourceConfigType() string {
-	// Returns Dataplex source kind
+	// Returns Dataplex source type
 	return SourceType
 }
 
@@ -82,7 +82,7 @@ type Source struct {
 }
 
 func (s *Source) SourceType() string {
-	// Returns Dataplex source kind
+	// Returns Dataplex source type
 	return SourceType
 }
 
