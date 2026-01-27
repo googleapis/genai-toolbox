@@ -50,17 +50,17 @@ func TestRegistry(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("RegisterAndDecodeSuccess", func(t *testing.T) {
-		kind := "testTypeSuccess"
-		if !prompts.Register(kind, mockFactory) {
+		resourceType := "testTypeSuccess"
+		if !prompts.Register(resourceType, mockFactory) {
 			t.Fatal("expected registration to succeed")
 		}
 		// This should fail because we are registering a duplicate
-		if prompts.Register(kind, mockFactory) {
+		if prompts.Register(resourceType, mockFactory) {
 			t.Fatal("expected duplicate registration to fail")
 		}
 
 		decoder := yaml.NewDecoder(strings.NewReader(""))
-		config, err := prompts.DecodeConfig(ctx, kind, "testPrompt", decoder)
+		config, err := prompts.DecodeConfig(ctx, resourceType, "testPrompt", decoder)
 		if err != nil {
 			t.Fatalf("expected DecodeConfig to succeed, but got error: %v", err)
 		}
@@ -73,7 +73,7 @@ func TestRegistry(t *testing.T) {
 		decoder := yaml.NewDecoder(strings.NewReader(""))
 		_, err := prompts.DecodeConfig(ctx, "unregisteredType", "testPrompt", decoder)
 		if err == nil {
-			t.Fatal("expected an error for unknown kind, but got nil")
+			t.Fatal("expected an error for unknown type, but got nil")
 		}
 		if !strings.Contains(err.Error(), "unknown prompt type") {
 			t.Errorf("expected error to contain 'unknown prompt type', but got: %v", err)
@@ -81,13 +81,13 @@ func TestRegistry(t *testing.T) {
 	})
 
 	t.Run("FactoryReturnsError", func(t *testing.T) {
-		kind := "testTypeError"
-		if !prompts.Register(kind, mockErrorFactory) {
+		resourceType := "testTypeError"
+		if !prompts.Register(resourceType, mockErrorFactory) {
 			t.Fatal("expected registration to succeed")
 		}
 
 		decoder := yaml.NewDecoder(strings.NewReader(""))
-		_, err := prompts.DecodeConfig(ctx, kind, "testPrompt", decoder)
+		_, err := prompts.DecodeConfig(ctx, resourceType, "testPrompt", decoder)
 		if err == nil {
 			t.Fatal("expected an error from the factory, but got nil")
 		}
@@ -100,13 +100,13 @@ func TestRegistry(t *testing.T) {
 		decoder := yaml.NewDecoder(strings.NewReader("description: A test prompt"))
 		config, err := prompts.DecodeConfig(ctx, "", "testDefaultPrompt", decoder)
 		if err != nil {
-			t.Fatalf("expected DecodeConfig with empty kind to succeed, but got error: %v", err)
+			t.Fatalf("expected DecodeConfig with empty type to succeed, but got error: %v", err)
 		}
 		if config == nil {
-			t.Fatal("expected a non-nil config for default kind")
+			t.Fatal("expected a non-nil config for default type")
 		}
 		if config.PromptConfigType() != "custom" {
-			t.Errorf("expected default kind to be 'custom', but got %q", config.PromptConfigType())
+			t.Errorf("expected default type to be 'custom', but got %q", config.PromptConfigType())
 		}
 	})
 }

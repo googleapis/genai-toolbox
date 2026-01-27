@@ -129,25 +129,12 @@ func (s *StringLevel) Type() string {
 	return "stringLevel"
 }
 
-// SourceConfigs is a type used to allow unmarshal of the data source config map
 type SourceConfigs map[string]sources.SourceConfig
-
-// AuthServiceConfigs is a type used to allow unmarshal of the data authService config map
 type AuthServiceConfigs map[string]auth.AuthServiceConfig
-
-// EmbeddingModelConfigs is a type used to allow unmarshal of the embedding model config map
 type EmbeddingModelConfigs map[string]embeddingmodels.EmbeddingModelConfig
-
-// ToolConfigs is a type used to allow unmarshal of the tool configs
 type ToolConfigs map[string]tools.ToolConfig
-
-// ToolsetConfigs is a type used to allow unmarshal of the toolset configs
 type ToolsetConfigs map[string]tools.ToolsetConfig
-
-// PromptConfigs is a type used to allow unmarshal of the prompt configs
 type PromptConfigs map[string]prompts.PromptConfig
-
-// PromptConfigs is a type used to allow unmarshal of the prompt configs
 type PromptsetConfigs map[string]prompts.PromptsetConfig
 
 func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, AuthServiceConfigs, EmbeddingModelConfigs, ToolConfigs, ToolsetConfigs, PromptConfigs, error) {
@@ -226,7 +213,7 @@ func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, Au
 }
 
 func UnmarshalYAMLSourceConfig(ctx context.Context, name string, r map[string]any) (sources.SourceConfig, error) {
-	typeStr, ok := r["type"].(string)
+	resourceType, ok := r["type"].(string)
 	if !ok {
 		return nil, fmt.Errorf("missing 'type' field or it is not a string")
 	}
@@ -234,7 +221,7 @@ func UnmarshalYAMLSourceConfig(ctx context.Context, name string, r map[string]an
 	if err != nil {
 		return nil, fmt.Errorf("error creating decoder: %w", err)
 	}
-	sourceConfig, err := sources.DecodeConfig(ctx, typeStr, name, dec)
+	sourceConfig, err := sources.DecodeConfig(ctx, resourceType, name, dec)
 	if err != nil {
 		return nil, err
 	}
@@ -242,12 +229,12 @@ func UnmarshalYAMLSourceConfig(ctx context.Context, name string, r map[string]an
 }
 
 func UnmarshalYAMLAuthServiceConfig(ctx context.Context, name string, r map[string]any) (auth.AuthServiceConfig, error) {
-	typeStr, ok := r["type"].(string)
+	resourceType, ok := r["type"].(string)
 	if !ok {
 		return nil, fmt.Errorf("missing 'type' field or it is not a string")
 	}
-	if typeStr != google.AuthServiceType {
-		return nil, fmt.Errorf("%s is not a valid type of auth service", typeStr)
+	if resourceType != google.AuthServiceType {
+		return nil, fmt.Errorf("%s is not a valid type of auth service", resourceType)
 	}
 	dec, err := util.NewStrictDecoder(r)
 	if err != nil {
@@ -261,12 +248,12 @@ func UnmarshalYAMLAuthServiceConfig(ctx context.Context, name string, r map[stri
 }
 
 func UnmarshalYAMLEmbeddingModelConfig(ctx context.Context, name string, r map[string]any) (embeddingmodels.EmbeddingModelConfig, error) {
-	typeStr, ok := r["type"].(string)
+	resourceType, ok := r["type"].(string)
 	if !ok {
 		return nil, fmt.Errorf("missing 'type' field or it is not a string")
 	}
-	if typeStr != gemini.EmbeddingModelType {
-		return nil, fmt.Errorf("%s is not a valid type of embedding model", typeStr)
+	if resourceType != gemini.EmbeddingModelType {
+		return nil, fmt.Errorf("%s is not a valid type of embedding model", resourceType)
 	}
 	dec, err := util.NewStrictDecoder(r)
 	if err != nil {
@@ -280,7 +267,7 @@ func UnmarshalYAMLEmbeddingModelConfig(ctx context.Context, name string, r map[s
 }
 
 func UnmarshalYAMLToolConfig(ctx context.Context, name string, r map[string]any) (tools.ToolConfig, error) {
-	typeStr, ok := r["type"].(string)
+	resourceType, ok := r["type"].(string)
 	if !ok {
 		return nil, fmt.Errorf("missing 'type' field or it is not a string")
 	}
@@ -335,7 +322,7 @@ func UnmarshalYAMLToolConfig(ctx context.Context, name string, r map[string]any)
 	if err != nil {
 		return nil, fmt.Errorf("error creating decoder: %s", err)
 	}
-	toolCfg, err := tools.DecodeConfig(ctx, typeStr, name, dec)
+	toolCfg, err := tools.DecodeConfig(ctx, resourceType, name, dec)
 	if err != nil {
 		return nil, err
 	}
@@ -361,12 +348,12 @@ func UnmarshalYAMLToolsetConfig(ctx context.Context, name string, r map[string]a
 }
 
 func UnmarshalYAMLPromptConfig(ctx context.Context, name string, r map[string]any) (prompts.PromptConfig, error) {
-	// Look for the 'kind' field. If it's not present, kindStr will be an
+	// Look for the 'type' field. If it's not present, typeStr will be an
 	// empty string, which prompts.DecodeConfig will correctly default to "custom".
-	var typeStr string
+	var resourceType string
 	if typeVal, ok := r["type"]; ok {
 		var isString bool
-		typeStr, isString = typeVal.(string)
+		resourceType, isString = typeVal.(string)
 		if !isString {
 			return nil, fmt.Errorf("invalid 'type' field for prompt %q (must be a string)", name)
 		}
@@ -376,8 +363,8 @@ func UnmarshalYAMLPromptConfig(ctx context.Context, name string, r map[string]an
 		return nil, fmt.Errorf("error creating decoder: %s", err)
 	}
 
-	// Use the central registry to decode the prompt based on its kind.
-	promptCfg, err := prompts.DecodeConfig(ctx, typeStr, name, dec)
+	// Use the central registry to decode the prompt based on its type.
+	promptCfg, err := prompts.DecodeConfig(ctx, resourceType, name, dec)
 	if err != nil {
 		return nil, err
 	}

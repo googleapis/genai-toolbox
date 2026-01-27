@@ -51,7 +51,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name      string   `yaml:"name" validate:"required"`
-	Type      string   `yaml:"kind" validate:"required"`
+	Type      string   `yaml:"type" validate:"required"`
 	Addresses []string `yaml:"addresses" validate:"required"`
 	Username  string   `yaml:"username"`
 	Password  string   `yaml:"password"`
@@ -139,7 +139,7 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	return s, nil
 }
 
-// SourceType returns the kind string for this source.
+// SourceType returns the resourceType string for this source.
 func (s *Source) SourceType() string {
 	return SourceType
 }

@@ -20,7 +20,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -39,11 +38,11 @@ func TestParseFromYamlCloudGDA(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-		            sources:
-		                my-gda-instance:
-		                    kind: cloud-gemini-data-analytics
-		                    projectId: test-project-id
-		            `,
+			kind: sources
+			name: my-gda-instance
+			type: cloud-gemini-data-analytics
+			projectId: test-project-id
+			`,
 			want: map[string]sources.SourceConfig{
 				"my-gda-instance": cloudgda.Config{
 					Name:           "my-gda-instance",
@@ -56,11 +55,11 @@ func TestParseFromYamlCloudGDA(t *testing.T) {
 		{
 			desc: "use client auth example",
 			in: `
-			sources:
-				my-gda-instance:
-					kind: cloud-gemini-data-analytics
-					projectId: another-project
-					useClientOAuth: true
+			kind: sources
+			name: my-gda-instance
+			type: cloud-gemini-data-analytics
+			projectId: another-project
+			useClientOAuth: true
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-gda-instance": cloudgda.Config{
@@ -76,16 +75,12 @@ func TestParseFromYamlCloudGDA(t *testing.T) {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -101,22 +96,18 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing projectId",
 			in: `
-			sources:
-				my-gda-instance:
-					kind: cloud-gemini-data-analytics
+			kind: sources
+			name: my-gda-instance
+			type: cloud-gemini-data-analytics
 			`,
-			err: "unable to parse source \"my-gda-instance\" as \"cloud-gemini-data-analytics\": Key: 'Config.ProjectID' Error:Field validation for 'ProjectID' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-gda-instance\" as \"cloud-gemini-data-analytics\": Key: 'Config.ProjectID' Error:Field validation for 'ProjectID' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

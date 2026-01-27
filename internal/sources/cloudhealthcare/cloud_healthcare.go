@@ -58,7 +58,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	// Healthcare configs
 	Name               string   `yaml:"name" validate:"required"`
-	Type               string   `yaml:"kind" validate:"required"`
+	Type               string   `yaml:"type" validate:"required"`
 	Project            string   `yaml:"project" validate:"required"`
 	Region             string   `yaml:"region" validate:"required"`
 	Dataset            string   `yaml:"dataset" validate:"required"`
