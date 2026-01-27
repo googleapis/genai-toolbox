@@ -69,7 +69,7 @@ func TestDataformCompileTool(t *testing.T) {
 	toolsFile := map[string]any{
 		"tools": map[string]any{
 			"my-dataform-compiler": map[string]any{
-				"kind":        "dataform-compile-local",
+				"type":        "dataform-compile-local",
 				"description": "Tool to compile dataform projects",
 			},
 		},

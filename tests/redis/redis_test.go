@@ -42,7 +42,7 @@ func getRedisVars(t *testing.T) map[string]any {
 		t.Fatal("'REDIS_PASS' not set")
 	}
 	return map[string]any{
-		"kind":     RedisSourceType,
+		"type":     RedisSourceType,
 		"address":  []string{RedisAddress},
 		"password": RedisPass,
 	}

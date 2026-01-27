@@ -56,7 +56,7 @@ func getMsSQLVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     MSSQLSourceType,
+		"type":     MSSQLSourceType,
 		"host":     MSSQLHost,
 		"port":     MSSQLPort,
 		"database": MSSQLDatabase,

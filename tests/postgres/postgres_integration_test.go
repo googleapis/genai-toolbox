@@ -55,7 +55,7 @@ func getPostgresVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     PostgresSourceType,
+		"type":     PostgresSourceType,
 		"host":     PostgresHost,
 		"port":     PostgresPort,
 		"database": PostgresDatabase,

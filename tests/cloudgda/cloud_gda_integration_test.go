@@ -205,13 +205,13 @@ func getCloudGdaToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-gda-source": map[string]any{
-				"kind":      "cloud-gemini-data-analytics",
+				"type":      "cloud-gemini-data-analytics",
 				"projectId": "test-project",
 			},
 		},
 		"tools": map[string]any{
 			"cloud-gda-query": map[string]any{
-				"kind":        cloudGdaToolType,
+				"type":        cloudGdaToolType,
 				"source":      "my-gda-source",
 				"description": "Test GDA Tool",
 				"location":    "us-central1",

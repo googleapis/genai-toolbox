@@ -229,12 +229,12 @@ func getCreateUsersToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 		},
 		"tools": map[string]any{
 			"create-user": map[string]any{
-				"kind":   createUserToolType,
+				"type":   createUserToolType,
 				"source": "my-cloud-sql-source",
 			},
 		},
