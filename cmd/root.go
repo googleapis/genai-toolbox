@@ -449,7 +449,7 @@ func convertToolsFile(raw []byte) ([]byte, error) {
 			}
 			// check if the key is config file v1's key
 			if slices.Contains(v1keys, key) {
-				// check if value convertion to yaml.MapSlice successfully
+				// check if value conversion to yaml.MapSlice successfully
 				// fields such as "tools" in toolsets might pass the first check but
 				// fail to convert to MapSlice
 				if slice, ok := item.Value.(yaml.MapSlice); ok {
