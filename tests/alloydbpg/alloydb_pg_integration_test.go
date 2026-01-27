@@ -159,7 +159,7 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 
 	// Add semantic search tool config
 	insertStmt, searchStmt := tests.GetPostgresVectorSearchStmts(vectorTableName)
-	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, AlloyDBPostgresToolKind, insertStmt, searchStmt)
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, AlloyDBPostgresToolType, insertStmt, searchStmt)
 
 	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
 

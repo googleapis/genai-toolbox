@@ -144,7 +144,7 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 
 	// Add semantic search tool config
 	insertStmt, searchStmt := tests.GetPostgresVectorSearchStmts(vectorTableName)
-	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, CloudSQLPostgresToolKind, insertStmt, searchStmt)
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, CloudSQLPostgresToolType, insertStmt, searchStmt)
 
 	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
