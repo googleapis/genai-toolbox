@@ -56,16 +56,16 @@ To initialize the application default credential run `gcloud auth login
 ## Example
 
 ```yaml
-sources:
-    my-looker-source:
-        kind: looker
-        base_url: http://looker.example.com
-        client_id: ${LOOKER_CLIENT_ID}
-        client_secret: ${LOOKER_CLIENT_SECRET}
-        project: ${LOOKER_PROJECT}
-        location: ${LOOKER_LOCATION}
-        verify_ssl: true
-        timeout: 600s
+kind: sources
+name: my-looker-source
+type: looker
+base_url: http://looker.example.com
+client_id: ${LOOKER_CLIENT_ID}
+client_secret: ${LOOKER_CLIENT_SECRET}
+project: ${LOOKER_PROJECT}
+location: ${LOOKER_LOCATION}
+verify_ssl: true
+timeout: 600s
 ```
 
 The Looker base url will look like "https://looker.example.com", don't include
@@ -93,7 +93,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**            | **type** | **required** | **description**                                                                                                                                     |
 |----------------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind                 |  string  |     true     | Must be "looker".                                                                                                                                   |
+| type                 |  string  |     true     | Must be "looker".                                                                                                                                   |
 | base_url             |  string  |     true     | The URL of your Looker server with no trailing /.                                                                                                   |
 | client_id            |  string  |    false     | The client id assigned by Looker.                                                                                                                   |
 | client_secret        |  string  |    false     | The client secret assigned by Looker.                                                                                                               |
