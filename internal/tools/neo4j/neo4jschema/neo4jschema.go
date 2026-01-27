@@ -31,13 +31,13 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
-// kind defines the unique identifier for this tool.
-const kind string = "neo4j-schema"
+// type defines the unique identifier for this tool.
+const resourceType string = "neo4j-schema"
 
 // init registers the tool with the application's tool registry when the package is initialized.
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool type %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -62,7 +62,7 @@ type compatibleSource interface {
 // These settings are typically read from a YAML file.
 type Config struct {
 	Name               string   `yaml:"name" validate:"required"`
-	Type               string   `yaml:"kind" validate:"required"`
+	Type               string   `yaml:"type" validate:"required"`
 	Source             string   `yaml:"source" validate:"required"`
 	Description        string   `yaml:"description" validate:"required"`
 	AuthRequired       []string `yaml:"authRequired"`
@@ -72,9 +72,9 @@ type Config struct {
 // Statically verify that Config implements the tools.ToolConfig interface.
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigType returns the kind of this tool configuration.
+// ToolConfigType returns the type of this tool configuration.
 func (cfg Config) ToolConfigType() string {
-	return kind
+	return resourceType
 }
 
 // Initialize sets up the tool with its dependencies and returns a ready-to-use Tool instance.

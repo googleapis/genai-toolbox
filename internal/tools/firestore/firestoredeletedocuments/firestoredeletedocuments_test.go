@@ -17,7 +17,6 @@ package firestoredeletedocuments_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -37,11 +36,11 @@ func TestParseFromYamlFirestoreDeleteDocuments(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				delete_docs_tool:
-					kind: firestore-delete-documents
-					source: my-firestore-instance
-					description: Delete documents from Firestore by paths
+			kind: tools
+			name: delete_docs_tool
+			type: firestore-delete-documents
+			source: my-firestore-instance
+			description: Delete documents from Firestore by paths
 			`,
 			want: server.ToolConfigs{
 				"delete_docs_tool": firestoredeletedocuments.Config{
@@ -56,14 +55,14 @@ func TestParseFromYamlFirestoreDeleteDocuments(t *testing.T) {
 		{
 			desc: "with auth requirements",
 			in: `
-			tools:
-				secure_delete_docs:
-					kind: firestore-delete-documents
-					source: prod-firestore
-					description: Delete documents with authentication
-					authRequired:
-						- google-auth-service
-						- api-key-service
+			kind: tools
+			name: secure_delete_docs
+			type: firestore-delete-documents
+			source: prod-firestore
+			description: Delete documents with authentication
+			authRequired:
+				- google-auth-service
+				- api-key-service
 			`,
 			want: server.ToolConfigs{
 				"secure_delete_docs": firestoredeletedocuments.Config{
@@ -78,15 +77,11 @@ func TestParseFromYamlFirestoreDeleteDocuments(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -99,24 +94,28 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	in := `
-	tools:
-		delete_user_docs:
-			kind: firestore-delete-documents
-			source: users-firestore
-			description: Delete user documents
-			authRequired:
-				- user-auth
-		delete_product_docs:
-			kind: firestore-delete-documents
-			source: products-firestore
-			description: Delete product documents
-		delete_order_docs:
-			kind: firestore-delete-documents
-			source: orders-firestore
-			description: Delete order documents
-			authRequired:
-				- user-auth
-				- admin-auth
+	kind: tools
+	name: delete_user_docs
+	type: firestore-delete-documents
+	source: users-firestore
+	description: Delete user documents
+	authRequired:
+		- user-auth
+---
+	kind: tools
+	name: delete_product_docs
+	type: firestore-delete-documents
+	source: products-firestore
+	description: Delete product documents
+---
+	kind: tools
+	name: delete_order_docs
+	type: firestore-delete-documents
+	source: orders-firestore
+	description: Delete order documents
+	authRequired:
+		- user-auth
+		- admin-auth
 	`
 	want := server.ToolConfigs{
 		"delete_user_docs": firestoredeletedocuments.Config{
@@ -142,15 +141,11 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 		},
 	}
 
-	got := struct {
-		Tools server.ToolConfigs `yaml:"tools"`
-	}{}
-	// Parse contents
-	err = yaml.UnmarshalContext(ctx, testutils.FormatYaml(in), &got)
+	_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(in))
 	if err != nil {
 		t.Fatalf("unable to unmarshal: %s", err)
 	}
-	if diff := cmp.Diff(want, got.Tools); diff != "" {
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("incorrect parse: diff %v", diff)
 	}
 }

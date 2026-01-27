@@ -20,13 +20,16 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/couchbase"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
-func TestParseFromYamlCouchbase(t *testing.T) {
+func TestParseFromYaml(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
 	tcs := []struct {
 		desc string
 		in   string
@@ -35,17 +38,17 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: couchbase-sql
-					source: my-couchbase-instance
-					description: some tool description
-					statement: |
-						select * from hotel WHERE name = $hotel;
-					parameters:
-						- name: hotel
-						  type: string
-						  description: hotel parameter description
+			kind: tools
+			name: example_tool
+			type: couchbase-sql
+			source: my-couchbase-instance
+			description: some tool description
+			statement: |
+				select * from hotel WHERE name = $hotel;
+			parameters:
+				- name: hotel
+				  type: string
+				  description: hotel parameter description
 			`,
 			want: server.ToolConfigs{
 				"example_tool": couchbase.Config{
@@ -61,59 +64,24 @@ func TestParseFromYamlCouchbase(t *testing.T) {
 				},
 			},
 		},
-	}
-	for _, tc := range tcs {
-		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-
-			// Create a context with a logger
-			ctx, err := testutils.ContextWithNewLogger()
-			if err != nil {
-				t.Fatalf("unable to create context with logger: %s", err)
-			}
-
-			// Parse contents with context
-			err = yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
-			if err != nil {
-				t.Fatalf("unable to unmarshal: %s", err)
-			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
-				t.Fatalf("incorrect parse: diff %v", diff)
-			}
-		})
-	}
-}
-
-func TestParseFromYamlWithTemplateMssql(t *testing.T) {
-	ctx, err := testutils.ContextWithNewLogger()
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-	tcs := []struct {
-		desc string
-		in   string
-		want server.ToolConfigs
-	}{
 		{
-			desc: "basic example",
+			desc: "with template",
 			in: `
-			tools:
-				example_tool:
-					kind: couchbase-sql
-					source: my-couchbase-instance
-					description: some tool description
-					statement: |
-						select * from {{.tableName}} WHERE name = $hotel;
-					parameters:
-						- name: hotel
-						  type: string
-						  description: hotel parameter description
-					templateParameters:
-						- name: tableName
-						  type: string
-						  description: The table to select hotels from.
+			kind: tools
+			name: example_tool
+			type: couchbase-sql
+			source: my-couchbase-instance
+			description: some tool description
+			statement: |
+				select * from {{.tableName}} WHERE name = $hotel;
+			parameters:
+				- name: hotel
+				  type: string
+				  description: hotel parameter description
+			templateParameters:
+				- name: tableName
+				  type: string
+				  description: The table to select hotels from.
 			`,
 			want: server.ToolConfigs{
 				"example_tool": couchbase.Config{
@@ -135,15 +103,11 @@ func TestParseFromYamlWithTemplateMssql(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
