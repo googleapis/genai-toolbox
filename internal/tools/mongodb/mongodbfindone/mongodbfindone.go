@@ -15,7 +15,6 @@ package mongodbfindone
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"slices"
 
@@ -48,6 +47,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 
 type compatibleSource interface {
 	MongoClient() *mongo.Client
+	FindOne(context.Context, string, string, string, *options.FindOneOptions) ([]any, error)
 }
 
 type Config struct {
@@ -117,9 +117,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 
 	paramsMap := params.AsMap()
-
 	filterString, err := parameters.PopulateTemplateWithJSON("MongoDBFindOneFilterString", t.FilterPayload, paramsMap)
-
 	if err != nil {
 		return nil, fmt.Errorf("error populating filter: %s", err)
 	}
@@ -137,34 +135,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 		opts = opts.SetProjection(projection)
 	}
-
-	var filter = bson.D{}
-	err = bson.UnmarshalExtJSON([]byte(filterString), false, &filter)
-	if err != nil {
-		return nil, err
-	}
-
-	res := source.MongoClient().Database(t.Database).Collection(t.Collection).FindOne(ctx, filter, opts)
-	if res.Err() != nil {
-		return nil, res.Err()
-	}
-
-	var data any
-	err = res.Decode(&data)
-	if err != nil {
-		return nil, err
-	}
-
-	var final []any
-	tmp, _ := bson.MarshalExtJSON(data, false, false)
-	var tmp2 any
-	err = json.Unmarshal(tmp, &tmp2)
-	if err != nil {
-		return nil, err
-	}
-	final = append(final, tmp2)
-
-	return final, err
+	return source.FindOne(ctx, filterString, t.Database, t.Collection, opts)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

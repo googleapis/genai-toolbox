@@ -17,12 +17,10 @@ package listfhirstores
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
-	healthcareds "github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/healthcare/v1"
@@ -45,13 +43,8 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (tools.T
 }
 
 type compatibleSource interface {
-	Project() string
-	Region() string
-	DatasetID() string
-	AllowedFHIRStores() map[string]struct{}
-	Service() *healthcare.Service
-	ServiceCreator() healthcareds.HealthcareServiceCreator
 	UseClientAuthorization() bool
+	ListFHIRStores(string) ([]*healthcare.FhirStore, error)
 }
 
 type Config struct {
@@ -102,41 +95,14 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if err != nil {
 		return nil, err
 	}
-
-	svc := source.Service()
-
-	// Initialize new service if using user OAuth token
+	var tokenStr string
 	if source.UseClientAuthorization() {
-		tokenStr, err := accessToken.ParseBearerToken()
+		tokenStr, err = accessToken.ParseBearerToken()
 		if err != nil {
 			return nil, fmt.Errorf("error parsing access token: %w", err)
 		}
-		svc, err = source.ServiceCreator()(tokenStr)
-		if err != nil {
-			return nil, fmt.Errorf("error creating service from OAuth access token: %w", err)
-		}
 	}
-
-	datasetName := fmt.Sprintf("projects/%s/locations/%s/datasets/%s", source.Project(), source.Region(), source.DatasetID())
-	stores, err := svc.Projects.Locations.Datasets.FhirStores.List(datasetName).Do()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get dataset %q: %w", datasetName, err)
-	}
-	var filtered []*healthcare.FhirStore
-	for _, store := range stores.FhirStores {
-		if len(source.AllowedFHIRStores()) == 0 {
-			filtered = append(filtered, store)
-			continue
-		}
-		if len(store.Name) == 0 {
-			continue
-		}
-		parts := strings.Split(store.Name, "/")
-		if _, ok := source.AllowedFHIRStores()[parts[len(parts)-1]]; ok {
-			filtered = append(filtered, store)
-		}
-	}
-	return filtered, nil
+	return source.ListFHIRStores(tokenStr)
 }
 
 func (t Tool) ParseParams(data map[string]any, claims map[string]map[string]any) (parameters.ParamValues, error) {

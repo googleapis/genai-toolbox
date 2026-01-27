@@ -89,6 +89,7 @@ type Config struct {
 	UseClientOAuth            bool                `yaml:"useClientOAuth"`
 	ImpersonateServiceAccount string              `yaml:"impersonateServiceAccount"`
 	Scopes                    StringOrStringSlice `yaml:"scopes"`
+	MaxQueryResultRows        int                 `yaml:"maxQueryResultRows"`
 }
 
 // StringOrStringSlice is a custom type that can unmarshal both a single string
@@ -127,6 +128,10 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		r.WriteMode = WriteModeAllowed
 	}
 
+	if r.MaxQueryResultRows == 0 {
+		r.MaxQueryResultRows = 50
+	}
+
 	if r.WriteMode == WriteModeProtected && r.UseClientOAuth {
 		// The protected mode only allows write operations to the session's temporary datasets.
 		// when using client OAuth, a new session is created every
@@ -150,7 +155,7 @@ func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 		Client:             client,
 		RestService:        restService,
 		TokenSource:        tokenSource,
-		MaxQueryResultRows: 50,
+		MaxQueryResultRows: r.MaxQueryResultRows,
 		ClientCreator:      clientCreator,
 	}
 
@@ -567,7 +572,7 @@ func (s *Source) RunSQL(ctx context.Context, bqClient *bigqueryapi.Client, state
 	}
 
 	var out []any
-	for {
+	for s.MaxQueryResultRows <= 0 || len(out) < s.MaxQueryResultRows {
 		var val []bigqueryapi.Value
 		err = it.Next(&val)
 		if err == iterator.Done {
