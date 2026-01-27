@@ -315,15 +315,15 @@ func Execute() {
 type Command struct {
 	*cobra.Command
 
-	cfg            server.ServerConfig
-	logger         log.Logger
-	tools_file     string
-	tools_files    []string
-	tools_folder   string
-	prebuiltConfig string
-	inStream       io.Reader
-	outStream      io.Writer
-	errStream      io.Writer
+	cfg             server.ServerConfig
+	logger          log.Logger
+	tools_file      string
+	tools_files     []string
+	tools_folder    string
+	prebuiltConfigs []string
+	inStream        io.Reader
+	outStream       io.Writer
+	errStream       io.Writer
 }
 
 // NewCommand returns a Command object representing an invocation of the CLI.
@@ -376,10 +376,10 @@ func NewCommand(opts ...Option) *Command {
 	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
 	// Fetch prebuilt tools sources to customize the help description
 	prebuiltHelp := fmt.Sprintf(
-		"Use a prebuilt tool configuration by source type. Allowed: '%s'.",
+		"Use a prebuilt tool configuration by source type. Allowed: '%s'. Can be specified multiple times.",
 		strings.Join(prebuiltconfigs.GetPrebuiltSources(), "', '"),
 	)
-	flags.StringVar(&cmd.prebuiltConfig, "prebuilt", "", prebuiltHelp)
+	flags.StringSliceVar(&cmd.prebuiltConfigs, "prebuilt", []string{}, prebuiltHelp)
 	flags.BoolVar(&cmd.cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 	flags.BoolVar(&cmd.cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
 	flags.BoolVar(&cmd.cfg.UI, "ui", false, "Launches the Toolbox UI web server.")
@@ -867,24 +867,32 @@ func run(cmd *Command) error {
 	var allToolsFiles []ToolsFile
 
 	// Load Prebuilt Configuration
-	if cmd.prebuiltConfig != "" {
-		buf, err := prebuiltconfigs.Get(cmd.prebuiltConfig)
-		if err != nil {
-			cmd.logger.ErrorContext(ctx, err.Error())
-			return err
-		}
-		logMsg := fmt.Sprint("Using prebuilt tool configuration for ", cmd.prebuiltConfig)
-		cmd.logger.InfoContext(ctx, logMsg)
-		// Append prebuilt.source to Version string for the User Agent
-		cmd.cfg.Version += "+prebuilt." + cmd.prebuiltConfig
 
-		parsed, err := parseToolsFile(ctx, buf)
-		if err != nil {
-			errMsg := fmt.Errorf("unable to parse prebuilt tool configuration: %w", err)
-			cmd.logger.ErrorContext(ctx, errMsg.Error())
-			return errMsg
+	if len(cmd.prebuiltConfigs) > 0 {
+		slices.Sort(cmd.prebuiltConfigs)
+		sourcesList := strings.Join(cmd.prebuiltConfigs, ", ")
+		logMsg := fmt.Sprintf("Using prebuilt tool configurations for: %s", sourcesList)
+		cmd.logger.InfoContext(ctx, logMsg)
+
+		for _, configName := range cmd.prebuiltConfigs {
+			buf, err := prebuiltconfigs.Get(configName)
+			if err != nil {
+				cmd.logger.ErrorContext(ctx, err.Error())
+				return err
+			}
+
+			// Update version string
+			cmd.cfg.Version += "+prebuilt." + configName
+
+			// Parse into ToolsFile struct
+			parsed, err := parseToolsFile(ctx, buf)
+			if err != nil {
+				errMsg := fmt.Errorf("unable to parse prebuilt tool configuration for '%s': %w", configName, err)
+				cmd.logger.ErrorContext(ctx, errMsg.Error())
+				return errMsg
+			}
+			allToolsFiles = append(allToolsFiles, parsed)
 		}
-		allToolsFiles = append(allToolsFiles, parsed)
 	}
 
 	// Determine if Custom Files should be loaded
@@ -892,7 +900,7 @@ func run(cmd *Command) error {
 	isCustomConfigured := cmd.tools_file != "" || len(cmd.tools_files) > 0 || cmd.tools_folder != ""
 
 	// Determine if default 'tools.yaml' should be used (No prebuilt AND No custom flags)
-	useDefaultToolsFile := cmd.prebuiltConfig == "" && !isCustomConfigured
+	useDefaultToolsFile := len(cmd.prebuiltConfigs) == 0 && !isCustomConfigured
 
 	if useDefaultToolsFile {
 		cmd.tools_file = "tools.yaml"
