@@ -335,7 +335,7 @@ pip install toolbox-llamaindex
 {{< /tab >}}
 {{< tab header="ADK" lang="bash" >}}
 
-pip install google-adk
+pip install google-adk[toolbox]
 {{< /tab >}}
 
 {{< /tabpane >}}
@@ -375,7 +375,7 @@ pip install llama-index-llms-google-genai
 
 {{< /tab >}}
 {{< tab header="ADK" lang="bash" >}}
-pip install toolbox-adk
+# No other dependencies required for ADK
 {{< /tab >}}
 {{< /tabpane >}}
 
