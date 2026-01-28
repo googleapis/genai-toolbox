@@ -1,11 +1,10 @@
 import asyncio
-from toolbox_langchain import ToolboxClient
-from langchain_google_vertexai import ChatVertexAI
-from langchain_core.messages import ToolMessage, messages_to_dict
+
 from langchain.agents import create_agent
-from langchain.agents.middleware import (
-    wrap_tool_call,
-)
+from langchain.agents.middleware import wrap_tool_call
+from langchain_core.messages import ToolMessage, messages_to_dict
+from langchain_google_vertexai import ChatVertexAI
+from toolbox_langchain import ToolboxClient
 
 system_prompt = """
   You're a helpful hotel assistant. You handle hotel searching, booking and
@@ -16,6 +15,7 @@ system_prompt = """
   update checkin or checkout dates if mentioned by the user.
   Don't ask for confirmations from the user.
 """
+
 
 # Pre processing
 @wrap_tool_call
@@ -32,13 +32,14 @@ async def enforce_business_rules(request, handler):
 
     if name == "book-hotel":
         if "duration_days" in args and int(args["duration_days"]) > 14:
-             print("BLOCKED: Stay too long")
-             return ToolMessage(
-                 content="Error: Maximum stay duration is 14 days.",
-                 tool_call_id=tool_call["id"]
-             )
+            print("BLOCKED: Stay too long")
+            return ToolMessage(
+                content="Error: Maximum stay duration is 14 days.",
+                tool_call_id=tool_call["id"],
+            )
 
     return await handler(request)
+
 
 # Post processing
 @wrap_tool_call
@@ -69,19 +70,19 @@ async def main():
             system_prompt=system_prompt,
             model=model,
             tools=tools,
-            middleware=[
-                enforce_business_rules,
-                enrich_response
-            ],
+            middleware=[enforce_business_rules, enrich_response],
         )
 
         user_input = "Book hotel with id 3."
-        response = await agent.ainvoke({"messages": [{"role": "user", "content": user_input}]})
+        response = await agent.ainvoke(
+            {"messages": [{"role": "user", "content": user_input}]}
+        )
 
         print("-" * 50)
         print("Final Client Response:")
         last_ai_msg = response["messages"][-1].content
         print(f"AI: {last_ai_msg}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
