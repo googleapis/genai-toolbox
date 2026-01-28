@@ -1,16 +1,24 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import asyncio
-import re
-import json
-from typing import Callable, Any
-from toolbox_langchain import ToolboxClient
-from toolbox_core.protocol import Protocol
-from langchain_google_vertexai import ChatVertexAI
-from langchain_core.messages import ToolMessage, messages_to_dict
+
 from langchain.agents import create_agent
-from langchain.agents.middleware import (
-    wrap_tool_call,
-    AgentState
-)
+from langchain.agents.middleware import wrap_tool_call
+from langchain_core.messages import ToolMessage, messages_to_dict
+from langchain_google_vertexai import ChatVertexAI
+from toolbox_langchain import ToolboxClient
 
 system_prompt = """
   You're a helpful hotel assistant. You handle hotel searching, booking and
@@ -21,6 +29,7 @@ system_prompt = """
   update checkin or checkout dates if mentioned by the user.
   Don't ask for confirmations from the user.
 """
+
 
 # Pre processing
 @wrap_tool_call
@@ -37,13 +46,14 @@ async def enforce_business_rules(request, handler):
 
     if name == "book-hotel":
         if "duration_days" in args and int(args["duration_days"]) > 14:
-             print("BLOCKED: Stay too long")
-             return ToolMessage(
-                 content="Error: Maximum stay duration is 14 days.",
-                 tool_call_id=tool_call["id"]
-             )
+            print("BLOCKED: Stay too long")
+            return ToolMessage(
+                content="Error: Maximum stay duration is 14 days.",
+                tool_call_id=tool_call["id"],
+            )
 
     return await handler(request)
+
 
 # Post processing
 @wrap_tool_call
@@ -74,22 +84,19 @@ async def main():
             system_prompt=system_prompt,
             model=model,
             tools=tools,
-            middleware=[
-                enforce_business_rules,
-                enrich_response
-            ],
+            middleware=[enforce_business_rules, enrich_response],
         )
 
         user_input = "Book hotel with id 3."
-        response = await agent.ainvoke({"messages": [{"role": "user", "content": user_input}]})
+        response = await agent.ainvoke(
+            {"messages": [{"role": "user", "content": user_input}]}
+        )
 
         print("-" * 50)
         print("Final Client Response:")
-        serializable_response = {
-            "messages": messages_to_dict(response["messages"])
-        }
         last_ai_msg = response["messages"][-1].content
         print(f"AI: {last_ai_msg}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
