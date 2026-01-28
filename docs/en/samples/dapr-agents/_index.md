@@ -23,16 +23,17 @@ This guide assumes you have already done the following:
     https://packaging.python.org/en/latest/tutorials/installing-packages/#creating-virtual-environments
 [install-postgres]: https://www.postgresql.org/download/
 
-### Install Dapr
-```
+### Install & Initialize Dapr
+```sh
 curl -fsSL https://raw.githubusercontent.com/dapr/cli/master/install/install.sh | /bin/bash
 # TODO(developer): Make sure to install the correct version: https://docs.dapr.io/getting-started/install-dapr-cli/
+dapr init
 ```
 
 ### Install Dapr Agents
 
-```
-pip install -r requirements.txt
+```sh
+pip install dapr-agents==0.10.6 requests==2.32.5
 ```
 
 ## Step 2: Install Toolbox
@@ -282,6 +283,13 @@ Ensure your OpenAI API key is exported in the environment:
 ```sh
 export OPENAI_API_KEY="your_key"
 ```
+
+Create the following file as `components/state.yaml`:
+{{< highlight yaml >}}
+{{< include "components/state.yaml" >}}
+{{< /highlight >}}
+
+This tells Dapr to provide a state store that will persist the agents memory. In this example we use an `in-memory` store. See all available state stores on [Dapr docs](https://docs.dapr.io/reference/components-reference/supported-state-stores/).
 
 Create a new file named `agent.py` and copy the following code:
 {{< highlight python >}}
