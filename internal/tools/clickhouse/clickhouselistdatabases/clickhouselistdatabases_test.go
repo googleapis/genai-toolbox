@@ -81,7 +81,7 @@ func TestListDatabasesToolParseParams(t *testing.T) {
 		},
 	}
 
-	params, err := tool.ParseParams(map[string]any{}, map[string]map[string]any{})
+	params, err := parameters.ParseParams(tool.GetParameters(), map[string]any{}, map[string]map[string]any{})
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
