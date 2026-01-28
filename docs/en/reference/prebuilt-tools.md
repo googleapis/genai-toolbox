@@ -483,6 +483,24 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `get_models`: Retrieves the list of LookML models.
     *   `get_explores`: Retrieves the list of explores in a model.
 
+## Looker Admin
+
+*   `--prebuilt` value: `looker-admin`
+*   **Environment Variables:**
+    *   `LOOKER_BASE_URL`: The URL of your Looker instance.
+    *   `LOOKER_CLIENT_ID`: The client ID for the Looker API.
+    *   `LOOKER_CLIENT_SECRET`: The client secret for the Looker API.
+    *   `LOOKER_VERIFY_SSL`: Whether to verify SSL certificates.
+    *   `LOOKER_USE_CLIENT_OAUTH`: Whether to use OAuth for authentication.
+    *   `LOOKER_SHOW_HIDDEN_MODELS`: Whether to show hidden models.
+    *   `LOOKER_SHOW_HIDDEN_EXPLORES`: Whether to show hidden explores.
+    *   `LOOKER_SHOW_HIDDEN_FIELDS`: Whether to show hidden fields.
+*   **Permissions:**
+    *   A Looker account with permissions to access the desired models,
+        explores, and data is required.
+*   **Tools:**
+    *   `search_permission_sets`: Searches for permission sets in the Looker instance. Permission sets define what actions a user or group can perform.
+
 ## Microsoft SQL Server
 
 *   `--prebuilt` value: `mssql`
