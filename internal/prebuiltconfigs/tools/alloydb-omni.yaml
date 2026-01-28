@@ -83,7 +83,7 @@ tools:
     list_columnar_recommended_columns:
         kind: postgres-sql
         source: alloydb-omni-source
-        description: "List AlloyDB Omni columnar-related configurations (name and current setting) from pg_settings."
+        description: "Lists columns that AlloyDB Omni recommends adding to the columnar engine to improve query performance."
         statement: select * from g_columnar_recommended_columns;
 
     list_memory_configurations:

@@ -31,15 +31,13 @@ import (
 )
 
 var (
-	AlloyDBSourceKind = "alloydb-omni-source"
-	AlloyDBToolKind   = "postgres-sql"
-	AlloyDBUser       = "postgres"
-	AlloyDBPass       = "mysecretpassword"
-	AlloyDBDatabase   = "postgres"
+	AlloyDBUser     = "postgres"
+	AlloyDBPass     = "mysecretpassword"
+	AlloyDBDatabase = "postgres"
 )
 
 // Copied over from postgres.go
-func initAlloyDBConnectionPool(host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
+func initPostgresConnectionPool(host, port, user, pass, dbname string) (*pgxpool.Pool, error) {
 	// urlExample := "postgres:dd//username:password@localhost:5432/database_name"
 	url := &url.URL{
 		Scheme: "postgres",
@@ -99,7 +97,7 @@ func setupAlloyDBContainer(ctx context.Context, t *testing.T) (string, string, f
 	return host, mappedPort.Port(), cleanup
 }
 
-func TestAlloyDB(t *testing.T) {
+func TestAlloyDBOmni(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
@@ -114,13 +112,10 @@ func TestAlloyDB(t *testing.T) {
 
 	args := []string{"--prebuilt", "alloydb-omni"}
 
-	pool, err := initAlloyDBConnectionPool(AlloyDBHost, AlloyDBPort, AlloyDBUser, AlloyDBPass, AlloyDBDatabase)
+	pool, err := initPostgresConnectionPool(AlloyDBHost, AlloyDBPort, AlloyDBUser, AlloyDBPass, AlloyDBDatabase)
 	if err != nil {
 		t.Fatalf("unable to create alloydb connection pool: %s", err)
 	}
-
-	// cleanup test environment
-	tests.CleanupPostgresTables(t, ctx, pool)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, map[string]any{}, args...)
 	if err != nil {

@@ -1070,7 +1070,7 @@ func TestEnvVarReplacement(t *testing.T) {
 				${toolset_name}:
 					- example_tool
 
-						
+
 			prompts:
 				${prompt_name}:
 					description: A test prompt for {{.name}}.
@@ -1354,6 +1354,7 @@ func TestSingleEdit(t *testing.T) {
 
 func TestPrebuiltTools(t *testing.T) {
 	// Get prebuilt configs
+	alloydb_omni_config, _ := prebuiltconfigs.Get("alloydb-omni")
 	alloydb_admin_config, _ := prebuiltconfigs.Get("alloydb-postgres-admin")
 	alloydb_config, _ := prebuiltconfigs.Get("alloydb-postgres")
 	bigquery_config, _ := prebuiltconfigs.Get("bigquery")
@@ -1403,6 +1404,12 @@ func TestPrebuiltTools(t *testing.T) {
 	t.Setenv("ALLOYDB_POSTGRES_DATABASE", "your_alloydb_db")
 	t.Setenv("ALLOYDB_POSTGRES_USER", "your_alloydb_user")
 	t.Setenv("ALLOYDB_POSTGRES_PASSWORD", "your_alloydb_password")
+
+	t.Setenv("ALLOYDB_OMNI_HOST", "localhost")
+	t.Setenv("ALLOYDB_OMNI_PORT", "5432")
+	t.Setenv("ALLOYDB_OMNI_DATABASE", "your_alloydb_db")
+	t.Setenv("ALLOYDB_OMNI_USER", "your_alloydb_user")
+	t.Setenv("ALLOYDB_OMNI_PASSWORD", "your_alloydb_password")
 
 	t.Setenv("CLICKHOUSE_PROTOCOL", "your_clickhouse_protocol")
 	t.Setenv("CLICKHOUSE_DATABASE", "your_clickhouse_database")
@@ -1497,6 +1504,16 @@ func TestPrebuiltTools(t *testing.T) {
 		in          []byte
 		wantToolset server.ToolsetConfigs
 	}{
+		{
+			name: "alloydb omni prebuilt tools",
+			in:   alloydb_omni_config,
+			wantToolset: server.ToolsetConfigs{
+				"alloydb_omni_database_tools": tools.ToolsetConfig{
+					Name:      "alloydb_omni_database_tools",
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_columnar_configurations", "list_columnar_recommended_columns", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats", "list_stored_procedure"},
+				},
+			},
+		},
 		{
 			name: "alloydb postgres admin prebuilt tools",
 			in:   alloydb_admin_config,
