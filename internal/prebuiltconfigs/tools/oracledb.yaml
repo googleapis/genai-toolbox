@@ -1,0 +1,122 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+sources:
+    oracle-source:
+        kind: "oracle"
+        connectionString: ${ORACLE_CONNECTION_STRING}
+        walletLocation: ${ORACLE_WALLET:}
+        user: ${ORACLE_USER}
+        password: ${ORACLE_PASSWORD}
+        useOCI: ${ORACLE_USE_OCI:false}
+
+tools:
+   
+    list_tables:
+        kind: oracle-sql
+        source: oracle-source
+        description: "Lists all user tables in the connected schema, including segment size, row count, and last analyzed date. Filters by a comma-separated list of names. If names are omitted, lists all tables in the current user's schema."
+        statement: SELECT table_name from user_tables;
+
+    list_active_sessions:
+        kind: oracle-sql
+        source: oracle-source
+        description: "List the top N (default 50) currently running database sessions (STATUS='ACTIVE'), showing SID, OS User, Program, and the current SQL statement text."
+        statement:  SELECT
+                s.sid,
+                s.serial#,
+                s.username,
+                s.osuser,
+                s.program,
+                s.status,
+                s.wait_class,
+                s.event,
+                sql.sql_text
+            FROM
+                v$session s,
+                v$sql sql
+            WHERE
+                s.status = 'ACTIVE'
+                AND s.sql_id = sql.sql_id (+)
+                AND s.audsid != userenv('sessionid') -- Exclude current session
+            ORDER BY s.last_call_et DESC
+            FETCH FIRST COALESCE(10) ROWS ONLY;
+
+    get_query_plan:
+        kind: oracle-sql
+        source: oracle-source
+        description: "Generate a full execution plan for a single SQL statement. This can be used to analyze query performance without execution. Requires the SQL statement as input. following is an example EXPLAIN PLAN FOR {{&query}};"
+        statement: SELECT PLAN_TABLE_OUTPUT FROM TABLE(DBMS_XPLAN.DISPLAY());
+
+    list_top_sql_by_resource:
+        kind: oracle-sql
+        source: oracle-source
+        description: "List the top N SQL statements from the library cache based on a chosen resource metric (CPU, I/O, or Elapsed Time), following is an example of the sql" 
+        statement: SELECT
+                sql_id,
+                executions,
+                buffer_gets,
+                disk_reads,
+                cpu_time / 1000000 AS cpu_seconds,
+                elapsed_time / 1000000 AS elapsed_seconds
+            FROM
+                v$sql
+            FETCH FIRST 5 ROWS ONLY;
+            
+    list_tablespace_usage:
+        kind: oracle-sql
+        source: oracle-source
+        description: "List tablespace names, total size, free space, and used percentage to monitor storage utilization."
+        statement: SELECT
+                t.tablespace_name,
+                TO_CHAR(t.total_bytes / 1024 / 1024, '99,999.00') AS total_mb,
+                TO_CHAR(SUM(d.bytes) / 1024 / 1024, '99,999.00') AS free_mb,
+                TO_CHAR((t.total_bytes - SUM(d.bytes)) / t.total_bytes * 100, '99.00') AS used_pct
+            FROM
+                (SELECT tablespace_name, SUM(bytes) AS total_bytes FROM dba_data_files GROUP BY tablespace_name) t,
+                dba_free_space d
+            WHERE
+                t.tablespace_name = d.tablespace_name (+)
+            GROUP BY
+                t.tablespace_name, t.total_bytes
+            ORDER BY
+                used_pct DESC;
+
+    list_invalid_objects:
+        kind: oracle-sql  
+        source: oracle-source  
+        description: "Lists all database objects that are in an invalid state, requiring recompilation (e.g., procedures, functions, views)."  
+        statement: |  
+            SELECT  
+                owner,  
+                object_type,  
+                object_name,  
+                status  
+            FROM  
+                dba_objects  
+            WHERE  
+                status = 'INVALID'  
+                AND owner NOT IN ('SYS', 'SYSTEM') -- Exclude system schemas for clarity  
+            ORDER BY  
+                owner, object_type, object_name; 
+
+toolsets:
+    oracle_database_tools:
+        - execute_sql
+        - list_tables
+        - list_active_sessions
+        - get_query_plan
+        - list_top_sql_by_resource
+        - list_tablespace_usage
+        - list_invalid_objects

@@ -654,6 +654,34 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `execute_cypher`: Executes a Cypher query.
     *   `get_schema`: Retrieves the schema of the Neo4j database.
 
+
+## Oracle
+
+*   `--prebuilt` value: `oracle`
+*   **Environment Variables:**
+    *   `ORACLE_HOST`: The hostname or IP address of the Oracle server.
+    *   `ORACLE_PORT`: The port number for the Oracle server (Default: 1521).
+    *   `ORACLE_CONNECTION_STRING`: The
+    *   `ORACLE_USER`: The username for the Oracle DB instance.
+    *   `ORACLE_PASSWORD`: The password for the Oracle DB instance
+    *   `ORACLE_WALLET`: The path to Oracle DB Wallet file for the databases that support this authentication type
+    *   `ORACLE_USE_OCI`: true or false, The flag if the Oracle Database is deployed in cloud deployment. Default is false.
+*   **Permissions:**
+    *   Database-level permissions (e.g., `SELECT`, `INSERT`) are required to execute queries.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+    *   `list_active_sessions`: Lists active database sessions.
+    *   `get_query_plan`: Gets the execution plan for a SQL statement.
+    *   `list_top_sql_by_resource`: Lists top SQL statements by resource usage.
+    *   `list_tablespace_usage`: Lists tablespace usage.
+    *   `list_invalid_objects`: Lists invalid objects.
+    *   `list_active_sessions`: Lists active database sessions.
+    *   `get_query_plan`: Gets the execution plan for a SQL statement.
+    *   `list_top_sql_by_resource`: Lists top SQL statements by resource usage.
+    *   `list_tablespace_usage`: Lists tablespace usage.
+    *   `list_invalid_objects`: Lists invalid objects.
+
 ## Google Cloud Healthcare API
 *   `--prebuilt` value: `cloud-healthcare`
 *   **Environment Variables:**
