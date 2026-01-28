@@ -16,7 +16,7 @@ import asyncio
 
 from langchain.agents import create_agent
 from langchain.agents.middleware import wrap_tool_call
-from langchain_core.messages import ToolMessage, messages_to_dict
+from langchain_core.messages import ToolMessage
 from langchain_google_vertexai import ChatVertexAI
 from toolbox_langchain import ToolboxClient
 
