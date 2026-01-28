@@ -7490,6 +7490,75 @@ useClientOAuth: true
 | useClientOAuth     |   bool   |    false     | If true, forwards the client's OAuth access token from the "Authorization" header to downstream queries.                                                                                                                                                                     |
 
 
+# Cloud Logging Admin
+The Cloud Logging Admin source enables tools to interact with the Cloud Logging API, allowing for the retrieval of log names, monitored resource types, and the querying of log data.
+
+
+## About
+
+The Cloud Logging Admin source provides a client to interact with the [Google
+Cloud Logging API](https://cloud.google.com/logging/docs). This allows tools to list log names, monitored resource types, and query log entries.
+
+Authentication can be handled in two ways:
+
+1.  **Application Default Credentials (ADC):** By default, the source uses ADC
+    to authenticate with the API.
+2.  **Client-side OAuth:** If `useClientOAuth` is set to `true`, the source will
+    expect an OAuth 2.0 access token to be provided by the client (e.g., a web
+    browser) for each request.
+
+## Available Tools
+
+- [`cloud-logging-admin-list-log-names`](../tools/cloudloggingadmin/cloud-logging-admin-list-log-names.md)
+  Lists the log names in the project.
+
+- [`cloud-logging-admin-list-resource-types`](../tools/cloudloggingadmin/cloud-logging-admin-list-resource-types.md)
+  Lists the monitored resource types.
+
+- [`cloud-logging-admin-query-logs`](../tools/cloudloggingadmin/cloud-logging-admin-query-logs.md)
+  Queries log entries.
+
+## Example
+
+Initialize a Cloud Logging Admin source that uses ADC:
+
+```yaml
+kind: sources
+name: my-cloud-logging
+type: cloud-logging-admin
+project: my-project-id
+```
+
+Initialize a Cloud Logging Admin source that uses client-side OAuth:
+
+```yaml
+kind: sources
+name: my-oauth-cloud-logging
+type: cloud-logging-admin
+project: my-project-id
+useClientOAuth: true
+```
+
+Initialize a Cloud Logging Admin source that uses service account impersonation:
+
+```yaml
+kind: sources
+name: my-impersonated-cloud-logging
+type: cloud-logging-admin
+project: my-project-id
+impersonateServiceAccount: "my-service-account@my-project.iam.gserviceaccount.com"
+```
+
+## Reference
+
+| **field**                   | **type** | **required** | **description**                                                                                                                                                                                 |
+|-----------------------------|:--------:|:------------:|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| type                        |  string  |     true     | Must be "cloud-logging-admin".                                                                                                                                                                  |
+| project                     |  string  |     true     | ID of the GCP project.                                                                                                                                                                          |
+| useClientOAuth              | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. Cannot be used with `impersonateServiceAccount`. |
+| impersonateServiceAccount   |  string  |    false     | The service account to impersonate for API calls. Cannot be used with `useClientOAuth`.                                                                                                         |
+
+
 # Cloud Monitoring
 A "cloud-monitoring" source provides a client for the Cloud Monitoring API.
 
@@ -11286,6 +11355,114 @@ Tools that work with Valkey Sources.
 # YugabyteDB
 Tools that work with Valkey Sources.
 
+
+
+# cloud-logging-admin-list-log-names
+A "cloud-logging-admin-list-log-names" tool lists the log names in the project.
+
+
+## About
+
+The `cloud-logging-admin-list-log-names` tool lists the log names available in the Google Cloud project.
+It's compatible with the following sources:
+
+- [cloud-logging-admin](../../sources/cloud-logging-admin.md)
+
+## Example
+
+```yaml
+kind: tools
+name: list_log_names
+type: cloud-logging-admin-list-log-names
+source: my-cloud-logging
+description: Lists all log names in the project.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "cloud-logging-admin-list-log-names".      |
+| source      |  string  |     true     | Name of the cloud-logging-admin source.            |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+### Parameters
+
+| **parameter** | **type** | **required** | **description** |
+|:--------------|:--------:|:------------:|:----------------|
+| limit | integer | false | Maximum number of log entries to return (default: 200). |
+
+
+# cloud-logging-admin-list-resource-types
+A "cloud-logging-admin-list-resource-types" tool lists the monitored resource types.
+
+
+## About
+
+The `cloud-logging-admin-list-resource-types` tool lists the monitored resource types available in Google Cloud Logging.
+It's compatible with the following sources:
+
+- [cloud-logging-admin](../../sources/cloud-logging-admin.md)
+
+## Example
+
+```yaml
+kind: tools
+name: list_resource_types
+type: cloud-logging-admin-list-resource-types
+source: my-cloud-logging
+description: Lists monitored resource types.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "cloud-logging-admin-list-resource-types".|
+| source      |  string  |     true     | Name of the cloud-logging-admin source.            |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+
+
+# cloud-logging-admin-query-logs
+A "cloud-logging-admin-query-logs" tool queries log entries.
+
+
+## About
+
+The `cloud-logging-admin-query-logs` tool allows you to query log entries from Google Cloud Logging using the advanced logs filter syntax.
+It's compatible with the following sources:
+
+- [cloud-logging-admin](../../sources/cloud-logging-admin.md)
+
+## Example
+
+```yaml
+kind: tools
+name: query_logs
+type: cloud-logging-admin-query-logs
+source: my-cloud-logging
+description: Queries log entries from Cloud Logging.
+```
+
+## Reference
+
+| **field**   | **type** | **required** | **description**                                    |
+|-------------|:--------:|:------------:|----------------------------------------------------|
+| type        |  string  |     true     | Must be "cloud-logging-admin-query-logs".          |
+| source      |  string  |     true     | Name of the cloud-logging-admin source.            |
+| description |  string  |     true     | Description of the tool that is passed to the LLM. |
+
+### Parameters
+
+| **parameter** | **type** | **required** | **description** |
+|:--------------|:--------:|:------------:|:----------------|
+| filter | string | false | Cloud Logging filter query. Common fields: resource.type, resource.labels.*, logName, severity, textPayload, jsonPayload.*, protoPayload.*, labels.*, httpRequest.*. Operators: =, !=, <, <=, >, >=, :, =~, AND, OR, NOT. |
+| newestFirst | boolean | false | Set to true for newest logs first. Defaults to oldest first. |
+| startTime | string | false | Start time in RFC3339 format (e.g., 2025-12-09T00:00:00Z). Defaults to 30 days ago. |
+| endTime | string | false | End time in RFC3339 format (e.g., 2025-12-09T23:59:59Z). Defaults to now. |
+| verbose | boolean | false | Include additional fields (insertId, trace, spanId, httpRequest, labels, operation, sourceLocation). Defaults to false. |
+| limit | integer | false | Maximum number of log entries to return. Default: `200`. |
 
 
 # Prompts
