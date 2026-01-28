@@ -150,5 +150,5 @@ func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, 
 }
 
 func (t Tool) GetParameters() parameters.Parameters {
-	return t.Parameters
+	return t.AllParams
 }
