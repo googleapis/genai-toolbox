@@ -186,6 +186,8 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 
 	var args []string
 
+	tests.CleanupSingleStoreTables(t, ctx, sourceConfig)
+
 	pool, err := initSingleStoreConnectionPool(SingleStoreHost, SingleStorePort, SingleStoreUser, SingleStorePass, SingleStoreDatabase)
 	if err != nil {
 		t.Fatalf("unable to create SingleStore connection pool: %s", err)
@@ -217,6 +219,7 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
 	defer cleanup()
+	
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
