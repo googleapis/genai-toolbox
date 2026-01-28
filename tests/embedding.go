@@ -64,10 +64,11 @@ func AddSemanticSearchConfig(t *testing.T, config map[string]any, toolKind, inse
 				"description": "The text content associated with the vector.",
 			},
 			map[string]any{
-				"name":        "text_to_embed",
-				"type":        "string",
-				"description": "The text content used to generate the vector.",
-				"embeddedBy":  "gemini_model",
+				"name":           "text_to_embed",
+				"type":           "string",
+				"description":    "The text content used to generate the vector.",
+				"embeddedBy":     "gemini_model",
+				"valueFromParam": "content",
 			},
 		},
 	}
@@ -108,7 +109,7 @@ func RunSemanticSearchToolInvokeTest(t *testing.T, insertWant, mcpInsertWant, se
 			name:        "HTTP invoke insert_docs",
 			api:         "http://127.0.0.1:5000/api/tool/insert_docs/invoke",
 			isMcp:       false,
-			requestBody: `{"content": "The quick brown fox jumps over the lazy dog", "text_to_embed": "The quick brown fox jumps over the lazy dog"}`,
+			requestBody: `{"content": "The quick brown fox jumps over the lazy dog"}`,
 			want:        insertWant,
 		},
 		{
@@ -131,8 +132,7 @@ func RunSemanticSearchToolInvokeTest(t *testing.T, insertWant, mcpInsertWant, se
 				Params: map[string]any{
 					"name": "insert_docs",
 					"arguments": map[string]any{
-						"content":       "The quick brown fox jumps over the lazy dog",
-						"text_to_embed": "The quick brown fox jumps over the lazy dog",
+						"content": "The quick brown fox jumps over the lazy dog",
 					},
 				},
 			},

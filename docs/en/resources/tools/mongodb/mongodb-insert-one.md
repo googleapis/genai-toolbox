@@ -17,7 +17,7 @@ This tool takes one required parameter named `data`, which must be a string
 containing the JSON object you want to insert. Upon successful insertion, the
 tool returns the unique `_id` of the newly created document.
 
-This tool is compatible with the following source kind:
+This tool is compatible with the following source type:
 
 * [`mongodb`](../../sources/mongodb.md)
 
@@ -27,14 +27,14 @@ Here is an example configuration for a tool that adds a new user to a `users`
 collection.
 
 ```yaml
-tools:
-  create_new_user:
-    kind: mongodb-insert-one
-    source: my-mongo-source
-    description: Creates a new user record in the database.
-    database: user_data
-    collection: users
-    canonical: false
+kind: tools
+name: create_new_user
+type: mongodb-insert-one
+source: my-mongo-source
+description: Creates a new user record in the database.
+database: user_data
+collection: users
+canonical: false
 ```
 
 An LLM would call this tool by providing the document as a JSON string in the
@@ -45,7 +45,7 @@ An LLM would call this tool by providing the document as a JSON string in the
 
 | **field**   | **type** | **required** | **description**                                                                                                         |
 |:------------|:---------|:-------------|:------------------------------------------------------------------------------------------------------------------------|
-| kind        | string   | true         | Must be `mongodb-insert-one`.                                                                                           |
+| type        | string   | true         | Must be `mongodb-insert-one`.                                                                                           |
 | source      | string   | true         | The name of the `mongodb` source to use.                                                                                |
 | description | string   | true         | A description of the tool that is passed to the LLM.                                                                    |
 | database    | string   | true         | The name of the MongoDB database containing the collection.                                                             |

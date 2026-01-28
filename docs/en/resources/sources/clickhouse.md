@@ -46,31 +46,31 @@ ClickHouse supports multiple protocols:
 ### Secure Connection Example
 
 ```yaml
-sources:
-    secure-clickhouse-source:
-        kind: clickhouse
-        host: clickhouse.example.com
-        port: "8443"
-        database: analytics
-        user: ${CLICKHOUSE_USER}
-        password: ${CLICKHOUSE_PASSWORD}
-        protocol: https
-        secure: true
+kind: sources
+name: secure-clickhouse-source
+type: clickhouse
+host: clickhouse.example.com
+port: "8443"
+database: analytics
+user: ${CLICKHOUSE_USER}
+password: ${CLICKHOUSE_PASSWORD}
+protocol: https
+secure: true
 ```
 
 ### HTTP Protocol Example
 
 ```yaml
-sources:
-    http-clickhouse-source:
-        kind: clickhouse
-        host: localhost
-        port: "8123"
-        database: logs
-        user: ${CLICKHOUSE_USER}
-        password: ${CLICKHOUSE_PASSWORD}
-        protocol: http
-        secure: false
+kind: sources
+name: http-clickhouse-source
+type: clickhouse
+host: localhost
+port: "8123"
+database: logs
+user: ${CLICKHOUSE_USER}
+password: ${CLICKHOUSE_PASSWORD}
+protocol: http
+secure: false
 ```
 
 {{< notice tip >}}
@@ -82,7 +82,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                                     |
 |-----------|:--------:|:------------:|-------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "clickhouse".                                                               |
+| type      |  string  |     true     | Must be "clickhouse".                                                               |
 | host      |  string  |     true     | IP address or hostname to connect to (e.g. "127.0.0.1" or "clickhouse.example.com") |
 | port      |  string  |     true     | Port to connect to (e.g. "8443" for HTTPS, "8123" for HTTP)                         |
 | database  |  string  |     true     | Name of the ClickHouse database to connect to (e.g. "my_database").                 |

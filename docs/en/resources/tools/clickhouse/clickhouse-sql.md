@@ -21,60 +21,60 @@ query execution capabilities.
 ## Example
 
 ```yaml
-tools:
-  my_analytics_query:
-    kind: clickhouse-sql
-    source: my-clickhouse-instance
-    description: Get user analytics for a specific date range
-    statement: |
-      SELECT 
-        user_id,
-        count(*) as event_count,
-        max(timestamp) as last_event
-      FROM events 
-      WHERE date >= ? AND date <= ?
-      GROUP BY user_id
-      ORDER BY event_count DESC
-      LIMIT ?
-    parameters:
-      - name: start_date
-        description: Start date for the query (YYYY-MM-DD format)
-      - name: end_date  
-        description: End date for the query (YYYY-MM-DD format)
-      - name: limit
-        description: Maximum number of results to return
+kind: tools
+name: my_analytics_query
+type: clickhouse-sql
+source: my-clickhouse-instance
+description: Get user analytics for a specific date range
+statement: |
+  SELECT 
+    user_id,
+    count(*) as event_count,
+    max(timestamp) as last_event
+  FROM events 
+  WHERE date >= ? AND date <= ?
+  GROUP BY user_id
+  ORDER BY event_count DESC
+  LIMIT ?
+parameters:
+  - name: start_date
+    description: Start date for the query (YYYY-MM-DD format)
+  - name: end_date  
+    description: End date for the query (YYYY-MM-DD format)
+  - name: limit
+    description: Maximum number of results to return
 ```
 
 ## Template Parameters Example
 
 ```yaml
-tools:
-  flexible_table_query:
-    kind: clickhouse-sql
-    source: my-clickhouse-instance
-    description: Query any table with flexible columns
-    statement: |
-      SELECT {{columns}}
-      FROM {{table_name}}
-      WHERE created_date >= ?
-      LIMIT ?
-    templateParameters:
-      - name: columns
-        description: Comma-separated list of columns to select
-      - name: table_name
-        description: Name of the table to query
-    parameters:
-      - name: start_date
-        description: Start date filter
-      - name: limit
-        description: Maximum number of results
+kind: tools
+name: flexible_table_query
+type: clickhouse-sql
+source: my-clickhouse-instance
+description: Query any table with flexible columns
+statement: |
+  SELECT {{columns}}
+  FROM {{table_name}}
+  WHERE created_date >= ?
+  LIMIT ?
+templateParameters:
+  - name: columns
+    description: Comma-separated list of columns to select
+  - name: table_name
+    description: Name of the table to query
+parameters:
+  - name: start_date
+    description: Start date filter
+  - name: limit
+    description: Maximum number of results
 ```
 
 ## Reference
 
 | **field**          |      **type**      | **required** | **description**                                       |
 |--------------------|:------------------:|:------------:|-------------------------------------------------------|
-| kind               |       string       |     true     | Must be "clickhouse-sql".                             |
+| type               |       string       |     true     | Must be "clickhouse-sql".                             |
 | source             |       string       |     true     | Name of the ClickHouse source to execute SQL against. |
 | description        |       string       |     true     | Description of the tool that is passed to the LLM.    |
 | statement          |       string       |     true     | The SQL statement template to execute.                |

@@ -97,11 +97,11 @@ ORDER BY created_at DESC;
 ## Example
 
 ```yaml
-tools:
- execute_sql_tool:
-    kind: mindsdb-execute-sql
-    source: my-mindsdb-instance
-    description: Use this tool to execute SQL statements across multiple datasources and ML models.
+kind: tools
+name: execute_sql_tool
+type: mindsdb-execute-sql
+source: my-mindsdb-instance
+description: Use this tool to execute SQL statements across multiple datasources and ML models.
 ```
 
 ### Working Configuration Example
@@ -109,28 +109,28 @@ tools:
 Here's a working configuration that has been tested:
 
 ```yaml
-sources:
-  my-pg-source:
-    kind: mindsdb
-    host: 127.0.0.1
-    port: 47335
-    database: files
-    user: mindsdb
-
-tools:
-  mindsdb-execute-sql:
-    kind: mindsdb-execute-sql
-    source: my-pg-source
-    description: |
-      Execute SQL queries directly on MindsDB database.
-      Use this tool to run any SQL statement against your MindsDB instance.
-      Example: SELECT * FROM my_table LIMIT 10
+kind: sources
+name: my-pg-source
+type: mindsdb
+host: 127.0.0.1
+port: 47335
+database: files
+user: mindsdb
+---
+kind: tools
+name: mindsdb-execute-sql
+type: mindsdb-execute-sql
+source: my-pg-source
+description: |
+  Execute SQL queries directly on MindsDB database.
+  Use this tool to run any SQL statement against your MindsDB instance.
+  Example: SELECT * FROM my_table LIMIT 10
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "mindsdb-execute-sql".                     |
+| type        |  string  |     true     | Must be "mindsdb-execute-sql".                     |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

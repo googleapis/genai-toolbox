@@ -7,6 +7,17 @@ description: >
 
 ---
 
+{{< notice note >}}
+**⚠️ Best Effort Maintenance**
+
+This integration is maintained on a best-effort basis by the project
+team/community. While we strive to address issues and provide workarounds when
+resources are available, there are no guaranteed response times or code fixes.
+
+The automated integration tests for this module are currently non-functional or
+failing.
+{{< /notice >}}
+
 ## About
 
 [Dgraph][dgraph-docs] is an open-source graph database. It is designed for
@@ -40,14 +51,14 @@ and user credentials for that namespace.
 ## Example
 
 ```yaml
-sources:
-    my-dgraph-source:
-        kind: dgraph
-        dgraphUrl: https://xxxx.cloud.dgraph.io
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        apiKey: ${API_KEY}
-        namespace : 0
+kind: sources
+name: my-dgraph-source
+type: dgraph
+dgraphUrl: https://xxxx.cloud.dgraph.io
+user: ${USER_NAME}
+password: ${PASSWORD}
+apiKey: ${API_KEY}
+namespace : 0
 ```
 
 {{< notice tip >}}
@@ -59,7 +70,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **Field**   | **Type** | **Required** | **Description**                                                                                  |
 |-------------|:--------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |  string  |     true     | Must be "dgraph".                                                                                |
+| type        |  string  |     true     | Must be "dgraph".                                                                                |
 | dgraphUrl   |  string  |     true     | Connection URI (e.g. "<https://xxx.cloud.dgraph.io>", "<https://localhost:8080>").               |
 | user        |  string  |     false    | Name of the Dgraph user to connect as (e.g., "groot").                                           |
 | password    |  string  |     false    | Password of the Dgraph user (e.g., "password").                                                  |
