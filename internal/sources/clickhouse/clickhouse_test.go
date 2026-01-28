@@ -52,15 +52,18 @@ func TestNewConfig(t *testing.T) {
 				secure: true
 			`,
 			expected: Config{
-				Name:     "test-clickhouse",
-				Kind:     "clickhouse",
-				Host:     "localhost",
-				Port:     "8443",
-				User:     "default",
-				Password: "mypass",
-				Database: "mydb",
-				Protocol: "https",
-				Secure:   true,
+				Name:            "test-clickhouse",
+				Kind:            "clickhouse",
+				Host:            "localhost",
+				Port:            "8443",
+				User:            "default",
+				Password:        "mypass",
+				Database:        "mydb",
+				Protocol:        "https",
+				Secure:          true,
+				MaxOpenConns:    nil,
+				MaxIdleConns:    nil,
+				ConnMaxLifetime: "",
 			},
 		},
 		{
@@ -74,15 +77,18 @@ func TestNewConfig(t *testing.T) {
 				database: testdb
 			`,
 			expected: Config{
-				Name:     "minimal-clickhouse",
-				Kind:     "clickhouse",
-				Host:     "127.0.0.1",
-				Port:     "8123",
-				User:     "testuser",
-				Password: "",
-				Database: "testdb",
-				Protocol: "",
-				Secure:   false,
+				Name:            "minimal-clickhouse",
+				Kind:            "clickhouse",
+				Host:            "127.0.0.1",
+				Port:            "8123",
+				User:            "testuser",
+				Password:        "",
+				Database:        "testdb",
+				Protocol:        "",
+				Secure:          false,
+				MaxOpenConns:    nil,
+				MaxIdleConns:    nil,
+				ConnMaxLifetime: "",
 			},
 		},
 		{
@@ -99,15 +105,18 @@ func TestNewConfig(t *testing.T) {
 				secure: false
 			`,
 			expected: Config{
-				Name:     "http-clickhouse",
-				Kind:     "clickhouse",
-				Host:     "clickhouse.example.com",
-				Port:     "8123",
-				User:     "analytics",
-				Password: "securepass",
-				Database: "analytics_db",
-				Protocol: "http",
-				Secure:   false,
+				Name:            "http-clickhouse",
+				Kind:            "clickhouse",
+				Host:            "clickhouse.example.com",
+				Port:            "8123",
+				User:            "analytics",
+				Password:        "securepass",
+				Database:        "analytics_db",
+				Protocol:        "http",
+				Secure:          false,
+				MaxOpenConns:    nil,
+				MaxIdleConns:    nil,
+				ConnMaxLifetime: "",
 			},
 		},
 		{
@@ -124,15 +133,75 @@ func TestNewConfig(t *testing.T) {
 				secure: true
 			`,
 			expected: Config{
-				Name:     "secure-clickhouse",
-				Kind:     "clickhouse",
-				Host:     "secure.clickhouse.io",
-				Port:     "8443",
-				User:     "secureuser",
-				Password: "verysecure",
-				Database: "production",
-				Protocol: "https",
-				Secure:   true,
+				Name:            "secure-clickhouse",
+				Kind:            "clickhouse",
+				Host:            "secure.clickhouse.io",
+				Port:            "8443",
+				User:            "secureuser",
+				Password:        "verysecure",
+				Database:        "production",
+				Protocol:        "https",
+				Secure:          true,
+				MaxOpenConns:    nil,
+				MaxIdleConns:    nil,
+				ConnMaxLifetime: "",
+			},
+		},
+		{
+			name: "with connection pool settings",
+			yaml: `
+				name: pool-clickhouse
+				kind: clickhouse
+				host: localhost
+				port: "8443"
+				user: testuser
+				password: "testpass"
+				database: testdb
+				protocol: https
+				secure: true
+				maxOpenConns: 50
+				maxIdleConns: 10
+				connMaxLifetime: 10m
+			`,
+			expected: Config{
+				Name:            "pool-clickhouse",
+				Kind:            "clickhouse",
+				Host:            "localhost",
+				Port:            "8443",
+				User:            "testuser",
+				Password:        "testpass",
+				Database:        "testdb",
+				Protocol:        "https",
+				Secure:          true,
+				MaxOpenConns:    intPtr(50),
+				MaxIdleConns:    intPtr(10),
+				ConnMaxLifetime: "10m",
+			},
+		},
+		{
+			name: "partial connection pool settings",
+			yaml: `
+				name: partial-pool-clickhouse
+				kind: clickhouse
+				host: localhost
+				port: "8443"
+				user: testuser
+				database: testdb
+				maxOpenConns: 30
+			`,
+			expected: Config{
+				Name:            "partial-pool-clickhouse",
+				Kind:            "clickhouse",
+				Host:            "localhost",
+				Port:            "8443",
+				User:            "testuser",
+				Password:        "",
+				Database:        "testdb",
+				Protocol:        "",
+				Secure:          false,
+				MaxOpenConns:    intPtr(30),
+				MaxIdleConns:    nil,
+				ConnMaxLifetime: "",
 			},
 		},
 	}
@@ -334,7 +403,17 @@ func TestInitClickHouseConnectionPoolDSNGeneration(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pool, err := initClickHouseConnectionPool(ctx, tracer, "test", tt.host, tt.port, tt.user, tt.pass, tt.dbname, tt.protocol, tt.secure)
+			config := Config{
+				Name:     "test",
+				Host:     tt.host,
+				Port:     tt.port,
+				User:     tt.user,
+				Password: tt.pass,
+				Database: tt.dbname,
+				Protocol: tt.protocol,
+				Secure:   tt.secure,
+			}
+			pool, err := initClickHouseConnectionPool(ctx, tracer, config)
 
 			if !tt.shouldErr && err != nil {
 				t.Errorf("Expected no error, got: %v", err)
@@ -345,4 +424,99 @@ func TestInitClickHouseConnectionPoolDSNGeneration(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestInitClickHouseConnectionPoolWithPoolSettings(t *testing.T) {
+	tracer := otel.Tracer("test")
+	ctx := context.Background()
+
+	tests := []struct {
+		name            string
+		maxOpenConns    *int
+		maxIdleConns    *int
+		connMaxLifetime string
+		expectErr       bool
+		errorContains   string
+	}{
+		{
+			name:            "default pool settings",
+			maxOpenConns:    nil,
+			maxIdleConns:    nil,
+			connMaxLifetime: "",
+			expectErr:       true, // Will fail because no actual connection
+			errorContains:   "sql.Open",
+		},
+		{
+			name:            "custom pool settings",
+			maxOpenConns:    intPtr(50),
+			maxIdleConns:    intPtr(10),
+			connMaxLifetime: "10m",
+			expectErr:       true, // Will fail because no actual connection
+			errorContains:   "sql.Open",
+		},
+		{
+			name:            "partial pool settings",
+			maxOpenConns:    intPtr(30),
+			maxIdleConns:    nil,
+			connMaxLifetime: "5m",
+			expectErr:       true, // Will fail because no actual connection
+			errorContains:   "sql.Open",
+		},
+		{
+			name:            "invalid duration format",
+			maxOpenConns:    nil,
+			maxIdleConns:    nil,
+			connMaxLifetime: "invalid-duration",
+			expectErr:       true,
+			errorContains:   "invalid connMaxLifetime",
+		},
+		{
+			name:            "valid duration formats",
+			maxOpenConns:    intPtr(25),
+			maxIdleConns:    intPtr(5),
+			connMaxLifetime: "30s",
+			expectErr:       true, // Will fail because no actual connection
+			errorContains:   "sql.Open",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			config := Config{
+				Name:            "test",
+				Host:            "localhost",
+				Port:            "8443",
+				User:            "user",
+				Password:        "pass",
+				Database:        "db",
+				Protocol:        "https",
+				Secure:          true,
+				MaxOpenConns:    tt.maxOpenConns,
+				MaxIdleConns:    tt.maxIdleConns,
+				ConnMaxLifetime: tt.connMaxLifetime,
+			}
+			pool, err := initClickHouseConnectionPool(ctx, tracer, config)
+
+			if tt.expectErr {
+				if err == nil {
+					t.Errorf("Expected error but got none")
+				} else if tt.errorContains != "" && !strings.Contains(err.Error(), tt.errorContains) {
+					t.Errorf("Expected error to contain %q, got: %v", tt.errorContains, err)
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Expected no error, got: %v", err)
+				}
+			}
+
+			if pool != nil {
+				pool.Close()
+			}
+		})
+	}
+}
+
+// intPtr is a helper function to create a pointer to an int
+func intPtr(i int) *int {
+	return &i
 }
