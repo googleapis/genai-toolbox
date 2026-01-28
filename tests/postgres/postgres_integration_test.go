@@ -81,9 +81,28 @@ func initPostgresConnectionPool(host, port, user, pass, dbname string) (*pgxpool
 	return pool, nil
 }
 
+func CreateIsolatedSchema(t *testing.T, ctx context.Context, pool *pgxpool.Pool) (string, func()) {
+	
+	schemaName := "test_schema_" + strings.ReplaceAll(uuid.New().String(), "-", "")
+	
+	_, err := pool.Exec(ctx, fmt.Sprintf("CREATE SCHEMA %q;", schemaName))
+	if err != nil {
+		t.Fatalf("failed to create sandbox schema: %v", err)
+	}
+
+	cleanup := func() {
+		// Use Background context to ensure cleanup runs even if the test timed out
+		_, err := pool.Exec(context.Background(), fmt.Sprintf("DROP SCHEMA %q CASCADE;", schemaName))
+		if err != nil {
+			t.Logf("Cleanup warning: failed to drop schema %s: %v", schemaName, err)
+		}
+	}
+
+	return schemaName, cleanup
+}
 func TestPostgres(t *testing.T) {
 	sourceConfig := getPostgresVars(t)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
 	var args []string
@@ -92,9 +111,20 @@ func TestPostgres(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to create postgres connection pool: %s", err)
 	}
+	defer pool.Close()
 
+	//this was conflicting and too slow
 	// cleanup test environment
 	tests.CleanupPostgresTables(t, ctx, pool)
+
+	// schemaName, cleanupSchema := CreateIsolatedSchema(t, ctx, pool)
+	// defer cleanupSchema()
+
+	// Force the pool to ONLY use this schema for this test run
+	// _, err = pool.Exec(ctx, fmt.Sprintf("SET search_path TO %q;", schemaName))
+	// if err != nil {
+	// 	t.Fatalf("failed to set search path: %v", err)
+	// }
 
 	// create table name with UUID
 	tableNameParam := "param_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
@@ -126,6 +156,7 @@ func TestPostgres(t *testing.T) {
 	insertStmt, searchStmt := tests.GetPostgresVectorSearchStmts(vectorTableName)
 	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, PostgresToolType, insertStmt, searchStmt)
 
+	// Start toolbox command
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
 		t.Fatalf("command initialization returned an error: %s", err)

@@ -186,6 +186,8 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 
 	var args []string
 
+	tests.CleanupSingleStoreTables(t, ctx, sourceConfig)
+
 	pool, err := initSingleStoreConnectionPool(SingleStoreHost, SingleStorePort, SingleStoreUser, SingleStorePass, SingleStoreDatabase)
 	if err != nil {
 		t.Fatalf("unable to create SingleStore connection pool: %s", err)
