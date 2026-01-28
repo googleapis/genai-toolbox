@@ -17,10 +17,10 @@ flexible, JSON-like documents, making it easy to develop and scale applications.
 ## Example
 
 ```yaml
-sources:
-    my-mongodb:
-        kind: mongodb
-        uri: "mongodb+srv://username:password@host.mongodb.net"       
+kind: sources
+name: my-mongodb
+type: mongodb
+uri: "mongodb+srv://username:password@host.mongodb.net"       
 
 ```
 
@@ -28,5 +28,5 @@ sources:
 
 | **field** | **type** | **required** | **description**                                                   |
 |-----------|:--------:|:------------:|-------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "mongodb".                                                |
+| type      |  string  |     true     | Must be "mongodb".                                                |
 | uri       |  string  |     true     | connection string to connect to MongoDB                           |

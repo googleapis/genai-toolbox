@@ -123,7 +123,7 @@ In this section, we will download and install the Toolbox binary.
     <!-- {x-release-please-start-version} -->
     ```bash
     export OS="linux/amd64" # one of linux/amd64, darwin/arm64, darwin/amd64, or windows/amd64
-    export VERSION="0.25.0"
+    export VERSION="0.26.0"
     curl -O https://storage.googleapis.com/genai-toolbox/v$VERSION/$OS/toolbox
     ```
     <!-- {x-release-please-end} -->
@@ -143,16 +143,16 @@ First, define the data source for your tools. This tells Toolbox how to connect
 to your AlloyDB instance.
 
 ```yaml
-sources:
-  alloydb-pg-source:
-    kind: alloydb-postgres
-    project: YOUR_PROJECT_ID
-    region: YOUR_REGION
-    cluster: YOUR_CLUSTER
-    instance: YOUR_INSTANCE
-    database: YOUR_DATABASE
-    user: YOUR_USER
-    password: YOUR_PASSWORD
+kind: sources
+name: alloydb-pg-source
+type: alloydb-postgres
+project: YOUR_PROJECT_ID
+region: YOUR_REGION
+cluster: YOUR_CLUSTER
+instance: YOUR_INSTANCE
+database: YOUR_DATABASE
+user: YOUR_USER
+password: YOUR_PASSWORD
 ```
 
 Next, define the tools the agent can use. We will categorize them into three
@@ -165,76 +165,77 @@ structured queries like managing a shopping cart. Add the following to your
 `tools.yaml` file:
 
 ```yaml
-tools:
-
-  access-cart-information:
-    kind: postgres-sql
-    source: alloydb-pg-source
-    description: >-
-      List items in customer cart.
-      Use this tool to list items in a customer cart. This tool requires the cart ID.
-    parameters:
-      - name: cart_id
-        type: integer
-        description: The id of the cart.
-    statement: |
-      SELECT
-        p.name AS product_name,
-        ci.quantity,
-        ci.price AS item_price,
-        (ci.quantity * ci.price) AS total_item_price,
-        c.created_at AS cart_created_at,
-        ci.product_id AS product_id
-      FROM
-        cart_items ci JOIN cart c ON ci.cart_id = c.cart_id
-        JOIN products p ON ci.product_id = p.product_id
-      WHERE
-        c.cart_id = $1;
-
-  add-to-cart:
-    kind: postgres-sql
-    source: alloydb-pg-source
-    description: >-
-      Add items to customer cart using the product ID and product prices from the product list.
-      Use this tool to add items to a customer cart.
-      This tool requires the cart ID, product ID, quantity, and price.
-    parameters:
-      - name: cart_id
-        type: integer
-        description: The id of the cart.
-      - name: product_id
-        type: integer
-        description: The id of the product.
-      - name: quantity
-        type: integer
-        description: The quantity of items to add.
-      - name: price
-        type: float
-        description: The price of items to add.
-    statement: |
-      INSERT INTO
-        cart_items (cart_id, product_id, quantity, price)
-      VALUES($1,$2,$3,$4);
-
-  delete-from-cart:
-    kind: postgres-sql
-    source: alloydb-pg-source
-    description: >-
-      Remove products from customer cart.
-      Use this tool to remove products from a customer cart.
-      This tool requires the cart ID and product ID.
-    parameters:
-      - name: cart_id
-        type: integer
-        description: The id of the cart.
-      - name: product_id
-        type: integer
-        description: The id of the product.
-    statement: |
-      DELETE FROM
-        cart_items
-      WHERE
-        cart_id = $1 AND product_id = $2;
+kind: tools
+name: access-cart-information
+type: postgres-sql
+source: alloydb-pg-source
+description: >-
+  List items in customer cart.
+  Use this tool to list items in a customer cart. This tool requires the cart ID.
+parameters:
+  - name: cart_id
+    type: integer
+    description: The id of the cart.
+statement: |
+  SELECT
+    p.name AS product_name,
+    ci.quantity,
+    ci.price AS item_price,
+    (ci.quantity * ci.price) AS total_item_price,
+    c.created_at AS cart_created_at,
+    ci.product_id AS product_id
+  FROM
+    cart_items ci JOIN cart c ON ci.cart_id = c.cart_id
+    JOIN products p ON ci.product_id = p.product_id
+  WHERE
+    c.cart_id = $1;
+---
+kind: tools
+name: add-to-cart
+type: postgres-sql
+source: alloydb-pg-source
+description: >-
+  Add items to customer cart using the product ID and product prices from the product list.
+  Use this tool to add items to a customer cart.
+  This tool requires the cart ID, product ID, quantity, and price.
+parameters:
+  - name: cart_id
+    type: integer
+    description: The id of the cart.
+  - name: product_id
+    type: integer
+    description: The id of the product.
+  - name: quantity
+    type: integer
+    description: The quantity of items to add.
+  - name: price
+    type: float
+    description: The price of items to add.
+statement: |
+  INSERT INTO
+    cart_items (cart_id, product_id, quantity, price)
+  VALUES($1,$2,$3,$4);
+---
+kind: tools
+name: delete-from-cart
+type: postgres-sql
+source: alloydb-pg-source
+description: >-
+  Remove products from customer cart.
+  Use this tool to remove products from a customer cart.
+  This tool requires the cart ID and product ID.
+parameters:
+  - name: cart_id
+    type: integer
+    description: The id of the cart.
+  - name: product_id
+    type: integer
+    description: The id of the product.
+statement: |
+  DELETE FROM
+    cart_items
+  WHERE
+    cart_id = $1 AND product_id = $2;
 ```
 
 ### 2. Semantic Search Tools
@@ -244,27 +245,28 @@ meaning of a user's query, rather than just keywords. Append the following tools
 to the `tools` section in your `tools.yaml`:
 
 ```yaml
-  search-product-recommendations:
-    kind: postgres-sql
-    source: alloydb-pg-source
-    description: >-
-      Search for products based on user needs.
-      Use this tool to search for products. This tool requires the user's needs.
-    parameters:
-      - name: query
-        type: string
-        description: The product characteristics
-    statement: |
-      SELECT
-        product_id,
-        name,
-        description,
-        ROUND(CAST(price AS numeric), 2) as price
-      FROM
-        products
-      ORDER BY
-        embedding('gemini-embedding-001', $1)::vector <=> embedding
-      LIMIT 5;
+kind: tools
+name: search-product-recommendations
+type: postgres-sql
+source: alloydb-pg-source
+description: >-
+  Search for products based on user needs.
+  Use this tool to search for products. This tool requires the user's needs.
+parameters:
+  - name: query
+    type: string
+    description: The product characteristics
+statement: |
+  SELECT
+    product_id,
+    name,
+    description,
+    ROUND(CAST(price AS numeric), 2) as price
+  FROM
+    products
+  ORDER BY
+    embedding('gemini-embedding-001', $1)::vector <=> embedding
+  LIMIT 5;
 ```
 
 ### 3. Natural Language to SQL (NL2SQL) Tools
@@ -286,27 +288,29 @@ to the `tools` section in your `tools.yaml`:
    section:
 
 ```yaml
-  ask-questions-about-products:
-    kind: alloydb-ai-nl
-    source: alloydb-pg-source
-    nlConfig: flower_shop
-    description: >-
-      Ask questions related to products or brands.
-      Use this tool to ask questions about products or brands.
-      Always SELECT the IDs of objects when generating queries.
+kind: tools
+name: ask-questions-about-products
+type: alloydb-ai-nl
+source: alloydb-pg-source
+nlConfig: flower_shop
+description: >-
+  Ask questions related to products or brands.
+  Use this tool to ask questions about products or brands.
+  Always SELECT the IDs of objects when generating queries.
 ```
 
 Finally, group the tools into a `toolset` to make them available to the model.
 Add the following to the end of your `tools.yaml` file:
 
 ```yaml
-toolsets:
-  flower_shop:
-    - access-cart-information
-    - search-product-recommendations
-    - ask-questions-about-products
-    - add-to-cart
-    - delete-from-cart
+kind: toolsets
+name: flower_shop
+tools:
+  - access-cart-information
+  - search-product-recommendations
+  - ask-questions-about-products
+  - add-to-cart
+  - delete-from-cart
 ```
 
 For more info on tools, check out the
