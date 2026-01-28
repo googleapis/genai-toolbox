@@ -26,17 +26,17 @@ not provided, it lists all root-level collections in the database.
 ## Example
 
 ```yaml
-tools:
-  list_firestore_collections:
-    kind: firestore-list-collections
-    source: my-firestore-source
-    description: Use this tool to list collections in Firestore.
+kind: tools
+name: list_firestore_collections
+type: firestore-list-collections
+source: my-firestore-source
+description: Use this tool to list collections in Firestore.
 ```
 
 ## Reference
 
 | **field**   |      **type**    | **required** | **description**                                        |
 |-------------|:----------------:|:------------:|--------------------------------------------------------|
-| kind        |      string      |     true     | Must be "firestore-list-collections".                  |
+| type        |      string      |     true     | Must be "firestore-list-collections".                  |
 | source      |      string      |     true     | Name of the Firestore source to list collections from. |
 | description |      string      |     true     | Description of the tool that is passed to the LLM.     |

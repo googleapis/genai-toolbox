@@ -37,7 +37,7 @@ import (
 )
 
 var (
-	waitToolKind = "alloydb-wait-for-operation"
+	waitToolType = "alloydb-wait-for-operation"
 )
 
 type waitForOperationTransport struct {
@@ -240,17 +240,17 @@ func getWaitToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-alloydb-source": map[string]any{
-				"kind": "alloydb-admin",
+				"type": "alloydb-admin",
 			},
 		},
 		"tools": map[string]any{
 			"wait-for-op1": map[string]any{
-				"kind":        waitToolKind,
+				"type":        waitToolType,
 				"source":      "my-alloydb-source",
 				"description": "wait for op1",
 			},
 			"wait-for-op2": map[string]any{
-				"kind":        waitToolKind,
+				"type":        waitToolType,
 				"source":      "my-alloydb-source",
 				"description": "wait for op2",
 			},

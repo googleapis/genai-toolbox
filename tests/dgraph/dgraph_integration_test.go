@@ -31,7 +31,7 @@ import (
 )
 
 var (
-	DgraphSourceKind = "dgraph"
+	DgraphSourceType = "dgraph"
 	DgraphApiKey     = "api-key"
 	DgraphUrl        = os.Getenv("DGRAPH_URL")
 )
@@ -41,7 +41,7 @@ func getDgraphVars(t *testing.T) map[string]any {
 		t.Fatal("'DGRAPH_URL' not set")
 	}
 	return map[string]any{
-		"kind":      DgraphSourceKind,
+		"type":      DgraphSourceType,
 		"dgraphUrl": DgraphUrl,
 		"apiKey":    DgraphApiKey,
 	}
@@ -61,7 +61,7 @@ func TestDgraphToolEndpoints(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"my-simple-dql-tool": map[string]any{
-				"kind":        "dgraph-dql",
+				"type":        "dgraph-dql",
 				"source":      "my-dgraph-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"statement":   "{result(func: uid(0x0)) {constant: math(1)}}",

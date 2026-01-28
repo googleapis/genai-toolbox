@@ -45,18 +45,18 @@ MariaDB user][mariadb-users] to log in to the database.
 ## Example
 
 ```yaml
-sources:
-    my_mariadb_db:
-        kind: mysql
-        host: 127.0.0.1
-        port: 3306
-        database: my_db
-        user: ${MARIADB_USER}
-        password: ${MARIADB_PASS}
-        # Optional TLS and other driver parameters. For example, enable preferred TLS:
-        # queryParams:
-        #     tls: preferred
-        queryTimeout: 30s # Optional: query timeout duration
+kind: sources
+name: my_mariadb_db
+type: mysql
+host: 127.0.0.1
+port: 3306
+database: my_db
+user: ${MARIADB_USER}
+password: ${MARIADB_PASS}
+# Optional TLS and other driver parameters. For example, enable preferred TLS:
+# queryParams:
+#     tls: preferred
+queryTimeout: 30s # Optional: query timeout duration
 ```
 
 {{< notice tip >}}
@@ -68,7 +68,7 @@ Use environment variables instead of committing credentials to source files.
 
 | **field**    | **type** | **required** | **description**                                                                                 |
 | ------------ | :------: | :----------: | ----------------------------------------------------------------------------------------------- |
-| kind         |  string  |     true     | Must be `mysql`.                                                                                |
+| type         |  string  |     true     | Must be `mysql`.                                                                                |
 | host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
 | port         |  string  |     true     | Port to connect to (e.g. "3307").                                                               |
 | database     |  string  |     true     | Name of the MariaDB database to connect to (e.g. "my_db").                                        |
