@@ -17,7 +17,7 @@ MongoDB collection that match a given filter. It locates the documents using a
 The tool returns an array of three integers: `[ModifiedCount, UpsertedCount,
 MatchedCount]`.
 
-This tool is compatible with the following source kind:
+This tool is compatible with the following source type:
 
 * [`mongodb`](../../sources/mongodb.md)
 
@@ -29,37 +29,37 @@ Here's an example configuration. This tool applies a discount to all items
 within a specific category and also marks them as being on sale.
 
 ```yaml
-tools:
-  apply_category_discount:
-    kind: mongodb-update-many
-    source: my-mongo-source
-    description: Use this tool to apply a discount to all items in a given category.
-    database: products
-    collection: inventory
-    filterPayload: |
-        { "category": {{json .category_name}} }
-    filterParams:
-      - name: category_name
-        type: string
-        description: The category of items to update.
-    updatePayload: |
-        { 
-          "$mul": { "price": {{json .discount_multiplier}} },
-          "$set": { "on_sale": true }
-        }
-    updateParams:
-      - name: discount_multiplier
-        type: number
-        description: The multiplier to apply to the price (e.g., 0.8 for a 20% discount).
-    canonical: false
-    upsert: false
+kind: tools
+name: apply_category_discount
+type: mongodb-update-many
+source: my-mongo-source
+description: Use this tool to apply a discount to all items in a given category.
+database: products
+collection: inventory
+filterPayload: |
+    { "category": {{json .category_name}} }
+filterParams:
+  - name: category_name
+    type: string
+    description: The category of items to update.
+updatePayload: |
+    { 
+      "$mul": { "price": {{json .discount_multiplier}} },
+      "$set": { "on_sale": true }
+    }
+updateParams:
+  - name: discount_multiplier
+    type: number
+    description: The multiplier to apply to the price (e.g., 0.8 for a 20% discount).
+canonical: false
+upsert: false
 ```
 
 ## Reference
 
 | **field**     | **type** | **required** | **description**                                                                                                                                                                                                                                  |
 |:--------------|:---------|:-------------|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind          | string   | true         | Must be `mongodb-update-many`.                                                                                                                                                                                                                   |
+| type          | string   | true         | Must be `mongodb-update-many`.                                                                                                                                                                                                                   |
 | source        | string   | true         | The name of the `mongodb` source to use.                                                                                                                                                                                                         |
 | description   | string   | true         | A description of the tool that is passed to the LLM.                                                                                                                                                                                             |
 | database      | string   | true         | The name of the MongoDB database containing the collection.                                                                                                                                                                                      |

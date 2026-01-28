@@ -37,7 +37,7 @@ import (
 )
 
 var (
-	cloudsqlWaitToolKind = "cloud-sql-wait-for-operation"
+	cloudsqlWaitToolType = "cloud-sql-wait-for-operation"
 )
 
 type waitForOperationTransport struct {
@@ -291,22 +291,22 @@ func getCloudSQLWaitToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 		},
 		"tools": map[string]any{
 			"wait-for-op1": map[string]any{
-				"kind":        cloudsqlWaitToolKind,
+				"type":        cloudsqlWaitToolType,
 				"source":      "my-cloud-sql-source",
 				"description": "wait for op1",
 			},
 			"wait-for-op2": map[string]any{
-				"kind":        cloudsqlWaitToolKind,
+				"type":        cloudsqlWaitToolType,
 				"source":      "my-cloud-sql-source",
 				"description": "wait for op2",
 			},
 			"wait-for-op3": map[string]any{
-				"kind":        cloudsqlWaitToolKind,
+				"type":        cloudsqlWaitToolType,
 				"source":      "my-cloud-sql-source",
 				"description": "wait for op3",
 			},

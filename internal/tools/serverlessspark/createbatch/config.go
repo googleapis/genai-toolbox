@@ -43,7 +43,7 @@ type compatibleSource interface {
 // Initialize implementation.
 type Config struct {
 	Name              string                        `yaml:"name" validate:"required"`
-	Kind              string                        `yaml:"kind" validate:"required"`
+	Type              string                        `yaml:"type" validate:"required"`
 	Source            string                        `yaml:"source" validate:"required"`
 	Description       string                        `yaml:"description"`
 	RuntimeConfig     *dataprocpb.RuntimeConfig     `yaml:"runtimeConfig"`
@@ -56,7 +56,7 @@ func NewConfig(ctx context.Context, name string, decoder *yaml.Decoder) (Config,
 	// conversion for RuntimeConfig and EnvironmentConfig.
 	var ymlCfg struct {
 		Name              string   `yaml:"name"`
-		Kind              string   `yaml:"kind"`
+		Type              string   `yaml:"type"`
 		Source            string   `yaml:"source"`
 		Description       string   `yaml:"description"`
 		RuntimeConfig     any      `yaml:"runtimeConfig"`
@@ -70,7 +70,7 @@ func NewConfig(ctx context.Context, name string, decoder *yaml.Decoder) (Config,
 
 	cfg := Config{
 		Name:         name,
-		Kind:         ymlCfg.Kind,
+		Type:         ymlCfg.Type,
 		Source:       ymlCfg.Source,
 		Description:  ymlCfg.Description,
 		AuthRequired: ymlCfg.AuthRequired,

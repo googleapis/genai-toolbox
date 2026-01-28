@@ -40,10 +40,10 @@ import (
 )
 
 var (
-	DataplexSourceKind                = "dataplex"
-	DataplexSearchEntriesToolKind     = "dataplex-search-entries"
-	DataplexLookupEntryToolKind       = "dataplex-lookup-entry"
-	DataplexSearchAspectTypesToolKind = "dataplex-search-aspect-types"
+	DataplexSourceType                = "dataplex"
+	DataplexSearchEntriesToolType     = "dataplex-search-entries"
+	DataplexLookupEntryToolType       = "dataplex-lookup-entry"
+	DataplexSearchAspectTypesToolType = "dataplex-search-aspect-types"
 	DataplexProject                   = os.Getenv("DATAPLEX_PROJECT")
 )
 
@@ -53,7 +53,7 @@ func getDataplexVars(t *testing.T) map[string]any {
 		t.Fatal("'DATAPLEX_PROJECT' not set")
 	}
 	return map[string]any{
-		"kind":    DataplexSourceKind,
+		"type":    DataplexSourceType,
 		"project": DataplexProject,
 	}
 }
@@ -283,40 +283,40 @@ func getDataplexToolsConfig(sourceConfig map[string]any) map[string]any {
 		},
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
-				"kind":     "google",
+				"type":     "google",
 				"clientId": tests.ClientId,
 			},
 		},
 		"tools": map[string]any{
 			"my-dataplex-search-entries-tool": map[string]any{
-				"kind":        DataplexSearchEntriesToolKind,
+				"type":        DataplexSearchEntriesToolType,
 				"source":      "my-dataplex-instance",
 				"description": "Simple dataplex search entries tool to test end to end functionality.",
 			},
 			"my-auth-dataplex-search-entries-tool": map[string]any{
-				"kind":         DataplexSearchEntriesToolKind,
+				"type":         DataplexSearchEntriesToolType,
 				"source":       "my-dataplex-instance",
 				"description":  "Simple dataplex search entries tool to test end to end functionality.",
 				"authRequired": []string{"my-google-auth"},
 			},
 			"my-dataplex-lookup-entry-tool": map[string]any{
-				"kind":        DataplexLookupEntryToolKind,
+				"type":        DataplexLookupEntryToolType,
 				"source":      "my-dataplex-instance",
 				"description": "Simple dataplex lookup entry tool to test end to end functionality.",
 			},
 			"my-auth-dataplex-lookup-entry-tool": map[string]any{
-				"kind":         DataplexLookupEntryToolKind,
+				"type":         DataplexLookupEntryToolType,
 				"source":       "my-dataplex-instance",
 				"description":  "Simple dataplex lookup entry tool to test end to end functionality.",
 				"authRequired": []string{"my-google-auth"},
 			},
 			"my-dataplex-search-aspect-types-tool": map[string]any{
-				"kind":        DataplexSearchAspectTypesToolKind,
+				"type":        DataplexSearchAspectTypesToolType,
 				"source":      "my-dataplex-instance",
 				"description": "Simple dataplex search aspect types tool to test end to end functionality.",
 			},
 			"my-auth-dataplex-search-aspect-types-tool": map[string]any{
-				"kind":         DataplexSearchAspectTypesToolKind,
+				"type":         DataplexSearchAspectTypesToolType,
 				"source":       "my-dataplex-instance",
 				"description":  "Simple dataplex search aspect types tool to test end to end functionality.",
 				"authRequired": []string{"my-google-auth"},

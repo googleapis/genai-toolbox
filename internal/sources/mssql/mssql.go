@@ -28,14 +28,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "mssql"
+const SourceType string = "mssql"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -50,7 +50,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	// Cloud SQL MSSQL configs
 	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
+	Type     string `yaml:"type" validate:"required"`
 	Host     string `yaml:"host" validate:"required"`
 	Port     string `yaml:"port" validate:"required"`
 	User     string `yaml:"user" validate:"required"`
@@ -59,9 +59,9 @@ type Config struct {
 	Encrypt  string `yaml:"encrypt"`
 }
 
-func (r Config) SourceConfigKind() string {
-	// Returns Cloud SQL MSSQL source kind
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	// Returns Cloud SQL MSSQL source type
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -91,9 +91,9 @@ type Source struct {
 	Db *sql.DB
 }
 
-func (s *Source) SourceKind() string {
-	// Returns Cloud SQL MSSQL source kind
-	return SourceKind
+func (s *Source) SourceType() string {
+	// Returns Cloud SQL MSSQL source type
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -156,7 +156,7 @@ func initMssqlConnection(
 	error,
 ) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	userAgent, err := util.UserAgentFromContext(ctx)

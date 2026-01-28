@@ -123,41 +123,41 @@ identity used has been granted the correct IAM permissions.
 Initialize a Cloud Healthcare API source that uses ADC:
 
 ```yaml
-sources:
-  my-healthcare-source:
-    kind: "cloud-healthcare"
-    project: "my-project-id"
-    region: "us-central1"
-    dataset: "my-healthcare-dataset-id"
-    # allowedFhirStores: # Optional: Restricts tool access to a specific list of FHIR store IDs.
-    #   - "my_fhir_store_1"
-    # allowedDicomStores: # Optional: Restricts tool access to a specific list of DICOM store IDs.
-    #   - "my_dicom_store_1"
-    #   - "my_dicom_store_2"
+kind: sources
+name: my-healthcare-source
+type: "cloud-healthcare"
+project: "my-project-id"
+region: "us-central1"
+dataset: "my-healthcare-dataset-id"
+# allowedFhirStores: # Optional: Restricts tool access to a specific list of FHIR store IDs.
+#   - "my_fhir_store_1"
+# allowedDicomStores: # Optional: Restricts tool access to a specific list of DICOM store IDs.
+#   - "my_dicom_store_1"
+#   - "my_dicom_store_2"
 ```
 
 Initialize a Cloud Healthcare API source that uses the client's access token:
 
 ```yaml
-sources:
-  my-healthcare-client-auth-source:
-    kind: "cloud-healthcare"
-    project: "my-project-id"
-    region: "us-central1"
-    dataset: "my-healthcare-dataset-id"
-    useClientOAuth: true
-    # allowedFhirStores: # Optional: Restricts tool access to a specific list of FHIR store IDs.
-    #   - "my_fhir_store_1"
-    # allowedDicomStores: # Optional: Restricts tool access to a specific list of DICOM store IDs.
-    #   - "my_dicom_store_1"
-    #   - "my_dicom_store_2"
+kind: sources
+name: my-healthcare-client-auth-source
+type: "cloud-healthcare"
+project: "my-project-id"
+region: "us-central1"
+dataset: "my-healthcare-dataset-id"
+useClientOAuth: true
+# allowedFhirStores: # Optional: Restricts tool access to a specific list of FHIR store IDs.
+#   - "my_fhir_store_1"
+# allowedDicomStores: # Optional: Restricts tool access to a specific list of DICOM store IDs.
+#   - "my_dicom_store_1"
+#   - "my_dicom_store_2"
 ```
 
 ## Reference
 
 | **field**          | **type** | **required** | **description**                                                                                                                                                                                                                                                              |
 |--------------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind               |  string  |     true     | Must be "cloud-healthcare".                                                                                                                                                                                                                                                  |
+| type               |  string  |     true     | Must be "cloud-healthcare".                                                                                                                                                                                                                                                  |
 | project            |  string  |     true     | ID of the GCP project that the dataset lives in.                                                                                                                                                                                                                             |
 | region             |  string  |     true     | Specifies the region (e.g., 'us', 'asia-northeast1') of the healthcare dataset. [Learn More](https://cloud.google.com/healthcare-api/docs/regions)                                                                                                                           |
 | dataset            |  string  |     true     | ID of the healthcare dataset.                                                                                                                                                                                                                                                |

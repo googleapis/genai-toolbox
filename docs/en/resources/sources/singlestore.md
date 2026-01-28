@@ -39,15 +39,15 @@ database user][singlestore-user] to login to the database with.
 ## Example
 
 ```yaml
-sources:
-    my-singlestore-source:
-        kind: singlestore
-        host: 127.0.0.1
-        port: 3306
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        queryTimeout: 30s # Optional: query timeout duration
+kind: sources
+name: my-singlestore-source
+type: singlestore
+host: 127.0.0.1
+port: 3306
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
+queryTimeout: 30s # Optional: query timeout duration
 ```
 
 {{< notice tip >}}
@@ -59,7 +59,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**    | **type** | **required** | **description**                                                                                 |
 |--------------|:--------:|:------------:|-------------------------------------------------------------------------------------------------|
-| kind         |  string  |     true     | Must be "singlestore".                                                                          |
+| type         |  string  |     true     | Must be "singlestore".                                                                          |
 | host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
 | port         |  string  |     true     | Port to connect to (e.g. "3306").                                                               |
 | database     |  string  |     true     | Name of the SingleStore database to connect to (e.g. "my_db").                                  |

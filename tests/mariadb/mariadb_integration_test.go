@@ -36,8 +36,8 @@ import (
 )
 
 var (
-	MariaDBSourceKind = "mysql"
-	MariaDBToolKind   = "mysql-sql"
+	MariaDBSourceType = "mysql"
+	MariaDBToolType   = "mysql-sql"
 	MariaDBDatabase   = os.Getenv("MARIADB_DATABASE")
 	MariaDBHost       = os.Getenv("MARIADB_HOST")
 	MariaDBPort       = os.Getenv("MARIADB_PORT")
@@ -60,7 +60,7 @@ func getMariaDBVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     MariaDBSourceKind,
+		"type":     MariaDBSourceType,
 		"host":     MariaDBHost,
 		"port":     MariaDBPort,
 		"database": MariaDBDatabase,
@@ -112,10 +112,10 @@ func TestMySQLToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, MariaDBToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, MariaDBToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddMySqlExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MariaDBToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, MariaDBToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	toolsFile = tests.AddMySQLPrebuiltToolConfig(t, toolsFile)
 

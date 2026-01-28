@@ -17,7 +17,6 @@ package cloudsqlgetinstances_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -37,16 +36,16 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				get-instances:
-					kind: cloud-sql-get-instance
-					description: "A tool to get cloud sql instances"
-					source: "my-gcp-source"
+			kind: tools
+			name: get-instances
+			type: cloud-sql-get-instance
+			description: "A tool to get cloud sql instances"
+			source: "my-gcp-source"
 			`,
 			want: server.ToolConfigs{
 				"get-instances": cloudsqlgetinstances.Config{
 					Name:         "get-instances",
-					Kind:         "cloud-sql-get-instance",
+					Type:         "cloud-sql-get-instance",
 					Description:  "A tool to get cloud sql instances",
 					Source:       "my-gcp-source",
 					AuthRequired: []string{},
@@ -56,15 +55,11 @@ func TestParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

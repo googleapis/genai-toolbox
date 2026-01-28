@@ -25,22 +25,22 @@ and shouldn't be used for production agents.
 ## Example
 
 ```yaml
-tools:
-  wait_for_operation:
-    kind: alloydb-wait-for-operation
-    source: my-alloydb-admin-source
-    description: "This will poll on operations API until the operation is done. For checking operation status we need projectId, locationID and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
-    delay: 1s
-    maxDelay: 4m
-    multiplier: 2
-    maxRetries: 10
+kind: tools
+name: wait_for_operation
+type: alloydb-wait-for-operation
+source: my-alloydb-admin-source
+description: "This will poll on operations API until the operation is done. For checking operation status we need projectId, locationID and operationId. Once instance is created give follow up steps on how to use the variables to bring data plane MCP server up in local and remote setup."
+delay: 1s
+maxDelay: 4m
+multiplier: 2
+maxRetries: 10
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                                                                                  |
 | ----------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------- |
-| kind        |  string  |     true     | Must be "alloydb-wait-for-operation".                                                                            |
+| type        |  string  |     true     | Must be "alloydb-wait-for-operation".                                                                            |
 | source      |  string  |     true     | The name of a `alloydb-admin` source to use for authentication.                                                  |
 | description |  string  |     false    | A description of the tool.                                                                                       |
 | delay       | duration |     false    | The initial delay between polling requests (e.g., `3s`). Defaults to 3 seconds.                                  |

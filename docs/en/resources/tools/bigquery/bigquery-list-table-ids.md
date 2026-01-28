@@ -34,17 +34,17 @@ will be used as the default value for the `dataset` parameter.
 ## Example
 
 ```yaml
-tools:
-  bigquery_list_table_ids:
-    kind: bigquery-list-table-ids
-    source: my-bigquery-source
-    description: Use this tool to get table metadata.
+kind: tools
+name: bigquery_list_table_ids
+type: bigquery-list-table-ids
+source: my-bigquery-source
+description: Use this tool to get table metadata.
 ```
 
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "bigquery-list-table-ids".                                                               |
+| type        |                   string                   |     true     | Must be "bigquery-list-table-ids".                                                               |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

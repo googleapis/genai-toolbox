@@ -17,7 +17,6 @@ package snowflakeexecutesql_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -37,16 +36,16 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-				tools:
-					my-snowflake-tool:
-						kind: snowflake-execute-sql
-						source: my-snowflake-source
-						description: Execute SQL on Snowflake
+			kind: tools
+			name: my-snowflake-tool
+			type: snowflake-execute-sql
+			source: my-snowflake-source
+			description: Execute SQL on Snowflake
 			`,
 			want: server.ToolConfigs{
 				"my-snowflake-tool": snowflakeexecutesql.Config{
 					Name:         "my-snowflake-tool",
-					Kind:         "snowflake-execute-sql",
+					Type:         "snowflake-execute-sql",
 					Source:       "my-snowflake-source",
 					Description:  "Execute SQL on Snowflake",
 					AuthRequired: []string{},
@@ -56,15 +55,12 @@ func TestParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -84,21 +80,18 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "missing required field",
 			in: `
-				tools:
-					my-snowflake-tool:
-						kind: snowflake-execute-sql
-						source: my-snowflake-source
+			kind: tools
+			name: my-snowflake-tool
+			type: snowflake-execute-sql
+			source: my-snowflake-source
 			`,
-			err: "unable to parse tool \"my-snowflake-tool\" as kind \"snowflake-execute-sql\": Key: 'Config.Description' Error:Field validation for 'Description' failed on the 'required' tag",
+			err: "error unmarshaling tools: unable to parse tool \"my-snowflake-tool\" as type \"snowflake-execute-sql\": Key: 'Config.Description' Error:Field validation for 'Description' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

@@ -23,23 +23,23 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-tools:
-    get_filters:
-        kind: looker-get-filters
-        source: looker-source
-        description: |
-          This tool retrieves a list of "filter-only fields" defined within a specific
-          Looker explore. These are special fields defined in LookML specifically to
-          create user-facing filter controls that do not directly affect the `GROUP BY`
-          clause of the SQL query. They are often used in conjunction with liquid templating
-          to create dynamic queries.
+kind: tools
+name: get_filters
+type: looker-get-filters
+source: looker-source
+description: |
+  This tool retrieves a list of "filter-only fields" defined within a specific
+  Looker explore. These are special fields defined in LookML specifically to
+  create user-facing filter controls that do not directly affect the `GROUP BY`
+  clause of the SQL query. They are often used in conjunction with liquid templating
+  to create dynamic queries.
 
-          Note: Regular dimensions and measures can also be used as filters in a query.
-          This tool *only* returns fields explicitly defined as `filter:` in LookML.
+  Note: Regular dimensions and measures can also be used as filters in a query.
+  This tool *only* returns fields explicitly defined as `filter:` in LookML.
 
-          Parameters:
-          - model_name (required): The name of the LookML model, obtained from `get_models`.
-          - explore_name (required): The name of the explore within the model, obtained from `get_explores`.
+  Parameters:
+  - model_name (required): The name of the LookML model, obtained from `get_models`.
+  - explore_name (required): The name of the explore within the model, obtained from `get_explores`.
 ```
 
 The response is a json array with the following elements:
@@ -63,6 +63,6 @@ The response is a json array with the following elements:
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "looker-get-filters".                      |
+| type        |  string  |     true     | Must be "looker-get-filters".                      |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

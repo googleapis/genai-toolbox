@@ -16,14 +16,14 @@ can be sent to a Large Language Model (LLM). The Toolbox server implements the
 specification, allowing clients to discover and retrieve these prompts.
 
 ```yaml
-prompts:
-  code_review:
-    description: "Asks the LLM to analyze code quality and suggest improvements."
-    messages:
-      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
-    arguments:
-      - name: "code"
-        description: "The code to review"
+kind: prompts
+name: code_review
+description: "Asks the LLM to analyze code quality and suggest improvements."
+messages:
+  - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+arguments:
+  - name: "code"
+    description: "The code to review"
 ```
 
 ## Prompt Schema
@@ -31,7 +31,7 @@ prompts:
 | **field**   | **type**                       | **required** | **description**                                                          |
 |-------------|--------------------------------|--------------|--------------------------------------------------------------------------|
 | description | string                         | No           | A brief explanation of what the prompt does.                             |
-| kind        | string                         | No           | The kind of prompt. Defaults to `"custom"`.                              |
+| type        | string                         | No           | The type of prompt. Defaults to `"custom"`.                              |
 | messages    | [][Message](#message-schema)   | Yes          | A list of one or more message objects that make up the prompt's content. |
 | arguments   | [][Argument](#argument-schema) | No           | A list of arguments that can be interpolated into the prompt's content.  |
 

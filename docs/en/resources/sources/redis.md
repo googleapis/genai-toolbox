@@ -34,16 +34,16 @@ connections must authenticate in order to connect.
 Specify your AUTH string in the password field:
 
 ```yaml
-sources:
-    my-redis-instance:
-     kind: redis
-     address:
-       - 127.0.0.1:6379
-     username: ${MY_USER_NAME}
-     password: ${MY_AUTH_STRING} # Omit this field if you don't have a password.
-     # database: 0
-     # clusterEnabled: false
-     # useGCPIAM: false
+kind: sources
+name: my-redis-instance
+type: redis
+address:
+  - 127.0.0.1:6379
+username: ${MY_USER_NAME}
+password: ${MY_AUTH_STRING} # Omit this field if you don't have a password.
+# database: 0
+# clusterEnabled: false
+# useGCPIAM: false
 ```
 
 {{< notice tip >}}
@@ -59,14 +59,14 @@ string.
 Here is an example tools.yaml config with [AUTH][auth] enabled:
 
 ```yaml
-sources:
-    my-redis-cluster-instance:
-     kind: memorystore-redis
-     address:
-       - 127.0.0.1:6379
-     password: ${MY_AUTH_STRING}
-     # useGCPIAM: false
-     # clusterEnabled: false
+kind: sources
+name: my-redis-cluster-instance
+type: memorystore-redis
+address:
+  - 127.0.0.1:6379
+password: ${MY_AUTH_STRING}
+# useGCPIAM: false
+# clusterEnabled: false
 ```
 
 Memorystore Redis Cluster supports IAM authentication instead. Grant your
@@ -76,13 +76,13 @@ Here is an example tools.yaml config for Memorystore Redis Cluster instances
 using IAM authentication:
 
 ```yaml
-sources:
-    my-redis-cluster-instance:
-     kind: memorystore-redis
-     address:
-       - 127.0.0.1:6379
-     useGCPIAM: true
-     clusterEnabled: true
+kind: sources
+name: my-redis-cluster-instance
+type: memorystore-redis
+address:
+  - 127.0.0.1:6379
+useGCPIAM: true
+clusterEnabled: true
 ```
 
 [iam]: https://cloud.google.com/memorystore/docs/cluster/about-iam-auth
@@ -91,7 +91,7 @@ sources:
 
 | **field**      | **type** | **required** | **description**                                                                                                                 |
 |----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------|
-| kind           |  string  |     true     | Must be "memorystore-redis".                                                                                                    |
+| type           |  string  |     true     | Must be "memorystore-redis".                                                                                                    |
 | address        |  string  |     true     | Primary endpoint for the Memorystore Redis instance to connect to.                                                              |
 | username       |  string  |    false     | If you are using a non-default user, specify the user name here. If you are using Memorystore for Redis, leave this field blank |
 | password       |  string  |    false     | If you have [Redis AUTH][auth] enabled, specify the AUTH string here                                                            |

@@ -178,16 +178,16 @@ To connect using IAM authentication:
 ## Example
 
 ```yaml
-sources:
-    my-cloud-sql-pg-source:
-        kind: cloud-sql-postgres
-        project: my-project-id
-        region: us-central1
-        instance: my-instance
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        # ipType: "private"
+kind: sources
+name: my-cloud-sql-pg-source
+type: cloud-sql-postgres
+project: my-project-id
+region: us-central1
+instance: my-instance
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
+# ipType: "private"
 ```
 
 {{< notice tip >}}
@@ -199,7 +199,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                                                                          |
 |-----------|:--------:|:------------:|--------------------------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "cloud-sql-postgres".                                                                                            |
+| type      |  string  |     true     | Must be "cloud-sql-postgres".                                                                                            |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                            |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                                             |
 | instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                                                  |

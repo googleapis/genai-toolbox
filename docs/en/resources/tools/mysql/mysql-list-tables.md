@@ -33,17 +33,17 @@ The tool takes the following input parameters:
 ## Example
 
 ```yaml
-tools:
-  mysql_list_tables:
-    kind: mysql-list-tables
-    source: mysql-source
-    description: Use this tool to retrieve schema information for all or specified tables. Output format can be simple (only table names) or detailed.
+kind: tools
+name: mysql_list_tables
+type: mysql-list-tables
+source: mysql-source
+description: Use this tool to retrieve schema information for all or specified tables. Output format can be simple (only table names) or detailed.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
-| kind        |  string  |     true     | Must be "mysql-list-tables".                         |
+| type        |  string  |     true     | Must be "mysql-list-tables".                         |
 | source      |  string  |     true     | Name of the source the SQL should execute on.        |
 | description |  string  |     true     | Description of the tool that is passed to the agent. |
