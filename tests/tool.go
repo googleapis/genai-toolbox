@@ -1241,7 +1241,10 @@ func RunPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth, user
 					var filteredGot []any
 					for _, item := range got {
 						if tableMap, ok := item.(map[string]interface{}); ok {
-							if schema, ok := tableMap["schema_name"]; ok && schema == "public" {
+							name, _ := tableMap["object_name"].(string)
+
+							// Only keep the table if it matches expected test tables
+							if name == tableNameParam || name == tableNameAuth {
 								filteredGot = append(filteredGot, item)
 							}
 						}

@@ -70,6 +70,9 @@ func withDefaults(c server.ServerConfig) server.ServerConfig {
 	if c.AllowedHosts == nil {
 		c.AllowedHosts = []string{"*"}
 	}
+	if c.UserAgentMetadata == nil {
+		c.UserAgentMetadata = []string{}
+	}
 	return c
 }
 
@@ -228,6 +231,13 @@ func TestServerConfigFlags(t *testing.T) {
 			args: []string{"--allowed-hosts", "http://foo.com,http://bar.com"},
 			want: withDefaults(server.ServerConfig{
 				AllowedHosts: []string{"http://foo.com", "http://bar.com"},
+			}),
+		},
+		{
+			desc: "user agent metadata",
+			args: []string{"--user-agent-metadata", "foo,bar"},
+			want: withDefaults(server.ServerConfig{
+				UserAgentMetadata: []string{"foo", "bar"},
 			}),
 		},
 	}
@@ -420,17 +430,27 @@ func TestPrebuiltFlag(t *testing.T) {
 	tcs := []struct {
 		desc string
 		args []string
-		want string
+		want []string
 	}{
 		{
 			desc: "default value",
 			args: []string{},
-			want: "",
+			want: []string{},
 		},
 		{
-			desc: "custom pre built flag",
-			args: []string{"--tools-file", "alloydb"},
-			want: "alloydb",
+			desc: "single prebuilt flag",
+			args: []string{"--prebuilt", "alloydb"},
+			want: []string{"alloydb"},
+		},
+		{
+			desc: "multiple prebuilt flags",
+			args: []string{"--prebuilt", "alloydb", "--prebuilt", "bigquery"},
+			want: []string{"alloydb", "bigquery"},
+		},
+		{
+			desc: "comma separated prebuilt flags",
+			args: []string{"--prebuilt", "alloydb,bigquery"},
+			want: []string{"alloydb", "bigquery"},
 		},
 	}
 	for _, tc := range tcs {
@@ -439,8 +459,8 @@ func TestPrebuiltFlag(t *testing.T) {
 			if err != nil {
 				t.Fatalf("unexpected error invoking command: %s", err)
 			}
-			if c.tools_file != tc.want {
-				t.Fatalf("got %v, want %v", c.cfg, tc.want)
+			if diff := cmp.Diff(c.prebuiltConfigs, tc.want); diff != "" {
+				t.Fatalf("got %v, want %v, diff %s", c.prebuiltConfigs, tc.want, diff)
 			}
 		})
 	}
@@ -494,6 +514,437 @@ func TestDefaultLogLevel(t *testing.T) {
 	}
 }
 
+func TestConvertToolsFile(t *testing.T) {
+	tcs := []struct {
+		desc   string
+		in     string
+		want   string
+		isErr  bool
+		errStr string
+	}{
+		{
+			desc: "basic convert",
+			in: `
+            sources:
+                my-pg-instance:
+                    kind: cloud-sql-postgres
+                    project: my-project
+                    region: my-region
+                    instance: my-instance
+                    database: my_db
+                    user: my_user
+                    password: my_pass
+            authServices:
+                my-google-auth:
+                    kind: google
+                    clientId: testing-id
+            tools:
+                example_tool:
+                    kind: postgres-sql
+                    source: my-pg-instance
+                    description: some description
+                    statement: SELECT * FROM SQL_STATEMENT;
+                    parameters:
+                        - name: country
+                          type: string
+                          description: some description
+            toolsets:
+                example_toolset:
+                    - example_tool
+            prompts:
+                code_review:
+                    description: ask llm to analyze code quality
+                    messages:
+                      - content: "please review the following code for quality: {{.code}}"
+                    arguments:
+                        - name: code
+                          description: the code to review
+            embeddingModels:
+                gemini-model:
+                    kind: gemini
+                    model: gemini-embedding-001
+                    apiKey: some-key
+                    dimension: 768`,
+			want: `kind: sources
+name: my-pg-instance
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: my_user
+password: my_pass
+---
+kind: authServices
+name: my-google-auth
+type: google
+clientId: testing-id
+---
+kind: tools
+name: example_tool
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
+kind: toolsets
+name: example_toolset
+tools:
+- example_tool
+---
+kind: prompts
+name: code_review
+description: ask llm to analyze code quality
+messages:
+- content: "please review the following code for quality: {{.code}}"
+arguments:
+- name: code
+  description: the code to review
+---
+kind: embeddingModels
+name: gemini-model
+type: gemini
+model: gemini-embedding-001
+apiKey: some-key
+dimension: 768
+`,
+		},
+		{
+			desc: "preserve resource order",
+			in: `
+            tools:
+                example_tool:
+                    kind: postgres-sql
+                    source: my-pg-instance
+                    description: some description
+                    statement: SELECT * FROM SQL_STATEMENT;
+                    parameters:
+                        - name: country
+                          type: string
+                          description: some description
+            sources:
+                my-pg-instance:
+                    kind: cloud-sql-postgres
+                    project: my-project
+                    region: my-region
+                    instance: my-instance
+                    database: my_db
+                    user: my_user
+                    password: my_pass
+            authServices:
+                my-google-auth:
+                    kind: google
+                    clientId: testing-id
+            toolsets:
+                example_toolset:
+                    - example_tool
+            authSources:
+                my-google-auth2:
+                    kind: google
+                    clientId: testing-id`,
+			want: `kind: tools
+name: example_tool
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
+kind: sources
+name: my-pg-instance
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: my_user
+password: my_pass
+---
+kind: authServices
+name: my-google-auth
+type: google
+clientId: testing-id
+---
+kind: toolsets
+name: example_toolset
+tools:
+- example_tool
+---
+kind: authServices
+name: my-google-auth2
+type: google
+clientId: testing-id
+`,
+		},
+		{
+			desc: "convert combination of v1 and v2",
+			in: `
+            sources:
+                my-pg-instance:
+                    kind: cloud-sql-postgres
+                    project: my-project
+                    region: my-region
+                    instance: my-instance
+                    database: my_db
+                    user: my_user
+                    password: my_pass
+            authServices:
+                my-google-auth:
+                    kind: google
+                    clientId: testing-id
+            tools:
+                example_tool:
+                    kind: postgres-sql
+                    source: my-pg-instance
+                    description: some description
+                    statement: SELECT * FROM SQL_STATEMENT;
+                    parameters:
+                        - name: country
+                          type: string
+                          description: some description
+            toolsets:
+                example_toolset:
+                    - example_tool
+            prompts:
+                code_review:
+                    description: ask llm to analyze code quality
+                    messages:
+                      - content: "please review the following code for quality: {{.code}}"
+                    arguments:
+                        - name: code
+                          description: the code to review
+            embeddingModels:
+                gemini-model:
+                    kind: gemini
+                    model: gemini-embedding-001
+                    apiKey: some-key
+                    dimension: 768
+---
+            kind: sources
+            name: my-pg-instance2
+            type: cloud-sql-postgres
+            project: my-project
+            region: my-region
+            instance: my-instance
+---
+            kind: authServices
+            name: my-google-auth2
+            type: google
+            clientId: testing-id
+---
+            kind: tools
+            name: example_tool2
+            type: postgres-sql
+            source: my-pg-instance
+            description: some description
+            statement: SELECT * FROM SQL_STATEMENT;
+            parameters:
+            - name: country
+              type: string
+              description: some description
+---
+            kind: toolsets
+            name: example_toolset2
+            tools:
+            - example_tool
+---
+            tools:
+            - example_tool
+            kind: toolsets
+            name: example_toolset3
+---
+            kind: prompts
+            name: code_review2
+            description: ask llm to analyze code quality
+            messages:
+            - content: "please review the following code for quality: {{.code}}"
+            arguments:
+            - name: code
+              description: the code to review
+---
+            kind: embeddingModels
+            name: gemini-model2
+            type: gemini`,
+			want: `kind: sources
+name: my-pg-instance
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: my_user
+password: my_pass
+---
+kind: authServices
+name: my-google-auth
+type: google
+clientId: testing-id
+---
+kind: tools
+name: example_tool
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
+kind: toolsets
+name: example_toolset
+tools:
+- example_tool
+---
+kind: prompts
+name: code_review
+description: ask llm to analyze code quality
+messages:
+- content: "please review the following code for quality: {{.code}}"
+arguments:
+- name: code
+  description: the code to review
+---
+kind: embeddingModels
+name: gemini-model
+type: gemini
+model: gemini-embedding-001
+apiKey: some-key
+dimension: 768
+---
+kind: sources
+name: my-pg-instance2
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+---
+kind: authServices
+name: my-google-auth2
+type: google
+clientId: testing-id
+---
+kind: tools
+name: example_tool2
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
+kind: toolsets
+name: example_toolset2
+tools:
+- example_tool
+---
+tools:
+- example_tool
+kind: toolsets
+name: example_toolset3
+---
+kind: prompts
+name: code_review2
+description: ask llm to analyze code quality
+messages:
+- content: "please review the following code for quality: {{.code}}"
+arguments:
+- name: code
+  description: the code to review
+---
+kind: embeddingModels
+name: gemini-model2
+type: gemini
+`,
+		},
+		{
+			desc: "no convertion needed",
+			in: `kind: sources
+name: my-pg-instance
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: my_user
+password: my_pass
+---
+kind: tools
+name: example_tool
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
+kind: toolsets
+name: example_toolset
+tools:
+- example_tool`,
+			want: `kind: sources
+name: my-pg-instance
+type: cloud-sql-postgres
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: my_user
+password: my_pass
+---
+kind: tools
+name: example_tool
+type: postgres-sql
+source: my-pg-instance
+description: some description
+statement: SELECT * FROM SQL_STATEMENT;
+parameters:
+- name: country
+  type: string
+  description: some description
+---
+kind: toolsets
+name: example_toolset
+tools:
+- example_tool
+`,
+		},
+		{
+			desc: "invalid source",
+			in:   `sources: invalid`,
+			want: "",
+		},
+		{
+			desc: "invalid toolset",
+			in:   `toolsets: invalid`,
+			want: "",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			output, err := convertToolsFile([]byte(tc.in))
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+
+			if diff := cmp.Diff(string(output), tc.want); diff != "" {
+				t.Fatalf("incorrect toolsets parse: diff %v", diff)
+			}
+		})
+	}
+}
+
 func TestParseToolFile(t *testing.T) {
 	ctx, err := testutils.ContextWithNewLogger()
 	if err != nil {
@@ -505,7 +956,7 @@ func TestParseToolFile(t *testing.T) {
 		wantToolsFile ToolsFile
 	}{
 		{
-			description: "basic example",
+			description: "basic example tools file v1",
 			in: `
 			sources:
 				my-pg-instance:
@@ -535,7 +986,7 @@ func TestParseToolFile(t *testing.T) {
 				Sources: server.SourceConfigs{
 					"my-pg-instance": cloudsqlpgsrc.Config{
 						Name:     "my-pg-instance",
-						Kind:     cloudsqlpgsrc.SourceKind,
+						Type:     cloudsqlpgsrc.SourceType,
 						Project:  "my-project",
 						Region:   "my-region",
 						Instance: "my-instance",
@@ -548,7 +999,7 @@ func TestParseToolFile(t *testing.T) {
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
 						Name:        "example_tool",
-						Kind:        "postgres-sql",
+						Type:        "postgres-sql",
 						Source:      "my-pg-instance",
 						Description: "some description",
 						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
@@ -564,20 +1015,135 @@ func TestParseToolFile(t *testing.T) {
 						ToolNames: []string{"example_tool"},
 					},
 				},
-				Prompts: nil,
+				AuthServices: nil,
+				Prompts:      nil,
 			},
 		},
 		{
-			description: "with prompts example",
+			description: "basic example tools file v2",
 			in: `
-            prompts:
-                my-prompt:
-                    description: A prompt template for data analysis.
-                    arguments:
-                        - name: country
-                          description: The country to analyze.
-                    messages:
-                        - content: Analyze the data for {{.country}}.
+			kind: sources
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+---
+			kind: authServices
+			name: my-google-auth
+			type: google
+			clientId: testing-id
+---
+			kind: embeddingModels
+			name: gemini-model
+			type: gemini
+			model: gemini-embedding-001
+			apiKey: some-key
+			dimension: 768
+---
+			kind: tools
+			name: example_tool
+			type: postgres-sql
+			source: my-pg-instance
+			description: some description
+			statement: |
+				SELECT * FROM SQL_STATEMENT;
+			parameters:
+			- name: country
+			  type: string
+			  description: some description
+---
+			kind: toolsets
+			name: example_toolset
+			tools:
+			- example_tool
+---
+			kind: prompts
+			name: code_review
+			description: ask llm to analyze code quality
+			messages:
+			- content: "please review the following code for quality: {{.code}}"
+			arguments:
+			- name: code
+			  description: the code to review
+			`,
+			wantToolsFile: ToolsFile{
+				Sources: server.SourceConfigs{
+					"my-pg-instance": cloudsqlpgsrc.Config{
+						Name:     "my-pg-instance",
+						Type:     cloudsqlpgsrc.SourceType,
+						Project:  "my-project",
+						Region:   "my-region",
+						Instance: "my-instance",
+						IPType:   "public",
+						Database: "my_db",
+						User:     "my_user",
+						Password: "my_pass",
+					},
+				},
+				AuthServices: server.AuthServiceConfigs{
+					"my-google-auth": google.Config{
+						Name:     "my-google-auth",
+						Type:     google.AuthServiceType,
+						ClientID: "testing-id",
+					},
+				},
+				EmbeddingModels: server.EmbeddingModelConfigs{
+					"gemini-model": gemini.Config{
+						Name:      "gemini-model",
+						Type:      gemini.EmbeddingModelType,
+						Model:     "gemini-embedding-001",
+						ApiKey:    "some-key",
+						Dimension: 768,
+					},
+				},
+				Tools: server.ToolConfigs{
+					"example_tool": postgressql.Config{
+						Name:        "example_tool",
+						Type:        "postgres-sql",
+						Source:      "my-pg-instance",
+						Description: "some description",
+						Statement:   "SELECT * FROM SQL_STATEMENT;\n",
+						Parameters: []parameters.Parameter{
+							parameters.NewStringParameter("country", "some description"),
+						},
+						AuthRequired: []string{},
+					},
+				},
+				Toolsets: server.ToolsetConfigs{
+					"example_toolset": tools.ToolsetConfig{
+						Name:      "example_toolset",
+						ToolNames: []string{"example_tool"},
+					},
+				},
+				Prompts: server.PromptConfigs{
+					"code_review": &custom.Config{
+						Name:        "code_review",
+						Description: "ask llm to analyze code quality",
+						Arguments: prompts.Arguments{
+							{Parameter: parameters.NewStringParameter("code", "the code to review")},
+						},
+						Messages: []prompts.Message{
+							{Role: "user", Content: "please review the following code for quality: {{.code}}"},
+						},
+					},
+				},
+			},
+		},
+		{
+			description: "only prompts",
+			in: `
+            kind: prompts
+            name: my-prompt
+            description: A prompt template for data analysis.
+            arguments:
+                - name: country
+                  description: The country to analyze.
+            messages:
+                - content: Analyze the data for {{.country}}.
             `,
 			wantToolsFile: ToolsFile{
 				Sources:      nil,
@@ -638,58 +1204,62 @@ func TestParseToolFileWithAuth(t *testing.T) {
 		{
 			description: "basic example",
 			in: `
-			sources:
-				my-pg-instance:
-					kind: cloud-sql-postgres
-					project: my-project
-					region: my-region
-					instance: my-instance
-					database: my_db
-					user: my_user
-					password: my_pass
-			authServices:
-				my-google-service:
-					kind: google
-					clientId: my-client-id
-				other-google-service:
-					kind: google
-					clientId: other-client-id
-
-			tools:
-				example_tool:
-					kind: postgres-sql
-					source: my-pg-instance
+			kind: sources
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+---
+			kind: authServices
+			name: my-google-service
+			type: google
+			clientId: my-client-id
+---
+			kind: authServices
+			name: other-google-service
+			type: google
+			clientId: other-client-id
+---
+			kind: tools
+			name: example_tool
+			type: postgres-sql
+			source: my-pg-instance
+			description: some description
+			statement: |
+				SELECT * FROM SQL_STATEMENT;
+			parameters:
+				- name: country
+					type: string
 					description: some description
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
-						- name: id
-						  type: integer
-						  description: user id
-						  authServices:
-							- name: my-google-service
-								field: user_id
-						- name: email
-							type: string
-							description: user email
-							authServices:
-							- name: my-google-service
-							  field: email
-							- name: other-google-service
-							  field: other_email
-
-			toolsets:
-				example_toolset:
-					- example_tool
+				- name: id
+					type: integer
+					description: user id
+					authServices:
+					- name: my-google-service
+						field: user_id
+				- name: email
+					type: string
+					description: user email
+					authServices:
+					- name: my-google-service
+						field: email
+					- name: other-google-service
+						field: other_email
+---
+			kind: toolsets
+			name: example_toolset
+			tools:
+				- example_tool
 			`,
 			wantToolsFile: ToolsFile{
 				Sources: server.SourceConfigs{
 					"my-pg-instance": cloudsqlpgsrc.Config{
 						Name:     "my-pg-instance",
-						Kind:     cloudsqlpgsrc.SourceKind,
+						Type:     cloudsqlpgsrc.SourceType,
 						Project:  "my-project",
 						Region:   "my-region",
 						Instance: "my-instance",
@@ -702,19 +1272,19 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				AuthServices: server.AuthServiceConfigs{
 					"my-google-service": google.Config{
 						Name:     "my-google-service",
-						Kind:     google.AuthServiceKind,
+						Type:     google.AuthServiceType,
 						ClientID: "my-client-id",
 					},
 					"other-google-service": google.Config{
 						Name:     "other-google-service",
-						Kind:     google.AuthServiceKind,
+						Type:     google.AuthServiceType,
 						ClientID: "other-client-id",
 					},
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
 						Name:         "example_tool",
-						Kind:         "postgres-sql",
+						Type:         "postgres-sql",
 						Source:       "my-pg-instance",
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -789,7 +1359,7 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				Sources: server.SourceConfigs{
 					"my-pg-instance": cloudsqlpgsrc.Config{
 						Name:     "my-pg-instance",
-						Kind:     cloudsqlpgsrc.SourceKind,
+						Type:     cloudsqlpgsrc.SourceType,
 						Project:  "my-project",
 						Region:   "my-region",
 						Instance: "my-instance",
@@ -799,22 +1369,22 @@ func TestParseToolFileWithAuth(t *testing.T) {
 						Password: "my_pass",
 					},
 				},
-				AuthSources: server.AuthServiceConfigs{
+				AuthServices: server.AuthServiceConfigs{
 					"my-google-service": google.Config{
 						Name:     "my-google-service",
-						Kind:     google.AuthServiceKind,
+						Type:     google.AuthServiceType,
 						ClientID: "my-client-id",
 					},
 					"other-google-service": google.Config{
 						Name:     "other-google-service",
-						Kind:     google.AuthServiceKind,
+						Type:     google.AuthServiceType,
 						ClientID: "other-client-id",
 					},
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
 						Name:         "example_tool",
-						Kind:         "postgres-sql",
+						Type:         "postgres-sql",
 						Source:       "my-pg-instance",
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -838,60 +1408,64 @@ func TestParseToolFileWithAuth(t *testing.T) {
 		{
 			description: "basic example with authRequired",
 			in: `
-			sources:
-				my-pg-instance:
-					kind: cloud-sql-postgres
-					project: my-project
-					region: my-region
-					instance: my-instance
-					database: my_db
-					user: my_user
-					password: my_pass
-			authServices:
-				my-google-service:
-					kind: google
-					clientId: my-client-id
-				other-google-service:
-					kind: google
-					clientId: other-client-id
-
-			tools:
-				example_tool:
-					kind: postgres-sql
-					source: my-pg-instance
+			kind: sources
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+---
+			kind: authServices
+			name: my-google-service
+			type: google
+			clientId: my-client-id
+---
+			kind: authServices
+			name: other-google-service
+			type: google
+			clientId: other-client-id
+---
+			kind: tools
+			name: example_tool
+			type: postgres-sql
+			source: my-pg-instance
+			description: some description
+			statement: |
+				SELECT * FROM SQL_STATEMENT;
+			authRequired:
+				- my-google-service
+			parameters:
+				- name: country
+					type: string
 					description: some description
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					authRequired:
-						- my-google-service
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
-						- name: id
-						  type: integer
-						  description: user id
-						  authServices:
-							- name: my-google-service
-								field: user_id
-						- name: email
-							type: string
-							description: user email
-							authServices:
-							- name: my-google-service
-							  field: email
-							- name: other-google-service
-							  field: other_email
-
-			toolsets:
-				example_toolset:
-					- example_tool
+				- name: id
+					type: integer
+					description: user id
+					authServices:
+					- name: my-google-service
+						field: user_id
+				- name: email
+					type: string
+					description: user email
+					authServices:
+					- name: my-google-service
+						field: email
+					- name: other-google-service
+						field: other_email
+---
+			kind: toolsets
+			name: example_toolset
+			tools:
+				- example_tool
 			`,
 			wantToolsFile: ToolsFile{
 				Sources: server.SourceConfigs{
 					"my-pg-instance": cloudsqlpgsrc.Config{
 						Name:     "my-pg-instance",
-						Kind:     cloudsqlpgsrc.SourceKind,
+						Type:     cloudsqlpgsrc.SourceType,
 						Project:  "my-project",
 						Region:   "my-region",
 						Instance: "my-instance",
@@ -904,19 +1478,19 @@ func TestParseToolFileWithAuth(t *testing.T) {
 				AuthServices: server.AuthServiceConfigs{
 					"my-google-service": google.Config{
 						Name:     "my-google-service",
-						Kind:     google.AuthServiceKind,
+						Type:     google.AuthServiceType,
 						ClientID: "my-client-id",
 					},
 					"other-google-service": google.Config{
 						Name:     "other-google-service",
-						Kind:     google.AuthServiceKind,
+						Type:     google.AuthServiceType,
 						ClientID: "other-client-id",
 					},
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": postgressql.Config{
 						Name:         "example_tool",
-						Kind:         "postgres-sql",
+						Type:         "postgres-sql",
 						Source:       "my-pg-instance",
 						Description:  "some description",
 						Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -1062,7 +1636,7 @@ func TestEnvVarReplacement(t *testing.T) {
 				Sources: server.SourceConfigs{
 					"my-http-instance": httpsrc.Config{
 						Name:           "my-http-instance",
-						Kind:           httpsrc.SourceKind,
+						Type:           httpsrc.SourceType,
 						BaseURL:        "http://test_server/",
 						Timeout:        "10s",
 						DefaultHeaders: map[string]string{"Authorization": "ACTUAL_HEADER"},
@@ -1072,19 +1646,165 @@ func TestEnvVarReplacement(t *testing.T) {
 				AuthServices: server.AuthServiceConfigs{
 					"my-google-service": google.Config{
 						Name:     "my-google-service",
-						Kind:     google.AuthServiceKind,
+						Type:     google.AuthServiceType,
 						ClientID: "ACTUAL_CLIENT_ID",
 					},
 					"other-google-service": google.Config{
 						Name:     "other-google-service",
-						Kind:     google.AuthServiceKind,
+						Type:     google.AuthServiceType,
 						ClientID: "ACTUAL_CLIENT_ID_2",
 					},
 				},
 				Tools: server.ToolConfigs{
 					"example_tool": http.Config{
 						Name:         "example_tool",
-						Kind:         "http",
+						Type:         "http",
+						Source:       "my-instance",
+						Method:       "GET",
+						Path:         "search?name=alice&pet=cat",
+						Description:  "some description",
+						AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
+						QueryParams: []parameters.Parameter{
+							parameters.NewStringParameterWithAuth("country", "some description",
+								[]parameters.ParamAuthService{{Name: "my-google-auth-service", Field: "user_id"},
+									{Name: "other-auth-service", Field: "user_id"}}),
+						},
+						RequestBody: `{
+  "age": {{.age}},
+  "city": "{{.city}}",
+  "food": "food",
+  "other": "$OTHER"
+}
+`,
+						BodyParams:   []parameters.Parameter{parameters.NewIntParameter("age", "age num"), parameters.NewStringParameter("city", "city string")},
+						Headers:      map[string]string{"Authorization": "API_KEY", "Content-Type": "application/json"},
+						HeaderParams: []parameters.Parameter{parameters.NewStringParameter("Language", "language string")},
+					},
+				},
+				Toolsets: server.ToolsetConfigs{
+					"ACTUAL_TOOLSET_NAME": tools.ToolsetConfig{
+						Name:      "ACTUAL_TOOLSET_NAME",
+						ToolNames: []string{"example_tool"},
+					},
+				},
+				Prompts: server.PromptConfigs{
+					"ACTUAL_PROMPT_NAME": &custom.Config{
+						Name:        "ACTUAL_PROMPT_NAME",
+						Description: "A test prompt for {{.name}}.",
+						Messages: []prompts.Message{
+							{
+								Role:    "user",
+								Content: "ACTUAL_CONTENT",
+							},
+						},
+						Arguments: nil,
+					},
+				},
+			},
+		},
+		{
+			description: "file with env var example toolsfile v2",
+			in: `
+			kind: sources
+			name: my-http-instance
+			type: http
+			baseUrl: http://test_server/
+			timeout: 10s
+			headers:
+				Authorization: ${TestHeader}
+			queryParams:
+				api-key: ${API_KEY}
+---
+			kind: authServices
+			name: my-google-service
+			type: google
+			clientId: ${clientId}
+---
+			kind: authServices
+			name: other-google-service
+			type: google
+			clientId: ${clientId2}
+---
+			kind: tools
+			name: example_tool
+			type: http
+			source: my-instance
+			method: GET
+			path: "search?name=alice&pet=${cat_string}"
+			description: some description
+			authRequired:
+				- my-google-auth-service
+				- other-auth-service
+			queryParams:
+				- name: country
+					type: string
+					description: some description
+					authServices:
+					- name: my-google-auth-service
+						field: user_id
+					- name: other-auth-service
+						field: user_id
+			requestBody: |
+					{
+						"age": {{.age}},
+						"city": "{{.city}}",
+						"food": "${food_string}",
+						"other": "$OTHER"
+					}
+			bodyParams:
+				- name: age
+					type: integer
+					description: age num
+				- name: city
+					type: string
+					description: city string
+			headers:
+				Authorization: API_KEY
+				Content-Type: application/json
+			headerParams:
+				- name: Language
+					type: string
+					description: language string
+---
+			kind: toolsets
+			name: ${toolset_name}
+			tools:
+				- example_tool
+---
+			kind: prompts
+			name: ${prompt_name}
+			description: A test prompt for {{.name}}.
+			messages:
+				- role: user
+					content: ${prompt_content}
+			`,
+			wantToolsFile: ToolsFile{
+				Sources: server.SourceConfigs{
+					"my-http-instance": httpsrc.Config{
+						Name:           "my-http-instance",
+						Type:           httpsrc.SourceType,
+						BaseURL:        "http://test_server/",
+						Timeout:        "10s",
+						DefaultHeaders: map[string]string{"Authorization": "ACTUAL_HEADER"},
+						QueryParams:    map[string]string{"api-key": "ACTUAL_API_KEY"},
+					},
+				},
+				AuthServices: server.AuthServiceConfigs{
+					"my-google-service": google.Config{
+						Name:     "my-google-service",
+						Type:     google.AuthServiceType,
+						ClientID: "ACTUAL_CLIENT_ID",
+					},
+					"other-google-service": google.Config{
+						Name:     "other-google-service",
+						Type:     google.AuthServiceType,
+						ClientID: "ACTUAL_CLIENT_ID_2",
+					},
+				},
+				Tools: server.ToolConfigs{
+					"example_tool": http.Config{
+						Name:         "example_tool",
+						Type:         "http",
 						Source:       "my-instance",
 						Method:       "GET",
 						Path:         "search?name=alice&pet=cat",
@@ -1950,17 +2670,18 @@ func TestPrebuiltAndCustomTools(t *testing.T) {
 	t.Setenv("SQLITE_DATABASE", "test.db")
 	// Setup custom tools file
 	customContent := `
-tools:
-  custom_tool:
-    kind: http
-    source: my-http
-    method: GET
-    path: /
-    description: "A custom tool for testing"
-sources:
-  my-http:
-    kind: http
-    baseUrl: http://example.com
+kind: tools
+name: custom_tool
+type: http
+source: my-http
+method: GET
+path: /
+description: "A custom tool for testing"
+---
+kind: sources
+name: my-http
+type: http
+baseUrl: http://example.com
 `
 	customFile := filepath.Join(t.TempDir(), "custom.yaml")
 	if err := os.WriteFile(customFile, []byte(customContent), 0644); err != nil {
@@ -1970,17 +2691,18 @@ sources:
 	// Tool Conflict File
 	// SQLite prebuilt has a tool named 'list_tables'
 	toolConflictContent := `
-tools:
-  list_tables:
-    kind: http
-    source: my-http
-    method: GET
-    path: /
-    description: "Conflicting tool"
-sources:
-  my-http:
-    kind: http
-    baseUrl: http://example.com
+kind: tools
+name: list_tables
+type: http
+source: my-http
+method: GET
+path: /
+description: "Conflicting tool"
+---
+kind: sources
+name: my-http
+type: http
+baseUrl: http://example.com
 `
 	toolConflictFile := filepath.Join(t.TempDir(), "tool_conflict.yaml")
 	if err := os.WriteFile(toolConflictFile, []byte(toolConflictContent), 0644); err != nil {
@@ -1990,17 +2712,18 @@ sources:
 	// Source Conflict File
 	// SQLite prebuilt has a source named 'sqlite-source'
 	sourceConflictContent := `
-sources:
-  sqlite-source:
-    kind: http
-    baseUrl: http://example.com
-tools:
-  dummy_tool:
-    kind: http
-    source: sqlite-source
-    method: GET
-    path: /
-    description: "Dummy"
+kind: sources
+name: sqlite-source
+type: http
+baseUrl: http://example.com
+---
+kind: tools
+name: dummy_tool
+type: http
+source: sqlite-source
+method: GET
+path: /
+description: "Dummy"
 `
 	sourceConflictFile := filepath.Join(t.TempDir(), "source_conflict.yaml")
 	if err := os.WriteFile(sourceConflictFile, []byte(sourceConflictContent), 0644); err != nil {
@@ -2010,20 +2733,23 @@ tools:
 	// Toolset Conflict File
 	// SQLite prebuilt has a toolset named 'sqlite_database_tools'
 	toolsetConflictContent := `
-sources:
-  dummy-src:
-    kind: http
-    baseUrl: http://example.com
+kind: sources
+name: dummy-src
+type: http
+baseUrl: http://example.com
+---
+kind: tools
+name: dummy_tool
+type: http
+source: dummy-src
+method: GET
+path: /
+description: "Dummy"
+---
+kind: toolsets
+name: sqlite_database_tools
 tools:
-  dummy_tool:
-    kind: http
-    source: dummy-src
-    method: GET
-    path: /
-    description: "Dummy"
-toolsets:
-  sqlite_database_tools:
-    - dummy_tool
+- dummy_tool
 `
 	toolsetConflictFile := filepath.Join(t.TempDir(), "toolset_conflict.yaml")
 	if err := os.WriteFile(toolsetConflictFile, []byte(toolsetConflictContent), 0644); err != nil {
@@ -2062,6 +2788,12 @@ authSources:
 				}
 				return nil
 			},
+		},
+		{
+			desc:      "sqlite called twice error",
+			args:      []string{"--prebuilt", "sqlite", "--prebuilt", "sqlite"},
+			wantErr:   true,
+			errString: "resource conflicts detected",
 		},
 		{
 			desc:      "tool conflict error",
@@ -2166,6 +2898,118 @@ func TestDefaultToolsFileBehavior(t *testing.T) {
 				}
 				if !strings.Contains(err.Error(), tc.errString) {
 					t.Errorf("expected error message to contain %q, but got %q", tc.errString, err.Error())
+				}
+			}
+		})
+	}
+}
+
+func TestParameterReferenceValidation(t *testing.T) {
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+
+	// Base template
+	baseYaml := `
+sources:
+  dummy-source:
+    kind: http
+    baseUrl: http://example.com
+tools:
+  test-tool:
+    kind: postgres-sql
+    source: dummy-source
+    description: test tool
+    statement: SELECT 1;
+    parameters:
+%s`
+
+	tcs := []struct {
+		desc      string
+		params    string
+		wantErr   bool
+		errSubstr string
+	}{
+		{
+			desc: "valid backward reference",
+			params: `
+      - name: source_param
+        type: string
+        description: source
+      - name: copy_param
+        type: string
+        description: copy
+        valueFromParam: source_param`,
+			wantErr: false,
+		},
+		{
+			desc: "valid forward reference (out of order)",
+			params: `
+      - name: copy_param
+        type: string
+        description: copy
+        valueFromParam: source_param
+      - name: source_param
+        type: string
+        description: source`,
+			wantErr: false,
+		},
+		{
+			desc: "invalid missing reference",
+			params: `
+      - name: copy_param
+        type: string
+        description: copy
+        valueFromParam: non_existent_param`,
+			wantErr:   true,
+			errSubstr: "references '\"non_existent_param\"' in the 'valueFromParam' field",
+		},
+		{
+			desc: "invalid self reference",
+			params: `
+      - name: myself
+        type: string
+        description: self
+        valueFromParam: myself`,
+			wantErr:   true,
+			errSubstr: "parameter \"myself\" cannot copy value from itself",
+		},
+		{
+			desc: "multiple valid references",
+			params: `
+      - name: a
+        type: string
+        description: a
+      - name: b
+        type: string
+        description: b
+        valueFromParam: a
+      - name: c
+        type: string
+        description: c
+        valueFromParam: a`,
+			wantErr: false,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			// Indent parameters to match YAML structure
+			yamlContent := fmt.Sprintf(baseYaml, tc.params)
+
+			_, err := parseToolsFile(ctx, []byte(yamlContent))
+
+			if tc.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				if !strings.Contains(err.Error(), tc.errSubstr) {
+					t.Errorf("error %q does not contain expected substring %q", err.Error(), tc.errSubstr)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("unexpected error: %v", err)
 				}
 			}
 		})

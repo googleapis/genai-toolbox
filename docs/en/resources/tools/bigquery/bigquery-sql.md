@@ -46,36 +46,36 @@ same query.
 > identifiers, column names, table names, or other parts of the query.
 
 ```yaml
-tools:
-  # Example: Querying a user table in BigQuery
-  search_users_bq:
-    kind: bigquery-sql
-    source: my-bigquery-source
-    statement: |
-      SELECT
-        id,
-        name,
-        email
-      FROM
-        `my-project.my-dataset.users`
-      WHERE
-        id = @id OR email = @email;
-    description: |
-      Use this tool to get information for a specific user.
-      Takes an id number or a name and returns info on the user.
+# Example: Querying a user table in BigQuery
+kind: tools
+name: search_users_bq
+type: bigquery-sql
+source: my-bigquery-source
+statement: |
+  SELECT
+    id,
+    name,
+    email
+  FROM
+    `my-project.my-dataset.users`
+  WHERE
+    id = @id OR email = @email;
+description: |
+  Use this tool to get information for a specific user.
+  Takes an id number or a name and returns info on the user.
 
-      Example:
-      {{
-          "id": 123,
-          "name": "Alice",
-      }}
-    parameters:
-      - name: id
-        type: integer
-        description: User ID
-      - name: email
-        type: string
-        description: Email address of the user
+  Example:
+  {{
+      "id": 123,
+      "name": "Alice",
+  }}
+parameters:
+  - name: id
+    type: integer
+    description: User ID
+  - name: email
+    type: string
+    description: Email address of the user
 ```
 
 ### Example with Template Parameters
@@ -87,29 +87,29 @@ tools:
 > [templateParameters](../#template-parameters).
 
 ```yaml
-tools:
- list_table:
-    kind: bigquery-sql
-    source: my-bigquery-source
-    statement: |
-      SELECT * FROM {{.tableName}};
-    description: |
-      Use this tool to list all information from a specific table.
-      Example:
-      {{
-          "tableName": "flights",
-      }}
-    templateParameters:
-      - name: tableName
-        type: string
-        description: Table to select from
+kind: tools
+name: list_table
+type: bigquery-sql
+source: my-bigquery-source
+statement: |
+  SELECT * FROM {{.tableName}};
+description: |
+  Use this tool to list all information from a specific table.
+  Example:
+  {{
+      "tableName": "flights",
+  }}
+templateParameters:
+  - name: tableName
+    type: string
+    description: Table to select from
 ```
 
 ## Reference
 
 | **field**          |                   **type**                    | **required** | **description**                                                                                                                         |
 |--------------------|:---------------------------------------------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------|
-| kind               |                    string                     |     true     | Must be "bigquery-sql".                                                                                                                 |
+| type               |                    string                     |     true     | Must be "bigquery-sql".                                                                                                                 |
 | source             |                    string                     |     true     | Name of the source the GoogleSQL should execute on.                                                                                     |
 | description        |                    string                     |     true     | Description of the tool that is passed to the LLM.                                                                                      |
 | statement          |                    string                     |     true     | The GoogleSQL statement to execute.                                                                                                     |

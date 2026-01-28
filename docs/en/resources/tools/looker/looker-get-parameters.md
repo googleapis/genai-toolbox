@@ -23,20 +23,20 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-tools:
-    get_parameters:
-        kind: looker-get-parameters
-        source: looker-source
-        description: |
-          This tool retrieves a list of parameters defined within a specific Looker explore.
-          LookML parameters are dynamic input fields that allow users to influence query
-          behavior without directly modifying the underlying LookML. They are often used
-          with `liquid` templating to create flexible dashboards and reports, enabling
-          users to choose dimensions, measures, or other query components at runtime.
+kind: tools
+name: get_parameters
+type: looker-get-parameters
+source: looker-source
+description: |
+  This tool retrieves a list of parameters defined within a specific Looker explore.
+  LookML parameters are dynamic input fields that allow users to influence query
+  behavior without directly modifying the underlying LookML. They are often used
+  with `liquid` templating to create flexible dashboards and reports, enabling
+  users to choose dimensions, measures, or other query components at runtime.
 
-          Parameters:
-          - model_name (required): The name of the LookML model, obtained from `get_models`.
-          - explore_name (required): The name of the explore within the model, obtained from `get_explores`.
+  Parameters:
+  - model_name (required): The name of the LookML model, obtained from `get_models`.
+  - explore_name (required): The name of the explore within the model, obtained from `get_explores`.
 ```
 
 The response is a json array with the following elements:
@@ -60,6 +60,6 @@ The response is a json array with the following elements:
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "looker-get-parameters".                   |
+| type        |  string  |     true     | Must be "looker-get-parameters".                   |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

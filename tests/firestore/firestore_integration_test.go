@@ -37,7 +37,7 @@ import (
 )
 
 var (
-	FirestoreSourceKind = "firestore"
+	FirestoreSourceType = "firestore"
 	FirestoreProject    = os.Getenv("FIRESTORE_PROJECT")
 	FirestoreDatabase   = os.Getenv("FIRESTORE_DATABASE") // Optional, defaults to "(default)"
 )
@@ -48,7 +48,7 @@ func getFirestoreVars(t *testing.T) map[string]any {
 	}
 
 	vars := map[string]any{
-		"kind":    FirestoreSourceKind,
+		"type":    FirestoreSourceType,
 		"project": FirestoreProject,
 	}
 
@@ -527,45 +527,45 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 	tools := map[string]any{
 		// Tool for RunToolGetTest
 		"my-simple-tool": map[string]any{
-			"kind":        "firestore-get-documents",
+			"type":        "firestore-get-documents",
 			"source":      "my-instance",
 			"description": "Simple tool to test end to end functionality.",
 		},
 		// Tool for MCP test - this will get documents
 		"my-param-tool": map[string]any{
-			"kind":        "firestore-get-documents",
+			"type":        "firestore-get-documents",
 			"source":      "my-instance",
 			"description": "Tool to get documents by paths",
 		},
 		// Tool for MCP test that fails
 		"my-fail-tool": map[string]any{
-			"kind":        "firestore-get-documents",
+			"type":        "firestore-get-documents",
 			"source":      "my-instance",
 			"description": "Tool that will fail",
 		},
 		// Firestore specific tools
 		"firestore-get-docs": map[string]any{
-			"kind":        "firestore-get-documents",
+			"type":        "firestore-get-documents",
 			"source":      "my-instance",
 			"description": "Get multiple documents from Firestore",
 		},
 		"firestore-list-colls": map[string]any{
-			"kind":        "firestore-list-collections",
+			"type":        "firestore-list-collections",
 			"source":      "my-instance",
 			"description": "List Firestore collections",
 		},
 		"firestore-delete-docs": map[string]any{
-			"kind":        "firestore-delete-documents",
+			"type":        "firestore-delete-documents",
 			"source":      "my-instance",
 			"description": "Delete documents from Firestore",
 		},
 		"firestore-query-coll": map[string]any{
-			"kind":        "firestore-query-collection",
+			"type":        "firestore-query-collection",
 			"source":      "my-instance",
 			"description": "Query a Firestore collection",
 		},
 		"firestore-query-param": map[string]any{
-			"kind":           "firestore-query",
+			"type":           "firestore-query",
 			"source":         "my-instance",
 			"description":    "Query a Firestore collection with parameterizable filters",
 			"collectionPath": "{{.collection}}",
@@ -595,7 +595,7 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 			},
 		},
 		"firestore-query-select-array": map[string]any{
-			"kind":           "firestore-query",
+			"type":           "firestore-query",
 			"source":         "my-instance",
 			"description":    "Query with array-based select fields",
 			"collectionPath": "{{.collection}}",
@@ -622,22 +622,22 @@ func getFirestoreToolsConfig(sourceConfig map[string]any) map[string]any {
 			},
 		},
 		"firestore-get-rules": map[string]any{
-			"kind":        "firestore-get-rules",
+			"type":        "firestore-get-rules",
 			"source":      "my-instance",
 			"description": "Get Firestore security rules",
 		},
 		"firestore-validate-rules": map[string]any{
-			"kind":        "firestore-validate-rules",
+			"type":        "firestore-validate-rules",
 			"source":      "my-instance",
 			"description": "Validate Firestore security rules",
 		},
 		"firestore-add-docs": map[string]any{
-			"kind":        "firestore-add-documents",
+			"type":        "firestore-add-documents",
 			"source":      "my-instance",
 			"description": "Add documents to Firestore",
 		},
 		"firestore-update-doc": map[string]any{
-			"kind":        "firestore-update-document",
+			"type":        "firestore-update-document",
 			"source":      "my-instance",
 			"description": "Update a document in Firestore",
 		},

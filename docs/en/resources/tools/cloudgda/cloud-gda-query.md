@@ -12,31 +12,34 @@ aliases:
 
 The `cloud-gemini-data-analytics-query` tool allows you to send natural language questions to the Gemini Data Analytics API and receive structured responses containing SQL queries, natural language answers, and explanations. For details on defining data agent context for database data sources, see the official [documentation](https://docs.cloud.google.com/gemini/docs/conversational-analytics-api/data-agent-authored-context-databases).
 
+> [!NOTE]
+> Only `alloydb`, `spannerReference`, and `cloudSqlReference` are supported as [datasource references](https://clouddocs.devsite.corp.google.com/gemini/docs/conversational-analytics-api/reference/rest/v1beta/projects.locations.dataAgents#DatasourceReferences).
+
 ## Example
 
 ```yaml
-tools:
-  my-gda-query-tool:
-    kind: cloud-gemini-data-analytics-query
-    source: my-gda-source
-    description: "Use this tool to send natural language queries to the Gemini Data Analytics API and receive SQL, natural language answers, and explanations."
-    location: ${your_database_location}
-    context:
-      datasourceReferences:
-        cloudSqlReference:
-          databaseReference:
-            projectId: "${your_project_id}"
-            region: "${your_database_instance_region}"
-            instanceId: "${your_database_instance_id}"
-            databaseId: "${your_database_name}"
-            engine: "POSTGRESQL"
-          agentContextReference:
-            contextSetId: "${your_context_set_id}" # E.g. projects/${project_id}/locations/${context_set_location}/contextSets/${context_set_id}
-    generationOptions:
-      generateQueryResult: true
-      generateNaturalLanguageAnswer: true
-      generateExplanation: true
-      generateDisambiguationQuestion: true
+kind: tools
+name: my-gda-query-tool
+type: cloud-gemini-data-analytics-query
+source: my-gda-source
+description: "Use this tool to send natural language queries to the Gemini Data Analytics API and receive SQL, natural language answers, and explanations."
+location: ${your_database_location}
+context:
+  datasourceReferences:
+    cloudSqlReference:
+      databaseReference:
+        projectId: "${your_project_id}"
+        region: "${your_database_instance_region}"
+        instanceId: "${your_database_instance_id}"
+        databaseId: "${your_database_name}"
+        engine: "POSTGRESQL"
+      agentContextReference:
+        contextSetId: "${your_context_set_id}" # E.g. projects/${project_id}/locations/${context_set_location}/contextSets/${context_set_id}
+generationOptions:
+  generateQueryResult: true
+  generateNaturalLanguageAnswer: true
+  generateExplanation: true
+  generateDisambiguationQuestion: true
 ```
 
 ### Usage Flow
@@ -84,7 +87,7 @@ How many accounts who have region in Prague are eligible for loans? A3 contains 
 
 | **field**         | **type** | **required** | **description**                                                                                                                                                                                                                                              |
 | ----------------- | :------: | :----------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| kind              |  string  |     true     | Must be "cloud-gemini-data-analytics-query".                                                                                                                                                                                                                 |
+| type              |  string  |     true     | Must be "cloud-gemini-data-analytics-query".                                                                                                                                                                                                                 |
 | source            |  string  |     true     | The name of the `cloud-gemini-data-analytics` source to use.                                                                                                                                                                                                 |
 | description       |  string  |     true     | A description of the tool's purpose.                                                                                                                                                                                                                         |
 | location          |  string  |     true     | The Google Cloud location of the target database resource (e.g., "us-central1"). This is used to construct the parent resource name in the API call.                                                                                                         |

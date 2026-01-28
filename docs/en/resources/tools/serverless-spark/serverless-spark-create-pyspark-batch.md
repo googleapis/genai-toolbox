@@ -43,16 +43,16 @@ prebuilt config.
 ### Example `tools.yaml`
 
 ```yaml
-tools:
-  - name: "serverless-spark-create-pyspark-batch"
-    kind: "serverless-spark-create-pyspark-batch"
-    source: "my-serverless-spark-source"
-    runtimeConfig:
-      properties:
-        spark.driver.memory: "1024m"
-    environmentConfig:
-      executionConfig:
-        networkUri: "my-network"
+kind: tools
+name: serverless-spark-create-pyspark-batch
+type: serverless-spark-create-pyspark-batch
+source: "my-serverless-spark-source"
+runtimeConfig:
+  properties:
+    spark.driver.memory: "1024m"
+environmentConfig:
+  executionConfig:
+    networkUri: "my-network"
 ```
 
 ## Response Format
@@ -89,7 +89,7 @@ detailed information.
 
 | **field**         | **type** | **required** | **description**                                                                                                                                          |
 | ----------------- | :------: | :----------: | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| kind              |  string  |     true     | Must be "serverless-spark-create-pyspark-batch".                                                                                                         |
+| type              |  string  |     true     | Must be "serverless-spark-create-pyspark-batch".                                                                                                         |
 | source            |  string  |     true     | Name of the source the tool should use.                                                                                                                  |
 | description       |  string  |    false     | Description of the tool that is passed to the LLM.                                                                                                       |
 | runtimeConfig     |   map    |    false     | [Runtime config](https://docs.cloud.google.com/dataproc-serverless/docs/reference/rest/v1/RuntimeConfig) for all batches created with this tool.         |

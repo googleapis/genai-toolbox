@@ -23,11 +23,11 @@ The tool returns a JSON array where each element represents statistics for a tab
 ## Example
 
 ```yaml
-tools:
-  list_table_stats:
-    kind: postgres-list-table-stats
-    source: postgres-source
-    description: "Lists table statistics including size, scans, and bloat metrics."
+kind: tools
+name: list_table_stats
+type: postgres-list-table-stats
+source: postgres-source
+description: "Lists table statistics including size, scans, and bloat metrics."
 ```
 
 ### Example Requests

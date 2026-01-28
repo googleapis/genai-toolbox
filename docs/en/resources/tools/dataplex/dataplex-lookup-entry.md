@@ -56,17 +56,17 @@ applying IAM permissions and roles to an identity.
 ## Example
 
 ```yaml
-tools:
-  lookup_entry:
-    kind: dataplex-lookup-entry
-    source: my-dataplex-source
-    description: Use this tool to retrieve a specific entry in Dataplex Catalog.
+kind: tools
+name: lookup_entry
+type: dataplex-lookup-entry
+source: my-dataplex-source
+description: Use this tool to retrieve a specific entry in Dataplex Catalog.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "dataplex-lookup-entry".                   |
+| type        |  string  |     true     | Must be "dataplex-lookup-entry".                   |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
