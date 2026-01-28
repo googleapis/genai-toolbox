@@ -97,8 +97,7 @@ tools:
         kind: oracle-sql  
         source: oracle-source  
         description: "Lists all database objects that are in an invalid state, requiring recompilation (e.g., procedures, functions, views)."  
-        statement: |  
-            SELECT  
+        statement: SELECT  
                 owner,  
                 object_type,  
                 object_name,  
