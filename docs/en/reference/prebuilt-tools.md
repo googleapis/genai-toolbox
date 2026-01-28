@@ -16,6 +16,9 @@ details on how to connect your AI tools (IDEs) to databases via Toolbox and MCP.
 {{< notice tip >}}
 You can now use `--prebuilt` along `--tools-file`, `--tools-files`, or
 `--tools-folder` to combine prebuilt configs with custom tools.
+
+You can also combine multiple prebuilt configs.
+
 See [Usage Examples](../reference/cli.md#examples).
 {{< /notice >}}
 

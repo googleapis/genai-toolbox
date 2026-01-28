@@ -59,11 +59,11 @@ must be wrapped with its type indicator:
 ### Basic Document Creation
 
 ```yaml
-tools:
-  add-company-doc:
-    kind: firestore-add-documents
-    source: my-firestore
-    description: Add a new company document
+kind: tools
+name: add-company-doc
+type: firestore-add-documents
+source: my-firestore
+description: Add a new company document
 ```
 
 Usage:
@@ -246,14 +246,14 @@ Usage:
 The tool can be configured to require authentication:
 
 ```yaml
-tools:
-  secure-add-docs:
-    kind: firestore-add-documents
-    source: prod-firestore
-    description: Add documents with authentication required
-    authRequired:
-      - google-oauth
-      - api-key
+kind: tools
+name: secure-add-docs
+type: firestore-add-documents
+source: prod-firestore
+description: Add documents with authentication required
+authRequired:
+  - google-oauth
+  - api-key
 ```
 
 ## Error Handling

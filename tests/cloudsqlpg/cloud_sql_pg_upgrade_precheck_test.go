@@ -35,7 +35,7 @@ import (
 )
 
 var (
-	preCheckToolKind = "postgres-upgrade-precheck"
+	preCheckToolType = "postgres-upgrade-precheck"
 )
 
 type preCheckTransport struct {
@@ -264,13 +264,13 @@ func TestPreCheckToolEndpoints(t *testing.T) {
 			name:     "successful precheck - with warnings",
 			toolName: "precheck-tool",
 			body:     `{"project": "p1", "instance": "instance-warnings", "targetDatabaseVersion": "POSTGRES_18"}`,
-			want:     `{"preCheckResponse":[{"actionsRequired":["Check documentation."],"kind":"","message":"This is a warning.","messageType":"WARNING"}]}`,
+			want:     `{"preCheckResponse":[{"actionsRequired":["Check documentation."],"type":"","message":"This is a warning.","messageType":"WARNING"}]}`,
 		},
 		{
 			name:     "successful precheck - with errors",
 			toolName: "precheck-tool",
 			body:     `{"project": "p1", "instance": "instance-errors", "targetDatabaseVersion": "POSTGRES_18"}`,
-			want:     `{"preCheckResponse":[{"actionsRequired":["Fix this now."],"kind":"","message":"This is a critical error.","messageType":"ERROR"}]}`,
+			want:     `{"preCheckResponse":[{"actionsRequired":["Fix this now."],"type":"","message":"This is a critical error.","messageType":"ERROR"}]}`,
 		},
 		{
 			name:        "instance not found",
@@ -368,12 +368,12 @@ func getPreCheckToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 		},
 		"tools": map[string]any{
 			"precheck-tool": map[string]any{
-				"kind":   preCheckToolKind,
+				"type":   preCheckToolType,
 				"source": "my-cloud-sql-source",
 				"authRequired": []string{
 					"https://www.googleapis.com/auth/cloud-platform",

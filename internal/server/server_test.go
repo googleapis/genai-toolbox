@@ -141,7 +141,7 @@ func TestUpdateServer(t *testing.T) {
 		"example-source": &alloydbpg.Source{
 			Config: alloydbpg.Config{
 				Name: "example-alloydb-source",
-				Kind: "alloydb-postgres",
+				Type: "alloydb-postgres",
 			},
 		},
 	}
@@ -198,5 +198,64 @@ func TestUpdateServer(t *testing.T) {
 	gotPromptset, _ := s.ResourceMgr.GetPromptset("example-promptset")
 	if diff := cmp.Diff(gotPromptset, newPromptsets["example-promptset"]); diff != "" {
 		t.Errorf("error updating server, promptset (-want +got):\n%s", diff)
+	}
+}
+
+func TestNameValidation(t *testing.T) {
+	testCases := []struct {
+		desc         string
+		resourceName string
+		errStr       string
+	}{
+		{
+			desc:         "names with 0 length",
+			resourceName: "",
+			errStr:       "resource name SHOULD be between 1 and 128 characters in length (inclusive)",
+		},
+		{
+			desc:         "names with allowed length",
+			resourceName: "foo",
+		},
+		{
+			desc:         "names with 128 length",
+			resourceName: strings.Repeat("a", 128),
+		},
+		{
+			desc:         "names with more than 128 length",
+			resourceName: strings.Repeat("a", 129),
+			errStr:       "resource name SHOULD be between 1 and 128 characters in length (inclusive)",
+		},
+		{
+			desc:         "names with space",
+			resourceName: "foo bar",
+			errStr:       "invalid character for resource name; only uppercase and lowercase ASCII letters (A-Z, a-z), digits (0-9), underscore (_), hyphen (-), and dot (.) is allowed",
+		},
+		{
+			desc:         "names with commas",
+			resourceName: "foo,bar",
+			errStr:       "invalid character for resource name; only uppercase and lowercase ASCII letters (A-Z, a-z), digits (0-9), underscore (_), hyphen (-), and dot (.) is allowed",
+		},
+		{
+			desc:         "names with other special character",
+			resourceName: "foo!",
+			errStr:       "invalid character for resource name; only uppercase and lowercase ASCII letters (A-Z, a-z), digits (0-9), underscore (_), hyphen (-), and dot (.) is allowed",
+		},
+		{
+			desc:         "names with allowed special character",
+			resourceName: "foo_.-bar6",
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			err := server.NameValidation(tc.resourceName)
+			if err != nil {
+				if tc.errStr != err.Error() {
+					t.Fatalf("unexpected error: %s", err)
+				}
+			}
+			if err == nil && tc.errStr != "" {
+				t.Fatalf("expect error: %s", tc.errStr)
+			}
+		})
 	}
 }

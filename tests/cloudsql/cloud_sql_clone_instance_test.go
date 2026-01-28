@@ -38,7 +38,7 @@ import (
 )
 
 var (
-	cloneInstanceToolKind = "cloud-sql-clone-instance"
+	cloneInstanceToolType = "cloud-sql-clone-instance"
 )
 
 type cloneInstanceTransport struct {
@@ -231,12 +231,12 @@ func getCloneInstanceToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 		},
 		"tools": map[string]any{
 			"clone-instance": map[string]any{
-				"kind":   cloneInstanceToolKind,
+				"type":   cloneInstanceToolType,
 				"source": "my-cloud-sql-source",
 			},
 		},

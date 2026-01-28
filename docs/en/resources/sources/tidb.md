@@ -46,29 +46,29 @@ console.
 - TiDB Cloud
 
     ```yaml
-    sources:
-        my-tidb-cloud-source:
-            kind: tidb
-            host: gateway01.us-west-2.prod.aws.tidbcloud.com
-            port: 4000
-            database: my_db
-            user: ${TIDB_USERNAME}
-            password: ${TIDB_PASSWORD}
-            # SSL is automatically enabled for TiDB Cloud
+    kind: sources
+    name: my-tidb-cloud-source
+    type: tidb
+    host: gateway01.us-west-2.prod.aws.tidbcloud.com
+    port: 4000
+    database: my_db
+    user: ${TIDB_USERNAME}
+    password: ${TIDB_PASSWORD}
+    # SSL is automatically enabled for TiDB Cloud    
     ```
 
 - Self-Hosted TiDB
 
     ```yaml
-    sources:
-        my-tidb-source:
-            kind: tidb
-            host: 127.0.0.1
-            port: 4000
-            database: my_db
-            user: ${TIDB_USERNAME}
-            password: ${TIDB_PASSWORD}
-            # ssl: true  # Optional: enable SSL for secure connections
+    kind: sources
+    name: my-tidb-source
+    type: tidb
+    host: 127.0.0.1
+    port: 4000
+    database: my_db
+    user: ${TIDB_USERNAME}
+    password: ${TIDB_PASSWORD}
+    # ssl: true  # Optional: enable SSL for secure connections    
     ```
 
 {{< notice tip >}}
@@ -80,7 +80,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                                            |
 |-----------|:--------:|:------------:|--------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "tidb".                                                                            |
+| type      |  string  |     true     | Must be "tidb".                                                                            |
 | host      |  string  |     true     | IP address or hostname to connect to (e.g. "127.0.0.1" or "gateway01.*.tidbcloud.com").    |
 | port      |  string  |     true     | Port to connect to (typically "4000" for TiDB).                                            |
 | database  |  string  |     true     | Name of the TiDB database to connect to (e.g. "my_db").                                    |

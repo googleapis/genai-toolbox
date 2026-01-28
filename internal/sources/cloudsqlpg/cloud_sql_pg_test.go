@@ -15,11 +15,12 @@
 package cloudsqlpg_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlpg"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
@@ -33,20 +34,20 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-pg-instance:
-					kind: cloud-sql-postgres
-					project: my-project
-					region: my-region
-					instance: my-instance
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: sources
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-pg-instance": cloudsqlpg.Config{
 					Name:     "my-pg-instance",
-					Kind:     cloudsqlpg.SourceKind,
+					Type:     cloudsqlpg.SourceType,
 					Project:  "my-project",
 					Region:   "my-region",
 					Instance: "my-instance",
@@ -60,21 +61,21 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 		{
 			desc: "public ipType",
 			in: `
-			sources:
-				my-pg-instance:
-					kind: cloud-sql-postgres
-					project: my-project
-					region: my-region
-					instance: my-instance
-					ipType: Public
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: sources
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			ipType: Public
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-pg-instance": cloudsqlpg.Config{
 					Name:     "my-pg-instance",
-					Kind:     cloudsqlpg.SourceKind,
+					Type:     cloudsqlpg.SourceType,
 					Project:  "my-project",
 					Region:   "my-region",
 					Instance: "my-instance",
@@ -88,21 +89,21 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 		{
 			desc: "private ipType",
 			in: `
-			sources:
-				my-pg-instance:
-					kind: cloud-sql-postgres
-					project: my-project
-					region: my-region
-					instance: my-instance
-					ipType: private 
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: sources
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			ipType: private 
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-pg-instance": cloudsqlpg.Config{
 					Name:     "my-pg-instance",
-					Kind:     cloudsqlpg.SourceKind,
+					Type:     cloudsqlpg.SourceType,
 					Project:  "my-project",
 					Region:   "my-region",
 					Instance: "my-instance",
@@ -116,21 +117,21 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 		{
 			desc: "psc ipType",
 			in: `
-			sources:
-				my-pg-instance:
-					kind: cloud-sql-postgres
-					project: my-project
-					region: my-region
-					instance: my-instance
-					ipType: psc 
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: sources
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			ipType: psc 
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-pg-instance": cloudsqlpg.Config{
 					Name:     "my-pg-instance",
-					Kind:     cloudsqlpg.SourceKind,
+					Type:     cloudsqlpg.SourceType,
 					Project:  "my-project",
 					Region:   "my-region",
 					Instance: "my-instance",
@@ -144,16 +145,12 @@ func TestParseFromYamlCloudSQLPg(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -169,57 +166,53 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "invalid ipType",
 			in: `
-			sources:
-				my-pg-instance:
-					kind: cloud-sql-postgres
-					project: my-project
-					region: my-region
-					instance: my-instance
-					ipType: fail 
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: sources
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			ipType: fail 
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			err: "unable to parse source \"my-pg-instance\" as \"cloud-sql-postgres\": ipType invalid: must be one of \"public\", \"private\", or \"psc\"",
+			err: "error unmarshaling sources: unable to parse source \"my-pg-instance\" as \"cloud-sql-postgres\": ipType invalid: must be one of \"public\", \"private\", or \"psc\"",
 		},
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-pg-instance:
-					kind: cloud-sql-postgres
-					project: my-project
-					region: my-region
-					instance: my-instance
-					database: my_db
-					user: my_user
-					password: my_pass
-					foo: bar
+			kind: sources
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+			foo: bar
 			`,
-			err: "unable to parse source \"my-pg-instance\" as \"cloud-sql-postgres\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | kind: cloud-sql-postgres\n   5 | password: my_pass\n   6 | ",
+			err: "error unmarshaling sources: unable to parse source \"my-pg-instance\" as \"cloud-sql-postgres\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | name: my-pg-instance\n   5 | password: my_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-pg-instance:
-					kind: cloud-sql-postgres
-					region: my-region
-					instance: my-instance
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: sources
+			name: my-pg-instance
+			type: cloud-sql-postgres
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			err: "unable to parse source \"my-pg-instance\" as \"cloud-sql-postgres\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-pg-instance\" as \"cloud-sql-postgres\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

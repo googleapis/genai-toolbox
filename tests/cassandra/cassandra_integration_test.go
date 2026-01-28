@@ -31,8 +31,8 @@ import (
 )
 
 var (
-	CassandraSourceKind = "cassandra"
-	CassandraToolKind   = "cassandra-cql"
+	CassandraSourceType = "cassandra"
+	CassandraToolType   = "cassandra-cql"
 	Hosts               = os.Getenv("CASSANDRA_HOST")
 	Keyspace            = "example_keyspace"
 	Username            = os.Getenv("CASSANDRA_USER")
@@ -49,7 +49,7 @@ func getCassandraVars(t *testing.T) map[string]any {
 		t.Fatal("'Password' not set")
 	}
 	return map[string]any{
-		"kind":     CassandraSourceKind,
+		"type":     CassandraSourceType,
 		"hosts":    strings.Split(Hosts, ","),
 		"keyspace": Keyspace,
 		"username": Username,
@@ -204,12 +204,12 @@ func TestCassandra(t *testing.T) {
 
 	paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt := createParamToolInfo(paramTableName)
 	_, _, authToolStmt := getCassandraAuthToolInfo(tableNameAuth)
-	toolsFile := tests.GetToolsConfig(sourceConfig, CassandraToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, CassandraToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 
 	tmplSelectCombined, tmplSelectFilterCombined := getCassandraTmplToolInfo()
 	tmpSelectAll := "SELECT * FROM {{.tableName}} where id = 1"
 
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CassandraToolKind, tmplSelectCombined, tmplSelectFilterCombined, tmpSelectAll)
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CassandraToolType, tmplSelectCombined, tmplSelectFilterCombined, tmpSelectAll)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
