@@ -87,8 +87,29 @@ body {
     display: flex;
     flex-direction: column;
     padding: 15px;
-    align-items: center;
+    align-items: stretch;
     position: relative;
+    min-width: 200px;
+    max-width: 50vw;
+    overflow: visible;
+    box-sizing: border-box;
+}
+
+.resize-handle {
+    position: absolute;
+    right: -2px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    cursor: ew-resize;
+    background-color: transparent;
+    z-index: 10;
+    transition: background-color 0.2s ease;
+}
+
+.resize-handle:hover,
+.resize-handle.active {
+    background-color: var(--toolbox-blue);
 }
 
 .nav-logo {
@@ -626,10 +647,13 @@ body {
 .search-container {
     display: flex;
     width: 100%;
+    min-width: 0;
     margin-bottom: 15px;
+    box-sizing: border-box;
 
     #toolset-search-input {
-        flex-grow: 1;
+        flex: 1;
+        min-width: 0;
         padding: 10px 12px;
         border: 1px solid #ccc;
         border-radius: 20px 0 0 20px; 
@@ -637,6 +661,7 @@ body {
         font-family: inherit;
         font-size: 0.9em;
         color: var(--text-primary-gray);
+        box-sizing: border-box;
 
         &:focus {
             outline: none;
