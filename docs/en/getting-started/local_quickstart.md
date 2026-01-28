@@ -66,6 +66,7 @@ pip install toolbox-llamaindex
 
 pip install toolbox-core
 {{< /tab >}}
+
 {{< /tabpane >}}
 
 1. Install other required dependencies:
@@ -99,6 +100,7 @@ pip install llama-index-llms-google-genai
 
 pip install google-genai
 {{< /tab >}}
+
 {{< /tabpane >}}
 
 1. Create the agent:
@@ -142,6 +144,7 @@ Create a new file named `agent.py` and copy the following code:
 {{< include "quickstart/python/core/quickstart.py" >}}
 ```
 {{% /tab %}}
+
 {{< /tabpane >}}
 
     {{< tabpane text=true persist=header >}}
@@ -195,7 +198,7 @@ python agent.py
 {{< tab header="Core" lang="bash" >}}
 python agent.py
 {{< /tab >}}
-    {{< /tabpane >}}
+{{< /tabpane >}}
 
 {{< notice info >}}
 For more information, visit the [Python SDK
