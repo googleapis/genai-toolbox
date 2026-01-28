@@ -60,11 +60,11 @@ LIMIT
 ## Example
 
 ```yaml
-tools:
-  long_running_transactions:
-    kind: postgres-long-running-transactions
-    source: postgres-source
-    description: "Identifies transactions open longer than a threshold and returns details including query text and durations."
+kind: tools
+name: long_running_transactions
+type: postgres-long-running-transactions
+source: postgres-source
+description: "Identifies transactions open longer than a threshold and returns details including query text and durations."
 ```
 
 Example response element:

@@ -23,12 +23,12 @@ This tool does not take any input parameters.
 ## Example
 
 ```yaml
-tools:
-  database_overview:
-    kind: postgres-database-overview
-    source: cloudsql-pg-source
-    description: |
-    fetches the current state of the PostgreSQL server. It returns the postgres version, whether it's a replica, uptime duration, maximum connection limit, number of current connections, number of active connections and the percentage of connections in use.
+kind: tools
+name: database_overview
+type: postgres-database-overview
+source: cloudsql-pg-source
+description: |
+  fetches the current state of the PostgreSQL server. It returns the postgres version, whether it's a replica, uptime duration, maximum connection limit, number of current connections, number of active connections and the percentage of connections in use.
 ```
 
 The response is a JSON object with the following elements:
@@ -49,6 +49,6 @@ The response is a JSON object with the following elements:
 
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
-| kind        |  string  |     true     | Must be "postgres-database-overview".                |
+| type        |  string  |     true     | Must be "postgres-database-overview".                |
 | source      |  string  |     true     | Name of the source the SQL should execute on.        |
 | description |  string  |    false     | Description of the tool that is passed to the agent. |

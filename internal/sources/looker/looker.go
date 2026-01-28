@@ -33,14 +33,14 @@ import (
 	v4 "github.com/looker-open-source/sdk-codegen/go/sdk/v4"
 )
 
-const SourceKind string = "looker"
+const SourceType string = "looker"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -64,7 +64,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name               string `yaml:"name" validate:"required"`
-	Kind               string `yaml:"kind" validate:"required"`
+	Type               string `yaml:"type" validate:"required"`
 	BaseURL            string `yaml:"base_url" validate:"required"`
 	ClientId           string `yaml:"client_id"`
 	ClientSecret       string `yaml:"client_secret"`
@@ -79,8 +79,8 @@ type Config struct {
 	SessionLength      int64  `yaml:"sessionLength"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 // Initialize initializes a Looker Source instance.
@@ -154,8 +154,8 @@ type Source struct {
 	AuthTokenHeaderName string
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
