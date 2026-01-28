@@ -75,6 +75,33 @@ type ToolAnnotations struct {
 	ReadOnlyHint    *bool `json:"readOnlyHint,omitempty" yaml:"readOnlyHint,omitempty"`
 }
 
+// NewReadOnlyAnnotations creates default annotations for a read-only tool.
+// Use this for tools that only query/fetch data without side effects.
+func NewReadOnlyAnnotations() *ToolAnnotations {
+	readOnly := true
+	return &ToolAnnotations{ReadOnlyHint: &readOnly}
+}
+
+// NewDestructiveAnnotations creates default annotations for a destructive tool.
+// Use this for tools that create, update, or delete data.
+func NewDestructiveAnnotations() *ToolAnnotations {
+	readOnly := false
+	destructive := true
+	return &ToolAnnotations{
+		ReadOnlyHint:    &readOnly,
+		DestructiveHint: &destructive,
+	}
+}
+
+// GetAnnotationsOrDefault returns the provided annotations if non-nil,
+// otherwise returns the result of calling defaultFn.
+func GetAnnotationsOrDefault(annotations *ToolAnnotations, defaultFn func() *ToolAnnotations) *ToolAnnotations {
+	if annotations != nil {
+		return annotations
+	}
+	return defaultFn()
+}
+
 type AccessToken string
 
 func (token AccessToken) ParseBearerToken() (string, error) {

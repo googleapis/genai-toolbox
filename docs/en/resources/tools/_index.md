@@ -279,4 +279,57 @@ tools:
         - other-auth-service
 ```
 
+## Tool Annotations
+
+Tool annotations provide semantic metadata that helps MCP clients understand tool
+behavior. These hints enable clients to make better decisions about tool usage
+and provide appropriate user experiences.
+
+### Available Annotations
+
+| **annotation**     |  **type**   | **default** | **description**                                                        |
+|--------------------|:-----------:|:-----------:|------------------------------------------------------------------------|
+| readOnlyHint       |    bool     |    false    | Tool only reads data, no modifications to the environment.             |
+| destructiveHint    |    bool     |    true     | Tool may create, update, or delete data.                               |
+| idempotentHint     |    bool     |    false    | Repeated calls with same arguments have no additional effect.          |
+| openWorldHint      |    bool     |    true     | Tool interacts with external entities beyond its local environment.    |
+
+### Specifying Annotations
+
+Annotations can be specified in YAML tool configuration:
+
+```yaml
+tools:
+  my_query_tool:
+    kind: mongodb-find-one
+    source: my-mongodb
+    description: Find a single document
+    database: mydb
+    collection: users
+    annotations:
+      readOnlyHint: true
+      idempotentHint: true
+```
+
+### Default Annotations
+
+If not specified, tools use sensible defaults based on their operation type:
+
+- **Read operations** (find, aggregate, list): `readOnlyHint: true`
+- **Write operations** (insert, update, delete): `destructiveHint: true`, `readOnlyHint: false`
+
+### MCP Client Response
+
+Annotations appear in the `tools/list` MCP response:
+
+```json
+{
+  "name": "my_query_tool",
+  "description": "Find a single document",
+  "annotations": {
+    "readOnlyHint": true
+  }
+}
+```
+
 ## Kinds of tools
