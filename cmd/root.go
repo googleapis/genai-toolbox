@@ -997,9 +997,6 @@ func run(cmd *Command) error {
 				return err
 			}
 
-			// Update version string
-			cmd.cfg.Version += "+prebuilt." + configName
-
 			// Parse into ToolsFile struct
 			parsed, err := parseToolsFile(ctx, buf)
 			if err != nil {
@@ -1064,6 +1061,18 @@ func run(cmd *Command) error {
 			return err
 		}
 		allToolsFiles = append(allToolsFiles, customTools)
+	}
+
+	// Modify version string based on loaded configurations
+	if len(cmd.prebuiltConfigs) > 0 {
+		tag := "prebuilt"
+		if isCustomConfigured {
+			tag = "custom"
+		}
+		// cmd.prebuiltConfigs is already sorted above
+		for _, configName := range cmd.prebuiltConfigs {
+			cmd.cfg.Version += fmt.Sprintf("+%s.%s", tag, configName)
+		}
 	}
 
 	// Merge Everything
