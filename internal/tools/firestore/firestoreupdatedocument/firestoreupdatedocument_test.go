@@ -242,7 +242,7 @@ func TestTool_ParseParams(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			params, err := tool.ParseParams(tt.data, tt.claims)
+			params, err := parameters.ParseParams(tool.GetParameters(), tt.data, tt.claims)
 
 			if tt.wantErr {
 				if err == nil {
