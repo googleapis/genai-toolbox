@@ -1,11 +1,16 @@
 import asyncio
-from datetime import datetime
-
-from langchain.agents import create_agent
-from langchain.agents.middleware import wrap_tool_call
-from langchain_core.messages import ToolMessage
-from langchain_google_vertexai import ChatVertexAI
+import re
+import json
+from typing import Callable, Any
 from toolbox_langchain import ToolboxClient
+from toolbox_core.protocol import Protocol
+from langchain_google_vertexai import ChatVertexAI
+from langchain_core.messages import ToolMessage, messages_to_dict
+from langchain.agents import create_agent
+from langchain.agents.middleware import (
+    wrap_tool_call,
+    AgentState
+)
 
 system_prompt = """
   You're a helpful hotel assistant. You handle hotel searching, booking and
@@ -16,7 +21,6 @@ system_prompt = """
   update checkin or checkout dates if mentioned by the user.
   Don't ask for confirmations from the user.
 """
-
 
 # Pre processing
 @wrap_tool_call
@@ -31,30 +35,15 @@ async def enforce_business_rules(request, handler):
 
     print(f"POLICY CHECK: Intercepting '{name}'")
 
-    if name == "update-hotel":
-        if "checkin_date" in args and "checkout_date" in args:
-            try:
-                start = datetime.fromisoformat(args["checkin_date"])
-                end = datetime.fromisoformat(args["checkout_date"])
-                duration = (end - start).days
+    if name == "book-hotel":
+        if "duration_days" in args and int(args["duration_days"]) > 14:
+             print("BLOCKED: Stay too long")
+             return ToolMessage(
+                 content="Error: Maximum stay duration is 14 days.",
+                 tool_call_id=tool_call["id"]
+             )
 
-                if duration > 14:
-                    print("BLOCKED: Stay too long")
-                    return ToolMessage(
-                        content="Error: Maximum stay duration is 14 days.",
-                        tool_call_id=tool_call["id"],
-                    )
-            except ValueError:
-                pass  # Ignore invalid date formats
-
-    # PRE: Code here runs BEFORE the tool execution
-    
-    # EXEC: Execute the tool (or next middleware)
-    result = await handler(request)
-
-    # POST: Code here runs AFTER the tool execution
-    return result
-
+    return await handler(request)
 
 # Post processing
 @wrap_tool_call
@@ -64,19 +53,15 @@ async def enrich_response(request, handler):
     Adds loyalty points information to successful bookings.
     Standardizes output format.
     """
-    # PRE: Code here runs BEFORE the tool execution
-    
-    # EXEC: Execute the tool (or next middleware)
     result = await handler(request)
 
-    # POST: Code here runs AFTER the tool execution
     if isinstance(result, ToolMessage):
         content = str(result.content)
         tool_name = request.tool_call["name"]
 
         if tool_name == "book-hotel" and "Error" not in content:
             loyalty_bonus = 500
-            result.content = f"Booking Confirmed!\n You earned {loyalty_bonus} Loyalty Points with this stay.\n\nSystem Details: {content}"
+            result.content = f"Booking Confirmed! \n You earned {loyalty_bonus} Loyalty Points with this stay.\n\nSystem Details: {content}"
 
     return result
 
@@ -89,28 +74,22 @@ async def main():
             system_prompt=system_prompt,
             model=model,
             tools=tools,
-            # add any pre and post processing methods
-            middleware=[enforce_business_rules, enrich_response],
+            middleware=[
+                enforce_business_rules,
+                enrich_response
+            ],
         )
-        # Test post-processing
+
         user_input = "Book hotel with id 3."
-        response = await agent.ainvoke(
-            {"messages": [{"role": "user", "content": user_input}]}
-        )
+        response = await agent.ainvoke({"messages": [{"role": "user", "content": user_input}]})
 
         print("-" * 50)
+        print("Final Client Response:")
+        serializable_response = {
+            "messages": messages_to_dict(response["messages"])
+        }
         last_ai_msg = response["messages"][-1].content
         print(f"AI: {last_ai_msg}")
-
-        # Test Pre-processing
-        print("-" * 50)
-        user_input = "Update my hotel with id 3 with checkin date 2025-01-18 and checkout date 2025-02-20."
-        response = await agent.ainvoke(
-            {"messages": [{"role": "user", "content": user_input}]}
-        )
-        last_ai_msg = response["messages"][-1].content
-        print(f"AI: {last_ai_msg}")
-
 
 if __name__ == "__main__":
     asyncio.run(main())
