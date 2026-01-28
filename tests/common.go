@@ -1055,6 +1055,7 @@ func CleanupMSSQLTables(t *testing.T, ctx context.Context, pool *sql.DB) {
 func CleanupSingleStoreTables(t *testing.T, ctx context.Context, pool *sql.DB) {
 
 	// SingleStore cleanup logic would go here
+	fmt.Logf("in cleanupSingleStoreTables");
 	rows, err := pool.QueryContext(ctx, "SHOW TABLES;")
 	if err != nil {
 		t.Fatalf("Failed to query for all SingleStore tables: %v", err)
