@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import asyncio
+from datetime import datetime
 
 from langchain.agents import create_agent
 from langchain.agents.middleware import wrap_tool_call
@@ -44,13 +45,21 @@ async def enforce_business_rules(request, handler):
 
     print(f"POLICY CHECK: Intercepting '{name}'")
 
-    if name == "book-hotel":
-        if "duration_days" in args and int(args["duration_days"]) > 14:
-            print("BLOCKED: Stay too long")
-            return ToolMessage(
-                content="Error: Maximum stay duration is 14 days.",
-                tool_call_id=tool_call["id"],
-            )
+    if name == "update-hotel":
+        if "checkin_date" in args and "checkout_date" in args:
+            try:
+                start = datetime.fromisoformat(args["checkin_date"])
+                end = datetime.fromisoformat(args["checkout_date"])
+                duration = (end - start).days
+
+                if duration > 14:
+                    print("BLOCKED: Stay too long")
+                    return ToolMessage(
+                        content="Error: Maximum stay duration is 14 days.",
+                        tool_call_id=tool_call["id"],
+                    )
+            except ValueError:
+                pass  # Ignore invalid date formats
 
     return await handler(request)
 
