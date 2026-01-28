@@ -219,6 +219,7 @@ func TestSingleStoreToolEndpoints(t *testing.T) {
 		t.Fatalf("command initialization returned an error: %s", err)
 	}
 	defer cleanup()
+	
 
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
