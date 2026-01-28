@@ -17,7 +17,6 @@ package cassandracql_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -38,30 +37,30 @@ func TestParseFromYamlCassandra(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: cassandra-cql
-					source: my-cassandra-instance
-					description: some description
-					statement: |
-						SELECT * FROM CQL_STATEMENT;
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
-						  authServices:
-							- name: my-google-auth-service
-							  field: user_id
-							- name: other-auth-service
-							  field: user_id
-			`,
+            kind: tools
+            type: cassandra-cql
+            name: example_tool
+            source: my-cassandra-instance
+            description: some description
+            statement: |
+                SELECT * FROM CQL_STATEMENT;
+            authRequired:
+                - my-google-auth-service
+                - other-auth-service
+            parameters:
+                - name: country
+                  type: string
+                  description: some description
+                  authServices:
+                    - name: my-google-auth-service
+                      field: user_id
+                    - name: other-auth-service
+                      field: user_id
+            `,
 			want: server.ToolConfigs{
 				"example_tool": cassandracql.Config{
 					Name:         "example_tool",
-					Kind:         "cassandra-cql",
+					Type:         "cassandra-cql",
 					Source:       "my-cassandra-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM CQL_STATEMENT;\n",
@@ -77,41 +76,41 @@ func TestParseFromYamlCassandra(t *testing.T) {
 		{
 			desc: "with template parameters",
 			in: `
-			tools:
-				example_tool:
-					kind: cassandra-cql
-					source: my-cassandra-instance
-					description: some description
-					statement: |
-						SELECT * FROM CQL_STATEMENT;
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
-						  authServices:
-							- name: my-google-auth-service
-							  field: user_id
-							- name: other-auth-service
-							  field: user_id
-					templateParameters:
-						- name: tableName
-						  type: string
-						  description: some description.
-						- name: fieldArray
-						  type: array
-						  description: The columns to return for the query.
-						  items: 
-								name: column
-								type: string
-								description: A column name that will be returned from the query.
-			`,
+            kind: tools
+            type: cassandra-cql
+            name: example_tool
+            source: my-cassandra-instance
+            description: some description
+            statement: |
+                SELECT * FROM CQL_STATEMENT;
+            authRequired:
+                - my-google-auth-service
+                - other-auth-service
+            parameters:
+                - name: country
+                  type: string
+                  description: some description
+                  authServices:
+                    - name: my-google-auth-service
+                      field: user_id
+                    - name: other-auth-service
+                      field: user_id
+            templateParameters:
+                - name: tableName
+                  type: string
+                  description: some description.
+                - name: fieldArray
+                  type: array
+                  description: The columns to return for the query.
+                  items: 
+                        name: column
+                        type: string
+                        description: A column name that will be returned from the query.
+            `,
 			want: server.ToolConfigs{
 				"example_tool": cassandracql.Config{
 					Name:         "example_tool",
-					Kind:         "cassandra-cql",
+					Type:         "cassandra-cql",
 					Source:       "my-cassandra-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM CQL_STATEMENT;\n",
@@ -131,18 +130,18 @@ func TestParseFromYamlCassandra(t *testing.T) {
 		{
 			desc: "without optional fields",
 			in: `
-			tools:
-				example_tool:
-					kind: cassandra-cql
-					source: my-cassandra-instance
-					description: some description
-					statement: |
-						SELECT * FROM CQL_STATEMENT;
-			`,
+            kind: tools
+            type: cassandra-cql
+            name: example_tool
+            source: my-cassandra-instance
+            description: some description
+            statement: |
+                SELECT * FROM CQL_STATEMENT;
+            `,
 			want: server.ToolConfigs{
 				"example_tool": cassandracql.Config{
 					Name:               "example_tool",
-					Kind:               "cassandra-cql",
+					Type:               "cassandra-cql",
 					Source:             "my-cassandra-instance",
 					Description:        "some description",
 					Statement:          "SELECT * FROM CQL_STATEMENT;\n",
@@ -155,15 +154,12 @@ func TestParseFromYamlCassandra(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

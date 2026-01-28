@@ -45,17 +45,17 @@ The tool takes the following input parameters:
 ## Example
 
 ```yaml
-tools:
-  create_instance:
-    kind: alloydb-create-instance
-    source: alloydb-admin-source
-    description: Use this tool to create a new AlloyDB instance within a specified cluster.
+kind: tools
+name: create_instance
+type: alloydb-create-instance
+source: alloydb-admin-source
+description: Use this tool to create a new AlloyDB instance within a specified cluster.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                      |
 | ----------- | :------: | :----------: | ---------------------------------------------------- |
-| kind        |  string  |     true     | Must be alloydb-create-instance.                     |
+| type        |  string  |     true     | Must be alloydb-create-instance.                     |
 | source      |  string  |     true     | The name of an `alloydb-admin` source.               |
 | description |  string  |     false    | Description of the tool that is passed to the agent. |

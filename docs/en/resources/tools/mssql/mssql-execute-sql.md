@@ -26,17 +26,17 @@ statement against the `source`.
 ## Example
 
 ```yaml
-tools:
- execute_sql_tool:
-    kind: mssql-execute-sql
-    source: my-mssql-instance
-    description: Use this tool to execute sql statement.
+kind: tools
+name: execute_sql_tool
+type: mssql-execute-sql
+source: my-mssql-instance
+description: Use this tool to execute sql statement.
 ```
 
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                    |
 |-------------|:------------------------------------------:|:------------:|----------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "mssql-execute-sql".                       |
+| type        |                   string                   |     true     | Must be "mssql-execute-sql".                       |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.      |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM. |

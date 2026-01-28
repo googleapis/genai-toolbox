@@ -18,7 +18,7 @@ returned. Otherwise, the selection is not guaranteed.
 The tool returns a single JSON object representing the document, wrapped in a
 JSON array.
 
-This tool is compatible with the following source kind:
+This tool is compatible with the following source type:
 
 * [`mongodb`](../../sources/mongodb.md)
 
@@ -31,31 +31,31 @@ and returning their profile information, while excluding sensitive fields like
 the password hash.
 
 ```yaml
-tools:
-  get_user_profile:
-    kind: mongodb-find-one
-    source: my-mongo-source
-    description: Retrieves a user's profile by their email address.
-    database: user_data
-    collection: profiles
-    filterPayload: |
-        { "email": {{json .email}} }
-    filterParams:
-      - name: email
-        type: string
-        description: The email address of the user to find.
-    projectPayload: |
-        { 
-          "password_hash": 0,
-          "login_history": 0
-        }
+kind: tools
+name: get_user_profile
+type: mongodb-find-one
+source: my-mongo-source
+description: Retrieves a user's profile by their email address.
+database: user_data
+collection: profiles
+filterPayload: |
+    { "email": {{json .email}} }
+filterParams:
+  - name: email
+    type: string
+    description: The email address of the user to find.
+projectPayload: |
+    { 
+      "password_hash": 0,
+      "login_history": 0
+    }
 ```
 
 ## Reference
 
 | **field**      | **type** | **required** | **description**                                                                                                                              |
 |:---------------|:---------|:-------------|:---------------------------------------------------------------------------------------------------------------------------------------------|
-| kind           | string   | true         | Must be `mongodb-find-one`.                                                                                                                  |
+| type           | string   | true         | Must be `mongodb-find-one`.                                                                                                                  |
 | source         | string   | true         | The name of the `mongodb` source to use.                                                                                                     |
 | description    | string   | true         | A description of the tool that is passed to the LLM.                                                                                         |
 | database       | string   | true         | The name of the MongoDB database to query.                                                                                                   |

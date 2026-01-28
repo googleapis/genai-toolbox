@@ -34,11 +34,11 @@ This tool takes 4 optional input parameters:
 ## Example
 
 ```yaml
-tools:
-  list_table_fragmentation:
-    kind: mysql-list-table-fragmentation
-    source: my-mysql-instance
-    description: List table fragmentation in MySQL, by calculating the size of the data and index files and free space allocated to each table. The query calculates fragmentation percentage which represents the proportion of free space relative to the total data and index size. Storage can be reclaimed for tables with high fragmentation using OPTIMIZE TABLE.
+kind: tools
+name: list_table_fragmentation
+type: mysql-list-table-fragmentation
+source: my-mysql-instance
+description: List table fragmentation in MySQL, by calculating the size of the data and index files and free space allocated to each table. The query calculates fragmentation percentage which represents the proportion of free space relative to the total data and index size. Storage can be reclaimed for tables with high fragmentation using OPTIMIZE TABLE.
 ```
 
 The response is a json array with the following fields:
@@ -58,6 +58,6 @@ The response is a json array with the following fields:
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "mysql-list-table-fragmentation".          |
+| type        |  string  |     true     | Must be "mysql-list-table-fragmentation".          |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

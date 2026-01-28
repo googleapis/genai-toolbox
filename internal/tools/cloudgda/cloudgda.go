@@ -26,7 +26,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind string = "cloud-gemini-data-analytics-query"
+const resourceType string = "cloud-gemini-data-analytics-query"
 
 // Guidance is the tool guidance string.
 const Guidance = `Tool guidance:
@@ -44,8 +44,8 @@ Usage guidance:
   2. If ` + "`natural_language_answer`" + ` is produced, use ` + "`intent_explanation`" + ` and ` + "`generated_query`" + ` to see if you need to clarify any assumptions for the user.`
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -65,7 +65,7 @@ type compatibleSource interface {
 
 type Config struct {
 	Name              string             `yaml:"name" validate:"required"`
-	Kind              string             `yaml:"kind" validate:"required"`
+	Type              string             `yaml:"type" validate:"required"`
 	Source            string             `yaml:"source" validate:"required"`
 	Description       string             `yaml:"description" validate:"required"`
 	Location          string             `yaml:"location" validate:"required"`
@@ -77,8 +77,8 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-func (cfg Config) ToolConfigKind() string {
-	return kind
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error) {
@@ -121,7 +121,7 @@ func (t Tool) ToConfig() tools.ToolConfig {
 
 // Invoke executes the tool logic
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func (t Tool) Authorized(verifiedAuthServices []string) bool {
 }
 
 func (t Tool) RequiresClientAuthorization(resourceMgr tools.SourceProvider) (bool, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return false, err
 	}

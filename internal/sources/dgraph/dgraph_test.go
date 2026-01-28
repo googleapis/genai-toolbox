@@ -15,11 +15,12 @@
 package dgraph_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/dgraph"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
@@ -33,19 +34,19 @@ func TestParseFromYamlDgraph(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-dgraph-instance:
-					kind: dgraph
-					dgraphUrl: https://localhost:8080
-					apiKey: abc123
-					password: pass@123
-					namespace: 0
-					user: user123
+			kind: sources
+			name: my-dgraph-instance
+			type: dgraph
+			dgraphUrl: https://localhost:8080
+			apiKey: abc123
+			password: pass@123
+			namespace: 0
+			user: user123
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-dgraph-instance": dgraph.Config{
 					Name:      "my-dgraph-instance",
-					Kind:      dgraph.SourceKind,
+					Type:      dgraph.SourceType,
 					DgraphUrl: "https://localhost:8080",
 					ApiKey:    "abc123",
 					Password:  "pass@123",
@@ -57,15 +58,15 @@ func TestParseFromYamlDgraph(t *testing.T) {
 		{
 			desc: "basic example minimal field",
 			in: `
-			sources:
-				my-dgraph-instance:
-					kind: dgraph
-					dgraphUrl: https://localhost:8080
+			kind: sources
+			name: my-dgraph-instance
+			type: dgraph
+			dgraphUrl: https://localhost:8080
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-dgraph-instance": dgraph.Config{
 					Name:      "my-dgraph-instance",
-					Kind:      dgraph.SourceKind,
+					Type:      dgraph.SourceType,
 					DgraphUrl: "https://localhost:8080",
 				},
 			},
@@ -74,16 +75,12 @@ func TestParseFromYamlDgraph(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
 
-			if diff := cmp.Diff(tc.want, got.Sources); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -100,31 +97,27 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-dgraph-instance:
-					kind: dgraph
-					dgraphUrl: https://localhost:8080
-					foo: bar
+			kind: sources
+			name: my-dgraph-instance
+			type: dgraph
+			dgraphUrl: https://localhost:8080
+			foo: bar
 			`,
-			err: "unable to parse source \"my-dgraph-instance\" as \"dgraph\": [2:1] unknown field \"foo\"\n   1 | dgraphUrl: https://localhost:8080\n>  2 | foo: bar\n       ^\n   3 | kind: dgraph",
+			err: "error unmarshaling sources: unable to parse source \"my-dgraph-instance\" as \"dgraph\": [2:1] unknown field \"foo\"\n   1 | dgraphUrl: https://localhost:8080\n>  2 | foo: bar\n       ^\n   3 | name: my-dgraph-instance\n   4 | type: dgraph",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-dgraph-instance:
-					kind: dgraph
+			kind: sources
+			name: my-dgraph-instance
+			type: dgraph
 			`,
-			err: "unable to parse source \"my-dgraph-instance\" as \"dgraph\": Key: 'Config.DgraphUrl' Error:Field validation for 'DgraphUrl' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-dgraph-instance\" as \"dgraph\": Key: 'Config.DgraphUrl' Error:Field validation for 'DgraphUrl' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

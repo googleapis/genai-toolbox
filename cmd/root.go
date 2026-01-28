@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"bytes"
 	"context"
 	_ "embed"
 	"fmt"
@@ -396,7 +397,6 @@ func NewCommand(opts ...Option) *Command {
 
 type ToolsFile struct {
 	Sources         server.SourceConfigs         `yaml:"sources"`
-	AuthSources     server.AuthServiceConfigs    `yaml:"authSources"` // Deprecated: Kept for compatibility.
 	AuthServices    server.AuthServiceConfigs    `yaml:"authServices"`
 	EmbeddingModels server.EmbeddingModelConfigs `yaml:"embeddingModels"`
 	Tools           server.ToolConfigs           `yaml:"tools"`
@@ -427,6 +427,129 @@ func parseEnv(input string) (string, error) {
 	return output, err
 }
 
+func convertToolsFile(raw []byte) ([]byte, error) {
+	var input yaml.MapSlice
+	decoder := yaml.NewDecoder(bytes.NewReader(raw), yaml.UseOrderedMap())
+
+	// convert to tools file v2
+	var buf bytes.Buffer
+	encoder := yaml.NewEncoder(&buf)
+
+	v1keys := []string{"sources", "authSources", "authServices", "embeddingModels", "tools", "toolsets", "prompts"}
+	for {
+		if err := decoder.Decode(&input); err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
+		for _, item := range input {
+			key, ok := item.Key.(string)
+			if !ok {
+				return nil, fmt.Errorf("unexpected non-string key in input: %v", item.Key)
+			}
+			// check if the key is config file v1's key
+			if slices.Contains(v1keys, key) {
+				// check if value conversion to yaml.MapSlice successfully
+				// fields such as "tools" in toolsets might pass the first check but
+				// fail to convert to MapSlice
+				if slice, ok := item.Value.(yaml.MapSlice); ok {
+					// Deprecated: convert authSources to authServices
+					if key == "authSources" {
+						key = "authServices"
+					}
+					transformed, err := transformDocs(key, slice)
+					if err != nil {
+						return nil, err
+					}
+					// encode per-doc
+					for _, doc := range transformed {
+						if err := encoder.Encode(doc); err != nil {
+							return nil, err
+						}
+					}
+				} else {
+					// invalid input will be ignored
+					// we don't want to throw error here since the config could
+					// be valid but with a different order such as:
+					// ---
+					// tools:
+					// - tool_a
+					// kind: toolsets
+					// ---
+					continue
+				}
+			} else {
+				// this doc is already v2, encode to buf
+				if err := encoder.Encode(input); err != nil {
+					return nil, err
+				}
+				break
+			}
+		}
+	}
+	return buf.Bytes(), nil
+}
+
+// transformDocs transforms the configuration file from v1 format to v2
+// yaml.MapSlice will preserve the order in a map
+func transformDocs(kind string, input yaml.MapSlice) ([]yaml.MapSlice, error) {
+	var transformed []yaml.MapSlice
+	for _, entry := range input {
+		entryName, ok := entry.Key.(string)
+		if !ok {
+			return nil, fmt.Errorf("unexpected non-string key for entry in '%s': %v", kind, entry.Key)
+		}
+		entryBody := ProcessValue(entry.Value, kind == "toolsets")
+
+		currentTransformed := yaml.MapSlice{
+			{Key: "kind", Value: kind},
+			{Key: "name", Value: entryName},
+		}
+
+		// Merge the transformed body into our result
+		if bodySlice, ok := entryBody.(yaml.MapSlice); ok {
+			currentTransformed = append(currentTransformed, bodySlice...)
+		} else {
+			return nil, fmt.Errorf("unable to convert entryBody to MapSlice")
+		}
+		transformed = append(transformed, currentTransformed)
+	}
+	return transformed, nil
+}
+
+// ProcessValue recursively looks for MapSlices to rename 'kind' -> 'type'
+func ProcessValue(v any, isToolset bool) any {
+	switch val := v.(type) {
+	case yaml.MapSlice:
+		// creating a new MapSlice is safer for recursive transformation
+		newVal := make(yaml.MapSlice, len(val))
+		for i, item := range val {
+			// Perform renaming
+			if item.Key == "kind" {
+				item.Key = "type"
+			}
+			// Recursive call for nested values (e.g., nested objects or lists)
+			item.Value = ProcessValue(item.Value, false)
+			newVal[i] = item
+		}
+		return newVal
+	case []any:
+		// Process lists: If it's a toolset top-level list, wrap it.
+		if isToolset {
+			return yaml.MapSlice{{Key: "tools", Value: val}}
+		}
+		// Otherwise, recurse into list items (to catch nested objects)
+		newVal := make([]any, len(val))
+		for i := range val {
+			newVal[i] = ProcessValue(val[i], false)
+		}
+		return newVal
+	default:
+		return val
+	}
+}
+
 // parseToolsFile parses the provided yaml into appropriate configs.
 func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	var toolsFile ToolsFile
@@ -437,8 +560,13 @@ func parseToolsFile(ctx context.Context, raw []byte) (ToolsFile, error) {
 	}
 	raw = []byte(output)
 
+	raw, err = convertToolsFile(raw)
+	if err != nil {
+		return toolsFile, fmt.Errorf("error converting tools file: %s", err)
+	}
+
 	// Parse contents
-	err = yaml.UnmarshalContext(ctx, raw, &toolsFile, yaml.Strict())
+	toolsFile.Sources, toolsFile.AuthServices, toolsFile.EmbeddingModels, toolsFile.Tools, toolsFile.Toolsets, toolsFile.Prompts, err = server.UnmarshalResourceConfig(ctx, raw)
 	if err != nil {
 		return toolsFile, err
 	}
@@ -467,18 +595,6 @@ func mergeToolsFiles(files ...ToolsFile) (ToolsFile, error) {
 				conflicts = append(conflicts, fmt.Sprintf("source '%s' (file #%d)", name, fileIndex+1))
 			} else {
 				merged.Sources[name] = source
-			}
-		}
-
-		// Check for conflicts and merge authSources (deprecated, but still support)
-		for name, authSource := range file.AuthSources {
-			if _, exists := merged.AuthSources[name]; exists {
-				conflicts = append(conflicts, fmt.Sprintf("authSource '%s' (file #%d)", name, fileIndex+1))
-			} else {
-				if merged.AuthSources == nil {
-					merged.AuthSources = make(server.AuthServiceConfigs)
-				}
-				merged.AuthSources[name] = authSource
 			}
 		}
 
@@ -881,9 +997,6 @@ func run(cmd *Command) error {
 				return err
 			}
 
-			// Update version string
-			cmd.cfg.Version += "+prebuilt." + configName
-
 			// Parse into ToolsFile struct
 			parsed, err := parseToolsFile(ctx, buf)
 			if err != nil {
@@ -950,6 +1063,18 @@ func run(cmd *Command) error {
 		allToolsFiles = append(allToolsFiles, customTools)
 	}
 
+	// Modify version string based on loaded configurations
+	if len(cmd.prebuiltConfigs) > 0 {
+		tag := "prebuilt"
+		if isCustomConfigured {
+			tag = "custom"
+		}
+		// cmd.prebuiltConfigs is already sorted above
+		for _, configName := range cmd.prebuiltConfigs {
+			cmd.cfg.Version += fmt.Sprintf("+%s.%s", tag, configName)
+		}
+	}
+
 	// Merge Everything
 	// This will error if custom tools collide with prebuilt tools
 	finalToolsFile, err := mergeToolsFiles(allToolsFiles...)
@@ -964,20 +1089,6 @@ func run(cmd *Command) error {
 	cmd.cfg.ToolConfigs = finalToolsFile.Tools
 	cmd.cfg.ToolsetConfigs = finalToolsFile.Toolsets
 	cmd.cfg.PromptConfigs = finalToolsFile.Prompts
-
-	authSourceConfigs := finalToolsFile.AuthSources
-	if authSourceConfigs != nil {
-		cmd.logger.WarnContext(ctx, "`authSources` is deprecated, use `authServices` instead")
-
-		for k, v := range authSourceConfigs {
-			if _, exists := cmd.cfg.AuthServiceConfigs[k]; exists {
-				errMsg := fmt.Errorf("resource conflict detected: authSource '%s' has the same name as an existing authService. Please rename your authSource", k)
-				cmd.logger.ErrorContext(ctx, errMsg.Error())
-				return errMsg
-			}
-			cmd.cfg.AuthServiceConfigs[k] = v
-		}
-	}
 
 	instrumentation, err := telemetry.CreateTelemetryInstrumentation(versionString)
 	if err != nil {

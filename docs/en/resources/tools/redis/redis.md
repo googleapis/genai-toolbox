@@ -42,21 +42,21 @@ to be executed after argument expansion will be `[SADD, userNames, Alice, Sid, B
 ## Example
 
 ```yaml
-tools:
-  user_data_tool:
-    kind: redis
-    source: my-redis-instance
-    description: |
-      Use this tool to interact with user data stored in Redis.
-      It can set, retrieve, and delete user-specific information.
-    commands:
-      - [SADD, userNames, $userNames] # Array will be flattened into multiple arguments.
-      - [GET, $userId]
-    parameters:
-      - name: userId
-        type: string
-        description: The unique identifier for the user.
-      - name: userNames
-        type: array
-        description: The user names to be set.  
+kind: tools
+name: user_data_tool
+type: redis
+source: my-redis-instance
+description: |
+  Use this tool to interact with user data stored in Redis.
+  It can set, retrieve, and delete user-specific information.
+commands:
+  - [SADD, userNames, $userNames] # Array will be flattened into multiple arguments.
+  - [GET, $userId]
+parameters:
+  - name: userId
+    type: string
+    description: The unique identifier for the user.
+  - name: userNames
+    type: array
+    description: The user names to be set.  
 ```

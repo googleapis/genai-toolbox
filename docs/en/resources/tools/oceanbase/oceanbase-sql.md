@@ -29,31 +29,31 @@ form of placeholders `?`.
 > names, or other parts of the query.
 
 ```yaml
-tools:
-  search_flights_by_number:
-    kind: oceanbase-sql
-    source: my-oceanbase-instance
-    statement: |
-      SELECT * FROM flights
-      WHERE airline = ?
-      AND flight_number = ?
-      LIMIT 10
-    description: |
-      Use this tool to get information for a specific flight.
-      Takes an airline code and flight number and returns info on the flight.
-      Do NOT use this tool with a flight id. Do NOT guess an airline code or flight number.
-      Example:
-      {{
-          "airline": "CY",
-          "flight_number": "888",
-      }}
-    parameters:
-      - name: airline
-        type: string
-        description: Airline unique 2 letter identifier
-      - name: flight_number
-        type: string
-        description: 1 to 4 digit number
+kind: tools
+name: search_flights_by_number
+type: oceanbase-sql
+source: my-oceanbase-instance
+statement: |
+  SELECT * FROM flights
+  WHERE airline = ?
+  AND flight_number = ?
+  LIMIT 10
+description: |
+  Use this tool to get information for a specific flight.
+  Takes an airline code and flight number and returns info on the flight.
+  Do NOT use this tool with a flight id. Do NOT guess an airline code or flight number.
+  Example:
+  {{
+      "airline": "CY",
+      "flight_number": "888",
+  }}
+parameters:
+  - name: airline
+    type: string
+    description: Airline unique 2 letter identifier
+  - name: flight_number
+    type: string
+    description: 1 to 4 digit number
 ```
 
 ### Example with Template Parameters
@@ -64,64 +64,64 @@ tools:
 > recommended for performance and safety reasons.
 
 ```yaml
-tools:
-  list_table:
-    kind: oceanbase-sql
-    source: my-oceanbase-instance
-    statement: |
-      SELECT * FROM {{.tableName}};
-    description: |
-      Use this tool to list all information from a specific table.
-      Example:
-      {{
-          "tableName": "flights",
-      }}
-    templateParameters:
-      - name: tableName
-        type: string
-        description: Table to select from
+kind: tools
+name: list_table
+type: oceanbase-sql
+source: my-oceanbase-instance
+statement: |
+  SELECT * FROM {{.tableName}};
+description: |
+  Use this tool to list all information from a specific table.
+  Example:
+  {{
+      "tableName": "flights",
+  }}
+templateParameters:
+  - name: tableName
+    type: string
+    description: Table to select from
 ```
 
 ### Example with Array Parameters
 
 ```yaml
-tools:
-  search_flights_by_ids:
-    kind: oceanbase-sql
-    source: my-oceanbase-instance
-    statement: |
-      SELECT * FROM flights
-      WHERE id IN (?)
-      AND status IN (?)
-    description: |
-      Use this tool to get information for multiple flights by their IDs and statuses.
-      Example:
-      {{
-          "flight_ids": [1, 2, 3],
-          "statuses": ["active", "scheduled"]
-      }}
-    parameters:
-      - name: flight_ids
-        type: array
-        description: List of flight IDs to search for
-        items:
-          name: flight_id
-          type: integer
-          description: Individual flight ID
-      - name: statuses
-        type: array
-        description: List of flight statuses to filter by
-        items:
-          name: status
-          type: string
-          description: Individual flight status
+kind: tools
+name: search_flights_by_ids
+type: oceanbase-sql
+source: my-oceanbase-instance
+statement: |
+  SELECT * FROM flights
+  WHERE id IN (?)
+  AND status IN (?)
+description: |
+  Use this tool to get information for multiple flights by their IDs and statuses.
+  Example:
+  {{
+      "flight_ids": [1, 2, 3],
+      "statuses": ["active", "scheduled"]
+  }}
+parameters:
+  - name: flight_ids
+    type: array
+    description: List of flight IDs to search for
+    items:
+      name: flight_id
+      type: integer
+      description: Individual flight ID
+  - name: statuses
+    type: array
+    description: List of flight statuses to filter by
+    items:
+      name: status
+      type: string
+      description: Individual flight status
 ```
 
 ## Reference
 
 | **field**          |                   **type**                   | **required** | **description**                                                                                                                        |
 |--------------------|:--------------------------------------------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------|
-| kind               |                    string                    |     true     | Must be "oceanbase-sql".                                                                                                               |
+| type               |                    string                    |     true     | Must be "oceanbase-sql".                                                                                                               |
 | source             |                    string                    |     true     | Name of the source the SQL should execute on.                                                                                          |
 | description        |                    string                    |     true     | Description of the tool that is passed to the LLM.                                                                                     |
 | statement          |                    string                    |     true     | SQL statement to execute on.                                                                                                           |

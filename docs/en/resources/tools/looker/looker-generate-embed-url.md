@@ -31,28 +31,28 @@ supplied to this tool.
 ## Example
 
 ```yaml
-tools:
-    generate_embed_url:
-        kind: looker-generate-embed-url
-        source: looker-source
-        description: |
-          This tool generates a signed, private embed URL for specific Looker content,
-          allowing users to access it directly.
+kind: tools
+name: generate_embed_url
+type: looker-generate-embed-url
+source: looker-source
+description: |
+  This tool generates a signed, private embed URL for specific Looker content,
+  allowing users to access it directly.
 
-          Parameters:
-          - type (required): The type of content to embed. Common values include:
-            - `dashboards`
-            - `looks`
-            - `explore`
-          - id (required): The unique identifier for the content.
-            - For dashboards and looks, use the numeric ID (e.g., "123").
-            - For explores, use the format "model_name/explore_name".
+  Parameters:
+  - type (required): The type of content to embed. Common values include:
+    - `dashboards`
+    - `looks`
+    - `explore`
+  - id (required): The unique identifier for the content.
+    - For dashboards and looks, use the numeric ID (e.g., "123").
+    - For explores, use the format "model_name/explore_name".
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "looker-generate-embed-url"                |
+| type        |  string  |     true     | Must be "looker-generate-embed-url"                |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
