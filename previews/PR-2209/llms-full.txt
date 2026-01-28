@@ -19,6 +19,12 @@ Databases” as its initial development predated MCP, but was renamed to align
 with recently added MCP compatibility.
 {{< /notice >}}
 
+{{< notice note >}}
+This document has been updated to support the configuration file v2 format. To
+view documentation with configuration file v1 format, please navigate to the
+top-right menu and select versions v0.26.0 or older.
+{{< /notice >}}
+
 ## Why Toolbox?
 
 Toolbox helps you build Gen AI tools that let your agents access data in your
@@ -789,7 +795,7 @@ runtime](https://research.google.com/colaboratory/local-runtimes.html).
     {{< tabpane persist=header >}}
 {{< tab header="ADK" lang="bash" >}}
 
-pip install toolbox-core
+pip install google-adk[toolbox]
 {{< /tab >}}
 {{< tab header="Langchain" lang="bash" >}}
 
@@ -810,7 +816,7 @@ pip install toolbox-core
     {{< tabpane persist=header >}}
 {{< tab header="ADK" lang="bash" >}}
 
-pip install google-adk
+# No other dependencies required for ADK
 {{< /tab >}}
 {{< tab header="Langchain" lang="bash" >}}
 
@@ -1317,61 +1323,67 @@ Create a file named `tools.yaml`. This file defines the database connection, the
 SQL tools available, and the prompts the agents will use.
 
 ```yaml
-sources:
-  my-foodiefind-db:
-    kind: postgres
-    host: 127.0.0.1
-    port: 5432
-    database: toolbox_db
-    user: toolbox_user
-    password: my-password
-tools:
-  find_user_by_email:
-    kind: postgres-sql
-    source: my-foodiefind-db
-    description: Find a user's ID by their email address.
-    parameters:
-      - name: email
-        type: string
-        description: The email address of the user to find.
-    statement: SELECT id FROM users WHERE email = $1;
-  find_restaurant_by_name:
-    kind: postgres-sql
-    source: my-foodiefind-db
-    description: Find a restaurant's ID by its exact name.
-    parameters:
-      - name: name
-        type: string
-        description: The name of the restaurant to find.
-    statement: SELECT id FROM restaurants WHERE name = $1;
-  find_review_by_user_and_restaurant:
-    kind: postgres-sql
-    source: my-foodiefind-db
-    description: Find the full record for a specific review using the user's ID and the restaurant's ID.
-    parameters:
-      - name: user_id
-        type: integer
-        description: The numerical ID of the user.
-      - name: restaurant_id
-        type: integer
-        description: The numerical ID of the restaurant.
-    statement: SELECT * FROM reviews WHERE user_id = $1 AND restaurant_id = $2;
-prompts:
-  investigate_missing_review:
-    description: "Investigates a user's missing review by finding the user, restaurant, and the review itself, then analyzing its status."
-    arguments:
-      - name: "user_email"
-        description: "The email of the user who wrote the review."
-      - name: "restaurant_name"
-        description: "The name of the restaurant being reviewed."
-    messages:
-      - content: >-
-          **Goal:** Find the review written by the user with email '{{.user_email}}' for the restaurant named '{{.restaurant_name}}' and understand its status.
-          **Workflow:**
-          1. Use the `find_user_by_email` tool with the email '{{.user_email}}' to get the `user_id`.
-          2. Use the `find_restaurant_by_name` tool with the name '{{.restaurant_name}}' to get the `restaurant_id`.
-          3. Use the `find_review_by_user_and_restaurant` tool with the `user_id` and `restaurant_id` you just found.
-          4. Analyze the results from the final tool call. Examine the `is_published` and `moderation_status` fields and explain the review's status to the user in a clear, human-readable sentence.
+kind: sources
+name: my-foodiefind-db
+type: postgres
+host: 127.0.0.1
+port: 5432
+database: toolbox_db
+user: toolbox_user
+password: my-password
+---
+kind: tools
+name: find_user_by_email
+type: postgres-sql
+source: my-foodiefind-db
+description: Find a user's ID by their email address.
+parameters:
+  - name: email
+    type: string
+    description: The email address of the user to find.
+statement: SELECT id FROM users WHERE email = $1;
+---
+kind: tools
+name: find_restaurant_by_name
+type: postgres-sql
+source: my-foodiefind-db
+description: Find a restaurant's ID by its exact name.
+parameters:
+  - name: name
+    type: string
+    description: The name of the restaurant to find.
+statement: SELECT id FROM restaurants WHERE name = $1;
+---
+kind: tools
+name: find_review_by_user_and_restaurant
+type: postgres-sql
+source: my-foodiefind-db
+description: Find the full record for a specific review using the user's ID and the restaurant's ID.
+parameters:
+  - name: user_id
+    type: integer
+    description: The numerical ID of the user.
+  - name: restaurant_id
+    type: integer
+    description: The numerical ID of the restaurant.
+statement: SELECT * FROM reviews WHERE user_id = $1 AND restaurant_id = $2;
+---
+kind: prompts
+name: investigate_missing_review
+description: "Investigates a user's missing review by finding the user, restaurant, and the review itself, then analyzing its status."
+arguments:
+  - name: "user_email"
+    description: "The email of the user who wrote the review."
+  - name: "restaurant_name"
+    description: "The name of the restaurant being reviewed."
+messages:
+  - content: >-
+      **Goal:** Find the review written by the user with email '{{.user_email}}' for the restaurant named '{{.restaurant_name}}' and understand its status.
+      **Workflow:**
+      1. Use the `find_user_by_email` tool with the email '{{.user_email}}' to get the `user_id`.
+      2. Use the `find_restaurant_by_name` tool with the name '{{.restaurant_name}}' to get the `restaurant_id`.
+      3. Use the `find_review_by_user_and_restaurant` tool with the `user_id` and `restaurant_id` you just found.
+      4. Analyze the results from the final tool call. Examine the `is_published` and `moderation_status` fields and explain the review's status to the user in a clear, human-readable sentence.
 ```
 
 ## Step 3: Connect to Gemini CLI
@@ -1528,78 +1540,89 @@ In this section, we will download Toolbox, configure our tools in a
     {{< /notice >}}
 
     ```yaml
-    sources:
-      my-pg-source:
-        kind: postgres
-        host: 127.0.0.1
-        port: 5432
-        database: toolbox_db
-        user: toolbox_user
-        password: my-password
+    kind: sources
+    name: my-pg-source
+    type: postgres
+    host: 127.0.0.1
+    port: 5432
+    database: toolbox_db
+    user: toolbox_user
+    password: my-password
+    ---
+    kind: tools
+    name: search-hotels-by-name
+    type: postgres-sql
+    source: my-pg-source
+    description: Search for hotels based on name.
+    parameters:
+      - name: name
+        type: string
+        description: The name of the hotel.
+    statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
+    ---
+    kind: tools
+    name: search-hotels-by-location
+    type: postgres-sql
+    source: my-pg-source
+    description: Search for hotels based on location.
+    parameters:
+      - name: location
+        type: string
+        description: The location of the hotel.
+    statement: SELECT * FROM hotels WHERE location ILIKE '%' || $1 || '%';
+    ---
+    kind: tools
+    name: book-hotel
+    type: postgres-sql
+    source: my-pg-source
+    description: >-
+       Book a hotel by its ID. If the hotel is successfully booked, returns a NULL, raises an error if not.
+    parameters:
+      - name: hotel_id
+        type: string
+        description: The ID of the hotel to book.
+    statement: UPDATE hotels SET booked = B'1' WHERE id = $1;
+    ---
+    kind: tools
+    name: update-hotel
+    type: postgres-sql
+    source: my-pg-source
+    description: >-
+      Update a hotel's check-in and check-out dates by its ID. Returns a message
+      indicating  whether the hotel was successfully updated or not.
+    parameters:
+      - name: hotel_id
+        type: string
+        description: The ID of the hotel to update.
+      - name: checkin_date
+        type: string
+        description: The new check-in date of the hotel.
+      - name: checkout_date
+        type: string
+        description: The new check-out date of the hotel.
+    statement: >-
+      UPDATE hotels SET checkin_date = CAST($2 as date), checkout_date = CAST($3
+      as date) WHERE id = $1;
+    ---
+    kind: tools
+    name: cancel-hotel
+    type: postgres-sql
+    source: my-pg-source
+    description: Cancel a hotel by its ID.
+    parameters:
+      - name: hotel_id
+        type: string
+        description: The ID of the hotel to cancel.
+    statement: UPDATE hotels SET booked = B'0' WHERE id = $1;
+    ---
+    kind: toolsets
+    name: my-toolset
     tools:
-      search-hotels-by-name:
-        kind: postgres-sql
-        source: my-pg-source
-        description: Search for hotels based on name.
-        parameters:
-          - name: name
-            type: string
-            description: The name of the hotel.
-        statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
-      search-hotels-by-location:
-        kind: postgres-sql
-        source: my-pg-source
-        description: Search for hotels based on location.
-        parameters:
-          - name: location
-            type: string
-            description: The location of the hotel.
-        statement: SELECT * FROM hotels WHERE location ILIKE '%' || $1 || '%';
-      book-hotel:
-        kind: postgres-sql
-        source: my-pg-source
-        description: >-
-           Book a hotel by its ID. If the hotel is successfully booked, returns a NULL, raises an error if not.
-        parameters:
-          - name: hotel_id
-            type: string
-            description: The ID of the hotel to book.
-        statement: UPDATE hotels SET booked = B'1' WHERE id = $1;
-      update-hotel:
-        kind: postgres-sql
-        source: my-pg-source
-        description: >-
-          Update a hotel's check-in and check-out dates by its ID. Returns a message
-          indicating  whether the hotel was successfully updated or not.
-        parameters:
-          - name: hotel_id
-            type: string
-            description: The ID of the hotel to update.
-          - name: checkin_date
-            type: string
-            description: The new check-in date of the hotel.
-          - name: checkout_date
-            type: string
-            description: The new check-out date of the hotel.
-        statement: >-
-          UPDATE hotels SET checkin_date = CAST($2 as date), checkout_date = CAST($3
-          as date) WHERE id = $1;
-      cancel-hotel:
-        kind: postgres-sql
-        source: my-pg-source
-        description: Cancel a hotel by its ID.
-        parameters:
-          - name: hotel_id
-            type: string
-            description: The ID of the hotel to cancel.
-        statement: UPDATE hotels SET booked = B'0' WHERE id = $1;
-   toolsets:
-      my-toolset:
-        - search-hotels-by-name
-        - search-hotels-by-location
-        - book-hotel
-        - update-hotel
-        - cancel-hotel
+      - search-hotels-by-name
+      - search-hotels-by-location
+      - book-hotel
+      - update-hotel
+      - cancel-hotel
     ```
 
     For more info on tools, check out the
@@ -1688,14 +1711,14 @@ Toolbox should have access to. Most tools will have at least one source to
 execute against.
 
 ```yaml
-sources:
-  my-pg-source:
-    kind: postgres
-    host: 127.0.0.1
-    port: 5432
-    database: toolbox_db
-    user: ${USER_NAME}
-    password: ${PASSWORD}
+kind: sources
+name: my-pg-source
+type: postgres
+host: 127.0.0.1
+port: 5432
+database: toolbox_db
+user: ${USER_NAME}
+password: ${PASSWORD}
 ```
 
 For more details on configuring different types of sources, see the
@@ -1704,20 +1727,20 @@ For more details on configuring different types of sources, see the
 ### Tools
 
 The `tools` section of your `tools.yaml` defines the actions your agent can
-take: what kind of tool it is, which source(s) it affects, what parameters it
+take: what type of tool it is, which source(s) it affects, what parameters it
 uses, etc.
 
 ```yaml
-tools:
-  search-hotels-by-name:
-    kind: postgres-sql
-    source: my-pg-source
-    description: Search for hotels based on name.
-    parameters:
-      - name: name
-        type: string
-        description: The name of the hotel.
-    statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
+kind: tools
+name: search-hotels-by-name
+type: postgres-sql
+source: my-pg-source
+description: Search for hotels based on name.
+parameters:
+  - name: name
+    type: string
+    description: The name of the hotel.
+statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
 ```
 
 For more details on configuring different types of tools, see the
@@ -1730,13 +1753,17 @@ that you want to be able to load together. This can be useful for defining
 different sets for different agents or different applications.
 
 ```yaml
-toolsets:
-  my_first_toolset:
-    - my_first_tool
-    - my_second_tool
-  my_second_toolset:
-    - my_second_tool
-    - my_third_tool
+kind: toolsets
+name: my_first_toolset
+tools:
+  - my_first_tool
+  - my_second_tool
+---
+kind: toolsets
+name: my_second_toolset
+tools:
+  - my_second_tool
+  - my_third_tool
 ```
 
 You can load toolsets by name:
@@ -1755,14 +1782,14 @@ The `prompts` section of your `tools.yaml` defines the templates containing
 structured messages and instructions for interacting with language models.
 
 ```yaml
-prompts:
-  code_review:
-    description: "Asks the LLM to analyze code quality and suggest improvements."
-    messages:
-      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
-    arguments:
-      - name: "code"
-        description: "The code to review"
+kind: prompts
+name: code_review
+description: "Asks the LLM to analyze code quality and suggest improvements."
+messages:
+  - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+arguments:
+  - name: "code"
+    description: "The code to review"
 ```
 
 For more details on configuring different types of prompts, see the
@@ -1835,7 +1862,7 @@ The structured logging outputs log as JSON:
   "timestamp":"2024-11-04T16:45:11.987299-08:00",
   "severity":"ERROR",
   "logging.googleapis.com/sourceLocation":{...},
-  "message":"unable to parse tool file at \"tools.yaml\": \"cloud-sql-postgres1\" is not a valid kind of data source"
+  "message":"unable to parse tool file at \"tools.yaml\": \"cloud-sql-postgres1\" is not a valid type of data source"
 }
 ```
 
@@ -5662,10 +5689,10 @@ with the necessary configuration for deployment to Vertex AI Agent Engine.
     process will generate deployment configuration files (like a `Makefile` and
     `Dockerfile`) in your project directory.
 
-4.  Add `toolbox-core` as a dependency to the new project:
+4.  Add `google-adk[toolbox]` as a dependency to the new project:
 
     ```bash
-    uv add toolbox-core
+    uv add google-adk[toolbox]
     ```
 
 ## Step 3: Configure Google Cloud Authentication
@@ -5711,22 +5738,23 @@ authentication token.
     ```python
     from google.adk import Agent
     from google.adk.apps import App
-    from toolbox_core import ToolboxSyncClient, auth_methods
+    from google.adk.tools.toolbox_toolset import ToolboxToolset
+    from toolbox_adk import CredentialStrategy
 
     # TODO(developer): Replace with your Toolbox Cloud Run Service URL
     TOOLBOX_URL = "https://your-toolbox-service-xyz.a.run.app"
 
-    # Initialize the client with the Cloud Run URL and Auth headers
-    client = ToolboxSyncClient(
-        TOOLBOX_URL, 
-        client_headers={"Authorization": auth_methods.get_google_id_token(TOOLBOX_URL)}
+    # Initialize the toolset with Workload Identity (generates ID token for the URL)
+    toolset = ToolboxToolset(
+        server_url=TOOLBOX_URL,
+        credentials=CredentialStrategy.workload_identity(target_audience=TOOLBOX_URL)
     )
 
     root_agent = Agent(
         name='root_agent',
         model='gemini-2.5-flash',
         instruction="You are a helpful AI assistant designed to provide accurate and useful information.",
-        tools=client.load_toolset(),
+        tools=[toolset],
     )
 
     app = App(root_agent=root_agent, name="my_agent")
@@ -6305,17 +6333,19 @@ The following configurations are placed at the top level of a `tools.yaml` file.
 {{< notice tip >}}
 If you are accessing Toolbox with multiple applications, each
  application should register their own Client ID even if they use the same
- "kind" of auth provider.
+ "type" of auth provider.
 {{< /notice >}}
 
 ```yaml
-authServices:
-  my_auth_app_1:
-    kind: google
-    clientId: ${YOUR_CLIENT_ID_1}
-  my_auth_app_2:
-    kind: google
-    clientId: ${YOUR_CLIENT_ID_2}
+kind: authServices
+name: my_auth_app_1
+type: google
+clientId: ${YOUR_CLIENT_ID_1}
+---
+kind: authServices
+name: my_auth_app_2
+type: google
+clientId: ${YOUR_CLIENT_ID_2}
 ```
 
 {{< notice tip >}}
@@ -6620,10 +6650,10 @@ id-token][provided-claims] can be used for the parameter.
 ## Example
 
 ```yaml
-authServices:
-  my-google-auth:
-    kind: google
-    clientId: ${YOUR_GOOGLE_CLIENT_ID}
+kind: authServices
+name: my-google-auth
+type: google
+clientId: ${YOUR_GOOGLE_CLIENT_ID}
 ```
 
 {{< notice tip >}}
@@ -6635,7 +6665,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                  |
 |-----------|:--------:|:------------:|------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "google".                                                |
+| type      |  string  |     true     | Must be "google".                                                |
 | clientId  |  string  |     true     | Client ID of your application from registering your application. |
 
 
@@ -6654,15 +6684,15 @@ instead of hardcoding your secrets into the configuration file.
 {{< /notice >}}
 
 ```yaml
-sources:
-    my-cloud-sql-source:
-        kind: cloud-sql-postgres
-        project: my-project-id
-        region: us-central1
-        instance: my-instance-name
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
+kind: sources
+name: my-cloud-sql-source
+type: cloud-sql-postgres
+project: my-project-id
+region: us-central1
+instance: my-instance-name
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
 ```
 
 In implementation, each source is a different connection pool or client that used
@@ -6842,17 +6872,17 @@ To connect using IAM authentication:
 ## Example
 
 ```yaml
-sources:
-    my-alloydb-pg-source:
-        kind: alloydb-postgres
-        project: my-project-id
-        region: us-central1
-        cluster: my-cluster
-        instance: my-instance
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        # ipType: "public"
+kind: sources
+name: my-alloydb-pg-source
+type: alloydb-postgres
+project: my-project-id
+region: us-central1
+cluster: my-cluster
+instance: my-instance
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
+# ipType: "public"
 ```
 
 {{< notice tip >}}
@@ -6864,7 +6894,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                                                                          |
 |-----------|:--------:|:------------:|--------------------------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "alloydb-postgres".                                                                                              |
+| type      |  string  |     true     | Must be "alloydb-postgres".                                                                                              |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                            |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                                             |
 | cluster   |  string  |     true     | Name of the AlloyDB cluster (e.g. "my-cluster").                                                                         |
@@ -6897,20 +6927,21 @@ Authentication can be handled in two ways:
 ## Example
 
 ```yaml
-sources:
-    my-alloydb-admin:
-        kind: alloy-admin
-
-    my-oauth-alloydb-admin:
-        kind: alloydb-admin
-        useClientOAuth: true
+kind: sources
+name: my-alloydb-admin
+type: alloydb-admin
+---
+kind: sources
+name: my-oauth-alloydb-admin
+type: alloydb-admin
+useClientOAuth: true
 ```
 
 ## Reference
 
 | **field**      | **type** | **required** | **description**                                                                                                                                |
 | -------------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| kind           |  string  |     true     | Must be "alloydb-admin".                                                                                                                       |
+| type           |  string  |     true     | Must be "alloydb-admin".                                                                                                                       |
 | defaultProject |  string  |     false    | The Google Cloud project ID to use for AlloyDB infrastructure tools.                                                                           |
 | useClientOAuth |  boolean |     false    | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
 
@@ -7029,47 +7060,47 @@ identity used has been granted the correct IAM permissions.
 Initialize a BigQuery source that uses ADC:
 
 ```yaml
-sources:
-  my-bigquery-source:
-    kind: "bigquery"
-    project: "my-project-id"
-    # location: "US" # Optional: Specifies the location for query jobs.
-    # writeMode: "allowed" # One of: allowed, blocked, protected. Defaults to "allowed".
-    # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
-    #   - "my_dataset_1"
-    #   - "other_project.my_dataset_2"
-    # impersonateServiceAccount: "service-account@project-id.iam.gserviceaccount.com" # Optional: Service account to impersonate
-    # scopes: # Optional: List of OAuth scopes to request.
-    #   - "https://www.googleapis.com/auth/bigquery"
-    #   - "https://www.googleapis.com/auth/drive.readonly"
-    # maxQueryResultRows: 50 # Optional: Limits the number of rows returned by queries. Defaults to 50.
+kind: sources
+name: my-bigquery-source
+type: "bigquery"
+project: "my-project-id"
+# location: "US" # Optional: Specifies the location for query jobs.
+# writeMode: "allowed" # One of: allowed, blocked, protected. Defaults to "allowed".
+# allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
+#   - "my_dataset_1"
+#   - "other_project.my_dataset_2"
+# impersonateServiceAccount: "service-account@project-id.iam.gserviceaccount.com" # Optional: Service account to impersonate
+# scopes: # Optional: List of OAuth scopes to request.
+#   - "https://www.googleapis.com/auth/bigquery"
+#   - "https://www.googleapis.com/auth/drive.readonly"
+# maxQueryResultRows: 50 # Optional: Limits the number of rows returned by queries. Defaults to 50.
 ```
 
 Initialize a BigQuery source that uses the client's access token:
 
 ```yaml
-sources:
-  my-bigquery-client-auth-source:
-    kind: "bigquery"
-    project: "my-project-id"
-    useClientOAuth: true
-    # location: "US" # Optional: Specifies the location for query jobs.
-    # writeMode: "allowed" # One of: allowed, blocked, protected. Defaults to "allowed".
-    # allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
-    #   - "my_dataset_1"
-    #   - "other_project.my_dataset_2"
-    # impersonateServiceAccount: "service-account@project-id.iam.gserviceaccount.com" # Optional: Service account to impersonate
-    # scopes: # Optional: List of OAuth scopes to request.
-    #   - "https://www.googleapis.com/auth/bigquery"
-    #   - "https://www.googleapis.com/auth/drive.readonly"
-    # maxQueryResultRows: 50 # Optional: Limits the number of rows returned by queries. Defaults to 50.
+kind: sources
+name: my-bigquery-client-auth-source
+type: "bigquery"
+project: "my-project-id"
+useClientOAuth: true
+# location: "US" # Optional: Specifies the location for query jobs.
+# writeMode: "allowed" # One of: allowed, blocked, protected. Defaults to "allowed".
+# allowedDatasets: # Optional: Restricts tool access to a specific list of datasets.
+#   - "my_dataset_1"
+#   - "other_project.my_dataset_2"
+# impersonateServiceAccount: "service-account@project-id.iam.gserviceaccount.com" # Optional: Service account to impersonate
+# scopes: # Optional: List of OAuth scopes to request.
+#   - "https://www.googleapis.com/auth/bigquery"
+#   - "https://www.googleapis.com/auth/drive.readonly"
+# maxQueryResultRows: 50 # Optional: Limits the number of rows returned by queries. Defaults to 50.
 ```
 
 ## Reference
 
 | **field**                 | **type** | **required** | **description**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 |---------------------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind                      |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| type                      |  string  |     true     | Must be "bigquery".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | project                   |  string  |     true     | Id of the Google Cloud project to use for billing and as the default project for BigQuery resources.                                                                                                                                                                                                                                                                                                                                                                                                                |
 | location                  |  string  |    false     | Specifies the location (e.g., 'us', 'asia-northeast1') in which to run the query job. This location must match the location of any tables referenced in the query. Defaults to the table's location or 'US' if the location cannot be determined. [Learn More](https://cloud.google.com/bigquery/docs/locations)                                                                                                                                                                                                    |
 | writeMode                 |  string  |    false     | Controls the write behavior for tools. `allowed` (default): All queries are permitted. `blocked`: Only `SELECT` statements are allowed for the `bigquery-execute-sql` tool. `protected`: Enables session-based execution where all tools associated with this source instance share the same [BigQuery session](https://cloud.google.com/bigquery/docs/sessions-intro). This allows for stateful operations using temporary tables (e.g., `CREATE TEMP TABLE`). For `bigquery-execute-sql`, `SELECT` statements can be used on all tables, but write operations are restricted to the session's temporary dataset. For tools like `bigquery-sql`, `bigquery-forecast`, and `bigquery-analyze-contribution`, the `writeMode` restrictions do not apply, but they will operate within the shared session. **Note:** The `protected` mode cannot be used with `useClientOAuth: true`. It is also not recommended for multi-user server environments, as all users would share the same session. A session is terminated automatically after 24 hours of inactivity or after 7 days, whichever comes first. A new session is created on the next request, and any temporary data from the previous session will be lost. |
@@ -7136,18 +7167,18 @@ applying IAM permissions and roles to an identity.
 ## Example
 
 ```yaml
-sources:
-  my-bigtable-source:
-    kind: "bigtable"
-    project: "my-project-id"
-    instance: "test-instance"
+kind: sources
+name: my-bigtable-source
+type: "bigtable"
+project: "my-project-id"
+instance: "test-instance"
 ```
 
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                               |
 |-----------|:--------:|:------------:|-------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "bigtable".                                                           |
+| type      |  string  |     true     | Must be "bigtable".                                                           |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id"). |
 | instance  |  string  |     true     | Name of the Bigtable instance.                                                |
 
@@ -7173,19 +7204,19 @@ distributed architectures, and a flexible approach to schema definition.
 ## Example
 
 ```yaml
-sources:
-    my-cassandra-source:
-        kind: cassandra
-        hosts:
-            - 127.0.0.1
-        keyspace: my_keyspace
-        protoVersion: 4
-        username: ${USER_NAME}
-        password: ${PASSWORD}
-        caPath: /path/to/ca.crt # Optional: path to CA certificate
-        certPath: /path/to/client.crt # Optional: path to client certificate
-        keyPath: /path/to/client.key # Optional: path to client key
-        enableHostVerification: true # Optional: enable host verification
+kind: sources
+name: my-cassandra-source
+type: cassandra
+hosts:
+    - 127.0.0.1
+keyspace: my_keyspace
+protoVersion: 4
+username: ${USER_NAME}
+password: ${PASSWORD}
+caPath: /path/to/ca.crt # Optional: path to CA certificate
+certPath: /path/to/client.crt # Optional: path to client certificate
+keyPath: /path/to/client.key # Optional: path to client key
+enableHostVerification: true # Optional: enable host verification
 ```
 
 {{< notice tip >}}
@@ -7197,7 +7228,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**              | **type** | **required** | **description**                                                                                                                                    |
 |------------------------|:--------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind                   |  string  |     true     | Must be "cassandra".                                                                                                                               |
+| type                   |  string  |     true     | Must be "cassandra".                                                                                                                               |
 | hosts                  | string[] |     true     | List of IP addresses to connect to (e.g., ["192.168.1.1:9042", "192.168.1.2:9042","192.168.1.3:9042"]). The default port is 9042 if not specified. |
 | keyspace               |  string  |     true     | Name of the Cassandra keyspace to connect to (e.g., "my_keyspace").                                                                                |
 | protoVersion           | integer  |    false     | Protocol version for the Cassandra connection (e.g., 4).                                                                                           |
@@ -7252,31 +7283,31 @@ ClickHouse supports multiple protocols:
 ### Secure Connection Example
 
 ```yaml
-sources:
-    secure-clickhouse-source:
-        kind: clickhouse
-        host: clickhouse.example.com
-        port: "8443"
-        database: analytics
-        user: ${CLICKHOUSE_USER}
-        password: ${CLICKHOUSE_PASSWORD}
-        protocol: https
-        secure: true
+kind: sources
+name: secure-clickhouse-source
+type: clickhouse
+host: clickhouse.example.com
+port: "8443"
+database: analytics
+user: ${CLICKHOUSE_USER}
+password: ${CLICKHOUSE_PASSWORD}
+protocol: https
+secure: true
 ```
 
 ### HTTP Protocol Example
 
 ```yaml
-sources:
-    http-clickhouse-source:
-        kind: clickhouse
-        host: localhost
-        port: "8123"
-        database: logs
-        user: ${CLICKHOUSE_USER}
-        password: ${CLICKHOUSE_PASSWORD}
-        protocol: http
-        secure: false
+kind: sources
+name: http-clickhouse-source
+type: clickhouse
+host: localhost
+port: "8123"
+database: logs
+user: ${CLICKHOUSE_USER}
+password: ${CLICKHOUSE_PASSWORD}
+protocol: http
+secure: false
 ```
 
 {{< notice tip >}}
@@ -7288,7 +7319,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                                     |
 |-----------|:--------:|:------------:|-------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "clickhouse".                                                               |
+| type      |  string  |     true     | Must be "clickhouse".                                                               |
 | host      |  string  |     true     | IP address or hostname to connect to (e.g. "127.0.0.1" or "clickhouse.example.com") |
 | port      |  string  |     true     | Port to connect to (e.g. "8443" for HTTPS, "8123" for HTTP)                         |
 | database  |  string  |     true     | Name of the ClickHouse database to connect to (e.g. "my_database").                 |
@@ -7416,41 +7447,41 @@ identity used has been granted the correct IAM permissions.
 Initialize a Cloud Healthcare API source that uses ADC:
 
 ```yaml
-sources:
-  my-healthcare-source:
-    kind: "cloud-healthcare"
-    project: "my-project-id"
-    region: "us-central1"
-    dataset: "my-healthcare-dataset-id"
-    # allowedFhirStores: # Optional: Restricts tool access to a specific list of FHIR store IDs.
-    #   - "my_fhir_store_1"
-    # allowedDicomStores: # Optional: Restricts tool access to a specific list of DICOM store IDs.
-    #   - "my_dicom_store_1"
-    #   - "my_dicom_store_2"
+kind: sources
+name: my-healthcare-source
+type: "cloud-healthcare"
+project: "my-project-id"
+region: "us-central1"
+dataset: "my-healthcare-dataset-id"
+# allowedFhirStores: # Optional: Restricts tool access to a specific list of FHIR store IDs.
+#   - "my_fhir_store_1"
+# allowedDicomStores: # Optional: Restricts tool access to a specific list of DICOM store IDs.
+#   - "my_dicom_store_1"
+#   - "my_dicom_store_2"
 ```
 
 Initialize a Cloud Healthcare API source that uses the client's access token:
 
 ```yaml
-sources:
-  my-healthcare-client-auth-source:
-    kind: "cloud-healthcare"
-    project: "my-project-id"
-    region: "us-central1"
-    dataset: "my-healthcare-dataset-id"
-    useClientOAuth: true
-    # allowedFhirStores: # Optional: Restricts tool access to a specific list of FHIR store IDs.
-    #   - "my_fhir_store_1"
-    # allowedDicomStores: # Optional: Restricts tool access to a specific list of DICOM store IDs.
-    #   - "my_dicom_store_1"
-    #   - "my_dicom_store_2"
+kind: sources
+name: my-healthcare-client-auth-source
+type: "cloud-healthcare"
+project: "my-project-id"
+region: "us-central1"
+dataset: "my-healthcare-dataset-id"
+useClientOAuth: true
+# allowedFhirStores: # Optional: Restricts tool access to a specific list of FHIR store IDs.
+#   - "my_fhir_store_1"
+# allowedDicomStores: # Optional: Restricts tool access to a specific list of DICOM store IDs.
+#   - "my_dicom_store_1"
+#   - "my_dicom_store_2"
 ```
 
 ## Reference
 
 | **field**          | **type** | **required** | **description**                                                                                                                                                                                                                                                              |
 |--------------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind               |  string  |     true     | Must be "cloud-healthcare".                                                                                                                                                                                                                                                  |
+| type               |  string  |     true     | Must be "cloud-healthcare".                                                                                                                                                                                                                                                  |
 | project            |  string  |     true     | ID of the GCP project that the dataset lives in.                                                                                                                                                                                                                             |
 | region             |  string  |     true     | Specifies the region (e.g., 'us', 'asia-northeast1') of the healthcare dataset. [Learn More](https://cloud.google.com/healthcare-api/docs/regions)                                                                                                                           |
 | dataset            |  string  |     true     | ID of the healthcare dataset.                                                                                                                                                                                                                                                |
@@ -7480,20 +7511,21 @@ Authentication can be handled in two ways:
 ## Example
 
 ```yaml
-sources:
-    my-cloud-monitoring:
-        kind: cloud-monitoring
-
-    my-oauth-cloud-monitoring:
-        kind: cloud-monitoring
-        useClientOAuth: true
+kind: sources
+name: my-cloud-monitoring
+type: cloud-monitoring
+---
+kind: sources
+name: my-oauth-cloud-monitoring
+type: cloud-monitoring
+useClientOAuth: true
 ```
 
 ## Reference
 
 | **field**      | **type** | **required** | **description**                                                                                                                                |
 |----------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind           |  string  |     true     | Must be "cloud-monitoring".                                                                                                                    |
+| type           |  string  |     true     | Must be "cloud-monitoring".                                                                                                                    |
 | useClientOAuth | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
 
 
@@ -7621,16 +7653,16 @@ To connect using IAM authentication:
 ## Example
 
 ```yaml
-sources:
-    my-cloud-sql-mysql-source:
-        kind: cloud-sql-mysql
-        project: my-project-id
-        region: us-central1
-        instance: my-instance
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        # ipType: "private"
+kind: sources
+name: my-cloud-sql-mysql-source
+type: cloud-sql-mysql
+project: my-project-id
+region: us-central1
+instance: my-instance
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
+# ipType: "private"
 ```
 
 {{< notice tip >}}
@@ -7642,7 +7674,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                                                      |
 |-----------|:--------:|:------------:|------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "cloud-sql-mysql".                                                                           |
+| type      |  string  |     true     | Must be "cloud-sql-mysql".                                                                           |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                        |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                         |
 | instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                              |
@@ -7826,16 +7858,16 @@ To connect using IAM authentication:
 ## Example
 
 ```yaml
-sources:
-    my-cloud-sql-pg-source:
-        kind: cloud-sql-postgres
-        project: my-project-id
-        region: us-central1
-        instance: my-instance
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        # ipType: "private"
+kind: sources
+name: my-cloud-sql-pg-source
+type: cloud-sql-postgres
+project: my-project-id
+region: us-central1
+instance: my-instance
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
+# ipType: "private"
 ```
 
 {{< notice tip >}}
@@ -7847,7 +7879,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                                                                          |
 |-----------|:--------:|:------------:|--------------------------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "cloud-sql-postgres".                                                                                            |
+| type      |  string  |     true     | Must be "cloud-sql-postgres".                                                                                            |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                            |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                                             |
 | instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                                                  |
@@ -7941,16 +7973,16 @@ Currently, this source only uses standard authentication. You will need to
 ## Example
 
 ```yaml
-sources:
-    my-cloud-sql-mssql-instance:
-     kind: cloud-sql-mssql
-     project: my-project
-     region: my-region
-     instance: my-instance
-     database: my_db
-     user: ${USER_NAME}
-     password: ${PASSWORD}
-     # ipType: private
+kind: sources
+name: my-cloud-sql-mssql-instance
+type: cloud-sql-mssql
+project: my-project
+region: my-region
+instance: my-instance
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
+# ipType: private
 ```
 
 {{< notice tip >}}
@@ -7962,7 +7994,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                                                      |
 |-----------|:--------:|:------------:|------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "cloud-sql-mssql".                                                                           |
+| type      |  string  |     true     | Must be "cloud-sql-mssql".                                                                           |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                        |
 | region    |  string  |     true     | Name of the GCP region that the cluster was created in (e.g. "us-central1").                         |
 | instance  |  string  |     true     | Name of the Cloud SQL instance within the cluster (e.g. "my-instance").                              |
@@ -7994,20 +8026,21 @@ Authentication can be handled in two ways:
 ## Example
 
 ```yaml
-sources:
-    my-cloud-sql-admin:
-        kind: cloud-sql-admin
-
-    my-oauth-cloud-sql-admin:
-        kind: cloud-sql-admin
-        useClientOAuth: true
+kind: sources
+name: my-cloud-sql-admin
+type: cloud-sql-admin
+---
+kind: sources
+name: my-oauth-cloud-sql-admin
+type: cloud-sql-admin
+useClientOAuth: true
 ```
 
 ## Reference
 
 | **field**      | **type** | **required** | **description**                                                                                                                                |
 | -------------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| kind           |  string  |     true     | Must be "cloud-sql-admin".                                                                                                                     |
+| type           |  string  |     true     | Must be "cloud-sql-admin".                                                                                                                     |
 | defaultProject |  string  |     false    | The Google Cloud project ID to use for Cloud SQL infrastructure tools.                                                                         |
 | useClientOAuth |  boolean |     false    | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
 
@@ -8029,14 +8062,14 @@ allowing tools to execute SQL queries against it.
 ## Example
 
 ```yaml
-sources:
-    my-couchbase-instance:
-        kind: couchbase
-        connectionString: couchbase://localhost
-        bucket: travel-sample
-        scope: inventory
-        username: Administrator
-        password: password
+kind: sources
+name: my-couchbase-instance
+type: couchbase
+connectionString: couchbase://localhost
+bucket: travel-sample
+scope: inventory
+username: Administrator
+password: password
 ```
 
 {{< notice note >}}
@@ -8048,7 +8081,7 @@ Connections](https://docs.couchbase.com/java-sdk/current/howtos/managing-connect
 
 | **field**            | **type** | **required** | **description**                                                                                                                                                                                                                                                                                                                                                                          |
 |----------------------|:--------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind                 |  string  |     true     | Must be "couchbase".                                                                                                                                                                                                                                                                                                                                                                     |
+| type                 |  string  |     true     | Must be "couchbase".                                                                                                                                                                                                                                                                                                                                                                     |
 | connectionString     |  string  |     true     | Connection string for the Couchbase cluster.                                                                                                                                                                                                                                                                                                                                             |
 | bucket               |  string  |     true     | Name of the bucket to connect to.                                                                                                                                                                                                                                                                                                                                                        |
 | scope                |  string  |     true     | Name of the scope within the bucket.                                                                                                                                                                                                                                                                                                                                                     |
@@ -8085,10 +8118,10 @@ applying artificial intelligence and machine learning.
 ## Example
 
 ```yaml
-sources:
-  my-dataplex-source:
-    kind: "dataplex"
-    project: "my-project-id"
+kind: sources
+name: my-dataplex-source
+type: "dataplex"
+project: "my-project-id"
 ```
 
 ## Sample System Prompt
@@ -8417,7 +8450,7 @@ This abbreviated syntax works for the qualified predicates except for `label` in
 
 | **field** | **type** | **required** | **description**                                                                  |
 |-----------|:--------:|:------------:|----------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "dataplex".                                                              |
+| type      |  string  |     true     | Must be "dataplex".                                                              |
 | project   |  string  |     true     | ID of the GCP project used for quota and billing purposes (e.g. "my-project-id").|
 
 
@@ -8469,14 +8502,14 @@ and user credentials for that namespace.
 ## Example
 
 ```yaml
-sources:
-    my-dgraph-source:
-        kind: dgraph
-        dgraphUrl: https://xxxx.cloud.dgraph.io
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        apiKey: ${API_KEY}
-        namespace : 0
+kind: sources
+name: my-dgraph-source
+type: dgraph
+dgraphUrl: https://xxxx.cloud.dgraph.io
+user: ${USER_NAME}
+password: ${PASSWORD}
+apiKey: ${API_KEY}
+namespace : 0
 ```
 
 {{< notice tip >}}
@@ -8488,7 +8521,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **Field**   | **Type** | **Required** | **Description**                                                                                  |
 |-------------|:--------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |  string  |     true     | Must be "dgraph".                                                                                |
+| type        |  string  |     true     | Must be "dgraph".                                                                                |
 | dgraphUrl   |  string  |     true     | Connection URI (e.g. "<https://xxx.cloud.dgraph.io>", "<https://localhost:8080>").               |
 | user        |  string  |     false    | Name of the Dgraph user to connect as (e.g., "groot").                                           |
 | password    |  string  |     false    | Password of the Dgraph user (e.g., "password").                                                  |
@@ -8551,19 +8584,19 @@ applying permissions to an API key.
 ## Example
 
 ```yaml
-sources:
-  my-elasticsearch-source:
-    kind: "elasticsearch"
-    addresses:
-      - "http://localhost:9200"
-    apikey: "my-api-key"
+kind: sources
+name: my-elasticsearch-source
+type: "elasticsearch"
+addresses:
+  - "http://localhost:9200"
+apikey: "my-api-key"
 ```
 
 ## Reference
 
 | **field** | **type** | **required** | **description**                            |
 |-----------|:--------:|:------------:|--------------------------------------------|
-| kind      |  string  |     true     | Must be "elasticsearch".                   |
+| type      |  string  |     true     | Must be "elasticsearch".                   |
 | addresses | []string |     true     | List of Elasticsearch hosts to connect to. |
 | apikey    |  string  |     true     | The API key to use for authentication.     |
 
@@ -8601,14 +8634,14 @@ user][fb-users] to login to the database with.
 ## Example
 
 ```yaml
-sources:
-    my_firebird_db:
-        kind: firebird
-        host: "localhost"
-        port: 3050
-        database: "/path/to/your/database.fdb"
-        user: ${FIREBIRD_USER}
-        password: ${FIREBIRD_PASS}
+kind: sources
+name: my_firebird_db
+type: firebird
+host: "localhost"
+port: 3050
+database: "/path/to/your/database.fdb"
+user: ${FIREBIRD_USER}
+password: ${FIREBIRD_PASS}
 ```
 
 {{< notice tip >}}
@@ -8620,7 +8653,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                              |
 |-----------|:--------:|:------------:|------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "firebird".                                                          |
+| type      |  string  |     true     | Must be "firebird".                                                          |
 | host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1")                                  |
 | port      |  string  |     true     | Port to connect to (e.g. "3050")                                             |
 | database  |  string  |     true     | Path to the Firebird database file (e.g. "/var/lib/firebird/data/test.fdb"). |
@@ -8686,18 +8719,18 @@ database named `(default)` will be used.
 ## Example
 
 ```yaml
-sources:
-  my-firestore-source:
-    kind: "firestore"
-    project: "my-project-id"
-    # database: "my-database"  # Optional, defaults to "(default)"
+kind: sources
+name: my-firestore-source
+type: "firestore"
+project: "my-project-id"
+# database: "my-database"  # Optional, defaults to "(default)"
 ```
 
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                                                          |
 |-----------|:--------:|:------------:|----------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "firestore".                                                                                     |
+| type      |  string  |     true     | Must be "firestore".                                                                                     |
 | project   |  string  |     true     | Id of the GCP project that contains the Firestore database (e.g. "my-project-id").                       |
 | database  |  string  |     false    | Name of the Firestore database to connect to. Defaults to "(default)" if not specified.                  |
 
@@ -8718,22 +8751,23 @@ Authentication can be handled in two ways:
 ## Example
 
 ```yaml
-sources:
-  my-gda-source:
-    kind: cloud-gemini-data-analytics
-    projectId: my-project-id
-
-  my-oauth-gda-source:
-    kind: cloud-gemini-data-analytics
-    projectId: my-project-id
-    useClientOAuth: true
+kind: sources
+name: my-gda-source
+type: cloud-gemini-data-analytics
+projectId: my-project-id
+---
+kind: sources
+name: my-oauth-gda-source
+type: cloud-gemini-data-analytics
+projectId: my-project-id
+useClientOAuth: true
 ```
 
 ## Reference
 
 | **field**      | **type** | **required** | **description**                                                                                                                                                              |
 | -------------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| kind           |  string  |     true     | Must be "cloud-gemini-data-analytics".                                                                                                                                       |
+| type           |  string  |     true     | Must be "cloud-gemini-data-analytics".                                                                                                                                       |
 | projectId      |  string  |     true     | The Google Cloud Project ID where the API is enabled.                                                                                                                        |
 | useClientOAuth | boolean  |    false     | If true, the source uses the token provided by the caller (forwarded to the API). Otherwise, it uses server-side Application Default Credentials (ADC). Defaults to `false`. |
 
@@ -8756,18 +8790,18 @@ and other HTTP-accessible resources.
 ## Example
 
 ```yaml
-sources:
-  my-http-source:
-    kind: http
-    baseUrl: https://api.example.com/data
-    timeout: 10s # default to 30s
-    headers:
-      Authorization: Bearer ${API_KEY}
-      Content-Type: application/json
-    queryParams:
-      param1: value1
-      param2: value2
-    # disableSslVerification: false
+kind: sources
+name: my-http-source
+type: http
+baseUrl: https://api.example.com/data
+timeout: 10s # default to 30s
+headers:
+  Authorization: Bearer ${API_KEY}
+  Content-Type: application/json
+queryParams:
+  param1: value1
+  param2: value2
+# disableSslVerification: false
 ```
 
 {{< notice tip >}}
@@ -8779,7 +8813,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**              |     **type**      | **required** | **description**                                                                                                                    |
 |------------------------|:-----------------:|:------------:|------------------------------------------------------------------------------------------------------------------------------------|
-| kind                   |      string       |     true     | Must be "http".                                                                                                                    |
+| type                   |      string       |     true     | Must be "http".                                                                                                                    |
 | baseUrl                |      string       |     true     | The base URL for the HTTP requests (e.g., `https://api.example.com`).                                                              |
 | timeout                |      string       |    false     | The timeout for HTTP requests (e.g., "5s", "1m", refer to [ParseDuration][parse-duration-doc] for more examples). Defaults to 30s. |
 | headers                | map[string]string |    false     | Default headers to include in the HTTP requests.                                                                                   |
@@ -8843,16 +8877,16 @@ To initialize the application default credential run `gcloud auth login
 ## Example
 
 ```yaml
-sources:
-    my-looker-source:
-        kind: looker
-        base_url: http://looker.example.com
-        client_id: ${LOOKER_CLIENT_ID}
-        client_secret: ${LOOKER_CLIENT_SECRET}
-        project: ${LOOKER_PROJECT}
-        location: ${LOOKER_LOCATION}
-        verify_ssl: true
-        timeout: 600s
+kind: sources
+name: my-looker-source
+type: looker
+base_url: http://looker.example.com
+client_id: ${LOOKER_CLIENT_ID}
+client_secret: ${LOOKER_CLIENT_SECRET}
+project: ${LOOKER_PROJECT}
+location: ${LOOKER_LOCATION}
+verify_ssl: true
+timeout: 600s
 ```
 
 The Looker base url will look like "https://looker.example.com", don't include
@@ -8880,7 +8914,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**            | **type** | **required** | **description**                                                                                                                                     |
 |----------------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind                 |  string  |     true     | Must be "looker".                                                                                                                                   |
+| type                 |  string  |     true     | Must be "looker".                                                                                                                                   |
 | base_url             |  string  |     true     | The URL of your Looker server with no trailing /.                                                                                                   |
 | client_id            |  string  |    false     | The client id assigned by Looker.                                                                                                                   |
 | client_secret        |  string  |    false     | The client secret assigned by Looker.                                                                                                               |
@@ -8935,18 +8969,18 @@ MariaDB user][mariadb-users] to log in to the database.
 ## Example
 
 ```yaml
-sources:
-    my_mariadb_db:
-        kind: mysql
-        host: 127.0.0.1
-        port: 3306
-        database: my_db
-        user: ${MARIADB_USER}
-        password: ${MARIADB_PASS}
-        # Optional TLS and other driver parameters. For example, enable preferred TLS:
-        # queryParams:
-        #     tls: preferred
-        queryTimeout: 30s # Optional: query timeout duration
+kind: sources
+name: my_mariadb_db
+type: mysql
+host: 127.0.0.1
+port: 3306
+database: my_db
+user: ${MARIADB_USER}
+password: ${MARIADB_PASS}
+# Optional TLS and other driver parameters. For example, enable preferred TLS:
+# queryParams:
+#     tls: preferred
+queryTimeout: 30s # Optional: query timeout duration
 ```
 
 {{< notice tip >}}
@@ -8958,7 +8992,7 @@ Use environment variables instead of committing credentials to source files.
 
 | **field**    | **type** | **required** | **description**                                                                                 |
 | ------------ | :------: | :----------: | ----------------------------------------------------------------------------------------------- |
-| kind         |  string  |     true     | Must be `mysql`.                                                                                |
+| type         |  string  |     true     | Must be `mysql`.                                                                                |
 | host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
 | port         |  string  |     true     | Port to connect to (e.g. "3307").                                                               |
 | database     |  string  |     true     | Name of the MariaDB database to connect to (e.g. "my_db").                                        |
@@ -9091,15 +9125,15 @@ can omit the password field.
 ## Example
 
 ```yaml
-sources:
-    my-mindsdb-source:
-        kind: mindsdb
-        host: 127.0.0.1
-        port: 3306
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD} # Optional: omit if MindsDB is configured without authentication
-        queryTimeout: 30s # Optional: query timeout duration
+kind: sources
+name: my-mindsdb-source
+type: mindsdb
+host: 127.0.0.1
+port: 3306
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD} # Optional: omit if MindsDB is configured without authentication
+queryTimeout: 30s # Optional: query timeout duration
 ```
 
 ### Working Configuration Example
@@ -9107,13 +9141,13 @@ sources:
 Here's a working configuration that has been tested:
 
 ```yaml
-sources:
-  my-pg-source:
-    kind: mindsdb
-    host: 127.0.0.1
-    port: 47335
-    database: files
-    user: mindsdb
+kind: sources
+name: my-pg-source
+type: mindsdb
+host: 127.0.0.1
+port: 47335
+database: files
+user: mindsdb
 ```
 
 {{< notice tip >}}
@@ -9142,7 +9176,7 @@ With MindsDB integration, you can:
 
 | **field**    | **type** | **required** | **description**                                                                                              |
 |--------------|:--------:|:------------:|--------------------------------------------------------------------------------------------------------------|
-| kind         |  string  |     true     | Must be "mindsdb".                                                                                           |
+| type         |  string  |     true     | Must be "mindsdb".                                                                                           |
 | host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                                 |
 | port         |  string  |     true     | Port to connect to (e.g. "3306").                                                                            |
 | database     |  string  |     true     | Name of the MindsDB database to connect to (e.g. "my_db").                                                   |
@@ -9170,10 +9204,10 @@ flexible, JSON-like documents, making it easy to develop and scale applications.
 ## Example
 
 ```yaml
-sources:
-    my-mongodb:
-        kind: mongodb
-        uri: "mongodb+srv://username:password@host.mongodb.net"       
+kind: sources
+name: my-mongodb
+type: mongodb
+uri: "mongodb+srv://username:password@host.mongodb.net"       
 
 ```
 
@@ -9181,7 +9215,7 @@ sources:
 
 | **field** | **type** | **required** | **description**                                                   |
 |-----------|:--------:|:------------:|-------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "mongodb".                                                |
+| type      |  string  |     true     | Must be "mongodb".                                                |
 | uri       |  string  |     true     | connection string to connect to MongoDB                           |
 
 
@@ -9232,18 +9266,18 @@ MySQL user][mysql-users] to login to the database with.
 ## Example
 
 ```yaml
-sources:
-    my-mysql-source:
-        kind: mysql
-        host: 127.0.0.1
-        port: 3306
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        # Optional TLS and other driver parameters. For example, enable preferred TLS:
-        # queryParams:
-        #     tls: preferred
-        queryTimeout: 30s # Optional: query timeout duration
+kind: sources
+name: my-mysql-source
+type: mysql
+host: 127.0.0.1
+port: 3306
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
+# Optional TLS and other driver parameters. For example, enable preferred TLS:
+# queryParams:
+#     tls: preferred
+queryTimeout: 30s # Optional: query timeout duration
 ```
 
 {{< notice tip >}}
@@ -9255,7 +9289,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**    | **type** | **required** | **description**                                                                                 |
 | ------------ | :------: | :----------: | ----------------------------------------------------------------------------------------------- |
-| kind         |  string  |     true     | Must be "mysql".                                                                                |
+| type         |  string  |     true     | Must be "mysql".                                                                                |
 | host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
 | port         |  string  |     true     | Port to connect to (e.g. "3306").                                                               |
 | database     |  string  |     true     | Name of the MySQL database to connect to (e.g. "my_db").                                        |
@@ -9295,13 +9329,13 @@ user if available.
 ## Example
 
 ```yaml
-sources:
-    my-neo4j-source:
-        kind: neo4j
-        uri: neo4j+s://xxxx.databases.neo4j.io:7687
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        database: "neo4j"
+kind: sources
+name: my-neo4j-source
+type: neo4j
+uri: neo4j+s://xxxx.databases.neo4j.io:7687
+user: ${USER_NAME}
+password: ${PASSWORD}
+database: "neo4j"
 ```
 
 {{< notice tip >}}
@@ -9313,7 +9347,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                      |
 |-----------|:--------:|:------------:|----------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "neo4j".                                                     |
+| type      |  string  |     true     | Must be "neo4j".                                                     |
 | uri       |  string  |     true     | Connect URI ("bolt://localhost", "neo4j+s://xxx.databases.neo4j.io") |
 | user      |  string  |     true     | Name of the Neo4j user to connect as (e.g. "neo4j").                 |
 | password  |  string  |     true     | Password of the Neo4j user (e.g. "my-password").                     |
@@ -9351,15 +9385,15 @@ with SSL).
 ## Example
 
 ```yaml
-sources:
-    my-oceanbase-source:
-        kind: oceanbase
-        host: 127.0.0.1
-        port: 2881
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        queryTimeout: 30s # Optional: query timeout duration
+kind: sources
+name: my-oceanbase-source
+type: oceanbase
+host: 127.0.0.1
+port: 2881
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
+queryTimeout: 30s # Optional: query timeout duration
 ```
 
 {{< notice tip >}}
@@ -9371,7 +9405,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**    | **type** | **required** | **description**                                                                                 |
 | ------------ | :------: | :----------: |-------------------------------------------------------------------------------------------------|
-| kind         |  string  |     true     | Must be "oceanbase".                                                                            |
+| type         |  string  |     true     | Must be "oceanbase".                                                                            |
 | host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
 | port         |  string  |     true     | Port to connect to (e.g. "2881").                                                               |
 | database     |  string  |     true     | Name of the OceanBase database to connect to (e.g. "my_db").                                    |
@@ -9491,27 +9525,27 @@ using a TNS (Transparent Network Substrate) alias.
 This example demonstrates the four connection methods you could choose from:
 
 ```yaml
-sources:
-    my-oracle-source:
-        kind: oracle
-        
-        # --- Choose one connection method ---
-        # 1. Host, Port, and Service Name
-        host: 127.0.0.1
-        port: 1521
-        serviceName: XEPDB1
+kind: sources
+name: my-oracle-source
+type: oracle
 
-        # 2. Direct Connection String
-        connectionString: "127.0.0.1:1521/XEPDB1"
+# --- Choose one connection method ---
+# 1. Host, Port, and Service Name
+host: 127.0.0.1
+port: 1521
+serviceName: XEPDB1
 
-        # 3. TNS Alias (requires tnsnames.ora)
-        tnsAlias: "MY_DB_ALIAS"
-        tnsAdmin: "/opt/oracle/network/admin" # Optional: overrides TNS_ADMIN env var
+# 2. Direct Connection String
+connectionString: "127.0.0.1:1521/XEPDB1"
 
-        user: ${USER_NAME}
-        password: ${PASSWORD}
+# 3. TNS Alias (requires tnsnames.ora)
+tnsAlias: "MY_DB_ALIAS"
+tnsAdmin: "/opt/oracle/network/admin" # Optional: overrides TNS_ADMIN env var
 
-        # Optional: Set to true to use the OCI-based driver for advanced features (Requires Oracle Instant Client)
+user: ${USER_NAME}
+password: ${PASSWORD}
+
+# Optional: Set to true to use the OCI-based driver for advanced features (Requires Oracle Instant Client)
 ```
 
 ### Using an Oracle Wallet
@@ -9523,15 +9557,15 @@ Oracle Wallet allows you to store credentails used for database connection. Depe
 The `go-ora` driver uses the `walletLocation` field to connect to a database secured with an Oracle Wallet without standard username and password.
 
 ```yaml
-sources:
-    pure-go-wallet:
-        kind: oracle
-        connectionString: "127.0.0.1:1521/XEPDB1"
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        # The TNS Alias is often required to connect to a service registered in tnsnames.ora
-        tnsAlias: "SECURE_DB_ALIAS"
-        walletLocation: "/path/to/my/wallet/directory"
+kind: sources
+name: pure-go-wallet
+type: oracle
+connectionString: "127.0.0.1:1521/XEPDB1"
+user: ${USER_NAME}
+password: ${PASSWORD}
+# The TNS Alias is often required to connect to a service registered in tnsnames.ora
+tnsAlias: "SECURE_DB_ALIAS"
+walletLocation: "/path/to/my/wallet/directory"
 ```
 
 #### OCI-Based Driver (`useOCI: true`) - Oracle Wallet
@@ -9539,15 +9573,15 @@ sources:
 For the OCI-based driver, wallet authentication is triggered by setting tnsAdmin to the wallet directory and connecting via a tnsAlias. 
 
 ```yaml
-sources:
-    oci-wallet:
-        kind: oracle
-        connectionString: "127.0.0.1:1521/XEPDB1"
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        tnsAlias: "WALLET_DB_ALIAS"
-        tnsAdmin: "/opt/oracle/wallet" # Directory containing tnsnames.ora, sqlnet.ora, and wallet files
-        useOCI: true
+kind: sources
+name: oci-wallet
+type: oracle
+connectionString: "127.0.0.1:1521/XEPDB1"
+user: ${USER_NAME}
+password: ${PASSWORD}
+tnsAlias: "WALLET_DB_ALIAS"
+tnsAdmin: "/opt/oracle/wallet" # Directory containing tnsnames.ora, sqlnet.ora, and wallet files
+useOCI: true
 ```
 
 {{< notice tip >}}
@@ -9559,7 +9593,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**        | **type** | **required** | **description**                                                                                                                                                                         |
 |------------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind             |  string  |     true     | Must be "oracle".                                                                                                                                                                       |
+| type             |  string  |     true     | Must be "oracle".                                                                                                                                                                       |
 | user             |  string  |     true     | Name of the Oracle user to connect as (e.g. "my-oracle-user").                                                                                                                          |
 | password         |  string  |     true     | Password of the Oracle user (e.g. "my-password").                                                                                                                                       |
 | host             |  string  |    false     | IP address or hostname to connect to (e.g. "127.0.0.1"). Required if not using `connectionString` or `tnsAlias`.                                                                        |
@@ -9675,14 +9709,14 @@ PostgreSQL user][pg-users] to login to the database with.
 ## Example
 
 ```yaml
-sources:
-    my-pg-source:
-        kind: postgres
-        host: 127.0.0.1
-        port: 5432
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
+kind: sources
+name: my-pg-source
+type: postgres
+host: 127.0.0.1
+port: 5432
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
 ```
 
 {{< notice tip >}}
@@ -9694,7 +9728,7 @@ instead of hardcoding your secrets into the configuration file.
 
 |  **field**  |      **type**      | **required** | **description**                                                        |
 |-------------|:------------------:|:------------:|------------------------------------------------------------------------|
-| kind        |       string       |     true     | Must be "postgres".                                                    |
+| type        |       string       |     true     | Must be "postgres".                                                    |
 | host        |       string       |     true     | IP address to connect to (e.g. "127.0.0.1")                            |
 | port        |       string       |     true     | Port to connect to (e.g. "5432")                                       |
 | database    |       string       |     true     | Name of the Postgres database to connect to (e.g. "my_db").            |
@@ -9733,16 +9767,16 @@ connections must authenticate in order to connect.
 Specify your AUTH string in the password field:
 
 ```yaml
-sources:
-    my-redis-instance:
-     kind: redis
-     address:
-       - 127.0.0.1:6379
-     username: ${MY_USER_NAME}
-     password: ${MY_AUTH_STRING} # Omit this field if you don't have a password.
-     # database: 0
-     # clusterEnabled: false
-     # useGCPIAM: false
+kind: sources
+name: my-redis-instance
+type: redis
+address:
+  - 127.0.0.1:6379
+username: ${MY_USER_NAME}
+password: ${MY_AUTH_STRING} # Omit this field if you don't have a password.
+# database: 0
+# clusterEnabled: false
+# useGCPIAM: false
 ```
 
 {{< notice tip >}}
@@ -9758,14 +9792,14 @@ string.
 Here is an example tools.yaml config with [AUTH][auth] enabled:
 
 ```yaml
-sources:
-    my-redis-cluster-instance:
-     kind: memorystore-redis
-     address:
-       - 127.0.0.1:6379
-     password: ${MY_AUTH_STRING}
-     # useGCPIAM: false
-     # clusterEnabled: false
+kind: sources
+name: my-redis-cluster-instance
+type: memorystore-redis
+address:
+  - 127.0.0.1:6379
+password: ${MY_AUTH_STRING}
+# useGCPIAM: false
+# clusterEnabled: false
 ```
 
 Memorystore Redis Cluster supports IAM authentication instead. Grant your
@@ -9775,13 +9809,13 @@ Here is an example tools.yaml config for Memorystore Redis Cluster instances
 using IAM authentication:
 
 ```yaml
-sources:
-    my-redis-cluster-instance:
-     kind: memorystore-redis
-     address:
-       - 127.0.0.1:6379
-     useGCPIAM: true
-     clusterEnabled: true
+kind: sources
+name: my-redis-cluster-instance
+type: memorystore-redis
+address:
+  - 127.0.0.1:6379
+useGCPIAM: true
+clusterEnabled: true
 ```
 
 [iam]: https://cloud.google.com/memorystore/docs/cluster/about-iam-auth
@@ -9790,7 +9824,7 @@ sources:
 
 | **field**      | **type** | **required** | **description**                                                                                                                 |
 |----------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------|
-| kind           |  string  |     true     | Must be "memorystore-redis".                                                                                                    |
+| type           |  string  |     true     | Must be "memorystore-redis".                                                                                                    |
 | address        |  string  |     true     | Primary endpoint for the Memorystore Redis instance to connect to.                                                              |
 | username       |  string  |    false     | If you are using a non-default user, specify the user name here. If you are using Memorystore for Redis, leave this field blank |
 | password       |  string  |    false     | If you have [Redis AUTH][auth] enabled, specify the AUTH string here                                                            |
@@ -9848,18 +9882,18 @@ set up your ADC.
 ## Example
 
 ```yaml
-sources:
-  my-serverless-spark-source:
-    kind: serverless-spark
-    project: my-project-id
-    location: us-central1
+kind: sources
+name: my-serverless-spark-source
+type: serverless-spark
+project: my-project-id
+location: us-central1
 ```
 
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                   |
 | --------- | :------: | :----------: | ----------------------------------------------------------------- |
-| kind      |  string  |     true     | Must be "serverless-spark".                                       |
+| type      |  string  |     true     | Must be "serverless-spark".                                       |
 | project   |  string  |     true     | ID of the GCP project with Serverless for Apache Spark resources. |
 | location  |  string  |     true     | Location containing Serverless for Apache Spark resources.        |
 
@@ -9901,15 +9935,15 @@ database user][singlestore-user] to login to the database with.
 ## Example
 
 ```yaml
-sources:
-    my-singlestore-source:
-        kind: singlestore
-        host: 127.0.0.1
-        port: 3306
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        queryTimeout: 30s # Optional: query timeout duration
+kind: sources
+name: my-singlestore-source
+type: singlestore
+host: 127.0.0.1
+port: 3306
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
+queryTimeout: 30s # Optional: query timeout duration
 ```
 
 {{< notice tip >}}
@@ -9921,7 +9955,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**    | **type** | **required** | **description**                                                                                 |
 |--------------|:--------:|:------------:|-------------------------------------------------------------------------------------------------|
-| kind         |  string  |     true     | Must be "singlestore".                                                                          |
+| type         |  string  |     true     | Must be "singlestore".                                                                          |
 | host         |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                    |
 | port         |  string  |     true     | Port to connect to (e.g. "3306").                                                               |
 | database     |  string  |     true     | Name of the SingleStore database to connect to (e.g. "my_db").                                  |
@@ -9958,16 +9992,16 @@ Snowflake user to login to the database with.
 ## Example
 
 ```yaml
-sources:
-    my-sf-source:
-        kind: snowflake
-        account: ${SNOWFLAKE_ACCOUNT}
-        user: ${SNOWFLAKE_USER}
-        password: ${SNOWFLAKE_PASSWORD}
-        database: ${SNOWFLAKE_DATABASE}
-        schema: ${SNOWFLAKE_SCHEMA}
-        warehouse: ${SNOWFLAKE_WAREHOUSE}
-        role: ${SNOWFLAKE_ROLE}
+kind: sources
+name: my-sf-source
+type: snowflake
+account: ${SNOWFLAKE_ACCOUNT}
+user: ${SNOWFLAKE_USER}
+password: ${SNOWFLAKE_PASSWORD}
+database: ${SNOWFLAKE_DATABASE}
+schema: ${SNOWFLAKE_SCHEMA}
+warehouse: ${SNOWFLAKE_WAREHOUSE}
+role: ${SNOWFLAKE_ROLE}
 ```
 
 {{< notice tip >}}
@@ -9979,7 +10013,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                        |
 |-----------|:--------:|:------------:|------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "snowflake".                                                   |
+| type      |  string  |     true     | Must be "snowflake".                                                   |
 | account   |  string  |     true     | Your Snowflake account identifier.                                     |
 | user      |  string  |     true     | Name of the Snowflake user to connect as (e.g. "my-sf-user").          |
 | password  |  string  |     true     | Password of the Snowflake user (e.g. "my-password").                   |
@@ -10049,20 +10083,20 @@ applying IAM permissions and roles to an identity.
 ## Example
 
 ```yaml
-sources:
-    my-spanner-source:
-        kind: "spanner"
-        project: "my-project-id"
-        instance: "my-instance"
-        database: "my_db"
-        # dialect: "googlesql"
+kind: sources
+name: my-spanner-source
+type: "spanner"
+project: "my-project-id"
+instance: "my-instance"
+database: "my_db"
+# dialect: "googlesql"
 ```
 
 ## Reference
 
 | **field** | **type** | **required** | **description**                                                                                                     |
 |-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "spanner".                                                                                                  |
+| type      |  string  |     true     | Must be "spanner".                                                                                                  |
 | project   |  string  |     true     | Id of the GCP project that the cluster was created in (e.g. "my-project-id").                                       |
 | instance  |  string  |     true     | Name of the Spanner instance.                                                                                       |
 | database  |  string  |     true     | Name of the database on the Spanner instance                                                                        |
@@ -10145,15 +10179,15 @@ SQL Server user][mssql-users] to login to the database with.
 ## Example
 
 ```yaml
-sources:
-    my-mssql-source:
-        kind: mssql
-        host: 127.0.0.1
-        port: 1433
-        database: my_db
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        # encrypt: strict
+kind: sources
+name: my-mssql-source
+type: mssql
+host: 127.0.0.1
+port: 1433
+database: my_db
+user: ${USER_NAME}
+password: ${PASSWORD}
+# encrypt: strict
 ```
 
 {{< notice tip >}}
@@ -10165,7 +10199,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                                                                                                                                                                                                                          |
 |-----------|:--------:|:------------:|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "mssql".                                                                                                                                                                                                                                                         |
+| type      |  string  |     true     | Must be "mssql".                                                                                                                                                                                                                                                         |
 | host      |  string  |     true     | IP address to connect to (e.g. "127.0.0.1").                                                                                                                                                                                                                             |
 | port      |  string  |     true     | Port to connect to (e.g. "1433").                                                                                                                                                                                                                                        |
 | database  |  string  |     true     | Name of the SQL Server database to connect to (e.g. "my_db").                                                                                                                                                                                                            |
@@ -10218,19 +10252,19 @@ You need a SQLite database file. This can be:
 ## Example
 
 ```yaml
-sources:
-    my-sqlite-db:
-        kind: "sqlite"
-        database: "/path/to/database.db"
+kind: sources
+name: my-sqlite-db
+type: "sqlite"
+database: "/path/to/database.db"
 ```
 
 For an in-memory database:
 
 ```yaml
-sources:
-    my-sqlite-memory-db:
-        kind: "sqlite"
-        database: ":memory:"
+kind: sources
+name: my-sqlite-memory-db
+type: "sqlite"
+database: ":memory:"
 ```
 
 ## Reference
@@ -10239,7 +10273,7 @@ sources:
 
 | **field** | **type** | **required** | **description**                                                                                                     |
 |-----------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "sqlite".                                                                                                   |
+| type      |  string  |     true     | Must be "sqlite".                                                                                                   |
 | database  |  string  |     true     | Path to SQLite database file, or ":memory:" for an in-memory database.                                              |
 
 ### Connection Properties
@@ -10293,29 +10327,29 @@ console.
 - TiDB Cloud
 
     ```yaml
-    sources:
-        my-tidb-cloud-source:
-            kind: tidb
-            host: gateway01.us-west-2.prod.aws.tidbcloud.com
-            port: 4000
-            database: my_db
-            user: ${TIDB_USERNAME}
-            password: ${TIDB_PASSWORD}
-            # SSL is automatically enabled for TiDB Cloud
+    kind: sources
+    name: my-tidb-cloud-source
+    type: tidb
+    host: gateway01.us-west-2.prod.aws.tidbcloud.com
+    port: 4000
+    database: my_db
+    user: ${TIDB_USERNAME}
+    password: ${TIDB_PASSWORD}
+    # SSL is automatically enabled for TiDB Cloud    
     ```
 
 - Self-Hosted TiDB
 
     ```yaml
-    sources:
-        my-tidb-source:
-            kind: tidb
-            host: 127.0.0.1
-            port: 4000
-            database: my_db
-            user: ${TIDB_USERNAME}
-            password: ${TIDB_PASSWORD}
-            # ssl: true  # Optional: enable SSL for secure connections
+    kind: sources
+    name: my-tidb-source
+    type: tidb
+    host: 127.0.0.1
+    port: 4000
+    database: my_db
+    user: ${TIDB_USERNAME}
+    password: ${TIDB_PASSWORD}
+    # ssl: true  # Optional: enable SSL for secure connections    
     ```
 
 {{< notice tip >}}
@@ -10327,7 +10361,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                                            |
 |-----------|:--------:|:------------:|--------------------------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "tidb".                                                                            |
+| type      |  string  |     true     | Must be "tidb".                                                                            |
 | host      |  string  |     true     | IP address or hostname to connect to (e.g. "127.0.0.1" or "gateway01.*.tidbcloud.com").    |
 | port      |  string  |     true     | Port to connect to (typically "4000" for TiDB).                                            |
 | database  |  string  |     true     | Name of the TiDB database to connect to (e.g. "my_db").                                    |
@@ -10366,15 +10400,15 @@ the catalogs and schemas you want to query.
 ## Example
 
 ```yaml
-sources:
-    my-trino-source:
-    kind: trino
-    host: trino.example.com
-    port: "8080"
-    user: ${TRINO_USER}  # Optional for anonymous access
-    password: ${TRINO_PASSWORD}  # Optional
-    catalog: hive
-    schema: default
+kind: sources
+name: my-trino-source
+type: trino
+host: trino.example.com
+port: "8080"
+user: ${TRINO_USER}  # Optional for anonymous access
+password: ${TRINO_PASSWORD}  # Optional
+catalog: hive
+schema: default
 ```
 
 {{< notice tip >}}
@@ -10386,7 +10420,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**              | **type** | **required** | **description**                                                              |
 | ---------------------- | :------: | :----------: | ---------------------------------------------------------------------------- |
-| kind                   |  string  |     true     | Must be "trino".                                                             |
+| type                   |  string  |     true     | Must be "trino".                                                             |
 | host                   |  string  |     true     | Trino coordinator hostname (e.g. "trino.example.com")                        |
 | port                   |  string  |     true     | Trino coordinator port (e.g. "8080", "8443")                                 |
 | user                   |  string  |    false     | Username for authentication (e.g. "analyst"). Optional for anonymous access. |
@@ -10425,16 +10459,16 @@ the [official Valkey website](https://valkey.io/topics/quickstart/).
 ## Example
 
 ```yaml
-sources:
-    my-valkey-instance:
-     kind: valkey
-     address:
-       - 127.0.0.1:6379
-     username: ${YOUR_USERNAME}
-     password: ${YOUR_PASSWORD}
-     # database: 0
-     # useGCPIAM: false
-     # disableCache: false
+kind: sources
+name: my-valkey-instance
+type: valkey
+address:
+  - 127.0.0.1:6379
+username: ${YOUR_USERNAME}
+password: ${YOUR_PASSWORD}
+# database: 0
+# useGCPIAM: false
+# disableCache: false
 ```
 
 {{< notice tip >}}
@@ -10449,12 +10483,12 @@ authentication. Grant your account the required [IAM role][iam] and set
 `useGCPIAM` to `true`:
 
 ```yaml
-sources:
-    my-valkey-instance:
-     kind: valkey
-     address:
-       - 127.0.0.1:6379
-     useGCPIAM: true
+kind: sources
+name: my-valkey-instance
+type: valkey
+address:
+  - 127.0.0.1:6379
+useGCPIAM: true
 ```
 
 [iam]: https://cloud.google.com/memorystore/docs/valkey/about-iam-auth
@@ -10463,7 +10497,7 @@ sources:
 
 | **field**    | **type** | **required** | **description**                                                                                                                  |
 |--------------|:--------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------|
-| kind         |  string  |     true     | Must be "valkey".                                                                                                                |
+| type         |  string  |     true     | Must be "valkey".                                                                                                                |
 | address      | []string |     true     | Endpoints for the Valkey instance to connect to.                                                                                 |
 | username     |  string  |    false     | If you are using a non-default user, specify the user name here. If you are using Memorystore for Valkey, leave this field blank |
 | password     |  string  |    false     | Password for the Valkey instance                                                                                                 |
@@ -10487,23 +10521,23 @@ compatibility.
 ## Example
 
 ```yaml
-sources:
-    my-yb-source:
-        kind: yugabytedb
-        host: 127.0.0.1
-        port: 5433
-        database: yugabyte
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        loadBalance: true
-        topologyKeys: cloud.region.zone1:1,cloud.region.zone2:2
+kind: sources
+name: my-yb-source
+type: yugabytedb
+host: 127.0.0.1
+port: 5433
+database: yugabyte
+user: ${USER_NAME}
+password: ${PASSWORD}
+loadBalance: true
+topologyKeys: cloud.region.zone1:1,cloud.region.zone2:2
 ```
 
 ## Reference
 
 | **field**                    | **type** | **required** | **description**                                                                                                                                                       |
 |------------------------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind                         |  string  |     true     | Must be "yugabytedb".                                                                                                                                                 |
+| type                         |  string  |     true     | Must be "yugabytedb".                                                                                                                                                 |
 | host                         |  string  |     true     | IP address to connect to.                                                                                                                                             |
 | port                         | integer  |     true     | Port to connect to. The default port is 5433.                                                                                                                         |
 | database                     |  string  |     true     | Name of the YugabyteDB database to connect to. The default database name is yugabyte.                                                                                 |
@@ -10567,12 +10601,12 @@ ${ENV_NAME} instead of hardcoding your API keys into the configuration file.
 Define an embedding model in the `embeddingModels` section:
 
 ```yaml
-embeddingModels:
-  gemini-model: # Name of the embedding model
-    kind: gemini
-    model: gemini-embedding-001
-    apiKey: ${GOOGLE_API_KEY}
-    dimension: 768
+kind: embeddingModels
+name: gemini-model # Name of the embedding model
+type: gemini
+model: gemini-embedding-001
+apiKey: ${GOOGLE_API_KEY}
+dimension: 768
 ```
 
 ### Step 2 - Embed Tool Parameters
@@ -10581,38 +10615,39 @@ Use the defined embedding model, embed your query parameters using the
 `embeddedBy` field. Only string-typed parameters can be embedded:
 
 ```yaml
-tools:
-  # Vector ingestion tool
-  insert_embedding:
-    kind: postgres-sql
-    source: my-pg-instance
-    statement: |
-      INSERT INTO documents (content, embedding) 
-      VALUES ($1, $2);
-    parameters:
-      - name: content
-        type: string
-        description: The raw text content to be stored in the database.
-      - name: vector_string
-        type: string
-        # This parameter is hidden from the LLM.
-        # It automatically copies the value from 'content' and embeds it.
-        valueFromParam: content
-        embeddedBy: gemini-model
-
-  # Semantic search tool
-  search_embedding:
-    kind: postgres-sql
-    source: my-pg-instance
-    statement: |
-      SELECT id, content, embedding <-> $1 AS distance 
-      FROM documents
-      ORDER BY distance LIMIT 1
-    parameters:
-      - name: semantic_search_string
-        type: string
-        description: The search query that will be converted to a vector.
-        embeddedBy: gemini-model # refers to the name of a defined embedding model
+# Vector ingestion tool
+kind: tools
+name: insert_embedding
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  INSERT INTO documents (content, embedding) 
+  VALUES ($1, $2);
+parameters:
+  - name: content
+    type: string
+    description: The raw text content to be stored in the database.
+  - name: vector_string
+    type: string
+    # This parameter is hidden from the LLM.
+    # It automatically copies the value from 'content' and embeds it.
+    valueFromParam: content
+    embeddedBy: gemini-model
+---
+# Semantic search tool
+kind: tools
+name: search_embedding
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  SELECT id, content, embedding <-> $1 AS distance 
+  FROM documents
+  ORDER BY distance LIMIT 1
+parameters:
+  - name: semantic_search_string
+    type: string
+    description: The search query that will be converted to a vector.
+    embeddedBy: gemini-model # refers to the name of a defined embedding model
 ```
 
 ## Kinds of Embedding Models
@@ -10666,12 +10701,12 @@ information.
 ## Example
 
 ```yaml
-embeddingModels:
-  gemini-model:
-    kind: gemini
-    model: gemini-embedding-001
-    apiKey: ${GOOGLE_API_KEY}
-    dimension: 768
+kind: embeddingModels
+name: gemini-model
+type: gemini
+model: gemini-embedding-001
+apiKey: ${GOOGLE_API_KEY}
+dimension: 768
 ```
 
 {{< notice tip >}}
@@ -10683,7 +10718,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                              |
 |-----------|:--------:|:------------:|--------------------------------------------------------------|
-| kind      |  string  |     true     | Must be `gemini`.                                            |
+| type      |  string  |     true     | Must be `gemini`.                                            |
 | model     |  string  |     true     | The Gemini model ID to use (e.g., `gemini-embedding-001`).   |
 | apiKey    |  string  |    false     | Your API Key from Google AI Studio.                          |
 | dimension | integer  |    false     | The number of dimensions in the output vector (e.g., `768`). |
@@ -10698,41 +10733,41 @@ statement. You can define Tools as a map in the `tools` section of your
 `tools.yaml` file. Typically, a tool will require a source to act on:
 
 ```yaml
-tools:
- search_flights_by_number:
-    kind: postgres-sql
-    source: my-pg-instance
-    statement: |
-      SELECT * FROM flights
-      WHERE airline = $1
-      AND flight_number = $2
-      LIMIT 10
-    description: |
-      Use this tool to get information for a specific flight.
-      Takes an airline code and flight number and returns info on the flight.
-      Do NOT use this tool with a flight id. Do NOT guess an airline code or flight number.
-      An airline code is a code for an airline service consisting of a two-character
-      airline designator and followed by a flight number, which is a 1 to 4 digit number.
-      For example, if given CY 0123, the airline is "CY", and flight_number is "123".
-      Another example for this is DL 1234, the airline is "DL", and flight_number is "1234".
-      If the tool returns more than one option choose the date closest to today.
-      Example:
-      {{
-          "airline": "CY",
-          "flight_number": "888",
-      }}
-      Example:
-      {{
-          "airline": "DL",
-          "flight_number": "1234",
-      }}
-    parameters:
-      - name: airline
-        type: string
-        description: Airline unique 2 letter identifier
-      - name: flight_number
-        type: string
-        description: 1 to 4 digit number
+kind: tools
+name: search_flights_by_number
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  SELECT * FROM flights
+  WHERE airline = $1
+  AND flight_number = $2
+  LIMIT 10
+description: |
+  Use this tool to get information for a specific flight.
+  Takes an airline code and flight number and returns info on the flight.
+  Do NOT use this tool with a flight id. Do NOT guess an airline code or flight number.
+  An airline code is a code for an airline service consisting of a two-character
+  airline designator and followed by a flight number, which is a 1 to 4 digit number.
+  For example, if given CY 0123, the airline is "CY", and flight_number is "123".
+  Another example for this is DL 1234, the airline is "DL", and flight_number is "1234".
+  If the tool returns more than one option choose the date closest to today.
+  Example:
+  {{
+      "airline": "CY",
+      "flight_number": "888",
+  }}
+  Example:
+  {{
+      "airline": "DL",
+      "flight_number": "1234",
+  }}
+parameters:
+  - name: airline
+    type: string
+    description: Airline unique 2 letter identifier
+  - name: flight_number
+    type: string
+    description: 1 to 4 digit number
 ```
 
 ## Specifying Parameters
@@ -10741,13 +10776,13 @@ Parameters for each Tool will define what inputs the agent will need to provide
 to invoke them. Parameters should be pass as a list of Parameter objects:
 
 ```yaml
-    parameters:
-      - name: airline
-        type: string
-        description: Airline unique 2 letter identifier
-      - name: flight_number
-        type: string
-        description: 1 to 4 digit number
+parameters:
+  - name: airline
+    type: string
+    description: Airline unique 2 letter identifier
+  - name: flight_number
+    type: string
+    description: 1 to 4 digit number
 ```
 
 ### Basic Parameters
@@ -10757,10 +10792,10 @@ most cases, the description will be provided to the LLM as context on specifying
 the parameter.
 
 ```yaml
-    parameters:
-      - name: airline
-        type: string
-        description: Airline unique 2 letter identifier
+parameters:
+  - name: airline
+    type: string
+    description: Airline unique 2 letter identifier
 ```
 
 | **field**      |    **type**    | **required** | **description**                                                                                                                                                                                                                        |
@@ -10783,16 +10818,16 @@ To use the `array` type, you must also specify what kind of items are
 in the list using the items field:
 
 ```yaml
-    parameters:
-      - name: preferred_airlines
-        type: array
-        description: A list of airline, ordered by preference.
-        items:
-          name: name
-          type: string
-          description: Name of the airline.
-    statement: |
-      SELECT * FROM airlines WHERE preferred_airlines = ANY($1);
+parameters:
+  - name: preferred_airlines
+    type: array
+    description: A list of airline, ordered by preference.
+    items:
+      name: name
+      type: string
+      description: Name of the airline.
+statement: |
+  SELECT * FROM airlines WHERE preferred_airlines = ANY($1);
 ```
 
 | **field**      |     **type**     | **required** | **description**                                                            |
@@ -10827,10 +10862,10 @@ This is the default behavior when valueType is omitted. It's useful for passing
 a flexible group of settings.
 
 ```yaml
-    parameters:
-          - name: execution_context
-            type: map
-            description: A flexible set of key-value pairs for the execution environment.
+parameters:
+  - name: execution_context
+    type: map
+    description: A flexible set of key-value pairs for the execution environment.
 ```
 
 #### Typed Map
@@ -10839,11 +10874,11 @@ Specify valueType to ensure all values in the map are of the same type. An error
 will be thrown in case of value type mismatch.
 
 ```yaml
- parameters:
-      - name: user_scores
-        type: map
-        description: A map of user IDs to their scores. All scores must be integers.
-        valueType: integer # This enforces the value type for all entries.
+parameters:
+  - name: user_scores
+    type: map
+    description: A map of user IDs to their scores. All scores must be integers.
+    valueType: integer # This enforces the value type for all entries.
 ```
 
 ### Authenticated Parameters
@@ -10857,21 +10892,21 @@ the required [authServices](../authServices/) to specific claims within the
 user's ID token.
 
 ```yaml
-  tools:
-    search_flights_by_user_id:
-        kind: postgres-sql
-        source: my-pg-instance
-        statement: |
-          SELECT * FROM flights WHERE user_id = $1
-        parameters:
-          - name: user_id
-            type: string
-            description: Auto-populated from Google login
-            authServices:
-              # Refer to one of the `authServices` defined
-              - name: my-google-auth
-              # `sub` is the OIDC claim field for user ID
-                field: sub
+kind: tools
+name: search_flights_by_user_id
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  SELECT * FROM flights WHERE user_id = $1
+parameters:
+  - name: user_id
+    type: string
+    description: Auto-populated from Google login
+    authServices:
+      # Refer to one of the `authServices` defined
+      - name: my-google-auth
+        # `sub` is the OIDC claim field for user ID
+        field: sub
 ```
 
 | **field** | **type** | **required** | **description**                                                                  |
@@ -10908,31 +10943,31 @@ can use `minValue` and `maxValue` to define the allowable range.
 {{< /notice >}}
 
 ```yaml
-tools:
- select_columns_from_table:
-    kind: postgres-sql
-    source: my-pg-instance
-    statement: |
-      SELECT {{array .columnNames}} FROM {{.tableName}}
-    description: |
-      Use this tool to list all information from a specific table.
-      Example:
-      {{
-          "tableName": "flights",
-          "columnNames": ["id", "name"]
-      }}
-    templateParameters:
-      - name: tableName
-        type: string
-        description: Table to select from
-      - name: columnNames
-        type: array
-        description: The columns to select
-        items:
-          name: column
-          type: string
-          description: Name of a column to select
-          escape: double-quotes # with this, the statement will resolve to `SELECT "id", "name" FROM flights`
+kind: tools
+name: select_columns_from_table
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  SELECT {{array .columnNames}} FROM {{.tableName}}
+description: |
+  Use this tool to list all information from a specific table.
+  Example:
+  {{
+      "tableName": "flights",
+      "columnNames": ["id", "name"]
+  }}
+templateParameters:
+  - name: tableName
+    type: string
+    description: Table to select from
+  - name: columnNames
+    type: array
+    description: The columns to select
+    items:
+      name: column
+      type: string
+      description: Name of a column to select
+      escape: double-quotes # with this, the statement will resolve to `SELECT "id", "name" FROM flights`
 ```
 
 | **field**      |     **type**     |  **required**   | **description**                                                                     |
@@ -10953,16 +10988,16 @@ specifying an `authRequired` field. Specify a list of
 [authServices](../authServices/) defined in the previous section.
 
 ```yaml
-tools:
-  search_all_flight:
-      kind: postgres-sql
-      source: my-pg-instance
-      statement: |
-        SELECT * FROM flights
-      # A list of `authServices` defined previously
-      authRequired:
-        - my-google-auth
-        - other-auth-service
+kind: tools
+name: search_all_flight
+type: postgres-sql
+source: my-pg-instance
+statement: |
+  SELECT * FROM flights
+# A list of `authServices` defined previously
+authRequired:
+  - my-google-auth
+  - other-auth-service
 ```
 
 ## Kinds of tools
@@ -11178,22 +11213,22 @@ federated database capabilities.
 Here's a complete working configuration that has been tested:
 
 ```yaml
-sources:
-  my-pg-source:
-    kind: mindsdb
-    host: 127.0.0.1
-    port: 47335
-    database: files
-    user: mindsdb
-
-tools:
-  mindsdb-execute-sql:
-    kind: mindsdb-execute-sql
-    source: my-pg-source
-    description: |
-      Execute SQL queries directly on MindsDB database.
-      Use this tool to run any SQL statement against your MindsDB instance.
-      Example: SELECT * FROM my_table LIMIT 10
+kind: sources
+name: my-pg-source
+type: mindsdb
+host: 127.0.0.1
+port: 47335
+database: files
+user: mindsdb
+---
+kind: tools
+name: mindsdb-execute-sql
+type: mindsdb-execute-sql
+source: my-pg-source
+description: |
+  Execute SQL queries directly on MindsDB database.
+  Use this tool to run any SQL statement against your MindsDB instance.
+  Example: SELECT * FROM my_table LIMIT 10
 ```
 
 
@@ -11357,14 +11392,14 @@ can be sent to a Large Language Model (LLM). The Toolbox server implements the
 specification, allowing clients to discover and retrieve these prompts.
 
 ```yaml
-prompts:
-  code_review:
-    description: "Asks the LLM to analyze code quality and suggest improvements."
-    messages:
-      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
-    arguments:
-      - name: "code"
-        description: "The code to review"
+kind: prompts
+name: code_review
+description: "Asks the LLM to analyze code quality and suggest improvements."
+messages:
+  - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+arguments:
+  - name: "code"
+    description: "The code to review"
 ```
 
 ## Prompt Schema
@@ -11372,7 +11407,7 @@ prompts:
 | **field**   | **type**                       | **required** | **description**                                                          |
 |-------------|--------------------------------|--------------|--------------------------------------------------------------------------|
 | description | string                         | No           | A brief explanation of what the prompt does.                             |
-| kind        | string                         | No           | The kind of prompt. Defaults to `"custom"`.                              |
+| type        | string                         | No           | The type of prompt. Defaults to `"custom"`.                              |
 | messages    | [][Message](#message-schema)   | Yes          | A list of one or more message objects that make up the prompt's content. |
 | arguments   | [][Argument](#argument-schema) | No           | A list of arguments that can be interpolated into the prompt's content.  |
 
@@ -11437,14 +11472,14 @@ Here is an example of a simple prompt that takes a single argument, code, and
 asks an LLM to review it.
 
 ```yaml
-prompts:
-  code_review:
-    description: "Asks the LLM to analyze code quality and suggest improvements."
-    messages:
-      - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
-    arguments:
-      - name: "code"
-        description: "The code to review"
+kind: prompts
+name: code_review
+description: "Asks the LLM to analyze code quality and suggest improvements."
+messages:
+  - content: "Please review the following code for quality, correctness, and potential improvements: \n\n{{.code}}"
+arguments:
+  - name: "code"
+    description: "The code to review"
 ```
 
 ### Multi-message prompt
@@ -11453,19 +11488,19 @@ You can define prompts with multiple messages to set up more complex
 conversational contexts, like a role-playing scenario.
 
 ```yaml
-prompts:
-  roleplay_scenario:
-    description: "Sets up a roleplaying scenario with initial messages."
-    arguments:
-      - name: "character"
-        description: "The character the AI should embody."
-      - name: "situation"
-        description: "The initial situation for the roleplay."
-    messages:
-      - role: "user"
-        content: "Let's roleplay. You are {{.character}}. The situation is: {{.situation}}"
-      - role: "assistant"
-        content: "Okay, I understand. I am ready. What happens next?"
+kind: prompts
+name: roleplay_scenario
+description: "Sets up a roleplaying scenario with initial messages."
+arguments:
+  - name: "character"
+    description: "The character the AI should embody."
+  - name: "situation"
+    description: "The initial situation for the roleplay."
+messages:
+  - role: "user"
+    content: "Let's roleplay. You are {{.character}}. The situation is: {{.situation}}"
+  - role: "assistant"
+    content: "Okay, I understand. I am ready. What happens next?"
 ```
 
 ## Reference
@@ -11474,7 +11509,7 @@ prompts:
 
 | **field**   | **type**                       | **required** | **description**                                                          |
 |-------------|--------------------------------|--------------|--------------------------------------------------------------------------|
-| kind        | string                         | No           | The kind of prompt. Must be `"custom"`.                                  |
+| type        | string                         | No           | The type of prompt. Must be `"custom"`.                                  |
 | description | string                         | No           | A brief explanation of what the prompt does.                             |
 | messages    | [][Message](#message-schema)   | Yes          | A list of one or more message objects that make up the prompt's content. |
 | arguments   | [][Argument](#argument-schema) | No           | A list of arguments that can be interpolated into the prompt's content.  |
@@ -11638,16 +11673,16 @@ First, define the data source for your tools. This tells Toolbox how to connect
 to your AlloyDB instance.
 
 ```yaml
-sources:
-  alloydb-pg-source:
-    kind: alloydb-postgres
-    project: YOUR_PROJECT_ID
-    region: YOUR_REGION
-    cluster: YOUR_CLUSTER
-    instance: YOUR_INSTANCE
-    database: YOUR_DATABASE
-    user: YOUR_USER
-    password: YOUR_PASSWORD
+kind: sources
+name: alloydb-pg-source
+type: alloydb-postgres
+project: YOUR_PROJECT_ID
+region: YOUR_REGION
+cluster: YOUR_CLUSTER
+instance: YOUR_INSTANCE
+database: YOUR_DATABASE
+user: YOUR_USER
+password: YOUR_PASSWORD
 ```
 
 Next, define the tools the agent can use. We will categorize them into three
@@ -11660,76 +11695,77 @@ structured queries like managing a shopping cart. Add the following to your
 `tools.yaml` file:
 
 ```yaml
-tools:
-
-  access-cart-information:
-    kind: postgres-sql
-    source: alloydb-pg-source
-    description: >-
-      List items in customer cart.
-      Use this tool to list items in a customer cart. This tool requires the cart ID.
-    parameters:
-      - name: cart_id
-        type: integer
-        description: The id of the cart.
-    statement: |
-      SELECT
-        p.name AS product_name,
-        ci.quantity,
-        ci.price AS item_price,
-        (ci.quantity * ci.price) AS total_item_price,
-        c.created_at AS cart_created_at,
-        ci.product_id AS product_id
-      FROM
-        cart_items ci JOIN cart c ON ci.cart_id = c.cart_id
-        JOIN products p ON ci.product_id = p.product_id
-      WHERE
-        c.cart_id = $1;
-
-  add-to-cart:
-    kind: postgres-sql
-    source: alloydb-pg-source
-    description: >-
-      Add items to customer cart using the product ID and product prices from the product list.
-      Use this tool to add items to a customer cart.
-      This tool requires the cart ID, product ID, quantity, and price.
-    parameters:
-      - name: cart_id
-        type: integer
-        description: The id of the cart.
-      - name: product_id
-        type: integer
-        description: The id of the product.
-      - name: quantity
-        type: integer
-        description: The quantity of items to add.
-      - name: price
-        type: float
-        description: The price of items to add.
-    statement: |
-      INSERT INTO
-        cart_items (cart_id, product_id, quantity, price)
-      VALUES($1,$2,$3,$4);
-
-  delete-from-cart:
-    kind: postgres-sql
-    source: alloydb-pg-source
-    description: >-
-      Remove products from customer cart.
-      Use this tool to remove products from a customer cart.
-      This tool requires the cart ID and product ID.
-    parameters:
-      - name: cart_id
-        type: integer
-        description: The id of the cart.
-      - name: product_id
-        type: integer
-        description: The id of the product.
-    statement: |
-      DELETE FROM
-        cart_items
-      WHERE
-        cart_id = $1 AND product_id = $2;
+kind: tools
+name: access-cart-information
+type: postgres-sql
+source: alloydb-pg-source
+description: >-
+  List items in customer cart.
+  Use this tool to list items in a customer cart. This tool requires the cart ID.
+parameters:
+  - name: cart_id
+    type: integer
+    description: The id of the cart.
+statement: |
+  SELECT
+    p.name AS product_name,
+    ci.quantity,
+    ci.price AS item_price,
+    (ci.quantity * ci.price) AS total_item_price,
+    c.created_at AS cart_created_at,
+    ci.product_id AS product_id
+  FROM
+    cart_items ci JOIN cart c ON ci.cart_id = c.cart_id
+    JOIN products p ON ci.product_id = p.product_id
+  WHERE
+    c.cart_id = $1;
+---
+kind: tools
+name: add-to-cart
+type: postgres-sql
+source: alloydb-pg-source
+description: >-
+  Add items to customer cart using the product ID and product prices from the product list.
+  Use this tool to add items to a customer cart.
+  This tool requires the cart ID, product ID, quantity, and price.
+parameters:
+  - name: cart_id
+    type: integer
+    description: The id of the cart.
+  - name: product_id
+    type: integer
+    description: The id of the product.
+  - name: quantity
+    type: integer
+    description: The quantity of items to add.
+  - name: price
+    type: float
+    description: The price of items to add.
+statement: |
+  INSERT INTO
+    cart_items (cart_id, product_id, quantity, price)
+  VALUES($1,$2,$3,$4);
+---
+kind: tools
+name: delete-from-cart
+type: postgres-sql
+source: alloydb-pg-source
+description: >-
+  Remove products from customer cart.
+  Use this tool to remove products from a customer cart.
+  This tool requires the cart ID and product ID.
+parameters:
+  - name: cart_id
+    type: integer
+    description: The id of the cart.
+  - name: product_id
+    type: integer
+    description: The id of the product.
+statement: |
+  DELETE FROM
+    cart_items
+  WHERE
+    cart_id = $1 AND product_id = $2;
 ```
 
 ### 2. Semantic Search Tools
@@ -11739,27 +11775,28 @@ meaning of a user's query, rather than just keywords. Append the following tools
 to the `tools` section in your `tools.yaml`:
 
 ```yaml
-  search-product-recommendations:
-    kind: postgres-sql
-    source: alloydb-pg-source
-    description: >-
-      Search for products based on user needs.
-      Use this tool to search for products. This tool requires the user's needs.
-    parameters:
-      - name: query
-        type: string
-        description: The product characteristics
-    statement: |
-      SELECT
-        product_id,
-        name,
-        description,
-        ROUND(CAST(price AS numeric), 2) as price
-      FROM
-        products
-      ORDER BY
-        embedding('gemini-embedding-001', $1)::vector <=> embedding
-      LIMIT 5;
+kind: tools
+name: search-product-recommendations
+type: postgres-sql
+source: alloydb-pg-source
+description: >-
+  Search for products based on user needs.
+  Use this tool to search for products. This tool requires the user's needs.
+parameters:
+  - name: query
+    type: string
+    description: The product characteristics
+statement: |
+  SELECT
+    product_id,
+    name,
+    description,
+    ROUND(CAST(price AS numeric), 2) as price
+  FROM
+    products
+  ORDER BY
+    embedding('gemini-embedding-001', $1)::vector <=> embedding
+  LIMIT 5;
 ```
 
 ### 3. Natural Language to SQL (NL2SQL) Tools
@@ -11781,27 +11818,29 @@ to the `tools` section in your `tools.yaml`:
    section:
 
 ```yaml
-  ask-questions-about-products:
-    kind: alloydb-ai-nl
-    source: alloydb-pg-source
-    nlConfig: flower_shop
-    description: >-
-      Ask questions related to products or brands.
-      Use this tool to ask questions about products or brands.
-      Always SELECT the IDs of objects when generating queries.
+kind: tools
+name: ask-questions-about-products
+type: alloydb-ai-nl
+source: alloydb-pg-source
+nlConfig: flower_shop
+description: >-
+  Ask questions related to products or brands.
+  Use this tool to ask questions about products or brands.
+  Always SELECT the IDs of objects when generating queries.
 ```
 
 Finally, group the tools into a `toolset` to make them available to the model.
 Add the following to the end of your `tools.yaml` file:
 
 ```yaml
-toolsets:
-  flower_shop:
-    - access-cart-information
-    - search-product-recommendations
-    - ask-questions-about-products
-    - add-to-cart
-    - delete-from-cart
+kind: toolsets
+name: flower_shop
+tools:
+  - access-cart-information
+  - search-product-recommendations
+  - ask-questions-about-products
+  - add-to-cart
+  - delete-from-cart
 ```
 
 For more info on tools, check out the
@@ -12070,66 +12109,75 @@ to use BigQuery, and then run the Toolbox server.
     {{< /notice >}}
 
     ```yaml
-    sources:
-      my-bigquery-source:
-        kind: bigquery
-        project: YOUR_PROJECT_ID
-        location: us
-    tools:
-      search-hotels-by-name:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: Search for hotels based on name.
-        parameters:
-          - name: name
-            type: string
-            description: The name of the hotel.
-        statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(name) LIKE LOWER(CONCAT('%', @name, '%'));
-      search-hotels-by-location:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: Search for hotels based on location.
-        parameters:
-          - name: location
-            type: string
-            description: The location of the hotel.
-        statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(location) LIKE LOWER(CONCAT('%', @location, '%'));
-      book-hotel:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: >-
-           Book a hotel by its ID. If the hotel is successfully booked, returns a NULL, raises an error if not.
-        parameters:
-          - name: hotel_id
-            type: integer
-            description: The ID of the hotel to book.
-        statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = TRUE WHERE id = @hotel_id;
-      update-hotel:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: >-
-          Update a hotel's check-in and check-out dates by its ID. Returns a message indicating whether the hotel was successfully updated or not.
-        parameters:
-          - name: checkin_date
-            type: string
-            description: The new check-in date of the hotel.
-          - name: checkout_date
-            type: string
-            description: The new check-out date of the hotel.
-          - name: hotel_id
-            type: integer
-            description: The ID of the hotel to update.
-        statement: >-
-          UPDATE `YOUR_DATASET_NAME.hotels` SET checkin_date = PARSE_DATE('%Y-%m-%d', @checkin_date), checkout_date = PARSE_DATE('%Y-%m-%d', @checkout_date) WHERE id = @hotel_id;
-      cancel-hotel:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: Cancel a hotel by its ID.
-        parameters:
-          - name: hotel_id
-            type: integer
-            description: The ID of the hotel to cancel.
-        statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = FALSE WHERE id = @hotel_id;
+    kind: sources
+    name: my-bigquery-source
+    type: bigquery
+    project: YOUR_PROJECT_ID
+    location: us
+    ---
+    kind: tools
+    name: search-hotels-by-name
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: Search for hotels based on name.
+    parameters:
+        - name: name
+        type: string
+        description: The name of the hotel.
+    statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(name) LIKE LOWER(CONCAT('%', @name, '%'));
+    ---
+    kind: tools
+    name: search-hotels-by-location
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: Search for hotels based on location.
+    parameters:
+        - name: location
+        type: string
+        description: The location of the hotel.
+    statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(location) LIKE LOWER(CONCAT('%', @location, '%'));
+    ---
+    kind: tools
+    name: book-hotel
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: >-
+        Book a hotel by its ID. If the hotel is successfully booked, returns a NULL, raises an error if not.
+    parameters:
+        - name: hotel_id
+        type: integer
+        description: The ID of the hotel to book.
+    statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = TRUE WHERE id = @hotel_id;
+    ---
+    kind: tools
+    name: update-hotel
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: >-
+        Update a hotel's check-in and check-out dates by its ID. Returns a message indicating whether the hotel was successfully updated or not.
+    parameters:
+        - name: checkin_date
+        type: string
+        description: The new check-in date of the hotel.
+        - name: checkout_date
+        type: string
+        description: The new check-out date of the hotel.
+        - name: hotel_id
+        type: integer
+        description: The ID of the hotel to update.
+    statement: >-
+        UPDATE `YOUR_DATASET_NAME.hotels` SET checkin_date = PARSE_DATE('%Y-%m-%d', @checkin_date), checkout_date = PARSE_DATE('%Y-%m-%d', @checkout_date) WHERE id = @hotel_id;
+    ---
+    kind: tools
+    name: cancel-hotel
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: Cancel a hotel by its ID.
+    parameters:
+        - name: hotel_id
+        type: integer
+        description: The ID of the hotel to cancel.
+    statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = FALSE WHERE id = @hotel_id;
     ```
 
     **Important Note on `toolsets`**: The `tools.yaml` content above does not
@@ -12141,8 +12189,9 @@ to use BigQuery, and then run the Toolbox server.
     ```yaml
     # Add this to your tools.yaml if using load_toolset("my-toolset")
     # Ensure it's at the same indentation level as 'sources:' and 'tools:'
-    toolsets:
-      my-toolset:
+    kind: toolsets
+    name: my-toolset
+    tools:
         - search-hotels-by-name
         - search-hotels-by-location
         - book-hotel
@@ -12194,7 +12243,7 @@ pip install toolbox-llamaindex
 {{< /tab >}}
 {{< tab header="ADK" lang="bash" >}}
 
-pip install google-adk
+pip install google-adk[toolbox]
 {{< /tab >}}
 
 {{< /tabpane >}}
@@ -12234,7 +12283,7 @@ pip install llama-index-llms-google-genai
 
 {{< /tab >}}
 {{< tab header="ADK" lang="bash" >}}
-pip install toolbox-core
+# No other dependencies required for ADK
 {{< /tab >}}
 {{< /tabpane >}}
 
@@ -12476,8 +12525,8 @@ from google.adk.agents import Agent
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.adk.artifacts.in_memory_artifact_service import InMemoryArtifactService
+from google.adk.tools.toolbox_toolset import ToolboxToolset
 from google.genai import types # For constructing message content
-from toolbox_core import ToolboxSyncClient
 
 import os
 os.environ['GOOGLE_GENAI_USE_VERTEXAI'] = 'True'
@@ -12492,46 +12541,45 @@ os.environ['GOOGLE_CLOUD_LOCATION'] = 'us-central1'
 
 # --- Load Tools from Toolbox ---
 
-# TODO(developer): Ensure the Toolbox server is running at <http://127.0.0.1:5000>
+# TODO(developer): Ensure the Toolbox server is running at http://127.0.0.1:5000
+toolset = ToolboxToolset(server_url="http://127.0.0.1:5000")
 
-with ToolboxSyncClient("<http://127.0.0.1:5000>") as toolbox_client:
-    # TODO(developer): Replace "my-toolset" with the actual ID of your toolset as configured in your MCP Toolbox server.
-    agent_toolset = toolbox_client.load_toolset("my-toolset")
+# --- Define the Agent's Prompt ---
+prompt = """
+  You're a helpful hotel assistant. You handle hotel searching, booking and
+  cancellations. When the user searches for a hotel, mention it's name, id,
+  location and price tier. Always mention hotel ids while performing any
+  searches. This is very important for any operations. For any bookings or
+  cancellations, please provide the appropriate confirmation. Be sure to
+  update checkin or checkout dates if mentioned by the user.
+  Don't ask for confirmations from the user.
+"""
 
-    # --- Define the Agent's Prompt ---
-    prompt = """
-      You're a helpful hotel assistant. You handle hotel searching, booking and
-      cancellations. When the user searches for a hotel, mention it's name, id,
-      location and price tier. Always mention hotel ids while performing any
-      searches. This is very important for any operations. For any bookings or
-      cancellations, please provide the appropriate confirmation. Be sure to
-      update checkin or checkout dates if mentioned by the user.
-      Don't ask for confirmations from the user.
-    """
+# --- Configure the Agent ---
 
-    # --- Configure the Agent ---
+root_agent = Agent(
+    model='gemini-2.0-flash-001',
+    name='hotel_agent',
+    description='A helpful AI assistant that can search and book hotels.',
+    instruction=prompt,
+    tools=[toolset], # Pass the loaded toolset
+)
 
-    root_agent = Agent(
-        model='gemini-2.0-flash-001',
-        name='hotel_agent',
-        description='A helpful AI assistant that can search and book hotels.',
-        instruction=prompt,
-        tools=agent_toolset, # Pass the loaded toolset
-    )
+# --- Initialize Services for Running the Agent ---
+session_service = InMemorySessionService()
+artifacts_service = InMemoryArtifactService()
 
-    # --- Initialize Services for Running the Agent ---
-    session_service = InMemorySessionService()
-    artifacts_service = InMemoryArtifactService()
+runner = Runner(
+    app_name='hotel_agent',
+    agent=root_agent,
+    artifact_service=artifacts_service,
+    session_service=session_service,
+)
+
+async def main():
     # Create a new session for the interaction.
-    session = session_service.create_session(
+    session = await session_service.create_session(
         state={}, app_name='hotel_agent', user_id='123'
-    )
-
-    runner = Runner(
-        app_name='hotel_agent',
-        agent=root_agent,
-        artifact_service=artifacts_service,
-        session_service=session_service,
     )
 
     # --- Define Queries and Run the Agent ---
@@ -12556,6 +12604,10 @@ with ToolboxSyncClient("<http://127.0.0.1:5000>") as toolbox_client:
 
         for text in responses:
           print(text)
+
+import asyncio
+if __name__ == "__main__":
+    asyncio.run(main())
 {{< /tab >}}
 {{< /tabpane >}}
 
@@ -12704,73 +12756,84 @@ In this section, we will download Toolbox, configure our tools in a
     {{< /notice >}}
 
     ```yaml
-    sources:
-      my-bigquery-source:
-        kind: bigquery
-        project: YOUR_PROJECT_ID
-        location: us
+    kind: sources
+    name: my-bigquery-source
+    type: bigquery
+    project: YOUR_PROJECT_ID
+    location: us
+    ---
+    kind: tools
+    name: search-hotels-by-name
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: Search for hotels based on name.
+    parameters:
+      - name: name
+        type: string
+        description: The name of the hotel.
+    statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(name) LIKE LOWER(CONCAT('%', @name, '%'));
+    ---
+    kind: tools
+    name: search-hotels-by-location
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: Search for hotels based on location.
+    parameters:
+      - name: location
+        type: string
+        description: The location of the hotel.
+    statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(location) LIKE LOWER(CONCAT('%', @location, '%'));
+    ---
+    kind: tools
+    name: book-hotel
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: >-
+        Book a hotel by its ID. If the hotel is successfully booked, returns a NULL, raises an error if not.
+    parameters:
+      - name: hotel_id
+        type: integer
+        description: The ID of the hotel to book.
+    statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = TRUE WHERE id = @hotel_id;
+    ---
+    kind: tools
+    name: update-hotel
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: >-
+      Update a hotel's check-in and check-out dates by its ID. Returns a message indicating whether the hotel was successfully updated or not.
+    parameters:
+      - name: checkin_date
+        type: string
+        description: The new check-in date of the hotel.
+      - name: checkout_date
+        type: string
+        description: The new check-out date of the hotel.
+      - name: hotel_id
+        type: integer
+        description: The ID of the hotel to update.
+    statement: >-
+      UPDATE `YOUR_DATASET_NAME.hotels` SET checkin_date = PARSE_DATE('%Y-%m-%d', @checkin_date), checkout_date = PARSE_DATE('%Y-%m-%d', @checkout_date) WHERE id = @hotel_id;
+    ---
+    kind: tools
+    name: cancel-hotel
+    type: bigquery-sql
+    source: my-bigquery-source
+    description: Cancel a hotel by its ID.
+    parameters:
+      - name: hotel_id
+        type: integer
+        description: The ID of the hotel to cancel.
+    statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = FALSE WHERE id = @hotel_id;
+    ---
+    kind: toolsets
+    name: my-toolset
     tools:
-      search-hotels-by-name:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: Search for hotels based on name.
-        parameters:
-          - name: name
-            type: string
-            description: The name of the hotel.
-        statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(name) LIKE LOWER(CONCAT('%', @name, '%'));
-      search-hotels-by-location:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: Search for hotels based on location.
-        parameters:
-          - name: location
-            type: string
-            description: The location of the hotel.
-        statement: SELECT * FROM `YOUR_DATASET_NAME.hotels` WHERE LOWER(location) LIKE LOWER(CONCAT('%', @location, '%'));
-      book-hotel:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: >-
-           Book a hotel by its ID. If the hotel is successfully booked, returns a NULL, raises an error if not.
-        parameters:
-          - name: hotel_id
-            type: integer
-            description: The ID of the hotel to book.
-        statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = TRUE WHERE id = @hotel_id;
-      update-hotel:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: >-
-          Update a hotel's check-in and check-out dates by its ID. Returns a message indicating whether the hotel was successfully updated or not.
-        parameters:
-          - name: checkin_date
-            type: string
-            description: The new check-in date of the hotel.
-          - name: checkout_date
-            type: string
-            description: The new check-out date of the hotel.
-          - name: hotel_id
-            type: integer
-            description: The ID of the hotel to update.
-        statement: >-
-          UPDATE `YOUR_DATASET_NAME.hotels` SET checkin_date = PARSE_DATE('%Y-%m-%d', @checkin_date), checkout_date = PARSE_DATE('%Y-%m-%d', @checkout_date) WHERE id = @hotel_id;
-      cancel-hotel:
-        kind: bigquery-sql
-        source: my-bigquery-source
-        description: Cancel a hotel by its ID.
-        parameters:
-          - name: hotel_id
-            type: integer
-            description: The ID of the hotel to cancel.
-        statement: UPDATE `YOUR_DATASET_NAME.hotels` SET booked = FALSE WHERE id = @hotel_id;
-    toolsets:
-      my-toolset:
-        - search-hotels-by-name
-        - search-hotels-by-location
-        - book-hotel
-        - update-hotel
-        - cancel-hotel
+      - search-hotels-by-name
+      - search-hotels-by-location
+      - book-hotel
+      - update-hotel
+      - cancel-hotel
     ```
 
     For more info on tools, check out the
@@ -13244,37 +13307,38 @@ Write the following into a `tools.yaml` file:
 \+
 
 ```yaml
-sources:
-  my-neo4j-source:
-    kind: neo4j
-    uri: bolt://localhost:7687
-    user: neo4j
-    password: my-password # Replace with your actual password
-
-tools:
-  search-movies-by-actor:
-    kind: neo4j-cypher
-    source: my-neo4j-source
-    description: "Searches for movies an actor has appeared in based on their name. Useful for questions like 'What movies has Tom Hanks been in?'"
-    parameters:
-      - name: actor_name
-        type: string
-        description: The full name of the actor to search for.
-    statement: |
-      MATCH (p:Person {name: $actor_name}) -[:ACTED_IN]-> (m:Movie)
-      RETURN m.title AS title, m.year AS year, m.genre AS genre
-  
-  get-actor-for-movie:
-    kind: neo4j-cypher
-    source: my-neo4j-source
-    description: "Finds the actors who starred in a specific movie. Useful for questions like 'Who acted in Inception?'"
-    parameters:
-      - name: movie_title
-        type: string
-        description: The exact title of the movie.
-    statement: |
-      MATCH (p:Person) -[:ACTED_IN]-> (m:Movie {title: $movie_title})
-      RETURN p.name AS actor
+kind: sources
+name: my-neo4j-source
+type: neo4j
+uri: bolt://localhost:7687
+user: neo4j
+password: my-password # Replace with your actual password
+---
+kind: tools
+name: search-movies-by-actor
+type: neo4j-cypher
+source: my-neo4j-source
+description: "Searches for movies an actor has appeared in based on their name. Useful for questions like 'What movies has Tom Hanks been in?'"
+parameters:
+  - name: actor_name
+    type: string
+    description: The full name of the actor to search for.
+statement: |
+  MATCH (p:Person {name: $actor_name}) -[:ACTED_IN]-> (m:Movie)
+  RETURN m.title AS title, m.year AS year, m.genre AS genre
+---
+kind: tools
+name: get-actor-for-movie
+type: neo4j-cypher
+source: my-neo4j-source
+description: "Finds the actors who starred in a specific movie. Useful for questions like 'Who acted in Inception?'"
+parameters:
+  - name: movie_title
+    type: string
+    description: The exact title of the movie.
+statement: |
+  MATCH (p:Person) -[:ACTED_IN]-> (m:Movie {title: $movie_title})
+  RETURN p.name AS actor
 ```
 
 . **Start the Toolbox server.**
@@ -13401,32 +13465,33 @@ You have two options:
 Create a `tools.yaml` file and add the following content. You must replace the placeholders with your actual Snowflake configuration.
 
 ```yaml
-sources:
-  snowflake-source:
-    kind: snowflake
-    account: ${SNOWFLAKE_ACCOUNT}
-    user: ${SNOWFLAKE_USER}
-    password: ${SNOWFLAKE_PASSWORD}
-    database: ${SNOWFLAKE_DATABASE}
-    schema: ${SNOWFLAKE_SCHEMA}
-    warehouse: ${SNOWFLAKE_WAREHOUSE}
-    role: ${SNOWFLAKE_ROLE}
-
-tools:
-    execute_sql:
-        kind: snowflake-execute-sql
-        source: snowflake-source
-        description: Use this tool to execute SQL.
-
-    list_tables:
-        kind: snowflake-sql
-        source: snowflake-source
-        description: "Lists detailed schema information for user-created tables."
-        statement: |
-           SELECT table_name, table_type 
-           FROM information_schema.tables 
-           WHERE table_schema = current_schema()
-           ORDER BY table_name;
+kind: sources
+name: snowflake-source
+type: snowflake
+account: ${SNOWFLAKE_ACCOUNT}
+user: ${SNOWFLAKE_USER}
+password: ${SNOWFLAKE_PASSWORD}
+database: ${SNOWFLAKE_DATABASE}
+schema: ${SNOWFLAKE_SCHEMA}
+warehouse: ${SNOWFLAKE_WAREHOUSE}
+role: ${SNOWFLAKE_ROLE}
+---
+kind: tools
+name: execute_sql
+type: snowflake-execute-sql
+source: snowflake-source
+description: Use this tool to execute SQL.
+---
+kind: tools
+name: list_tables
+type: snowflake-sql
+source: snowflake-source
+description: "Lists detailed schema information for user-created tables."
+statement: |
+    SELECT table_name, table_type 
+    FROM information_schema.tables 
+    WHERE table_schema = current_schema()
+    ORDER BY table_name;
 ```
 
 For more info on tools, check out the
@@ -13530,7 +13595,7 @@ most popular issues, so make sure to +1 ones you are the most interested in.
 ## Can Toolbox be used for non-database tools?
 
 **Yes!** While Toolbox is primarily focused on databases, it also supports generic 
-**HTTP tools** (`kind: http`). These allow you to connect your agents to REST APIs 
+**HTTP tools** (`type: http`). These allow you to connect your agents to REST APIs 
 and other web services, enabling workflows that extend beyond database interactions.
 
 For configuration details, see the [HTTP Tools documentation](../resources/tools/http/http.md).
@@ -13634,7 +13699,7 @@ This page describes the `toolbox` command-line options.
 |              | `--ui`                     | Launches the Toolbox UI web server.                                                                                                                                              |             |
 |              | `--allowed-origins`        | Specifies a list of origins permitted to access this server for CORs access.                                                                                                     | `*`         |
 |              | `--allowed-hosts`          | Specifies a list of hosts permitted to access this server to prevent DNS rebinding attacks.                                                                                      | `*`         |
-|              | `--user-agent-extra`       | Appends additional metadata to the User-Agent.                                                                                                                                   |             |
+|              | `--user-agent-metadata`    | Appends additional metadata to the User-Agent.                                                                                                                                   |             |
 | `-v`         | `--version`                | version for toolbox                                                                                                                                                              |             |
 
 ## Examples
