@@ -1,0 +1,95 @@
+import asyncio
+import re
+import json
+from typing import Callable, Any
+from toolbox_langchain import ToolboxClient
+from toolbox_core.protocol import Protocol
+from langchain_google_vertexai import ChatVertexAI
+from langchain_core.messages import ToolMessage, messages_to_dict
+from langchain.agents import create_agent
+from langchain.agents.middleware import (
+    wrap_tool_call,
+    AgentState
+)
+
+system_prompt = """
+  You're a helpful hotel assistant. You handle hotel searching, booking and
+  cancellations. When the user searches for a hotel, mention it's name, id,
+  location and price tier. Always mention hotel ids while performing any
+  searches. This is very important for any operations. For any bookings or
+  cancellations, please provide the appropriate confirmation. Be sure to
+  update checkin or checkout dates if mentioned by the user.
+  Don't ask for confirmations from the user.
+"""
+
+# Pre processing
+@wrap_tool_call
+async def enforce_business_rules(request, handler):
+    """
+    Business Logic Validation:
+    Enforces max stay duration (e.g., max 14 days).
+    """
+    tool_call = request.tool_call
+    name = tool_call["name"]
+    args = tool_call["args"]
+
+    print(f"POLICY CHECK: Intercepting '{name}'")
+
+    if name == "book-hotel":
+        if "duration_days" in args and int(args["duration_days"]) > 14:
+             print("BLOCKED: Stay too long")
+             return ToolMessage(
+                 content="Error: Maximum stay duration is 14 days.",
+                 tool_call_id=tool_call["id"]
+             )
+
+    return await handler(request)
+
+# Post processing
+@wrap_tool_call
+async def enrich_response(request, handler):
+    """
+    Post-Processing & Enrichment:
+    Adds loyalty points information to successful bookings.
+    Standardizes output format.
+    """
+    result = await handler(request)
+
+    if isinstance(result, ToolMessage):
+        content = str(result.content)
+        tool_name = request.tool_call["name"]
+
+        if tool_name == "book-hotel" and "Error" not in content:
+            loyalty_bonus = 500
+            result.content = f"Booking Confirmed! \n You earned {loyalty_bonus} Loyalty Points with this stay.\n\nSystem Details: {content}"
+
+    return result
+
+
+async def main():
+    async with ToolboxClient("http://127.0.0.1:5000") as client:
+        tools = await client.aload_toolset("my-toolset")
+        model = ChatVertexAI(model="gemini-2.5-flash")
+        agent = create_agent(
+            system_prompt=system_prompt,
+            model=model,
+            tools=tools,
+            middleware=[
+                enforce_business_rules,
+                enrich_response
+            ],
+        )
+
+        user_input = "Book hotel with id 3."
+        response = await agent.ainvoke({"messages": [{"role": "user", "content": user_input}]})
+
+        print("-" * 50)
+        print("Final Client Response:")
+        serializable_response = {
+            "messages": messages_to_dict(response["messages"])
+        }
+        last_ai_msg = response["messages"][-1].content
+        print(f"AI: {last_ai_msg}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
