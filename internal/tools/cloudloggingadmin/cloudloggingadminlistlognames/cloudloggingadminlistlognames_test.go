@@ -14,10 +14,10 @@
 package cloudloggingadminlistlognames_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
-	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -33,18 +33,18 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: cloud-logging-admin-list-log-names
-					source: my-logging-admin-source
-					description: list log names
-					authRequired:
-						- my-google-auth-service
+			kind: tools
+			name: example_tool
+			type: cloud-logging-admin-list-log-names
+			source: my-logging-admin-source
+			description: list log names
+			authRequired:
+				- my-google-auth-service
 			`,
 			want: server.ToolConfigs{
 				"example_tool": cloudloggingadminlistlognames.Config{
 					Name:         "example_tool",
-					Kind:         "cloud-logging-admin-list-log-names",
+					Type:         "cloud-logging-admin-list-log-names",
 					Source:       "my-logging-admin-source",
 					Description:  "list log names",
 					AuthRequired: []string{"my-google-auth-service"},
@@ -54,14 +54,11 @@ func TestParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -79,44 +76,40 @@ func TestFailParseFromYaml(t *testing.T) {
 		err  string
 	}{
 		{
-			desc: "Invalid kind",
+			desc: "Invalid type",
 			in: `
-			tools:
-				example_tool:
-					kind: invalid-kind
-					source: my-instance
-					description: some description
+			kind: tools
+			name: example_tool
+			type: invalid-type
+			source: my-instance
+			description: some description
 			`,
-			err: `unknown tool kind: "invalid-kind"`,
+			err: `unknown tool type: "invalid-type"`,
 		},
 		{
 			desc: "missing source",
 			in: `
-			tools:
-				example_tool:
-					kind: cloud-logging-admin-list-log-names
-					description: some description
+			kind: tools
+			name: example_tool
+			type: cloud-logging-admin-list-log-names
+			description: some description
 			`,
 			err: `Key: 'Config.Source' Error:Field validation for 'Source' failed on the 'required' tag`,
 		},
 		{
 			desc: "missing description",
 			in: `
-			tools:
-				example_tool:
-					kind: cloud-logging-admin-list-log-names
-					source: my-instance
+			kind: tools
+			name: example_tool
+			type: cloud-logging-admin-list-log-names
+			source: my-instance
 			`,
 			err: `Key: 'Config.Description' Error:Field validation for 'Description' failed on the 'required' tag`,
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

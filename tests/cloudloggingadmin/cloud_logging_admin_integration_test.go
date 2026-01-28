@@ -38,7 +38,7 @@ import (
 )
 
 var (
-	LogAdminSourceKind = "cloud-logging-admin"
+	LogAdminSourceType = "cloud-logging-admin"
 	LogAdminProject    = os.Getenv("LOGADMIN_PROJECT")
 )
 
@@ -49,7 +49,7 @@ func getLogAdminVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":    LogAdminSourceKind,
+		"type":    LogAdminSourceType,
 		"project": LogAdminProject,
 	}
 }
@@ -175,28 +175,28 @@ func getCloudLoggingAdminToolsConfig(sourceConfig map[string]any) map[string]any
 		},
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
-				"kind":     "google",
+				"type":     "google",
 				"clientId": tests.ClientId,
 			},
 		},
 		"tools": map[string]any{
 			"list-log-names": map[string]any{
-				"kind":        "cloud-logging-admin-list-log-names",
+				"type":        "cloud-logging-admin-list-log-names",
 				"source":      "my-logging-instance",
 				"description": "Lists log names in the project",
 			},
 			"list-resource-types": map[string]any{
-				"kind":        "cloud-logging-admin-list-resource-types",
+				"type":        "cloud-logging-admin-list-resource-types",
 				"source":      "my-logging-instance",
 				"description": "Lists monitored resource types",
 			},
 			"query-logs": map[string]any{
-				"kind":        "cloud-logging-admin-query-logs",
+				"type":        "cloud-logging-admin-query-logs",
 				"source":      "my-logging-instance",
 				"description": "Queries log entries",
 			},
 			"auth-list-log-names": map[string]any{
-				"kind":         "cloud-logging-admin-list-log-names",
+				"type":         "cloud-logging-admin-list-log-names",
 				"source":       "my-logging-instance",
 				"authRequired": []string{"my-google-auth"},
 				"description":  "Lists log names with authentication",

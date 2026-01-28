@@ -17,18 +17,18 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-tools:
-  list_resource_types:
-    kind: cloud-logging-admin-list-resource-types
-    source: my-cloud-logging
-    description: Lists monitored resource types.
+kind: tools
+name: list_resource_types
+type: cloud-logging-admin-list-resource-types
+source: my-cloud-logging
+description: Lists monitored resource types.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "cloud-logging-admin-list-resource-types".|
+| type        |  string  |     true     | Must be "cloud-logging-admin-list-resource-types".|
 | source      |  string  |     true     | Name of the cloud-logging-admin source.            |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 

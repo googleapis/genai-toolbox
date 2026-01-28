@@ -17,18 +17,18 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-tools:
-  list_log_names:
-    kind: cloud-logging-admin-list-log-names
-    source: my-cloud-logging
-    description: Lists all log names in the project.
+kind: tools
+name: list_log_names
+type: cloud-logging-admin-list-log-names
+source: my-cloud-logging
+description: Lists all log names in the project.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "cloud-logging-admin-list-log-names".      |
+| type        |  string  |     true     | Must be "cloud-logging-admin-list-log-names".      |
 | source      |  string  |     true     | Name of the cloud-logging-admin source.            |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 

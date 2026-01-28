@@ -17,18 +17,18 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-tools:
-  query_logs:
-    kind: cloud-logging-admin-query-logs
-    source: my-cloud-logging
-    description: Queries log entries from Cloud Logging.
+kind: tools
+name: query_logs
+type: cloud-logging-admin-query-logs
+source: my-cloud-logging
+description: Queries log entries from Cloud Logging.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "cloud-logging-admin-query-logs".          |
+| type        |  string  |     true     | Must be "cloud-logging-admin-query-logs".          |
 | source      |  string  |     true     | Name of the cloud-logging-admin source.            |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 

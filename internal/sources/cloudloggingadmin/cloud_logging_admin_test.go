@@ -14,9 +14,9 @@
 package cloudloggingadmin_test
 
 import (
+	"context"
 	"testing"
 
-	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudloggingadmin"
@@ -32,15 +32,15 @@ func TestParseFromYamlCloudLoggingAdmin(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-instance:
-					kind: cloud-logging-admin
-					project: my-project
+			kind: sources
+			name: my-instance
+			type: cloud-logging-admin
+			project: my-project
 			`,
 			want: server.SourceConfigs{
 				"my-instance": cloudloggingadmin.Config{
 					Name:    "my-instance",
-					Kind:    cloudloggingadmin.SourceKind,
+					Type:    cloudloggingadmin.SourceType,
 					Project: "my-project",
 				},
 			},
@@ -48,16 +48,16 @@ func TestParseFromYamlCloudLoggingAdmin(t *testing.T) {
 		{
 			desc: "with client oauth",
 			in: `
-			sources:
-				my-instance:
-					kind: cloud-logging-admin
-					project: my-project
-					useClientOAuth: true
+			kind: sources
+			name: my-instance
+			type: cloud-logging-admin
+			project: my-project
+			useClientOAuth: true
 			`,
 			want: server.SourceConfigs{
 				"my-instance": cloudloggingadmin.Config{
 					Name:           "my-instance",
-					Kind:           cloudloggingadmin.SourceKind,
+					Type:           cloudloggingadmin.SourceType,
 					Project:        "my-project",
 					UseClientOAuth: true,
 				},
@@ -66,16 +66,16 @@ func TestParseFromYamlCloudLoggingAdmin(t *testing.T) {
 		{
 			desc: "with service account impersonation",
 			in: `
-			sources:
-				my-instance:
-					kind: cloud-logging-admin
-					project: my-project
-					impersonateServiceAccount: service-account@my-project.iam.gserviceaccount.com
+			kind: sources
+			name: my-instance
+			type: cloud-logging-admin
+			project: my-project
+			impersonateServiceAccount: service-account@my-project.iam.gserviceaccount.com
 			`,
 			want: server.SourceConfigs{
 				"my-instance": cloudloggingadmin.Config{
 					Name:                      "my-instance",
-					Kind:                      cloudloggingadmin.SourceKind,
+					Type:                      cloudloggingadmin.SourceType,
 					Project:                   "my-project",
 					ImpersonateServiceAccount: "service-account@my-project.iam.gserviceaccount.com",
 				},
@@ -84,15 +84,12 @@ func TestParseFromYamlCloudLoggingAdmin(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -107,30 +104,27 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-instance:
-					kind: cloud-logging-admin
-					project: my-project
-					foo: bar
+			kind: sources
+			name: my-instance
+			type: cloud-logging-admin
+			project: my-project
+			foo: bar
 			`,
-			err: "unable to parse source \"my-instance\" as \"cloud-logging-admin\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | kind: cloud-logging-admin\n   3 | project: my-project",
+			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"cloud-logging-admin\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | name: my-instance\n   3 | project: my-project\n   4 | type: cloud-logging-admin",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-instance:
-					kind: cloud-logging-admin
+			kind: sources
+			name: my-instance
+			type: cloud-logging-admin
 			`,
-			err: "unable to parse source \"my-instance\" as \"cloud-logging-admin\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"cloud-logging-admin\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

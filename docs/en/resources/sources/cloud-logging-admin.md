@@ -35,37 +35,37 @@ Authentication can be handled in two ways:
 Initialize a Cloud Logging Admin source that uses ADC:
 
 ```yaml
-sources:
-    my-cloud-logging:
-        kind: cloud-logging-admin
-        project: my-project-id
+kind: sources
+name: my-cloud-logging
+type: cloud-logging-admin
+project: my-project-id
 ```
 
 Initialize a Cloud Logging Admin source that uses client-side OAuth:
 
 ```yaml
-sources:
-    my-oauth-cloud-logging:
-        kind: cloud-logging-admin
-        project: my-project-id
-        useClientOAuth: true
+kind: sources
+name: my-oauth-cloud-logging
+type: cloud-logging-admin
+project: my-project-id
+useClientOAuth: true
 ```
 
 Initialize a Cloud Logging Admin source that uses service account impersonation:
 
 ```yaml
-sources:
-    my-impersonated-cloud-logging:
-        kind: cloud-logging-admin
-        project: my-project-id
-        impersonateServiceAccount: "my-service-account@my-project.iam.gserviceaccount.com"
+kind: sources
+name: my-impersonated-cloud-logging
+type: cloud-logging-admin
+project: my-project-id
+impersonateServiceAccount: "my-service-account@my-project.iam.gserviceaccount.com"
 ```
 
 ## Reference
 
 | **field**                   | **type** | **required** | **description**                                                                                                                                                                                 |
 |-----------------------------|:--------:|:------------:|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind                        |  string  |     true     | Must be "cloud-logging-admin".                                                                                                                                                                  |
+| type                        |  string  |     true     | Must be "cloud-logging-admin".                                                                                                                                                                  |
 | project                     |  string  |     true     | ID of the GCP project.                                                                                                                                                                          |
 | useClientOAuth              | boolean  |    false     | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. Cannot be used with `impersonateServiceAccount`. |
 | impersonateServiceAccount   |  string  |    false     | The service account to impersonate for API calls. Cannot be used with `useClientOAuth`.                                                                                                         |
