@@ -952,7 +952,7 @@ func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool
 
 	rows, err := pool.Query(ctx, query)
 	if err != nil {
-		t.Fatalf("Failed to query for all tables in 'public' schema: %v", uniqueID, err)
+		t.Fatalf("Failed to query for tables with ID %s in 'public' schema: %v", uniqueID, err)
 	}
 	defer rows.Close()
 
@@ -976,7 +976,7 @@ func CleanupPostgresTables(t *testing.T, ctx context.Context, pool *pgxpool.Pool
 	dropQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s CASCADE;", strings.Join(tablesToDrop, ", "))
 
 	if _, err := pool.Exec(ctx, dropQuery); err != nil {
-		t.Fatalf("Failed to drop all tables in 'public' schema: %v", uniqueID, err)
+		t.Fatalf("Failed to drop tables with ID %s in 'public' schema: %v", uniqueID, err)
 	} else {
 		t.Logf("INTEGRATION CLEANUP SUCCESS: Wiped all tables for uniqueID: %s", uniqueID)
 	}
