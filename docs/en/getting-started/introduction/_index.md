@@ -71,7 +71,7 @@ redeploying your application.
 
 ## Getting Started
 
-### (Non-production) Running Toolbox
+### Quickstart: Running Toolbox using NPX 
 
 You can run Toolbox directly with a [configuration file](../configure.md):
 
