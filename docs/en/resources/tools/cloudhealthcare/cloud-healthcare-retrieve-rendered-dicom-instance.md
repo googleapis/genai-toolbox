@@ -22,18 +22,18 @@ string of the image in JPEG format.
 ## Example
 
 ```yaml
-tools:
-  retrieve_rendered_dicom_instance:
-    kind: cloud-healthcare-retrieve-rendered-dicom-instance
-    source: my-healthcare-source
-    description: Use this tool to retrieve a rendered DICOM instance from the DICOM store.
+kind: tools
+name: retrieve_rendered_dicom_instance
+type: cloud-healthcare-retrieve-rendered-dicom-instance
+source: my-healthcare-source
+description: Use this tool to retrieve a rendered DICOM instance from the DICOM store.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                              |
 |-------------|:--------:|:------------:|--------------------------------------------------------------|
-| kind        |  string  |     true     | Must be "cloud-healthcare-retrieve-rendered-dicom-instance". |
+| type        |  string  |     true     | Must be "cloud-healthcare-retrieve-rendered-dicom-instance". |
 | source      |  string  |     true     | Name of the healthcare source.                               |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.           |
 

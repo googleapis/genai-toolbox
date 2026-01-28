@@ -17,7 +17,6 @@ package spannersql_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -38,22 +37,22 @@ func TestParseFromYamlSpanner(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: spanner-sql
-					source: my-pg-instance
-					description: some description
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
+            kind: tools
+            name: example_tool
+            type: spanner-sql
+            source: my-pg-instance
+            description: some description
+            statement: |
+                SELECT * FROM SQL_STATEMENT;
+            parameters:
+                - name: country
+                  type: string
+                  description: some description
 			`,
 			want: server.ToolConfigs{
 				"example_tool": spannersql.Config{
 					Name:         "example_tool",
-					Kind:         "spanner-sql",
+					Type:         "spanner-sql",
 					Source:       "my-pg-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -67,23 +66,23 @@ func TestParseFromYamlSpanner(t *testing.T) {
 		{
 			desc: "read only set to true",
 			in: `
-			tools:
-				example_tool:
-					kind: spanner-sql
-					source: my-pg-instance
-					description: some description
-					readOnly: true
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
+            kind: tools
+            name: example_tool
+            type: spanner-sql
+            source: my-pg-instance
+            description: some description
+            readOnly: true
+            statement: |
+                SELECT * FROM SQL_STATEMENT;
+            parameters:
+                - name: country
+                  type: string
+                  description: some description
 			`,
 			want: server.ToolConfigs{
 				"example_tool": spannersql.Config{
 					Name:         "example_tool",
-					Kind:         "spanner-sql",
+					Type:         "spanner-sql",
 					Source:       "my-pg-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -98,15 +97,12 @@ func TestParseFromYamlSpanner(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -127,33 +123,33 @@ func TestParseFromYamlWithTemplateParamsSpanner(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: spanner-sql
-					source: my-pg-instance
-					description: some description
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
-					templateParameters:
-						- name: tableName
-						  type: string
-						  description: The table to select hotels from.
-						- name: fieldArray
-						  type: array
-						  description: The columns to return for the query.
-						  items: 
-								name: column
-								type: string
-								description: A column name that will be returned from the query.
+            kind: tools
+            name: example_tool
+            type: spanner-sql
+            source: my-pg-instance
+            description: some description
+            statement: |
+                SELECT * FROM SQL_STATEMENT;
+            parameters:
+                - name: country
+                  type: string
+                  description: some description
+            templateParameters:
+                - name: tableName
+                  type: string
+                  description: The table to select hotels from.
+                - name: fieldArray
+                  type: array
+                  description: The columns to return for the query.
+                  items: 
+                    name: column
+                    type: string
+                    description: A column name that will be returned from the query.
 			`,
 			want: server.ToolConfigs{
 				"example_tool": spannersql.Config{
 					Name:         "example_tool",
-					Kind:         "spanner-sql",
+					Type:         "spanner-sql",
 					Source:       "my-pg-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -171,23 +167,23 @@ func TestParseFromYamlWithTemplateParamsSpanner(t *testing.T) {
 		{
 			desc: "read only set to true",
 			in: `
-			tools:
-				example_tool:
-					kind: spanner-sql
-					source: my-pg-instance
-					description: some description
-					readOnly: true
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
+            kind: tools
+            name: example_tool
+            type: spanner-sql
+            source: my-pg-instance
+            description: some description
+            readOnly: true
+            statement: |
+                SELECT * FROM SQL_STATEMENT;
+            parameters:
+                - name: country
+                  type: string
+                  description: some description
 			`,
 			want: server.ToolConfigs{
 				"example_tool": spannersql.Config{
 					Name:         "example_tool",
-					Kind:         "spanner-sql",
+					Type:         "spanner-sql",
 					Source:       "my-pg-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -202,15 +198,12 @@ func TestParseFromYamlWithTemplateParamsSpanner(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

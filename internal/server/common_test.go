@@ -87,6 +87,10 @@ func (t MockTool) RequiresClientAuthorization(tools.SourceProvider) (bool, error
 	return t.requiresClientAuthrorization, nil
 }
 
+func (t MockTool) GetParameters() parameters.Parameters {
+	return t.Params
+}
+
 func (t MockTool) McpManifest() tools.McpManifest {
 	properties := make(map[string]parameters.ParameterMcpManifest)
 	required := make([]string, 0)

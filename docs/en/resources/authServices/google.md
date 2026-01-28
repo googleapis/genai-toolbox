@@ -40,10 +40,10 @@ id-token][provided-claims] can be used for the parameter.
 ## Example
 
 ```yaml
-authServices:
-  my-google-auth:
-    kind: google
-    clientId: ${YOUR_GOOGLE_CLIENT_ID}
+kind: authServices
+name: my-google-auth
+type: google
+clientId: ${YOUR_GOOGLE_CLIENT_ID}
 ```
 
 {{< notice tip >}}
@@ -55,5 +55,5 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                  |
 |-----------|:--------:|:------------:|------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "google".                                                |
+| type      |  string  |     true     | Must be "google".                                                |
 | clientId  |  string  |     true     | Client ID of your application from registering your application. |

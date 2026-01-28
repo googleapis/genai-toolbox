@@ -15,11 +15,12 @@
 package snowflake_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/snowflake"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
@@ -33,19 +34,19 @@ func TestParseFromYamlSnowflake(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-				sources:
-					my-snowflake-instance:
-						kind: snowflake
-						account: my-account
-						user: my_user
-						password: my_pass
-						database: my_db
-						schema: my_schema
+				kind: sources
+				name: my-snowflake-instance
+				type: snowflake
+				account: my-account
+				user: my_user
+				password: my_pass
+				database: my_db
+				schema: my_schema
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-snowflake-instance": snowflake.Config{
 					Name:      "my-snowflake-instance",
-					Kind:      snowflake.SourceKind,
+					Type:      snowflake.SourceType,
 					Account:   "my-account",
 					User:      "my_user",
 					Password:  "my_pass",
@@ -59,16 +60,12 @@ func TestParseFromYamlSnowflake(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -84,39 +81,35 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-				sources:
-					my-snowflake-instance:
-						kind: snowflake
-						account: my-account
-						user: my_user
-						password: my_pass
-						database: my_db
-						schema: my_schema
-						foo: bar
+				kind: sources
+				name: my-snowflake-instance
+				type: snowflake
+				account: my-account
+				user: my_user
+				password: my_pass
+				database: my_db
+				schema: my_schema
+				foo: bar
 			`,
-			err: "unable to parse source \"my-snowflake-instance\" as \"snowflake\": [3:1] unknown field \"foo\"\n   1 | account: my-account\n   2 | database: my_db\n>  3 | foo: bar\n       ^\n   4 | kind: snowflake\n   5 | password: my_pass\n   6 | schema: my_schema\n   7 | ",
+			err: "error unmarshaling sources: unable to parse source \"my-snowflake-instance\" as \"snowflake\": [3:1] unknown field \"foo\"\n   1 | account: my-account\n   2 | database: my_db\n>  3 | foo: bar\n       ^\n   4 | name: my-snowflake-instance\n   5 | password: my_pass\n   6 | schema: my_schema\n   7 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-				sources:
-					my-snowflake-instance:
-						kind: snowflake
-						account: my-account
-						user: my_user
-						password: my_pass
-						database: my_db
+				kind: sources
+				name: my-snowflake-instance
+				type: snowflake
+				account: my-account
+				user: my_user
+				password: my_pass
+				database: my_db
 			`,
-			err: "unable to parse source \"my-snowflake-instance\" as \"snowflake\": Key: 'Config.Schema' Error:Field validation for 'Schema' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-snowflake-instance\" as \"snowflake\": Key: 'Config.Schema' Error:Field validation for 'Schema' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

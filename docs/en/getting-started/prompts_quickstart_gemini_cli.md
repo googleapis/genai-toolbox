@@ -157,61 +157,67 @@ Create a file named `tools.yaml`. This file defines the database connection, the
 SQL tools available, and the prompts the agents will use.
 
 ```yaml
-sources:
-  my-foodiefind-db:
-    kind: postgres
-    host: 127.0.0.1
-    port: 5432
-    database: toolbox_db
-    user: toolbox_user
-    password: my-password
-tools:
-  find_user_by_email:
-    kind: postgres-sql
-    source: my-foodiefind-db
-    description: Find a user's ID by their email address.
-    parameters:
-      - name: email
-        type: string
-        description: The email address of the user to find.
-    statement: SELECT id FROM users WHERE email = $1;
-  find_restaurant_by_name:
-    kind: postgres-sql
-    source: my-foodiefind-db
-    description: Find a restaurant's ID by its exact name.
-    parameters:
-      - name: name
-        type: string
-        description: The name of the restaurant to find.
-    statement: SELECT id FROM restaurants WHERE name = $1;
-  find_review_by_user_and_restaurant:
-    kind: postgres-sql
-    source: my-foodiefind-db
-    description: Find the full record for a specific review using the user's ID and the restaurant's ID.
-    parameters:
-      - name: user_id
-        type: integer
-        description: The numerical ID of the user.
-      - name: restaurant_id
-        type: integer
-        description: The numerical ID of the restaurant.
-    statement: SELECT * FROM reviews WHERE user_id = $1 AND restaurant_id = $2;
-prompts:
-  investigate_missing_review:
-    description: "Investigates a user's missing review by finding the user, restaurant, and the review itself, then analyzing its status."
-    arguments:
-      - name: "user_email"
-        description: "The email of the user who wrote the review."
-      - name: "restaurant_name"
-        description: "The name of the restaurant being reviewed."
-    messages:
-      - content: >-
-          **Goal:** Find the review written by the user with email '{{.user_email}}' for the restaurant named '{{.restaurant_name}}' and understand its status.
-          **Workflow:**
-          1. Use the `find_user_by_email` tool with the email '{{.user_email}}' to get the `user_id`.
-          2. Use the `find_restaurant_by_name` tool with the name '{{.restaurant_name}}' to get the `restaurant_id`.
-          3. Use the `find_review_by_user_and_restaurant` tool with the `user_id` and `restaurant_id` you just found.
-          4. Analyze the results from the final tool call. Examine the `is_published` and `moderation_status` fields and explain the review's status to the user in a clear, human-readable sentence.
+kind: sources
+name: my-foodiefind-db
+type: postgres
+host: 127.0.0.1
+port: 5432
+database: toolbox_db
+user: toolbox_user
+password: my-password
+---
+kind: tools
+name: find_user_by_email
+type: postgres-sql
+source: my-foodiefind-db
+description: Find a user's ID by their email address.
+parameters:
+  - name: email
+    type: string
+    description: The email address of the user to find.
+statement: SELECT id FROM users WHERE email = $1;
+---
+kind: tools
+name: find_restaurant_by_name
+type: postgres-sql
+source: my-foodiefind-db
+description: Find a restaurant's ID by its exact name.
+parameters:
+  - name: name
+    type: string
+    description: The name of the restaurant to find.
+statement: SELECT id FROM restaurants WHERE name = $1;
+---
+kind: tools
+name: find_review_by_user_and_restaurant
+type: postgres-sql
+source: my-foodiefind-db
+description: Find the full record for a specific review using the user's ID and the restaurant's ID.
+parameters:
+  - name: user_id
+    type: integer
+    description: The numerical ID of the user.
+  - name: restaurant_id
+    type: integer
+    description: The numerical ID of the restaurant.
+statement: SELECT * FROM reviews WHERE user_id = $1 AND restaurant_id = $2;
+---
+kind: prompts
+name: investigate_missing_review
+description: "Investigates a user's missing review by finding the user, restaurant, and the review itself, then analyzing its status."
+arguments:
+  - name: "user_email"
+    description: "The email of the user who wrote the review."
+  - name: "restaurant_name"
+    description: "The name of the restaurant being reviewed."
+messages:
+  - content: >-
+      **Goal:** Find the review written by the user with email '{{.user_email}}' for the restaurant named '{{.restaurant_name}}' and understand its status.
+      **Workflow:**
+      1. Use the `find_user_by_email` tool with the email '{{.user_email}}' to get the `user_id`.
+      2. Use the `find_restaurant_by_name` tool with the name '{{.restaurant_name}}' to get the `restaurant_id`.
+      3. Use the `find_review_by_user_and_restaurant` tool with the `user_id` and `restaurant_id` you just found.
+      4. Analyze the results from the final tool call. Examine the `is_published` and `moderation_status` fields and explain the review's status to the user in a clear, human-readable sentence.
 ```
 
 ## Step 3: Connect to Gemini CLI

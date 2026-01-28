@@ -58,11 +58,11 @@ the `bigquery` source:
 ## Example
 
 ```yaml
-tools:
- forecast_tool:
-    kind: bigquery-forecast
-    source: my-bigquery-source
-    description: Use this tool to forecast time series data in BigQuery.
+kind: tools
+name: forecast_tool
+type: bigquery-forecast
+source: my-bigquery-source
+description: Use this tool to forecast time series data in BigQuery.
 ```
 
 ## Sample Prompt
@@ -78,6 +78,6 @@ You can use the following sample prompts to call this tool:
 
 | **field**   | **type** | **required** | **description**                                         |
 |-------------|:--------:|:------------:|---------------------------------------------------------|
-| kind        |  string  |     true     | Must be "bigquery-forecast".                            |
+| type        |  string  |     true     | Must be "bigquery-forecast".                            |
 | source      |  string  |     true     | Name of the source the forecast tool should execute on. |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.      |

@@ -17,7 +17,6 @@ package cloudsqlcreatebackup_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -37,16 +36,16 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-			  create-backup-tool:
-			    kind: cloud-sql-create-backup
-			    description: a test description
-			    source: a-source
+			kind: tools
+			name: create-backup-tool
+			type: cloud-sql-create-backup
+			description: a test description
+			source: a-source
 			`,
 			want: server.ToolConfigs{
 				"create-backup-tool": cloudsqlcreatebackup.Config{
 					Name:         "create-backup-tool",
-					Kind:         "cloud-sql-create-backup",
+					Type:         "cloud-sql-create-backup",
 					Description:  "a test description",
 					Source:       "a-source",
 					AuthRequired: []string{},
@@ -56,15 +55,11 @@ func TestParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
