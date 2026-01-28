@@ -24,19 +24,20 @@ Authentication can be handled in two ways:
 ## Example
 
 ```yaml
-sources:
-    my-spanner-admin:
-        kind: spanner-admin
-
-    my-oauth-spanner-admin:
-        kind: spanner-admin
-        useClientOAuth: true
+kind: sources
+name: my-spanner-admin
+type: spanner-admin
+---
+kind: sources
+name: my-oauth-spanner-admin
+type: spanner-admin
+useClientOAuth: true
 ```
 
 ## Reference
 
 | **field**      | **type** | **required** | **description**                                                                                                                                |
 | -------------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| kind           |  string  |     true     | Must be "spanner-admin".                                                                                                                       |
+| type           |  string  |     true     | Must be "spanner-admin".                                                                                                                       |
 | defaultProject |  string  |     false    | The Google Cloud project ID to use for Spanner infrastructure tools.                                                                           |
 | useClientOAuth |  boolean |     false    | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |

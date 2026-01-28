@@ -44,7 +44,7 @@ func getSpannerAdminVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":           "spanner-admin",
+		"type":           "spanner-admin",
 		"defaultProject": SpannerProject,
 	}
 }
@@ -90,7 +90,7 @@ func TestSpannerAdminCreateInstance(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"create-instance-tool": map[string]any{
-				"kind":        "spanner-create-instance",
+				"type":        "spanner-create-instance",
 				"source":      "my-spanner-admin",
 				"description": "Creates a Spanner instance.",
 			},

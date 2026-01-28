@@ -27,14 +27,14 @@ import (
 	"google.golang.org/api/option"
 )
 
-const SourceKind string = "spanner-admin"
+const SourceType string = "spanner-admin"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -48,13 +48,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name           string `yaml:"name" validate:"required"`
-	Kind           string `yaml:"kind" validate:"required"`
+	Type           string `yaml:"type" validate:"required"`
 	DefaultProject string `yaml:"defaultProject"`
 	UseClientOAuth bool   `yaml:"useClientOAuth"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 // Initialize initializes a Spanner Admin Source instance.
@@ -87,8 +87,8 @@ type Source struct {
 	Client *instance.InstanceAdminClient
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {

@@ -18,15 +18,15 @@ Here is an example of how to configure the `spanner-create-instance` tool in
 your `tools.yaml` file:
 
 ```yaml
-sources:
-  my-spanner-admin-source:
-    kind: spanner-admin
-
-tools:
-  create_my_spanner_instance:
-    kind: spanner-create-instance
-    source: my-spanner-admin-source
-    description: "Creates a Spanner instance."
+kind: sources
+name: my-spanner-admin-source
+type: spanner-admin
+---
+kind: tools
+name: create_my_spanner_instance
+type: spanner-create-instance
+source: my-spanner-admin-source
+description: "Creates a Spanner instance."
 ```
 
 ## Parameters
@@ -47,6 +47,6 @@ The `spanner-create-instance` tool has the following parameters:
 
 | **field**   | **type** | **required** | **description**                                              |
 | ----------- | :------: | :----------: | ------------------------------------------------------------ |
-| kind        |  string  |     true     | Must be `spanner-create-instance`.                           |
+| type        |  string  |     true     | Must be `spanner-create-instance`.                           |
 | source      |  string  |     true     | The name of the `spanner-admin` source to use for this tool. |
 | description |  string  |    false     | A description of the tool that is passed to the agent.       |
