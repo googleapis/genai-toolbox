@@ -107,7 +107,7 @@ redeploying your application.
 
 ## Getting Started
 
-### Quickstart: Running Toolbox using NPX 
+### Quickstart: Running Toolbox using NPX
 
 You can run Toolbox directly with a [configuration file](#configuration):
 
