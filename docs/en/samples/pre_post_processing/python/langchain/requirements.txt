@@ -1,0 +1,2 @@
+langchain==1.2.6
+toolbox-langchain==0.5.7
