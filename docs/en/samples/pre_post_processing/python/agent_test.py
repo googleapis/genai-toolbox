@@ -16,8 +16,6 @@ import os
 import pytest
 from pathlib import Path
 import asyncio
-import sys
-import importlib.util
 
 ORCH_NAME = os.environ.get("ORCH_NAME")
 module_path = f"python.{ORCH_NAME}.agent"

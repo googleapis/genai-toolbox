@@ -1,15 +1,10 @@
 import asyncio
-import re
-import json
-from typing import Callable, Any
 from toolbox_langchain import ToolboxClient
-from toolbox_core.protocol import Protocol
 from langchain_google_vertexai import ChatVertexAI
 from langchain_core.messages import ToolMessage, messages_to_dict
 from langchain.agents import create_agent
 from langchain.agents.middleware import (
     wrap_tool_call,
-    AgentState
 )
 
 system_prompt = """
@@ -85,9 +80,6 @@ async def main():
 
         print("-" * 50)
         print("Final Client Response:")
-        serializable_response = {
-            "messages": messages_to_dict(response["messages"])
-        }
         last_ai_msg = response["messages"][-1].content
         print(f"AI: {last_ai_msg}")
 
