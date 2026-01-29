@@ -914,8 +914,8 @@ steps:
         total_coverage=$(go tool cover -func=oracle_coverage.out | grep "total:" | awk '{print $3}')
         echo "Oracle total coverage: $total_coverage"
         coverage_numeric=$(echo "$total_coverage" | sed 's/%//')
-        if awk -v cov="$coverage_numeric" 'BEGIN {exit !(cov < 20)}'; then
-            echo "Coverage failure: $total_coverage is below 20%."
+        if awk -v cov="$coverage_numeric" 'BEGIN {exit !(cov < 60)}'; then
+            echo "Coverage failure: $total_coverage is below 60%."
             exit 1
         fi
 
