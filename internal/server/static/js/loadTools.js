@@ -13,6 +13,7 @@
 // limitations under the License.
 
 import { renderToolInterface } from "./toolDisplay.js";
+import { escapeHtml } from "./sanitize.js";
 
 let toolDetailsAbortController = null;
 
@@ -34,7 +35,7 @@ export async function loadTools(secondNavContent, toolDisplayArea, toolsetName) 
         renderToolList(apiResponse, secondNavContent, toolDisplayArea);
     } catch (error) {
         console.error('Failed to load tools:', error);
-        secondNavContent.innerHTML = `<p class="error">Failed to load tools: <pre><code>${error}</code></pre></p>`;
+        secondNavContent.innerHTML = `<p class="error">Failed to load tools: <pre><code>${escapeHtml(String(error))}</code></pre></p>`;
     }
 }
 
@@ -168,7 +169,7 @@ async function fetchToolDetails(toolName, toolDisplayArea) {
             console.debug("Previous fetch was aborted, expected behavior.");
         } else {
             console.error(`Failed to load details for tool "${toolName}":`, error);
-            toolDisplayArea.innerHTML = `<p class="error">Failed to load details for ${toolName}. ${error.message}</p>`;
+            toolDisplayArea.innerHTML = `<p class="error">Failed to load details for ${escapeHtml(toolName)}. ${escapeHtml(error.message)}</p>`;
         }
     }
 }

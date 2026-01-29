@@ -87,7 +87,6 @@ func (token AccessToken) ParseBearerToken() (string, error) {
 
 type Tool interface {
 	Invoke(context.Context, SourceProvider, parameters.ParamValues, AccessToken) (any, error)
-	ParseParams(map[string]any, map[string]map[string]any) (parameters.ParamValues, error)
 	EmbedParams(context.Context, parameters.ParamValues, map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error)
 	Manifest() Manifest
 	McpManifest() McpManifest
