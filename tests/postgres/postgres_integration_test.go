@@ -99,7 +99,7 @@ func TestPostgres(t *testing.T) {
  
 	// This will execute after all tool tests complete (success, fail, or t.Fatal)
 	t.Cleanup(func() {
-		tests.CleanupPostgresTables(t, ctx, pool, uniqueID)
+		tests.CleanupPostgresTables(t, context.Background(), pool, uniqueID)
 	})
 
 	// 3. Create table names using the UUID 
