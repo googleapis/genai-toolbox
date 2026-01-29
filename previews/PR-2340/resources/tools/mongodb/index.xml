@@ -11,7 +11,7 @@ deleting &lt;strong>ALL&lt;/strong> documents from a collection that match a spe
 &lt;p>The tool returns the total count of documents that were deleted. If the filter
 does not match any documents (i.e., the deleted count is 0), the tool will
 return an error.&lt;/p>
-&lt;p>This tool is compatible with the following source kind:&lt;/p>
+&lt;p>This tool is compatible with the following source type:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2340/resources/sources/mongodb/">&lt;code>mongodb&lt;/code>&lt;/a>&lt;/li>
 &lt;/ul>
@@ -33,7 +33,7 @@ shape the output by selecting specific fields (&lt;strong>projection&lt;/strong>
 results (&lt;strong>sorting&lt;/strong>), and restricting the number of documents returned
 (&lt;strong>limiting&lt;/strong>).&lt;/p>
 &lt;p>The tool returns a JSON array of the documents found.&lt;/p>
-&lt;p>This tool is compatible with the following source kind:&lt;/p>
+&lt;p>This tool is compatible with the following source type:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2340/resources/sources/mongodb/">&lt;code>mongodb&lt;/code>&lt;/a>&lt;/li>
 &lt;/ul>
@@ -47,7 +47,7 @@ match the filter, you can use &lt;code>sort&lt;/code> options to control which d
 returned. Otherwise, the selection is not guaranteed.&lt;/p>
 &lt;p>The tool returns a single JSON object representing the document, wrapped in a
 JSON array.&lt;/p>
-&lt;p>This tool is compatible with the following source kind:&lt;/p>
+&lt;p>This tool is compatible with the following source type:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2340/resources/sources/mongodb/">&lt;code>mongodb&lt;/code>&lt;/a>&lt;/li>
 &lt;/ul>
@@ -68,7 +68,7 @@ MongoDB collection.&lt;/p>
 &lt;p>This tool takes one required parameter named &lt;code>data&lt;/code>, which must be a string
 containing the JSON object you want to insert. Upon successful insertion, the
 tool returns the unique &lt;code>_id&lt;/code> of the newly created document.&lt;/p>
-&lt;p>This tool is compatible with the following source kind:&lt;/p>
+&lt;p>This tool is compatible with the following source type:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2340/resources/sources/mongodb/">&lt;code>mongodb&lt;/code>&lt;/a>&lt;/li>
 &lt;/ul>
@@ -79,7 +79,7 @@ collection.&lt;/p></description></item><item><title>mongodb-update-many</title><
 MongoDB collection that match a given filter. It locates the documents using a
 &lt;code>filterPayload&lt;/code> and applies the modifications defined in an &lt;code>updatePayload&lt;/code>.&lt;/p>
 &lt;p>The tool returns an array of three integers: &lt;code>[ModifiedCount, UpsertedCount, MatchedCount]&lt;/code>.&lt;/p>
-&lt;p>This tool is compatible with the following source kind:&lt;/p>
+&lt;p>This tool is compatible with the following source type:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2340/resources/sources/mongodb/">&lt;code>mongodb&lt;/code>&lt;/a>&lt;/li>
 &lt;/ul>
@@ -91,7 +91,7 @@ within a specific category and also marks them as being on sale.&lt;/p></descrip
 collection. It locates the document to be updated using a &lt;code>filterPayload&lt;/code> and
 applies modifications defined in an &lt;code>updatePayload&lt;/code>. If the filter matches
 multiple documents, only the first one found will be updated.&lt;/p>
-&lt;p>This tool is compatible with the following source kind:&lt;/p>
+&lt;p>This tool is compatible with the following source type:&lt;/p>
 &lt;ul>
 &lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2340/resources/sources/mongodb/">&lt;code>mongodb&lt;/code>&lt;/a>&lt;/li>
 &lt;/ul>
