@@ -8,7 +8,7 @@ description: "Restores a backup of a Cloud SQL instance."
 The `cloud-sql-restore-backup` tool restores a backup on a Cloud SQL instance using the Cloud SQL Admin API.
 
 {{< notice info dd>}}
-This tool uses a `source` of kind `cloud-sql-admin`.
+This tool uses a `source` of type `cloud-sql-admin`.
 {{< /notice >}}
 
 ## Examples
@@ -16,11 +16,11 @@ This tool uses a `source` of kind `cloud-sql-admin`.
 Basic backup restore
 
 ```yaml
-tools:
-  backup-restore-basic:
-    kind: cloud-sql-restore-backup
-    source: cloud-sql-admin-source
-    description: "Restores a backup onto the given Cloud SQL instance."
+kind: tools
+name: backup-restore-basic
+type: cloud-sql-restore-backup
+source: cloud-sql-admin-source
+description: "Restores a backup onto the given Cloud SQL instance."
 ```
 
 ## Reference
@@ -28,7 +28,7 @@ tools:
 ### Tool Configuration
 | **field**      | **type** | **required** | **description**                                  |
 | -------------- | :------: | :----------: | ------------------------------------------------ |
-| kind           | string   | true         | Must be "cloud-sql-restore-backup".              |
+| type           | string   | true         | Must be "cloud-sql-restore-backup".              |
 | source         | string   | true         | The name of the `cloud-sql-admin` source to use. |
 | description    | string   | false        | A description of the tool.                       |
 

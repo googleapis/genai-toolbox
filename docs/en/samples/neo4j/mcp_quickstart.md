@@ -61,37 +61,38 @@ Write the following into a `tools.yaml` file:
 \+
 
 ```yaml
-sources:
-  my-neo4j-source:
-    kind: neo4j
-    uri: bolt://localhost:7687
-    user: neo4j
-    password: my-password # Replace with your actual password
-
-tools:
-  search-movies-by-actor:
-    kind: neo4j-cypher
-    source: my-neo4j-source
-    description: "Searches for movies an actor has appeared in based on their name. Useful for questions like 'What movies has Tom Hanks been in?'"
-    parameters:
-      - name: actor_name
-        type: string
-        description: The full name of the actor to search for.
-    statement: |
-      MATCH (p:Person {name: $actor_name}) -[:ACTED_IN]-> (m:Movie)
-      RETURN m.title AS title, m.year AS year, m.genre AS genre
-  
-  get-actor-for-movie:
-    kind: neo4j-cypher
-    source: my-neo4j-source
-    description: "Finds the actors who starred in a specific movie. Useful for questions like 'Who acted in Inception?'"
-    parameters:
-      - name: movie_title
-        type: string
-        description: The exact title of the movie.
-    statement: |
-      MATCH (p:Person) -[:ACTED_IN]-> (m:Movie {title: $movie_title})
-      RETURN p.name AS actor
+kind: sources
+name: my-neo4j-source
+type: neo4j
+uri: bolt://localhost:7687
+user: neo4j
+password: my-password # Replace with your actual password
+---
+kind: tools
+name: search-movies-by-actor
+type: neo4j-cypher
+source: my-neo4j-source
+description: "Searches for movies an actor has appeared in based on their name. Useful for questions like 'What movies has Tom Hanks been in?'"
+parameters:
+  - name: actor_name
+    type: string
+    description: The full name of the actor to search for.
+statement: |
+  MATCH (p:Person {name: $actor_name}) -[:ACTED_IN]-> (m:Movie)
+  RETURN m.title AS title, m.year AS year, m.genre AS genre
+---
+kind: tools
+name: get-actor-for-movie
+type: neo4j-cypher
+source: my-neo4j-source
+description: "Finds the actors who starred in a specific movie. Useful for questions like 'Who acted in Inception?'"
+parameters:
+  - name: movie_title
+    type: string
+    description: The exact title of the movie.
+statement: |
+  MATCH (p:Person) -[:ACTED_IN]-> (m:Movie {title: $movie_title})
+  RETURN p.name AS actor
 ```
 
 . **Start the Toolbox server.**

@@ -31,16 +31,16 @@ Snowflake user to login to the database with.
 ## Example
 
 ```yaml
-sources:
-    my-sf-source:
-        kind: snowflake
-        account: ${SNOWFLAKE_ACCOUNT}
-        user: ${SNOWFLAKE_USER}
-        password: ${SNOWFLAKE_PASSWORD}
-        database: ${SNOWFLAKE_DATABASE}
-        schema: ${SNOWFLAKE_SCHEMA}
-        warehouse: ${SNOWFLAKE_WAREHOUSE}
-        role: ${SNOWFLAKE_ROLE}
+kind: sources
+name: my-sf-source
+type: snowflake
+account: ${SNOWFLAKE_ACCOUNT}
+user: ${SNOWFLAKE_USER}
+password: ${SNOWFLAKE_PASSWORD}
+database: ${SNOWFLAKE_DATABASE}
+schema: ${SNOWFLAKE_SCHEMA}
+warehouse: ${SNOWFLAKE_WAREHOUSE}
+role: ${SNOWFLAKE_ROLE}
 ```
 
 {{< notice tip >}}
@@ -52,7 +52,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                                        |
 |-----------|:--------:|:------------:|------------------------------------------------------------------------|
-| kind      |  string  |     true     | Must be "snowflake".                                                   |
+| type      |  string  |     true     | Must be "snowflake".                                                   |
 | account   |  string  |     true     | Your Snowflake account identifier.                                     |
 | user      |  string  |     true     | Name of the Snowflake user to connect as (e.g. "my-sf-user").          |
 | password  |  string  |     true     | Password of the Snowflake user (e.g. "my-password").                   |

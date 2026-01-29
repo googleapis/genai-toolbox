@@ -17,7 +17,6 @@ package postgreslistviews_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -37,19 +36,19 @@ func TestParseFromYamlPostgresListViews(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: postgres-list-views
-					source: my-postgres-instance
-					description: some description
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
+            kind: tools
+            name: example_tool
+            type: postgres-list-views
+            source: my-postgres-instance
+            description: some description
+            authRequired:
+                - my-google-auth-service
+                - other-auth-service
 			`,
 			want: server.ToolConfigs{
 				"example_tool": postgreslistviews.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-views",
+					Type:         "postgres-list-views",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{"my-google-auth-service", "other-auth-service"},
@@ -59,16 +58,16 @@ func TestParseFromYamlPostgresListViews(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: postgres-list-views
-					source: my-postgres-instance
-					description: some description
+            kind: tools
+            name: example_tool
+            type: postgres-list-views
+            source: my-postgres-instance
+            description: some description
 			`,
 			want: server.ToolConfigs{
 				"example_tool": postgreslistviews.Config{
 					Name:         "example_tool",
-					Kind:         "postgres-list-views",
+					Type:         "postgres-list-views",
 					Source:       "my-postgres-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -78,15 +77,12 @@ func TestParseFromYamlPostgresListViews(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
