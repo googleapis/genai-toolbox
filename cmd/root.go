@@ -396,6 +396,8 @@ func NewCommand(opts ...Option) *Command {
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }
 
+	baseCmd.AddCommand(newInvokeCmd(cmd))
+
 	return cmd
 }
 
