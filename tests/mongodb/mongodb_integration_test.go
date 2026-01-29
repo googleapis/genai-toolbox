@@ -28,8 +28,8 @@ import (
 
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/tests"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 var (
@@ -55,7 +55,7 @@ func getMongoDBVars(t *testing.T) map[string]any {
 
 func initMongoDbDatabase(ctx context.Context, uri, database string) (*mongo.Database, error) {
 	// Create a new mongodb Database
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
+	client, err := mongo.Connect(options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to mongodb: %s", err)
 	}
