@@ -91,6 +91,9 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaresearchdicominstances"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaresearchdicomseries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaresearchdicomstudies"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudloggingadmin/cloudloggingadminlistlognames"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudloggingadmin/cloudloggingadminlistresourcetypes"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudloggingadmin/cloudloggingadminquerylogs"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlcloneinstance"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlcreatebackup"
@@ -244,6 +247,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudgda"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudloggingadmin"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudmonitoring"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
@@ -997,9 +1001,6 @@ func run(cmd *Command) error {
 				return err
 			}
 
-			// Update version string
-			cmd.cfg.Version += "+prebuilt." + configName
-
 			// Parse into ToolsFile struct
 			parsed, err := parseToolsFile(ctx, buf)
 			if err != nil {
@@ -1064,6 +1065,18 @@ func run(cmd *Command) error {
 			return err
 		}
 		allToolsFiles = append(allToolsFiles, customTools)
+	}
+
+	// Modify version string based on loaded configurations
+	if len(cmd.prebuiltConfigs) > 0 {
+		tag := "prebuilt"
+		if isCustomConfigured {
+			tag = "custom"
+		}
+		// cmd.prebuiltConfigs is already sorted above
+		for _, configName := range cmd.prebuiltConfigs {
+			cmd.cfg.Version += fmt.Sprintf("+%s.%s", tag, configName)
+		}
 	}
 
 	// Merge Everything
