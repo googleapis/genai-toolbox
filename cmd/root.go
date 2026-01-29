@@ -219,6 +219,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparkcreatesparkbatch"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparkgetbatch"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparklistbatches"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/serverlessspark/serverlesssparkgetsessiontemplate"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/singlestore/singlestoreexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/singlestore/singlestoresql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/snowflake/snowflakeexecutesql"
