@@ -132,6 +132,7 @@ func TestPostgres(t *testing.T) {
 	}
 	defer cleanup()
 
+	
 	waitCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	out, err := testutils.WaitForString(waitCtx, regexp.MustCompile(`Server ready to serve`), cmd.Out)
