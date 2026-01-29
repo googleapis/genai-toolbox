@@ -28,25 +28,18 @@ Post-processing occurs after a tool has executed or the model has generated a re
 
 ## Processing Scopes
 
-Processing logic can be applied at different levels of the application:
+While processing logic can be applied at various levels (Agent, Model, Tool), this guide primarily focuses on **Tool Level** processing, which is most relevant for granular control over tool execution.
 
-### Tool Level
+### Tool Level (Primary Focus)
 
 Wraps individual tool executions. This is best for logic specific to a single tool or a set of tools.
 
 - **Scope**: Intercepts the raw inputs (arguments) to a tool and its outputs.
 - **Use Cases**: Argument validation, output formatting, specific privacy rules for sensitive tools.
 
-### Model Level
+### Comparison with Other Levels
 
-Intercepts individual calls to the Large Language Model (LLM).
+It is helpful to understand how tool-level processing differs from other scopes:
 
-- **Scope**: Intercepts the list of messages (prompt) sent to the model and the generation (response) received.
-- **Use Cases**: Global PII redaction (across all tools/chat), prompt engineering/injection, token usage tracking, and hallucination detection.
-
-### Agent Level
-
-Wraps the high-level agent execution loop (e.g., a "turn" in the conversation).
-
-- **Scope**: Intercepts the initial user input and the final agent response, enveloping one or more model calls and tool executions.
-- **Use Cases**: User authentication, rate limiting, session management, and end-to-end audit logging.
+- **Model Level**: Intercepts individual calls to the LLM (prompts and responses). Unlike tool-level, this applies globally to all text sent/received, making it better for global PII redaction or token tracking.
+- **Agent Level**: Wraps the high-level execution loop (e.g., a "turn" in the conversation). Unlike tool-level, this envelopes the entire turn (user input to final response), making it suitable for session management or end-to-end auditing.
