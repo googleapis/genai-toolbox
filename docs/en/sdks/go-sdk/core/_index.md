@@ -585,13 +585,14 @@ This project is licensed under the Apache License 2.0. See the
 
 If you encounter issues or have questions, check the existing [GitHub Issues](https://github.com/googleapis/genai-toolbox/issues) for the main Toolbox project.
 
-## Samples for Reference
+# Samples for Reference
 
 These samples demonstrate how to integrate the MCP Toolbox Go Core SDK with popular orchestration frameworks.
 
-{{< tabpane persist=header >}}
+<details>
+<summary>Google GenAI</summary>
 
-{{< tab header="Google GenAI" lang="go" >}}
+```go
 // This sample demonstrates integration with the standard Google GenAI framework.
 package main
 
@@ -732,9 +733,14 @@ func main() {
 	printResponse(finalResponse)
 
 }
-{{< /tab >}}
+```
 
-{{< tab header="LangChain Go" lang="go" >}}
+</details>
+
+<details>
+<summary>LangChain</summary>
+
+```go
 // This sample demonstrates how to use Toolbox tools as function definitions in LangChain Go.
 package main
 
@@ -872,9 +878,14 @@ func main() {
 	fmt.Println(finalResp.Choices[0].Content)
 	fmt.Println("======================================")
 }
-{{< /tab >}}
 
-{{< tab header="OpenAI Go" lang="go" >}}
+```
+</details>
+
+<details>
+<summary>OpenAI</summary>
+
+```go
 // This sample demonstrates integration with the OpenAI Go client.
 package main
 
@@ -993,6 +1004,6 @@ func main() {
 
 	fmt.Println(completion.Choices[0].Message.Content)
 }
-{{< /tab >}}
+```
 
-{{< /tabpane >}}
+</details>
