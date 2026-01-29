@@ -887,7 +887,7 @@ steps:
         tar -C /usr/local -xzf go.tar.gz
         export PATH="/usr/local/go/bin:$$PATH"
 
-        go test -v ./internal/sources/oracle/... \
+        go test -v ./tests/oracle/... \
           -coverprofile=oracle_coverage.out \
           -coverpkg=./internal/sources/oracle/...,./internal/tools/oracle/...
         
