@@ -618,6 +618,505 @@ func TestSingleEdit(t *testing.T) {
 	}
 }
 
+func TestPrebuiltTools(t *testing.T) {
+	// Get prebuilt configs
+	alloydb_omni_config, _ := prebuiltconfigs.Get("alloydb-omni")
+	alloydb_admin_config, _ := prebuiltconfigs.Get("alloydb-postgres-admin")
+	alloydb_config, _ := prebuiltconfigs.Get("alloydb-postgres")
+	bigquery_config, _ := prebuiltconfigs.Get("bigquery")
+	clickhouse_config, _ := prebuiltconfigs.Get("clickhouse")
+	cloudsqlpg_config, _ := prebuiltconfigs.Get("cloud-sql-postgres")
+	cloudsqlpg_admin_config, _ := prebuiltconfigs.Get("cloud-sql-postgres-admin")
+	cloudsqlmysql_config, _ := prebuiltconfigs.Get("cloud-sql-mysql")
+	cloudsqlmysql_admin_config, _ := prebuiltconfigs.Get("cloud-sql-mysql-admin")
+	cloudsqlmssql_config, _ := prebuiltconfigs.Get("cloud-sql-mssql")
+	cloudsqlmssql_admin_config, _ := prebuiltconfigs.Get("cloud-sql-mssql-admin")
+	dataplex_config, _ := prebuiltconfigs.Get("dataplex")
+	firestoreconfig, _ := prebuiltconfigs.Get("firestore")
+	mysql_config, _ := prebuiltconfigs.Get("mysql")
+	mssql_config, _ := prebuiltconfigs.Get("mssql")
+	looker_config, _ := prebuiltconfigs.Get("looker")
+	lookerca_config, _ := prebuiltconfigs.Get("looker-conversational-analytics")
+	postgresconfig, _ := prebuiltconfigs.Get("postgres")
+	spanner_config, _ := prebuiltconfigs.Get("spanner")
+	spannerpg_config, _ := prebuiltconfigs.Get("spanner-postgres")
+	mindsdb_config, _ := prebuiltconfigs.Get("mindsdb")
+	sqlite_config, _ := prebuiltconfigs.Get("sqlite")
+	neo4jconfig, _ := prebuiltconfigs.Get("neo4j")
+	alloydbobsvconfig, _ := prebuiltconfigs.Get("alloydb-postgres-observability")
+	cloudsqlpgobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-postgres-observability")
+	cloudsqlmysqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mysql-observability")
+	cloudsqlmssqlobsvconfig, _ := prebuiltconfigs.Get("cloud-sql-mssql-observability")
+	serverless_spark_config, _ := prebuiltconfigs.Get("serverless-spark")
+	cloudhealthcare_config, _ := prebuiltconfigs.Get("cloud-healthcare")
+	snowflake_config, _ := prebuiltconfigs.Get("snowflake")
+
+	// Set environment variables
+	t.Setenv("API_KEY", "your_api_key")
+
+	t.Setenv("BIGQUERY_PROJECT", "your_gcp_project_id")
+	t.Setenv("DATAPLEX_PROJECT", "your_gcp_project_id")
+	t.Setenv("FIRESTORE_PROJECT", "your_gcp_project_id")
+	t.Setenv("FIRESTORE_DATABASE", "your_firestore_db_name")
+
+	t.Setenv("SPANNER_PROJECT", "your_gcp_project_id")
+	t.Setenv("SPANNER_INSTANCE", "your_spanner_instance")
+	t.Setenv("SPANNER_DATABASE", "your_spanner_db")
+
+	t.Setenv("ALLOYDB_POSTGRES_PROJECT", "your_gcp_project_id")
+	t.Setenv("ALLOYDB_POSTGRES_REGION", "your_gcp_region")
+	t.Setenv("ALLOYDB_POSTGRES_CLUSTER", "your_alloydb_cluster")
+	t.Setenv("ALLOYDB_POSTGRES_INSTANCE", "your_alloydb_instance")
+	t.Setenv("ALLOYDB_POSTGRES_DATABASE", "your_alloydb_db")
+	t.Setenv("ALLOYDB_POSTGRES_USER", "your_alloydb_user")
+	t.Setenv("ALLOYDB_POSTGRES_PASSWORD", "your_alloydb_password")
+
+	t.Setenv("ALLOYDB_OMNI_HOST", "localhost")
+	t.Setenv("ALLOYDB_OMNI_PORT", "5432")
+	t.Setenv("ALLOYDB_OMNI_DATABASE", "your_alloydb_db")
+	t.Setenv("ALLOYDB_OMNI_USER", "your_alloydb_user")
+	t.Setenv("ALLOYDB_OMNI_PASSWORD", "your_alloydb_password")
+
+	t.Setenv("CLICKHOUSE_PROTOCOL", "your_clickhouse_protocol")
+	t.Setenv("CLICKHOUSE_DATABASE", "your_clickhouse_database")
+	t.Setenv("CLICKHOUSE_PASSWORD", "your_clickhouse_password")
+	t.Setenv("CLICKHOUSE_USER", "your_clickhouse_user")
+	t.Setenv("CLICKHOUSE_HOST", "your_clickhosue_host")
+	t.Setenv("CLICKHOUSE_PORT", "8123")
+
+	t.Setenv("CLOUD_SQL_POSTGRES_PROJECT", "your_pg_project")
+	t.Setenv("CLOUD_SQL_POSTGRES_INSTANCE", "your_pg_instance")
+	t.Setenv("CLOUD_SQL_POSTGRES_DATABASE", "your_pg_db")
+	t.Setenv("CLOUD_SQL_POSTGRES_REGION", "your_pg_region")
+	t.Setenv("CLOUD_SQL_POSTGRES_USER", "your_pg_user")
+	t.Setenv("CLOUD_SQL_POSTGRES_PASS", "your_pg_pass")
+
+	t.Setenv("CLOUD_SQL_MYSQL_PROJECT", "your_gcp_project_id")
+	t.Setenv("CLOUD_SQL_MYSQL_REGION", "your_gcp_region")
+	t.Setenv("CLOUD_SQL_MYSQL_INSTANCE", "your_instance")
+	t.Setenv("CLOUD_SQL_MYSQL_DATABASE", "your_cloudsql_mysql_db")
+	t.Setenv("CLOUD_SQL_MYSQL_USER", "your_cloudsql_mysql_user")
+	t.Setenv("CLOUD_SQL_MYSQL_PASSWORD", "your_cloudsql_mysql_password")
+
+	t.Setenv("CLOUD_SQL_MSSQL_PROJECT", "your_gcp_project_id")
+	t.Setenv("CLOUD_SQL_MSSQL_REGION", "your_gcp_region")
+	t.Setenv("CLOUD_SQL_MSSQL_INSTANCE", "your_cloudsql_mssql_instance")
+	t.Setenv("CLOUD_SQL_MSSQL_DATABASE", "your_cloudsql_mssql_db")
+	t.Setenv("CLOUD_SQL_MSSQL_IP_ADDRESS", "127.0.0.1")
+	t.Setenv("CLOUD_SQL_MSSQL_USER", "your_cloudsql_mssql_user")
+	t.Setenv("CLOUD_SQL_MSSQL_PASSWORD", "your_cloudsql_mssql_password")
+	t.Setenv("CLOUD_SQL_POSTGRES_PASSWORD", "your_cloudsql_pg_password")
+
+	t.Setenv("SERVERLESS_SPARK_PROJECT", "your_gcp_project_id")
+	t.Setenv("SERVERLESS_SPARK_LOCATION", "your_gcp_location")
+
+	t.Setenv("POSTGRES_HOST", "localhost")
+	t.Setenv("POSTGRES_PORT", "5432")
+	t.Setenv("POSTGRES_DATABASE", "your_postgres_db")
+	t.Setenv("POSTGRES_USER", "your_postgres_user")
+	t.Setenv("POSTGRES_PASSWORD", "your_postgres_password")
+
+	t.Setenv("MYSQL_HOST", "localhost")
+	t.Setenv("MYSQL_PORT", "3306")
+	t.Setenv("MYSQL_DATABASE", "your_mysql_db")
+	t.Setenv("MYSQL_USER", "your_mysql_user")
+	t.Setenv("MYSQL_PASSWORD", "your_mysql_password")
+
+	t.Setenv("MSSQL_HOST", "localhost")
+	t.Setenv("MSSQL_PORT", "1433")
+	t.Setenv("MSSQL_DATABASE", "your_mssql_db")
+	t.Setenv("MSSQL_USER", "your_mssql_user")
+	t.Setenv("MSSQL_PASSWORD", "your_mssql_password")
+
+	t.Setenv("MINDSDB_HOST", "localhost")
+	t.Setenv("MINDSDB_PORT", "47334")
+	t.Setenv("MINDSDB_DATABASE", "your_mindsdb_db")
+	t.Setenv("MINDSDB_USER", "your_mindsdb_user")
+	t.Setenv("MINDSDB_PASS", "your_mindsdb_password")
+
+	t.Setenv("LOOKER_BASE_URL", "https://your_company.looker.com")
+	t.Setenv("LOOKER_CLIENT_ID", "your_looker_client_id")
+	t.Setenv("LOOKER_CLIENT_SECRET", "your_looker_client_secret")
+	t.Setenv("LOOKER_VERIFY_SSL", "true")
+
+	t.Setenv("LOOKER_PROJECT", "your_project_id")
+	t.Setenv("LOOKER_LOCATION", "us")
+
+	t.Setenv("SQLITE_DATABASE", "test.db")
+
+	t.Setenv("NEO4J_URI", "bolt://localhost:7687")
+	t.Setenv("NEO4J_DATABASE", "neo4j")
+	t.Setenv("NEO4J_USERNAME", "your_neo4j_user")
+	t.Setenv("NEO4J_PASSWORD", "your_neo4j_password")
+
+	t.Setenv("CLOUD_HEALTHCARE_PROJECT", "your_gcp_project_id")
+	t.Setenv("CLOUD_HEALTHCARE_REGION", "your_gcp_region")
+	t.Setenv("CLOUD_HEALTHCARE_DATASET", "your_healthcare_dataset")
+
+	t.Setenv("SNOWFLAKE_ACCOUNT", "your_account")
+	t.Setenv("SNOWFLAKE_USER", "your_username")
+	t.Setenv("SNOWFLAKE_PASSWORD", "your_pass")
+	t.Setenv("SNOWFLAKE_DATABASE", "your_db")
+	t.Setenv("SNOWFLAKE_SCHEMA", "your_schema")
+	t.Setenv("SNOWFLAKE_WAREHOUSE", "your_wh")
+	t.Setenv("SNOWFLAKE_ROLE", "your_role")
+
+	t.Setenv("ORACLE_USERNAME", "your_oracle_username")
+	t.Setenv("ORACLE_PASS", "your_oracle_password")
+	t.Setenv("ORACLE_HOST", "your_oracle_host")
+	t.Setenv("ORACLE_PORT", "your_oracle_port")
+	t.Setenv("ORACLE_SERVICE_NAME", "your_oracle_service_name")
+	t.Setenv("ORACLE_USE_OCI", "your_oracle_use_oci")
+	t.Setenv("ORACLE_WALLET_LOCATION", "your_path_to_wallet")
+	t.Setenv("ORACLE_TNS_ADMIN", "your_path_to_tns_admin")
+
+	ctx, err := testutils.ContextWithNewLogger()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err)
+	}
+	tcs := []struct {
+		name        string
+		in          []byte
+		wantToolset server.ToolsetConfigs
+	}{
+		{
+			name: "alloydb omni prebuilt tools",
+			in:   alloydb_omni_config,
+			wantToolset: server.ToolsetConfigs{
+				"alloydb_omni_database_tools": tools.ToolsetConfig{
+					Name:      "alloydb_omni_database_tools",
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_columnar_configurations", "list_columnar_recommended_columns", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats", "list_stored_procedure"},
+				},
+			},
+		},
+		{
+			name: "alloydb postgres admin prebuilt tools",
+			in:   alloydb_admin_config,
+			wantToolset: server.ToolsetConfigs{
+				"alloydb_postgres_admin_tools": tools.ToolsetConfig{
+					Name:      "alloydb_postgres_admin_tools",
+					ToolNames: []string{"create_cluster", "wait_for_operation", "create_instance", "list_clusters", "list_instances", "list_users", "create_user", "get_cluster", "get_instance", "get_user"},
+				},
+			},
+		},
+		{
+			name: "cloudsql pg admin prebuilt tools",
+			in:   cloudsqlpg_admin_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_postgres_admin_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_postgres_admin_tools",
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "postgres_upgrade_precheck", "clone_instance", "create_backup", "restore_backup"},
+				},
+			},
+		},
+		{
+			name: "cloudsql mysql admin prebuilt tools",
+			in:   cloudsqlmysql_admin_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_mysql_admin_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_mysql_admin_tools",
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance", "create_backup", "restore_backup"},
+				},
+			},
+		},
+		{
+			name: "cloudsql mssql admin prebuilt tools",
+			in:   cloudsqlmssql_admin_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_mssql_admin_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_mssql_admin_tools",
+					ToolNames: []string{"create_instance", "get_instance", "list_instances", "create_database", "list_databases", "create_user", "wait_for_operation", "clone_instance", "create_backup", "restore_backup"},
+				},
+			},
+		},
+		{
+			name: "alloydb prebuilt tools",
+			in:   alloydb_config,
+			wantToolset: server.ToolsetConfigs{
+				"alloydb_postgres_database_tools": tools.ToolsetConfig{
+					Name:      "alloydb_postgres_database_tools",
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats", "list_stored_procedure"},
+				},
+			},
+		},
+		{
+			name: "bigquery prebuilt tools",
+			in:   bigquery_config,
+			wantToolset: server.ToolsetConfigs{
+				"bigquery_database_tools": tools.ToolsetConfig{
+					Name:      "bigquery_database_tools",
+					ToolNames: []string{"analyze_contribution", "ask_data_insights", "execute_sql", "forecast", "get_dataset_info", "get_table_info", "list_dataset_ids", "list_table_ids", "search_catalog"},
+				},
+			},
+		},
+		{
+			name: "clickhouse prebuilt tools",
+			in:   clickhouse_config,
+			wantToolset: server.ToolsetConfigs{
+				"clickhouse_database_tools": tools.ToolsetConfig{
+					Name:      "clickhouse_database_tools",
+					ToolNames: []string{"execute_sql", "list_databases", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "cloudsqlpg prebuilt tools",
+			in:   cloudsqlpg_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_postgres_database_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_postgres_database_tools",
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats", "list_stored_procedure"},
+				},
+			},
+		},
+		{
+			name: "cloudsqlmysql prebuilt tools",
+			in:   cloudsqlmysql_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_mysql_database_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_mysql_database_tools",
+					ToolNames: []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries", "list_tables_missing_unique_indexes", "list_table_fragmentation"},
+				},
+			},
+		},
+		{
+			name: "cloudsqlmssql prebuilt tools",
+			in:   cloudsqlmssql_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_mssql_database_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_mssql_database_tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "dataplex prebuilt tools",
+			in:   dataplex_config,
+			wantToolset: server.ToolsetConfigs{
+				"dataplex_tools": tools.ToolsetConfig{
+					Name:      "dataplex_tools",
+					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types"},
+				},
+			},
+		},
+		{
+			name: "serverless spark prebuilt tools",
+			in:   serverless_spark_config,
+			wantToolset: server.ToolsetConfigs{
+				"serverless_spark_tools": tools.ToolsetConfig{
+					Name:      "serverless_spark_tools",
+					ToolNames: []string{"list_batches", "get_batch", "cancel_batch", "create_pyspark_batch", "create_spark_batch"},
+				},
+			},
+		},
+		{
+			name: "firestore prebuilt tools",
+			in:   firestoreconfig,
+			wantToolset: server.ToolsetConfigs{
+				"firestore_database_tools": tools.ToolsetConfig{
+					Name:      "firestore_database_tools",
+					ToolNames: []string{"get_documents", "add_documents", "update_document", "list_collections", "delete_documents", "query_collection", "get_rules", "validate_rules"},
+				},
+			},
+		},
+		{
+			name: "mysql prebuilt tools",
+			in:   mysql_config,
+			wantToolset: server.ToolsetConfigs{
+				"mysql_database_tools": tools.ToolsetConfig{
+					Name:      "mysql_database_tools",
+					ToolNames: []string{"execute_sql", "list_tables", "get_query_plan", "list_active_queries", "list_tables_missing_unique_indexes", "list_table_fragmentation"},
+				},
+			},
+		},
+		{
+			name: "mssql prebuilt tools",
+			in:   mssql_config,
+			wantToolset: server.ToolsetConfigs{
+				"mssql_database_tools": tools.ToolsetConfig{
+					Name:      "mssql_database_tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "looker prebuilt tools",
+			in:   looker_config,
+			wantToolset: server.ToolsetConfigs{
+				"looker_tools": tools.ToolsetConfig{
+					Name:      "looker_tools",
+					ToolNames: []string{"get_models", "get_explores", "get_dimensions", "get_measures", "get_filters", "get_parameters", "query", "query_sql", "query_url", "get_looks", "run_look", "make_look", "get_dashboards", "run_dashboard", "make_dashboard", "add_dashboard_element", "add_dashboard_filter", "generate_embed_url", "health_pulse", "health_analyze", "health_vacuum", "dev_mode", "get_projects", "get_project_files", "get_project_file", "create_project_file", "update_project_file", "delete_project_file", "validate_project", "get_connections", "get_connection_schemas", "get_connection_databases", "get_connection_tables", "get_connection_table_columns"},
+				},
+			},
+		},
+		{
+			name: "looker-conversational-analytics prebuilt tools",
+			in:   lookerca_config,
+			wantToolset: server.ToolsetConfigs{
+				"looker_conversational_analytics_tools": tools.ToolsetConfig{
+					Name:      "looker_conversational_analytics_tools",
+					ToolNames: []string{"ask_data_insights", "get_models", "get_explores"},
+				},
+			},
+		},
+		{
+			name: "postgres prebuilt tools",
+			in:   postgresconfig,
+			wantToolset: server.ToolsetConfigs{
+				"postgres_database_tools": tools.ToolsetConfig{
+					Name:      "postgres_database_tools",
+					ToolNames: []string{"execute_sql", "list_tables", "list_active_queries", "list_available_extensions", "list_installed_extensions", "list_autovacuum_configurations", "list_memory_configurations", "list_top_bloated_tables", "list_replication_slots", "list_invalid_indexes", "get_query_plan", "list_views", "list_schemas", "database_overview", "list_triggers", "list_indexes", "list_sequences", "long_running_transactions", "list_locks", "replication_stats", "list_query_stats", "get_column_cardinality", "list_publication_tables", "list_tablespaces", "list_pg_settings", "list_database_stats", "list_roles", "list_table_stats", "list_stored_procedure"},
+				},
+			},
+		},
+		{
+			name: "spanner prebuilt tools",
+			in:   spanner_config,
+			wantToolset: server.ToolsetConfigs{
+				"spanner-database-tools": tools.ToolsetConfig{
+					Name:      "spanner-database-tools",
+					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables", "list_graphs"},
+				},
+			},
+		},
+		{
+			name: "spanner pg prebuilt tools",
+			in:   spannerpg_config,
+			wantToolset: server.ToolsetConfigs{
+				"spanner_postgres_database_tools": tools.ToolsetConfig{
+					Name:      "spanner_postgres_database_tools",
+					ToolNames: []string{"execute_sql", "execute_sql_dql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "mindsdb prebuilt tools",
+			in:   mindsdb_config,
+			wantToolset: server.ToolsetConfigs{
+				"mindsdb-tools": tools.ToolsetConfig{
+					Name:      "mindsdb-tools",
+					ToolNames: []string{"mindsdb-execute-sql", "mindsdb-sql"},
+				},
+			},
+		},
+		{
+			name: "sqlite prebuilt tools",
+			in:   sqlite_config,
+			wantToolset: server.ToolsetConfigs{
+				"sqlite_database_tools": tools.ToolsetConfig{
+					Name:      "sqlite_database_tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+			},
+		},
+		{
+			name: "neo4j prebuilt tools",
+			in:   neo4jconfig,
+			wantToolset: server.ToolsetConfigs{
+				"neo4j_database_tools": tools.ToolsetConfig{
+					Name:      "neo4j_database_tools",
+					ToolNames: []string{"execute_cypher", "get_schema"},
+				},
+			},
+		},
+		{
+			name: "alloydb postgres observability prebuilt tools",
+			in:   alloydbobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"alloydb_postgres_cloud_monitoring_tools": tools.ToolsetConfig{
+					Name:      "alloydb_postgres_cloud_monitoring_tools",
+					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
+				},
+			},
+		},
+		{
+			name: "cloudsql postgres observability prebuilt tools",
+			in:   cloudsqlpgobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_postgres_cloud_monitoring_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_postgres_cloud_monitoring_tools",
+					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
+				},
+			},
+		},
+		{
+			name: "cloudsql mysql observability prebuilt tools",
+			in:   cloudsqlmysqlobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_mysql_cloud_monitoring_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_mysql_cloud_monitoring_tools",
+					ToolNames: []string{"get_system_metrics", "get_query_metrics"},
+				},
+			},
+		},
+		{
+			name: "cloudsql mssql observability prebuilt tools",
+			in:   cloudsqlmssqlobsvconfig,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_sql_mssql_cloud_monitoring_tools": tools.ToolsetConfig{
+					Name:      "cloud_sql_mssql_cloud_monitoring_tools",
+					ToolNames: []string{"get_system_metrics"},
+				},
+			},
+		},
+		{
+			name: "cloud healthcare prebuilt tools",
+			in:   cloudhealthcare_config,
+			wantToolset: server.ToolsetConfigs{
+				"cloud_healthcare_dataset_tools": tools.ToolsetConfig{
+					Name:      "cloud_healthcare_dataset_tools",
+					ToolNames: []string{"get_dataset", "list_dicom_stores", "list_fhir_stores"},
+				},
+				"cloud_healthcare_fhir_tools": tools.ToolsetConfig{
+					Name:      "cloud_healthcare_fhir_tools",
+					ToolNames: []string{"get_fhir_store", "get_fhir_store_metrics", "get_fhir_resource", "fhir_patient_search", "fhir_patient_everything", "fhir_fetch_page"},
+				},
+				"cloud_healthcare_dicom_tools": tools.ToolsetConfig{
+					Name:      "cloud_healthcare_dicom_tools",
+					ToolNames: []string{"get_dicom_store", "get_dicom_store_metrics", "search_dicom_studies", "search_dicom_series", "search_dicom_instances", "retrieve_rendered_dicom_instance"},
+				},
+			},
+		},
+		{
+			name: "Snowflake prebuilt tool",
+			in:   snowflake_config,
+			wantToolset: server.ToolsetConfigs{
+				"snowflake_tools": tools.ToolsetConfig{
+					Name:      "snowflake_tools",
+					ToolNames: []string{"execute_sql", "list_tables","list_active_sessions","list_top_sql_by_resource","get_query_plan","list_tablespace_usage"},
+				},
+			},
+		},
+		{
+			name: "Oracle prebuilt tool",
+			in:   oracle_config,
+			wantToolset: server.ToolsetConfigs{
+				"oracle_tools": tools.ToolsetConfig{
+					Name:      "oracle_tools",
+					ToolNames: []string{"execute_sql", "list_tables"},
+				},
+
+			},
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			toolsFile, err := parseToolsFile(ctx, tc.in)
+			if err != nil {
+				t.Fatalf("failed to parse input: %v", err)
+			}
+			if diff := cmp.Diff(tc.wantToolset, toolsFile.Toolsets); diff != "" {
+				t.Fatalf("incorrect tools parse: diff %v", diff)
+			}
+			// Prebuilt configs do not have prompts, so assert empty maps.
+			if len(toolsFile.Prompts) != 0 {
+				t.Fatalf("expected empty prompts map for prebuilt config, got: %v", toolsFile.Prompts)
+			}
+		})
+	}
+}
+
 func TestMutuallyExclusiveFlags(t *testing.T) {
 	testCases := []struct {
 		desc      string
