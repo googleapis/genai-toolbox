@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,13 +24,24 @@ const (
 // ToolboxError is the interface all custom errors must satisfy
 type ToolboxError interface {
 	error
+	Category() ErrorCategory
 }
 
 // Agent Errors
-type AgentError struct{ Msg string }
+type AgentError struct {
+	Msg   string
+	Cause error
+}
 
-func (e *AgentError) Error() string           { return e.Msg }
+func (e *AgentError) Error() string { return e.Msg }
+
 func (e *AgentError) Category() ErrorCategory { return CategoryAgent }
+
+func (e *AgentError) Unwrap() error { return e.Cause }
+
+func NewAgentError(msg string, args ...any) *AgentError {
+	return &AgentError{Msg: fmt.Sprintf(msg, args...)}
+}
 
 // Server Errors
 type ServerError struct {
@@ -38,5 +49,12 @@ type ServerError struct {
 	Cause error
 }
 
-func (e *ServerError) Error() string           { return fmt.Sprintf("%s: %v", e.Msg, e.Cause) }
+func (e *ServerError) Error() string { return fmt.Sprintf("%s: %v", e.Msg, e.Cause) }
+
 func (e *ServerError) Category() ErrorCategory { return CategoryServer }
+
+func (e *ServerError) Unwrap() error { return e.Cause }
+
+func NewServerError(msg string, cause error) *ServerError {
+	return &ServerError{Msg: msg, Cause: cause}
+}
