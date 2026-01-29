@@ -37,6 +37,7 @@ extraFiles: [
     "docs/en/how-to/connect-ide/postgres_mcp.md",
     "docs/en/how-to/connect-ide/neo4j_mcp.md",
     "docs/en/how-to/connect-ide/sqlite_mcp.md",
+    "docs/en/how-to/connect-ide/oracle_mcp.md",
     "gemini-extension.json",
     {
         "type": "json",
