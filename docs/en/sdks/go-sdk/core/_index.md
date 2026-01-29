@@ -70,9 +70,9 @@ go get github.com/googleapis/mcp-toolbox-sdk-go
 ```
 This SDK is supported on Go version 1.24.4 and higher.
 
-> [!NOTE]
->
-> - While the SDK itself is synchronous, you can execute its functions within goroutines to achieve asynchronous behavior.
+{{< notice note >}}
+While the SDK itself is synchronous, you can execute its functions within goroutines to achieve asynchronous behavior.
+{{< /notice >}}
 
 
 ## Quickstart
@@ -125,17 +125,14 @@ client, err := core.NewToolboxClient("http://localhost:5000")
 
 All interactions for loading and invoking tools happen through this client.
 
-> [!NOTE]
-> For advanced use cases, you can provide an external custom `http.Client`
-> during initialization (e.g., `core.NewToolboxClient(URL, core.WithHTTPClient(myClient)`). If you
-> provide your own session, you are responsible for managing its lifecycle;
-> `ToolboxClient` *will not* close it.
+{{< notice note >}} 
+For advanced use cases, you can provide an external custom `http.Client` during initialization (e.g., `core.NewToolboxClient(URL, core.WithHTTPClient(myClient)`). 
+If you provide your own session, you are responsible for managing its lifecycle; `ToolboxClient` *will not* close it.
+{{< /notice >}}
 
-> [!IMPORTANT]
-> Closing the `ToolboxClient` also closes the underlying network session shared by
-> all tools loaded from that client. As a result, any tool instances you have
-> loaded will cease to function and will raise an error if you attempt to invoke
-> them after the client is closed.
+{{< notice info >}}
+Closing the `ToolboxClient` also closes the underlying network session shared by all tools loaded from that client. As a result, any tool instances you have loaded will cease to function and will raise an error if you attempt to invoke them after the client is closed.
+{{< /notice >}}
 
 ## Transport Protocols
 
@@ -143,9 +140,11 @@ The SDK supports multiple transport protocols for communicating with the Toolbox
 
 You can explicitly select a protocol using the `core.WithProtocol` option during client initialization. This is useful if you need to use the native Toolbox HTTP protocol or pin the client to a specific legacy version of MCP.
 
-> [!NOTE]
-> * **Native Toolbox Transport**: This uses the service's native **REST over HTTP** API.
-> * **MCP Transports**: These options use the **Model Context Protocol over HTTP**.
+{{< notice note >}}
+* **Native Toolbox Transport**: This uses the service's native **REST over HTTP** API.
+* **MCP Transports**: These options use the **Model Context Protocol over HTTP**.
+{{< /notice >}}
+
 
 ### Supported Protocols
 
@@ -221,10 +220,9 @@ inputs := map[string]any{"location": "London"}
 result, err := tool.Invoke(ctx, inputs)
 ```
 
-> [!TIP]
-> For a more comprehensive guide on setting up the Toolbox service itself, which
-> you'll need running to use this SDK, please refer to the [Toolbox Quickstart
-> Guide](https://googleapis.github.io/genai-toolbox/getting-started/local_quickstart).
+{{< notice tip >}}
+For a more comprehensive guide on setting up the Toolbox service itself, which you'll need running to use this SDK, please refer to the [Toolbox Quickstart Guide](https://googleapis.github.io/genai-toolbox/getting-started/local_quickstart).
+{{< /notice >}}
 
 ## Client to Server Authentication
 
@@ -320,13 +318,9 @@ For Toolbox servers hosted on Google Cloud (e.g., Cloud Run) and requiring
 
 ## Authenticating Tools
 
-> [!WARNING]
-> **Always use HTTPS** to connect your application with the Toolbox service,
-> especially in **production environments** or whenever the communication
-> involves **sensitive data** (including scenarios where tools require
-> authentication tokens). Using plain HTTP lacks encryption and exposes your
-> application and data to significant security risks, such as eavesdropping and
-> tampering.
+{{< notice warning >}}
+**Always use HTTPS** to connect your application with the Toolbox service, especially in **production environments** or whenever the communication involves **sensitive data** (including scenarios where tools requireauthentication tokens). Using plain HTTP lacks encryption and exposes your application and data to significant security risks, such as eavesdropping and tampering.
+{{< /notice >}}
 
 Tools can be configured within the Toolbox service to require authentication,
 ensuring only authorized users or applications can invoke them, especially when
@@ -364,10 +358,9 @@ You must provide the SDK with a function that returns the
 necessary token when called. The implementation depends on your application's
 authentication flow (e.g., retrieving a stored token, initiating an OAuth flow).
 
-> [!IMPORTANT]
-> The name used when registering the getter function with the SDK (e.g.,
-> `"my_api_token"`) must exactly match the `name` of the corresponding
-> `authServices` defined in the tool's configuration within the Toolbox service.
+{{< notice info >}}
+The name used when registering the getter function with the SDK (e.g., `"my_api_token"`) must exactly match the `name` of the corresponding `authServices` defined in the tool's configuration within the Toolbox service.
+{{< /notice >}}
 
 ```go
 func getAuthToken() string {
@@ -377,12 +370,9 @@ func getAuthToken() string {
 }
 ```
 
-> [!TIP]
-> Your token retriever function is invoked every time an authenticated parameter
-> requires a token for a tool call. Consider implementing caching logic within
-> this function to avoid redundant token fetching or generation, especially for
-> tokens with longer validity periods or if the retrieval process is
-> resource-intensive.
+{{< notice tip >}}
+Your token retriever function is invoked every time an authenticated parameter requires a token for a tool call. Consider implementing caching logic within this function to avoid redundant token fetching or generation, especially for tokens with longer validity periods or if the retrieval process is resource-intensive.
+{{< /notice >}}
 
 #### Option A: Add Default Authentication to a Client
 
@@ -440,9 +430,9 @@ AuthTools, err := client.LoadToolset(
 )
 ```
 
-> [!NOTE]
-> Adding auth tokens during loading only affect the tools loaded within that
-> call.
+{{< notice note >}}
+Adding auth tokens during loading only affect the tools loaded within that call.
+{{< /notice >}}
 
 ### Complete Authentication Example
 
@@ -472,10 +462,9 @@ func main() {
 }
 ```
 
-> [!NOTE]
-> An auth token getter for a specific name (e.g., "GOOGLE_ID") will replace any
-> client header with the same name followed by "_token" (e.g.,
-> "GOOGLE_ID_token").
+{{< notice note >}}
+An auth token getter for a specific name (e.g., "GOOGLE_ID") will replace any client header with the same name followed by "_token" (e.g., "GOOGLE_ID_token").
+{{< /notice >}}
 
 ## Binding Parameter Values
 
@@ -489,14 +478,13 @@ fixed and will not be requested or modified by the LLM during tool use.
 - **Enforcing consistency:** Ensuring specific values for certain parameters.
 - **Pre-filling known data:**  Providing defaults or context.
 
-> [!IMPORTANT]
-> The parameter names used for binding (e.g., `"api_key"`) must exactly match the
-> parameter names defined in the tool's configuration within the Toolbox
-> service.
+{{< notice info >}}
+The parameter names used for binding (e.g., `"api_key"`) must exactly match the parameter names defined in the tool's configuration within the Toolbox service.
+{{< /notice >}}
 
-> [!NOTE]
-> You do not need to modify the tool's configuration in the Toolbox service to
-> bind parameter values using the SDK.
+{{< notice note >}}
+You do not need to modify the tool's configuration in the Toolbox service to bind parameter values using the SDK.
+{{< /notice >}}
 
 #### Option A: Add Default Bound Parameters to a Client
 
@@ -545,8 +533,7 @@ boundTool, err := client.LoadTool("my-tool", ctx, core.WithBindParamString("para
 boundTool, err := client.LoadToolset("", ctx, core.WithBindParamString("param", "value"))
 ```
 
-> [!NOTE]
-> Bound values during loading only affect the tools loaded in that call.
+{{< notice note >}} Bound values during loading only affect the tools loaded in that call. {{< /notice >}}
 
 ### Binding Dynamic Values
 
@@ -561,8 +548,7 @@ getDynamicValue := func() (string, error) { return "req-123", nil }
 dynamicBoundTool, err := tool.ToolFrom(core.WithBindParamStringFunc("param", getDynamicValue))
 ```
 
-> [!IMPORTANT]
-> You don't need to modify tool configurations to bind parameter values.
+{{< notice info >}} You don't need to modify tool configurations to bind parameter values. {{< /notice >}}
 
 
 # Using with Orchestration Frameworks
