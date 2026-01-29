@@ -79,7 +79,7 @@ func getOracleConfigFromEnv(t *testing.T) oracle.Config {
 
 	return oracle.Config{
 		Name:             "test-oracle-instance",
-		Kind:             vars["kind"].(string),
+		Kind:             vars["type"].(string),
 		User:             vars["user"].(string),
 		Password:         vars["password"].(string),
 		Host:             vars["host"].(string),
