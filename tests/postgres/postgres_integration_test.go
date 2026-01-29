@@ -111,6 +111,7 @@ func TestPostgres(t *testing.T) {
 	teardownTable2 := tests.SetupPostgresSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
 	defer teardownTable2(t)
 
+	
 	// Set up table for semantic search
 	vectorTableName, tearDownVectorTable := tests.SetupPostgresVectorTable(t, ctx, pool)
 	defer tearDownVectorTable(t)
