@@ -39,6 +39,7 @@ var expectedToolSources = []string{
 	"dataplex",
 	"elasticsearch",
 	"firestore",
+	"looker-admin",
 	"looker-conversational-analytics",
 	"looker",
 	"mindsdb",
@@ -117,6 +118,7 @@ func TestGetPrebuiltTool(t *testing.T) {
 	firestoreconfig, _ := Get("firestore")
 	looker_config, _ := Get("looker")
 	lookerca_config, _ := Get("looker-conversational-analytics")
+	lookeradmin_config, _ := Get("looker-admin")
 	mysql_config, _ := Get("mysql")
 	mssql_config, _ := Get("mssql")
 	oceanbase_config, _ := Get("oceanbase")
@@ -182,6 +184,9 @@ func TestGetPrebuiltTool(t *testing.T) {
 	}
 	if len(lookerca_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch looker-conversational-analytics prebuilt tools yaml")
+	}
+	if len(lookeradmin_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch looker-admin prebuilt tools yaml")
 	}
 	if len(mysql_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch mysql prebuilt tools yaml")
