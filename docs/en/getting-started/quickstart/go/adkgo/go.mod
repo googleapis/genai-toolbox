@@ -4,8 +4,8 @@ go 1.24.4
 
 require (
 	github.com/googleapis/mcp-toolbox-sdk-go v0.4.0
-	google.golang.org/adk v0.1.0
-	google.golang.org/genai v1.36.0
+	google.golang.org/adk v0.3.0
+	google.golang.org/genai v1.43.0
 )
 
 require (
@@ -18,6 +18,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
+	github.com/google/safehtml v0.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.6 // indirect
 	github.com/googleapis/gax-go/v2 v2.15.0 // indirect

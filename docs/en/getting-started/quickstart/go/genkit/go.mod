@@ -3,7 +3,7 @@ module genkit-quickstart
 go 1.24.6
 
 require (
-	github.com/firebase/genkit/go v1.2.0
+	github.com/firebase/genkit/go v1.4.0
 	github.com/googleapis/mcp-toolbox-sdk-go v0.4.0
 )
 
@@ -45,7 +45,7 @@ require (
 	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.31.0 // indirect
 	google.golang.org/api v0.255.0 // indirect
-	google.golang.org/genai v1.34.0 // indirect
+	google.golang.org/genai v1.41.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251029180050-ab9386a59fda // indirect
 	google.golang.org/grpc v1.76.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
