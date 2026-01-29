@@ -72,8 +72,8 @@ func getOracleConfigFromEnv(t *testing.T) oracle.Config {
 		t.Fatalf("invalid ORACLE_PORT: %v", err)
 	}
 
-	useOCI, err := strconv.ParseBool(vars["ORACLE_USE_OCI"].(string))
-	if err != nil && vars["ORACLE_USE_OCI"].(string) != "" {
+	useOCI, err := strconv.ParseBool(vars["useOCI"].(string))
+	if err != nil && vars["useOCI"].(string) != "" {
 		useOCI = false
 	}
 
