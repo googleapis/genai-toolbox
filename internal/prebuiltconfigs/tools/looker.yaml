@@ -1143,6 +1143,24 @@ tools:
           - errors: Array of error objects (if any), containing details like `message`, `file_path`, `line_number`, and `severity`.
           - warnings: Array of warning messages (if any).
 
+    create_view_from_table:
+        kind: looker-create-view-from-table
+        source: looker-source
+        description: |
+          This tool generates boilerplate LookML views directly from the database schema.
+          It does not create model or explore files, only view files in the specified folder.
+
+          Prerequisite: The Looker session must be in Development Mode. Use `dev_mode: true` first.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+          - connection (required): The database connection name.
+          - tables (required): A list of objects to generate views for. Each object must contain `schema` and `table_name` (note: table names are case-sensitive). Optional fields include `primary_key`, `base_view`, and `columns` (array of objects with `column_name`).
+          - folder_name (optional): The folder to place the view files in (defaults to 'views/').
+
+          Output:
+          A confirmation message upon successful view generation, or an error message if the operation fails.
+
 toolsets:
     looker_tools:
         - get_models
@@ -1184,3 +1202,4 @@ toolsets:
         - get_connection_table_columns
         - get_lookml_tests
         - run_lookml_tests
+        - create_view_from_table
