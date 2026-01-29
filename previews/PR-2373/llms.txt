@@ -61,6 +61,7 @@ List of reference documentation for resources in Toolbox.
   - [Cassandra](https://googleapis.github.io/genai-toolbox/previews/PR-2373/resources/sources/cassandra/): Apache Cassandra is a NoSQL distributed database known for its horizontal scalability, distributed architecture, and flexible schema definition.
   - [ClickHouse](https://googleapis.github.io/genai-toolbox/previews/PR-2373/resources/sources/clickhouse/): ClickHouse is an open-source, OLTP database.
   - [Cloud Healthcare API](https://googleapis.github.io/genai-toolbox/previews/PR-2373/resources/sources/cloud-healthcare/): The Cloud Healthcare API provides a managed solution for storing and accessing healthcare data in Google Cloud, providing a critical bridge  between existing care systems and applications hosted on Google Cloud.
+  - [Cloud Logging Admin](https://googleapis.github.io/genai-toolbox/previews/PR-2373/resources/sources/cloud-logging-admin/): The Cloud Logging Admin source enables tools to interact with the Cloud Logging API, allowing for the retrieval of log names, monitored resource types, and the querying of log data.
   - [Cloud Monitoring](https://googleapis.github.io/genai-toolbox/previews/PR-2373/resources/sources/cloud-monitoring/): A "cloud-monitoring" source provides a client for the Cloud Monitoring API.
   - [Cloud SQL for MySQL](https://googleapis.github.io/genai-toolbox/previews/PR-2373/resources/sources/cloud-sql-mysql/): Cloud SQL for MySQL is a fully-managed database service for MySQL.
   - [Cloud SQL for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-2373/resources/sources/cloud-sql-pg/): Cloud SQL for PostgreSQL is a fully-managed database service for Postgres.
@@ -135,6 +136,9 @@ List of reference documentation for resources in Toolbox.
   - [Utility tools](https://googleapis.github.io/genai-toolbox/previews/PR-2373/resources/tools/utility/): Tools that provide utility.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-2373/resources/tools/valkey/): Tools that work with Valkey Sources.
   - [YugabyteDB](https://googleapis.github.io/genai-toolbox/previews/PR-2373/resources/tools/yuagbytedb/): Tools that work with Valkey Sources.
+  - [cloud-logging-admin-list-log-names](https://googleapis.github.io/genai-toolbox/previews/PR-2373/resources/tools/cloudloggingadmin/cloud-logging-admin-list-log-names/): A "cloud-logging-admin-list-log-names" tool lists the log names in the project.
+  - [cloud-logging-admin-list-resource-types](https://googleapis.github.io/genai-toolbox/previews/PR-2373/resources/tools/cloudloggingadmin/cloud-logging-admin-list-resource-types/): A "cloud-logging-admin-list-resource-types" tool lists the monitored resource types.
+  - [cloud-logging-admin-query-logs](https://googleapis.github.io/genai-toolbox/previews/PR-2373/resources/tools/cloudloggingadmin/cloud-logging-admin-query-logs/): A "cloud-logging-admin-query-logs" tool queries log entries.
 - [Prompts](https://googleapis.github.io/genai-toolbox/previews/PR-2373/resources/prompts/): Prompts allow servers to provide structured messages and instructions for interacting with language models.
   - [Custom](https://googleapis.github.io/genai-toolbox/previews/PR-2373/resources/prompts/custom/): Custom prompts defined by the user.
 
