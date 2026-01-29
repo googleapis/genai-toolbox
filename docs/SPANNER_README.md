@@ -21,6 +21,11 @@ An editor configured to use the Cloud Spanner MCP server can use its AI capabili
 ## Install & Configuration
 
 1. In the Antigravity MCP Store, click the "Install" button.
+    > [!NOTE]
+    > Installation automatically uses the
+    > [toolbox server package](https://www.npmjs.com/package/@toolbox-sdk/server)
+    > (version `>=0.26.0`). You can run the latest server manually with command
+    > ```npx -y @toolbox-sdk/server@latest --prebuilt spanner```.
 
 2. Add the required inputs for your [instance](https://docs.cloud.google.com/spanner/docs/instances) in the configuration pop-up, then click "Save". You can update this configuration at any time in the "Configure" tab.
 

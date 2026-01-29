@@ -23,6 +23,12 @@ To connect to the database to explore and query data, search the MCP store for t
 
 In the Antigravity MCP Store, click the "Install" button.
 
+> [!NOTE]
+> Installation automatically uses the
+> [toolbox server package](https://www.npmjs.com/package/@toolbox-sdk/server)
+> (version `>=0.26.0`). You can run the latest server manually with command
+> ```npx -y @toolbox-sdk/server@latest --prebuilt cloud-sql-mysql-admin```.
+
 You'll now be able to see all enabled tools in the "Tools" tab.
 
 > [!NOTE]
