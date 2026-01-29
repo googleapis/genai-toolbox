@@ -47,7 +47,7 @@ var expectedToolSources = []string{
 	"mysql",
 	"neo4j",
 	"oceanbase",
-	"oracle",
+	"oracledb",
 	"postgres",
 	"serverless-spark",
 	"singlestore",
@@ -132,6 +132,8 @@ func TestGetPrebuiltTool(t *testing.T) {
 	neo4jconfig := getOrFatal(t, "neo4j")
 	healthcare_config := getOrFatal(t, "cloud-healthcare")
 	snowflake_config := getOrFatal(t, "snowflake")
+	oracle_config := getOrFatal(t,"oracledb")
+
 	if len(alloydb_omni_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb omni prebuilt tools yaml")
 	}
