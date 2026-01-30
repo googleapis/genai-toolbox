@@ -114,16 +114,16 @@ func TestCloudSQLPgSimpleToolEndpoints(t *testing.T) {
 		t.Fatalf("unable to create Cloud SQL connection pool: %s", err)
 	}
 
-	// Generate a unique ID 
+	// Generate a unique ID
 	uniqueID := strings.ReplaceAll(uuid.New().String(), "-", "")
 	t.Logf("STARTING TEST RUN: uniqueID = %s", uniqueID)
- 
+
 	// This will execute after all tool tests complete (success, fail, or t.Fatal)
 	t.Cleanup(func() {
 		tests.CleanupPostgresTables(t, context.Background(), pool, uniqueID)
 	})
 
-	// 3. Create table names using the UUID 
+	// 3. Create table names using the UUID
 	tableNameParam := "param_table_" + uniqueID
 	tableNameAuth := "auth_table_" + uniqueID
 	tableNameTemplateParam := "template_param_table_" + uniqueID
