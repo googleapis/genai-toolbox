@@ -14,6 +14,8 @@ allows Toolbox to interact with Dataproc Clusters hosted on Google Cloud.
 
 ## Available Tools
 
+- [`dataproc-get-cluster`](../tools/dataproc/dataproc-get-cluster.md)
+  Get a specific Dataproc cluster.
 - [`dataproc-list-clusters`](../tools/dataproc/dataproc-list-clusters.md)
   List and filter Dataproc clusters.
 

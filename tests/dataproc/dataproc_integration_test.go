@@ -30,11 +30,14 @@ import (
 
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
 	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
+	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools/dataproc/dataproclistclusters"
 	"github.com/googleapis/genai-toolbox/tests"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/testing/protocmp"
 )
 
 var (
@@ -86,6 +89,15 @@ func TestDataprocClustersToolEndpoints(t *testing.T) {
 			},
 		},
 		"tools": map[string]any{
+			"get-cluster": map[string]any{
+				"type":   "dataproc-get-cluster",
+				"source": "my-dataproc",
+			},
+			"get-cluster-with-auth": map[string]any{
+				"type":         "dataproc-get-cluster",
+				"source":       "my-dataproc",
+				"authRequired": []string{"my-google-auth"},
+			},
 			"list-clusters": map[string]any{
 				"type":   "dataproc-list-clusters",
 				"source": "my-dataproc",
@@ -118,6 +130,50 @@ func TestDataprocClustersToolEndpoints(t *testing.T) {
 		t.Fatalf("failed to create dataproc client: %v", err)
 	}
 	defer clusterClient.Close()
+
+	t.Run("get-cluster", func(t *testing.T) {
+		clusterName := listClustersRpc(t, clusterClient, ctx, "", 1)[0].Name
+		t.Run("success", func(t *testing.T) {
+			t.Parallel()
+			runGetClusterTest(t, clusterClient, ctx, clusterName)
+		})
+		t.Run("errors", func(t *testing.T) {
+			t.Parallel()
+			missingClusterFullName := fmt.Sprintf("projects/%s/regions/%s/clusters/INVALID_CLUSTER", dataprocProject, dataprocRegion)
+			tcs := []struct {
+				name     string
+				toolName string
+				request  map[string]any
+				wantCode int
+				wantMsg  string
+			}{
+				{
+					name:     "missing cluster",
+					toolName: "get-cluster",
+					request:  map[string]any{"clusterName": "INVALID_CLUSTER"},
+					wantCode: http.StatusBadRequest,
+					wantMsg:  fmt.Sprintf("Not found: Cluster projects/%s/regions/%s/clusters/INVALID_CLUSTER", dataprocProject, dataprocRegion),
+				},
+				{
+					name:     "full cluster name",
+					toolName: "get-cluster",
+					request:  map[string]any{"clusterName": missingClusterFullName},
+					wantCode: http.StatusBadRequest,
+					wantMsg:  fmt.Sprintf("clusterName must be a short name without '/': %s", missingClusterFullName),
+				},
+			}
+			for _, tc := range tcs {
+				t.Run(tc.name, func(t *testing.T) {
+					t.Parallel()
+					testError(t, tc.toolName, tc.request, tc.wantCode, tc.wantMsg)
+				})
+			}
+		})
+		t.Run("auth", func(t *testing.T) {
+			t.Parallel()
+			runAuthTest(t, "get-cluster-with-auth", map[string]any{"clusterName": shortName(clusterName)}, http.StatusOK)
+		})
+	})
 
 	t.Run("list-clusters", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
@@ -276,6 +332,126 @@ func runListClustersTest(t *testing.T, client *dataproc.ClusterControllerClient,
 	}
 }
 
+func runGetClusterTest(t *testing.T, client *dataproc.ClusterControllerClient, ctx context.Context, fullName string) {
+	// First get the cluster details directly from the Go proto API.
+	req := &dataprocpb.GetClusterRequest{
+		ProjectId:   dataprocProject,
+		Region:      dataprocRegion,
+		ClusterName: fullName[strings.LastIndex(fullName, "/")+1:],
+	}
+	rawWantClusterPb, err := client.GetCluster(ctx, req)
+	if err != nil {
+		t.Fatalf("failed to get cluster: %s", err)
+	}
+
+	// Trim unknown fields from the proto by marshalling and unmarshalling.
+	jsonBytes, err := protojson.Marshal(rawWantClusterPb)
+	if err != nil {
+		t.Fatalf("failed to marshal cluster to JSON: %s", err)
+	}
+	var wantClusterPb dataprocpb.Cluster
+	if err := protojson.Unmarshal(jsonBytes, &wantClusterPb); err != nil {
+		t.Fatalf("error unmarshalling result: %s", err)
+	}
+
+	shortName := fullName[strings.LastIndex(fullName, "/")+1:]
+
+	tcs := []struct {
+		name        string
+		clusterName string
+		want        *dataprocpb.Cluster
+	}{
+		{
+			name:        "found cluster",
+			clusterName: shortName,
+			want:        &wantClusterPb,
+		},
+	}
+
+	t.Run("success", func(t *testing.T) {
+		for _, tc := range tcs {
+			t.Run(tc.name, func(t *testing.T) {
+				request := map[string]any{"clusterName": tc.clusterName}
+				resp, err := invokeTool("get-cluster", request, nil)
+				if err != nil {
+					t.Fatalf("invokeTool failed: %v", err)
+				}
+				defer resp.Body.Close()
+
+				if resp.StatusCode != http.StatusOK {
+					body, _ := io.ReadAll(resp.Body)
+					t.Fatalf("status code got %d, want 200. Body: %s", resp.StatusCode, body)
+				}
+
+				var body map[string]any
+				if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+					t.Fatalf("error parsing response body: %v", err)
+				}
+				resultStr, ok := body["result"].(string)
+				if !ok {
+					t.Fatalf("result is not a string, got %T", body["result"])
+				}
+				var wrappedResult map[string]any
+				if err := json.Unmarshal([]byte(resultStr), &wrappedResult); err != nil {
+					t.Fatalf("error unmarshalling result: %s", err)
+				}
+
+				consoleURL, ok := wrappedResult["consoleUrl"].(string)
+				if !ok || !strings.HasPrefix(consoleURL, clusterURLPrefix) {
+					t.Errorf("unexpected consoleUrl: %v", consoleURL)
+				}
+				logsURL, ok := wrappedResult["logsUrl"].(string)
+				if !ok || !strings.HasPrefix(logsURL, logsURLPrefix) {
+					t.Errorf("unexpected logsUrl: %v", logsURL)
+				}
+
+				clusterJSON, err := json.Marshal(wrappedResult["cluster"])
+				if err != nil {
+					t.Fatalf("failed to marshal cluster: %v", err)
+				}
+
+				// Unmarshal JSON to proto for proto-aware deep comparison.
+				var cluster dataprocpb.Cluster
+				if err := protojson.Unmarshal(clusterJSON, &cluster); err != nil {
+					t.Fatalf("error unmarshalling cluster from wrapped result: %s", err)
+				}
+
+				if !cmp.Equal(&cluster, tc.want, protocmp.Transform()) {
+					diff := cmp.Diff(&cluster, tc.want, protocmp.Transform())
+					t.Errorf("GetCluster() returned diff (-got +want):\n%s", diff)
+				}
+			})
+		}
+	})
+
+	t.Run("errors", func(t *testing.T) {
+		tcs := []struct {
+			name     string
+			request  map[string]any
+			wantCode int
+			wantMsg  string
+		}{
+			{
+				name:     "missing clusterName",
+				request:  map[string]any{},
+				wantCode: http.StatusBadRequest,
+				wantMsg:  "missing required parameter: clusterName",
+			},
+			{
+				name:     "invalid name with slash",
+				request:  map[string]any{"clusterName": "projects/foo/regions/bar/clusters/baz"}, // Full name requires matching project/region
+				wantCode: http.StatusBadRequest,
+				wantMsg:  "clusterName must be a short name without '/'",
+			},
+		}
+		for _, tc := range tcs {
+			t.Run(tc.name, func(t *testing.T) {
+				testError(t, "get-cluster", tc.request, tc.wantCode, tc.wantMsg)
+			})
+		}
+	})
+}
+
 func listClustersRpc(t *testing.T, client *dataproc.ClusterControllerClient, ctx context.Context, filter string, n int) []dataproclistclusters.Cluster {
 	req := &dataprocpb.ListClustersRequest{
 		ProjectId: dataprocProject,
@@ -364,4 +540,9 @@ func testError(t *testing.T, toolName string, request map[string]any, wantCode i
 	if !bytes.Contains(bodyBytes, []byte(wantMsg)) {
 		t.Fatalf("response body does not contain %q: %s", wantMsg, string(bodyBytes))
 	}
+}
+
+func shortName(fullName string) string {
+	parts := strings.Split(fullName, "/")
+	return parts[len(parts)-1]
 }

@@ -431,6 +431,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   **Dataproc Viewer** (`roles/dataproc.viewer`) to examine clusters and jobs.
 *   **Tools:**
     *   `list_clusters`: Lists Dataproc clusters.
+    *   `get_cluster`: Gets a Dataproc cluster.
 
 ## Firestore
 
