@@ -115,23 +115,35 @@ func TestSpannerToolEndpoints(t *testing.T) {
 		SpannerInstance,
 		SpannerDatabase,
 	)
-	teardownTable1 := setupSpannerTable(t, ctx, adminClient, dataClient, createParamTableStmt, insertParamTableStmt, tableNameParam, dbString, paramTestParams)
+	teardownTable1,err := setupSpannerTable(t, ctx, adminClient, dataClient, createParamTableStmt, insertParamTableStmt, tableNameParam, dbString, paramTestParams)
+	if err != nil {
+		t.Fatalf("failed to setup Spanner table %s: %v", tableNameParam, err)
+	}
 	defer teardownTable1(t)
 
 	// set up data for auth tool
 	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := getSpannerAuthToolInfo(tableNameAuth)
-	teardownTable2 := setupSpannerTable(t, ctx, adminClient, dataClient, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, dbString, authTestParams)
+	teardownTable2,err := setupSpannerTable(t, ctx, adminClient, dataClient, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, dbString, authTestParams)
+	if err != nil {
+		t.Fatalf("failed to setup Spanner table %s: %v", tableNameAuth, err)
+	}	
 	defer teardownTable2(t)
 
 	// set up data for template param tool
 	createStatementTmpl := fmt.Sprintf("CREATE TABLE %s (id INT64, name STRING(MAX), age INT64) PRIMARY KEY (id)", tableNameTemplateParam)
-	teardownTableTmpl := setupSpannerTable(t, ctx, adminClient, dataClient, createStatementTmpl, "", tableNameTemplateParam, dbString, nil)
+	teardownTableTmpl,err := setupSpannerTable(t, ctx, adminClient, dataClient, createStatementTmpl, "", tableNameTemplateParam, dbString, nil)
+	if err != nil {
+		t.Fatalf("failed to setup Spanner table %s: %v", tableNameTemplateParam, err)
+	}
 	defer teardownTableTmpl(t)
 
 	// set up for graph tool
 	nodeTableName := "node_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
 	createNodeStatementTmpl := fmt.Sprintf("CREATE TABLE %s (id INT64 NOT NULL) PRIMARY KEY (id)", nodeTableName)
-	teardownNodeTableTmpl := setupSpannerTable(t, ctx, adminClient, dataClient, createNodeStatementTmpl, "", nodeTableName, dbString, nil)
+	teardownNodeTableTmpl,err := setupSpannerTable(t, ctx, adminClient, dataClient, createNodeStatementTmpl, "", nodeTableName, dbString, nil)
+	if err != nil {
+		t.Fatalf("failed to setup Spanner table %s: %v", nodeTableName, err)
+	}	
 	defer teardownNodeTableTmpl(t)
 
 	edgeTableName := "edge_table_" + strings.ReplaceAll(uuid.New().String(), "-", "")
@@ -143,7 +155,10 @@ func TestSpannerToolEndpoints(t *testing.T) {
 	) PRIMARY KEY (id, target_id),
 	 INTERLEAVE IN PARENT %[2]s ON DELETE CASCADE
 	`, edgeTableName, nodeTableName)
-	teardownEdgeTableTmpl := setupSpannerTable(t, ctx, adminClient, dataClient, createEdgeStatementTmpl, "", edgeTableName, dbString, nil)
+	teardownEdgeTableTmpl,err := setupSpannerTable(t, ctx, adminClient, dataClient, createEdgeStatementTmpl, "", edgeTableName, dbString, nil)
+	if err != nil {
+		t.Fatalf("failed to setup Spanner table %s: %v", edgeTableName, err)
+	}	
 	defer teardownEdgeTableTmpl(t)
 
 	graphName := "graph_" + strings.ReplaceAll(uuid.New().String(), "-", "")
@@ -243,7 +258,7 @@ func getSpannerAuthToolInfo(tableName string) (string, string, string, map[strin
 
 // setupSpannerTable creates and inserts data into a table of tool
 // compatible with spanner-sql tool
-func setupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, dataClient *spanner.Client, createStatement, insertStatement, tableName, dbString string, params map[string]any) func(*testing.T) {
+func setupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.DatabaseAdminClient, dataClient *spanner.Client, createStatement, insertStatement, tableName, dbString string, params map[string]any) (func(*testing.T),error) {
 
 	// Create table
 	op, err := adminClient.UpdateDatabaseDdl(ctx, &databasepb.UpdateDatabaseDdlRequest{
@@ -251,11 +266,11 @@ func setupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.
 		Statements: []string{createStatement},
 	})
 	if err != nil {
-		t.Fatalf("unable to start create table operation %s: %s", tableName, err)
+		return nil, fmt.Errorf("unable to start create table operation %s: %w", tableName, err)
 	}
 	err = op.Wait(ctx)
 	if err != nil {
-		t.Fatalf("unable to create test table %s: %s", tableName, err)
+		return nil, fmt.Errorf("unable to create test table %s: %w", tableName, err)
 	}
 
 	// Insert test data
@@ -269,7 +284,7 @@ func setupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.
 			return err
 		})
 		if err != nil {
-			t.Fatalf("unable to insert test data: %s", err)
+			return nil, fmt.Errorf("unable to insert test data: %w", err)
 		}
 	}
 
@@ -288,7 +303,7 @@ func setupSpannerTable(t *testing.T, ctx context.Context, adminClient *database.
 		if opErr != nil {
 			t.Errorf("Teardown failed: %s", opErr)
 		}
-	}
+	}, nil
 }
 
 // setupSpannerGraph creates a graph and inserts data into it.
