@@ -1041,6 +1041,11 @@ tools:
           A JSON array of objects, where each object represents a column and contains details
           such as `table_name`, `column_name`, `data_type`, and `is_nullable`.
 
+    get_all_lookml_tests:
+        kind: looker-get-all-lookml-tests
+        source: looker-source
+        description: |
+          Returns a list of tests which can be run to validate a project's LookML code and/or the underlying data, optionally filtered by the file id.
 
 toolsets:
     looker_tools:
@@ -1077,3 +1082,4 @@ toolsets:
         - get_connection_databases
         - get_connection_tables
         - get_connection_table_columns
+        - get_all_lookml_tests

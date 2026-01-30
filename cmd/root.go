@@ -134,6 +134,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerdeleteprojectfile"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerdevmode"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergenerateembedurl"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetalllookmltests"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetconnectiondatabases"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetconnections"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookergetconnectionschemas"
