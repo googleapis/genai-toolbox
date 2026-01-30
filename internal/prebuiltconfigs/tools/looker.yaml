@@ -1098,6 +1098,26 @@ tools:
           A JSON array of objects, where each object represents a column and contains details
           such as `table_name`, `column_name`, `data_type`, and `is_nullable`.
 
+    get_lookml_tests:
+        kind: looker-get-lookml-tests
+        source: looker-source
+        description: |
+          Returns a list of tests which can be run to validate a project's LookML code and/or the underlying data, optionally filtered by the file id.
+
+          Prerequisite: The Looker session must be in Development Mode. Use `dev_mode: true` first.
+
+          Parameters:
+          - project_id (required): The unique ID of the LookML project.
+          - file_id (optional): The ID of the file to filter tests by. This must be the complete file path from the project root (e.g., `models/my_model.model.lkml` or `views/my_view.view.lkml`).
+          
+          Output:
+          A JSON array of LookML test objects, each containing:
+          - model_name: The name of the model.
+          - name: The name of the test.
+          - explore_name: The name of the explore being tested.
+          - query_url_params: The query parameters used for the test.
+          - file: The file path where the test is defined.
+          - line: The line number where the test is defined.
 
 toolsets:
     looker_tools:
@@ -1138,3 +1158,4 @@ toolsets:
         - get_connection_databases
         - get_connection_tables
         - get_connection_table_columns
+        - get_lookml_tests

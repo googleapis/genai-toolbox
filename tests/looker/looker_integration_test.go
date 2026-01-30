@@ -272,6 +272,11 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
+			"get_lookml_tests": map[string]any{
+				"type":        "looker-get-lookml-tests",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 		},
 	}
 
@@ -691,6 +696,30 @@ func TestLooker(t *testing.T) {
 						"required":             false,
 						"type":                 "object",
 						"default":              map[string]any{},
+					},
+				},
+			},
+		},
+	)
+	tests.RunToolGetTestByName(t, "get_lookml_tests",
+		map[string]any{
+			"get_lookml_tests": map[string]any{
+				"description":  "Get LookML tests.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The id of the project to retrieve LookML tests for.",
+						"name":        "project_id",
+						"required":    true,
+						"type":        "string",
+					},
+					map[string]any{
+						"authSources": []any{},
+						"description": "Optional id of the file to filter tests by.",
+						"name":        "file_id",
+						"required":    false,
+						"type":        "string",
 					},
 				},
 			},
