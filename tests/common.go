@@ -613,31 +613,37 @@ func GetMySQLWants() (string, string, string, string) {
 
 // SetupPostgresSQLTable creates and inserts data into a table of tool
 // compatible with postgres-sql tool
-func SetupPostgresSQLTable(t *testing.T, ctx context.Context, pool *pgxpool.Pool, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
+func SetupPostgresSQLTable(t *testing.T, ctx context.Context, pool *pgxpool.Pool, createStatement, insertStatement, tableName string, params []any) (func(*testing.T), error) {
 	err := pool.Ping(ctx)
 	if err != nil {
-		t.Fatalf("unable to connect to test database: %s", err)
+		// Return nil for the function and the error itself
+		return nil, fmt.Errorf("unable to connect to test database: %w", err)
 	}
 
 	// Create table
 	_, err = pool.Query(ctx, createStatement)
 	if err != nil {
-		t.Fatalf("unable to create test table %s: %s", tableName, err)
+		return nil, fmt.Errorf("unable to create test table %s: %w", tableName, err)
 	}
 
 	// Insert test data
 	_, err = pool.Query(ctx, insertStatement, params...)
 	if err != nil {
-		t.Fatalf("unable to insert test data: %s", err)
+		// If creation worked but insert failed, you might still want to return 
+		// the teardown so the empty table can be cleaned up
+		teardown := func(t *testing.T) {
+			pool.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName))
+		}
+		return teardown, fmt.Errorf("unable to insert test data: %w", err)
 	}
 
+	// Return the cleanup function and nil for error
 	return func(t *testing.T) {
-		// tear down test
-		_, err = pool.Exec(ctx, fmt.Sprintf("DROP TABLE %s;", tableName))
+		_, err = pool.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName))
 		if err != nil {
 			t.Errorf("Teardown failed: %s", err)
 		}
-	}
+	}, nil
 }
 
 // SetupMsSQLTable creates and inserts data into a table of tool
