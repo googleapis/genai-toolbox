@@ -100,7 +100,7 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 	teardownTable2, err := setupOracleTable(t, ctx, db, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
 	if err != nil {
 		t.Fatalf("failed to setup Oracle table %s: %v", tableNameAuth, err)
-	}	
+	}
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
@@ -141,7 +141,7 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
 
-func setupOracleTable(t *testing.T, ctx context.Context, pool *sql.DB, createStatement, insertStatement, tableName string, params []any) (func(*testing.T),error) {
+func setupOracleTable(t *testing.T, ctx context.Context, pool *sql.DB, createStatement, insertStatement, tableName string, params []any) (func(*testing.T), error) {
 	err := pool.PingContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to test database: %w", err)
