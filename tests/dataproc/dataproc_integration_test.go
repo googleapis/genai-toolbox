@@ -100,6 +100,15 @@ func TestDataprocClustersToolEndpoints(t *testing.T) {
 				"source":       "my-dataproc",
 				"authRequired": []string{"my-google-auth"},
 			},
+			"get-job": map[string]any{
+				"type":   "dataproc-get-job",
+				"source": "my-dataproc",
+			},
+			"get-job-with-auth": map[string]any{
+				"type":         "dataproc-get-job",
+				"source":       "my-dataproc",
+				"authRequired": []string{"my-google-auth"},
+			},
 			"list-clusters": map[string]any{
 				"type":   "dataproc-list-clusters",
 				"source": "my-dataproc",
@@ -192,6 +201,49 @@ func TestDataprocClustersToolEndpoints(t *testing.T) {
 		})
 	})
 
+	t.Run("get-job", func(t *testing.T) {
+		jobId := listJobsRpc(t, jobClient, ctx, "", 1)[0].ID
+		t.Run("success", func(t *testing.T) {
+			t.Parallel()
+			runGetJobTest(t, jobClient, ctx, jobId)
+		})
+		t.Run("errors", func(t *testing.T) {
+			t.Parallel()
+			missingJobFullName := fmt.Sprintf("projects/%s/regions/%s/jobs/INVALID_JOB", dataprocProject, dataprocRegion)
+			tcs := []struct {
+				name     string
+				toolName string
+				request  map[string]any
+				wantCode int
+				wantMsg  string
+			}{
+				{
+					name:     "missing job",
+					toolName: "get-job",
+					request:  map[string]any{"jobId": "INVALID_JOB"},
+					wantCode: http.StatusBadRequest,
+					wantMsg:  fmt.Sprintf("Not found: Job projects/%s/regions/%s/jobs/INVALID_JOB", dataprocProject, dataprocRegion),
+				},
+				{
+					name:     "full job name",
+					toolName: "get-job",
+					request:  map[string]any{"jobId": missingJobFullName},
+					wantCode: http.StatusBadRequest,
+					wantMsg:  fmt.Sprintf("jobId must be a short name without '/': %s", missingJobFullName),
+				},
+			}
+			for _, tc := range tcs {
+				t.Run(tc.name, func(t *testing.T) {
+					t.Parallel()
+					testError(t, tc.toolName, tc.request, tc.wantCode, tc.wantMsg)
+				})
+			}
+		})
+		t.Run("auth", func(t *testing.T) {
+			t.Parallel()
+			runAuthTest(t, "get-job-with-auth", map[string]any{"jobId": jobId}, http.StatusOK)
+		})
+	})
 	t.Run("list-clusters", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			runListClustersTest(t, clusterClient, ctx)

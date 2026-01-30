@@ -7,5 +7,6 @@ description: >
 ---
 
 - [dataproc-get-cluster](./dataproc-get-cluster.md)
+- [dataproc-get-job](./dataproc-get-job.md)
 - [dataproc-list-clusters](./dataproc-list-clusters.md)
 - [dataproc-list-jobs](./dataproc-list-jobs.md)
