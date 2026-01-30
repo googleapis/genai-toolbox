@@ -33,11 +33,11 @@ active queries. The tool takes the following input parameters:
 ## Example
 
 ```yaml
-tools:
-  list_active_queries:
-    kind: postgres-list-active-queries
-    source: postgres-source
-    description: List the top N (default 50) currently running queries (state='active') from pg_stat_activity, ordered by longest-running first. Returns pid, user, database, application_name, client_addr, state, wait_event_type/wait_event, backend/xact/query start times, computed query_duration, and the SQL text.
+kind: tools
+name: list_active_queries
+type: postgres-list-active-queries
+source: postgres-source
+description: List the top N (default 50) currently running queries (state='active') from pg_stat_activity, ordered by longest-running first. Returns pid, user, database, application_name, client_addr, state, wait_event_type/wait_event, backend/xact/query start times, computed query_duration, and the SQL text.
 ```
 
 The response is a json array with the following elements:
@@ -64,6 +64,6 @@ The response is a json array with the following elements:
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "postgres-list-active-queries".            |
+| type        |  string  |     true     | Must be "postgres-list-active-queries".            |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

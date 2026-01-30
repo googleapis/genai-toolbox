@@ -49,17 +49,17 @@ applying IAM permissions and roles to an identity.
 ## Example
 
 ```yaml
-tools:
-  dataplex-search-aspect-types:
-    kind: dataplex-search-aspect-types
-    source: my-dataplex-source
-    description: Use this tool to find aspect types relevant to the query.
+kind: tools
+name: dataplex-search-aspect-types
+type: dataplex-search-aspect-types
+source: my-dataplex-source
+description: Use this tool to find aspect types relevant to the query.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "dataplex-search-aspect-types".            |
+| type        |  string  |     true     | Must be "dataplex-search-aspect-types".            |
 | source      |  string  |     true     | Name of the source the tool should execute on.     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

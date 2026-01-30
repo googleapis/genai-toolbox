@@ -35,7 +35,7 @@ import (
 )
 
 var (
-	getInstancesToolKind = "cloud-sql-get-instance"
+	getInstancesToolType = "cloud-sql-get-instance"
 )
 
 type getInstancesTransport struct {
@@ -231,21 +231,21 @@ func getToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 			"my-invalid-cloud-sql-source": map[string]any{
-				"kind":           "cloud-sql-admin",
+				"type":           "cloud-sql-admin",
 				"useClientOAuth": true,
 			},
 		},
 		"tools": map[string]any{
 			"get-instance-1": map[string]any{
-				"kind":        getInstancesToolKind,
+				"type":        getInstancesToolType,
 				"description": "get instance 1",
 				"source":      "my-cloud-sql-source",
 			},
 			"get-instance-2": map[string]any{
-				"kind":        getInstancesToolKind,
+				"type":        getInstancesToolType,
 				"description": "get instance 2",
 				"source":      "my-invalid-cloud-sql-source",
 			},

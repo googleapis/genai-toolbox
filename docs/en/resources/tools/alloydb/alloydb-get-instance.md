@@ -22,17 +22,17 @@ specified AlloyDB instance. It is compatible with
 ## Example
 
 ```yaml
-tools:
-  get_specific_instance:
-    kind: alloydb-get-instance
-    source: my-alloydb-admin-source
-    description: Use this tool to retrieve details for a specific AlloyDB instance.
+kind: tools
+name: get_specific_instance
+type: alloydb-get-instance
+source: my-alloydb-admin-source
+description: Use this tool to retrieve details for a specific AlloyDB instance.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
-| kind        |  string  |     true     | Must be alloydb-get-instance.                        |
+| type        |  string  |     true     | Must be alloydb-get-instance.                        |
 | source      |  string  |     true     | The name of an `alloydb-admin` source.               |
 | description |  string  |    false     | Description of the tool that is passed to the agent. |

@@ -12,57 +12,60 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-sources:
-  my-snowflake-db:
-    kind: snowflake
-    account: ${SNOWFLAKE_ACCOUNT}
-    user: ${SNOWFLAKE_USER}
-    password: ${SNOWFLAKE_PASSWORD}
-    database: ${SNOWFLAKE_DATABASE}
-    schema: ${SNOWFLAKE_SCHEMA}
-    warehouse: ${SNOWFLAKE_WAREHOUSE}  # Optional, defaults to COMPUTE_WH if not set
-    role: ${SNOWFLAKE_ROLE}           # Optional, defaults to ACCOUNTADMIN if not set
-
+kind: sources
+name: my-snowflake-db
+type: snowflake
+account: ${SNOWFLAKE_ACCOUNT}
+user: ${SNOWFLAKE_USER}
+password: ${SNOWFLAKE_PASSWORD}
+database: ${SNOWFLAKE_DATABASE}
+schema: ${SNOWFLAKE_SCHEMA}
+warehouse: ${SNOWFLAKE_WAREHOUSE}  # Optional, defaults to COMPUTE_WH if not set
+role: ${SNOWFLAKE_ROLE}           # Optional, defaults to ACCOUNTADMIN if not set
+---
+kind: tools
+name: execute_sql
+type: snowflake-execute-sql
+source: my-snowflake-db
+description: Execute arbitrary SQL statements on Snowflake
+---
+kind: tools
+name: get_customer_orders
+type: snowflake-sql
+source: my-snowflake-db
+description: Get orders for a specific customer
+statement: |
+  SELECT o.order_id, o.order_date, o.total_amount, o.status
+  FROM orders o
+  WHERE o.customer_id = $1
+  ORDER BY o.order_date DESC
+parameters:
+  - name: customer_id
+    type: string
+    description: The customer ID to look up orders for
+---
+kind: tools
+name: daily_sales_report
+type: snowflake-sql
+source: my-snowflake-db
+description: Generate daily sales report for a specific date
+statement: |
+  SELECT 
+    DATE(order_date) as sales_date,
+    COUNT(*) as total_orders,
+    SUM(total_amount) as total_revenue,
+    AVG(total_amount) as avg_order_value
+  FROM orders
+  WHERE DATE(order_date) = $1
+  GROUP BY DATE(order_date)
+parameters:
+  - name: report_date
+    type: string
+    description: The date to generate report for (YYYY-MM-DD format)
+---
+kind: toolsets
+name: snowflake-analytics
 tools:
-  execute_sql:
-    kind: snowflake-execute-sql
-    source: my-snowflake-db
-    description: Execute arbitrary SQL statements on Snowflake
-
-  get_customer_orders:
-    kind: snowflake-sql
-    source: my-snowflake-db
-    description: Get orders for a specific customer
-    statement: |
-      SELECT o.order_id, o.order_date, o.total_amount, o.status
-      FROM orders o
-      WHERE o.customer_id = $1
-      ORDER BY o.order_date DESC
-    parameters:
-      - name: customer_id
-        type: string
-        description: The customer ID to look up orders for
-
-  daily_sales_report:
-    kind: snowflake-sql
-    source: my-snowflake-db
-    description: Generate daily sales report for a specific date
-    statement: |
-      SELECT 
-        DATE(order_date) as sales_date,
-        COUNT(*) as total_orders,
-        SUM(total_amount) as total_revenue,
-        AVG(total_amount) as avg_order_value
-      FROM orders
-      WHERE DATE(order_date) = $1
-      GROUP BY DATE(order_date)
-    parameters:
-      - name: report_date
-        type: string
-        description: The date to generate report for (YYYY-MM-DD format)
-
-toolsets:
-  snowflake-analytics:
-    - execute_sql
-    - get_customer_orders
-    - daily_sales_report
+  - execute_sql
+  - get_customer_orders
+  - daily_sales_report

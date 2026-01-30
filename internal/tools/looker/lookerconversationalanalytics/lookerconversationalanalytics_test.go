@@ -17,7 +17,6 @@ package lookerconversationalanalytics_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -37,16 +36,16 @@ func TestParseFromYamlLookerConversationalAnalytics(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: looker-conversational-analytics
-					source: my-instance
-					description: some description
+			kind: tools
+			name: example_tool
+			type: looker-conversational-analytics
+			source: my-instance
+			description: some description
 			`,
 			want: server.ToolConfigs{
 				"example_tool": lookerconversationalanalytics.Config{
 					Name:         "example_tool",
-					Kind:         "looker-conversational-analytics",
+					Type:         "looker-conversational-analytics",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -56,15 +55,11 @@ func TestParseFromYamlLookerConversationalAnalytics(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

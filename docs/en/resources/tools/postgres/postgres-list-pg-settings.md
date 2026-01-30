@@ -25,16 +25,16 @@ takes the following input parameters:
 ## Example
 
 ```yaml
-tools:
-  list_indexes:
-    kind: postgres-list-pg-settings
-    source: postgres-source
-    description: |
-        Lists configuration parameters for the postgres server ordered lexicographically, 
-        with a default limit of 50 rows. It returns the parameter name, its current setting,
-        unit of measurement, a short description, the source of the current setting (e.g.,
-        default, configuration file, session), and whether a restart is required when the
-        parameter value is changed."
+kind: tools
+name: list_indexes
+type: postgres-list-pg-settings
+source: postgres-source
+description: |
+  Lists configuration parameters for the postgres server ordered lexicographically, 
+  with a default limit of 50 rows. It returns the parameter name, its current setting,
+  unit of measurement, a short description, the source of the current setting (e.g.,
+  default, configuration file, session), and whether a restart is required when the
+  parameter value is changed."
 ```
 
 The response is a json array with the following elements:
@@ -54,6 +54,6 @@ The response is a json array with the following elements:
 
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
-| kind        |  string  |     true     | Must be "postgres-list-pg-settings".                     |
+| type        |  string  |     true     | Must be "postgres-list-pg-settings".                     |
 | source      |  string  |     true     | Name of the source the SQL should execute on.        |
 | description |  string  |    false     | Description of the tool that is passed to the agent. |

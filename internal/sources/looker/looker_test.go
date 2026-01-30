@@ -15,9 +15,9 @@
 package looker_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -34,17 +34,17 @@ func TestParseFromYamlLooker(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-looker-instance:
-					kind: looker
-					base_url: http://example.looker.com/
-					client_id: jasdl;k;tjl
-					client_secret: sdakl;jgflkasdfkfg
+			kind: sources
+			name: my-looker-instance
+			type: looker
+			base_url: http://example.looker.com/
+			client_id: jasdl;k;tjl
+			client_secret: sdakl;jgflkasdfkfg
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-looker-instance": looker.Config{
 					Name:               "my-looker-instance",
-					Kind:               looker.SourceKind,
+					Type:               looker.SourceType,
 					BaseURL:            "http://example.looker.com/",
 					ClientId:           "jasdl;k;tjl",
 					ClientSecret:       "sdakl;jgflkasdfkfg",
@@ -62,22 +62,18 @@ func TestParseFromYamlLooker(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
 }
 
-func TestFailParseFromYamlLooker(t *testing.T) {
+func TestFailParseFromYaml(t *testing.T) {
 	tcs := []struct {
 		desc string
 		in   string
@@ -86,34 +82,30 @@ func TestFailParseFromYamlLooker(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-looker-instance:
-					kind: looker
-					base_url: http://example.looker.com/
-					client_id: jasdl;k;tjl
-					client_secret: sdakl;jgflkasdfkfg
-					schema: test-schema
+			kind: sources
+			name: my-looker-instance
+			type: looker
+			base_url: http://example.looker.com/
+			client_id: jasdl;k;tjl
+			client_secret: sdakl;jgflkasdfkfg
+			schema: test-schema
 			`,
-			err: "unable to parse source \"my-looker-instance\" as \"looker\": [5:1] unknown field \"schema\"\n   2 | client_id: jasdl;k;tjl\n   3 | client_secret: sdakl;jgflkasdfkfg\n   4 | kind: looker\n>  5 | schema: test-schema\n       ^\n",
+			err: "error unmarshaling sources: unable to parse source \"my-looker-instance\" as \"looker\": [5:1] unknown field \"schema\"\n   2 | client_id: jasdl;k;tjl\n   3 | client_secret: sdakl;jgflkasdfkfg\n   4 | name: my-looker-instance\n>  5 | schema: test-schema\n       ^\n   6 | type: looker",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-looker-instance:
-					kind: looker
-					client_id: jasdl;k;tjl
+			kind: sources
+			name: my-looker-instance
+			type: looker
+			client_id: jasdl;k;tjl
 			`,
-			err: "unable to parse source \"my-looker-instance\" as \"looker\": Key: 'Config.BaseURL' Error:Field validation for 'BaseURL' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-looker-instance\" as \"looker\": Key: 'Config.BaseURL' Error:Field validation for 'BaseURL' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

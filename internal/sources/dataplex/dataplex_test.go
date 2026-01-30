@@ -15,11 +15,12 @@
 package dataplex_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/dataplex"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
@@ -33,15 +34,15 @@ func TestParseFromYamlDataplex(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-instance:
-					kind: dataplex
-					project: my-project
+			kind: sources
+			name: my-instance
+			type: dataplex
+			project: my-project
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-instance": dataplex.Config{
 					Name:    "my-instance",
-					Kind:    dataplex.SourceKind,
+					Type:    dataplex.SourceType,
 					Project: "my-project",
 				},
 			},
@@ -49,16 +50,12 @@ func TestParseFromYamlDataplex(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -74,31 +71,27 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-instance:
-					kind: dataplex
-					project: my-project
-					foo: bar
+			kind: sources
+			name: my-instance
+			type: dataplex
+			project: my-project
+			foo: bar
 			`,
-			err: "unable to parse source \"my-instance\" as \"dataplex\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | kind: dataplex\n   3 | project: my-project",
+			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"dataplex\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | name: my-instance\n   3 | project: my-project\n   4 | type: dataplex",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-instance:
-					kind: dataplex
+			kind: sources
+			name: my-instance
+			type: dataplex
 			`,
-			err: "unable to parse source \"my-instance\" as \"dataplex\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"dataplex\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

@@ -29,14 +29,14 @@ import (
 	monitoring "google.golang.org/api/monitoring/v3"
 )
 
-const SourceKind string = "cloud-monitoring"
+const SourceType string = "cloud-monitoring"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -50,12 +50,12 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name           string `yaml:"name" validate:"required"`
-	Kind           string `yaml:"kind" validate:"required"`
+	Type           string `yaml:"type" validate:"required"`
 	UseClientOAuth bool   `yaml:"useClientOAuth"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 // Initialize initializes a Cloud Monitoring Source instance.
@@ -99,8 +99,8 @@ type Source struct {
 	userAgent string
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {

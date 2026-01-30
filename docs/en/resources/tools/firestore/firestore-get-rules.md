@@ -23,17 +23,17 @@ content along with metadata such as the ruleset name, and timestamps.
 ## Example
 
 ```yaml
-tools:
-  get_firestore_rules:
-    kind: firestore-get-rules
-    source: my-firestore-source
-    description: Use this tool to retrieve the active Firestore security rules.
+kind: tools
+name: get_firestore_rules
+type: firestore-get-rules
+source: my-firestore-source
+description: Use this tool to retrieve the active Firestore security rules.
 ```
 
 ## Reference
 
 | **field**   |    **type**   | **required** | **description**                                       |
 |-------------|:-------------:|:------------:|-------------------------------------------------------|
-| kind        |     string    |     true     | Must be "firestore-get-rules".                        |
+| type        |     string    |     true     | Must be "firestore-get-rules".                        |
 | source      |     string    |     true     | Name of the Firestore source to retrieve rules from.  |
 | description |     string    |     true     | Description of the tool that is passed to the LLM.    |

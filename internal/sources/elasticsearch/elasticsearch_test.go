@@ -15,13 +15,15 @@
 package elasticsearch_test
 
 import (
+	"context"
 	"reflect"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/elasticsearch"
+	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
 
 func TestParseFromYamlElasticsearch(t *testing.T) {
@@ -33,17 +35,17 @@ func TestParseFromYamlElasticsearch(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-            sources:
-              my-es-instance:
-                kind: elasticsearch
-                addresses:
-                  - http://localhost:9200
-                apikey: somekey
-            `,
-			want: server.SourceConfigs{
+			kind: sources
+			name: my-es-instance
+			type: elasticsearch
+			addresses:
+				- http://localhost:9200
+			apikey: somekey
+			`,
+			want: map[string]sources.SourceConfig{
 				"my-es-instance": elasticsearch.Config{
 					Name:      "my-es-instance",
-					Kind:      elasticsearch.SourceKind,
+					Type:      elasticsearch.SourceType,
 					Addresses: []string{"http://localhost:9200"},
 					APIKey:    "somekey",
 				},
@@ -52,15 +54,45 @@ func TestParseFromYamlElasticsearch(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			err := yaml.Unmarshal([]byte(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("failed to parse yaml: %v", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Sources); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Errorf("unexpected config diff (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestFailParseFromYaml(t *testing.T) {
+	tcs := []struct {
+		desc string
+		in   string
+		err  string
+	}{
+		{
+			desc: "extra field",
+			in: `
+			kind: sources
+			name: my-es-instance
+			type: elasticsearch
+			addresses:
+				- http://localhost:9200
+			foo: bar
+			`,
+			err: "error unmarshaling sources: unable to parse source \"my-es-instance\" as \"elasticsearch\": [3:1] unknown field \"foo\"\n   1 | addresses:\n   2 | - http://localhost:9200\n>  3 | foo: bar\n       ^\n   4 | name: my-es-instance\n   5 | type: elasticsearch",
+		},
+	}
+	for _, tc := range tcs {
+		t.Run(tc.desc, func(t *testing.T) {
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
+			if err == nil {
+				t.Fatalf("expect parsing to fail")
+			}
+			errStr := err.Error()
+			if errStr != tc.err {
+				t.Fatalf("unexpected error: got %q, want %q", errStr, tc.err)
 			}
 		})
 	}

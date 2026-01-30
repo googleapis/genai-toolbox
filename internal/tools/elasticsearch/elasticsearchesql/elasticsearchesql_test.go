@@ -17,7 +17,6 @@ package elasticsearchesql
 import (
 	"testing"
 
-	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -37,19 +36,19 @@ func TestParseFromYamlElasticsearchEsql(t *testing.T) {
 		{
 			desc: "basic search example",
 			in: `
-		tools:
-			example_tool:
-				kind: elasticsearch-esql
-				source: my-elasticsearch-instance
-				description: Elasticsearch ES|QL tool
-				query: |
-				  FROM my-index
-				  | KEEP first_name, last_name
+            kind: tools
+            name: example_tool
+            type: elasticsearch-esql
+            source: my-elasticsearch-instance
+            description: Elasticsearch ES|QL tool
+            query: |
+                FROM my-index
+                | KEEP first_name, last_name
 		`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
 					Name:         "example_tool",
-					Kind:         "elasticsearch-esql",
+					Type:         "elasticsearch-esql",
 					Source:       "my-elasticsearch-instance",
 					Description:  "Elasticsearch ES|QL tool",
 					AuthRequired: []string{},
@@ -60,23 +59,23 @@ func TestParseFromYamlElasticsearchEsql(t *testing.T) {
 		{
 			desc: "search with customizable limit parameter",
 			in: `
-			tools:
-				example_tool:
-					kind: elasticsearch-esql
-					source: my-elasticsearch-instance
-					description: Elasticsearch ES|QL tool with customizable limit
-					parameters:
-						- name: limit
-						  type: integer
-						  description: Limit the number of results
-					query: |
-					  FROM my-index
-					  | LIMIT ?limit
+            kind: tools
+            name: example_tool
+            type: elasticsearch-esql
+            source: my-elasticsearch-instance
+            description: Elasticsearch ES|QL tool with customizable limit
+            parameters:
+                - name: limit
+                  type: integer
+                  description: Limit the number of results
+            query: |
+                FROM my-index
+                | LIMIT ?limit
 			`,
 			want: server.ToolConfigs{
 				"example_tool": Config{
 					Name:         "example_tool",
-					Kind:         "elasticsearch-esql",
+					Type:         "elasticsearch-esql",
 					Source:       "my-elasticsearch-instance",
 					Description:  "Elasticsearch ES|QL tool with customizable limit",
 					AuthRequired: []string{},
@@ -91,15 +90,12 @@ func TestParseFromYamlElasticsearchEsql(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

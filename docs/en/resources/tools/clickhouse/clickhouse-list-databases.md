@@ -21,11 +21,11 @@ discovery and exploration tasks.
 ## Example
 
 ```yaml
-tools:
-  list_clickhouse_databases:
-    kind: clickhouse-list-databases
-    source: my-clickhouse-instance
-    description: List all available databases in the ClickHouse instance
+kind: tools
+name: list_clickhouse_databases
+type: clickhouse-list-databases
+source: my-clickhouse-instance
+description: List all available databases in the ClickHouse instance
 ```
 
 ## Return Value
@@ -49,7 +49,7 @@ Example response:
 
 | **field**    |      **type**      | **required** | **description**                                       |
 |--------------|:------------------:|:------------:|-------------------------------------------------------|
-| kind         |       string       |     true     | Must be "clickhouse-list-databases".                  |
+| type         |       string       |     true     | Must be "clickhouse-list-databases".                  |
 | source       |       string       |     true     | Name of the ClickHouse source to list databases from. |
 | description  |       string       |     true     | Description of the tool that is passed to the LLM.    |
 | authRequired |  array of string   |    false     | Authentication services required to use this tool.    |

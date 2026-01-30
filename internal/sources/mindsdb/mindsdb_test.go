@@ -15,11 +15,12 @@
 package mindsdb_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/mindsdb"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
@@ -33,19 +34,19 @@ func TestParseFromYamlMindsDB(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-mindsdb-instance:
-					kind: mindsdb
-					host: 0.0.0.0
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: sources
+			name: my-mindsdb-instance
+			type: mindsdb
+			host: 0.0.0.0
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-mindsdb-instance": mindsdb.Config{
 					Name:     "my-mindsdb-instance",
-					Kind:     mindsdb.SourceKind,
+					Type:     mindsdb.SourceType,
 					Host:     "0.0.0.0",
 					Port:     "my-port",
 					Database: "my_db",
@@ -57,20 +58,20 @@ func TestParseFromYamlMindsDB(t *testing.T) {
 		{
 			desc: "with query timeout",
 			in: `
-			sources:
-				my-mindsdb-instance:
-					kind: mindsdb
-					host: 0.0.0.0
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
-					queryTimeout: 45s
+			kind: sources
+			name: my-mindsdb-instance
+			type: mindsdb
+			host: 0.0.0.0
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			queryTimeout: 45s
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-mindsdb-instance": mindsdb.Config{
 					Name:         "my-mindsdb-instance",
-					Kind:         mindsdb.SourceKind,
+					Type:         mindsdb.SourceType,
 					Host:         "0.0.0.0",
 					Port:         "my-port",
 					Database:     "my_db",
@@ -83,16 +84,12 @@ func TestParseFromYamlMindsDB(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -108,39 +105,35 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-mindsdb-instance:
-					kind: mindsdb
-					host: 0.0.0.0
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
-					foo: bar
+			kind: sources
+			name: my-mindsdb-instance
+			type: mindsdb
+			host: 0.0.0.0
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			foo: bar
 			`,
-			err: "unable to parse source \"my-mindsdb-instance\" as \"mindsdb\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | kind: mindsdb\n   5 | password: my_pass\n   6 | ",
+			err: "error unmarshaling sources: unable to parse source \"my-mindsdb-instance\" as \"mindsdb\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | name: my-mindsdb-instance\n   5 | password: my_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-mindsdb-instance:
-					kind: mindsdb
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: sources
+			name: my-mindsdb-instance
+			type: mindsdb
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			err: "unable to parse source \"my-mindsdb-instance\" as \"mindsdb\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-mindsdb-instance\" as \"mindsdb\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

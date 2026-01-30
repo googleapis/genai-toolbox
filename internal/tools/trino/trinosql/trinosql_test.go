@@ -17,7 +17,6 @@ package trinosql_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -38,30 +37,30 @@ func TestParseFromYamlTrino(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: trino-sql
-					source: my-trino-instance
-					description: some description
-					statement: |
-						SELECT * FROM catalog.schema.table WHERE id = ?;
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
-					parameters:
-						- name: id
-						  type: string
-						  description: ID to filter by
-						  authServices:
-							- name: my-google-auth-service
-							  field: user_id
-							- name: other-auth-service
-							  field: user_id
+			kind: tools
+			name: example_tool
+			type: trino-sql
+			source: my-trino-instance
+			description: some description
+			statement: |
+				SELECT * FROM catalog.schema.table WHERE id = ?;
+			authRequired:
+				- my-google-auth-service
+				- other-auth-service
+			parameters:
+				- name: id
+				  type: string
+				  description: ID to filter by
+				  authServices:
+					- name: my-google-auth-service
+					  field: user_id
+					- name: other-auth-service
+					  field: user_id
 			`,
 			want: server.ToolConfigs{
 				"example_tool": trinosql.Config{
 					Name:         "example_tool",
-					Kind:         "trino-sql",
+					Type:         "trino-sql",
 					Source:       "my-trino-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM catalog.schema.table WHERE id = ?;\n",
@@ -77,15 +76,11 @@ func TestParseFromYamlTrino(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -105,47 +100,47 @@ func TestParseFromYamlWithTemplateParamsTrino(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: trino-sql
-					source: my-trino-instance
-					description: some description
-					statement: |
-						SELECT * FROM {{ .catalog }}.{{ .schema }}.{{ .tableName }} WHERE country = ?;
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
-					parameters:
-						- name: country
-						  type: string
-						  description: some description
-						  authServices:
-							- name: my-google-auth-service
-							  field: user_id
-							- name: other-auth-service
-							  field: user_id
-					templateParameters:
-						- name: catalog
-						  type: string
-						  description: The catalog to query from.
-						- name: schema
-						  type: string
-						  description: The schema to query from.
-						- name: tableName
-						  type: string
-						  description: The table to select data from.
-						- name: fieldArray
-						  type: array
-						  description: The columns to return for the query.
-						  items: 
-								name: column
-								type: string
-								description: A column name that will be returned from the query.
+			kind: tools
+			name: example_tool
+			type: trino-sql
+			source: my-trino-instance
+			description: some description
+			statement: |
+				SELECT * FROM {{ .catalog }}.{{ .schema }}.{{ .tableName }} WHERE country = ?;
+			authRequired:
+				- my-google-auth-service
+				- other-auth-service
+			parameters:
+				- name: country
+				  type: string
+				  description: some description
+				  authServices:
+					- name: my-google-auth-service
+					  field: user_id
+					- name: other-auth-service
+					  field: user_id
+			templateParameters:
+				- name: catalog
+				  type: string
+				  description: The catalog to query from.
+				- name: schema
+				  type: string
+				  description: The schema to query from.
+				- name: tableName
+				  type: string
+				  description: The table to select data from.
+				- name: fieldArray
+				  type: array
+				  description: The columns to return for the query.
+				  items: 
+						name: column
+						type: string
+						description: A column name that will be returned from the query.
 			`,
 			want: server.ToolConfigs{
 				"example_tool": trinosql.Config{
 					Name:         "example_tool",
-					Kind:         "trino-sql",
+					Type:         "trino-sql",
 					Source:       "my-trino-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM {{ .catalog }}.{{ .schema }}.{{ .tableName }} WHERE country = ?;\n",
@@ -167,15 +162,11 @@ func TestParseFromYamlWithTemplateParamsTrino(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

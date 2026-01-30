@@ -34,7 +34,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-const SourceKind string = "cloud-healthcare"
+const SourceType string = "cloud-healthcare"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
@@ -42,8 +42,8 @@ var _ sources.SourceConfig = Config{}
 type HealthcareServiceCreator func(tokenString string) (*healthcare.Service, error)
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -58,7 +58,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	// Healthcare configs
 	Name               string   `yaml:"name" validate:"required"`
-	Kind               string   `yaml:"kind" validate:"required"`
+	Type               string   `yaml:"type" validate:"required"`
 	Project            string   `yaml:"project" validate:"required"`
 	Region             string   `yaml:"region" validate:"required"`
 	Dataset            string   `yaml:"dataset" validate:"required"`
@@ -67,8 +67,8 @@ type Config struct {
 	UseClientOAuth     bool     `yaml:"useClientOAuth"`
 }
 
-func (c Config) SourceConfigKind() string {
-	return SourceKind
+func (c Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -144,7 +144,7 @@ func newHealthcareServiceCreator(ctx context.Context, tracer trace.Tracer, name 
 }
 
 func initHealthcareConnectionWithOAuthToken(ctx context.Context, tracer trace.Tracer, name string, userAgent string, tokenString string) (*healthcare.Service, error) {
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 	// Construct token source
 	token := &oauth2.Token{
@@ -162,7 +162,7 @@ func initHealthcareConnectionWithOAuthToken(ctx context.Context, tracer trace.Tr
 }
 
 func initHealthcareConnection(ctx context.Context, tracer trace.Tracer, name string) (*healthcare.Service, oauth2.TokenSource, error) {
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	cred, err := google.FindDefaultCredentials(ctx, healthcare.CloudHealthcareScope)
@@ -194,8 +194,8 @@ type Source struct {
 	allowedDICOMStores map[string]struct{}
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -517,14 +517,14 @@ func (s *Source) RetrieveRenderedDICOMInstance(storeID, study, series, sop strin
 	return base64String, nil
 }
 
-func (s *Source) SearchDICOM(toolKind, storeID, dicomWebPath, tokenStr string, opts []googleapi.CallOption) (any, error) {
+func (s *Source) SearchDICOM(toolType, storeID, dicomWebPath, tokenStr string, opts []googleapi.CallOption) (any, error) {
 	svc, err := s.getService(tokenStr)
 	if err != nil {
 		return nil, err
 	}
 	name := fmt.Sprintf("projects/%s/locations/%s/datasets/%s/dicomStores/%s", s.Project(), s.Region(), s.DatasetID(), storeID)
 	var resp *http.Response
-	switch toolKind {
+	switch toolType {
 	case "cloud-healthcare-search-dicom-instances":
 		resp, err = svc.Projects.Locations.Datasets.DicomStores.SearchForInstances(name, dicomWebPath).Do(opts...)
 	case "cloud-healthcare-search-dicom-series":
@@ -532,7 +532,7 @@ func (s *Source) SearchDICOM(toolKind, storeID, dicomWebPath, tokenStr string, o
 	case "cloud-healthcare-search-dicom-studies":
 		resp, err = svc.Projects.Locations.Datasets.DicomStores.SearchForStudies(name, dicomWebPath).Do(opts...)
 	default:
-		return nil, fmt.Errorf("incompatible tool kind: %s", toolKind)
+		return nil, fmt.Errorf("incompatible tool type: %s", toolType)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to search dicom series: %w", err)

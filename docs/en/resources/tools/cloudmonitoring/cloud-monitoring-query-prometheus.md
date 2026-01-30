@@ -55,21 +55,21 @@ Here are some examples of how to use the `cloud-monitoring-query-prometheus`
 tool.
 
 ```yaml
-tools:
- get_wait_time_metrics:
-    kind: cloud-monitoring-query-prometheus
-    source: cloud-monitoring-source
-    description: |
-      This tool fetches system wait time information for AlloyDB cluster, instance. Get the `projectID`, `clusterID` and `instanceID` from the user intent. To use this tool, you must provide the Google Cloud `projectId` and a PromQL `query`.
-      Generate `query` using these metric details:
-      metric: `alloydb.googleapis.com/instance/postgresql/wait_time`,  monitored_resource: `alloydb.googleapis.com/Instance`. labels: `cluster_id`, `instance_id`, `wait_event_type`, `wait_event_name`.
-      Basic time series example promql query: `avg_over_time({"__name__"="alloydb.googleapis.com/instance/postgresql/wait_time","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance"}[5m])`
+kind: tools
+name: get_wait_time_metrics
+type: cloud-monitoring-query-prometheus
+source: cloud-monitoring-source
+description: |
+  This tool fetches system wait time information for AlloyDB cluster, instance. Get the `projectID`, `clusterID` and `instanceID` from the user intent. To use this tool, you must provide the Google Cloud `projectId` and a PromQL `query`.
+  Generate `query` using these metric details:
+  metric: `alloydb.googleapis.com/instance/postgresql/wait_time`,  monitored_resource: `alloydb.googleapis.com/Instance`. labels: `cluster_id`, `instance_id`, `wait_event_type`, `wait_event_name`.
+  Basic time series example promql query: `avg_over_time({"__name__"="alloydb.googleapis.com/instance/postgresql/wait_time","monitored_resource"="alloydb.googleapis.com/Instance","instance_id"="alloydb-instance"}[5m])`
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
-| kind        |  string  |     true     | Must be cloud-monitoring-query-prometheus.           |
+| type        |  string  |     true     | Must be cloud-monitoring-query-prometheus.           |
 | source      |  string  |     true     | The name of an `cloud-monitoring` source.            |
 | description |  string  |     true     | Description of the tool that is passed to the agent. |

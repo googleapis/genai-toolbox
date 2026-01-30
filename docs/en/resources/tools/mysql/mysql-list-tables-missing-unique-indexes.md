@@ -27,11 +27,11 @@ parameters:
 ## Example
 
 ```yaml
-tools:
-  list_tables_missing_unique_indexes:
-    kind: mysql-list-tables-missing-unique-indexes
-    source: my-mysql-instance
-    description: Find tables that do not have primary or unique key constraint. A primary key or unique key is the only mechanism that guaranttes a row is unique. Without them, the database-level protection against data integrity issues will be missing.
+kind: tools
+name: list_tables_missing_unique_indexes
+type: mysql-list-tables-missing-unique-indexes
+source: my-mysql-instance
+description: Find tables that do not have primary or unique key constraint. A primary key or unique key is the only mechanism that guaranttes a row is unique. Without them, the database-level protection against data integrity issues will be missing.
 ```
 
 The response is a json array with the following fields:
@@ -47,6 +47,6 @@ The response is a json array with the following fields:
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "mysql-list-active-queries".               |
+| type        |  string  |     true     | Must be "mysql-list-active-queries".               |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

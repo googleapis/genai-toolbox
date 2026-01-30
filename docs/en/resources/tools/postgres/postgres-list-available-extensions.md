@@ -26,11 +26,11 @@ not support any input parameter.
 ## Example
 
 ```yaml
-tools:
-  list_available_extensions:
-    kind: postgres-list-available-extensions
-    source: postgres-source
-    description: Discover all PostgreSQL extensions available for installation on this server, returning name, default_version, and description.
+kind: tools
+name: list_available_extensions
+type: postgres-list-available-extensions
+source: postgres-source
+description: Discover all PostgreSQL extensions available for installation on this server, returning name, default_version, and description.
 ```
 
 ## Reference

@@ -31,13 +31,12 @@ tool takes the following input parameters:
 ## Example
 
 ```yaml
-```yaml
-tools:
-  list_triggers:
-    kind: postgres-list-triggers
-    source: postgres-source
-    description: |
-        Lists all non-internal triggers in a database. Returns trigger name, schema name, table name, wether its enabled or disabled,  timing (e.g BEFORE/AFTER of the event), the  events that cause the trigger to fire such as INSERT, UPDATE, or DELETE, whether the trigger activates per ROW or per STATEMENT, the handler function executed by the trigger and full definition.
+kind: tools
+name: list_triggers
+type: postgres-list-triggers
+source: postgres-source
+description: |
+  Lists all non-internal triggers in a database. Returns trigger name, schema name, table name, wether its enabled or disabled,  timing (e.g BEFORE/AFTER of the event), the  events that cause the trigger to fire such as INSERT, UPDATE, or DELETE, whether the trigger activates per ROW or per STATEMENT, the handler function executed by the trigger and full definition.
 ```
 
 The response is a json array with the following elements:
@@ -60,6 +59,6 @@ The response is a json array with the following elements:
 
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
-| kind        |  string  |     true     | Must be "postgres-list-triggers".                    |
+| type        |  string  |     true     | Must be "postgres-list-triggers".                    |
 | source      |  string  |     true     | Name of the source the SQL should execute on.        |
 | description |  string  |    false     | Description of the tool that is passed to the agent. |

@@ -17,7 +17,6 @@ package alloydbainl_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -38,26 +37,26 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: alloydb-ai-nl
-					source: my-alloydb-instance
-					description: AlloyDB natural language query tool
-					nlConfig: 'my_nl_config'
-					authRequired:
-						- my-google-auth-service
-					nlConfigParameters:
-						- name: user_id
-						  type: string
-						  description: user_id to use
-						  authServices:
-							- name: my-google-auth-service
-							  field: sub
-			`,
+            kind: tools
+            name: example_tool
+            type: alloydb-ai-nl
+            source: my-alloydb-instance
+            description: AlloyDB natural language query tool
+            nlConfig: 'my_nl_config'
+            authRequired:
+            - my-google-auth-service
+            nlConfigParameters:
+            - name: user_id
+              type: string
+              description: user_id to use
+              authServices:
+                - name: my-google-auth-service
+                  field: sub
+            `,
 			want: server.ToolConfigs{
 				"example_tool": alloydbainl.Config{
 					Name:         "example_tool",
-					Kind:         "alloydb-ai-nl",
+					Type:         "alloydb-ai-nl",
 					Source:       "my-alloydb-instance",
 					Description:  "AlloyDB natural language query tool",
 					NLConfig:     "my_nl_config",
@@ -72,33 +71,33 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 		{
 			desc: "with multiple parameters",
 			in: `
-			tools:
-				complex_tool:
-					kind: alloydb-ai-nl
-					source: my-alloydb-instance
-					description: AlloyDB natural language query tool with multiple parameters
-					nlConfig: 'complex_nl_config'
-					authRequired:
-						- my-google-auth-service
-						- other-auth-service
-					nlConfigParameters:
-						- name: user_id
-						  type: string
-						  description: user_id to use
-						  authServices:
-							- name: my-google-auth-service
-							  field: sub
-						- name: user_email
-						  type: string
-						  description: user_email to use
-						  authServices:
-							- name: my-google-auth-service
-							  field: user_email
-			`,
+            kind: tools
+            name: complex_tool
+            type: alloydb-ai-nl
+            source: my-alloydb-instance
+            description: AlloyDB natural language query tool with multiple parameters
+            nlConfig: 'complex_nl_config'
+            authRequired:
+            - my-google-auth-service
+            - other-auth-service
+            nlConfigParameters:
+            - name: user_id
+              type: string
+              description: user_id to use
+              authServices:
+                - name: my-google-auth-service
+                  field: sub
+            - name: user_email
+              type: string
+              description: user_email to use
+              authServices:
+                - name: my-google-auth-service
+                  field: user_email
+            `,
 			want: server.ToolConfigs{
 				"complex_tool": alloydbainl.Config{
 					Name:         "complex_tool",
-					Kind:         "alloydb-ai-nl",
+					Type:         "alloydb-ai-nl",
 					Source:       "my-alloydb-instance",
 					Description:  "AlloyDB natural language query tool with multiple parameters",
 					NLConfig:     "complex_nl_config",
@@ -115,15 +114,12 @@ func TestParseFromYamlAlloyDBNLA(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

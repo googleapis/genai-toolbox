@@ -15,9 +15,9 @@
 package spanner_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -34,17 +34,17 @@ func TestParseFromYamlSpannerDb(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-spanner-instance:
-					kind: spanner
-					project: my-project
-					instance: my-instance
-					database: my_db
+			kind: sources
+			name: my-spanner-instance
+			type: spanner
+			project: my-project
+			instance: my-instance
+			database: my_db
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-spanner-instance": spanner.Config{
 					Name:     "my-spanner-instance",
-					Kind:     spanner.SourceKind,
+					Type:     spanner.SourceType,
 					Project:  "my-project",
 					Instance: "my-instance",
 					Dialect:  "googlesql",
@@ -55,18 +55,18 @@ func TestParseFromYamlSpannerDb(t *testing.T) {
 		{
 			desc: "gsql dialect",
 			in: `
-			sources:
-				my-spanner-instance:
-					kind: spanner
-					project: my-project
-					instance: my-instance
-					dialect: Googlesql 
-					database: my_db
+			kind: sources
+			name: my-spanner-instance
+			type: spanner
+			project: my-project
+			instance: my-instance
+			dialect: Googlesql 
+			database: my_db
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-spanner-instance": spanner.Config{
 					Name:     "my-spanner-instance",
-					Kind:     spanner.SourceKind,
+					Type:     spanner.SourceType,
 					Project:  "my-project",
 					Instance: "my-instance",
 					Dialect:  "googlesql",
@@ -77,18 +77,18 @@ func TestParseFromYamlSpannerDb(t *testing.T) {
 		{
 			desc: "postgresql dialect",
 			in: `
-			sources:
-				my-spanner-instance:
-					kind: spanner
-					project: my-project
-					instance: my-instance
-					dialect: postgresql
-					database: my_db
+			kind: sources
+			name: my-spanner-instance
+			type: spanner
+			project: my-project
+			instance: my-instance
+			dialect: postgresql
+			database: my_db
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-spanner-instance": spanner.Config{
 					Name:     "my-spanner-instance",
-					Kind:     spanner.SourceKind,
+					Type:     spanner.SourceType,
 					Project:  "my-project",
 					Instance: "my-instance",
 					Dialect:  "postgresql",
@@ -99,16 +99,12 @@ func TestParseFromYamlSpannerDb(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -124,48 +120,44 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "invalid dialect",
 			in: `
-			sources:
-				my-spanner-instance:
-					kind: spanner
-					project: my-project
-					instance: my-instance
-					dialect: fail
-					database: my_db
+			kind: sources
+			name: my-spanner-instance
+			type: spanner
+			project: my-project
+			instance: my-instance
+			dialect: fail
+			database: my_db
 			`,
-			err: "unable to parse source \"my-spanner-instance\" as \"spanner\": dialect invalid: must be one of \"googlesql\", or \"postgresql\"",
+			err: "error unmarshaling sources: unable to parse source \"my-spanner-instance\" as \"spanner\": dialect invalid: must be one of \"googlesql\", or \"postgresql\"",
 		},
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-spanner-instance:
-					kind: spanner
-					project: my-project
-					instance: my-instance
-					database: my_db
-					foo: bar
+			kind: sources
+			name: my-spanner-instance
+			type: spanner
+			project: my-project
+			instance: my-instance
+			database: my_db
+			foo: bar
 			`,
-			err: "unable to parse source \"my-spanner-instance\" as \"spanner\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | kind: spanner\n   5 | project: my-project",
+			err: "error unmarshaling sources: unable to parse source \"my-spanner-instance\" as \"spanner\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | name: my-spanner-instance\n   5 | project: my-project\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-spanner-instance:
-					kind: spanner
-					project: my-project
-					instance: my-instance
+			kind: sources
+			name: my-spanner-instance
+			type: spanner
+			project: my-project
+			instance: my-instance
 			`,
-			err: "unable to parse source \"my-spanner-instance\" as \"spanner\": Key: 'Config.Database' Error:Field validation for 'Database' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-spanner-instance\" as \"spanner\": Key: 'Config.Database' Error:Field validation for 'Database' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

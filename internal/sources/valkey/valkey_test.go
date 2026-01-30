@@ -15,10 +15,10 @@
 package valkey_test
 
 import (
+	"context"
 	"strings"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -35,16 +35,16 @@ func TestParseFromYamlValkey(t *testing.T) {
 		{
 			desc: "default setting",
 			in: `
-			sources:
-				my-valkey-instance:
-					kind: valkey
-					address:
-					  - 127.0.0.1
+			kind: sources
+			name: my-valkey-instance
+			type: valkey
+			address:
+			  - 127.0.0.1
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-valkey-instance": valkey.Config{
 					Name:         "my-valkey-instance",
-					Kind:         valkey.SourceKind,
+					Type:         valkey.SourceType,
 					Address:      []string{"127.0.0.1"},
 					Username:     "",
 					Password:     "",
@@ -57,21 +57,21 @@ func TestParseFromYamlValkey(t *testing.T) {
 		{
 			desc: "advanced example",
 			in: `
-			sources:
-				my-valkey-instance:
-					kind: valkey
-					address:
-					  - 127.0.0.1
-					database: 1
-					username: user
-					password: pass
-					useGCPIAM: true
-					disableCache: true
+			kind: sources
+			name: my-valkey-instance
+			type: valkey
+			address:
+			  - 127.0.0.1
+			database: 1
+			username: user
+			password: pass
+			useGCPIAM: true
+			disableCache: true
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-valkey-instance": valkey.Config{
 					Name:         "my-valkey-instance",
-					Kind:         valkey.SourceKind,
+					Type:         valkey.SourceType,
 					Address:      []string{"127.0.0.1"},
 					Username:     "user",
 					Password:     "pass",
@@ -84,16 +84,12 @@ func TestParseFromYamlValkey(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -109,47 +105,42 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "invalid database",
 			in: `
-			sources:
-				my-valkey-instance:
-					kind: valkey
-					project: my-project
-					address:
-					  - 127.0.0.1
-					database: my-db
-					useGCPIAM: false
+			kind: sources
+			name: my-valkey-instance
+			type: valkey
+			address:
+			  - 127.0.0.1
+			database: my-db
+			useGCPIAM: false
 			`,
-			err: "cannot unmarshal string into Go struct field .Sources of type int",
+			err: "error unmarshaling sources: unable to parse source \"my-valkey-instance\" as \"valkey\": [3:11] cannot unmarshal string into Go struct field Config.Database of type int\n   1 | address:\n   2 | - 127.0.0.1\n>  3 | database: my-db\n                 ^\n   4 | name: my-valkey-instance\n   5 | type: valkey\n   6 | useGCPIAM: false",
 		},
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-valkey-instance:
-					kind: valkey
-					address:
-					  - 127.0.0.1
-					project: proj
-					database: 1
+			kind: sources
+			name: my-valkey-instance
+			type: valkey
+			address:
+			  - 127.0.0.1
+			project: proj
+			database: 1
 			`,
-			err: "unable to parse source \"my-valkey-instance\" as \"valkey\": [5:1] unknown field \"project\"",
+			err: "error unmarshaling sources: unable to parse source \"my-valkey-instance\" as \"valkey\": [5:1] unknown field \"project\"\n   2 | - 127.0.0.1\n   3 | database: 1\n   4 | name: my-valkey-instance\n>  5 | project: proj\n       ^\n   6 | type: valkey",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-valkey-instance:
-					kind: valkey
+			kind: sources
+			name: my-valkey-instance
+			type: valkey
 			`,
-			err: "unable to parse source \"my-valkey-instance\" as \"valkey\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-valkey-instance\" as \"valkey\": Key: 'Config.Address' Error:Field validation for 'Address' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

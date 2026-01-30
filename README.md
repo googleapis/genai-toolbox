@@ -2,6 +2,8 @@
 
 # MCP Toolbox for Databases
 
+<a href="https://trendshift.io/repositories/13019" target="_blank"><img src="https://trendshift.io/api/badge/repositories/13019" alt="googleapis%2Fgenai-toolbox | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+
 [![Docs](https://img.shields.io/badge/docs-MCP_Toolbox-blue)](https://googleapis.github.io/genai-toolbox/)
 [![Discord](https://img.shields.io/badge/Discord-%235865F2.svg?style=flat&logo=discord&logoColor=white)](https://discord.gg/Dmm69peqjh)
 [![Medium](https://img.shields.io/badge/Medium-12100E?style=flat&logo=medium&logoColor=white)](https://medium.com/@mcp_toolbox)
@@ -105,7 +107,7 @@ redeploying your application.
 
 ## Getting Started
 
-### (Non-production) Running Toolbox
+### Quickstart: Running Toolbox using NPX
 
 You can run Toolbox directly with a [configuration file](#configuration):
 
@@ -938,14 +940,14 @@ Toolbox should have access to. Most tools will have at least one source to
 execute against.
 
 ```yaml
-sources:
-  my-pg-source:
-    kind: postgres
-    host: 127.0.0.1
-    port: 5432
-    database: toolbox_db
-    user: toolbox_user
-    password: my-password
+kind: sources
+name: my-pg-source
+type: postgres
+host: 127.0.0.1
+port: 5432
+database: toolbox_db
+user: toolbox_user
+password: my-password
 ```
 
 For more details on configuring different types of sources, see the
@@ -954,19 +956,19 @@ For more details on configuring different types of sources, see the
 ### Tools
 
 The `tools` section of a `tools.yaml` define the actions an agent can take: what
-kind of tool it is, which source(s) it affects, what parameters it uses, etc.
+type of tool it is, which source(s) it affects, what parameters it uses, etc.
 
 ```yaml
-tools:
-  search-hotels-by-name:
-    kind: postgres-sql
-    source: my-pg-source
-    description: Search for hotels based on name.
-    parameters:
-      - name: name
-        type: string
-        description: The name of the hotel.
-    statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
+kind: tools
+name: search-hotels-by-name
+type: postgres-sql
+source: my-pg-source
+description: Search for hotels based on name.
+parameters:
+  - name: name
+    type: string
+    description: The name of the hotel.
+statement: SELECT * FROM hotels WHERE name ILIKE '%' || $1 || '%';
 ```
 
 For more details on configuring different types of tools, see the

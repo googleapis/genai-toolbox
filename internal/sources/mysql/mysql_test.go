@@ -19,12 +19,12 @@ import (
 	"strings"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/mysql"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
@@ -38,19 +38,19 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-mysql-instance:
-					kind: mysql
-					host: 0.0.0.0
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: sources
+			name: my-mysql-instance
+			type: mysql
+			host: 0.0.0.0
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-mysql-instance": mysql.Config{
 					Name:     "my-mysql-instance",
-					Kind:     mysql.SourceKind,
+					Type:     mysql.SourceType,
 					Host:     "0.0.0.0",
 					Port:     "my-port",
 					Database: "my_db",
@@ -62,20 +62,20 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 		{
 			desc: "with query timeout",
 			in: `
-			sources:
-				my-mysql-instance:
-					kind: mysql
-					host: 0.0.0.0
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
-					queryTimeout: 45s
+			kind: sources
+			name: my-mysql-instance
+			type: mysql
+			host: 0.0.0.0
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			queryTimeout: 45s
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-mysql-instance": mysql.Config{
 					Name:         "my-mysql-instance",
-					Kind:         mysql.SourceKind,
+					Type:         mysql.SourceType,
 					Host:         "0.0.0.0",
 					Port:         "my-port",
 					Database:     "my_db",
@@ -88,22 +88,22 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 		{
 			desc: "with query params",
 			in: `
-			sources:
-				my-mysql-instance:
-					kind: mysql
-					host: 0.0.0.0
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
-					queryParams:
-						tls: preferred
-						charset: utf8mb4
+			kind: sources
+			name: my-mysql-instance
+			type: mysql
+			host: 0.0.0.0
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			queryParams:
+				tls: preferred
+				charset: utf8mb4
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-mysql-instance": mysql.Config{
 					Name:     "my-mysql-instance",
-					Kind:     mysql.SourceKind,
+					Type:     mysql.SourceType,
 					Host:     "0.0.0.0",
 					Port:     "my-port",
 					Database: "my_db",
@@ -120,15 +120,11 @@ func TestParseFromYamlCloudSQLMySQL(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Sources, cmpopts.EquateEmpty()); diff != "" {
+			if diff := cmp.Diff(tc.want, got, cmpopts.EquateEmpty()); diff != "" {
 				t.Fatalf("mismatch (-want +got):\n%s", diff)
 			}
 		})
@@ -145,55 +141,51 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-mysql-instance:
-					kind: mysql
-					host: 0.0.0.0
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
-					foo: bar
+			kind: sources
+			name: my-mysql-instance
+			type: mysql
+			host: 0.0.0.0
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
+			foo: bar
 			`,
-			err: "unknown field \"foo\"",
+			err: "error unmarshaling sources: unable to parse source \"my-mysql-instance\" as \"mysql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | host: 0.0.0.0\n   4 | name: my-mysql-instance\n   5 | password: my_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-mysql-instance:
-					kind: mysql
-					port: my-port
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: sources
+			name: my-mysql-instance
+			type: mysql
+			port: my-port
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			err: "Field validation for 'Host' failed",
+			err: "error unmarshaling sources: unable to parse source \"my-mysql-instance\" as \"mysql\": Key: 'Config.Host' Error:Field validation for 'Host' failed on the 'required' tag",
 		},
 		{
 			desc: "invalid query params type",
 			in: `
-			sources:
-				my-mysql-instance:
-					kind: mysql
-					host: 0.0.0.0
-					port: 3306
-					database: my_db
-					user: my_user
-					password: my_pass
-					queryParams: not-a-map
+			kind: sources
+			name: my-mysql-instance
+			type: mysql
+			host: 0.0.0.0
+			port: 3306
+			database: my_db
+			user: my_user
+			password: my_pass
+			queryParams: not-a-map
 			`,
-			err: "string was used where mapping is expected",
+			err: "error unmarshaling sources: unable to parse source \"my-mysql-instance\" as \"mysql\": [6:14] string was used where mapping is expected\n   3 | name: my-mysql-instance\n   4 | password: my_pass\n   5 | port: 3306\n>  6 | queryParams: not-a-map\n                    ^\n   7 | type: mysql\n   8 | user: my_user",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}
@@ -211,7 +203,7 @@ func TestFailInitialization(t *testing.T) {
 
 	cfg := mysql.Config{
 		Name:         "instance",
-		Kind:         "mysql",
+		Type:         "mysql",
 		Host:         "localhost",
 		Port:         "3306",
 		Database:     "db",

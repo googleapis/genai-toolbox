@@ -20,21 +20,22 @@ Authentication can be handled in two ways:
 ## Example
 
 ```yaml
-sources:
-  my-gda-source:
-    kind: cloud-gemini-data-analytics
-    projectId: my-project-id
-
-  my-oauth-gda-source:
-    kind: cloud-gemini-data-analytics
-    projectId: my-project-id
-    useClientOAuth: true
+kind: sources
+name: my-gda-source
+type: cloud-gemini-data-analytics
+projectId: my-project-id
+---
+kind: sources
+name: my-oauth-gda-source
+type: cloud-gemini-data-analytics
+projectId: my-project-id
+useClientOAuth: true
 ```
 
 ## Reference
 
 | **field**      | **type** | **required** | **description**                                                                                                                                                              |
 | -------------- | :------: | :----------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| kind           |  string  |     true     | Must be "cloud-gemini-data-analytics".                                                                                                                                       |
+| type           |  string  |     true     | Must be "cloud-gemini-data-analytics".                                                                                                                                       |
 | projectId      |  string  |     true     | The Google Cloud Project ID where the API is enabled.                                                                                                                        |
 | useClientOAuth | boolean  |    false     | If true, the source uses the token provided by the caller (forwarded to the API). Otherwise, it uses server-side Application Default Credentials (ADC). Defaults to `false`. |

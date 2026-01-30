@@ -27,13 +27,13 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 )
 
-const SourceKind string = "firebird"
+const SourceType string = "firebird"
 
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -47,7 +47,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name     string `yaml:"name" validate:"required"`
-	Kind     string `yaml:"kind" validate:"required"`
+	Type     string `yaml:"type" validate:"required"`
 	Host     string `yaml:"host" validate:"required"`
 	Port     string `yaml:"port" validate:"required"`
 	User     string `yaml:"user" validate:"required"`
@@ -55,8 +55,8 @@ type Config struct {
 	Database string `yaml:"database" validate:"required"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -84,8 +84,8 @@ type Source struct {
 	Db *sql.DB
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -144,7 +144,7 @@ func (s *Source) RunSQL(ctx context.Context, statement string, params []any) (an
 }
 
 func initFirebirdConnectionPool(ctx context.Context, tracer trace.Tracer, name, host, port, user, pass, dbname string) (*sql.DB, error) {
-	_, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	_, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	// urlExample := "user:password@host:port/path/to/database.fdb"

@@ -26,11 +26,11 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
-const kind = "serverless-spark-create-spark-batch"
+const resourceType = "serverless-spark-create-spark-batch"
 
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -49,9 +49,9 @@ type Config struct {
 // validate interface
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the unique name for this tool.
-func (cfg Config) ToolConfigKind() string {
-	return kind
+// ToolConfigType returns the unique name for this tool.
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 // Initialize creates a new Tool instance.

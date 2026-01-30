@@ -36,35 +36,35 @@ syntax.
 ### Basic Usage - List All Tables
 
 ```yaml
-sources:
-  my-spanner-db:
-    kind: spanner
-    project: ${SPANNER_PROJECT}
-    instance: ${SPANNER_INSTANCE}
-    database: ${SPANNER_DATABASE}
-    dialect: googlesql  # or postgresql
-
-tools:
-  list_all_tables:
-    kind: spanner-list-tables
-    source: my-spanner-db
-    description: Lists all tables with their complete schema information
+kind: sources
+name: my-spanner-db
+type: spanner
+project: ${SPANNER_PROJECT}
+instance: ${SPANNER_INSTANCE}
+database: ${SPANNER_DATABASE}
+dialect: googlesql  # or postgresql
+---
+kind: tools
+name: list_all_tables
+type: spanner-list-tables
+source: my-spanner-db
+description: Lists all tables with their complete schema information
 ```
 
 ### List Specific Tables
 
 ```yaml
-tools:
-  list_specific_tables:
-    kind: spanner-list-tables
-    source: my-spanner-db
-    description: |
-      Lists schema information for specific tables.
-      Example usage:
-      {
-        "table_names": "users,orders,products",
-        "output_format": "detailed"
-      }
+kind: tools
+name: list_specific_tables
+type: spanner-list-tables
+source: my-spanner-db
+description: |
+  Lists schema information for specific tables.
+  Example usage:
+  {
+    "table_names": "users,orders,products",
+    "output_format": "detailed"
+  }
 ```
 
 ## Parameters
@@ -177,36 +177,36 @@ comprehensive schema information:
 ## Example with Agent Integration
 
 ```yaml
-sources:
-  spanner-db:
-    kind: spanner
-    project: my-project
-    instance: my-instance
-    database: my-database
-    dialect: googlesql
-
-tools:
-  schema_inspector:
-    kind: spanner-list-tables
-    source: spanner-db
-    description: |
-      Use this tool to inspect database schema information.
-      You can:
-      - List all tables by leaving table_names empty
-      - Get specific table schemas by providing comma-separated table names
-      - Choose between simple (names only) or detailed (full schema) output
-      
-      Examples:
-      1. List all tables with details: {"output_format": "detailed"}
-      2. Get specific tables: {"table_names": "users,orders", "output_format": "detailed"}
-      3. Just get table names: {"output_format": "simple"}
+kind: sources
+name: spanner-db
+type: spanner
+project: my-project
+instance: my-instance
+database: my-database
+dialect: googlesql
+---
+kind: tools
+name: schema_inspector
+type: spanner-list-tables
+source: spanner-db
+description: |
+  Use this tool to inspect database schema information.
+  You can:
+  - List all tables by leaving table_names empty
+  - Get specific table schemas by providing comma-separated table names
+  - Choose between simple (names only) or detailed (full schema) output
+  
+  Examples:
+  1. List all tables with details: {"output_format": "detailed"}
+  2. Get specific tables: {"table_names": "users,orders", "output_format": "detailed"}
+  3. Just get table names: {"output_format": "simple"}
 ```
 
 ## Reference
 
 | **field**    | **type** | **required** | **description**                                    |
 |--------------|:--------:|:------------:|----------------------------------------------------|
-| kind         |  string  |     true     | Must be "spanner-list-tables"                      |
+| type         |  string  |     true     | Must be "spanner-list-tables"                      |
 | source       |  string  |     true     | Name of the Spanner source to query                |
 | description  |  string  |    false     | Description of the tool that is passed to the LLM  |
 | authRequired | string[] |    false     | List of auth services required to invoke this tool |

@@ -31,8 +31,8 @@ import (
 )
 
 var (
-	ElasticsearchSourceKind = "elasticsearch"
-	ElasticsearchToolKind   = "elasticsearch-esql"
+	ElasticsearchSourceType = "elasticsearch"
+	ElasticsearchToolType   = "elasticsearch-esql"
 	EsAddress               = os.Getenv("ELASTICSEARCH_HOST")
 	EsUser                  = os.Getenv("ELASTICSEARCH_USER")
 	EsPass                  = os.Getenv("ELASTICSEARCH_PASS")
@@ -43,7 +43,7 @@ func getElasticsearchVars(t *testing.T) map[string]any {
 		t.Fatal("'ELASTICSEARCH_HOST' not set")
 	}
 	return map[string]any{
-		"kind":      ElasticsearchSourceKind,
+		"type":      ElasticsearchSourceType,
 		"addresses": []string{EsAddress},
 		"username":  EsUser,
 		"password":  EsPass,
@@ -72,7 +72,7 @@ func TestElasticsearchToolEndpoints(t *testing.T) {
 
 	paramToolStatement, idParamToolStatement, nameParamToolStatement, arrayParamToolStatement, authToolStatement := getElasticsearchQueries(index)
 
-	toolsConfig := getElasticsearchToolsConfig(sourceConfig, ElasticsearchToolKind, paramToolStatement, idParamToolStatement, nameParamToolStatement, arrayParamToolStatement, authToolStatement)
+	toolsConfig := getElasticsearchToolsConfig(sourceConfig, ElasticsearchToolType, paramToolStatement, idParamToolStatement, nameParamToolStatement, arrayParamToolStatement, authToolStatement)
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsConfig, args...)
 	if err != nil {
@@ -177,26 +177,26 @@ func getElasticsearchWants() ElasticsearchWants {
 	}
 }
 
-func getElasticsearchToolsConfig(sourceConfig map[string]any, toolKind, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
+func getElasticsearchToolsConfig(sourceConfig map[string]any, toolType, paramToolStatement, idParamToolStmt, nameParamToolStmt, arrayToolStatement, authToolStatement string) map[string]any {
 	toolsFile := map[string]any{
 		"sources": map[string]any{
 			"my-instance": sourceConfig,
 		},
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
-				"kind":     "google",
+				"type":     "google",
 				"clientId": tests.ClientId,
 			},
 		},
 		"tools": map[string]any{
 			"my-simple-tool": map[string]any{
-				"kind":        toolKind,
+				"type":        toolType,
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 				"query":       "FROM test-index | SORT id ASC",
 			},
 			"my-tool": map[string]any{
-				"kind":        toolKind,
+				"type":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"query":       paramToolStatement,
@@ -214,7 +214,7 @@ func getElasticsearchToolsConfig(sourceConfig map[string]any, toolKind, paramToo
 				},
 			},
 			"my-tool-by-id": map[string]any{
-				"kind":        toolKind,
+				"type":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"query":       idParamToolStmt,
@@ -227,7 +227,7 @@ func getElasticsearchToolsConfig(sourceConfig map[string]any, toolKind, paramToo
 				},
 			},
 			"my-tool-by-name": map[string]any{
-				"kind":        toolKind,
+				"type":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with params.",
 				"query":       nameParamToolStmt,
@@ -241,7 +241,7 @@ func getElasticsearchToolsConfig(sourceConfig map[string]any, toolKind, paramToo
 				},
 			},
 			"my-array-tool": map[string]any{
-				"kind":        toolKind,
+				"type":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test invocation with array params.",
 				"query":       arrayToolStatement,
@@ -269,7 +269,7 @@ func getElasticsearchToolsConfig(sourceConfig map[string]any, toolKind, paramToo
 				},
 			},
 			"my-auth-tool": map[string]any{
-				"kind":        toolKind,
+				"type":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test authenticated parameters.",
 				// statement to auto-fill authenticated parameter
@@ -289,7 +289,7 @@ func getElasticsearchToolsConfig(sourceConfig map[string]any, toolKind, paramToo
 				},
 			},
 			"my-auth-required-tool": map[string]any{
-				"kind":        toolKind,
+				"type":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test auth required invocation.",
 				"query":       "FROM test-index | SORT id ASC",
@@ -298,7 +298,7 @@ func getElasticsearchToolsConfig(sourceConfig map[string]any, toolKind, paramToo
 				},
 			},
 			"my-fail-tool": map[string]any{
-				"kind":        toolKind,
+				"type":        toolType,
 				"source":      "my-instance",
 				"description": "Tool to test statement with incorrect syntax.",
 				"query":       "SELEC 1;",

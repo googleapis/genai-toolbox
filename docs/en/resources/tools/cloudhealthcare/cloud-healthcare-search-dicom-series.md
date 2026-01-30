@@ -20,18 +20,18 @@ set of criteria. It's compatible with the following sources:
 ## Example
 
 ```yaml
-tools:
-  search_dicom_series:
-    kind: cloud-healthcare-search-dicom-series
-    source: my-healthcare-source
-    description: Use this tool to search for DICOM series in the DICOM store.
+kind: tools
+name: search_dicom_series
+type: cloud-healthcare-search-dicom-series
+source: my-healthcare-source
+description: Use this tool to search for DICOM series in the DICOM store.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "cloud-healthcare-search-dicom-series".    |
+| type        |  string  |     true     | Must be "cloud-healthcare-search-dicom-series".    |
 | source      |  string  |     true     | Name of the healthcare source.                     |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
 

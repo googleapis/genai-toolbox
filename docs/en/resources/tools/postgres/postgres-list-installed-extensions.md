@@ -26,17 +26,17 @@ support any input parameter.
 ## Example
 
 ```yaml
-tools:
-  list_installed_extensions:
-    kind: postgres-list-installed-extensions
-    source: postgres-source
-    description: List all installed PostgreSQL extensions with their name, version, schema, owner, and description.
+kind: tools
+name: list_installed_extensions
+type: postgres-list-installed-extensions
+source: postgres-source
+description: List all installed PostgreSQL extensions with their name, version, schema, owner, and description.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "postgres-list-active-queries".            |
+| type        |  string  |     true     | Must be "postgres-list-active-queries".            |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

@@ -34,7 +34,7 @@ import (
 )
 
 var (
-	listDatabasesToolKind = "cloud-sql-list-databases"
+	listDatabasesToolType = "cloud-sql-list-databases"
 )
 
 type listDatabasesTransport struct {
@@ -200,12 +200,12 @@ func getListDatabasesToolsConfig() map[string]any {
 	return map[string]any{
 		"sources": map[string]any{
 			"my-cloud-sql-source": map[string]any{
-				"kind": "cloud-sql-admin",
+				"type": "cloud-sql-admin",
 			},
 		},
 		"tools": map[string]any{
 			"list-databases": map[string]any{
-				"kind":   listDatabasesToolKind,
+				"type":   listDatabasesToolType,
 				"source": "my-cloud-sql-source",
 			},
 		},

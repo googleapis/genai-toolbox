@@ -48,17 +48,17 @@ applying IAM permissions and roles to an identity.
 ## Example
 
 ```yaml
-tools:
-  search_catalog:
-    kind: bigquery-search-catalog
-    source: bigquery-source
-    description: Use this tool to find tables, views, models, routines or connections.
+kind: tools
+name: search_catalog
+type: bigquery-search-catalog
+source: bigquery-source
+description: Use this tool to find tables, views, models, routines or connections.
 ```
 
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "bigquery-search-catalog".                                                               |
+| type        |                   string                   |     true     | Must be "bigquery-search-catalog".                                                               |
 | source      |                   string                   |     true     | Name of the source the tool should execute on.                                                   |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

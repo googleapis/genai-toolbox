@@ -8,7 +8,7 @@ description: "Clone a Cloud SQL instance."
 The `cloud-sql-clone-instance` tool clones a Cloud SQL instance using the Cloud SQL Admin API.
 
 {{< notice info dd>}}
-This tool uses a `source` of kind `cloud-sql-admin`.
+This tool uses a `source` of type `cloud-sql-admin`.
 {{< /notice >}}
 
 ## Examples
@@ -16,21 +16,21 @@ This tool uses a `source` of kind `cloud-sql-admin`.
 Basic clone (current state)
 
 ```yaml
-tools:
-  clone-instance-basic:
-    kind: cloud-sql-clone-instance
-    source: cloud-sql-admin-source
-    description: "Creates an exact copy of a Cloud SQL instance. Supports configuring instance zones and high-availability setup through zone preferences."
+kind: tools
+name: clone-instance-basic
+type: cloud-sql-clone-instance
+source: cloud-sql-admin-source
+description: "Creates an exact copy of a Cloud SQL instance. Supports configuring instance zones and high-availability setup through zone preferences."
 ```
 
 Point-in-time recovery (PITR) clone
 
 ```yaml
-tools:
-  clone-instance-pitr:
-    kind: cloud-sql-clone-instance
-    source: cloud-sql-admin-source
-    description: "Creates an exact copy of a Cloud SQL instance at a specific point in time (PITR). Supports configuring instance zones and high-availability setup through zone preferences"
+kind: tools
+name: clone-instance-pitr
+type: cloud-sql-clone-instance
+source: cloud-sql-admin-source
+description: "Creates an exact copy of a Cloud SQL instance at a specific point in time (PITR). Supports configuring instance zones and high-availability setup through zone preferences"
 ```
 
 ## Reference
@@ -39,7 +39,7 @@ tools:
 
 | **field**      | **type** | **required** | **description**                                               |
 | -------------- | :------: | :----------: | ------------------------------------------------------------- |
-| kind           | string   | true         | Must be "cloud-sql-clone-instance".                           |
+| type           | string   | true         | Must be "cloud-sql-clone-instance".                           |
 | source         | string   | true         | The name of the `cloud-sql-admin` source to use.              |
 | description    | string   | false        | A description of the tool.                                    |
 

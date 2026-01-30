@@ -30,8 +30,8 @@ import (
 )
 
 var (
-	TiDBSourceKind = "tidb"
-	TiDBToolKind   = "tidb-sql"
+	TiDBSourceType = "tidb"
+	TiDBToolType   = "tidb-sql"
 	TiDBDatabase   = os.Getenv("TIDB_DATABASE")
 	TiDBHost       = os.Getenv("TIDB_HOST")
 	TiDBPort       = os.Getenv("TIDB_PORT")
@@ -54,7 +54,7 @@ func getTiDBVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     TiDBSourceKind,
+		"type":     TiDBSourceType,
 		"host":     TiDBHost,
 		"port":     TiDBPort,
 		"database": TiDBDatabase,
@@ -91,12 +91,12 @@ func addTiDBExecuteSqlConfig(t *testing.T, config map[string]any) map[string]any
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "tidb-execute-sql",
+		"type":        "tidb-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "tidb-execute-sql",
+		"type":        "tidb-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{
@@ -135,10 +135,10 @@ func TestTiDBToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, TiDBToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, TiDBToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addTiDBExecuteSqlConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, TiDBToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, TiDBToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {

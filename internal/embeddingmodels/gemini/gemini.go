@@ -23,22 +23,22 @@ import (
 	"google.golang.org/genai"
 )
 
-const EmbeddingModelKind string = "gemini"
+const EmbeddingModelType string = "gemini"
 
 // validate interface
 var _ embeddingmodels.EmbeddingModelConfig = Config{}
 
 type Config struct {
 	Name      string `yaml:"name" validate:"required"`
-	Kind      string `yaml:"kind" validate:"required"`
+	Type      string `yaml:"type" validate:"required"`
 	Model     string `yaml:"model" validate:"required"`
 	ApiKey    string `yaml:"apiKey"`
 	Dimension int32  `yaml:"dimension"`
 }
 
-// Returns the embedding model kind
-func (cfg Config) EmbeddingModelConfigKind() string {
-	return EmbeddingModelKind
+// Returns the embedding model type
+func (cfg Config) EmbeddingModelConfigType() string {
+	return EmbeddingModelType
 }
 
 // Initialize a Gemini embedding model
@@ -69,9 +69,9 @@ type EmbeddingModel struct {
 	Config
 }
 
-// Returns the embedding model kind
-func (m EmbeddingModel) EmbeddingModelKind() string {
-	return EmbeddingModelKind
+// Returns the embedding model type
+func (m EmbeddingModel) EmbeddingModelType() string {
+	return EmbeddingModelType
 }
 
 func (m EmbeddingModel) ToConfig() embeddingmodels.EmbeddingModelConfig {

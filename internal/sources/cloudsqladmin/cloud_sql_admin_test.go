@@ -15,9 +15,9 @@
 package cloudsqladmin_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -35,14 +35,14 @@ func TestParseFromYamlCloudSQLAdmin(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-cloud-sql-admin-instance:
-					kind: cloud-sql-admin
+			kind: sources
+			name: my-cloud-sql-admin-instance
+			type: cloud-sql-admin
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-cloud-sql-admin-instance": cloudsqladmin.Config{
 					Name:           "my-cloud-sql-admin-instance",
-					Kind:           cloudsqladmin.SourceKind,
+					Type:           cloudsqladmin.SourceType,
 					UseClientOAuth: false,
 				},
 			},
@@ -50,15 +50,15 @@ func TestParseFromYamlCloudSQLAdmin(t *testing.T) {
 		{
 			desc: "use client auth example",
 			in: `
-			sources:
-				my-cloud-sql-admin-instance:
-					kind: cloud-sql-admin
-					useClientOAuth: true
+			kind: sources
+			name: my-cloud-sql-admin-instance
+			type: cloud-sql-admin
+			useClientOAuth: true
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-cloud-sql-admin-instance": cloudsqladmin.Config{
 					Name:           "my-cloud-sql-admin-instance",
-					Kind:           cloudsqladmin.SourceKind,
+					Type:           cloudsqladmin.SourceType,
 					UseClientOAuth: true,
 				},
 			},
@@ -68,16 +68,12 @@ func TestParseFromYamlCloudSQLAdmin(t *testing.T) {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -93,36 +89,28 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-cloud-sql-admin-instance:
-					kind: cloud-sql-admin
-					project: test-project
+			kind: sources
+			name: my-cloud-sql-admin-instance
+			type: cloud-sql-admin
+			project: test-project
 			`,
-			err: `unable to parse source "my-cloud-sql-admin-instance" as "cloud-sql-admin": [2:1] unknown field "project"
-   1 | kind: cloud-sql-admin
->  2 | project: test-project
-       ^
-`,
+			err: "error unmarshaling sources: unable to parse source \"my-cloud-sql-admin-instance\" as \"cloud-sql-admin\": [2:1] unknown field \"project\"\n   1 | name: my-cloud-sql-admin-instance\n>  2 | project: test-project\n       ^\n   3 | type: cloud-sql-admin",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-cloud-sql-admin-instance:
-					useClientOAuth: true
+			kind: sources
+			name: my-cloud-sql-admin-instance
+			useClientOAuth: true
 			`,
-			err: "missing 'kind' field for source \"my-cloud-sql-admin-instance\"",
+			err: "error unmarshaling sources: missing 'type' field or it is not a string",
 		},
 	}
 	for _, tc := range tcs {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			t.Parallel()
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

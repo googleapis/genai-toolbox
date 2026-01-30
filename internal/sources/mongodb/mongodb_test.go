@@ -15,11 +15,12 @@
 package mongodb_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/mongodb"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
@@ -33,15 +34,15 @@ func TestParseFromYamlMongoDB(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				mongo-db:
-					kind: "mongodb"
-					uri: "mongodb+srv://username:password@host/dbname"
+			kind: sources
+			name: mongo-db
+			type: "mongodb"
+			uri: "mongodb+srv://username:password@host/dbname"
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"mongo-db": mongodb.Config{
 					Name: "mongo-db",
-					Kind: mongodb.SourceKind,
+					Type: mongodb.SourceType,
 					Uri:  "mongodb+srv://username:password@host/dbname",
 				},
 			},
@@ -49,16 +50,12 @@ func TestParseFromYamlMongoDB(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -74,31 +71,27 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				mongo-db:
-					kind: mongodb
-					uri: "mongodb+srv://username:password@host/dbname"
-					foo: bar
+			kind: sources
+			name: mongo-db
+			type: mongodb
+			uri: "mongodb+srv://username:password@host/dbname"
+			foo: bar
 			`,
-			err: "unable to parse source \"mongo-db\" as \"mongodb\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | kind: mongodb\n   3 | uri: mongodb+srv://username:password@host/dbname",
+			err: "error unmarshaling sources: unable to parse source \"mongo-db\" as \"mongodb\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | name: mongo-db\n   3 | type: mongodb\n   4 | uri: mongodb+srv://username:password@host/dbname",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				mongo-db:
-					kind: mongodb
+			kind: sources
+			name: mongo-db
+			type: mongodb
 			`,
-			err: "unable to parse source \"mongo-db\" as \"mongodb\": Key: 'Config.Uri' Error:Field validation for 'Uri' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"mongo-db\" as \"mongodb\": Key: 'Config.Uri' Error:Field validation for 'Uri' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

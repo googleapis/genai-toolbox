@@ -28,41 +28,41 @@ The specified SQL statement is executed as a [prepared statement][trino-prepare]
 > names, or other parts of the query.
 
 ```yaml
-tools:
- search_orders_by_region:
-    kind: trino-sql
-    source: my-trino-instance
-    statement: |
-      SELECT * FROM hive.sales.orders
-      WHERE region = ?
-      AND order_date >= DATE(?)
-      LIMIT 10
-    description: |
-      Use this tool to get information for orders in a specific region.
-      Takes a region code and date and returns info on the orders.
-      Do NOT use this tool with an order id. Do NOT guess a region code or date.
-      A region code is a code for a geographic region consisting of two-character
-      region designator and followed by optional subregion.
-      For example, if given US-WEST, the region is "US-WEST".
-      Another example for this is EU-CENTRAL, the region is "EU-CENTRAL".
-      If the tool returns more than one option choose the date closest to today.
-      Example:
-      {{
-          "region": "US-WEST",
-          "order_date": "2024-01-01",
-      }}
-      Example:
-      {{
-          "region": "EU-CENTRAL",
-          "order_date": "2024-01-15",
-      }}
-    parameters:
-      - name: region
-        type: string
-        description: Region unique identifier
-      - name: order_date
-        type: string
-        description: Order date in YYYY-MM-DD format
+kind: tools
+name: search_orders_by_region
+type: trino-sql
+source: my-trino-instance
+statement: |
+  SELECT * FROM hive.sales.orders
+  WHERE region = ?
+  AND order_date >= DATE(?)
+  LIMIT 10
+description: |
+  Use this tool to get information for orders in a specific region.
+  Takes a region code and date and returns info on the orders.
+  Do NOT use this tool with an order id. Do NOT guess a region code or date.
+  A region code is a code for a geographic region consisting of two-character
+  region designator and followed by optional subregion.
+  For example, if given US-WEST, the region is "US-WEST".
+  Another example for this is EU-CENTRAL, the region is "EU-CENTRAL".
+  If the tool returns more than one option choose the date closest to today.
+  Example:
+  {{
+      "region": "US-WEST",
+      "order_date": "2024-01-01",
+  }}
+  Example:
+  {{
+      "region": "EU-CENTRAL",
+      "order_date": "2024-01-15",
+  }}
+parameters:
+  - name: region
+    type: string
+    description: Region unique identifier
+  - name: order_date
+    type: string
+    description: Order date in YYYY-MM-DD format
 ```
 
 ### Example with Template Parameters
@@ -74,29 +74,29 @@ tools:
 > [templateParameters](..#template-parameters).
 
 ```yaml
-tools:
- list_table:
-    kind: trino-sql
-    source: my-trino-instance
-    statement: |
-      SELECT * FROM {{.tableName}}
-    description: |
-      Use this tool to list all information from a specific table.
-      Example:
-      {{
-          "tableName": "hive.sales.orders",
-      }}
-    templateParameters:
-      - name: tableName
-        type: string
-        description: Table to select from
+kind: tools
+name: list_table
+type: trino-sql
+source: my-trino-instance
+statement: |
+  SELECT * FROM {{.tableName}}
+description: |
+  Use this tool to list all information from a specific table.
+  Example:
+  {{
+      "tableName": "hive.sales.orders",
+  }}
+templateParameters:
+  - name: tableName
+    type: string
+    description: Table to select from
 ```
 
 ## Reference
 
 | **field**          |                   **type**                   | **required** | **description**                                                                                                                        |
 |--------------------|:--------------------------------------------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------|
-| kind               |                    string                    |     true     | Must be "trino-sql".                                                                                                                   |
+| type               |                    string                    |     true     | Must be "trino-sql".                                                                                                                   |
 | source             |                    string                    |     true     | Name of the source the SQL should execute on.                                                                                          |
 | description        |                    string                    |     true     | Description of the tool that is passed to the LLM.                                                                                     |
 | statement          |                    string                    |     true     | SQL statement to execute on.                                                                                                           |

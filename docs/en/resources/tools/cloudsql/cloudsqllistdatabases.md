@@ -18,15 +18,15 @@ Here is an example of how to configure the `cloud-sql-list-databases` tool in yo
 `tools.yaml` file:
 
 ```yaml
-sources:
-  my-cloud-sql-admin-source:
-    kind: cloud-sql-admin
-
-tools:
-  list_my_databases:
-    kind: cloud-sql-list-databases
-    source: my-cloud-sql-admin-source
-    description: Use this tool to list all Cloud SQL databases in an instance.
+kind: sources
+name: my-cloud-sql-admin-source
+type: cloud-sql-admin
+---
+kind: tools
+name: list_my_databases
+type: cloud-sql-list-databases
+source: my-cloud-sql-admin-source
+description: Use this tool to list all Cloud SQL databases in an instance.
 ```
 
 ## Parameters
@@ -42,6 +42,6 @@ The `cloud-sql-list-databases` tool has two required parameters:
 
 | **field**   | **type** | **required** | **description**                                                |
 | ----------- | :------: | :----------: | -------------------------------------------------------------- |
-| kind        |  string  |     true     | Must be "cloud-sql-list-databases".                            |
+| type        |  string  |     true     | Must be "cloud-sql-list-databases".                            |
 | source      |  string  |     true     | The name of the `cloud-sql-admin` source to use for this tool. |
 | description |  string  |     false    | Description of the tool that is passed to the agent.           |

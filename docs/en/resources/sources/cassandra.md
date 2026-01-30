@@ -23,19 +23,19 @@ distributed architectures, and a flexible approach to schema definition.
 ## Example
 
 ```yaml
-sources:
-    my-cassandra-source:
-        kind: cassandra
-        hosts:
-            - 127.0.0.1
-        keyspace: my_keyspace
-        protoVersion: 4
-        username: ${USER_NAME}
-        password: ${PASSWORD}
-        caPath: /path/to/ca.crt # Optional: path to CA certificate
-        certPath: /path/to/client.crt # Optional: path to client certificate
-        keyPath: /path/to/client.key # Optional: path to client key
-        enableHostVerification: true # Optional: enable host verification
+kind: sources
+name: my-cassandra-source
+type: cassandra
+hosts:
+    - 127.0.0.1
+keyspace: my_keyspace
+protoVersion: 4
+username: ${USER_NAME}
+password: ${PASSWORD}
+caPath: /path/to/ca.crt # Optional: path to CA certificate
+certPath: /path/to/client.crt # Optional: path to client certificate
+keyPath: /path/to/client.key # Optional: path to client key
+enableHostVerification: true # Optional: enable host verification
 ```
 
 {{< notice tip >}}
@@ -47,7 +47,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**              | **type** | **required** | **description**                                                                                                                                    |
 |------------------------|:--------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind                   |  string  |     true     | Must be "cassandra".                                                                                                                               |
+| type                   |  string  |     true     | Must be "cassandra".                                                                                                                               |
 | hosts                  | string[] |     true     | List of IP addresses to connect to (e.g., ["192.168.1.1:9042", "192.168.1.2:9042","192.168.1.3:9042"]). The default port is 9042 if not specified. |
 | keyspace               |  string  |     true     | Name of the Cassandra keyspace to connect to (e.g., "my_keyspace").                                                                                |
 | protoVersion           | integer  |    false     | Protocol version for the Cassandra connection (e.g., 4).                                                                                           |

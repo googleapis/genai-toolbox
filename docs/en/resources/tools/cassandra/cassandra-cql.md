@@ -31,27 +31,27 @@ the form of placeholders `?`.
 > names, or other parts of the query.
 
 ```yaml
-tools:
-  search_users_by_email:
-    kind: cassandra-cql
-    source: my-cassandra-cluster
-    statement: |
-      SELECT user_id, email, first_name, last_name, created_at 
-      FROM users 
-      WHERE email = ?
-    description: |
-      Use this tool to retrieve specific user information by their email address.
-      Takes an email address and returns user details including user ID, email, 
-      first name, last name, and account creation timestamp.
-      Do NOT use this tool with a user ID or other identifiers.
-      Example:
-      {{
-          "email": "user@example.com",
-      }}
-    parameters:
-      - name: email
-        type: string
-        description: User's email address
+kind: tools
+name: search_users_by_email
+type: cassandra-cql
+source: my-cassandra-cluster
+statement: |
+  SELECT user_id, email, first_name, last_name, created_at 
+  FROM users 
+  WHERE email = ?
+description: |
+  Use this tool to retrieve specific user information by their email address.
+  Takes an email address and returns user details including user ID, email, 
+  first name, last name, and account creation timestamp.
+  Do NOT use this tool with a user ID or other identifiers.
+  Example:
+  {{
+      "email": "user@example.com",
+  }}
+parameters:
+  - name: email
+    type: string
+    description: User's email address
 ```
 
 ### Example with Template Parameters
@@ -63,33 +63,33 @@ tools:
 > [templateParameters](../#template-parameters).
 
 ```yaml
-tools:
-  list_keyspace_table:
-    kind: cassandra-cql
-    source: my-cassandra-cluster
-    statement: |
-      SELECT * FROM {{.keyspace}}.{{.tableName}};
-    description: |
-      Use this tool to list all information from a specific table in a keyspace.
-      Example:
-      {{
-          "keyspace": "my_keyspace",
-          "tableName": "users",
-      }}
-    templateParameters:
-      - name: keyspace
-        type: string
-        description: Keyspace containing the table
-      - name: tableName
-        type: string
-        description: Table to select from
+kind: tools
+name: list_keyspace_table
+type: cassandra-cql
+source: my-cassandra-cluster
+statement: |
+  SELECT * FROM {{.keyspace}}.{{.tableName}};
+description: |
+  Use this tool to list all information from a specific table in a keyspace.
+  Example:
+  {{
+      "keyspace": "my_keyspace",
+      "tableName": "users",
+  }}
+templateParameters:
+  - name: keyspace
+    type: string
+    description: Keyspace containing the table
+  - name: tableName
+    type: string
+    description: Table to select from
 ```
 
 ## Reference
 
 | **field**          |                   **type**                    | **required** | **description**                                                                                                                         |
 |--------------------|:---------------------------------------------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------|
-| kind               |                    string                     |     true     | Must be "cassandra-cql".                                                                                                                |
+| type               |                    string                     |     true     | Must be "cassandra-cql".                                                                                                                |
 | source             |                    string                     |     true     | Name of the source the CQL should execute on.                                                                                           |
 | description        |                    string                     |     true     | Description of the tool that is passed to the LLM.                                                                                      |
 | statement          |                    string                     |     true     | CQL statement to execute.                                                                                                               |

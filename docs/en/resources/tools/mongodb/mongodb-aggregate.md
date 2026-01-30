@@ -22,7 +22,7 @@ array of documents produced by the final stage of the pipeline.
 A `readOnly` flag can be set to `true` as a safety measure to ensure the
 pipeline does not contain any write stages (like `$out` or `$merge`).
 
-This tool is compatible with the following source kind:
+This tool is compatible with the following source type:
 
 * [`mongodb`](../../sources/mongodb.md)
 
@@ -32,45 +32,45 @@ Here is an example that calculates the average price and total count of products
 for each category, but only for products with an "active" status.
 
 ```yaml
-tools:
-  get_category_stats:
-    kind: mongodb-aggregate
-    source: my-mongo-source
-    description: Calculates average price and count of products, grouped by category.
-    database: ecommerce
-    collection: products
-    readOnly: true
-    pipelinePayload: |
-      [
-        {
-          "$match": {
-            "status": {{json .status_filter}}
-          }
-        },
-        {
-          "$group": {
-            "_id": "$category",
-            "average_price": { "$avg": "$price" },
-            "item_count": { "$sum": 1 }
-          }
-        },
-        {
-          "$sort": {
-            "average_price": -1
-          }
-        }
-      ]
-    pipelineParams:
-      - name: status_filter
-        type: string
-        description: The product status to filter by (e.g., "active").
+kind: tools
+name: get_category_stats
+type: mongodb-aggregate
+source: my-mongo-source
+description: Calculates average price and count of products, grouped by category.
+database: ecommerce
+collection: products
+readOnly: true
+pipelinePayload: |
+  [
+    {
+      "$match": {
+        "status": {{json .status_filter}}
+      }
+    },
+    {
+      "$group": {
+        "_id": "$category",
+        "average_price": { "$avg": "$price" },
+        "item_count": { "$sum": 1 }
+      }
+    },
+    {
+      "$sort": {
+        "average_price": -1
+      }
+    }
+  ]
+pipelineParams:
+  - name: status_filter
+    type: string
+    description: The product status to filter by (e.g., "active").
 ```
 
 ## Reference
 
 | **field**       | **type** | **required** | **description**                                                                                                |
 |:----------------|:---------|:-------------|:---------------------------------------------------------------------------------------------------------------|
-| kind            | string   | true         | Must be `mongodb-aggregate`.                                                                                   |
+| type            | string   | true         | Must be `mongodb-aggregate`.                                                                                   |
 | source          | string   | true         | The name of the `mongodb` source to use.                                                                       |
 | description     | string   | true         | A description of the tool that is passed to the LLM.                                                           |
 | database        | string   | true         | The name of the MongoDB database containing the collection.                                                    |

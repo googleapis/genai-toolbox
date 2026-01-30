@@ -26,17 +26,17 @@ parameters:
 ## Example
 
 ```yaml
-tools:
-  list_instances:
-    kind: alloydb-list-instances
-    source: alloydb-admin-source
-    description: Use this tool to list all AlloyDB instances for a given project, cluster and location.
+kind: tools
+name: list_instances
+type: alloydb-list-instances
+source: alloydb-admin-source
+description: Use this tool to list all AlloyDB instances for a given project, cluster and location.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                      |
 | ----------- | :------: | :----------: | ---------------------------------------------------- |
-| kind        |  string  |     true     | Must be alloydb-list-instances.                      |
+| type        |  string  |     true     | Must be alloydb-list-instances.                      |
 | source      |  string  |     true     | The name of an `alloydb-admin` source.               |
 | description |  string  |     false    | Description of the tool that is passed to the agent. |

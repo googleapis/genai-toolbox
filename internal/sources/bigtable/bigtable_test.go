@@ -15,9 +15,9 @@
 package bigtable_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -34,16 +34,16 @@ func TestParseFromYamlBigtableDb(t *testing.T) {
 		{
 			desc: "can configure with a bigtable table",
 			in: `
-			sources:
-				my-bigtable-instance:
-					kind: bigtable
-					project: my-project
-					instance: my-instance
+			kind: sources
+			name: my-bigtable-instance
+			type: bigtable
+			project: my-project
+			instance: my-instance
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-bigtable-instance": bigtable.Config{
 					Name:     "my-bigtable-instance",
-					Kind:     bigtable.SourceKind,
+					Type:     bigtable.SourceType,
 					Project:  "my-project",
 					Instance: "my-instance",
 				},
@@ -52,16 +52,12 @@ func TestParseFromYamlBigtableDb(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -77,33 +73,29 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-bigtable-instance:
-					kind: bigtable
-					project: my-project
-					instance: my-instance
-					foo: bar
+			kind: sources
+			name: my-bigtable-instance
+			type: bigtable
+			project: my-project
+			instance: my-instance
+			foo: bar
 			`,
-			err: "unable to parse source \"my-bigtable-instance\" as \"bigtable\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | instance: my-instance\n   3 | kind: bigtable\n   4 | project: my-project",
+			err: "error unmarshaling sources: unable to parse source \"my-bigtable-instance\" as \"bigtable\": [1:1] unknown field \"foo\"\n>  1 | foo: bar\n       ^\n   2 | instance: my-instance\n   3 | name: my-bigtable-instance\n   4 | project: my-project\n   5 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-bigtable-instance:
-					kind: bigtable
-					project: my-project
+			kind: sources
+			name: my-bigtable-instance
+			type: bigtable
+			project: my-project
 			`,
-			err: "unable to parse source \"my-bigtable-instance\" as \"bigtable\": Key: 'Config.Instance' Error:Field validation for 'Instance' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-bigtable-instance\" as \"bigtable\": Key: 'Config.Instance' Error:Field validation for 'Instance' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

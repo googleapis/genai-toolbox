@@ -16,6 +16,12 @@ Databases” as its initial development predated MCP, but was renamed to align
 with recently added MCP compatibility.
 {{< /notice >}}
 
+{{< notice note >}}
+This document has been updated to support the configuration file v2 format. To
+view documentation with configuration file v1 format, please navigate to the
+top-right menu and select versions v0.26.0 or older.
+{{< /notice >}}
+
 ## Why Toolbox?
 
 Toolbox helps you build Gen AI tools that let your agents access data in your
@@ -71,7 +77,7 @@ redeploying your application.
 
 ## Getting Started
 
-### (Non-production) Running Toolbox
+### Quickstart: Running Toolbox using NPX 
 
 You can run Toolbox directly with a [configuration file](../configure.md):
 

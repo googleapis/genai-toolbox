@@ -23,24 +23,24 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-tools:
-    get_measures:
-        kind: looker-get-measures
-        source: looker-source
-        description: |
-          This tool retrieves a list of measures defined within a specific Looker explore.
-          Measures are aggregatable metrics (e.g., total sales, average price, count of users)
-          that are used for calculations and quantitative analysis in your queries.
+kind: tools
+name: get_measures
+type: looker-get-measures
+source: looker-source
+description: |
+  This tool retrieves a list of measures defined within a specific Looker explore.
+  Measures are aggregatable metrics (e.g., total sales, average price, count of users)
+  that are used for calculations and quantitative analysis in your queries.
 
-          Parameters:
-          - model_name (required): The name of the LookML model, obtained from `get_models`.
-          - explore_name (required): The name of the explore within the model, obtained from `get_explores`.
+  Parameters:
+  - model_name (required): The name of the LookML model, obtained from `get_models`.
+  - explore_name (required): The name of the explore within the model, obtained from `get_explores`.
 
-          Output Details:
-          - If a measure includes a `suggestions` field, its contents are valid values
-            that can be used directly as filters for that measure.
-          - If a `suggest_explore` and `suggest_dimension` are provided, you can query
-            that specified explore and dimension to retrieve a list of valid filter values.
+  Output Details:
+  - If a measure includes a `suggestions` field, its contents are valid values
+    that can be used directly as filters for that measure.
+  - If a `suggest_explore` and `suggest_dimension` are provided, you can query
+    that specified explore and dimension to retrieve a list of valid filter values.
 
 ```
 
@@ -65,6 +65,6 @@ The response is a json array with the following elements:
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "looker-get-measures".                     |
+| type        |  string  |     true     | Must be "looker-get-measures".                     |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

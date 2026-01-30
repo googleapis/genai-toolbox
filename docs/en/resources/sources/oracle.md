@@ -90,27 +90,27 @@ using a TNS (Transparent Network Substrate) alias.
 This example demonstrates the four connection methods you could choose from:
 
 ```yaml
-sources:
-    my-oracle-source:
-        kind: oracle
-        
-        # --- Choose one connection method ---
-        # 1. Host, Port, and Service Name
-        host: 127.0.0.1
-        port: 1521
-        serviceName: XEPDB1
+kind: sources
+name: my-oracle-source
+type: oracle
 
-        # 2. Direct Connection String
-        connectionString: "127.0.0.1:1521/XEPDB1"
+# --- Choose one connection method ---
+# 1. Host, Port, and Service Name
+host: 127.0.0.1
+port: 1521
+serviceName: XEPDB1
 
-        # 3. TNS Alias (requires tnsnames.ora)
-        tnsAlias: "MY_DB_ALIAS"
-        tnsAdmin: "/opt/oracle/network/admin" # Optional: overrides TNS_ADMIN env var
+# 2. Direct Connection String
+connectionString: "127.0.0.1:1521/XEPDB1"
 
-        user: ${USER_NAME}
-        password: ${PASSWORD}
+# 3. TNS Alias (requires tnsnames.ora)
+tnsAlias: "MY_DB_ALIAS"
+tnsAdmin: "/opt/oracle/network/admin" # Optional: overrides TNS_ADMIN env var
 
-        # Optional: Set to true to use the OCI-based driver for advanced features (Requires Oracle Instant Client)
+user: ${USER_NAME}
+password: ${PASSWORD}
+
+# Optional: Set to true to use the OCI-based driver for advanced features (Requires Oracle Instant Client)
 ```
 
 ### Using an Oracle Wallet
@@ -122,15 +122,15 @@ Oracle Wallet allows you to store credentails used for database connection. Depe
 The `go-ora` driver uses the `walletLocation` field to connect to a database secured with an Oracle Wallet without standard username and password.
 
 ```yaml
-sources:
-    pure-go-wallet:
-        kind: oracle
-        connectionString: "127.0.0.1:1521/XEPDB1"
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        # The TNS Alias is often required to connect to a service registered in tnsnames.ora
-        tnsAlias: "SECURE_DB_ALIAS"
-        walletLocation: "/path/to/my/wallet/directory"
+kind: sources
+name: pure-go-wallet
+type: oracle
+connectionString: "127.0.0.1:1521/XEPDB1"
+user: ${USER_NAME}
+password: ${PASSWORD}
+# The TNS Alias is often required to connect to a service registered in tnsnames.ora
+tnsAlias: "SECURE_DB_ALIAS"
+walletLocation: "/path/to/my/wallet/directory"
 ```
 
 #### OCI-Based Driver (`useOCI: true`) - Oracle Wallet
@@ -138,15 +138,15 @@ sources:
 For the OCI-based driver, wallet authentication is triggered by setting tnsAdmin to the wallet directory and connecting via a tnsAlias. 
 
 ```yaml
-sources:
-    oci-wallet:
-        kind: oracle
-        connectionString: "127.0.0.1:1521/XEPDB1"
-        user: ${USER_NAME}
-        password: ${PASSWORD}
-        tnsAlias: "WALLET_DB_ALIAS"
-        tnsAdmin: "/opt/oracle/wallet" # Directory containing tnsnames.ora, sqlnet.ora, and wallet files
-        useOCI: true
+kind: sources
+name: oci-wallet
+type: oracle
+connectionString: "127.0.0.1:1521/XEPDB1"
+user: ${USER_NAME}
+password: ${PASSWORD}
+tnsAlias: "WALLET_DB_ALIAS"
+tnsAdmin: "/opt/oracle/wallet" # Directory containing tnsnames.ora, sqlnet.ora, and wallet files
+useOCI: true
 ```
 
 {{< notice tip >}}
@@ -158,7 +158,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**        | **type** | **required** | **description**                                                                                                                                                                         |
 |------------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind             |  string  |     true     | Must be "oracle".                                                                                                                                                                       |
+| type             |  string  |     true     | Must be "oracle".                                                                                                                                                                       |
 | user             |  string  |     true     | Name of the Oracle user to connect as (e.g. "my-oracle-user").                                                                                                                          |
 | password         |  string  |     true     | Password of the Oracle user (e.g. "my-password").                                                                                                                                       |
 | host             |  string  |    false     | IP address or hostname to connect to (e.g. "127.0.0.1"). Required if not using `connectionString` or `tnsAlias`.                                                                        |

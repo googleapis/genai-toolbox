@@ -22,17 +22,17 @@ specified AlloyDB user. It is compatible with
 ## Example
 
 ```yaml
-tools:
-  get_specific_user:
-    kind: alloydb-get-user
-    source: my-alloydb-admin-source
-    description: Use this tool to retrieve details for a specific AlloyDB user.
+kind: tools
+name: get_specific_user
+type: alloydb-get-user
+source: my-alloydb-admin-source
+description: Use this tool to retrieve details for a specific AlloyDB user.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                      |
 | ----------- | :------: | :----------: | ---------------------------------------------------- |
-| kind        |  string  |     true     | Must be alloydb-get-user.                            |
+| type        |  string  |     true     | Must be alloydb-get-user.                            |
 | source      |  string  |     true     | The name of an `alloydb-admin` source.               |
 | description |  string  |     false    | Description of the tool that is passed to the agent. |

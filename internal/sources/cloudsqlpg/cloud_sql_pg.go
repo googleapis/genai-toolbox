@@ -28,14 +28,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "cloud-sql-postgres"
+const SourceType string = "cloud-sql-postgres"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -49,7 +49,7 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name     string         `yaml:"name" validate:"required"`
-	Kind     string         `yaml:"kind" validate:"required"`
+	Type     string         `yaml:"type" validate:"required"`
 	Project  string         `yaml:"project" validate:"required"`
 	Region   string         `yaml:"region" validate:"required"`
 	Instance string         `yaml:"instance" validate:"required"`
@@ -59,8 +59,8 @@ type Config struct {
 	Password string         `yaml:"password"`
 }
 
-func (r Config) SourceConfigKind() string {
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -88,8 +88,8 @@ type Source struct {
 	Pool *pgxpool.Pool
 }
 
-func (s *Source) SourceKind() string {
-	return SourceKind
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -162,7 +162,7 @@ func getConnectionConfig(ctx context.Context, user, pass, dbname string) (string
 
 func initCloudSQLPgConnectionPool(ctx context.Context, tracer trace.Tracer, name, project, region, instance, ipType, user, pass, dbname string) (*pgxpool.Pool, error) {
 	//nolint:all // Reassigned ctx
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	// Configure the driver to connect to the database

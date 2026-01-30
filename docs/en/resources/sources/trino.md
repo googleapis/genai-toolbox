@@ -32,15 +32,15 @@ the catalogs and schemas you want to query.
 ## Example
 
 ```yaml
-sources:
-    my-trino-source:
-    kind: trino
-    host: trino.example.com
-    port: "8080"
-    user: ${TRINO_USER}  # Optional for anonymous access
-    password: ${TRINO_PASSWORD}  # Optional
-    catalog: hive
-    schema: default
+kind: sources
+name: my-trino-source
+type: trino
+host: trino.example.com
+port: "8080"
+user: ${TRINO_USER}  # Optional for anonymous access
+password: ${TRINO_PASSWORD}  # Optional
+catalog: hive
+schema: default
 ```
 
 {{< notice tip >}}
@@ -52,7 +52,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field**              | **type** | **required** | **description**                                                              |
 | ---------------------- | :------: | :----------: | ---------------------------------------------------------------------------- |
-| kind                   |  string  |     true     | Must be "trino".                                                             |
+| type                   |  string  |     true     | Must be "trino".                                                             |
 | host                   |  string  |     true     | Trino coordinator hostname (e.g. "trino.example.com")                        |
 | port                   |  string  |     true     | Trino coordinator port (e.g. "8080", "8443")                                 |
 | user                   |  string  |    false     | Username for authentication (e.g. "analyst"). Optional for anonymous access. |

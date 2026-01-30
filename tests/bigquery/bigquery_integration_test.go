@@ -41,8 +41,8 @@ import (
 )
 
 var (
-	BigquerySourceKind = "bigquery"
-	BigqueryToolKind   = "bigquery-sql"
+	BigquerySourceType = "bigquery"
+	BigqueryToolType   = "bigquery-sql"
 	BigqueryProject    = os.Getenv("BIGQUERY_PROJECT")
 )
 
@@ -53,7 +53,7 @@ func getBigQueryVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":    BigquerySourceKind,
+		"type":    BigquerySourceType,
 		"project": BigqueryProject,
 	}
 }
@@ -146,12 +146,12 @@ func TestBigQueryToolEndpoints(t *testing.T) {
 	defer teardownTable5(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, BigqueryToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, BigqueryToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = addClientAuthSourceConfig(t, toolsFile)
 	toolsFile = addBigQuerySqlToolConfig(t, toolsFile, dataTypeToolStmt, arrayDataTypeToolStmt)
 	toolsFile = addBigQueryPrebuiltToolsConfig(t, toolsFile)
 	tmplSelectCombined, tmplSelectFilterCombined := getBigQueryTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, BigqueryToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, BigqueryToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
@@ -286,42 +286,42 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	// Configure tool
 	toolsConfig := map[string]any{
 		"list-dataset-ids-restricted": map[string]any{
-			"kind":        "bigquery-list-dataset-ids",
+			"type":        "bigquery-list-dataset-ids",
 			"source":      "my-instance",
 			"description": "Tool to list dataset ids",
 		},
 		"list-table-ids-restricted": map[string]any{
-			"kind":        "bigquery-list-table-ids",
+			"type":        "bigquery-list-table-ids",
 			"source":      "my-instance",
 			"description": "Tool to list table within a dataset",
 		},
 		"get-dataset-info-restricted": map[string]any{
-			"kind":        "bigquery-get-dataset-info",
+			"type":        "bigquery-get-dataset-info",
 			"source":      "my-instance",
 			"description": "Tool to get dataset info",
 		},
 		"get-table-info-restricted": map[string]any{
-			"kind":        "bigquery-get-table-info",
+			"type":        "bigquery-get-table-info",
 			"source":      "my-instance",
 			"description": "Tool to get table info",
 		},
 		"execute-sql-restricted": map[string]any{
-			"kind":        "bigquery-execute-sql",
+			"type":        "bigquery-execute-sql",
 			"source":      "my-instance",
 			"description": "Tool to execute SQL",
 		},
 		"conversational-analytics-restricted": map[string]any{
-			"kind":        "bigquery-conversational-analytics",
+			"type":        "bigquery-conversational-analytics",
 			"source":      "my-instance",
 			"description": "Tool to ask BigQuery conversational analytics",
 		},
 		"forecast-restricted": map[string]any{
-			"kind":        "bigquery-forecast",
+			"type":        "bigquery-forecast",
 			"source":      "my-instance",
 			"description": "Tool to forecast",
 		},
 		"analyze-contribution-restricted": map[string]any{
-			"kind":        "bigquery-analyze-contribution",
+			"type":        "bigquery-analyze-contribution",
 			"source":      "my-instance",
 			"description": "Tool to analyze contribution",
 		},
@@ -398,7 +398,7 @@ func TestBigQueryWriteModeAllowed(t *testing.T) {
 		},
 		"tools": map[string]any{
 			"my-exec-sql-tool": map[string]any{
-				"kind":        "bigquery-execute-sql",
+				"type":        "bigquery-execute-sql",
 				"source":      "my-instance",
 				"description": "Tool to execute sql",
 			},
@@ -444,7 +444,7 @@ func TestBigQueryWriteModeBlocked(t *testing.T) {
 	toolsFile := map[string]any{
 		"sources": map[string]any{"my-instance": sourceConfig},
 		"tools": map[string]any{
-			"my-exec-sql-tool": map[string]any{"kind": "bigquery-execute-sql", "source": "my-instance", "description": "Tool to execute sql"},
+			"my-exec-sql-tool": map[string]any{"type": "bigquery-execute-sql", "source": "my-instance", "description": "Tool to execute sql"},
 		},
 	}
 
@@ -490,20 +490,20 @@ func TestBigQueryWriteModeProtected(t *testing.T) {
 	toolsFile := map[string]any{
 		"sources": map[string]any{"my-instance": sourceConfig},
 		"tools": map[string]any{
-			"my-exec-sql-tool": map[string]any{"kind": "bigquery-execute-sql", "source": "my-instance", "description": "Tool to execute sql"},
+			"my-exec-sql-tool": map[string]any{"type": "bigquery-execute-sql", "source": "my-instance", "description": "Tool to execute sql"},
 			"my-sql-tool-protected": map[string]any{
-				"kind":        "bigquery-sql",
+				"type":        "bigquery-sql",
 				"source":      "my-instance",
 				"description": "Tool to query from the session",
 				"statement":   "SELECT * FROM my_shared_temp_table",
 			},
 			"my-forecast-tool-protected": map[string]any{
-				"kind":        "bigquery-forecast",
+				"type":        "bigquery-forecast",
 				"source":      "my-instance",
 				"description": "Tool to forecast from session temp table",
 			},
 			"my-analyze-contribution-tool-protected": map[string]any{
-				"kind":        "bigquery-analyze-contribution",
+				"type":        "bigquery-analyze-contribution",
 				"source":      "my-instance",
 				"description": "Tool to analyze contribution from session temp table",
 			},
@@ -527,7 +527,7 @@ func TestBigQueryWriteModeProtected(t *testing.T) {
 	runBigQueryWriteModeProtectedTest(t, permanentDatasetName)
 }
 
-// getBigQueryParamToolInfo returns statements and param for my-tool for bigquery kind
+// getBigQueryParamToolInfo returns statements and param for my-tool for bigquery type
 func getBigQueryParamToolInfo(tableName string) (string, string, string, string, string, string, []bigqueryapi.QueryParameter) {
 	createStatement := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (id INT64, name STRING);`, tableName)
@@ -546,7 +546,7 @@ func getBigQueryParamToolInfo(tableName string) (string, string, string, string,
 	return createStatement, insertStatement, toolStatement, idToolStatement, nameToolStatement, arrayToolStatememt, params
 }
 
-// getBigQueryAuthToolInfo returns statements and param of my-auth-tool for bigquery kind
+// getBigQueryAuthToolInfo returns statements and param of my-auth-tool for bigquery type
 func getBigQueryAuthToolInfo(tableName string) (string, string, string, []bigqueryapi.QueryParameter) {
 	createStatement := fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s (id INT64, name STRING, email STRING)`, tableName)
@@ -616,7 +616,7 @@ func getBigQueryAnalyzeContributionToolInfo(tableName string) (string, string, [
 	return createStatement, insertStatement, params
 }
 
-// getBigQueryTmplToolStatement returns statements for template parameter test cases for bigquery kind
+// getBigQueryTmplToolStatement returns statements for template parameter test cases for bigquery type
 func getBigQueryTmplToolStatement() (string, string) {
 	tmplSelectCombined := "SELECT * FROM {{.tableName}} WHERE id = ? ORDER BY id"
 	tmplSelectFilterCombined := "SELECT * FROM {{.tableName}} WHERE {{.columnFilter}} = ? ORDER BY id"
@@ -708,12 +708,12 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-exec-sql-tool"] = map[string]any{
-		"kind":        "bigquery-execute-sql",
+		"type":        "bigquery-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 	}
 	tools["my-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "bigquery-execute-sql",
+		"type":        "bigquery-execute-sql",
 		"source":      "my-instance",
 		"description": "Tool to execute sql",
 		"authRequired": []string{
@@ -721,17 +721,17 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		},
 	}
 	tools["my-client-auth-exec-sql-tool"] = map[string]any{
-		"kind":        "bigquery-execute-sql",
+		"type":        "bigquery-execute-sql",
 		"source":      "my-client-auth-source",
 		"description": "Tool to execute sql",
 	}
 	tools["my-forecast-tool"] = map[string]any{
-		"kind":        "bigquery-forecast",
+		"type":        "bigquery-forecast",
 		"source":      "my-instance",
 		"description": "Tool to forecast time series data.",
 	}
 	tools["my-auth-forecast-tool"] = map[string]any{
-		"kind":        "bigquery-forecast",
+		"type":        "bigquery-forecast",
 		"source":      "my-instance",
 		"description": "Tool to forecast time series data with auth.",
 		"authRequired": []string{
@@ -739,17 +739,17 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		},
 	}
 	tools["my-client-auth-forecast-tool"] = map[string]any{
-		"kind":        "bigquery-forecast",
+		"type":        "bigquery-forecast",
 		"source":      "my-client-auth-source",
 		"description": "Tool to forecast time series data with auth.",
 	}
 	tools["my-analyze-contribution-tool"] = map[string]any{
-		"kind":        "bigquery-analyze-contribution",
+		"type":        "bigquery-analyze-contribution",
 		"source":      "my-instance",
 		"description": "Tool to analyze contribution.",
 	}
 	tools["my-auth-analyze-contribution-tool"] = map[string]any{
-		"kind":        "bigquery-analyze-contribution",
+		"type":        "bigquery-analyze-contribution",
 		"source":      "my-instance",
 		"description": "Tool to analyze contribution with auth.",
 		"authRequired": []string{
@@ -757,17 +757,17 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		},
 	}
 	tools["my-client-auth-analyze-contribution-tool"] = map[string]any{
-		"kind":        "bigquery-analyze-contribution",
+		"type":        "bigquery-analyze-contribution",
 		"source":      "my-client-auth-source",
 		"description": "Tool to analyze contribution with auth.",
 	}
 	tools["my-list-dataset-ids-tool"] = map[string]any{
-		"kind":        "bigquery-list-dataset-ids",
+		"type":        "bigquery-list-dataset-ids",
 		"source":      "my-instance",
 		"description": "Tool to list dataset",
 	}
 	tools["my-auth-list-dataset-ids-tool"] = map[string]any{
-		"kind":        "bigquery-list-dataset-ids",
+		"type":        "bigquery-list-dataset-ids",
 		"source":      "my-instance",
 		"description": "Tool to list dataset",
 		"authRequired": []string{
@@ -775,17 +775,17 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		},
 	}
 	tools["my-client-auth-list-dataset-ids-tool"] = map[string]any{
-		"kind":        "bigquery-list-dataset-ids",
+		"type":        "bigquery-list-dataset-ids",
 		"source":      "my-client-auth-source",
 		"description": "Tool to list dataset",
 	}
 	tools["my-get-dataset-info-tool"] = map[string]any{
-		"kind":        "bigquery-get-dataset-info",
+		"type":        "bigquery-get-dataset-info",
 		"source":      "my-instance",
 		"description": "Tool to show dataset metadata",
 	}
 	tools["my-auth-get-dataset-info-tool"] = map[string]any{
-		"kind":        "bigquery-get-dataset-info",
+		"type":        "bigquery-get-dataset-info",
 		"source":      "my-instance",
 		"description": "Tool to show dataset metadata",
 		"authRequired": []string{
@@ -793,17 +793,17 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		},
 	}
 	tools["my-client-auth-get-dataset-info-tool"] = map[string]any{
-		"kind":        "bigquery-get-dataset-info",
+		"type":        "bigquery-get-dataset-info",
 		"source":      "my-client-auth-source",
 		"description": "Tool to show dataset metadata",
 	}
 	tools["my-list-table-ids-tool"] = map[string]any{
-		"kind":        "bigquery-list-table-ids",
+		"type":        "bigquery-list-table-ids",
 		"source":      "my-instance",
 		"description": "Tool to list table within a dataset",
 	}
 	tools["my-auth-list-table-ids-tool"] = map[string]any{
-		"kind":        "bigquery-list-table-ids",
+		"type":        "bigquery-list-table-ids",
 		"source":      "my-instance",
 		"description": "Tool to list table within a dataset",
 		"authRequired": []string{
@@ -811,17 +811,17 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		},
 	}
 	tools["my-client-auth-list-table-ids-tool"] = map[string]any{
-		"kind":        "bigquery-list-table-ids",
+		"type":        "bigquery-list-table-ids",
 		"source":      "my-client-auth-source",
 		"description": "Tool to list table within a dataset",
 	}
 	tools["my-get-table-info-tool"] = map[string]any{
-		"kind":        "bigquery-get-table-info",
+		"type":        "bigquery-get-table-info",
 		"source":      "my-instance",
 		"description": "Tool to show dataset metadata",
 	}
 	tools["my-auth-get-table-info-tool"] = map[string]any{
-		"kind":        "bigquery-get-table-info",
+		"type":        "bigquery-get-table-info",
 		"source":      "my-instance",
 		"description": "Tool to show dataset metadata",
 		"authRequired": []string{
@@ -829,17 +829,17 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		},
 	}
 	tools["my-client-auth-get-table-info-tool"] = map[string]any{
-		"kind":        "bigquery-get-table-info",
+		"type":        "bigquery-get-table-info",
 		"source":      "my-client-auth-source",
 		"description": "Tool to show dataset metadata",
 	}
 	tools["my-conversational-analytics-tool"] = map[string]any{
-		"kind":        "bigquery-conversational-analytics",
+		"type":        "bigquery-conversational-analytics",
 		"source":      "my-instance",
 		"description": "Tool to ask BigQuery conversational analytics",
 	}
 	tools["my-auth-conversational-analytics-tool"] = map[string]any{
-		"kind":        "bigquery-conversational-analytics",
+		"type":        "bigquery-conversational-analytics",
 		"source":      "my-instance",
 		"description": "Tool to ask BigQuery conversational analytics",
 		"authRequired": []string{
@@ -847,17 +847,17 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		},
 	}
 	tools["my-client-auth-conversational-analytics-tool"] = map[string]any{
-		"kind":        "bigquery-conversational-analytics",
+		"type":        "bigquery-conversational-analytics",
 		"source":      "my-client-auth-source",
 		"description": "Tool to ask BigQuery conversational analytics",
 	}
 	tools["my-search-catalog-tool"] = map[string]any{
-		"kind":        "bigquery-search-catalog",
+		"type":        "bigquery-search-catalog",
 		"source":      "my-instance",
 		"description": "Tool to search the BiqQuery catalog",
 	}
 	tools["my-auth-search-catalog-tool"] = map[string]any{
-		"kind":        "bigquery-search-catalog",
+		"type":        "bigquery-search-catalog",
 		"source":      "my-instance",
 		"description": "Tool to search the BiqQuery catalog",
 		"authRequired": []string{
@@ -865,7 +865,7 @@ func addBigQueryPrebuiltToolsConfig(t *testing.T, config map[string]any) map[str
 		},
 	}
 	tools["my-client-auth-search-catalog-tool"] = map[string]any{
-		"kind":        "bigquery-search-catalog",
+		"type":        "bigquery-search-catalog",
 		"source":      "my-client-auth-source",
 		"description": "Tool to search the BiqQuery catalog",
 	}
@@ -879,7 +879,7 @@ func addClientAuthSourceConfig(t *testing.T, config map[string]any) map[string]a
 		t.Fatalf("unable to get sources from config")
 	}
 	sources["my-client-auth-source"] = map[string]any{
-		"kind":           BigquerySourceKind,
+		"type":           BigquerySourceType,
 		"project":        BigqueryProject,
 		"useClientOAuth": true,
 	}
@@ -893,7 +893,7 @@ func addBigQuerySqlToolConfig(t *testing.T, config map[string]any, toolStatement
 		t.Fatalf("unable to get tools from config")
 	}
 	tools["my-scalar-datatype-tool"] = map[string]any{
-		"kind":        "bigquery-sql",
+		"type":        "bigquery-sql",
 		"source":      "my-instance",
 		"description": "Tool to test various scalar data types.",
 		"statement":   toolStatement,
@@ -905,7 +905,7 @@ func addBigQuerySqlToolConfig(t *testing.T, config map[string]any, toolStatement
 		},
 	}
 	tools["my-array-datatype-tool"] = map[string]any{
-		"kind":        "bigquery-sql",
+		"type":        "bigquery-sql",
 		"source":      "my-instance",
 		"description": "Tool to test various array data types.",
 		"statement":   arrayToolStatement,
@@ -917,7 +917,7 @@ func addBigQuerySqlToolConfig(t *testing.T, config map[string]any, toolStatement
 		},
 	}
 	tools["my-client-auth-tool"] = map[string]any{
-		"kind":        "bigquery-sql",
+		"type":        "bigquery-sql",
 		"source":      "my-client-auth-source",
 		"description": "Tool to test client authorization.",
 		"statement":   "SELECT 1",

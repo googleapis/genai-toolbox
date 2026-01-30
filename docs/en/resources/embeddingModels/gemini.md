@@ -50,12 +50,12 @@ information.
 ## Example
 
 ```yaml
-embeddingModels:
-  gemini-model:
-    kind: gemini
-    model: gemini-embedding-001
-    apiKey: ${GOOGLE_API_KEY}
-    dimension: 768
+kind: embeddingModels
+name: gemini-model
+type: gemini
+model: gemini-embedding-001
+apiKey: ${GOOGLE_API_KEY}
+dimension: 768
 ```
 
 {{< notice tip >}}
@@ -67,7 +67,7 @@ instead of hardcoding your secrets into the configuration file.
 
 | **field** | **type** | **required** | **description**                                              |
 |-----------|:--------:|:------------:|--------------------------------------------------------------|
-| kind      |  string  |     true     | Must be `gemini`.                                            |
+| type      |  string  |     true     | Must be `gemini`.                                            |
 | model     |  string  |     true     | The Gemini model ID to use (e.g., `gemini-embedding-001`).   |
 | apiKey    |  string  |    false     | Your API Key from Google AI Studio.                          |
 | dimension | integer  |    false     | The number of dimensions in the output vector (e.g., `768`). |

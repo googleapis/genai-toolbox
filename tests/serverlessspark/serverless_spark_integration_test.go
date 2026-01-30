@@ -64,7 +64,7 @@ func getServerlessSparkVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":     "serverless-spark",
+		"type":     "serverless-spark",
 		"project":  serverlessSparkProject,
 		"location": serverlessSparkLocation,
 	}
@@ -81,40 +81,40 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 		},
 		"authServices": map[string]any{
 			"my-google-auth": map[string]any{
-				"kind":     "google",
+				"type":     "google",
 				"clientId": tests.ClientId,
 			},
 		},
 		"tools": map[string]any{
 			"list-batches": map[string]any{
-				"kind":   "serverless-spark-list-batches",
+				"type":   "serverless-spark-list-batches",
 				"source": "my-spark",
 			},
 			"list-batches-with-auth": map[string]any{
-				"kind":         "serverless-spark-list-batches",
+				"type":         "serverless-spark-list-batches",
 				"source":       "my-spark",
 				"authRequired": []string{"my-google-auth"},
 			},
 			"get-batch": map[string]any{
-				"kind":   "serverless-spark-get-batch",
+				"type":   "serverless-spark-get-batch",
 				"source": "my-spark",
 			},
 			"get-batch-with-auth": map[string]any{
-				"kind":         "serverless-spark-get-batch",
+				"type":         "serverless-spark-get-batch",
 				"source":       "my-spark",
 				"authRequired": []string{"my-google-auth"},
 			},
 			"cancel-batch": map[string]any{
-				"kind":   "serverless-spark-cancel-batch",
+				"type":   "serverless-spark-cancel-batch",
 				"source": "my-spark",
 			},
 			"cancel-batch-with-auth": map[string]any{
-				"kind":         "serverless-spark-cancel-batch",
+				"type":         "serverless-spark-cancel-batch",
 				"source":       "my-spark",
 				"authRequired": []string{"my-google-auth"},
 			},
 			"create-pyspark-batch": map[string]any{
-				"kind":   "serverless-spark-create-pyspark-batch",
+				"type":   "serverless-spark-create-pyspark-batch",
 				"source": "my-spark",
 				"environmentConfig": map[string]any{
 					"executionConfig": map[string]any{
@@ -123,7 +123,7 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				},
 			},
 			"create-pyspark-batch-2-3": map[string]any{
-				"kind":          "serverless-spark-create-pyspark-batch",
+				"type":          "serverless-spark-create-pyspark-batch",
 				"source":        "my-spark",
 				"runtimeConfig": map[string]any{"version": "2.3"},
 				"environmentConfig": map[string]any{
@@ -133,12 +133,12 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				},
 			},
 			"create-pyspark-batch-with-auth": map[string]any{
-				"kind":         "serverless-spark-create-pyspark-batch",
+				"type":         "serverless-spark-create-pyspark-batch",
 				"source":       "my-spark",
 				"authRequired": []string{"my-google-auth"},
 			},
 			"create-spark-batch": map[string]any{
-				"kind":   "serverless-spark-create-spark-batch",
+				"type":   "serverless-spark-create-spark-batch",
 				"source": "my-spark",
 				"environmentConfig": map[string]any{
 					"executionConfig": map[string]any{
@@ -147,7 +147,7 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				},
 			},
 			"create-spark-batch-2-3": map[string]any{
-				"kind":          "serverless-spark-create-spark-batch",
+				"type":          "serverless-spark-create-spark-batch",
 				"source":        "my-spark",
 				"runtimeConfig": map[string]any{"version": "2.3"},
 				"environmentConfig": map[string]any{
@@ -157,7 +157,7 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				},
 			},
 			"create-spark-batch-with-auth": map[string]any{
-				"kind":         "serverless-spark-create-spark-batch",
+				"type":         "serverless-spark-create-spark-batch",
 				"source":       "my-spark",
 				"authRequired": []string{"my-google-auth"},
 			},

@@ -30,40 +30,40 @@ var promptRegistry = make(map[string]PromptConfigFactory)
 
 // Register allows individual prompt packages to register their configuration
 // factory function. This is typically called from an init() function in the
-// prompt's package. It associates a 'kind' string with a function that can
+// prompt's package. It associates a 'type' string with a function that can
 // produce the specific PromptConfig type. It returns true if the registration was
-// successful, and false if a prompt with the same kind was already registered.
-func Register(kind string, factory PromptConfigFactory) bool {
-	if _, exists := promptRegistry[kind]; exists {
-		// Prompt with this kind already exists, do not overwrite.
+// successful, and false if a prompt with the same type was already registered.
+func Register(resourceType string, factory PromptConfigFactory) bool {
+	if _, exists := promptRegistry[resourceType]; exists {
+		// Prompt with this type already exists, do not overwrite.
 		return false
 	}
-	promptRegistry[kind] = factory
+	promptRegistry[resourceType] = factory
 	return true
 }
 
-// DecodeConfig looks up the registered factory for the given kind and uses it
+// DecodeConfig looks up the registered factory for the given type and uses it
 // to decode the prompt configuration.
-func DecodeConfig(ctx context.Context, kind, name string, decoder *yaml.Decoder) (PromptConfig, error) {
-	factory, found := promptRegistry[kind]
-	if !found && kind == "" {
-		kind = "custom"
-		factory, found = promptRegistry[kind]
+func DecodeConfig(ctx context.Context, resourceType, name string, decoder *yaml.Decoder) (PromptConfig, error) {
+	factory, found := promptRegistry[resourceType]
+	if !found && resourceType == "" {
+		resourceType = "custom"
+		factory, found = promptRegistry[resourceType]
 	}
 
 	if !found {
-		return nil, fmt.Errorf("unknown prompt kind: %q", kind)
+		return nil, fmt.Errorf("unknown prompt type: %q", resourceType)
 	}
 
 	promptConfig, err := factory(ctx, name, decoder)
 	if err != nil {
-		return nil, fmt.Errorf("unable to parse prompt %q as kind %q: %w", name, kind, err)
+		return nil, fmt.Errorf("unable to parse prompt %q as resourceType %q: %w", name, resourceType, err)
 	}
 	return promptConfig, nil
 }
 
 type PromptConfig interface {
-	PromptConfigKind() string
+	PromptConfigType() string
 	Initialize() (Prompt, error)
 }
 

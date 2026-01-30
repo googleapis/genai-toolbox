@@ -79,32 +79,33 @@ You have two options:
 Create a `tools.yaml` file and add the following content. You must replace the placeholders with your actual Snowflake configuration.
 
 ```yaml
-sources:
-  snowflake-source:
-    kind: snowflake
-    account: ${SNOWFLAKE_ACCOUNT}
-    user: ${SNOWFLAKE_USER}
-    password: ${SNOWFLAKE_PASSWORD}
-    database: ${SNOWFLAKE_DATABASE}
-    schema: ${SNOWFLAKE_SCHEMA}
-    warehouse: ${SNOWFLAKE_WAREHOUSE}
-    role: ${SNOWFLAKE_ROLE}
-
-tools:
-    execute_sql:
-        kind: snowflake-execute-sql
-        source: snowflake-source
-        description: Use this tool to execute SQL.
-
-    list_tables:
-        kind: snowflake-sql
-        source: snowflake-source
-        description: "Lists detailed schema information for user-created tables."
-        statement: |
-           SELECT table_name, table_type 
-           FROM information_schema.tables 
-           WHERE table_schema = current_schema()
-           ORDER BY table_name;
+kind: sources
+name: snowflake-source
+type: snowflake
+account: ${SNOWFLAKE_ACCOUNT}
+user: ${SNOWFLAKE_USER}
+password: ${SNOWFLAKE_PASSWORD}
+database: ${SNOWFLAKE_DATABASE}
+schema: ${SNOWFLAKE_SCHEMA}
+warehouse: ${SNOWFLAKE_WAREHOUSE}
+role: ${SNOWFLAKE_ROLE}
+---
+kind: tools
+name: execute_sql
+type: snowflake-execute-sql
+source: snowflake-source
+description: Use this tool to execute SQL.
+---
+kind: tools
+name: list_tables
+type: snowflake-sql
+source: snowflake-source
+description: "Lists detailed schema information for user-created tables."
+statement: |
+    SELECT table_name, table_type 
+    FROM information_schema.tables 
+    WHERE table_schema = current_schema()
+    ORDER BY table_name;
 ```
 
 For more info on tools, check out the

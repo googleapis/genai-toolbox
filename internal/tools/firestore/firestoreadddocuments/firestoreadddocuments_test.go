@@ -17,7 +17,6 @@ package firestoreadddocuments_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -37,16 +36,16 @@ func TestParseFromYamlFirestoreAddDocuments(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				add_docs_tool:
-					kind: firestore-add-documents
-					source: my-firestore-instance
-					description: Add documents to Firestore collections
+			kind: tools
+			name: add_docs_tool
+			type: firestore-add-documents
+			source: my-firestore-instance
+			description: Add documents to Firestore collections
 			`,
 			want: server.ToolConfigs{
 				"add_docs_tool": firestoreadddocuments.Config{
 					Name:         "add_docs_tool",
-					Kind:         "firestore-add-documents",
+					Type:         "firestore-add-documents",
 					Source:       "my-firestore-instance",
 					Description:  "Add documents to Firestore collections",
 					AuthRequired: []string{},
@@ -56,19 +55,19 @@ func TestParseFromYamlFirestoreAddDocuments(t *testing.T) {
 		{
 			desc: "with auth requirements",
 			in: `
-			tools:
-				secure_add_docs:
-					kind: firestore-add-documents
-					source: prod-firestore
-					description: Add documents with authentication
-					authRequired:
-						- google-auth-service
-						- api-key-service
+			kind: tools
+			name: secure_add_docs
+			type: firestore-add-documents
+			source: prod-firestore
+			description: Add documents with authentication
+			authRequired:
+				- google-auth-service
+				- api-key-service
 			`,
 			want: server.ToolConfigs{
 				"secure_add_docs": firestoreadddocuments.Config{
 					Name:         "secure_add_docs",
-					Kind:         "firestore-add-documents",
+					Type:         "firestore-add-documents",
 					Source:       "prod-firestore",
 					Description:  "Add documents with authentication",
 					AuthRequired: []string{"google-auth-service", "api-key-service"},
@@ -78,15 +77,11 @@ func TestParseFromYamlFirestoreAddDocuments(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -99,58 +94,57 @@ func TestParseFromYamlMultipleTools(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err)
 	}
 	in := `
-	tools:
-		add_user_docs:
-			kind: firestore-add-documents
-			source: users-firestore
-			description: Add user documents
-			authRequired:
-				- user-auth
-		add_product_docs:
-			kind: firestore-add-documents
-			source: products-firestore
-			description: Add product documents
-		add_order_docs:
-			kind: firestore-add-documents
-			source: orders-firestore
-			description: Add order documents
-			authRequired:
-				- user-auth
-				- admin-auth
+	kind: tools
+	name: add_user_docs
+	type: firestore-add-documents
+	source: users-firestore
+	description: Add user documents
+	authRequired:
+		- user-auth
+---
+	kind: tools
+	name: add_product_docs
+	type: firestore-add-documents
+	source: products-firestore
+	description: Add product documents
+---
+	kind: tools
+	name: add_order_docs
+	type: firestore-add-documents
+	source: orders-firestore
+	description: Add order documents
+	authRequired:
+		- user-auth
+		- admin-auth
 	`
 	want := server.ToolConfigs{
 		"add_user_docs": firestoreadddocuments.Config{
 			Name:         "add_user_docs",
-			Kind:         "firestore-add-documents",
+			Type:         "firestore-add-documents",
 			Source:       "users-firestore",
 			Description:  "Add user documents",
 			AuthRequired: []string{"user-auth"},
 		},
 		"add_product_docs": firestoreadddocuments.Config{
 			Name:         "add_product_docs",
-			Kind:         "firestore-add-documents",
+			Type:         "firestore-add-documents",
 			Source:       "products-firestore",
 			Description:  "Add product documents",
 			AuthRequired: []string{},
 		},
 		"add_order_docs": firestoreadddocuments.Config{
 			Name:         "add_order_docs",
-			Kind:         "firestore-add-documents",
+			Type:         "firestore-add-documents",
 			Source:       "orders-firestore",
 			Description:  "Add order documents",
 			AuthRequired: []string{"user-auth", "admin-auth"},
 		},
 	}
-
-	got := struct {
-		Tools server.ToolConfigs `yaml:"tools"`
-	}{}
-	// Parse contents
-	err = yaml.UnmarshalContext(ctx, testutils.FormatYaml(in), &got)
+	_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(in))
 	if err != nil {
 		t.Fatalf("unable to unmarshal: %s", err)
 	}
-	if diff := cmp.Diff(want, got.Tools); diff != "" {
+	if diff := cmp.Diff(want, got); diff != "" {
 		t.Fatalf("incorrect parse: diff %v", diff)
 	}
 }

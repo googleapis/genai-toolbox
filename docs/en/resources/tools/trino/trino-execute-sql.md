@@ -25,17 +25,17 @@ statement against the `source`.
 ## Example
 
 ```yaml
-tools:
- execute_sql_tool:
-    kind: trino-execute-sql
-    source: my-trino-instance
-    description: Use this tool to execute sql statement.
+kind: tools
+name: execute_sql_tool
+type: trino-execute-sql
+source: my-trino-instance
+description: Use this tool to execute sql statement.
 ```
 
 ## Reference
 
 | **field**   |                  **type**                  | **required** | **description**                                                                                  |
 |-------------|:------------------------------------------:|:------------:|--------------------------------------------------------------------------------------------------|
-| kind        |                   string                   |     true     | Must be "trino-execute-sql".                                                                     |
+| type        |                   string                   |     true     | Must be "trino-execute-sql".                                                                     |
 | source      |                   string                   |     true     | Name of the source the SQL should execute on.                                                    |
 | description |                   string                   |     true     | Description of the tool that is passed to the LLM.                                               |

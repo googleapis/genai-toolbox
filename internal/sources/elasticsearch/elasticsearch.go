@@ -30,14 +30,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-const SourceKind string = "elasticsearch"
+const SourceType string = "elasticsearch"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -51,15 +51,15 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 
 type Config struct {
 	Name      string   `yaml:"name" validate:"required"`
-	Kind      string   `yaml:"kind" validate:"required"`
+	Type      string   `yaml:"type" validate:"required"`
 	Addresses []string `yaml:"addresses" validate:"required"`
 	Username  string   `yaml:"username"`
 	Password  string   `yaml:"password"`
 	APIKey    string   `yaml:"apikey"`
 }
 
-func (c Config) SourceConfigKind() string {
-	return SourceKind
+func (c Config) SourceConfigType() string {
+	return SourceType
 }
 
 type EsClient interface {
@@ -139,9 +139,9 @@ func (c Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.So
 	return s, nil
 }
 
-// SourceKind returns the kind string for this source.
-func (s *Source) SourceKind() string {
-	return SourceKind
+// SourceType returns the resourceType string for this source.
+func (s *Source) SourceType() string {
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {

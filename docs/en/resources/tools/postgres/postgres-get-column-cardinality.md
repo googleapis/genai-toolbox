@@ -30,11 +30,11 @@ the following input parameters:
 ## Example
 
 ```yaml
-tools:
-  get_column_cardinality:
-    kind: postgres-get-column-cardinality
-    source: postgres-source
-    description: Estimates the number of unique values (cardinality) quickly for one or all columns in a specific PostgreSQL table by using the database's internal statistics, returning the results in descending order of estimated cardinality. Please run ANALYZE on the table before using this tool to get accurate results. The tool returns the column_name and the estimated_cardinality. If the column_name is not provided, the tool returns all columns along with their estimated cardinality.
+kind: tools
+name: get_column_cardinality
+type: postgres-get-column-cardinality
+source: postgres-source
+description: Estimates the number of unique values (cardinality) quickly for one or all columns in a specific PostgreSQL table by using the database's internal statistics, returning the results in descending order of estimated cardinality. Please run ANALYZE on the table before using this tool to get accurate results. The tool returns the column_name and the estimated_cardinality. If the column_name is not provided, the tool returns all columns along with their estimated cardinality.
 ```
 
 The response is a json array with the following elements:
@@ -58,6 +58,6 @@ to estimate cardinality.
 
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
-| kind        |  string  |     true     | Must be "postgres-get-column-cardinality".           |
+| type        |  string  |     true     | Must be "postgres-get-column-cardinality".           |
 | source      |  string  |     true     | Name of the source the SQL should execute on.        |
 | description |  string  |     true     | Description of the tool that is passed to the LLM.   |

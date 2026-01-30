@@ -49,7 +49,7 @@ func TestTool_Invoke(t *testing.T) {
 	tool := cloudmonitoring.Tool{
 		Config: cloudmonitoring.Config{
 			Name:        "test-cloudmonitoring",
-			Kind:        "cloud-monitoring-query-prometheus",
+			Type:        "cloud-monitoring-query-prometheus",
 			Description: "Test Cloudmonitoring Tool",
 		},
 		AllParams: parameters.Parameters{},
@@ -93,7 +93,7 @@ func TestTool_Invoke_Error(t *testing.T) {
 	tool := cloudmonitoring.Tool{
 		Config: cloudmonitoring.Config{
 			Name:        "test-cloudmonitoring",
-			Kind:        "clou-monitoring-query-prometheus",
+			Type:        "clou-monitoring-query-prometheus",
 			Description: "Test Cloudmonitoring Tool",
 		},
 		AllParams: parameters.Parameters{},

@@ -15,9 +15,9 @@
 package http_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/sources"
@@ -34,15 +34,15 @@ func TestParseFromYamlHttp(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-http-instance:
-					kind: http
-					baseUrl: http://test_server/
+			kind: sources
+			name: my-http-instance
+			type: http
+			baseUrl: http://test_server/
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-http-instance": http.Config{
 					Name:                   "my-http-instance",
-					Kind:                   http.SourceKind,
+					Type:                   http.SourceType,
 					BaseURL:                "http://test_server/",
 					Timeout:                "30s",
 					DisableSslVerification: false,
@@ -52,23 +52,23 @@ func TestParseFromYamlHttp(t *testing.T) {
 		{
 			desc: "advanced example",
 			in: `
-			sources:
-				my-http-instance:
-					kind: http
-					baseUrl: http://test_server/
-					timeout: 10s
-					headers:
-						Authorization: test_header
-						Custom-Header: custom
-					queryParams:
-						api-key: test_api_key
-						param: param-value
-					disableSslVerification: true
+			kind: sources
+			name: my-http-instance
+			type: http
+			baseUrl: http://test_server/
+			timeout: 10s
+			headers:
+				Authorization: test_header
+				Custom-Header: custom
+			queryParams:
+				api-key: test_api_key
+				param: param-value
+			disableSslVerification: true
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-http-instance": http.Config{
 					Name:                   "my-http-instance",
-					Kind:                   http.SourceKind,
+					Type:                   http.SourceType,
 					BaseURL:                "http://test_server/",
 					Timeout:                "10s",
 					DefaultHeaders:         map[string]string{"Authorization": "test_header", "Custom-Header": "custom"},
@@ -80,16 +80,12 @@ func TestParseFromYamlHttp(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -104,36 +100,32 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-http-instance:
-					kind: http
-					baseUrl: http://test_server/
-					timeout: 10s
-					headers:
-						Authorization: test_header
-					queryParams:
-						api-key: test_api_key
-					project: test-project
+			kind: sources
+			name: my-http-instance
+			type: http
+			baseUrl: http://test_server/
+			timeout: 10s
+			headers:
+				Authorization: test_header
+			queryParams:
+				api-key: test_api_key
+			project: test-project
 			`,
-			err: "unable to parse source \"my-http-instance\" as \"http\": [5:1] unknown field \"project\"\n   2 | headers:\n   3 |   Authorization: test_header\n   4 | kind: http\n>  5 | project: test-project\n       ^\n   6 | queryParams:\n   7 |   api-key: test_api_key\n   8 | timeout: 10s",
+			err: "error unmarshaling sources: unable to parse source \"my-http-instance\" as \"http\": [5:1] unknown field \"project\"\n   2 | headers:\n   3 |   Authorization: test_header\n   4 | name: my-http-instance\n>  5 | project: test-project\n       ^\n   6 | queryParams:\n   7 |   api-key: test_api_key\n   8 | timeout: 10s\n   9 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-http-instance:
-					baseUrl: http://test_server/
+			kind: sources
+			name: my-http-instance
+			baseUrl: http://test_server/
 			`,
-			err: "missing 'kind' field for source \"my-http-instance\"",
+			err: "error unmarshaling sources: missing 'type' field or it is not a string",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

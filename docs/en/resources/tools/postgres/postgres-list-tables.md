@@ -31,18 +31,18 @@ constraints, indexes, triggers, owner, comment) as JSON for user-created tables
 ## Example
 
 ```yaml
-tools:
-  postgres_list_tables:
-    kind: postgres-list-tables
-    source: postgres-source
-    description: Use this tool to retrieve schema information for all or
-    specified tables. Output format can be simple (only table names) or detailed.
+kind: tools
+name: postgres_list_tables
+type: postgres-list-tables
+source: postgres-source
+description: Use this tool to retrieve schema information for all or
+  specified tables. Output format can be simple (only table names) or detailed.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
-| kind        |  string  |     true     | Must be "postgres-list-tables".                      |
+| type        |  string  |     true     | Must be "postgres-list-tables".                      |
 | source      |  string  |     true     | Name of the source the SQL should execute on.        |
 | description |  string  |     true     | Description of the tool that is passed to the agent. |

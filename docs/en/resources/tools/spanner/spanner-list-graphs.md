@@ -35,35 +35,35 @@ source dialect, as Spanner Graph isn't available in the PostgreSQL dialect.
 ### Basic Usage - List All Graphs
 
 ```yaml
-sources:
-  my-spanner-db:
-    kind: spanner
-    project: ${SPANNER_PROJECT}
-    instance: ${SPANNER_INSTANCE}
-    database: ${SPANNER_DATABASE}
-    dialect: googlesql  # wont work for postgresql
-
-tools:
-  list_all_graphs:
-    kind: spanner-list-graphs
-    source: my-spanner-db
-    description: Lists all graphs with their complete schema information
+kind: sources
+name: my-spanner-db
+type: spanner
+project: ${SPANNER_PROJECT}
+instance: ${SPANNER_INSTANCE}
+database: ${SPANNER_DATABASE}
+dialect: googlesql  # wont work for postgresql
+---
+kind: tools
+name: list_all_graphs
+type: spanner-list-graphs
+source: my-spanner-db
+description: Lists all graphs with their complete schema information
 ```
 
 ### List Specific Graphs
 
 ```yaml
-tools:
-  list_specific_graphs:
-    kind: spanner-list-graphs
-    source: my-spanner-db
-    description: |
-      Lists schema information for specific graphs.
-      Example usage:
-      {
-        "graph_names": "FinGraph,SocialGraph",
-        "output_format": "detailed"
-      }
+kind: tools
+name: list_specific_graphs
+type: spanner-list-graphs
+source: my-spanner-db
+description: |
+  Lists schema information for specific graphs.
+  Example usage:
+  {
+    "graph_names": "FinGraph,SocialGraph",
+    "output_format": "detailed"
+  }
 ```
 
 ## Parameters
@@ -235,36 +235,36 @@ comprehensive schema information:
 ## Example with Agent Integration
 
 ```yaml
-sources:
-  spanner-db:
-    kind: spanner
-    project: my-project
-    instance: my-instance
-    database: my-database
-    dialect: googlesql
-
-tools:
-  schema_inspector:
-    kind: spanner-list-graphs
-    source: spanner-db
-    description: |
-      Use this tool to inspect database schema information.
-      You can:
-      - List all graphs by leaving graph_names empty
-      - Get specific graph schemas by providing comma-separated graph names
-      - Choose between simple (names only) or detailed (full schema) output
-      
-      Examples:
-      1. List all graphs with details: {"output_format": "detailed"}
-      2. Get specific graphs: {"graph_names": "FinGraph,SocialGraph", "output_format": "detailed"}
-      3. Just get graph names: {"output_format": "simple"}
+kind: sources
+name: spanner-db
+type: spanner
+project: my-project
+instance: my-instance
+database: my-database
+dialect: googlesql
+---
+kind: tools
+name: schema_inspector
+type: spanner-list-graphs
+source: spanner-db
+description: |
+  Use this tool to inspect database schema information.
+  You can:
+  - List all graphs by leaving graph_names empty
+  - Get specific graph schemas by providing comma-separated graph names
+  - Choose between simple (names only) or detailed (full schema) output
+  
+  Examples:
+  1. List all graphs with details: {"output_format": "detailed"}
+  2. Get specific graphs: {"graph_names": "FinGraph,SocialGraph", "output_format": "detailed"}
+  3. Just get graph names: {"output_format": "simple"}
 ```
 
 ## Reference
 
 | **field**    | **type** | **required** | **description**                                                 |
 |--------------|:--------:|:------------:|-----------------------------------------------------------------|
-| kind         |  string  |     true     | Must be "spanner-list-graphs"                                   |
+| type         |  string  |     true     | Must be "spanner-list-graphs"                                   |
 | source       |  string  |     true     | Name of the Spanner source to query (dialect must be GoogleSQL) |
 | description  |  string  |    false     | Description of the tool that is passed to the LLM               |
 | authRequired | string[] |    false     | List of auth services required to invoke this tool              |

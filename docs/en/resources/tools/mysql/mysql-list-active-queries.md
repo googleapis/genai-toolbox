@@ -27,11 +27,11 @@ This tool takes 2 optional input parameters:
 ## Example
 
 ```yaml
-tools:
-  list_active_queries:
-    kind: mysql-list-active-queries
-    source: my-mysql-instance
-    description: Lists top N (default 10) ongoing queries from processlist and innodb_trx, ordered by execution time in descending order. Returns detailed information of those queries in json format, including process id, query, transaction duration, transaction wait duration, process time, transaction state, process state, username with host, transaction rows locked, transaction rows modified, and db schema.
+kind: tools
+name: list_active_queries
+type: mysql-list-active-queries
+source: my-mysql-instance
+description: Lists top N (default 10) ongoing queries from processlist and innodb_trx, ordered by execution time in descending order. Returns detailed information of those queries in json format, including process id, query, transaction duration, transaction wait duration, process time, transaction state, process state, username with host, transaction rows locked, transaction rows modified, and db schema.
 ```
 
 The response is a json array with the following fields:
@@ -57,6 +57,6 @@ The response is a json array with the following fields:
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "mysql-list-active-queries".               |
+| type        |  string  |     true     | Must be "mysql-list-active-queries".               |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |

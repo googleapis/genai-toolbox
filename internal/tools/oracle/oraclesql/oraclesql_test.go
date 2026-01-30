@@ -4,7 +4,6 @@ package oraclesql_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -24,19 +23,19 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 		{
 			desc: "basic example with statement and auth",
 			in: `
-            tools:
-                get_user_by_id:
-                    kind: oracle-sql
-                    source: my-oracle-instance
-                    description: Retrieves user details by ID.
-                    statement: "SELECT id, name, email FROM users WHERE id = :1"
-                    authRequired:
-                        - my-google-auth-service
+            kind: tools
+            name: get_user_by_id
+            type: oracle-sql
+            source: my-oracle-instance
+            description: Retrieves user details by ID.
+            statement: "SELECT id, name, email FROM users WHERE id = :1"
+            authRequired:
+                - my-google-auth-service
             `,
 			want: server.ToolConfigs{
 				"get_user_by_id": oraclesql.Config{
 					Name:         "get_user_by_id",
-					Kind:         "oracle-sql",
+					Type:         "oracle-sql",
 					Source:       "my-oracle-instance",
 					Description:  "Retrieves user details by ID.",
 					Statement:    "SELECT id, name, email FROM users WHERE id = :1",
@@ -47,17 +46,17 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 		{
 			desc: "example with parameters and template parameters",
 			in: `
-            tools:
-                get_orders:
-                    kind: oracle-sql
-                    source: db-prod
-                    description: Gets orders for a customer with optional filtering.
-                    statement: "SELECT * FROM ${SCHEMA}.ORDERS WHERE customer_id = :customer_id AND status = :status"
+            kind: tools
+            name: get_orders
+            type: oracle-sql
+            source: db-prod
+            description: Gets orders for a customer with optional filtering.
+            statement: "SELECT * FROM ${SCHEMA}.ORDERS WHERE customer_id = :customer_id AND status = :status"
             `,
 			want: server.ToolConfigs{
 				"get_orders": oraclesql.Config{
 					Name:         "get_orders",
-					Kind:         "oracle-sql",
+					Type:         "oracle-sql",
 					Source:       "db-prod",
 					Description:  "Gets orders for a customer with optional filtering.",
 					Statement:    "SELECT * FROM ${SCHEMA}.ORDERS WHERE customer_id = :customer_id AND status = :status",
@@ -68,15 +67,12 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			// Parse contents
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
