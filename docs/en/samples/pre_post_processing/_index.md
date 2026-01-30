@@ -6,7 +6,9 @@ description: >
   Pre and Post processing in GenAI applications.
 ---
 
-Pre and post processing allow developers to intercept and modify interactions between the agent and its tools or the user. This capability is essential for building robust, secure, and compliant agents.
+Pre and post processing allow developers to intercept and modify interactions between the agent and its tools or the user.
+
+> **Note**: These capabilities are typically features of **orchestration frameworks** (like LangChain, LangGraph, or Agent Builder) rather than the Toolbox SDK itself. However, Toolbox tools are designed to fully leverage these framework capabilities to support robust, secure, and compliant agent architectures.
 
 ## Types of Processing
 
