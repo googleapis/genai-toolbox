@@ -980,6 +980,26 @@ steps:
           "Serverless Spark" \
           serverlessspark
 
+  - id: "dataproc"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "DATAPROC_PROJECT=$PROJECT_ID"
+      - "DATAPROC_REGION=$_REGION"
+      - "DATAPROC_LIST_JOBS_CLUSTER=cluster-36"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Dataproc" \
+          dataproc
+
   - id: "singlestore"
     name: golang:1
     waitFor: ["compile-test-binary"]
