@@ -57,6 +57,46 @@ func ClusterLogsURLFromProto(clusterPb *dataprocpb.Cluster, region string) strin
 	return ClusterLogsURL(clusterPb.ProjectId, region, clusterPb.ClusterName, clusterPb.ClusterUuid, startTime, endTime)
 }
 
+// JobConsoleURLFromProto builds a URL to the Google Cloud Console linking to the job page.
+func JobConsoleURLFromProto(jobPb *dataprocpb.Job, region string) string {
+	return JobConsoleURL(jobPb.Reference.ProjectId, region, jobPb.Reference.JobId)
+}
+
+// JobLogsURLFromProto builds a URL to the Google Cloud Console showing Cloud Logging for the given job.
+func JobLogsURLFromProto(jobPb *dataprocpb.Job, region string) (string, error) {
+	if jobPb.Placement == nil {
+		return "", fmt.Errorf("job has no placement info")
+	}
+	clusterName := jobPb.Placement.ClusterName
+	projectID := jobPb.Reference.ProjectId
+	jobID := jobPb.Reference.JobId
+
+	var startTime, endTime time.Time
+	// Find min start time from history
+	for _, s := range jobPb.StatusHistory {
+		t := s.StateStartTime.AsTime()
+		if startTime.IsZero() || t.Before(startTime) {
+			startTime = t
+		}
+	}
+	// Also check current status
+	if jobPb.Status != nil {
+		t := jobPb.Status.StateStartTime.AsTime()
+		if startTime.IsZero() || t.Before(startTime) {
+			startTime = t
+		}
+
+		// Check for terminal state for end time
+		state := jobPb.Status.State
+		switch state {
+		case dataprocpb.JobStatus_DONE, dataprocpb.JobStatus_CANCELLED, dataprocpb.JobStatus_ERROR:
+			endTime = jobPb.Status.StateStartTime.AsTime()
+		}
+	}
+
+	return JobLogsURL(projectID, region, clusterName, jobID, startTime, endTime), nil
+}
+
 // ClusterConsoleURL builds a URL to the Google Cloud Console linking to the cluster monitoring page.
 func ClusterConsoleURL(projectID, region, clusterName string) string {
 	return fmt.Sprintf("https://console.cloud.google.com/dataproc/clusters/%s/monitoring?region=%s&project=%s", clusterName, region, projectID)
@@ -74,6 +114,38 @@ resource.labels.cluster_name=%s`
 	if clusterUUID != "" {
 		advancedFilter += fmt.Sprintf("\nresource.labels.cluster_uuid=%q", clusterUUID)
 	}
+
+	if !startTime.IsZero() {
+		actualStart := startTime.Add(-1 * logTimeBufferBefore)
+		advancedFilter += fmt.Sprintf("\ntimestamp>=\"%s\"", actualStart.Format(time.RFC3339Nano))
+	}
+	if !endTime.IsZero() {
+		actualEnd := endTime.Add(logTimeBufferAfter)
+		advancedFilter += fmt.Sprintf("\ntimestamp<=\"%s\"", actualEnd.Format(time.RFC3339Nano))
+	}
+
+	v := url.Values{}
+	v.Add("resource", "cloud_dataproc_cluster/cluster_name/"+clusterName)
+	v.Add("advancedFilter", advancedFilter)
+	v.Add("project", projectID)
+
+	return "https://console.cloud.google.com/logs/viewer?" + v.Encode()
+}
+
+// JobConsoleURL builds a URL to the Google Cloud Console linking to the job page.
+func JobConsoleURL(projectID, region, jobID string) string {
+	return fmt.Sprintf("https://console.cloud.google.com/dataproc/jobs/%s?region=%s&project=%s", jobID, region, projectID)
+}
+
+// JobLogsURL builds a URL to the Google Cloud Console showing Cloud Logging for the given job and time range.
+func JobLogsURL(projectID, region, clusterName, jobID string, startTime, endTime time.Time) string {
+	advancedFilterTemplate := `resource.type="cloud_dataproc_cluster"
+resource.labels.project_id=%s
+resource.labels.region=%s
+resource.labels.cluster_name=%s
+labels.job_id=%s`
+	// Use %q to quote and escape the strings.
+	advancedFilter := fmt.Sprintf(advancedFilterTemplate, fmt.Sprintf("%q", projectID), fmt.Sprintf("%q", region), fmt.Sprintf("%q", clusterName), fmt.Sprintf("%q", jobID))
 
 	if !startTime.IsZero() {
 		actualStart := startTime.Add(-1 * logTimeBufferBefore)

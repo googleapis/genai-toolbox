@@ -33,6 +33,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 	"github.com/googleapis/genai-toolbox/internal/tools/dataproc/dataproclistclusters"
+	"github.com/googleapis/genai-toolbox/internal/tools/dataproc/dataproclistjobs"
 	"github.com/googleapis/genai-toolbox/tests"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -53,6 +54,7 @@ var (
 
 const (
 	clusterURLPrefix = "https://console.cloud.google.com/dataproc/clusters/"
+	jobURLPrefix     = "https://console.cloud.google.com/dataproc/jobs/"
 	logsURLPrefix    = "https://console.cloud.google.com/logs/viewer?"
 )
 
@@ -107,6 +109,15 @@ func TestDataprocClustersToolEndpoints(t *testing.T) {
 				"source":       "my-dataproc",
 				"authRequired": []string{"my-google-auth"},
 			},
+			"list-jobs": map[string]any{
+				"type":   "dataproc-list-jobs",
+				"source": "my-dataproc",
+			},
+			"list-jobs-with-auth": map[string]any{
+				"type":         "dataproc-list-jobs",
+				"source":       "my-dataproc",
+				"authRequired": []string{"my-google-auth"},
+			},
 		},
 	}
 
@@ -130,6 +141,12 @@ func TestDataprocClustersToolEndpoints(t *testing.T) {
 		t.Fatalf("failed to create dataproc client: %v", err)
 	}
 	defer clusterClient.Close()
+
+	jobClient, err := dataproc.NewJobControllerClient(ctx, option.WithEndpoint(endpoint))
+	if err != nil {
+		t.Fatalf("failed to create dataproc client: %v", err)
+	}
+	defer jobClient.Close()
 
 	t.Run("get-cluster", func(t *testing.T) {
 		clusterName := listClustersRpc(t, clusterClient, ctx, "", 1)[0].Name
@@ -215,6 +232,51 @@ func TestDataprocClustersToolEndpoints(t *testing.T) {
 			runAuthTest(t, "list-clusters-with-auth", map[string]any{"pageSize": 1}, http.StatusOK)
 		})
 	})
+
+	t.Run("list-jobs", func(t *testing.T) {
+		t.Run("success", func(t *testing.T) {
+			runListJobsTest(t, jobClient, ctx)
+		})
+		t.Run("errors", func(t *testing.T) {
+			t.Parallel()
+			tcs := []struct {
+				name     string
+				toolName string
+				request  map[string]any
+				wantCode int
+				wantMsg  string
+			}{
+				{
+					name:     "zero page size",
+					toolName: "list-jobs",
+					request:  map[string]any{"pageSize": 0},
+					wantCode: http.StatusBadRequest,
+					wantMsg:  "pageSize must be positive: 0",
+				},
+				{
+					name:     "negative page size",
+					toolName: "list-jobs",
+					request:  map[string]any{"pageSize": -1},
+					wantCode: http.StatusBadRequest,
+					wantMsg:  "pageSize must be positive: -1",
+				},
+			}
+			for _, tc := range tcs {
+				t.Run(tc.name, func(t *testing.T) {
+					t.Parallel()
+					testError(t, tc.toolName, tc.request, tc.wantCode, tc.wantMsg)
+				})
+			}
+		})
+		t.Run("auth", func(t *testing.T) {
+			t.Parallel()
+			runAuthTest(t, "list-jobs-with-auth", map[string]any{
+				"pageSize": 1,
+				"filter":   "clusterName = " + dataprocListJobsCluster,
+			}, http.StatusOK)
+		})
+	})
+
 }
 
 func invokeTool(toolName string, request map[string]any, headers map[string]string) (*http.Response, error) {
@@ -540,6 +602,250 @@ func testError(t *testing.T, toolName string, request map[string]any, wantCode i
 	if !bytes.Contains(bodyBytes, []byte(wantMsg)) {
 		t.Fatalf("response body does not contain %q: %s", wantMsg, string(bodyBytes))
 	}
+}
+
+func runListJobsTest(t *testing.T, client *dataproc.JobControllerClient, ctx context.Context) {
+	tcs := []struct {
+		name     string
+		filter   string
+		pageSize int
+		numPages int
+		wantN    int
+	}{
+		{name: "one page", pageSize: 2, numPages: 1, wantN: 2},
+		{name: "two pages", pageSize: 1, numPages: 2, wantN: 2},
+		{name: "10 batches", pageSize: 10, numPages: 1, wantN: 10},
+		{name: "omit page size", numPages: 1, wantN: 20},
+		{
+			name:     "filtered",
+			filter:   "status.state = NON_ACTIVE",
+			pageSize: 20,
+			numPages: 1,
+			wantN:    20,
+		},
+		{
+			name:     "empty",
+			filter:   "status.state = NON_ACTIVE AND status.state = ACTIVE",
+			pageSize: 1,
+			numPages: 1,
+			wantN:    0,
+		},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			var want []dataproclistjobs.Job
+			if tc.wantN > 0 {
+				want = listJobsRpc(t, client, ctx, tc.filter, tc.wantN)
+			}
+
+			var actual []dataproclistjobs.Job
+			var pageToken string
+			for i := 0; i < tc.numPages; i++ {
+				filter := tc.filter
+				if filter != "" {
+					filter += " AND "
+				}
+				filter += "clusterName = " + dataprocListJobsCluster
+				request := map[string]any{
+					"filter":    filter,
+					"pageToken": pageToken,
+				}
+				if tc.pageSize > 0 {
+					request["pageSize"] = tc.pageSize
+				}
+
+				resp, err := invokeTool("list-jobs", request, nil)
+				if err != nil {
+					t.Fatalf("invokeTool failed: %v", err)
+				}
+				defer resp.Body.Close()
+
+				if resp.StatusCode != http.StatusOK {
+					bodyBytes, _ := io.ReadAll(resp.Body)
+					t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+				}
+
+				var body map[string]any
+				if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+					t.Fatalf("error parsing response body: %v", err)
+				}
+
+				result, ok := body["result"].(string)
+				if !ok {
+					t.Fatalf("unable to find result in response body")
+				}
+
+				var listResponse dataproclistjobs.ListJobsResponse
+				if err := json.Unmarshal([]byte(result), &listResponse); err != nil {
+					t.Fatalf("error unmarshalling result: %s", err)
+				}
+				actual = append(actual, listResponse.Jobs...)
+				pageToken = listResponse.NextPageToken
+			}
+
+			if !reflect.DeepEqual(actual, want) {
+				t.Fatalf("unexpected jobs: got %+v, want %+v", actual, want)
+			}
+
+			// want has URLs because it's created from Job instances by the same utility function
+			// used by the tool internals. Double-check that the URLs are reasonable.
+			for _, job := range want {
+				if !strings.HasPrefix(job.ConsoleURL, jobURLPrefix) {
+					t.Errorf("unexpected consoleUrl in job: %#v", job)
+				}
+				if !strings.HasPrefix(job.LogsURL, logsURLPrefix) {
+					t.Errorf("unexpected logsUrl in job: %#v", job)
+				}
+			}
+		})
+	}
+}
+
+func runGetJobTest(t *testing.T, client *dataproc.JobControllerClient, ctx context.Context, jobId string) {
+	// First get the job details directly from the Go proto API.
+	req := &dataprocpb.GetJobRequest{
+		ProjectId: dataprocProject,
+		Region:    dataprocRegion,
+		JobId:     jobId,
+	}
+	rawWantJobPb, err := client.GetJob(ctx, req)
+	if err != nil {
+		t.Fatalf("failed to get job: %s", err)
+	}
+
+	// Trim unknown fields from the proto by marshalling and unmarshalling.
+	jsonBytes, err := protojson.Marshal(rawWantJobPb)
+	if err != nil {
+		t.Fatalf("failed to marshal job to JSON: %s", err)
+	}
+	var wantJobPb dataprocpb.Job
+	if err := protojson.Unmarshal(jsonBytes, &wantJobPb); err != nil {
+		t.Fatalf("error unmarshalling result: %s", err)
+	}
+
+	tcs := []struct {
+		name  string
+		jobId string
+		want  *dataprocpb.Job
+	}{
+		{
+			name:  "found job",
+			jobId: jobId,
+			want:  &wantJobPb,
+		},
+	}
+
+	t.Run("success", func(t *testing.T) {
+		for _, tc := range tcs {
+			t.Run(tc.name, func(t *testing.T) {
+				request := map[string]any{"jobId": tc.jobId}
+				resp, err := invokeTool("get-job", request, nil)
+				if err != nil {
+					t.Fatalf("invokeTool failed: %v", err)
+				}
+				defer resp.Body.Close()
+
+				if resp.StatusCode != http.StatusOK {
+					body, _ := io.ReadAll(resp.Body)
+					t.Fatalf("status code got %d, want 200. Body: %s", resp.StatusCode, body)
+				}
+
+				var body map[string]any
+				if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+					t.Fatalf("error parsing response body: %v", err)
+				}
+				resultStr, ok := body["result"].(string)
+				if !ok {
+					t.Fatalf("result is not a string, got %T", body["result"])
+				}
+				var wrappedResult map[string]any
+				if err := json.Unmarshal([]byte(resultStr), &wrappedResult); err != nil {
+					t.Fatalf("error unmarshalling result: %s", err)
+				}
+
+				consoleURL, ok := wrappedResult["consoleUrl"].(string)
+				if !ok || !strings.HasPrefix(consoleURL, jobURLPrefix) {
+					t.Errorf("unexpected consoleUrl: %v", consoleURL)
+				}
+				logsURL, ok := wrappedResult["logsUrl"].(string)
+				if !ok || !strings.HasPrefix(logsURL, logsURLPrefix) {
+					t.Errorf("unexpected logsUrl: %v", logsURL)
+				}
+
+				jobJSON, err := json.Marshal(wrappedResult["job"])
+				if err != nil {
+					t.Fatalf("failed to marshal job: %v", err)
+				}
+
+				// Unmarshal JSON to proto for proto-aware deep comparison.
+				var job dataprocpb.Job
+				if err := protojson.Unmarshal(jobJSON, &job); err != nil {
+					t.Fatalf("error unmarshalling job from wrapped result: %s", err)
+				}
+
+				if !cmp.Equal(&job, tc.want, protocmp.Transform()) {
+					diff := cmp.Diff(&job, tc.want, protocmp.Transform())
+					t.Errorf("GetJob() returned diff (-got +want):\n%s", diff)
+				}
+			})
+		}
+	})
+
+	t.Run("errors", func(t *testing.T) {
+		tcs := []struct {
+			name     string
+			request  map[string]any
+			wantCode int
+			wantMsg  string
+		}{
+			{
+				name:     "missing jobId",
+				request:  map[string]any{},
+				wantCode: http.StatusBadRequest,
+				wantMsg:  "missing required parameter: jobId",
+			},
+			{
+				name:     "invalid name with slash",
+				request:  map[string]any{"jobId": "projects/foo/regions/bar/jobs/baz"},
+				wantCode: http.StatusBadRequest,
+				wantMsg:  "jobId must be a short name without '/'",
+			},
+		}
+		for _, tc := range tcs {
+			t.Run(tc.name, func(t *testing.T) {
+				testError(t, "get-job", tc.request, tc.wantCode, tc.wantMsg)
+			})
+		}
+	})
+}
+
+func listJobsRpc(t *testing.T, client *dataproc.JobControllerClient, ctx context.Context, filter string, n int) []dataproclistjobs.Job {
+	req := &dataprocpb.ListJobsRequest{
+		ProjectId:   dataprocProject,
+		Region:      dataprocRegion,
+		ClusterName: dataprocListJobsCluster,
+		PageSize:    int32(n),
+	}
+	if filter != "" {
+		req.Filter = filter
+	}
+
+	it := client.ListJobs(ctx, req)
+	pager := iterator.NewPager(it, n, "")
+	var jobPbs []*dataprocpb.Job
+	_, err := pager.NextPage(&jobPbs)
+	if err != nil {
+		t.Fatalf("failed to list jobs: %s", err)
+	}
+
+	jobs, err := dataproclistjobs.ToJobs(jobPbs, dataprocRegion)
+	if err != nil {
+		t.Fatalf("failed to convert jobs: %v", err)
+	}
+	return jobs
 }
 
 func shortName(fullName string) string {

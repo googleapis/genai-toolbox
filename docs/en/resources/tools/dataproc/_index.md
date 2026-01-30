@@ -8,3 +8,4 @@ description: >
 
 - [dataproc-get-cluster](./dataproc-get-cluster.md)
 - [dataproc-list-clusters](./dataproc-list-clusters.md)
+- [dataproc-list-jobs](./dataproc-list-jobs.md)
