@@ -61,15 +61,15 @@ within your Go applications or AI orchestration frameworks.
 
 Choosing the right package depends on how you are building your application:
 
-- [`core`](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core):
-  This is a framework agnostic way to connect the tools to popular frameworks
+- [**`core`**](core/):
+  This is a framework-agnostic way to connect tools to popular frameworks
   like Google GenAI, LangChain, etc.
 
-- [`tbadk`](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbadk):
+- [**`tbadk`**](tbadk/):
   This package provides a way to connect tools to ADK Go.
 
-- [`tbgenkit`](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbgenkit):
-  This package provides a functionality to convert the Tool fetched using the core package
+- [**`tbgenkit`**](tbgenkit/):
+  This package provides functionality to convert the Tool fetched using the core package
   into a Genkit Go compatible tool.
 
 ## Available Packages
@@ -79,9 +79,9 @@ README for detailed installation and usage instructions:
 
 | Package | Target Use Case | Integration | Path | Details (README) |
 | :------ | :----------| :---------- | :---------------------- | :---------- |
-| `core` | Framework-agnostic / Custom applications | Use directly / Custom | `core/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md) |
-| `tbadk` | ADK Go | Use directly | `tbadk/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/tbadk/README.md) |
-| `tbgenkit` | Genkit Go | Along with core | `tbgenkit/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/tbgenkit/README.md) |
+| [`core`](core/) | Framework-agnostic / Custom applications | Use directly / Custom | `core/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/core/README.md) |
+| [`tbadk`](tbadk/) | ADK Go | Use directly | `tbadk/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/tbadk/README.md) |
+| [`tbgenkit`](tbgenkit/) | Genkit Go | Along with core | `tbgenkit/` | 📄 [View README](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/tbgenkit/README.md) |
 
 ## Getting Started
 
