@@ -22,7 +22,7 @@ import (
 
 var (
 	OracleSourceType = "oracle"
-	OracleToolType   = "oracle-sql"
+	OracleToolKind   = "oracle-sql"
 	OracleHost       = os.Getenv("ORACLE_HOST")
 	OraclePort       = os.Getenv("ORACLE_PORT")
 	OracleUser       = os.Getenv("ORACLE_USER")
@@ -49,7 +49,7 @@ func getOracleVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"type":             OracleSourceType,
+		"kind":             OracleToolKind,
 		"connectionString": OracleConnStr,
 		"useOCI":           OracleUseOCI,
 		"walletLocation":   OracleWalletLocation,
@@ -79,7 +79,7 @@ func getOracleConfigFromEnv(t *testing.T) oracle.Config {
 
 	return oracle.Config{
 		Name:             "test-oracle-instance",
-		Kind:             vars["type"].(string),
+		Kind:             vars["kind"].(string),
 		User:             vars["user"].(string),
 		Password:         vars["password"].(string),
 		Host:             vars["host"].(string),
@@ -173,10 +173,10 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, OracleToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, OracleToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "oracle-execute-sql")
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, OracleToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, OracleToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
 	if err != nil {
