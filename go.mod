@@ -29,6 +29,7 @@ require (
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/go-chi/cors v1.2.2
 	github.com/go-chi/httplog/v2 v2.1.1
+	github.com/go-chi/httplog/v3 v3.3.0
 	github.com/go-chi/render v1.0.3
 	github.com/go-goquery/goquery v1.0.1
 	github.com/go-playground/validator/v10 v10.28.0
@@ -43,6 +44,7 @@ require (
 	github.com/microsoft/go-mssqldb v1.9.3
 	github.com/nakagami/firebirdsql v0.9.15
 	github.com/neo4j/neo4j-go-driver/v5 v5.28.4
+	github.com/neo4j/neo4j-go-driver/v6 v6.0.0
 	github.com/redis/go-redis/v9 v9.17.2
 	github.com/sijms/go-ora/v2 v2.9.0
 	github.com/snowflakedb/gosnowflake v1.18.1
