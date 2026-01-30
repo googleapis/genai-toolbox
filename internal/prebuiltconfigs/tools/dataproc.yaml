@@ -22,7 +22,11 @@ tools:
   list_clusters:
     kind: dataproc-list-clusters
     source: dataproc-source
+  get_cluster:
+    kind: dataproc-get-cluster
+    source: dataproc-source
 
 toolsets:
   dataproc_tools:
     - list_clusters
+    - get_cluster
