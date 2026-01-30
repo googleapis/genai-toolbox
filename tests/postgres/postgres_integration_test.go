@@ -105,26 +105,22 @@ func TestPostgres(t *testing.T) {
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetPostgresSQLParamToolInfo(tableNameParam)
 	// teardownTable1 := tests.SetupPostgresSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
 	teardownTable1, err := tests.SetupPostgresSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
+	if teardownTable1 != nil {
+		defer teardownTable1(t)
+	}
 	if err != nil {
-    // If an error happened, we still try to run teardown if it was returned
-    	if teardownTable1 != nil {
-        	defer teardownTable1(t)
-    	}
     	t.Fatalf("Setup failed: %v", err)
 	}
-	defer teardownTable1(t)
 
 	// set up data for auth tool
 	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := tests.GetPostgresSQLAuthToolInfo(tableNameAuth)
 	teardownTable2,err := tests.SetupPostgresSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
+	if teardownTable2 != nil {
+		defer teardownTable2(t)
+	}
 	if err != nil {
-    // If an error happened, we still try to run teardown if it was returned
-    	if teardownTable2 != nil {
-        	defer teardownTable2(t)
-    	}
     	t.Fatalf("Setup failed: %v", err)
 	}
-	defer teardownTable2(t)
 
 	// Set up table for semantic search
 	vectorTableName, tearDownVectorTable := tests.SetupPostgresVectorTable(t, ctx, pool)

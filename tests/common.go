@@ -621,13 +621,13 @@ func SetupPostgresSQLTable(t *testing.T, ctx context.Context, pool *pgxpool.Pool
 	}
 
 	// Create table
-	_, err = pool.Query(ctx, createStatement)
+	_, err = pool.Exec(ctx, createStatement)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create test table %s: %w", tableName, err)
 	}
 
 	// Insert test data
-	_, err = pool.Query(ctx, insertStatement, params...)
+	_, err = pool.Exec(ctx, insertStatement, params...)
 	if err != nil {
 		// If creation worked but insert failed, you might still want to return 
 		// the teardown so the empty table can be cleaned up
