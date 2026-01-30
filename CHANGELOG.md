@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.0.0](https://github.com/googleapis/genai-toolbox/compare/v0.26.0...v1.0.0) (2026-01-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* update configuration file v2 ([#2369](https://github.com/googleapis/genai-toolbox/issues/2369))
+
+### Features
+
+* **cli/invoke:** Add support for direct tool invocation from CLI ([#2353](https://github.com/googleapis/genai-toolbox/issues/2353)) ([6e49ba4](https://github.com/googleapis/genai-toolbox/commit/6e49ba436ef2390c13feaf902b29f5907acffb57))
+* **prebuiltconfigs/alloydb-omni:** Implement Alloydb omni dataplane tools ([#2340](https://github.com/googleapis/genai-toolbox/issues/2340)) ([e995349](https://github.com/googleapis/genai-toolbox/commit/e995349ea0756c700d188b8f04e9459121219f0c))
+* **sources/cloud-logging-admin:** Add source, tools, integration test and docs ([#2137](https://github.com/googleapis/genai-toolbox/issues/2137)) ([252fc30](https://github.com/googleapis/genai-toolbox/commit/252fc3091af10d25d8d7af7e047b5ac87a5dd041))
+* Update configuration file v2 ([#2369](https://github.com/googleapis/genai-toolbox/issues/2369)) ([293c1d6](https://github.com/googleapis/genai-toolbox/commit/293c1d6889c39807855ba5e01d4c13ba2a4c50ce))
+
+
+### Bug Fixes
+
+* **dataplex:** Capture GCP HTTP errors in MCP Toolbox ([#2347](https://github.com/googleapis/genai-toolbox/issues/2347)) ([1d7c498](https://github.com/googleapis/genai-toolbox/commit/1d7c4981164c34b4d7bc8edecfd449f57ad11e15))
+* Surface Dataplex API errors in MCP results ([1d7c498](https://github.com/googleapis/genai-toolbox/commit/1d7c4981164c34b4d7bc8edecfd449f57ad11e15))
+
 ## [0.26.0](https://github.com/googleapis/genai-toolbox/compare/v0.25.0...v0.26.0) (2026-01-22)
 
 
