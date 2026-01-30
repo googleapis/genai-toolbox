@@ -432,6 +432,7 @@ See [Usage Examples](../reference/cli.md#examples).
 *   **Tools:**
     *   `list_clusters`: Lists Dataproc clusters.
     *   `get_cluster`: Gets a Dataproc cluster.
+    *   `list_jobs`: Lists Dataproc jobs.
 
 ## Firestore
 

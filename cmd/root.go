@@ -116,6 +116,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataplex/dataplexsearchentries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataproc/dataprocgetcluster"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dataproc/dataproclistclusters"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/dataproc/dataproclistjobs"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/dgraph"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/elasticsearch/elasticsearchesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/firebird/firebirdexecutesql"

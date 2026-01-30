@@ -132,3 +132,100 @@ func TestClusterLogsURL_Escaping(t *testing.T) {
 		t.Errorf("ClusterLogsURL_Escaping() = \n%v\nwant \n%v", got, want)
 	}
 }
+
+func TestJobConsoleURL(t *testing.T) {
+	got := JobConsoleURL("my-project", "us-central1", "my-job")
+	want := "https://console.cloud.google.com/dataproc/jobs/my-job?region=us-central1&project=my-project"
+	if got != want {
+		t.Errorf("JobConsoleURL() = %v, want %v", got, want)
+	}
+}
+
+func TestJobLogsURL(t *testing.T) {
+	startTime := time.Date(2025, 10, 1, 5, 0, 0, 0, time.UTC)
+	endTime := time.Date(2025, 10, 1, 6, 0, 0, 0, time.UTC)
+
+	got := JobLogsURL("my-project", "us-central1", "my-cluster", "my-job", startTime, endTime)
+	want := "https://console.cloud.google.com/logs/viewer?advancedFilter=" +
+		"resource.type%3D%22cloud_dataproc_cluster%22" +
+		"%0Aresource.labels.project_id%3D%22my-project%22" +
+		"%0Aresource.labels.region%3D%22us-central1%22" +
+		"%0Aresource.labels.cluster_name%3D%22my-cluster%22" +
+		"%0Alabels.job_id%3D%22my-job%22" +
+		"%0Atimestamp%3E%3D%222025-10-01T04%3A59%3A00Z%22" +
+		"%0Atimestamp%3C%3D%222025-10-01T06%3A10%3A00Z%22" +
+		"&project=my-project" +
+		"&resource=cloud_dataproc_cluster%2Fcluster_name%2Fmy-cluster"
+	if got != want {
+		t.Errorf("JobLogsURL() = %v, want %v", got, want)
+	}
+}
+
+func TestJobLogsURLFromProto(t *testing.T) {
+	startTime := time.Date(2025, 10, 1, 5, 0, 0, 0, time.UTC)
+	endTime := time.Date(2025, 10, 1, 6, 0, 0, 0, time.UTC)
+
+	jobPb := &dataprocpb.Job{
+		Reference: &dataprocpb.JobReference{
+			ProjectId: "my-project",
+			JobId:     "my-job",
+		},
+		Placement: &dataprocpb.JobPlacement{
+			ClusterName: "my-cluster",
+		},
+		StatusHistory: []*dataprocpb.JobStatus{
+			{
+				State:          dataprocpb.JobStatus_PENDING,
+				StateStartTime: timestamppb.New(startTime),
+			},
+			{
+				State:          dataprocpb.JobStatus_RUNNING,
+				StateStartTime: timestamppb.New(startTime.Add(1 * time.Minute)),
+			},
+		},
+		Status: &dataprocpb.JobStatus{
+			State:          dataprocpb.JobStatus_DONE,
+			StateStartTime: timestamppb.New(endTime),
+		},
+	}
+
+	got, err := JobLogsURLFromProto(jobPb, "us-central1")
+	if err != nil {
+		t.Fatalf("JobLogsURLFromProto() error = %v", err)
+	}
+
+	want := "https://console.cloud.google.com/logs/viewer?advancedFilter=" +
+		"resource.type%3D%22cloud_dataproc_cluster%22" +
+		"%0Aresource.labels.project_id%3D%22my-project%22" +
+		"%0Aresource.labels.region%3D%22us-central1%22" +
+		"%0Aresource.labels.cluster_name%3D%22my-cluster%22" +
+		"%0Alabels.job_id%3D%22my-job%22" +
+		"%0Atimestamp%3E%3D%222025-10-01T04%3A59%3A00Z%22" +
+		"%0Atimestamp%3C%3D%222025-10-01T06%3A10%3A00Z%22" +
+		"&project=my-project" +
+		"&resource=cloud_dataproc_cluster%2Fcluster_name%2Fmy-cluster"
+
+	if got != want {
+		t.Errorf("JobLogsURLFromProto() = %v, want %v", got, want)
+	}
+}
+
+func TestJobLogsURL_Escaping(t *testing.T) {
+	// Input contains a double quote which should be escaped.
+	jobID := `my-job" OR root`
+	got := JobLogsURL("my-project", "us-central1", "my-cluster", jobID, time.Time{}, time.Time{})
+
+	want := "https://console.cloud.google.com/logs/viewer?advancedFilter=" +
+		"resource.type%3D%22cloud_dataproc_cluster%22" +
+		"%0Aresource.labels.project_id%3D%22my-project%22" +
+		"%0Aresource.labels.region%3D%22us-central1%22" +
+		"%0Aresource.labels.cluster_name%3D%22my-cluster%22" +
+		// "my-job\" OR root" encoded
+		"%0Alabels.job_id%3D%22my-job%5C%22+OR+root%22" +
+		"&project=my-project" +
+		"&resource=cloud_dataproc_cluster%2Fcluster_name%2Fmy-cluster"
+
+	if got != want {
+		t.Errorf("JobLogsURL_Escaping() = \n%v\nwant \n%v", got, want)
+	}
+}

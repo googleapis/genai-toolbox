@@ -2344,7 +2344,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"dataproc_tools": tools.ToolsetConfig{
 					Name:      "dataproc_tools",
-					ToolNames: []string{"list_clusters", "get_cluster"},
+					ToolNames: []string{"list_clusters", "get_cluster", "list_jobs"},
 				},
 			},
 		},
