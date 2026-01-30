@@ -28,7 +28,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/helpers"
 	"github.com/googleapis/genai-toolbox/internal/tools/neo4j/neo4jschema/types"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v6/neo4j"
 )
 
 // type defines the unique identifier for this tool.
