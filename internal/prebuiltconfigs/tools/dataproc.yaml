@@ -28,9 +28,13 @@ tools:
   list_jobs:
     kind: dataproc-list-jobs
     source: dataproc-source
+  get_job:
+    kind: dataproc-get-job
+    source: dataproc-source
 
 toolsets:
   dataproc_tools:
     - list_clusters
     - get_cluster
     - list_jobs
+    - get_job

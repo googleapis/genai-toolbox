@@ -18,6 +18,8 @@ allows Toolbox to interact with Dataproc Clusters hosted on Google Cloud.
   Get a specific Dataproc cluster.
 - [`dataproc-list-clusters`](../tools/dataproc/dataproc-list-clusters.md)
   List and filter Dataproc clusters.
+- [`dataproc-get-job`](../tools/dataproc/dataproc-get-job.md)
+  Get a specific Dataproc job.
 - [`dataproc-list-jobs`](../tools/dataproc/dataproc-list-jobs.md)
   List and filter Dataproc jobs.
 
