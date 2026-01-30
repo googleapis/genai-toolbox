@@ -91,7 +91,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
       "mcpServers": {
         "oracle": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","oracle","--stdio"],
+          "args": ["--prebuilt","oracledb","--stdio"],
           "env": {
             "ORACLE_HOST": "",
             "ORACLE_PORT": "1521",
@@ -121,7 +121,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
       "mcpServers": {
         "oracle": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","oracle","--stdio"],
+          "args": ["--prebuilt","oracledb","--stdio"],
           "env": {
             "ORACLE_HOST": "",
             "ORACLE_PORT": "1521",
@@ -154,7 +154,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
       "mcpServers": {
         "oracle": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","oracle","--stdio"],
+          "args": ["--prebuilt","oracledb","--stdio"],
           "env": {
             "ORACLE_HOST": "",
             "ORACLE_PORT": "1521",
@@ -185,7 +185,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
       "mcpServers": {
         "oracle": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","oracle","--stdio"],
+          "args": ["--prebuilt","oracledb","--stdio"],
           "env": {
             "ORACLE_HOST": "",
             "ORACLE_PORT": "1521",
@@ -246,7 +246,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
       "mcpServers": {
         "oracle": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","oracle","--stdio"],
+          "args": ["--prebuilt","oracledb","--stdio"],
           "env": {
             "ORACLE_HOST": "",
             "ORACLE_PORT": "1521",
@@ -275,7 +275,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
       "mcpServers": {
         "oracle": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","oracle","--stdio"],
+          "args": ["--prebuilt","oracledb","--stdio"],
           "env": {
             "ORACLE_HOST": "",
             "ORACLE_PORT": "1521",
@@ -302,7 +302,7 @@ curl -O https://storage.googleapis.com/genai-toolbox/v0.26.0/windows/amd64/toolb
       "mcpServers": {
         "oracle": {
           "command": "./PATH/TO/toolbox",
-          "args": ["--prebuilt","oracle","--stdio"],
+          "args": ["--prebuilt","oracledb","--stdio"],
           "env": {
             "ORACLE_HOST": "",
             "ORACLE_PORT": "1521",

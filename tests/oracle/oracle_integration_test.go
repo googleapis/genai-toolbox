@@ -142,25 +142,15 @@ func initOracleConnection(ctx context.Context, user, pass, connStr string) (*sql
 }
 
 // TestOracleSimpleToolEndpoints tests Oracle SQL tool endpoints
-func TestOracleTools(t *testing.T) {
+func TestOracleSimpleToolEndpoints(t *testing.T) {
+	
 	sourceConfig := getOracleVars(t)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	var args []string
 
-	ctx, err := testutils.ContextWithNewLogger()
-	if err != nil {
-		t.Fatalf("unexpected error: %s", err)
-	}
-
-	cfg := getOracleConfigFromEnv(t)
-	source, err := cfg.Initialize(ctx, nil)
-	if err != nil {
-		t.Fatalf("unable to initialize oracle source: %v", err)
-	}
-	db := source.(*oracle.Source).DB
-
+	db, err := initOracleConnection(ctx, OracleUser, OraclePass, OracleConnStr)
 	if err != nil {
 		t.Fatalf("unable to create Oracle connection pool: %s", err)
 	}
@@ -184,8 +174,8 @@ func TestOracleTools(t *testing.T) {
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, OracleToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
-	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "oracle-sql")
-	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement() // MySql ?? 
+	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "oracle-execute-sql")
+	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, OracleToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	cmd, cleanup, err := tests.StartCmd(ctx, toolsFile, args...)
@@ -203,33 +193,21 @@ func TestOracleTools(t *testing.T) {
 	}
 
 	// Get configs for tests
-	select1Want := `[{"1":1}]`
+	select1Want := "[{\"1\":1}]"
 	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: dpiStmt_execute: ORA-00900: invalid SQL statement"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id NUMBER GENERATED AS IDENTITY PRIMARY KEY, name VARCHAR2(255))"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
 
-	t.Run("oracle-source-parsing", func(t *testing.T) {
-		// This test implicitly checks if the Oracle source configuration
-		// is parsed correctly by the toolbox server at startup.
-		// A failure in StartCmd or WaitForString would indicate a parsing issue.
-		if err != nil {
-			t.Errorf("Oracle source configuration failed to parse: %v", err)
-		} else {
-			fmt.Println("Oracle source configuration parsed successfully.")
-		}
-	})
-
-	t.Run("tool-endpoints", func(t *testing.T) {
-		tests.RunToolGetTest(t)
-		tests.RunToolInvokeTest(t, select1Want,
-			tests.DisableOptionalNullParamTest(),
-			tests.WithMyToolById4Want(`[{"id":4,"name":""}]`),
-			tests.DisableArrayTest(),
-		)
-		tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
-		tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
-		tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
-	})
+	// Run tests
+	tests.RunToolGetTest(t)
+	tests.RunToolInvokeTest(t, select1Want,
+		tests.DisableOptionalNullParamTest(),
+		tests.WithMyToolById4Want("[{\"id\":4,\"name\":\"\"}]"),
+		tests.DisableArrayTest(),
+	)
+	tests.RunMCPToolCallMethod(t, mcpMyFailToolWant, mcpSelect1Want)
+	tests.RunExecuteSqlToolInvokeTest(t, createTableStatement, select1Want)
+	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
 
 
