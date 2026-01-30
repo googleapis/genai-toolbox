@@ -139,12 +139,12 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 
 	// set up data for param tool
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetPostgresSQLParamToolInfo(tableNameParam)
-	teardownTable1,err := tests.SetupPostgresSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
+	teardownTable1, err := tests.SetupPostgresSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
 	if teardownTable1 != nil {
 		defer teardownTable1(t)
 	}
 	if err != nil {
-    	t.Fatalf("Setup failed: %v", err)
+		t.Fatalf("Setup failed: %v", err)
 	}
 
 	// set up data for auth tool

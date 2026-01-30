@@ -629,7 +629,6 @@ func SetupPostgresSQLTable(t *testing.T, ctx context.Context, pool *pgxpool.Pool
 	// Insert test data
 	_, err = pool.Exec(ctx, insertStatement, params...)
 	if err != nil {
-		
 		// partially cleanup if insert fails
 		teardown := func(t *testing.T) {
 			_, _ =pool.Exec(ctx, fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName))
