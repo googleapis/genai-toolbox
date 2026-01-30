@@ -30,6 +30,21 @@ description: >
 |              | `--user-agent-metadata`    | Appends additional metadata to the User-Agent.                                                                                                                                   |             |
 | `-v`         | `--version`                | version for toolbox                                                                                                                                                              |             |
 
+## Sub Commands
+
+### `invoke`
+
+Executes a tool directly with the provided parameters. This is useful for testing tool configurations and parameters without needing a full client setup.
+
+**Syntax:**
+
+```bash
+toolbox invoke <tool-name> [params]
+```
+
+- `<tool-name>`: The name of the tool to execute (as defined in your configuration).
+- `[params]`: (Optional) A JSON string containing the parameters for the tool.
+
 ## Examples
 
 ### Transport Configuration

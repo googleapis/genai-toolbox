@@ -24,6 +24,13 @@ For Cloud SQL infrastructure management, search the MCP store for the Cloud SQL 
 ## Install & Configuration
 
 1. In the Antigravity MCP Store, click the "Install" button.
+    > [!NOTE]
+    > On first use, the installation process automatically downloads and uses
+    > [MCP Toolbox](https://www.npmjs.com/package/@toolbox-sdk/server)
+    > `>=0.26.0`. To update MCP Toolbox, use:
+    > ```npm i -g @toolbox-sdk/server@latest```
+    > To always run the latest version, update the MCP server configuration to use:
+    > ```npx -y @toolbox-sdk/server@latest --prebuilt cloud-sql-mssql```.
 
 2. Add the required inputs for your [instance](https://cloud.google.com/sql/docs/sqlserver/instance-info) in the configuration pop-up, then click "Save". You can update this configuration at any time in the "Configure" tab.
 
