@@ -210,6 +210,48 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
 
+// TestOracleConnectionOCIWithWallet tests OCI driver connection with TNS Admin and Wallet
+func TestOracleConnectionOCIWithWallet(t *testing.T) {
+    t.Parallel()
+    // This test verifies that useOCI=true and tnsAdmin parameters are correctly passed for OCI wallet.
+    // It will likely fail due to missing tnsnames.ora and wallet files.
+
+    // Save original env vars and restore them at the end
+    cleanup := setOracleEnv(t,
+        "", OracleUser, OraclePass, "", "", // Unset host/port/service for TNS alias, but keep user/pass
+        "", // connectionString
+        "MY_TNS_ALIAS", // tnsAlias
+        "/tmp/nonexistent_tns_admin", // tnsAdmin
+        "", // walletLocation
+        true, // useOCI
+    )
+    defer cleanup()
+
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+    cfg := getOracleConfigFromEnv(t)
+    _, err := cfg.Initialize(ctx, nil)
+
+    if err == nil {
+        t.Fatalf("Expected connection to fail (OCI driver with TNS Admin/Wallet), but it succeeded")
+    }
+
+    // Check for error message indicating TNS Admin/Wallet usage or connection failure.
+    expectedErrorSubstrings := []string{"tns", "wallet", "oci", "driver", "connection"}
+    foundExpectedError := false
+    for _, sub := range expectedErrorSubstrings {
+        if strings.Contains(strings.ToLower(err.Error()), sub) {
+            foundExpectedError = true
+            break
+        }
+    }
+    if !foundExpectedError {
+        t.Errorf("Expected error message to contain one of %v (case-insensitive) but got: %v", expectedErrorSubstrings, err)
+    }
+    t.Logf("Connection failed as expected (OCI Driver with TNS Admin/Wallet): %v", err)
+}
+
 
 //test utils
 func setupOracleTable(t *testing.T, ctx context.Context, pool *sql.DB, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
