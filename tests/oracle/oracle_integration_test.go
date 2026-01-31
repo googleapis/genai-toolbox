@@ -252,6 +252,85 @@ func TestOracleConnectionOCIWithWallet(t *testing.T) {
     t.Logf("Connection failed as expected (OCI Driver with TNS Admin/Wallet): %v", err)
 }
 
+// TestOracleConnectionPureGoWithWallet tests pure Go driver connection with wallet
+func TestOracleConnectionPureGoWithWallet(t *testing.T) {
+    t.Parallel()
+    // This test expects the connection to fail because the wallet file won't exist.
+    // It verifies that the walletLocation parameter is correctly passed to the pure Go driver.
+
+    // Save original env vars and restore them at the end
+    cleanup := setOracleEnv(t,
+        OracleHost, OracleUser, OraclePass, OracleServerName, OraclePort, // Use existing base connection details
+        "", // connectionString
+        "", // tnsAlias
+        "",                        // tnsAdmin
+        "/tmp/nonexistent_wallet", // walletLocation
+        false,                     // useOCI
+    )
+    defer cleanup()
+
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+    cfg := getOracleConfigFromEnv(t)
+    _, err := cfg.Initialize(ctx, nil) // Pass nil for tracer as it's not critical for this test
+
+    if err == nil {
+        t.Fatalf("Expected connection to fail with non-existent wallet, but it succeeded")
+    }
+
+    // Check for error message indicating wallet usage or connection failure related to wallet
+    // The exact error message might vary depending on the go-ora version and OS.
+    // We are looking for an error that suggests the wallet path was attempted.
+    expectedErrorSubstring := "wallet"
+    if !strings.Contains(strings.ToLower(err.Error()), expectedErrorSubstring) {
+        t.Errorf("Expected error message to contain '%s' (case-insensitive) but got: %v", expectedErrorSubstring, err)
+    }
+    t.Logf("Connection failed as expected (Pure Go with Wallet): %v", err)
+}
+
+// TestOracleConnectionOCI tests OCI driver connection without wallet
+func TestOracleConnectionOCI(t *testing.T) {
+    t.Parallel()
+    // This test verifies that the useOCI=true parameter is correctly passed to the OCI driver.
+    // It will likely fail if Oracle Instant Client is not installed or configured.
+
+    // Save original env vars and restore them at the end
+    cleanup := setOracleEnv(t,
+        OracleHost, OracleUser, OraclePass, OracleServerName, OraclePort, // Use existing base connection details
+        "",    // connectionString
+        "",    // tnsAlias
+        "",    // tnsAdmin
+        "", // walletLocation
+        true,  // useOCI
+    )
+    defer cleanup()
+
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+    cfg := getOracleConfigFromEnv(t)
+    _, err := cfg.Initialize(ctx, nil)
+
+    if err == nil {
+        t.Fatalf("Expected connection to fail (OCI driver without Instant Client), but it succeeded")
+    }
+
+    // Check for error message indicating OCI driver usage or connection failure related to OCI.
+    // Common errors include "OCI environment not initialized", "driver: bad connection", etc.
+    expectedErrorSubstrings := []string{"oci", "driver", "connection"}
+    foundExpectedError := false
+    for _, sub := range expectedErrorSubstrings {
+        if strings.Contains(strings.ToLower(err.Error()), sub) {
+            foundExpectedError = true
+            break
+        }
+    }
+    if !foundExpectedError {
+        t.Errorf("Expected error message to contain one of %v (case-insensitive) but got: %v", expectedErrorSubstrings, err)
+    }
+    t.Logf("Connection failed as expected (OCI Driver): %v", err)
+}
 
 //test utils
 func setupOracleTable(t *testing.T, ctx context.Context, pool *sql.DB, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
