@@ -23,9 +23,9 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/util"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/bson"
+	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -148,7 +148,7 @@ func (s *Source) Aggregate(ctx context.Context, pipelineString string, canonical
 	return res, err
 }
 
-func (s *Source) Find(ctx context.Context, filterString, database, collection string, opts *options.FindOptions) ([]any, error) {
+func (s *Source) Find(ctx context.Context, filterString, database, collection string, opts *options.FindOptionsBuilder) ([]any, error) {
 	var filter = bson.D{}
 	err := bson.UnmarshalExtJSON([]byte(filterString), false, &filter)
 	if err != nil {
@@ -163,7 +163,7 @@ func (s *Source) Find(ctx context.Context, filterString, database, collection st
 	return parseData(ctx, cur)
 }
 
-func (s *Source) FindOne(ctx context.Context, filterString, database, collection string, opts *options.FindOneOptions) ([]any, error) {
+func (s *Source) FindOne(ctx context.Context, filterString, database, collection string, opts *options.FindOneOptionsBuilder) ([]any, error) {
 	var filter = bson.D{}
 	err := bson.UnmarshalExtJSON([]byte(filterString), false, &filter)
 	if err != nil {
@@ -233,7 +233,7 @@ func (s *Source) UpdateMany(ctx context.Context, filterString string, canonical 
 		return nil, fmt.Errorf("unable to unmarshal update string: %w", err)
 	}
 
-	res, err := s.MongoClient().Database(database).Collection(collection).UpdateMany(ctx, filter, update, options.Update().SetUpsert(upsert))
+	res, err := s.MongoClient().Database(database).Collection(collection).UpdateMany(ctx, filter, update, options.UpdateMany().SetUpsert(upsert))
 	if err != nil {
 		return nil, fmt.Errorf("error updating collection: %w", err)
 	}
@@ -252,7 +252,7 @@ func (s *Source) UpdateOne(ctx context.Context, filterString string, canonical b
 		return nil, fmt.Errorf("unable to unmarshal update string: %w", err)
 	}
 
-	res, err := s.MongoClient().Database(database).Collection(collection).UpdateOne(ctx, filter, update, options.Update().SetUpsert(upsert))
+	res, err := s.MongoClient().Database(database).Collection(collection).UpdateOne(ctx, filter, update, options.UpdateOne().SetUpsert(upsert))
 	if err != nil {
 		return nil, fmt.Errorf("error updating collection: %w", err)
 	}
@@ -266,7 +266,7 @@ func (s *Source) DeleteMany(ctx context.Context, filterString, database, collect
 		return nil, err
 	}
 
-	res, err := s.MongoClient().Database(database).Collection(collection).DeleteMany(ctx, filter, options.Delete())
+	res, err := s.MongoClient().Database(database).Collection(collection).DeleteMany(ctx, filter, options.DeleteMany())
 	if err != nil {
 		return nil, err
 	}
@@ -284,7 +284,7 @@ func (s *Source) DeleteOne(ctx context.Context, filterString, database, collecti
 		return nil, err
 	}
 
-	res, err := s.MongoClient().Database(database).Collection(collection).DeleteOne(ctx, filter, options.Delete())
+	res, err := s.MongoClient().Database(database).Collection(collection).DeleteOne(ctx, filter, options.DeleteOne())
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +303,7 @@ func initMongoDBClient(ctx context.Context, tracer trace.Tracer, name, uri strin
 
 	// Create a new MongoDB client
 	clientOpts := options.Client().ApplyURI(uri).SetAppName(userAgent)
-	client, err := mongo.Connect(ctx, clientOpts)
+	client, err := mongo.Connect(clientOpts)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create MongoDB client: %w", err)
 	}
