@@ -245,7 +245,7 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	// Setup allowed table
 	allowedTableNameParam1 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName1, allowedTableName1)
 	createAllowedTableStmt1 := fmt.Sprintf("CREATE TABLE %s (id INT64)", allowedTableNameParam1)
-	teardownAllowed1 ,err:= setupBigQueryTable(t, ctx, client, createAllowedTableStmt1, "", allowedDatasetName1, allowedTableNameParam1, nil)
+	teardownAllowed1, err:= setupBigQueryTable(t, ctx, client, createAllowedTableStmt1, "", allowedDatasetName1, allowedTableNameParam1, nil)
 	if err != nil {
 		t.Fatalf("failed to setup allowed table 1: %s", err)
 	}
@@ -253,7 +253,7 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 
 	allowedTableNameParam2 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName2, allowedTableName2)
 	createAllowedTableStmt2 := fmt.Sprintf("CREATE TABLE %s (id INT64)", allowedTableNameParam2)
-	teardownAllowed2 ,err:= setupBigQueryTable(t, ctx, client, createAllowedTableStmt2, "", allowedDatasetName2, allowedTableNameParam2, nil)
+	teardownAllowed2, err:= setupBigQueryTable(t, ctx, client, createAllowedTableStmt2, "", allowedDatasetName2, allowedTableNameParam2, nil)
 	if err != nil {
 		t.Fatalf("failed to setup allowed table 2: %s", err)
 	}
@@ -262,7 +262,7 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	// Setup allowed forecast table
 	allowedForecastTableFullName1 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName1, allowedForecastTableName1)
 	createForecastStmt1, insertForecastStmt1, forecastParams1 := getBigQueryForecastToolInfo(allowedForecastTableFullName1)
-	teardownAllowedForecast1 ,err:= setupBigQueryTable(t, ctx, client, createForecastStmt1, insertForecastStmt1, allowedDatasetName1, allowedForecastTableFullName1, forecastParams1)
+	teardownAllowedForecast1, err:= setupBigQueryTable(t, ctx, client, createForecastStmt1, insertForecastStmt1, allowedDatasetName1, allowedForecastTableFullName1, forecastParams1)
 	if err != nil {
 		t.Fatalf("failed to setup allowed forecast table 1: %s", err)
 	}
@@ -270,7 +270,7 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 
 	allowedForecastTableFullName2 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName2, allowedForecastTableName2)
 	createForecastStmt2, insertForecastStmt2, forecastParams2 := getBigQueryForecastToolInfo(allowedForecastTableFullName2)
-	teardownAllowedForecast2 ,err:= setupBigQueryTable(t, ctx, client, createForecastStmt2, insertForecastStmt2, allowedDatasetName2, allowedForecastTableFullName2, forecastParams2)
+	teardownAllowedForecast2, err:= setupBigQueryTable(t, ctx, client, createForecastStmt2, insertForecastStmt2, allowedDatasetName2, allowedForecastTableFullName2, forecastParams2)
 	if err != nil {
 		t.Fatalf("failed to setup allowed forecast table 2: %s", err)
 	}	
@@ -279,7 +279,7 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	// Setup disallowed table
 	disallowedTableNameParam := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, disallowedDatasetName, disallowedTableName)
 	createDisallowedTableStmt := fmt.Sprintf("CREATE TABLE %s (id INT64)", disallowedTableNameParam)
-	teardownDisallowed ,err:= setupBigQueryTable(t, ctx, client, createDisallowedTableStmt, "", disallowedDatasetName, disallowedTableNameParam, nil)
+	teardownDisallowed, err:= setupBigQueryTable(t, ctx, client, createDisallowedTableStmt, "", disallowedDatasetName, disallowedTableNameParam, nil)
 	if err != nil {
 		t.Fatalf("failed to setup disallowed table: %s", err)
 	}
@@ -288,7 +288,7 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	// Setup disallowed forecast table
 	disallowedForecastTableFullName := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, disallowedDatasetName, disallowedForecastTableName)
 	createDisallowedForecastStmt, insertDisallowedForecastStmt, disallowedForecastParams := getBigQueryForecastToolInfo(disallowedForecastTableFullName)
-	teardownDisallowedForecast ,err:= setupBigQueryTable(t, ctx, client, createDisallowedForecastStmt, insertDisallowedForecastStmt, disallowedDatasetName, disallowedForecastTableFullName, disallowedForecastParams)
+	teardownDisallowedForecast, err:= setupBigQueryTable(t, ctx, client, createDisallowedForecastStmt, insertDisallowedForecastStmt, disallowedDatasetName, disallowedForecastTableFullName, disallowedForecastParams)
 	if err != nil {
 		t.Fatalf("failed to setup disallowed forecast table: %s", err)
 	}
@@ -297,7 +297,7 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	// Setup allowed analyze contribution table
 	allowedAnalyzeContributionTableFullName1 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName1, allowedAnalyzeContributionTableName1)
 	createAnalyzeContributionStmt1, insertAnalyzeContributionStmt1, analyzeContributionParams1 := getBigQueryAnalyzeContributionToolInfo(allowedAnalyzeContributionTableFullName1)
-	teardownAllowedAnalyzeContribution1 ,err:= setupBigQueryTable(t, ctx, client, createAnalyzeContributionStmt1, insertAnalyzeContributionStmt1, allowedDatasetName1, allowedAnalyzeContributionTableFullName1, analyzeContributionParams1)
+	teardownAllowedAnalyzeContribution1, err:= setupBigQueryTable(t, ctx, client, createAnalyzeContributionStmt1, insertAnalyzeContributionStmt1, allowedDatasetName1, allowedAnalyzeContributionTableFullName1, analyzeContributionParams1)
 	if err != nil {
 		t.Fatalf("failed to setup allowed analyze contribution table 1: %s", err)
 	}
@@ -305,7 +305,7 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 
 	allowedAnalyzeContributionTableFullName2 := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, allowedDatasetName2, allowedAnalyzeContributionTableName2)
 	createAnalyzeContributionStmt2, insertAnalyzeContributionStmt2, analyzeContributionParams2 := getBigQueryAnalyzeContributionToolInfo(allowedAnalyzeContributionTableFullName2)
-	teardownAllowedAnalyzeContribution2 ,err:= setupBigQueryTable(t, ctx, client, createAnalyzeContributionStmt2, insertAnalyzeContributionStmt2, allowedDatasetName2, allowedAnalyzeContributionTableFullName2, analyzeContributionParams2)
+	teardownAllowedAnalyzeContribution2, err:= setupBigQueryTable(t, ctx, client, createAnalyzeContributionStmt2, insertAnalyzeContributionStmt2, allowedDatasetName2, allowedAnalyzeContributionTableFullName2, analyzeContributionParams2)
 	if err != nil {
 		t.Fatalf("failed to setup allowed analyze contribution table 2: %s", err)
 	}
@@ -314,7 +314,7 @@ func TestBigQueryToolWithDatasetRestriction(t *testing.T) {
 	// Setup disallowed analyze contribution table
 	disallowedAnalyzeContributionTableFullName := fmt.Sprintf("`%s.%s.%s`", BigqueryProject, disallowedDatasetName, disallowedAnalyzeContributionTableName)
 	createDisallowedAnalyzeContributionStmt, insertDisallowedAnalyzeContributionStmt, disallowedAnalyzeContributionParams := getBigQueryAnalyzeContributionToolInfo(disallowedAnalyzeContributionTableFullName)
-	teardownDisallowedAnalyzeContribution ,err:= setupBigQueryTable(t, ctx, client, createDisallowedAnalyzeContributionStmt, insertDisallowedAnalyzeContributionStmt, disallowedDatasetName, disallowedAnalyzeContributionTableFullName, disallowedAnalyzeContributionParams)
+	teardownDisallowedAnalyzeContribution, err:= setupBigQueryTable(t, ctx, client, createDisallowedAnalyzeContributionStmt, insertDisallowedAnalyzeContributionStmt, disallowedDatasetName, disallowedAnalyzeContributionTableFullName, disallowedAnalyzeContributionParams)
 	if err != nil {
 		t.Fatalf("failed to setup disallowed analyze contribution table: %s", err)
 	}
