@@ -120,7 +120,7 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 
 	// Add the new update tool to the configuration
 	toolsMap["my-update-tool"] = map[string]any{
-		"kind":        "oracle-sql",
+		"type":        "oracle-sql",
 		"source":      "my-instance", // Uses the existing test database source
 		"statement":   updateStmt,
 		"readOnly":    false, // This flag triggers the DML execution path in oracle.go
@@ -155,7 +155,7 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 
 	// Get configs for tests
 	select1Want := "[{\"1\":1}]"
-	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: dpiStmt_execute: ORA-00900: invalid SQL statement"}],"isError":true}}`
+	mcpMyFailToolWant := `{"jsonrpc":"2.0","id":"invoke-fail-tool","result":{"content":[{"type":"text","text":"unable to execute query: dpiStmt_execute: ORA-00900: invalid SQL statement\nHelp: https://docs.oracle.com/error-help/db/ora-00900/"}],"isError":true}}`
 	createTableStatement := `"CREATE TABLE t (id NUMBER GENERATED AS IDENTITY PRIMARY KEY, name VARCHAR2(255))"`
 	mcpSelect1Want := `{"jsonrpc":"2.0","id":"invoke my-auth-required-tool","result":{"content":[{"type":"text","text":"{\"1\":1}"}]}}`
 
@@ -292,7 +292,7 @@ func runInvokeToolTest(t *testing.T, toolName, paramsJSON, wantResponseSubStr st
 	t.Helper()
 
 	// The test server typically runs on port 8080
-	url := "http://localhost:5000/rpc"
+	url := "http://localhost:5000/mcp"
 
 	// Construct the JSON-RPC request body
 	reqBody := fmt.Sprintf(`{
