@@ -43,7 +43,7 @@ func NewAgentError(msg string, args ...any) *AgentError {
 	return &AgentError{Msg: fmt.Sprintf(msg, args...)}
 }
 
-// Server Errors usually return 5XX error code
+// ClientServerError returns 4XX/5XX error code
 type ClientServerError struct {
 	Msg   string
 	Code  int
