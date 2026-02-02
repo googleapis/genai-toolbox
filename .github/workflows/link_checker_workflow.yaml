@@ -50,11 +50,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # This step only runs if the 'lychee_check' step fails, ensuring the 
       # context note only appears when the developer needs to troubleshoot.
+
       - name: Display Link Context Note on Failure
         if: ${{ failure() }}
         run: |
           echo "## Link Resolution Note" >> $GITHUB_STEP_SUMMARY
           echo "Local links and directory changes work differently on GitHub than on the docsite." >> $GITHUB_STEP_SUMMARY
           echo "You must ensure fixes pass the **GitHub check** and also work with **\`hugo server\`**." >> $GITHUB_STEP_SUMMARY
+          echo "See [Link Checking and Fixing with Lychee](https://github.com/googleapis/genai-toolbox/blob/main/DEVELOPER.md#link-checking-and-fixing-with-lychee) for more details." >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
-
