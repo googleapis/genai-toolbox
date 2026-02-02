@@ -27,7 +27,7 @@ type ToolboxError interface {
 	Category() ErrorCategory
 }
 
-// Agent Errors
+// Agent Errors return 200 to the sender
 type AgentError struct {
 	Msg   string
 	Cause error
@@ -43,9 +43,10 @@ func NewAgentError(msg string, args ...any) *AgentError {
 	return &AgentError{Msg: fmt.Sprintf(msg, args...)}
 }
 
-// Server Errors
+// Server Errors return specified error code
 type ServerError struct {
 	Msg   string
+	Code  int
 	Cause error
 }
 
@@ -55,6 +56,6 @@ func (e *ServerError) Category() ErrorCategory { return CategoryServer }
 
 func (e *ServerError) Unwrap() error { return e.Cause }
 
-func NewServerError(msg string, cause error) *ServerError {
-	return &ServerError{Msg: msg, Cause: cause}
+func NewServerError(msg string, code int, cause error) *ServerError {
+	return &ServerError{Msg: msg, Code: code, Cause: cause}
 }
