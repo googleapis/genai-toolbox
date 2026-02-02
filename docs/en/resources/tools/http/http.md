@@ -31,36 +31,38 @@ For example, the following config allows you to reach different paths of the
 same server using multiple Tools:
 
 ```yaml
-sources:
-    my-http-source:
-        kind: http
-        baseUrl: https://api.example.com
-
-tools:
-    my-post-tool:
-        kind: http
-        source: my-http-source
-        method: POST
-        path: /update
-        description: Tool to update information to the example API
-
-    my-get-tool:
-        kind: http
-        source: my-http-source
-        method: GET
-        path: /search
-        description: Tool to search information from the example API
-
-    my-dynamic-path-tool:
-        kind: http
-        source: my-http-source
-        method: GET
-        path: /{{.myPathParam}}/search
-        description: Tool to reach endpoint based on the input to `myPathParam`
-        pathParams:
-            - name: myPathParam
-              type: string
-              description: The dynamic path parameter
+kind: sources
+name: my-http-source
+type: http
+baseUrl: https://api.example.com
+---
+kind: tools
+name: my-post-tool
+type: http
+source: my-http-source
+method: POST
+path: /update
+description: Tool to update information to the example API
+---
+kind: tools
+name: my-get-tool
+type: http
+source: my-http-source
+method: GET
+path: /search
+description: Tool to search information from the example API
+---
+kind: tools
+name: my-dynamic-path-tool
+type: http
+source: my-http-source
+method: GET
+path: /{{.myPathParam}}/search
+description: Tool to reach endpoint based on the input to `myPathParam`
+pathParams:
+    - name: myPathParam
+      type: string
+      description: The dynamic path parameter
 
 ```
 
@@ -77,15 +79,16 @@ The HTTP Tool allows you to specify headers in two different ways:
   same for every invocation:
 
 ```yaml
-my-http-tool:
-    kind: http
-    source: my-http-source
-    method: GET
-    path: /search
-    description: Tool to search data from API
-    headers:
-      Authorization: API_KEY
-      Content-Type: application/json
+kind: tools
+name: my-http-tool
+type: http
+source: my-http-source
+method: GET
+path: /search
+description: Tool to search data from API
+headers:
+  Authorization: API_KEY
+  Content-Type: application/json
 ```
 
 - Dynamic headers can be specified as parameters in the `headerParams` field.
@@ -93,16 +96,17 @@ my-http-tool:
   is determined by the LLM input upon Tool invocation:
 
 ```yaml
-my-http-tool:
-    kind: http
-    source: my-http-source
-    method: GET
-    path: /search
-    description: some description
-    headerParams:
-      - name: Content-Type # Example LLM input: "application/json"
-        description: request content type
-        type: string
+kind: tools
+name: my-http-tool
+type: http
+source: my-http-source
+method: GET
+path: /search
+description: some description
+headerParams:
+  - name: Content-Type # Example LLM input: "application/json"
+    description: request content type
+    type: string
 ```
 
 ### Query parameters
@@ -115,28 +119,30 @@ filtering or sorting data.
   the URL itself:
 
 ```yaml
-my-http-tool:
-    kind: http
-    source: my-http-source
-    method: GET
-    path: /search?language=en&id=1
-    description: Tool to search for item with ID 1 in English
+kind: tools
+name: my-http-tool
+type: http
+source: my-http-source
+method: GET
+path: /search?language=en&id=1
+description: Tool to search for item with ID 1 in English
 ```
 
 - Dynamic request query parameters should be specified as parameters in the
   `queryParams` section:
 
 ```yaml
-my-http-tool:
-    kind: http
-    source: my-http-source
-    method: GET
-    path: /search
-    description: Tool to search for item with ID
-    queryParams:
-      - name: id
-        description: item ID
-        type: integer
+kind: tools
+name: my-http-tool
+type: http
+source: my-http-source
+method: GET
+path: /search
+description: Tool to search for item with ID
+queryParams:
+  - name: id
+    description: item ID
+    type: integer
 ```
 
 ### Request body
@@ -150,24 +156,25 @@ body payload upon Tool invocation.
 Example:
 
 ```yaml
-my-http-tool:
-    kind: http
-    source: my-http-source
-    method: GET
-    path: /search
-    description: Tool to search for person with name and age
-    requestBody: |
-      {
-        "age": {{.age}},
-        "name": "{{.name}}"
-      }
-    bodyParams:
-      - name: age
-        description: age number
-        type: integer
-      - name: name
-        description: name string
-        type: string
+kind: tools
+name: my-http-tool
+type: http
+source: my-http-source
+method: GET
+path: /search
+description: Tool to search for person with name and age
+requestBody: |
+  {
+    "age": {{.age}},
+    "name": "{{.name}}"
+  }
+bodyParams:
+  - name: age
+    description: age number
+    type: integer
+  - name: name
+    description: name string
+    type: string
 ```
 
 #### Formatting Parameters
@@ -211,45 +218,46 @@ will send the following output:
 ## Example
 
 ```yaml
-my-http-tool:
-    kind: http
-    source: my-http-source
-    method: GET
-    path: /search
+kind: tools
+name: my-http-tool
+type: http
+source: my-http-source
+method: GET
+path: /search
+description: some description
+authRequired:
+  - my-google-auth-service
+  - other-auth-service
+queryParams:
+  - name: country
     description: some description
-    authRequired:
-      - my-google-auth-service
-      - other-auth-service
-    queryParams:
-      - name: country
-        description: some description
-        type: string
-    requestBody: |
-      {
-        "age": {{.age}},
-        "city": "{{.city}}"
-      }
-    bodyParams:
-      - name: age
-        description: age number
-        type: integer
-      - name: city
-        description: city string
-        type: string
-    headers:
-      Authorization: API_KEY
-      Content-Type: application/json
-    headerParams:
-      - name: Language
-        description: language string
-        type: string
+    type: string
+requestBody: |
+  {
+    "age": {{.age}},
+    "city": "{{.city}}"
+  }
+bodyParams:
+  - name: age
+    description: age number
+    type: integer
+  - name: city
+    description: city string
+    type: string
+headers:
+  Authorization: API_KEY
+  Content-Type: application/json
+headerParams:
+  - name: Language
+    description: language string
+    type: string
 ```
 
 ## Reference
 
 | **field**    |                **type**                 | **required** | **description**                                                                                                                                                                                                            |
 |--------------|:---------------------------------------:|:------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kind         |                 string                  |     true     | Must be "http".                                                                                                                                                                                                            |
+| type         |                 string                  |     true     | Must be "http".                                                                                                                                                                                                            |
 | source       |                 string                  |     true     | Name of the source the HTTP request should be sent to.                                                                                                                                                                     |
 | description  |                 string                  |     true     | Description of the tool that is passed to the LLM.                                                                                                                                                                         |
 | path         |                 string                  |     true     | The path of the HTTP request. You can include static query parameters in the path string.                                                                                                                                  |

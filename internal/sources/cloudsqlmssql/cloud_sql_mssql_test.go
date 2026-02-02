@@ -15,11 +15,12 @@
 package cloudsqlmssql_test
 
 import (
+	"context"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
@@ -33,20 +34,20 @@ func TestParseFromYamlCloudSQLMssql(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			sources:
-				my-instance:
-					kind: cloud-sql-mssql
-					project: my-project
-					region: my-region
-					instance: my-instance
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: sources
+			name: my-instance
+			type: cloud-sql-mssql
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-instance": cloudsqlmssql.Config{
 					Name:     "my-instance",
-					Kind:     cloudsqlmssql.SourceKind,
+					Type:     cloudsqlmssql.SourceType,
 					Project:  "my-project",
 					Region:   "my-region",
 					Instance: "my-instance",
@@ -60,21 +61,21 @@ func TestParseFromYamlCloudSQLMssql(t *testing.T) {
 		{
 			desc: "psc ipType",
 			in: `
-			sources:
-				my-instance:
-					kind: cloud-sql-mssql
-					project: my-project
-					region: my-region
-					instance: my-instance
-					database: my_db
-					user: my_user
-					password: my_pass
-					ipType: psc
+			kind: sources
+			name: my-instance
+			type: cloud-sql-mssql
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+			ipType: psc
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-instance": cloudsqlmssql.Config{
 					Name:     "my-instance",
-					Kind:     cloudsqlmssql.SourceKind,
+					Type:     cloudsqlmssql.SourceType,
 					Project:  "my-project",
 					Region:   "my-region",
 					Instance: "my-instance",
@@ -88,21 +89,21 @@ func TestParseFromYamlCloudSQLMssql(t *testing.T) {
 		{
 			desc: "with deprecated ipAddress",
 			in: `
-			sources:
-				my-instance:
-					kind: cloud-sql-mssql
-					project: my-project
-					region: my-region
-					instance: my-instance
-					ipAddress: random
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: sources
+			name: my-instance
+			type: cloud-sql-mssql
+			project: my-project
+			region: my-region
+			instance: my-instance
+			ipAddress: random
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-instance": cloudsqlmssql.Config{
 					Name:      "my-instance",
-					Kind:      cloudsqlmssql.SourceKind,
+					Type:      cloudsqlmssql.SourceType,
 					Project:   "my-project",
 					Region:    "my-region",
 					Instance:  "my-instance",
@@ -117,16 +118,12 @@ func TestParseFromYamlCloudSQLMssql(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect psarse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect psarse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -142,57 +139,53 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "invalid ipType",
 			in: `
-			sources:
-				my-instance:
-					kind: cloud-sql-mssql
-					project: my-project
-					region: my-region
-					instance: my-instance
-					ipType: fail
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: sources
+			name: my-instance
+			type: cloud-sql-mssql
+			project: my-project
+			region: my-region
+			instance: my-instance
+			ipType: fail
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			err: "unable to parse source \"my-instance\" as \"cloud-sql-mssql\": ipType invalid: must be one of \"public\", \"private\", or \"psc\"",
+			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"cloud-sql-mssql\": ipType invalid: must be one of \"public\", \"private\", or \"psc\"",
 		},
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-instance:
-					kind: cloud-sql-mssql
-					project: my-project
-					region: my-region
-					instance: my-instance
-					database: my_db
-					user: my_user
-					password: my_pass
-					foo: bar
+			kind: sources
+			name: my-instance
+			type: cloud-sql-mssql
+			project: my-project
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
+			foo: bar
 			`,
-			err: "unable to parse source \"my-instance\" as \"cloud-sql-mssql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | kind: cloud-sql-mssql\n   5 | password: my_pass\n   6 | ",
+			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"cloud-sql-mssql\": [2:1] unknown field \"foo\"\n   1 | database: my_db\n>  2 | foo: bar\n       ^\n   3 | instance: my-instance\n   4 | name: my-instance\n   5 | password: my_pass\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-instance:
-					kind: cloud-sql-mssql
-					region: my-region
-					instance: my-instance
-					database: my_db
-					user: my_user
-					password: my_pass
+			kind: sources
+			name: my-instance
+			type: cloud-sql-mssql
+			region: my-region
+			instance: my-instance
+			database: my_db
+			user: my_user
+			password: my_pass
 			`,
-			err: "unable to parse source \"my-instance\" as \"cloud-sql-mssql\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
+			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"cloud-sql-mssql\": Key: 'Config.Project' Error:Field validation for 'Project' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

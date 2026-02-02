@@ -18,7 +18,6 @@ import (
 	"strings"
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -38,16 +37,16 @@ func TestParseFromYamlLookerGetProjectFiles(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: looker-get-project-files
-					source: my-instance
-					description: some description
+            kind: tools
+            name: example_tool
+            type: looker-get-project-files
+            source: my-instance
+            description: some description
 				`,
 			want: server.ToolConfigs{
 				"example_tool": lkr.Config{
 					Name:         "example_tool",
-					Kind:         "looker-get-project-files",
+					Type:         "looker-get-project-files",
 					Source:       "my-instance",
 					Description:  "some description",
 					AuthRequired: []string{},
@@ -57,15 +56,12 @@ func TestParseFromYamlLookerGetProjectFiles(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -86,23 +82,20 @@ func TestFailParseFromYamlLookerGetProjectFiles(t *testing.T) {
 		{
 			desc: "Invalid method",
 			in: `
-			tools:
-				example_tool:
-					kind: looker-get-project-files
-					source: my-instance
-					method: GOT
-					description: some description
+            kind: tools
+            name: example_tool
+            type: looker-get-project-files
+            source: my-instance
+            method: GOT
+            description: some description
 			`,
-			err: "unable to parse tool \"example_tool\" as kind \"looker-get-project-files\": [4:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n   3 | kind: looker-get-project-files\n>  4 | method: GOT\n       ^\n   5 | source: my-instance",
+			err: "error unmarshaling tools: unable to parse tool \"example_tool\" as type \"looker-get-project-files\": [3:1] unknown field \"method\"\n   1 | authRequired: []\n   2 | description: some description\n>  3 | method: GOT\n       ^\n   4 | name: example_tool\n   5 | source: my-instance\n   6 | type: looker-get-project-files",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

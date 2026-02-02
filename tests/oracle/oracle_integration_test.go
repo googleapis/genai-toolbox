@@ -21,8 +21,8 @@ import (
 )
 
 var (
-	OracleSourceKind = "oracle"
-	OracleToolKind   = "oracle-sql"
+	OracleSourceType = "oracle"
+	OracleToolType   = "oracle-sql"
 	OracleHost       = os.Getenv("ORACLE_HOST")
 	OracleUser       = os.Getenv("ORACLE_USER")
 	OraclePass       = os.Getenv("ORACLE_PASS")
@@ -44,7 +44,7 @@ func getOracleVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":             OracleSourceKind,
+		"type":             OracleSourceType,
 		"connectionString": OracleConnStr,
 		"useOCI":           true,
 		"user":             OracleUser,
@@ -101,10 +101,10 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, OracleToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, OracleToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "oracle-execute-sql")
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, OracleToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, OracleToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
 	// Configure a DML tool (Update) to verify the 'readonly: false' logic.
 	// We insert this directly into the tools map to ensure the 'readonly' flag

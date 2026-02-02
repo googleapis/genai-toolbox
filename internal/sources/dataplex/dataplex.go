@@ -26,17 +26,19 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/util"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/oauth2/google"
+	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
+	grpcstatus "google.golang.org/grpc/status"
 )
 
-const SourceKind string = "dataplex"
+const SourceType string = "dataplex"
 
 // validate interface
 var _ sources.SourceConfig = Config{}
 
 func init() {
-	if !sources.Register(SourceKind, newConfig) {
-		panic(fmt.Sprintf("source kind %q already registered", SourceKind))
+	if !sources.Register(SourceType, newConfig) {
+		panic(fmt.Sprintf("source type %q already registered", SourceType))
 	}
 }
 
@@ -51,13 +53,13 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 type Config struct {
 	// Dataplex configs
 	Name    string `yaml:"name" validate:"required"`
-	Kind    string `yaml:"kind" validate:"required"`
+	Type    string `yaml:"type" validate:"required"`
 	Project string `yaml:"project" validate:"required"`
 }
 
-func (r Config) SourceConfigKind() string {
-	// Returns Dataplex source kind
-	return SourceKind
+func (r Config) SourceConfigType() string {
+	// Returns Dataplex source type
+	return SourceType
 }
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
@@ -81,9 +83,9 @@ type Source struct {
 	Client *dataplexapi.CatalogClient
 }
 
-func (s *Source) SourceKind() string {
-	// Returns Dataplex source kind
-	return SourceKind
+func (s *Source) SourceType() string {
+	// Returns Dataplex source type
+	return SourceType
 }
 
 func (s *Source) ToConfig() sources.SourceConfig {
@@ -104,7 +106,7 @@ func initDataplexConnection(
 	name string,
 	project string,
 ) (*dataplexapi.CatalogClient, error) {
-	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceKind, name)
+	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	cred, err := google.FindDefaultCredentials(ctx)
@@ -173,8 +175,17 @@ func (s *Source) SearchAspectTypes(ctx context.Context, query string, pageSize i
 	var results []*dataplexpb.AspectType
 	for {
 		entry, err := it.Next()
-		if err != nil {
+
+		if err == iterator.Done {
 			break
+		}
+		if err != nil {
+			if st, ok := grpcstatus.FromError(err); ok {
+				errorCode := st.Code()
+				errorMessage := st.Message()
+				return nil, fmt.Errorf("failed to search aspect types with error code: %q message: %s", errorCode.String(), errorMessage)
+			}
+			return nil, fmt.Errorf("failed to search aspect types: %w", err)
 		}
 
 		// Create an instance of exponential backoff with default values for retrying GetAspectType calls
@@ -214,8 +225,16 @@ func (s *Source) SearchEntries(ctx context.Context, query string, pageSize int, 
 	var results []*dataplexpb.SearchEntriesResult
 	for {
 		entry, err := it.Next()
-		if err != nil {
+		if err == iterator.Done {
 			break
+		}
+		if err != nil {
+			if st, ok := grpcstatus.FromError(err); ok {
+				errorCode := st.Code()
+				errorMessage := st.Message()
+				return nil, fmt.Errorf("failed to search entries with error code: %q message: %s", errorCode.String(), errorMessage)
+			}
+			return nil, fmt.Errorf("failed to search entries: %w", err)
 		}
 		results = append(results, entry)
 	}
