@@ -43,19 +43,19 @@ func NewAgentError(msg string, args ...any) *AgentError {
 	return &AgentError{Msg: fmt.Sprintf(msg, args...)}
 }
 
-// Server Errors return specified error code
-type ServerError struct {
+// Server Errors usually return 5XX error code
+type ClientServerError struct {
 	Msg   string
 	Code  int
 	Cause error
 }
 
-func (e *ServerError) Error() string { return fmt.Sprintf("%s: %v", e.Msg, e.Cause) }
+func (e *ClientServerError) Error() string { return fmt.Sprintf("%s: %v", e.Msg, e.Cause) }
 
-func (e *ServerError) Category() ErrorCategory { return CategoryServer }
+func (e *ClientServerError) Category() ErrorCategory { return CategoryServer }
 
-func (e *ServerError) Unwrap() error { return e.Cause }
+func (e *ClientServerError) Unwrap() error { return e.Cause }
 
-func NewServerError(msg string, code int, cause error) *ServerError {
-	return &ServerError{Msg: msg, Code: code, Cause: cause}
+func NewClientServerError(msg string, code int, cause error) *ClientServerError {
+	return &ClientServerError{Msg: msg, Code: code, Cause: cause}
 }
