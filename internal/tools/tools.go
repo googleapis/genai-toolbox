@@ -17,6 +17,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"slices"
 	"strings"
 
@@ -80,7 +81,7 @@ type AccessToken string
 func (token AccessToken) ParseBearerToken() (string, error) {
 	headerParts := strings.Split(string(token), " ")
 	if len(headerParts) != 2 || strings.ToLower(headerParts[0]) != "bearer" {
-		return "", fmt.Errorf("authorization header must be in the format 'Bearer <token>': %w", util.ErrUnauthorized)
+		return "", util.NewClientServerError("authorization header must be in the format 'Bearer <token>'", http.StatusUnauthorized, nil)
 	}
 	return headerParts[1], nil
 }

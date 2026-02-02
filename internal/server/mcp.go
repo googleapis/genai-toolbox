@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 
@@ -444,15 +443,17 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		code := rpcResponse.Error.Code
 		switch code {
 		case jsonrpc.INTERNAL_ERROR:
+			// Map Internal RPC Error (-32603) to HTTP 500
 			w.WriteHeader(http.StatusInternalServerError)
 		case jsonrpc.INVALID_REQUEST:
-			errStr := err.Error()
-			if errors.Is(err, util.ErrUnauthorized) {
-				w.WriteHeader(http.StatusUnauthorized)
-			} else if strings.Contains(errStr, "Error 401") {
-				w.WriteHeader(http.StatusUnauthorized)
-			} else if strings.Contains(errStr, "Error 403") {
-				w.WriteHeader(http.StatusForbidden)
+			var clientServerErr *util.ClientServerError
+			if errors.As(err, &clientServerErr) {
+				switch clientServerErr.Code {
+				case http.StatusUnauthorized:
+					w.WriteHeader(http.StatusUnauthorized)
+				case http.StatusForbidden:
+					w.WriteHeader(http.StatusForbidden)
+				}
 			}
 		}
 	}

@@ -19,6 +19,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"reflect"
 	"regexp"
 	"slices"
@@ -118,7 +119,7 @@ func parseFromAuthService(paramAuthServices []ParamAuthService, claimsMap map[st
 		}
 		return v, nil
 	}
-	return nil, fmt.Errorf("missing or invalid authentication header: %w", util.ErrUnauthorized)
+	return nil, util.NewClientServerError("missing or invalid authentication header", http.StatusUnauthorized, nil)
 }
 
 // CheckParamRequired checks if a parameter is required based on the required and default field.

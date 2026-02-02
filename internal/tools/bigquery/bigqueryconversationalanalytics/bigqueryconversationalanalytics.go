@@ -184,7 +184,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if source.UseClientAuthorization() {
 		// Use client-side access token
 		if accessToken == "" {
-			return nil, fmt.Errorf("tool is configured for client OAuth but no token was provided in the request header: %w", util.ErrUnauthorized)
+			return nil, util.NewClientServerError("tool is configured for client OAuth but no token was provided in the request header", http.StatusUnauthorized, nil)
 		}
 		tokenStr, err = accessToken.ParseBearerToken()
 		if err != nil {

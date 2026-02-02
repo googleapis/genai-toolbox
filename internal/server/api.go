@@ -234,8 +234,13 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	params, err := parameters.ParseParams(tool.GetParameters(), data, claimsFromAuth)
 	if err != nil {
 		// If auth error, return 401
-		if errors.Is(err, util.ErrUnauthorized) {
-			s.logger.DebugContext(ctx, fmt.Sprintf("error parsing authenticated parameters from ID token: %s", err))
+		errMsg := fmt.Sprintf("error parsing authenticated parameters from ID token: %w", err)
+		if errors.Is(err, util.NewClientServerError(
+			errMsg,
+			http.StatusUnauthorized,
+			nil,
+		)) {
+			s.logger.DebugContext(ctx, errMsg)
 			_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
 			return
 		}
@@ -270,12 +275,12 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 			case util.CategoryServer:
 				// Server Errors -> Check the specific code inside
-				var serverErr *util.ServerError
+				var clientServerErr *util.ClientServerError
 				statusCode := http.StatusInternalServerError // Default to 500
 
-				if errors.As(err, &serverErr) {
-					if serverErr.Code != 0 {
-						statusCode = serverErr.Code
+				if errors.As(err, &clientServerErr) {
+					if clientServerErr.Code != 0 {
+						statusCode = clientServerErr.Code
 					}
 				}
 
