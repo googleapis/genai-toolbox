@@ -22,6 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
@@ -122,44 +123,49 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 // Invoke executes the tool's logic.
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", 500, err)
 	}
 
 	paramsMap := params.AsMap()
 	project, ok := paramsMap["project"].(string)
 	if !ok || project == "" {
-		return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'project' parameter; expected a non-empty string")
 	}
 
 	location, ok := paramsMap["location"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid 'location' parameter; expected a string")
+		return nil, util.NewAgentError("invalid 'location' parameter; expected a string")
 	}
 
 	clusterID, ok := paramsMap["cluster"].(string)
 	if !ok || clusterID == "" {
-		return nil, fmt.Errorf("invalid or missing 'cluster' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'cluster' parameter; expected a non-empty string")
 	}
 
 	password, ok := paramsMap["password"].(string)
 	if !ok || password == "" {
-		return nil, fmt.Errorf("invalid or missing 'password' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'password' parameter; expected a non-empty string")
 	}
 
 	network, ok := paramsMap["network"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid 'network' parameter; expected a string")
+		return nil, util.NewAgentError("invalid 'network' parameter; expected a string")
 	}
 
 	user, ok := paramsMap["user"].(string)
 	if !ok {
-		return nil, fmt.Errorf("invalid 'user' parameter; expected a string")
+		return nil, util.NewAgentError("invalid 'user' parameter; expected a string", nil)
+	}
+	resp, err := source.CreateCluster(ctx, project, location, network, user, password, clusterID, string(accessToken))
+
+	if err != nil {
+		return nil, util.ProecessGcpError(err)
 	}
 
-	return source.CreateCluster(ctx, project, location, network, user, password, clusterID, string(accessToken))
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {

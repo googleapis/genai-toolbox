@@ -22,6 +22,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
@@ -123,36 +124,36 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 // Invoke executes the tool's logic.
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", 500, err)
 	}
 
 	paramsMap := params.AsMap()
 	project, ok := paramsMap["project"].(string)
 	if !ok || project == "" {
-		return nil, fmt.Errorf("invalid or missing 'project' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'project' parameter; expected a non-empty string", nil)
 	}
 
 	location, ok := paramsMap["location"].(string)
 	if !ok || location == "" {
-		return nil, fmt.Errorf("invalid or missing 'location' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'location' parameter; expected a non-empty string", nil)
 	}
 
 	cluster, ok := paramsMap["cluster"].(string)
 	if !ok || cluster == "" {
-		return nil, fmt.Errorf("invalid or missing 'cluster' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'cluster' parameter; expected a non-empty string", nil)
 	}
 
 	instanceID, ok := paramsMap["instance"].(string)
 	if !ok || instanceID == "" {
-		return nil, fmt.Errorf("invalid or missing 'instance' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'instance' parameter; expected a non-empty string", nil)
 	}
 
 	instanceType, ok := paramsMap["instanceType"].(string)
 	if !ok || (instanceType != "READ_POOL" && instanceType != "PRIMARY") {
-		return nil, fmt.Errorf("invalid 'instanceType' parameter; expected 'PRIMARY' or 'READ_POOL'")
+		return nil, util.NewAgentError("invalid 'instanceType' parameter; expected 'PRIMARY' or 'READ_POOL'", nil)
 	}
 
 	displayName, _ := paramsMap["displayName"].(string)
@@ -161,11 +162,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if instanceType == "READ_POOL" {
 		nodeCount, ok = paramsMap["nodeCount"].(int)
 		if !ok {
-			return nil, fmt.Errorf("invalid 'nodeCount' parameter; expected an integer for READ_POOL")
+			return nil, util.NewAgentError("invalid 'nodeCount' parameter; expected an integer for READ_POOL", nil)
 		}
 	}
 
-	return source.CreateInstance(ctx, project, location, cluster, instanceID, instanceType, displayName, nodeCount, string(accessToken))
+	resp, err := source.CreateInstance(ctx, project, location, cluster, instanceID, instanceType, displayName, nodeCount, string(accessToken))
+	if err != nil {
+		return nil, util.ProecessGcpError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {

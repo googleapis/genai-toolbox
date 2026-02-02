@@ -12,7 +12,13 @@
 // limitations under the License.
 package util
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"net/http"
+
+	"google.golang.org/api/googleapi"
+)
 
 type ErrorCategory string
 
@@ -76,4 +82,25 @@ func (e *ClientServerError) Unwrap() error { return e.Cause }
 
 func NewClientServerError(msg string, code int, cause error) *ClientServerError {
 	return &ClientServerError{Msg: msg, Code: code, Cause: cause}
+}
+
+func ProecessGcpError(err error) ToolboxError {
+	var gErr *googleapi.Error
+	if errors.As(err, &gErr) {
+		if gErr.Code == 401 {
+			return NewClientServerError(
+				"failed to access GCP resource",
+				http.StatusUnauthorized,
+				err,
+			)
+		}
+		if gErr.Code == 403 {
+			return NewClientServerError(
+				"failed to access GCP resource",
+				http.StatusForbidden,
+				err,
+			)
+		}
+	}
+	return NewAgentError("error processing GCP request", err)
 }
