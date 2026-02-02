@@ -235,11 +235,8 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// If auth error, return 401
 		errMsg := fmt.Sprintf("error parsing authenticated parameters from ID token: %w", err)
-		if errors.Is(err, util.NewClientServerError(
-			errMsg,
-			http.StatusUnauthorized,
-			nil,
-		)) {
+		var clientServerErr *util.ClientServerError
+		if errors.As(err, &clientServerErr) && clientServerErr.Code == http.StatusUnauthorized {
 			s.logger.DebugContext(ctx, errMsg)
 			_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
 			return
@@ -300,6 +297,11 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 				_ = render.Render(w, r, newErrResponse(err, statusCode))
 				return
 			}
+		} else {
+			// Unknown error -> 500
+			s.logger.ErrorContext(ctx, fmt.Sprintf("Tool invocation unknown error: %v", err))
+			_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
+			return
 		}
 	}
 

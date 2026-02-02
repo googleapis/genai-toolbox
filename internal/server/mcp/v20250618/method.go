@@ -174,6 +174,7 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 			http.StatusUnauthorized,
 			nil,
 		)
+		return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 	logger.DebugContext(ctx, "tool invocation authorized")
 
@@ -228,6 +229,9 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 				}
 				return jsonrpc.NewError(id, rpcCode, err.Error(), nil), err
 			}
+		} else {
+			// Unknown error -> 500
+			return jsonrpc.NewError(id, jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 		}
 	}
 
