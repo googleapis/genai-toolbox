@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Javascript on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2395/sdks/js-sdk/</link><description>Recent content in Javascript on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-2395/sdks/js-sdk/index.xml" rel="self" type="application/rss+xml"/><item><title>adk</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2395/sdks/js-sdk/adk/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2395/sdks/js-sdk/adk/</guid><description>&lt;h2 id="overview">Overview&lt;/h2>
+&lt;p>The &lt;code>@toolbox-sdk/adk&lt;/code> package provides a Javascript interface to the MCP Toolbox service, enabling you to load and invoke tools from your own applications.&lt;/p>
+&lt;h2 id="supported-environments">Supported Environments&lt;/h2>
+&lt;p>This SDK is a standard Node.js package built with TypeScript, ensuring broad compatibility with the modern JavaScript ecosystem.&lt;/p>
+&lt;ul>
+&lt;li>Node.js: Actively supported on Node.js v18.x and higher. The package is compatible with both modern ES Module (import) and legacy CommonJS (require).&lt;/li>
+&lt;li>TypeScript: The SDK is written in TypeScript and ships with its own type declarations, providing a first-class development experience with autocompletion and type-checking out of the box.&lt;/li>
+&lt;li>JavaScript: Fully supports modern JavaScript in Node.js environments.&lt;/li>
+&lt;/ul>
+&lt;h2 id="installation">Installation&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">npm install @toolbox-sdk/adk
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="quickstart">Quickstart&lt;/h2>
+&lt;ol>
+&lt;li>
+&lt;p>&lt;strong>Start the Toolbox Service&lt;/strong>&lt;/p></description></item></channel></rss>
