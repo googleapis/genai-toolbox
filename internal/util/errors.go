@@ -39,8 +39,8 @@ func (e *AgentError) Category() ErrorCategory { return CategoryAgent }
 
 func (e *AgentError) Unwrap() error { return e.Cause }
 
-func NewAgentError(msg string, args ...any) *AgentError {
-	return &AgentError{Msg: fmt.Sprintf(msg, args...)}
+func NewAgentError(msg string, cause error) *AgentError {
+	return &AgentError{Msg: msg, Cause: cause}
 }
 
 // ClientServerError returns 4XX/5XX error code
