@@ -208,7 +208,7 @@ func TestRunSQLExecutesDML(t *testing.T) {
 	src := &oracle.Source{
 		Config: oracle.Config{
 			Name: "test-dml-source",
-			Kind: oracle.SourceKind,
+			Type: oracle.SourceType,
 			User: "test-user",
 		},
 		DB: db,

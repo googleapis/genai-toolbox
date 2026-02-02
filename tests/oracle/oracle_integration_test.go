@@ -120,7 +120,7 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 
 	// Add the new update tool to the configuration
 	toolsMap["my-update-tool"] = map[string]any{
-		"kind":        OracleToolKind,
+		"kind":        "oracle-sql",
 		"source":      "my-instance", // Uses the existing test database source
 		"statement":   updateStmt,
 		"readOnly":    false, // This flag triggers the DML execution path in oracle.go

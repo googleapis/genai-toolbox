@@ -73,18 +73,18 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 		{
 			desc: "explicit: readOnly set to true",
 			in: `
-            tools:
-                safe_query:
-                    kind: oracle-sql
-                    source: db-prod
-                    description: Safe read operation.
-                    readOnly: true
-                    statement: "SELECT * FROM orders"
-            `,
+			kind: tools
+			name: safe_query
+			type: oracle-sql
+			source: db-prod
+			description: Safe read operation.
+			readOnly: true
+			statement: "SELECT * FROM orders"
+			`,
 			want: server.ToolConfigs{
 				"safe_query": oraclesql.Config{
 					Name:         "safe_query",
-					Kind:         "oracle-sql",
+					Type:         "oracle-sql",
 					Source:       "db-prod",
 					Description:  "Safe read operation.",
 					Statement:    "SELECT * FROM orders",
@@ -96,18 +96,18 @@ func TestParseFromYamlOracleSql(t *testing.T) {
 		{
 			desc: "example with readonly flag set to false (DML)",
 			in: `
-            tools:
-                update_user:
-                    kind: oracle-sql
-                    source: db-prod
-                    description: Updates user email.
-                    readOnly: false   # <--- We are testing this specific line
-                    statement: "UPDATE users SET email = :1 WHERE id = :2"
-            `,
+			kind: tools
+			name: update_user
+			type: oracle-sql
+			source: db-prod
+			description: Updates user email.
+			readOnly: false
+			statement: "UPDATE users SET email = :1 WHERE id = :2"
+			`,
 			want: server.ToolConfigs{
 				"update_user": oraclesql.Config{
 					Name:         "update_user",
-					Kind:         "oracle-sql",
+					Type:         "oracle-sql",
 					Source:       "db-prod",
 					Description:  "Updates user email.",
 					Statement:    "UPDATE users SET email = :1 WHERE id = :2",
