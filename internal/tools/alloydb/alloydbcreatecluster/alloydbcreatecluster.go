@@ -132,27 +132,27 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	paramsMap := params.AsMap()
 	project, ok := paramsMap["project"].(string)
 	if !ok || project == "" {
-		return nil, util.NewAgentError("invalid or missing 'project' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'project' parameter; expected a non-empty string", nil)
 	}
 
 	location, ok := paramsMap["location"].(string)
 	if !ok {
-		return nil, util.NewAgentError("invalid 'location' parameter; expected a string")
+		return nil, util.NewAgentError("invalid 'location' parameter; expected a string", nil)
 	}
 
 	clusterID, ok := paramsMap["cluster"].(string)
 	if !ok || clusterID == "" {
-		return nil, util.NewAgentError("invalid or missing 'cluster' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'cluster' parameter; expected a non-empty string", nil)
 	}
 
 	password, ok := paramsMap["password"].(string)
 	if !ok || password == "" {
-		return nil, util.NewAgentError("invalid or missing 'password' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'password' parameter; expected a non-empty string", nil)
 	}
 
 	network, ok := paramsMap["network"].(string)
 	if !ok {
-		return nil, util.NewAgentError("invalid 'network' parameter; expected a string")
+		return nil, util.NewAgentError("invalid 'network' parameter; expected a string", nil)
 	}
 
 	user, ok := paramsMap["user"].(string)

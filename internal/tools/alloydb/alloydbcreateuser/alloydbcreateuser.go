@@ -132,34 +132,34 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	paramsMap := params.AsMap()
 	project, ok := paramsMap["project"].(string)
 	if !ok || project == "" {
-		return nil, util.NewAgentError("invalid or missing 'project' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'project' parameter; expected a non-empty string", nil)
 	}
 
 	location, ok := paramsMap["location"].(string)
 	if !ok || location == "" {
-		return nil, util.NewAgentError("invalid or missing'location' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing'location' parameter; expected a non-empty string", nil)
 	}
 
 	cluster, ok := paramsMap["cluster"].(string)
 	if !ok || cluster == "" {
-		return nil, util.NewAgentError("invalid or missing 'cluster' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'cluster' parameter; expected a non-empty string", nil)
 	}
 
 	userID, ok := paramsMap["user"].(string)
 	if !ok || userID == "" {
-		return nil, util.NewAgentError("invalid or missing 'user' parameter; expected a non-empty string")
+		return nil, util.NewAgentError("invalid or missing 'user' parameter; expected a non-empty string", nil)
 	}
 
 	userType, ok := paramsMap["userType"].(string)
 	if !ok || (userType != "ALLOYDB_BUILT_IN" && userType != "ALLOYDB_IAM_USER") {
-		return nil, util.NewAgentError("invalid or missing 'userType' parameter; expected 'ALLOYDB_BUILT_IN' or 'ALLOYDB_IAM_USER'")
+		return nil, util.NewAgentError("invalid or missing 'userType' parameter; expected 'ALLOYDB_BUILT_IN' or 'ALLOYDB_IAM_USER'", nil)
 	}
 	var password string
 
 	if userType == "ALLOYDB_BUILT_IN" {
 		password, ok = paramsMap["password"].(string)
 		if !ok || password == "" {
-			return nil, util.NewAgentError("password is required when userType is ALLOYDB_BUILT_IN")
+			return nil, util.NewAgentError("password is required when userType is ALLOYDB_BUILT_IN", nil)
 		}
 	}
 

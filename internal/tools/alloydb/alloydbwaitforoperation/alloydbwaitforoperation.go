@@ -224,15 +224,15 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, util.NewAgentError("missing 'project' parameter")
+		return nil, util.NewAgentError("missing 'project' parameter", nil)
 	}
 	location, ok := paramsMap["location"].(string)
 	if !ok {
-		return nil, util.NewAgentError("missing 'location' parameter")
+		return nil, util.NewAgentError("missing 'location' parameter", nil)
 	}
 	operation, ok := paramsMap["operation"].(string)
 	if !ok {
-		return nil, util.NewAgentError("missing 'operation' parameter")
+		return nil, util.NewAgentError("missing 'operation' parameter", nil)
 	}
 
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Minute)
@@ -266,7 +266,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 		}
 		retries++
 	}
-	return nil, util.NewAgentError("exceeded max retries waiting for operation")
+	return nil, util.NewAgentError("exceeded max retries waiting for operation", nil)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {

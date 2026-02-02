@@ -129,11 +129,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	project, ok := paramsMap["project"].(string)
 	if !ok || project == "" {
-		return nil, util.NewAgentError("invalid or missing 'project' parameter; expected a string")
+		return nil, util.NewAgentError("invalid or missing 'project' parameter; expected a string", nil)
 	}
 	location, ok := paramsMap["location"].(string)
 	if !ok {
-		return nil, util.NewAgentError("invalid 'location' parameter; expected a string")
+		return nil, util.NewAgentError("invalid 'location' parameter; expected a string", nil)
 	}
 
 	resp, err := source.ListCluster(ctx, project, location, string(accessToken))
