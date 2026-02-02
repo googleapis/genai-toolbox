@@ -19,7 +19,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -259,34 +258,44 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	// Determine what error to return to the users.
 	if err != nil {
-		errStr := err.Error()
-		var statusCode int
+		var tbErr util.ToolboxError
 
-		// Upstream API auth error propagation
-		switch {
-		case strings.Contains(errStr, "Error 401"):
-			statusCode = http.StatusUnauthorized
-		case strings.Contains(errStr, "Error 403"):
-			statusCode = http.StatusForbidden
-		}
+		if errors.As(err, &tbErr) {
+			switch tbErr.Category() {
+			case util.CategoryAgent:
+				// Agent Errors -> 200 OK
+				s.logger.DebugContext(ctx, fmt.Sprintf("Tool invocation agent error: %v", err))
+				_ = render.Render(w, r, newErrResponse(err, http.StatusOK))
+				return
 
-		if statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
-			if clientAuth {
-				// Propagate the original 401/403 error.
-				s.logger.DebugContext(ctx, fmt.Sprintf("error invoking tool. Client credentials lack authorization to the source: %v", err))
+			case util.CategoryServer:
+				// Server Errors -> Check the specific code inside
+				var serverErr *util.ServerError
+				statusCode := http.StatusInternalServerError // Default to 500
+
+				if errors.As(err, &serverErr) {
+					if serverErr.Code != 0 {
+						statusCode = serverErr.Code
+					}
+				}
+
+				// Process auth error
+				if statusCode == http.StatusUnauthorized || statusCode == http.StatusForbidden {
+					if clientAuth {
+						// Token error, pass through 401/403
+						s.logger.DebugContext(ctx, fmt.Sprintf("Client credentials lack authorization: %v", err))
+						_ = render.Render(w, r, newErrResponse(err, statusCode))
+						return
+					}
+					// ADC/Config error, return 500
+					statusCode = http.StatusInternalServerError
+				}
+
+				s.logger.ErrorContext(ctx, fmt.Sprintf("Tool invocation server error: %v", err))
 				_ = render.Render(w, r, newErrResponse(err, statusCode))
 				return
 			}
-			// ADC lacking permission or credentials configuration error.
-			internalErr := fmt.Errorf("unexpected auth error occured during Tool invocation: %w", err)
-			s.logger.ErrorContext(ctx, internalErr.Error())
-			_ = render.Render(w, r, newErrResponse(internalErr, http.StatusInternalServerError))
-			return
 		}
-		err = fmt.Errorf("error while invoking tool: %w", err)
-		s.logger.DebugContext(ctx, err.Error())
-		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
-		return
 	}
 
 	resMarshal, err := json.Marshal(res)
