@@ -126,8 +126,16 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 		"readOnly":    false, // This flag triggers the DML execution path in oracle.go
 		"description": "Update user name by ID.",
 		"parameters": []map[string]any{
-			{"name": "name", "type": "string"},
-			{"name": "id", "type": "integer"},
+			{
+				"name":        "name",
+				"type":        "string",
+				"description": "The new name for the user.",
+			},
+			{
+				"name":        "id",
+				"type":        "integer",
+				"description": "The user ID to update.",
+			},
 		},
 	}
 
