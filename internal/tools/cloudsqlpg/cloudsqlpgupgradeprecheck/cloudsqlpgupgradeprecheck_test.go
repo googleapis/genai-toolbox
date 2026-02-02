@@ -17,7 +17,6 @@ package cloudsqlpgupgradeprecheck_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -37,18 +36,18 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "basic precheck example",
 			in: `
-			tools:
-				precheck-upgrade-tool:
-					kind: postgres-upgrade-precheck
-					description: a precheck test description
-					source: some-admin-source
-					authRequired:
-						- https://www.googleapis.com/auth/cloud-platform
+			kind: tools
+			name: precheck-upgrade-tool
+			type: postgres-upgrade-precheck
+			description: a precheck test description
+			source: some-admin-source
+			authRequired:
+				- https://www.googleapis.com/auth/cloud-platform
 			`,
 			want: server.ToolConfigs{
 				"precheck-upgrade-tool": cloudsqlpgupgradeprecheck.Config{
 					Name:         "precheck-upgrade-tool",
-					Kind:         "postgres-upgrade-precheck",
+					Type:         "postgres-upgrade-precheck",
 					Description:  "a precheck test description",
 					Source:       "some-admin-source",
 					AuthRequired: []string{"https://www.googleapis.com/auth/cloud-platform"},
@@ -58,16 +57,16 @@ func TestParseFromYaml(t *testing.T) {
 		{
 			desc: "precheck example with no auth",
 			in: `
-			tools:
-				precheck-upgrade-tool-no-auth:
-					kind: postgres-upgrade-precheck
-					description: a precheck test description no auth
-					source: other-admin-source
+			kind: tools
+			name: precheck-upgrade-tool-no-auth
+			type: postgres-upgrade-precheck
+			description: a precheck test description no auth
+			source: other-admin-source
 			`,
 			want: server.ToolConfigs{
 				"precheck-upgrade-tool-no-auth": cloudsqlpgupgradeprecheck.Config{
 					Name:         "precheck-upgrade-tool-no-auth",
-					Kind:         "postgres-upgrade-precheck",
+					Type:         "postgres-upgrade-precheck",
 					Description:  "a precheck test description no auth",
 					Source:       "other-admin-source",
 					AuthRequired: []string{},
@@ -77,15 +76,11 @@ func TestParseFromYaml(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff (-want +got):\n%s", diff)
 			}
 		})

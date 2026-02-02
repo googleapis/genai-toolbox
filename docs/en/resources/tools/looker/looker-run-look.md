@@ -22,26 +22,26 @@ It's compatible with the following sources:
 ## Example
 
 ```yaml
-tools:
-    run_look:
-        kind: looker-run-look
-        source: looker-source
-        description: |
-          This tool executes the query associated with a saved Look and
-          returns the resulting data in a JSON structure.
+kind: tools
+name: run_look
+type: looker-run-look
+source: looker-source
+description: |
+  This tool executes the query associated with a saved Look and
+  returns the resulting data in a JSON structure.
 
-          Parameters:
-          - look_id (required): The unique identifier of the Look to run,
-            typically obtained from the `get_looks` tool.
+  Parameters:
+  - look_id (required): The unique identifier of the Look to run,
+    typically obtained from the `get_looks` tool.
 
-          Output:
-          The query results are returned as a JSON object.
+  Output:
+  The query results are returned as a JSON object.
 ```
 
 ## Reference
 
 | **field**   | **type** | **required** | **description**                                    |
 |-------------|:--------:|:------------:|----------------------------------------------------|
-| kind        |  string  |     true     | Must be "looker-run-look"                          |
+| type        |  string  |     true     | Must be "looker-run-look"                          |
 | source      |  string  |     true     | Name of the source the SQL should execute on.      |
 | description |  string  |     true     | Description of the tool that is passed to the LLM. |
