@@ -112,7 +112,7 @@ run_python_test() {
         export PYTHONPATH="../"
         python3 "${name}/${AGENT_FILE_PATTERN}"
     fi
-    rm -rf ".venv"
+    rm -rf "${name}/.venv"
   )
 }
 
@@ -135,7 +135,7 @@ run_js_test() {
         echo "No native test found. running agent directly..."
         node "${name}/${AGENT_FILE_PATTERN}"
     fi
-    rm -rf "node_modules"
+    rm -rf "${name}/node_modules"
   )
 }
 
@@ -151,8 +151,21 @@ run_go_test() {
   echo "--- Running Go Test: $name ---"
   (
     cd "$dir"
-    echo "Running Go tests for $name..."
-    go test ./...
+    if [ -f "go.mod" ]; then
+      go mod tidy
+    fi
+    
+    cd ..
+    local test_file=$(find . -maxdepth 1 -name "*test.go" | head -n 1)
+    if [ -n "$test_file" ]; then
+        echo "Found native test: $test_file. Running go test..."
+        export ORCH_NAME="$name"
+        go test -v ./...
+    else
+        echo "No native test found. running agent directly..."
+        cd "$name"
+        go run "."
+    fi
   )
 }
 
