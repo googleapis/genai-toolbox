@@ -451,7 +451,7 @@ Langchain</button></li></ul><div class=tab-content id=tabs-0-content><div class=
 </span></span><span class=line><span class=cl>            <span class=n>middleware</span><span class=o>=</span><span class=p>[</span><span class=n>enforce_business_rules</span><span class=p>,</span> <span class=n>enrich_response</span><span class=p>],</span>
 </span></span><span class=line><span class=cl>        <span class=p>)</span>
 </span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl>        <span class=n>user_input</span> <span class=o>=</span> <span class=s2>&#34;Book hotel with id 3 with checkin 2025-01-01 and checkout 2025-01-20&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=n>user_input</span> <span class=o>=</span> <span class=s2>&#34;Book hotel with id 3 for 2 days.&#34;</span>
 </span></span><span class=line><span class=cl>        <span class=n>response</span> <span class=o>=</span> <span class=k>await</span> <span class=n>agent</span><span class=o>.</span><span class=n>ainvoke</span><span class=p>(</span>
 </span></span><span class=line><span class=cl>            <span class=p>{</span><span class=s2>&#34;messages&#34;</span><span class=p>:</span> <span class=p>[{</span><span class=s2>&#34;role&#34;</span><span class=p>:</span> <span class=s2>&#34;user&#34;</span><span class=p>,</span> <span class=s2>&#34;content&#34;</span><span class=p>:</span> <span class=n>user_input</span><span class=p>}]}</span>
 </span></span><span class=line><span class=cl>        <span class=p>)</span>
@@ -463,7 +463,7 @@ Langchain</button></li></ul><div class=tab-content id=tabs-0-content><div class=
 </span></span><span class=line><span class=cl>
 </span></span><span class=line><span class=cl>        <span class=c1># Test Pre-processing</span>
 </span></span><span class=line><span class=cl>        <span class=nb>print</span><span class=p>(</span><span class=s2>&#34;-&#34;</span> <span class=o>*</span> <span class=mi>50</span><span class=p>)</span>
-</span></span><span class=line><span class=cl>        <span class=n>user_input</span> <span class=o>=</span> <span class=s2>&#34;Update booking for hotel 3 with checkin 2025-01-18 and checkout 2025-01-20&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=n>user_input</span> <span class=o>=</span> <span class=s2>&#34;Update my hotel with id 3 with checkin date 2025-01-18 and checkout date 2025-01-20&#34;</span>
 </span></span><span class=line><span class=cl>        <span class=n>response</span> <span class=o>=</span> <span class=k>await</span> <span class=n>agent</span><span class=o>.</span><span class=n>ainvoke</span><span class=p>(</span>
 </span></span><span class=line><span class=cl>            <span class=p>{</span><span class=s2>&#34;messages&#34;</span><span class=p>:</span> <span class=p>[{</span><span class=s2>&#34;role&#34;</span><span class=p>:</span> <span class=s2>&#34;user&#34;</span><span class=p>,</span> <span class=s2>&#34;content&#34;</span><span class=p>:</span> <span class=n>user_input</span><span class=p>}]}</span>
 </span></span><span class=line><span class=cl>        <span class=p>)</span>

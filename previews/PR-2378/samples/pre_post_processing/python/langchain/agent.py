@@ -96,7 +96,7 @@ async def main():
             middleware=[enforce_business_rules, enrich_response],
         )
 
-        user_input = "Book hotel with id 3 with checkin 2025-01-01 and checkout 2025-01-20"
+        user_input = "Book hotel with id 3 for 2 days."
         response = await agent.ainvoke(
             {"messages": [{"role": "user", "content": user_input}]}
         )
@@ -108,7 +108,7 @@ async def main():
 
         # Test Pre-processing
         print("-" * 50)
-        user_input = "Update booking for hotel 3 with checkin 2025-01-18 and checkout 2025-01-20"
+        user_input = "Update my hotel with id 3 with checkin date 2025-01-18 and checkout date 2025-01-20"
         response = await agent.ainvoke(
             {"messages": [{"role": "user", "content": user_input}]}
         )
