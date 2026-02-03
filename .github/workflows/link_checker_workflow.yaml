@@ -35,7 +35,7 @@ jobs:
         uses: lycheeverse/lychee-action@a8c4c7cb88f0c7386610c35eb25108e448569cb0 # v2
         with:
           args: >
-            --verbose
+            --quiet
             --no-progress
             --cache
             --max-cache-age 1d
@@ -45,7 +45,7 @@ jobs:
           output: /tmp/foo.txt
           fail: true
           jobSummary: true
-          debug: true
+          debug: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # This step only runs if the 'lychee_check' step fails, ensuring the 
