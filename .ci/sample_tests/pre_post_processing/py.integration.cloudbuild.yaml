@@ -14,19 +14,24 @@
 
 steps:
   - name: "${_IMAGE}"
-    id: "samples-test"
+    id: "py-pre-post-processing-test"
     entrypoint: "bash"
     args:
       - -c
       - |
         set -ex
-        chmod +x .ci/samples_test/run_samples_tests.sh
-        .ci/samples_test/run_samples_tests.sh ${_LANG}
+        chmod +x .ci/sample_tests/run_tests.sh
+        .ci/sample_tests/run_tests.sh
     env:
       - "CLOUD_SQL_INSTANCE=${_CLOUD_SQL_INSTANCE}"
       - "GCP_PROJECT=${_GCP_PROJECT}"
       - "DATABASE_NAME=${_DATABASE_NAME}"
       - "DB_USER=${_DB_USER}"
+      - "TARGET_ROOT=${_TARGET_ROOT}"
+      - "TARGET_LANG=${_TARGET_LANG}"
+      - "TABLE_NAME=${_TABLE_NAME}"
+      - "SQL_FILE=${_SQL_FILE}"
+      - "AGENT_FILE_PATTERN=${_AGENT_FILE_PATTERN}"
     secretEnv: ["TOOLS_YAML_CONTENT", "GOOGLE_API_KEY", "DB_PASSWORD"]
 
 availableSecrets:
@@ -37,16 +42,16 @@ availableSecrets:
       env: "GOOGLE_API_KEY"
     - versionName: projects/${_GCP_PROJECT}/secrets/${_DB_PASS_SECRET}/versions/latest
       env: "DB_PASSWORD"
-artifacts:
-  objects:
-    location: "gs://${_LOG_BUCKET}/samples-tests/$BUILD_ID"
-    paths: ["*.log"]
 
 timeout: 1200s
+
 substitutions:
-  _LANG: "python"
-  _IMAGE: "python:3.11"
-  _LOG_BUCKET: "toolbox-test-logs"
+  _TARGET_LANG: "python"
+  _IMAGE: "gcr.io/google.com/cloudsdktool/cloud-sdk:537.0.0"
+  _TARGET_ROOT: "docs/en/samples/pre_post_processing/python"
+  _TABLE_NAME: "hotels_py_pre_post_processing"
+  _SQL_FILE: ".ci/sample_tests/setup_hotels.sql"
+  _AGENT_FILE_PATTERN: "agent.py"
 
 options:
   logging: CLOUD_LOGGING_ONLY
