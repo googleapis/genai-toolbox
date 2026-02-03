@@ -16,6 +16,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"google.golang.org/api/googleapi"
 )
@@ -84,6 +85,8 @@ func NewClientServerError(msg string, code int, cause error) *ClientServerError 
 	return &ClientServerError{Msg: msg, Code: code, Cause: cause}
 }
 
+// ProecessGcpError catches auth related errors and return 401/403 error codes
+// Returns AgentError for all other errors
 func ProecessGcpError(err error) ToolboxError {
 	var gErr *googleapi.Error
 	if errors.As(err, &gErr) {
@@ -103,4 +106,35 @@ func ProecessGcpError(err error) ToolboxError {
 		}
 	}
 	return NewAgentError("error processing GCP request", err)
+}
+
+// ProcessGeneralError handles generic errors by inspecting the error string
+// for common status code patterns.
+func ProcessGeneralError(err error) ToolboxError {
+	if err == nil {
+		return nil
+	}
+
+	errStr := err.Error()
+
+	// Check for Unauthorized
+	if strings.Contains(errStr, "Error 401") || strings.Contains(errStr, "status 401") {
+		return NewClientServerError(
+			"failed to access resource",
+			http.StatusUnauthorized,
+			err,
+		)
+	}
+
+	// Check for Forbidden
+	if strings.Contains(errStr, "Error 403") || strings.Contains(errStr, "status 403") {
+		return NewClientServerError(
+			"failed to access resource",
+			http.StatusForbidden,
+			err,
+		)
+	}
+
+	// Default to AgentError for logical failures (task execution failed)
+	return NewAgentError("error processing request", err)
 }

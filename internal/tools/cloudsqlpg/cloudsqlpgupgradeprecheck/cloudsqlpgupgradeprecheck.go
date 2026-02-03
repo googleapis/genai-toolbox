@@ -17,12 +17,14 @@ package cloudsqlpgupgradeprecheck
 import (
 	"context"
 	"fmt"
+	"net/http" // Added for http.StatusInternalServerError
 	"time"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util" // Added for util.ToolboxError
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	sqladmin "google.golang.org/api/sqladmin/v1"
 )
@@ -132,31 +134,31 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 // Invoke executes the tool's logic.
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 
 	project, ok := paramsMap["project"].(string)
 	if !ok || project == "" {
-		return nil, fmt.Errorf("missing or empty 'project' parameter")
+		return nil, util.NewAgentError("missing or empty 'project' parameter", nil)
 	}
 	instanceName, ok := paramsMap["instance"].(string)
 	if !ok || instanceName == "" {
-		return nil, fmt.Errorf("missing or empty 'instance' parameter")
+		return nil, util.NewAgentError("missing or empty 'instance' parameter", nil)
 	}
 	targetVersion, ok := paramsMap["targetDatabaseVersion"].(string)
 	if !ok || targetVersion == "" {
 		// This should not happen due to the default value
-		return nil, fmt.Errorf("missing or empty 'targetDatabaseVersion' parameter")
+		return nil, util.NewAgentError("missing or empty 'targetDatabaseVersion' parameter", nil)
 	}
 
 	service, err := source.GetService(ctx, string(accessToken))
 	if err != nil {
-		return nil, fmt.Errorf("failed to get HTTP client from source: %w", err)
+		return nil, util.ProecessGcpError(err)
 	}
 
 	reqBody := &sqladmin.InstancesPreCheckMajorVersionUpgradeRequest{
@@ -168,7 +170,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	call := service.Instances.PreCheckMajorVersionUpgrade(project, instanceName, reqBody).Context(ctx)
 	op, err := call.Do()
 	if err != nil {
-		return nil, fmt.Errorf("failed to start pre-check operation: %w", err)
+		return nil, util.ProecessGcpError(err)
 	}
 
 	const pollTimeout = 20 * time.Second
@@ -177,7 +179,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	for time.Now().Before(cutoffTime) {
 		currentOp, err := service.Operations.Get(project, op.Name).Context(ctx).Do()
 		if err != nil {
-			return nil, fmt.Errorf("failed to get operation status: %w", err)
+			return nil, util.ProecessGcpError(err)
 		}
 
 		if currentOp.Status == "DONE" {
@@ -186,7 +188,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 				if currentOp.Error.Errors[0].Code != "" {
 					errMsg = fmt.Sprintf("%s (Code: %s)", errMsg, currentOp.Error.Errors[0].Code)
 				}
-				return nil, fmt.Errorf("%s", errMsg)
+				return nil, util.NewClientServerError(errMsg, http.StatusInternalServerError, fmt.Errorf("pre-check operation failed with error: %s", errMsg))
 			}
 
 			var preCheckItems []*sqladmin.PreCheckResponse
@@ -199,7 +201,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 		select {
 		case <-ctx.Done():
-			return nil, ctx.Err()
+			return nil, util.NewClientServerError("timed out waiting for operation", http.StatusRequestTimeout, ctx.Err())
 		case <-time.After(5 * time.Second):
 		}
 	}
