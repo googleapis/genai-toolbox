@@ -1,9 +1,9 @@
 ---
-title: "adk"
+title: "Adk"
 type: docs
 weight: 8
 description: >
-  Toolbox-adk SDK for connecting to the MCP Toolbox server and invoking tools programmatically.
+  MCP Toolbox ADK SDK for integrating functionalities of MCP Toolbox into your apps.
 ---
 
 ## Overview
