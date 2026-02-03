@@ -43,10 +43,6 @@ availableSecrets:
     - versionName: projects/${_GCP_PROJECT}/secrets/${_DB_PASS_SECRET}/versions/latest
       env: "DB_PASSWORD"
 
-artifacts:
-  objects:
-    location: "gs://${_LOG_BUCKET}/universal-tests/$BUILD_ID"
-    paths: ["*.log"]
 
 timeout: 1200s
 
@@ -60,5 +56,4 @@ substitutions:
   _LOG_BUCKET: "toolbox-test-logs"
 
 options:
-  machineType: "E2_HIGHCPU_8"
   logging: CLOUD_LOGGING_ONLY
