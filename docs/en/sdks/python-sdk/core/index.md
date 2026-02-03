@@ -3,7 +3,7 @@ title: "core"
 type: docs
 weight: 8
 description: >
-  Toolbox-core SDK for connecting to the MCP Toolbox server and invoking tools programmatically.
+  MCP Toolbox Core SDK for integrating functionalities of MCP Toolbox into your Agentic apps.
 ---
 
 ## Overview
@@ -18,7 +18,7 @@ pip install toolbox-core
 
 {{< notice note >}}
 * The primary `ToolboxClient` is asynchronous and requires using `await` for loading and invoking tools, as shown in most examples.
-*  Asynchronous code needs to run within an event loop (e.g., using   `asyncio.run()` or in an async framework). See the [Python `asyncio` documentation](https://docs.python.org/3/library/asyncio-task.html) for more details.
+*  Asynchronous code needs to run within an event loop (e.g., using `asyncio.run()` or in an async framework). See the [Python `asyncio` documentation](https://docs.python.org/3/library/asyncio-task.html) for more details.
 * If you prefer synchronous execution, refer to the [Synchronous Usage](#synchronous-usage) section below.
 {{< /notice >}}
 
@@ -29,7 +29,7 @@ The `ToolboxClient` (and its synchronous counterpart `ToolboxSyncClient`) intera
 ## Quickstart
 
 1. **Start the Toolbox Service**
-   - Make sure the MCP Toolbox service is running. See the [Toolbox Getting Started Guide](/getting-started/introduction/#getting-started).
+   - Make sure the MCP Toolbox service is running on port `5000` of your local machine. See the [Toolbox Getting Started Guide](/getting-started/introduction/#getting-started).
 
 2. **Minimal Example**
 
@@ -424,7 +424,7 @@ async with ToolboxClient("http://127.0.0.1:5000") as toolbox:
 ```
 
 {{< notice >}}
-An auth token getter for a specific name (e.g., “GOOGLE_ID”) will replace any client header with the same name followed by “_token” (e.g., “GOOGLE_ID_token”).
+An auth token getter for a specific name (e.g., `“GOOGLE_ID”`) will replace any client header with the same name followed by `“_token”` (e.g., `“GOOGLE_ID_token”`).
 {{</notice>}}
 
 
@@ -441,7 +441,7 @@ fixed and will not be requested or modified by the LLM during tool use.
 - **Pre-filling known data:**  Providing defaults or context.
 
 {{< notice info >}}
-The parameter names used for binding (e.g., "api_key") must exactly match the parameter names defined in the tool’s configuration within the Toolbox service.
+The parameter names used for binding (e.g., `"api_key"`) must exactly match the parameter names defined in the tool’s configuration within the Toolbox service.
 {{</notice>}}
 
 {{< notice >}}
@@ -495,5 +495,6 @@ async def get_dynamic_value():
     # Logic to determine the value
     return "dynamic_value"
 
+# Assuming `tool` is a loaded tool instance from a ToolboxClient
 dynamic_bound_tool = tool.bind_param("param", get_dynamic_value)
 ```
