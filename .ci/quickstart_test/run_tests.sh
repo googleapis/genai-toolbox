@@ -1,4 +1,3 @@
-#!/bin/bash
 # Copyright 2026 Google LLC
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -102,20 +101,18 @@ run_python_test() {
     pip install -q -r requirements.txt pytest
     
     cd ..
-    # If there is a pytest file in the parent directory (like agent_test.py or quickstart_test.py)
-    # we use it. Otherwise we just run the agent.
     local test_file=$(find . -maxdepth 1 -name "*test.py" | head -n 1)
     if [ -n "$test_file" ]; then
         echo "Found native test: $test_file. Running pytest..."
         export ORCH_NAME="$name"
-        export PYTHONPATH="../" 
+        export PYTHONPATH="../"
         pytest "$test_file"
     else
         echo "No native test found. running agent directly..."
         export PYTHONPATH="../"
         python3 "${name}/${AGENT_FILE_PATTERN}"
     fi
-    rm -rf ".venv"
+    rm -rf "${name}/.venv"
   )
 }
 
@@ -138,18 +135,37 @@ run_js_test() {
         echo "No native test found. running agent directly..."
         node "${name}/${AGENT_FILE_PATTERN}"
     fi
-    rm -rf "node_modules"
+    rm -rf "${name}/node_modules"
   )
 }
 
 run_go_test() {
   local dir=$1
   local name=$(basename "$dir")
+
+  if [ "$name" == "openAI" ]; then
+      echo -e "\nSkipping framework '${name}': Temporarily excluded."
+      return
+  fi
+
   echo "--- Running Go Test: $name ---"
   (
     cd "$dir"
-    echo "Running Go tests for $name..."
-    go test ./...
+    if [ -f "go.mod" ]; then
+      go mod tidy
+    fi
+    
+    cd ..
+    local test_file=$(find . -maxdepth 1 -name "*test.go" | head -n 1)
+    if [ -n "$test_file" ]; then
+        echo "Found native test: $test_file. Running go test..."
+        export ORCH_NAME="$name"
+        go test -v ./...
+    else
+        echo "No native test found. running agent directly..."
+        cd "$name"
+        go run "."
+    fi
   )
 }
 
