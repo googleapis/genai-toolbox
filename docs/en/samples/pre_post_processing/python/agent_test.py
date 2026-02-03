@@ -54,5 +54,6 @@ class TestExecution:
     def test_keywords_in_output(self, script_output, golden_keywords):
         """Test that expected keywords are present in the script's output."""
         output = script_output.out
+        print(f"\nAgent Output:\n{output}\n")
         missing_keywords = [kw for kw in golden_keywords if kw not in output]
         assert not missing_keywords, f"Missing keywords in output: {missing_keywords}"
