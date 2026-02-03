@@ -115,7 +115,7 @@ run_python_test() {
         export PYTHONPATH="../"
         python3 "${name}/${AGENT_FILE_PATTERN}"
     fi
-    rm -rf "${name}/.venv"
+    rm -rf ".venv"
   )
 }
 
