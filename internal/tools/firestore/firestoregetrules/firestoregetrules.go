@@ -17,13 +17,13 @@ package firestoregetrules
 import (
 	"context"
 	"fmt"
-	"net/http" // Added for http.StatusInternalServerError
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/util" // Added for util.ToolboxError
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/firebaserules/v1"
 )
