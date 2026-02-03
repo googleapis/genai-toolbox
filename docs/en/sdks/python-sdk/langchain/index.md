@@ -3,7 +3,7 @@ title: "langchain"
 type: docs
 weight: 8
 description: >
-  Toolbox-langchain SDK for connecting to the MCP Toolbox server and invoking tools programmatically.
+  MCP Toolbox LangChain SDK for integrating functionalities of MCP Toolbox into your LangChain/LangGraph apps.
 ---
 
 ## Overview
