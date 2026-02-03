@@ -16,6 +16,7 @@ name: Link Checker
 on:
   pull_request:
 
+
 jobs:
   link-check:
     runs-on: ubuntu-latest
@@ -33,9 +34,8 @@ jobs:
       - name: Link Checker
         uses: lycheeverse/lychee-action@a8c4c7cb88f0c7386610c35eb25108e448569cb0 # v2
         with:
-          # Changed --verbose to --quiet to hide successful checks
           args: >
-            --quiet
+            --verbose
             --no-progress
             --cache
             --max-cache-age 1d
@@ -45,11 +45,11 @@ jobs:
           output: /tmp/foo.txt
           fail: true
           jobSummary: true
-          debug: false # Set to false to reduce log noise
+          debug: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # This step only runs if the 'lychee_check' step fails
+      # This step only runs if the 'lychee_check' step fails, ensuring the 
+      # context note only appears when the developer needs to troubleshoot.
       - name: Display Link Context Note on Failure
         if: ${{ failure() }}
         run: |
@@ -58,3 +58,4 @@ jobs:
           echo "You must ensure fixes pass the **GitHub check** and also work with **\`hugo server\`**." >> $GITHUB_STEP_SUMMARY
           echo "See [Link Checking and Fixing with Lychee](https://github.com/googleapis/genai-toolbox/blob/main/DEVELOPER.md#link-checking-and-fixing-with-lychee) for more details." >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
+
