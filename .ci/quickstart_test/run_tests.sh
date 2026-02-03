@@ -138,7 +138,7 @@ run_js_test() {
         echo "No native test found. running agent directly..."
         node "${name}/${AGENT_FILE_PATTERN}"
     fi
-    rm -rf "${name}/node_modules"
+    rm -rf "node_modules"
   )
 }
 
