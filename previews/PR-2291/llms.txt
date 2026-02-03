@@ -157,7 +157,7 @@ Client SDKs to connect to the MCP Toolbox server.
 - [Go SDK](https://googleapis.github.io/genai-toolbox/previews/PR-2291/sdks/go-sdk/): Go SDKs to connect to the MCP Toolbox server.
 - [JS SDK](https://googleapis.github.io/genai-toolbox/previews/PR-2291/sdks/js-sdk/): JS SDKs to connect to the MCP Toolbox server.
 - [Python SDK](https://googleapis.github.io/genai-toolbox/previews/PR-2291/sdks/python-sdk/): Python SDKs to connect to the MCP Toolbox server.
-  - [llamaindex](https://googleapis.github.io/genai-toolbox/previews/PR-2291/sdks/python-sdk/llamaindex/): Toolbox-llamaindex SDK for connecting to the MCP Toolbox server and invoking tools programmatically.
+  - [LlamaIndex](https://googleapis.github.io/genai-toolbox/previews/PR-2291/sdks/python-sdk/llamaindex/): MCP Toolbox LlamaIndex SDK for integrating functionalities of MCP Toolbox into your LlamaIndex apps.
 
 ### Reference
 
