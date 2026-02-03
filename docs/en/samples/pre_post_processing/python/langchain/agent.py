@@ -106,6 +106,14 @@ async def main():
         last_ai_msg = response["messages"][-1].content
         print(f"AI: {last_ai_msg}")
 
+        # Test Pre-processing
+        print("-" * 50)
+        user_input = "Update booking for hotel 3 with checkin 2025-01-01 and checkout 2025-01-20"
+        response = await agent.ainvoke(
+            {"messages": [{"role": "user", "content": user_input}]}
+        )
+        print(f"AI: {response['messages'][-1].content}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
