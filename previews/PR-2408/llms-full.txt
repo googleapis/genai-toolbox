@@ -13134,8 +13134,8 @@ Source code for [js-sdk](https://github.com/googleapis/mcp-toolbox-sdk-js)
 {{< /notice >}}
 
 
-# core
-Toolbox-core SDK for connecting to the MCP Toolbox server and invoking tools programmatically.
+# Core
+MCP Toolbox Core SDK for integrating functionalities of MCP Toolbox into your Agentic apps.
 
 
 ## Overview
@@ -13645,6 +13645,7 @@ await ai.generate({
 ```
 
 </details>
+
 
 # Python SDK
 Python SDKs to connect to the MCP Toolbox server.
