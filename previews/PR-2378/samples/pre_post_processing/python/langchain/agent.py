@@ -96,7 +96,7 @@ async def main():
             middleware=[enforce_business_rules, enrich_response],
         )
 
-        user_input = "Book hotel with id 3 for 2 days."
+        user_input = "Book hotel with id 3."
         response = await agent.ainvoke(
             {"messages": [{"role": "user", "content": user_input}]}
         )
