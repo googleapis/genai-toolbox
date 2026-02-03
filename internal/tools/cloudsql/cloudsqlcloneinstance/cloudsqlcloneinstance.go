@@ -17,11 +17,13 @@ package cloudsqlcloneinstance
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	sqladmin "google.golang.org/api/sqladmin/v1"
 )
@@ -124,31 +126,35 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 // Invoke executes the tool's logic.
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 	paramsMap := params.AsMap()
 
 	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("error casting 'project' parameter: %v", paramsMap["project"])
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'project' parameter: %v", paramsMap["project"]), nil)
 	}
 	sourceInstanceName, ok := paramsMap["sourceInstanceName"].(string)
 	if !ok {
-		return nil, fmt.Errorf("error casting 'sourceInstanceName' parameter: %v", paramsMap["sourceInstanceName"])
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'sourceInstanceName' parameter: %v", paramsMap["sourceInstanceName"]), nil)
 	}
 	destinationInstanceName, ok := paramsMap["destinationInstanceName"].(string)
 	if !ok {
-		return nil, fmt.Errorf("error casting 'destinationInstanceName' parameter: %v", paramsMap["destinationInstanceName"])
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'destinationInstanceName' parameter: %v", paramsMap["destinationInstanceName"]), nil)
 	}
 
 	pointInTime, _ := paramsMap["pointInTime"].(string)
 	preferredZone, _ := paramsMap["preferredZone"].(string)
 	preferredSecondaryZone, _ := paramsMap["preferredSecondaryZone"].(string)
 
-	return source.CloneInstance(ctx, project, sourceInstanceName, destinationInstanceName, pointInTime, preferredZone, preferredSecondaryZone, string(accessToken))
+	resp, err := source.CloneInstance(ctx, project, sourceInstanceName, destinationInstanceName, pointInTime, preferredZone, preferredSecondaryZone, string(accessToken))
+	if err != nil {
+		return nil, util.ProecessGcpError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {

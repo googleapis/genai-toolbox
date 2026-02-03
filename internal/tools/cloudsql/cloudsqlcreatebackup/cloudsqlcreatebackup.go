@@ -17,11 +17,13 @@ package cloudsqlcreatebackup
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 	"google.golang.org/api/sqladmin/v1"
 )
@@ -120,26 +122,30 @@ func (t Tool) ToConfig() tools.ToolConfig {
 	return t.Config
 }
 
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 	paramsMap := params.AsMap()
 
 	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("error casting 'project' parameter: %v", paramsMap["project"])
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'project' parameter: %v", paramsMap["project"]), nil)
 	}
 	instance, ok := paramsMap["instance"].(string)
 	if !ok {
-		return nil, fmt.Errorf("error casting 'instance' parameter: %v", paramsMap["instance"])
+		return nil, util.NewAgentError(fmt.Sprintf("error casting 'instance' parameter: %v", paramsMap["instance"]), nil)
 	}
 
 	location, _ := paramsMap["location"].(string)
 	description, _ := paramsMap["backup_description"].(string)
 
-	return source.InsertBackupRun(ctx, project, instance, location, description, string(accessToken))
+	resp, err := source.InsertBackupRun(ctx, project, instance, location, description, string(accessToken))
+	if err != nil {
+		return nil, util.ProecessGcpError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {

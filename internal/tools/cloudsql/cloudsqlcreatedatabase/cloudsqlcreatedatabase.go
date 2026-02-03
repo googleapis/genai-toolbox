@@ -17,11 +17,13 @@ package cloudsqlcreatedatabase
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
@@ -117,27 +119,31 @@ func (t Tool) ToConfig() tools.ToolConfig {
 }
 
 // Invoke executes the tool's logic.
-func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
+func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, util.ToolboxError) {
 	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError("source used is not compatible with the tool", http.StatusInternalServerError, err)
 	}
 
 	paramsMap := params.AsMap()
 
 	project, ok := paramsMap["project"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'project' parameter")
+		return nil, util.NewAgentError("missing 'project' parameter", nil)
 	}
 	instance, ok := paramsMap["instance"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'instance' parameter")
+		return nil, util.NewAgentError("missing 'instance' parameter", nil)
 	}
 	name, ok := paramsMap["name"].(string)
 	if !ok {
-		return nil, fmt.Errorf("missing 'name' parameter")
+		return nil, util.NewAgentError("missing 'name' parameter", nil)
 	}
-	return source.CreateDatabase(ctx, name, project, instance, string(accessToken))
+	resp, err := source.CreateDatabase(ctx, name, project, instance, string(accessToken))
+	if err != nil {
+		return nil, util.ProecessGcpError(err)
+	}
+	return resp, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
