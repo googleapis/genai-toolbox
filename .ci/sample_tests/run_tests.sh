@@ -151,21 +151,8 @@ run_go_test() {
   echo "--- Running Go Test: $name ---"
   (
     cd "$dir"
-    if [ -f "go.mod" ]; then
-      go mod tidy
-    fi
-    
-    cd ..
-    local test_file=$(find . -maxdepth 1 -name "*test.go" | head -n 1)
-    if [ -n "$test_file" ]; then
-        echo "Found native test: $test_file. Running go test..."
-        export ORCH_NAME="$name"
-        go test -v ./...
-    else
-        echo "No native test found. running agent directly..."
-        cd "$name"
-        go run "."
-    fi
+    echo "Running Go tests for $name..."
+    go test ./...
   )
 }
 
