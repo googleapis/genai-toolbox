@@ -1,9 +1,9 @@
 ---
-title: "core"
+title: "Core"
 type: docs
 weight: 8
 description: >
-  Toolbox-core SDK for connecting to the MCP Toolbox server and invoking tools programmatically.
+   MCP Toolbox Core SDK for integrating functionalities of MCP Toolbox into your Agentic apps.
 ---
 
 ## Overview
