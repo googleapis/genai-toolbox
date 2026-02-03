@@ -1,5 +1,4 @@
 Final Client Response:
 AI:
-Booking Confirmed
 Loyalty Points
 POLICY CHECK: Intercepting 'update-hotel'
