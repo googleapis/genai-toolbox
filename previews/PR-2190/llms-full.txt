@@ -13146,7 +13146,7 @@ Source code for [python-sdk](https://github.com/googleapis/mcp-toolbox-sdk-pytho
 
 
 # langchain
-Toolbox-langchain SDK for connecting to the MCP Toolbox server and invoking tools programmatically.
+MCP Toolbox LangChain SDK for integrating functionalities of MCP Toolbox into your LangChain/LangGraph apps.
 
 
 ## Overview
