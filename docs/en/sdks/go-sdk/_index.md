@@ -25,7 +25,7 @@ Logo](https://raw.githubusercontent.com/googleapis/genai-toolbox/main/logo.png)
 
 This repository contains the Go SDK designed to seamlessly integrate the
 functionalities of the [MCP
-Toolbox](https://github.com/googleapis/genai-toolbox) into your Gen AI
+Toolbox](https://github.com/googleapis/genai-toolbox) into your Agentic
 applications. The SDK allow you to load tools defined in Toolbox and use them
 as standard Go tools within popular orchestration frameworks
 or your custom code.
@@ -105,7 +105,7 @@ To get started using Toolbox tools with an application, follow these general ste
 
 3. **Use the SDK:**
 
-    Consult the README for your chosen package (linked in the "[Available
+    Consult the `README` for your chosen package (linked in the "[Available
     Packages](#available-packages)" section above) for detailed instructions on
     how to connect the client, load tool definitions, invoke tools, configure
     authentication/binding, and integrate them into your application or
