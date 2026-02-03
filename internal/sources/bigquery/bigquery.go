@@ -236,9 +236,9 @@ func setupClientCaching(s *Source, baseCreator BigqueryClientCreator) {
 	}
 
 	// Initialize caches
-	s.bqClientCache = NewCache(onBqEvict)
-	s.bqRestCache = NewCache(nil)
-	s.dataplexCache = NewCache(onDataplexEvict)
+	s.bqClientCache = sources.NewCache(onBqEvict)
+	s.bqRestCache = sources.NewCache(nil)
+	s.dataplexCache = sources.NewCache(onDataplexEvict)
 
 	// Create the caching wrapper for the client creator
 	s.ClientCreator = func(tokenString string, wantRestService bool) (*bigqueryapi.Client, *bigqueryrestapi.Service, error) {
@@ -289,9 +289,9 @@ type Source struct {
 	Session                   *Session
 
 	// Caches for OAuth clients
-	bqClientCache *Cache
-	bqRestCache   *Cache
-	dataplexCache *Cache
+	bqClientCache *sources.Cache
+	bqRestCache   *sources.Cache
+	dataplexCache *sources.Cache
 }
 
 type Session struct {
