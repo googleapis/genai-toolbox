@@ -33,7 +33,7 @@ steps:
       - 'TARGET_ROOT=docs/en/getting-started/quickstart/js'
       - 'TARGET_LANG=js'
       - 'TABLE_NAME=hotels_js'
-      - 'SQL_FILE=.ci/sample_tests/setup_hotels_sample.sql'
+      - 'SQL_FILE=.ci/sample_tests/setup_hotels.sql'
       - 'AGENT_FILE_PATTERN=quickstart.js'
     secretEnv: ['TOOLS_YAML_CONTENT', 'GOOGLE_API_KEY', 'DB_PASSWORD']
 
