@@ -412,7 +412,7 @@ func TestDefaultSecuritySettings(t *testing.T) {
 
 	// Create a minimal YAML config
 	yamlData := `name: test
-kind: cockroachdb
+type: cockroachdb
 host: localhost
 port: "26257"
 user: root

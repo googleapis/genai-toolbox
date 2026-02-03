@@ -16,7 +16,7 @@ The `cockroachdb-sql` tool allows you to execute parameterized SQL queries again
 ```yaml
 sources:
   my_cockroachdb:
-    kind: cockroachdb
+    type: cockroachdb
     host: your-cluster.cockroachlabs.cloud
     port: "26257"
     user: myuser
@@ -27,7 +27,7 @@ sources:
 
 tools:
   get_user_orders:
-    kind: cockroachdb-sql
+    type: cockroachdb-sql
     source: my_cockroachdb
     description: Get all orders for a specific user
     statement: |
@@ -76,7 +76,7 @@ Parameters allow you to safely pass values into your SQL queries using prepared 
 ```yaml
 tools:
   filter_expenses:
-    kind: cockroachdb-sql
+    type: cockroachdb-sql
     source: my_cockroachdb
     description: Filter expenses by category and date range
     statement: |
@@ -111,7 +111,7 @@ Template parameters enable dynamic query construction by replacing placeholders 
 ```yaml
 tools:
   get_column_data:
-    kind: cockroachdb-sql
+    type: cockroachdb-sql
     source: my_cockroachdb
     description: Get data from a specific column
     statement: |
@@ -166,7 +166,7 @@ CockroachDB supports standard SQL JOINs. Keep joins efficient by:
 ```yaml
 tools:
   get_user_with_orders:
-    kind: cockroachdb-sql
+    type: cockroachdb-sql
     source: my_cockroachdb
     description: Get user details with their recent orders
     statement: |
@@ -207,7 +207,7 @@ The tool automatically handles:
 ```yaml
 tools:
   expense_summary:
-    kind: cockroachdb-sql
+    type: cockroachdb-sql
     source: my_cockroachdb
     description: Get expense summary by category for a user
     statement: |
@@ -235,7 +235,7 @@ tools:
 ```yaml
 tools:
   running_total:
-    kind: cockroachdb-sql
+    type: cockroachdb-sql
     source: my_cockroachdb
     description: Get running total of expenses
     statement: |
@@ -257,7 +257,7 @@ tools:
 ```yaml
 tools:
   top_spenders:
-    kind: cockroachdb-sql
+    type: cockroachdb-sql
     source: my_cockroachdb
     description: Find top spending users
     statement: |

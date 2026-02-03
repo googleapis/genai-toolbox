@@ -50,7 +50,7 @@ CockroachDB Cloud clusters require SSL/TLS connections. Use the `queryParams` se
 ```yaml
 sources:
   my_cockroachdb:
-    kind: cockroachdb
+    type: cockroachdb
     host: your-cluster.cockroachlabs.cloud
     port: "26257"
     user: myuser
@@ -73,7 +73,7 @@ sources:
 
 tools:
   list_expenses:
-    kind: cockroachdb-sql
+    type: cockroachdb-sql
     source: my_cockroachdb
     description: List all expenses
     statement: SELECT id, description, amount, category FROM expenses WHERE user_id = $1
@@ -83,12 +83,12 @@ tools:
         description: The user's ID
   
   describe_expenses:
-    kind: cockroachdb-describe-table
+    type: cockroachdb-describe-table
     source: my_cockroachdb
     description: Describe the expenses table schema
   
   list_expenses_indexes:
-    kind: cockroachdb-list-indexes
+    type: cockroachdb-list-indexes
     source: my_cockroachdb
     description: List indexes on the expenses table
 ```

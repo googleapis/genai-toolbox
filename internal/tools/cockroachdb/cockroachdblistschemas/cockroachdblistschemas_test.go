@@ -17,7 +17,6 @@ package cockroachdblistschemas_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -37,16 +36,16 @@ func TestParseFromYamlCockroachDBListSchemas(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				list_schemas_tool:
-					kind: cockroachdb-list-schemas
-					source: my-crdb-instance
-					description: List schemas in CockroachDB
+            kind: tools
+            name: list_schemas_tool
+            type: cockroachdb-list-schemas
+            source: my-crdb-instance
+            description: List schemas in CockroachDB
 			`,
 			want: server.ToolConfigs{
 				"list_schemas_tool": cockroachdblistschemas.Config{
 					Name:         "list_schemas_tool",
-					Kind:         "cockroachdb-list-schemas",
+					Type:         "cockroachdb-list-schemas",
 					Source:       "my-crdb-instance",
 					Description:  "List schemas in CockroachDB",
 					AuthRequired: []string{},
@@ -56,15 +55,12 @@ func TestParseFromYamlCockroachDBListSchemas(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -74,7 +70,7 @@ func TestParseFromYamlCockroachDBListSchemas(t *testing.T) {
 func TestCockroachDBListSchemasToolConfigKind(t *testing.T) {
 	cfg := cockroachdblistschemas.Config{
 		Name:        "test-tool",
-		Kind:        "cockroachdb-list-schemas",
+		Type:        "cockroachdb-list-schemas",
 		Source:      "test-source",
 		Description: "test description",
 	}

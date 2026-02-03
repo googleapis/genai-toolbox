@@ -17,7 +17,6 @@ package cockroachdbsql_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -38,22 +37,22 @@ func TestParseFromYamlCockroachDB(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: cockroachdb-sql
-					source: my-crdb-instance
-					description: some description
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					parameters:
-						- name: user_id
-						  type: string
-						  description: user id parameter
+            kind: tools
+            name: example_tool
+            type: cockroachdb-sql
+            source: my-crdb-instance
+            description: some description
+            statement: |
+                SELECT * FROM SQL_STATEMENT;
+            parameters:
+                - name: user_id
+                  type: string
+                  description: user id parameter
 			`,
 			want: server.ToolConfigs{
 				"example_tool": cockroachdbsql.Config{
 					Name:         "example_tool",
-					Kind:         "cockroachdb-sql",
+					Type:         "cockroachdb-sql",
 					Source:       "my-crdb-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -67,15 +66,12 @@ func TestParseFromYamlCockroachDB(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -85,7 +81,7 @@ func TestParseFromYamlCockroachDB(t *testing.T) {
 func TestCockroachDBSQLToolConfigKind(t *testing.T) {
 	cfg := cockroachdbsql.Config{
 		Name:        "test-tool",
-		Kind:        "cockroachdb-sql",
+		Type:        "cockroachdb-sql",
 		Source:      "test-source",
 		Description: "test description",
 		Statement:   "SELECT 1",

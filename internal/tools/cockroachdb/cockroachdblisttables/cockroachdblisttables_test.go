@@ -17,7 +17,6 @@ package cockroachdblisttables_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -37,16 +36,16 @@ func TestParseFromYamlCockroachDBListTables(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				list_tables_tool:
-					kind: cockroachdb-list-tables
-					source: my-crdb-instance
-					description: List tables in CockroachDB
+            kind: tools
+            name: list_tables_tool
+            type: cockroachdb-list-tables
+            source: my-crdb-instance
+            description: List tables in CockroachDB
 			`,
 			want: server.ToolConfigs{
 				"list_tables_tool": cockroachdblisttables.Config{
 					Name:         "list_tables_tool",
-					Kind:         "cockroachdb-list-tables",
+					Type:         "cockroachdb-list-tables",
 					Source:       "my-crdb-instance",
 					Description:  "List tables in CockroachDB",
 					AuthRequired: []string{},
@@ -56,15 +55,12 @@ func TestParseFromYamlCockroachDBListTables(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
 			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -74,7 +70,7 @@ func TestParseFromYamlCockroachDBListTables(t *testing.T) {
 func TestCockroachDBListTablesToolConfigKind(t *testing.T) {
 	cfg := cockroachdblisttables.Config{
 		Name:        "test-tool",
-		Kind:        "cockroachdb-list-tables",
+		Type:        "cockroachdb-list-tables",
 		Source:      "test-source",
 		Description: "test description",
 	}

@@ -22,7 +22,7 @@ This tool is useful for:
 ```yaml
 sources:
   my_cockroachdb:
-    kind: cockroachdb
+    type: cockroachdb
     host: your-cluster.cockroachlabs.cloud
     port: "26257"
     user: myuser
@@ -33,7 +33,7 @@ sources:
 
 tools:
   list_schemas:
-    kind: cockroachdb-list-schemas
+    type: cockroachdb-list-schemas
     source: my_cockroachdb
     description: List all schemas in the database
 ```
@@ -154,7 +154,7 @@ The `cockroachdb-list-schemas` tool helps discover all tenant schemas:
 ```yaml
 tools:
   list_tenants:
-    kind: cockroachdb-list-schemas
+    type: cockroachdb-list-schemas
     source: my_cockroachdb
     description: |
       List all tenant schemas in the database.
@@ -205,12 +205,12 @@ REVOKE ALL ON SCHEMA hr FROM public;
 ```yaml
 tools:
   list_schemas:
-    kind: cockroachdb-list-schemas
+    type: cockroachdb-list-schemas
     source: my_cockroachdb
     description: List all schemas first
     
   list_tables:
-    kind: cockroachdb-list-tables
+    type: cockroachdb-list-tables
     source: my_cockroachdb
     description: |
       List tables in the database.
@@ -230,7 +230,7 @@ tools:
 ```yaml
 tools:
   discover_schemas:
-    kind: cockroachdb-list-schemas
+    type: cockroachdb-list-schemas
     source: my_cockroachdb
     description: |
       Discover how the database is organized into schemas.
@@ -242,7 +242,7 @@ tools:
 ```yaml
 tools:
   list_tenant_schemas:
-    kind: cockroachdb-list-schemas
+    type: cockroachdb-list-schemas
     source: my_cockroachdb
     description: |
       List all tenant schemas (each tenant has their own schema).
@@ -254,7 +254,7 @@ tools:
 ```yaml
 tools:
   audit_schemas:
-    kind: cockroachdb-list-schemas
+    type: cockroachdb-list-schemas
     source: my_cockroachdb
     description: |
       Audit existing schemas before migration.

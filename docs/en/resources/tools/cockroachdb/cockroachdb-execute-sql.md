@@ -20,7 +20,7 @@ The tool takes a single `sql` parameter containing the SQL statement to execute 
 ```yaml
 sources:
   my_cockroachdb:
-    kind: cockroachdb
+    type: cockroachdb
     host: your-cluster.cockroachlabs.cloud
     port: "26257"
     user: myuser
@@ -31,7 +31,7 @@ sources:
 
 tools:
   execute_sql:
-    kind: cockroachdb-execute-sql
+    type: cockroachdb-execute-sql
     source: my_cockroachdb
     description: Execute any SQL statement against the CockroachDB database
 ```
@@ -208,7 +208,7 @@ Configure the `authRequired` field to restrict access:
 ```yaml
 tools:
   execute_sql:
-    kind: cockroachdb-execute-sql
+    type: cockroachdb-execute-sql
     source: my_cockroachdb
     description: Execute SQL statements
     authRequired:

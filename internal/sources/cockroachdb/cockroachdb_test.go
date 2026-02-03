@@ -31,7 +31,7 @@ func TestCockroachDBSourceConfig(t *testing.T) {
 			name: "valid config",
 			yaml: `
 name: test-cockroachdb
-kind: cockroachdb
+type: cockroachdb
 host: localhost
 port: "26257"
 user: root
@@ -47,7 +47,7 @@ queryParams:
 			name: "with optional queryParams",
 			yaml: `
 name: test-cockroachdb
-kind: cockroachdb
+type: cockroachdb
 host: localhost
 port: "26257"
 user: root
@@ -62,7 +62,7 @@ queryParams:
 			name: "with custom retry settings",
 			yaml: `
 name: test-cockroachdb
-kind: cockroachdb
+type: cockroachdb
 host: localhost
 port: "26257"
 user: root
@@ -76,7 +76,7 @@ retryBaseDelay: 1s
 			name: "without password (insecure mode)",
 			yaml: `
 name: test-cockroachdb
-kind: cockroachdb
+type: cockroachdb
 host: localhost
 port: "26257"
 user: root
@@ -117,7 +117,7 @@ database: defaultdb
 func TestCockroachDBSourceKind(t *testing.T) {
 	yamlContent := `
 name: test-cockroachdb
-kind: cockroachdb
+type: cockroachdb
 host: localhost
 port: "26257"
 user: root
@@ -130,15 +130,15 @@ database: defaultdb
 		t.Fatalf("failed to create config: %v", err)
 	}
 
-	if cfg.SourceConfigKind() != "cockroachdb" {
-		t.Errorf("expected SourceConfigKind 'cockroachdb', got %q", cfg.SourceConfigKind())
+	if cfg.SourceConfigType() != "cockroachdb" {
+		t.Errorf("expected SourceConfigType 'cockroachdb', got %q", cfg.SourceConfigType())
 	}
 }
 
 func TestCockroachDBDefaultValues(t *testing.T) {
 	yamlContent := `
 name: test-cockroachdb
-kind: cockroachdb
+type: cockroachdb
 host: localhost
 port: "26257"
 user: root

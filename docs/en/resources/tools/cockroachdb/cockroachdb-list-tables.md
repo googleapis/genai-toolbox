@@ -22,7 +22,7 @@ This tool is useful for:
 ```yaml
 sources:
   my_cockroachdb:
-    kind: cockroachdb
+    type: cockroachdb
     host: your-cluster.cockroachlabs.cloud
     port: "26257"
     user: myuser
@@ -33,7 +33,7 @@ sources:
 
 tools:
   list_all_tables:
-    kind: cockroachdb-list-tables
+    type: cockroachdb-list-tables
     source: my_cockroachdb
     description: List all user tables in the database with their structure
 ```
@@ -230,7 +230,7 @@ The tool is ideal for helping AI assistants understand your database structure:
 ```yaml
 tools:
   discover_schema:
-    kind: cockroachdb-list-tables
+    type: cockroachdb-list-tables
     source: my_cockroachdb
     description: |
       Use this tool first to understand the database schema before generating queries.
@@ -282,7 +282,7 @@ The tool handles common errors:
 ```yaml
 tools:
   list_tables:
-    kind: cockroachdb-list-tables
+    type: cockroachdb-list-tables
     source: my_cockroachdb
     description: |
       Lists all tables in the database with detailed schema information.
