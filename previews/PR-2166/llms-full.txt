@@ -13222,7 +13222,7 @@ async with ToolboxClient("http://127.0.0.1:5000") as toolbox:
 
 All interactions for loading and invoking tools happen through this client.
 
-{{< notice note>}}
+{{< notice tip>}}
 For advanced use cases, you can provide an external `aiohttp.ClientSession` during initialization (e.g., `ToolboxClient(url, session=my_session)`). If you provide your own session, you are responsible for managing its lifecycle; `ToolboxClient` *will not* close it.
 {{< /notice >}}
 
@@ -13619,9 +13619,6 @@ bound_tool = await toolbox.load_tool("my-tool", bound_params={"param": "value"})
 
 bound_tools = await toolbox.load_toolset(bound_params={"param": "value"})
 ```
-{{< notice >}}
-Bound values during loading only affect the tools loaded in that call.
-{{</notice>}}
 
 ### Binding Dynamic Values
 
