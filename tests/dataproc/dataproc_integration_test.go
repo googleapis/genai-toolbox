@@ -31,9 +31,8 @@ import (
 	dataproc "cloud.google.com/go/dataproc/v2/apiv1"
 	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/google/go-cmp/cmp"
+	dataprocsrc "github.com/googleapis/genai-toolbox/internal/sources/dataproc"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
-	"github.com/googleapis/genai-toolbox/internal/tools/dataproc/dataproclistclusters"
-	"github.com/googleapis/genai-toolbox/internal/tools/dataproc/dataproclistjobs"
 	"github.com/googleapis/genai-toolbox/tests"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -382,12 +381,12 @@ func runListClustersTest(t *testing.T, client *dataproc.ClusterControllerClient,
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var want []dataproclistclusters.Cluster
+			var want []dataprocsrc.Cluster
 			if tc.wantN > 0 {
 				want = listClustersRpc(t, client, ctx, tc.filter, tc.wantN)
 			}
 
-			var actual []dataproclistclusters.Cluster
+			var actual []dataprocsrc.Cluster
 			var pageToken string
 
 			for i := 0; i < tc.numPages; i++ {
@@ -420,7 +419,7 @@ func runListClustersTest(t *testing.T, client *dataproc.ClusterControllerClient,
 					t.Fatalf("unable to find result in response body")
 				}
 
-				var listResponse dataproclistclusters.ListClustersResponse
+				var listResponse dataprocsrc.ListClustersResponse
 				if err := json.Unmarshal([]byte(result), &listResponse); err != nil {
 					t.Fatalf("error unmarshalling result: %s", err)
 				}
@@ -566,7 +565,7 @@ func runGetClusterTest(t *testing.T, client *dataproc.ClusterControllerClient, c
 	})
 }
 
-func listClustersRpc(t *testing.T, client *dataproc.ClusterControllerClient, ctx context.Context, filter string, n int) []dataproclistclusters.Cluster {
+func listClustersRpc(t *testing.T, client *dataproc.ClusterControllerClient, ctx context.Context, filter string, n int) []dataprocsrc.Cluster {
 	req := &dataprocpb.ListClustersRequest{
 		ProjectId: dataprocProject,
 		Region:    dataprocRegion,
@@ -584,7 +583,7 @@ func listClustersRpc(t *testing.T, client *dataproc.ClusterControllerClient, ctx
 		t.Fatalf("failed to list clusters: %s", err)
 	}
 
-	clusters, err := dataproclistclusters.ToClusters(clusterPbs, dataprocRegion)
+	clusters, err := dataprocsrc.ToClusters(clusterPbs, dataprocRegion)
 	if err != nil {
 		t.Fatalf("failed to convert clusters to JSON: %v", err)
 	}
@@ -688,12 +687,12 @@ func runListJobsTest(t *testing.T, client *dataproc.JobControllerClient, ctx con
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			var want []dataproclistjobs.Job
+			var want []dataprocsrc.Job
 			if tc.wantN > 0 {
 				want = listJobsRpc(t, client, ctx, tc.filter, tc.wantN)
 			}
 
-			var actual []dataproclistjobs.Job
+			var actual []dataprocsrc.Job
 			var pageToken string
 			for i := 0; i < tc.numPages; i++ {
 				filter := tc.filter
@@ -730,7 +729,7 @@ func runListJobsTest(t *testing.T, client *dataproc.JobControllerClient, ctx con
 					t.Fatalf("unable to find result in response body")
 				}
 
-				var listResponse dataproclistjobs.ListJobsResponse
+				var listResponse dataprocsrc.ListJobsResponse
 				if err := json.Unmarshal([]byte(result), &listResponse); err != nil {
 					t.Fatalf("error unmarshalling result: %s", err)
 				}
@@ -874,7 +873,7 @@ func runGetJobTest(t *testing.T, client *dataproc.JobControllerClient, ctx conte
 	})
 }
 
-func listJobsRpc(t *testing.T, client *dataproc.JobControllerClient, ctx context.Context, filter string, n int) []dataproclistjobs.Job {
+func listJobsRpc(t *testing.T, client *dataproc.JobControllerClient, ctx context.Context, filter string, n int) []dataprocsrc.Job {
 	req := &dataprocpb.ListJobsRequest{
 		ProjectId:   dataprocProject,
 		Region:      dataprocRegion,
@@ -893,7 +892,7 @@ func listJobsRpc(t *testing.T, client *dataproc.JobControllerClient, ctx context
 		t.Fatalf("failed to list jobs: %s", err)
 	}
 
-	jobs, err := dataproclistjobs.ToJobs(jobPbs, dataprocRegion)
+	jobs, err := dataprocsrc.ToJobs(jobPbs, dataprocRegion)
 	if err != nil {
 		t.Fatalf("failed to convert jobs: %v", err)
 	}

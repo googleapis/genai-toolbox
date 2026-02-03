@@ -17,17 +17,13 @@ package dataproclistjobs
 import (
 	"context"
 	"fmt"
-	"time"
 
-	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/dataproc"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/dataproc/common"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/iterator"
 )
 
 const kind = "dataproc-list-jobs"
@@ -113,134 +109,31 @@ type Tool struct {
 	Parameters  parameters.Parameters
 }
 
-// ListJobsResponse is the response from the list jobs API.
-type ListJobsResponse struct {
-	Jobs          []Job  `json:"jobs"`
-	NextPageToken string `json:"nextPageToken"`
-}
-
-// Job represents a single Dataproc job.
-type Job struct {
-	ID          string `json:"id"`
-	Status      string `json:"status"`
-	SubStatus   string `json:"subStatus,omitempty"`
-	StartTime   string `json:"startTime"`
-	EndTime     string `json:"endTime,omitempty"`
-	ClusterName string `json:"clusterName"`
-	ConsoleURL  string `json:"consoleUrl"`
-	LogsURL     string `json:"logsUrl"`
+type compatibleSource interface {
+	ListJobs(context.Context, *int, string, string, string) (any, error)
 }
 
 // Invoke executes the tool's operation.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	client := t.Source.GetJobControllerClient()
-
-	req := &dataprocpb.ListJobsRequest{
-		ProjectId: t.Source.Project,
-		Region:    t.Source.Region,
-	}
-
-	paramMap := params.AsMap()
-	if ps, ok := paramMap["pageSize"]; ok && ps != nil {
-		req.PageSize = int32(ps.(int))
-		if (req.PageSize) <= 0 {
-			return nil, fmt.Errorf("pageSize must be positive: %d", req.PageSize)
-		}
-	}
-	if pt, ok := paramMap["pageToken"]; ok && pt != nil {
-		req.PageToken = pt.(string)
-	}
-	if filter, ok := paramMap["filter"]; ok && filter != nil {
-		req.Filter = filter.(string)
-	}
-	if matcher, ok := paramMap["jobStateMatcher"]; ok && matcher != nil {
-		matcherStr := matcher.(string)
-		if v, ok := dataprocpb.ListJobsRequest_JobStateMatcher_value[matcherStr]; ok {
-			req.JobStateMatcher = dataprocpb.ListJobsRequest_JobStateMatcher(v)
-		} else {
-			return nil, fmt.Errorf("invalid jobStateMatcher: %s. Supported values: ALL, ACTIVE, NON_ACTIVE", matcherStr)
-		}
-	}
-
-	it := client.ListJobs(ctx, req)
-	pager := iterator.NewPager(it, int(req.PageSize), req.PageToken)
-
-	var jobPbs []*dataprocpb.Job
-	nextPageToken, err := pager.NextPage(&jobPbs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list jobs: %w", err)
-	}
-
-	jobs, err := ToJobs(jobPbs, t.Source.Region)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Config.Source, t.Name, kind)
 	if err != nil {
 		return nil, err
 	}
 
-	return ListJobsResponse{Jobs: jobs, NextPageToken: nextPageToken}, nil
-}
-
-// ToJobs converts a slice of protobuf Job messages to a slice of Job structs.
-func ToJobs(jobPbs []*dataprocpb.Job, region string) ([]Job, error) {
-	jobs := make([]Job, 0, len(jobPbs))
-	for _, jobPb := range jobPbs {
-		consoleUrl := common.JobConsoleURLFromProto(jobPb, region)
-		logsUrl, err := common.JobLogsURLFromProto(jobPb, region)
-		if err != nil {
-			return nil, fmt.Errorf("error generating logs url: %v", err)
+	paramMap := params.AsMap()
+	var pageSize *int
+	if ps, ok := paramMap["pageSize"]; ok && ps != nil {
+		pageSizeV := ps.(int)
+		if pageSizeV <= 0 {
+			return nil, fmt.Errorf("pageSize must be positive: %d", pageSizeV)
 		}
-
-		status := "STATE_UNSPECIFIED"
-		subStatus := ""
-		var startTime, endTime string
-
-		if jobPb.Status != nil {
-			status = jobPb.Status.State.Enum().String()
-			subStatus = jobPb.Status.Substate.Enum().String()
-		}
-
-		var sTime, eTime time.Time
-		for _, s := range jobPb.StatusHistory {
-			t := s.StateStartTime.AsTime()
-			if sTime.IsZero() || t.Before(sTime) {
-				sTime = t
-			}
-		}
-		if jobPb.Status != nil {
-			t := jobPb.Status.StateStartTime.AsTime()
-			if sTime.IsZero() || t.Before(sTime) {
-				sTime = t
-			}
-			switch jobPb.Status.State {
-			case dataprocpb.JobStatus_DONE, dataprocpb.JobStatus_CANCELLED, dataprocpb.JobStatus_ERROR:
-				eTime = t
-			}
-		}
-
-		if !sTime.IsZero() {
-			startTime = sTime.Format(time.RFC3339)
-		}
-		if !eTime.IsZero() {
-			endTime = eTime.Format(time.RFC3339)
-		}
-
-		clusterName := ""
-		if jobPb.Placement != nil {
-			clusterName = jobPb.Placement.ClusterName
-		}
-
-		job := Job{
-			ID:          jobPb.Reference.JobId,
-			Status:      status,
-			SubStatus:   subStatus,
-			StartTime:   startTime,
-			EndTime:     endTime,
-			ClusterName: clusterName,
-			ConsoleURL:  consoleUrl,
-			LogsURL:     logsUrl,
-		}
-		jobs = append(jobs, job)
+		pageSize = &pageSizeV
 	}
-	return jobs, nil
+	pt, _ := paramMap["pageToken"].(string)
+	filter, _ := paramMap["filter"].(string)
+	matcher, _ := paramMap["jobStateMatcher"].(string)
+
+	return source.ListJobs(ctx, pageSize, pt, filter, matcher)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {

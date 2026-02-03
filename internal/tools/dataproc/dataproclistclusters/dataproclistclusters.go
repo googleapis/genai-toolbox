@@ -17,17 +17,13 @@ package dataproclistclusters
 import (
 	"context"
 	"fmt"
-	"time"
 
-	"cloud.google.com/go/dataproc/v2/apiv1/dataprocpb"
 	"github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/dataproc"
 	"github.com/googleapis/genai-toolbox/internal/tools"
-	"github.com/googleapis/genai-toolbox/internal/tools/dataproc/common"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
-	"google.golang.org/api/iterator"
 )
 
 const kind = "dataproc-list-clusters"
@@ -112,92 +108,30 @@ type Tool struct {
 	Parameters  parameters.Parameters
 }
 
-// ListClustersResponse is the response from the list clusters API.
-type ListClustersResponse struct {
-	Clusters      []Cluster `json:"clusters"`
-	NextPageToken string    `json:"nextPageToken"`
-}
-
-// Cluster represents a single Dataproc cluster.
-type Cluster struct {
-	Name       string `json:"name"` // Full resource name
-	UUID       string `json:"uuid"`
-	State      string `json:"state"`
-	CreateTime string `json:"createTime"`
-	ConsoleURL string `json:"consoleUrl"`
-	LogsURL    string `json:"logsUrl"`
+type compatibleSource interface {
+	ListClusters(context.Context, *int, string, string) (any, error)
 }
 
 // Invoke executes the tool's operation.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	client := t.Source.GetClusterControllerClient()
-
-	req := &dataprocpb.ListClustersRequest{
-		ProjectId: t.Source.Project,
-		Region:    t.Source.Region,
-	}
-
-	paramMap := params.AsMap()
-	if ps, ok := paramMap["pageSize"]; ok && ps != nil {
-		req.PageSize = int32(ps.(int))
-		if (req.PageSize) <= 0 {
-			return nil, fmt.Errorf("pageSize must be positive: %d", req.PageSize)
-		}
-	}
-	if pt, ok := paramMap["pageToken"]; ok && pt != nil {
-		req.PageToken = pt.(string)
-	}
-	if filter, ok := paramMap["filter"]; ok && filter != nil {
-		req.Filter = filter.(string)
-	}
-
-	it := client.ListClusters(ctx, req)
-	pager := iterator.NewPager(it, int(req.PageSize), req.PageToken)
-
-	var clusterPbs []*dataprocpb.Cluster
-	nextPageToken, err := pager.NextPage(&clusterPbs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list clusters: %w", err)
-	}
-
-	clusters, err := ToClusters(clusterPbs, t.Source.Region)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Config.Source, t.Name, kind)
 	if err != nil {
 		return nil, err
 	}
 
-	return ListClustersResponse{Clusters: clusters, NextPageToken: nextPageToken}, nil
-}
-
-// ToClusters converts a slice of protobuf Cluster messages to a slice of Cluster structs.
-func ToClusters(clusterPbs []*dataprocpb.Cluster, region string) ([]Cluster, error) {
-	clusters := make([]Cluster, 0, len(clusterPbs))
-	for _, clusterPb := range clusterPbs {
-		consoleUrl := common.ClusterConsoleURLFromProto(clusterPb, region)
-		logsUrl := common.ClusterLogsURLFromProto(clusterPb, region)
-
-		state := "STATE_UNSPECIFIED"
-		// Extract create time from status history.
-		var createTime string
-		if clusterPb.Status != nil {
-			state = clusterPb.Status.State.Enum().String()
-			if clusterPb.Status.StateStartTime != nil {
-				createTime = clusterPb.Status.StateStartTime.AsTime().Format(time.RFC3339)
-			}
+	paramMap := params.AsMap()
+	var pageSize *int
+	if ps, ok := paramMap["pageSize"]; ok && ps != nil {
+		pageSizeV := ps.(int)
+		if pageSizeV <= 0 {
+			return nil, fmt.Errorf("pageSize must be positive: %d", pageSizeV)
 		}
-
-		fullName := fmt.Sprintf("projects/%s/regions/%s/clusters/%s", clusterPb.ProjectId, region, clusterPb.ClusterName)
-
-		cluster := Cluster{
-			Name:       fullName,
-			UUID:       clusterPb.ClusterUuid,
-			State:      state,
-			CreateTime: createTime,
-			ConsoleURL: consoleUrl,
-			LogsURL:    logsUrl,
-		}
-		clusters = append(clusters, cluster)
+		pageSize = &pageSizeV
 	}
-	return clusters, nil
+	pt, _ := paramMap["pageToken"].(string)
+	filter, _ := paramMap["filter"].(string)
+
+	return source.ListClusters(ctx, pageSize, pt, filter)
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
