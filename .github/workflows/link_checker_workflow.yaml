@@ -32,7 +32,9 @@ jobs:
           restore-keys: cache-lychee-
 
       - name: Link Checker
+        id: lychee-check       # Give it an ID to reference later
         uses: lycheeverse/lychee-action@a8c4c7cb88f0c7386610c35eb25108e448569cb0 # v2
+        continue-on-error: true # Let the workflow continue so we can handle the summary order
         with:
           args: >
             --quiet
@@ -40,22 +42,30 @@ jobs:
             --cache
             --max-cache-age 1d
             --exclude '^neo4j\+.*' --exclude '^bolt://.*'
+            --format markdown  # Ensure the output is readable Markdown
+            --output ./lychee-report.md
             README.md
             docs/
-          output: /tmp/foo.txt
-          fail: true
-          jobSummary: true
+          fail: true           # Mark the step outcome as 'failure' internally
+          jobSummary: false    # IMPORTANT: Don't write the report yet!
           debug: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # This step only runs if the 'lychee_check' step fails, ensuring the 
-      # context note only appears when the developer needs to troubleshoot.
-      - name: Display Link Context Note on Failure
-        if: ${{ failure() }}
+
+      - name: Display Failure Report
+        # Run this ONLY if the link checker failed
+        if: steps.lychee-check.outcome == 'failure'
         run: |
+          # 1. Write YOUR Note First (Top of Summary)
           echo "## Link Resolution Note" >> $GITHUB_STEP_SUMMARY
           echo "Local links and directory changes work differently on GitHub than on the docsite." >> $GITHUB_STEP_SUMMARY
           echo "You must ensure fixes pass the **GitHub check** and also work with **\`hugo server\`**." >> $GITHUB_STEP_SUMMARY
           echo "See [Link Checking and Fixing with Lychee](https://github.com/googleapis/genai-toolbox/blob/main/DEVELOPER.md#link-checking-and-fixing-with-lychee) for more details." >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
 
+          # 2. Append the Actual Error Report (Below Note)
+          echo "### Broken Links Found" >> $GITHUB_STEP_SUMMARY
+          cat ./lychee-report.md >> $GITHUB_STEP_SUMMARY
+
+          # 3. Manually Fail the Job (Since we used continue-on-error above)
+          exit 1
