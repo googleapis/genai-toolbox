@@ -1,9 +1,9 @@
 ---
-title: "llamaindex"
+title: "LlamaIndex"
 type: docs
 weight: 8
 description: >
-  Toolbox-llamaindex SDK for connecting to the MCP Toolbox server and invoking tools programmatically.
+  MCP Toolbox LlamaIndex SDK for integrating functionalities of MCP Toolbox into your LlamaIndex apps.
 ---
 
 ## Overview
@@ -129,7 +129,7 @@ vertex_model = GoogleGenAI(
 agent = AgentWorkflow.from_tools_or_functions(
     tools,
     llm=vertex_model,
-    system_prompt="You are a helpful assistant",
+    system_prompt="You are a helpful assistant.",
 )
 
 # Save memory in agent context
@@ -194,7 +194,7 @@ from toolbox_llamaindex import ToolboxClient
 
 async with ToolboxClient(
     "toolbox-url", 
-    client_headers={"header1": header1_getter, "header2": header2_getter, ...}
+    client_headers={"header1": header1_getter, "header2": header2_getter},
 ) as client:
 ```
 
