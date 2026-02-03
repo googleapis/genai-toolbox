@@ -148,8 +148,8 @@ run_go_test() {
   echo "--- Running Go Test: $name ---"
   (
     cd "$dir"
-    echo "Go testing coming soon for $name..."
-    # go test ./...
+    echo "Running Go tests for $name..."
+    go test ./...
   )
 }
 
