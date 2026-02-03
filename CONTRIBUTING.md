@@ -92,11 +92,11 @@ implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/s
   `newdb.go`. Create a `Config` struct to include all the necessary parameters
   for connecting to the database (e.g., host, port, username, password, database
   name) and a `Source` struct to store necessary parameters for tools (e.g.,
-  Name, Kind, connection object, additional config).
+  Name, Type, connection object, additional config).
 * **Implement the
   [`SourceConfig`](https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/sources/sources.go#L57)
   interface**. This interface requires two methods:
-  * `SourceConfigKind() string`: Returns a unique string identifier for your
+  * `SourceConfigType() string`: Returns a unique string identifier for your
     data source (e.g., `"newdb"`).
   * `Initialize(ctx context.Context, tracer trace.Tracer) (Source, error)`:
     Creates a new instance of your data source and establishes a connection to
@@ -104,7 +104,7 @@ implementation](https://github.com/googleapis/genai-toolbox/blob/main/internal/s
 * **Implement the
   [`Source`](https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/sources/sources.go#L63)
   interface**. This interface requires one method:
-  * `SourceKind() string`: Returns the same string identifier as `SourceConfigKind()`.
+  * `SourceType() string`: Returns the same string identifier as `SourceConfigType()`.
 * **Implement `init()`** to register the new Source.
 * **Implement Unit Tests** in a file named `newdb_test.go`.
 
@@ -126,7 +126,7 @@ tools.
 * **Implement the
   [`ToolConfig`](https://github.com/googleapis/genai-toolbox/blob/fd300dc606d88bf9f7bba689e2cee4e3565537dd/internal/tools/tools.go#L61)
   interface**. This interface requires one method:
-  * `ToolConfigKind() string`: Returns a unique string identifier for your tool
+  * `ToolConfigType() string`: Returns a unique string identifier for your tool
     (e.g., `"newdb-tool"`).
   * `Initialize(sources map[string]Source) (Tool, error)`: Creates a new
     instance of your tool and validates that it can connect to the specified
@@ -243,7 +243,7 @@ resources.
   | style           | Update src code, with only formatting and whitespace updates (e.g. code formatter or linter changes). |
 
   Pull requests should always add scope whenever possible. The scope is
-  formatted as `<scope-type>/<scope-kind>` (e.g., `sources/postgres`, or
+  formatted as `<scope-resource>/<scope-type>` (e.g., `sources/postgres`, or
   `tools/mssql-sql`).
   
   Ideally, **each PR covers only one scope**, if this is

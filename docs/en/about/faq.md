@@ -45,7 +45,7 @@ most popular issues, so make sure to +1 ones you are the most interested in.
 ## Can Toolbox be used for non-database tools?
 
 **Yes!** While Toolbox is primarily focused on databases, it also supports generic 
-**HTTP tools** (`kind: http`). These allow you to connect your agents to REST APIs 
+**HTTP tools** (`type: http`). These allow you to connect your agents to REST APIs 
 and other web services, enabling workflows that extend beyond database interactions.
 
 For configuration details, see the [HTTP Tools documentation](../resources/tools/http/http.md).

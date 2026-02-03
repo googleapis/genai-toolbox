@@ -15,11 +15,12 @@
 package cloudhealthcare_test
 
 import (
+	"context"
 	"testing"
 
-	"github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
+	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
 )
@@ -33,17 +34,17 @@ func TestParseFromYamlCloudHealthcare(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-				sources:
-					my-instance:
-						kind: cloud-healthcare
-						project: my-project
-						region: us-central1
-						dataset: my-dataset
+			kind: sources
+			name: my-instance
+			type: cloud-healthcare
+			project: my-project
+			region: us-central1
+			dataset: my-dataset
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-instance": cloudhealthcare.Config{
 					Name:           "my-instance",
-					Kind:           cloudhealthcare.SourceKind,
+					Type:           cloudhealthcare.SourceType,
 					Project:        "my-project",
 					Region:         "us-central1",
 					Dataset:        "my-dataset",
@@ -54,18 +55,18 @@ func TestParseFromYamlCloudHealthcare(t *testing.T) {
 		{
 			desc: "use client auth example",
 			in: `
-			sources:
-				my-instance:
-					kind: cloud-healthcare
-					project: my-project
-					region: us
-					dataset: my-dataset
-					useClientOAuth: true
+			kind: sources
+			name: my-instance
+			type: cloud-healthcare
+			project: my-project
+			region: us
+			dataset: my-dataset
+			useClientOAuth: true
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-instance": cloudhealthcare.Config{
 					Name:           "my-instance",
-					Kind:           cloudhealthcare.SourceKind,
+					Type:           cloudhealthcare.SourceType,
 					Project:        "my-project",
 					Region:         "us",
 					Dataset:        "my-dataset",
@@ -76,22 +77,22 @@ func TestParseFromYamlCloudHealthcare(t *testing.T) {
 		{
 			desc: "with allowed stores example",
 			in: `
-			sources:
-				my-instance:
-					kind: cloud-healthcare
-					project: my-project
-					region: us
-					dataset: my-dataset
-					allowedFhirStores:
-						- my-fhir-store
-					allowedDicomStores:
-						- my-dicom-store1
-						- my-dicom-store2
+			kind: sources
+			name: my-instance
+			type: cloud-healthcare
+			project: my-project
+			region: us
+			dataset: my-dataset
+			allowedFhirStores:
+				- my-fhir-store
+			allowedDicomStores:
+				- my-dicom-store1
+				- my-dicom-store2
 			`,
-			want: server.SourceConfigs{
+			want: map[string]sources.SourceConfig{
 				"my-instance": cloudhealthcare.Config{
 					Name:               "my-instance",
-					Kind:               cloudhealthcare.SourceKind,
+					Type:               cloudhealthcare.SourceType,
 					Project:            "my-project",
 					Region:             "us",
 					Dataset:            "my-dataset",
@@ -103,16 +104,12 @@ func TestParseFromYamlCloudHealthcare(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			got, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if !cmp.Equal(tc.want, got.Sources) {
-				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got.Sources)
+			if !cmp.Equal(tc.want, got) {
+				t.Fatalf("incorrect parse: want %v, got %v", tc.want, got)
 			}
 		})
 	}
@@ -127,35 +124,31 @@ func TestFailParseFromYaml(t *testing.T) {
 		{
 			desc: "extra field",
 			in: `
-			sources:
-				my-instance:
-					kind: cloud-healthcare
-					project: my-project
-					region: us-central1
-					dataset: my-dataset
-					foo: bar
+			kind: sources
+			name: my-instance
+			type: cloud-healthcare
+			project: my-project
+			region: us-central1
+			dataset: my-dataset
+			foo: bar
 			`,
-			err: "unable to parse source \"my-instance\" as \"cloud-healthcare\": [2:1] unknown field \"foo\"\n   1 | dataset: my-dataset\n>  2 | foo: bar\n       ^\n   3 | kind: cloud-healthcare\n   4 | project: my-project\n   5 | region: us-central1",
+			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"cloud-healthcare\": [2:1] unknown field \"foo\"\n   1 | dataset: my-dataset\n>  2 | foo: bar\n       ^\n   3 | name: my-instance\n   4 | project: my-project\n   5 | region: us-central1\n   6 | ",
 		},
 		{
 			desc: "missing required field",
 			in: `
-			sources:
-				my-instance:
-					kind: cloud-healthcare
-					project: my-project
-					region: us-central1
+			kind: sources
+			name: my-instance
+			type: cloud-healthcare
+			project: my-project
+			region: us-central1
 			`,
-			err: `unable to parse source "my-instance" as "cloud-healthcare": Key: 'Config.Dataset' Error:Field validation for 'Dataset' failed on the 'required' tag`,
+			err: "error unmarshaling sources: unable to parse source \"my-instance\" as \"cloud-healthcare\": Key: 'Config.Dataset' Error:Field validation for 'Dataset' failed on the 'required' tag",
 		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Sources server.SourceConfigs `yaml:"sources"`
-			}{}
-			// Parse contents
-			err := yaml.Unmarshal(testutils.FormatYaml(tc.in), &got)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(context.Background(), testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expect parsing to fail")
 			}

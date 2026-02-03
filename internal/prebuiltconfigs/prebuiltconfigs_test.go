@@ -21,6 +21,7 @@ import (
 )
 
 var expectedToolSources = []string{
+	"alloydb-omni",
 	"alloydb-postgres-admin",
 	"alloydb-postgres-observability",
 	"alloydb-postgres",
@@ -99,36 +100,40 @@ func TestLoadPrebuiltToolYAMLs(t *testing.T) {
 }
 
 func TestGetPrebuiltTool(t *testing.T) {
-	alloydb_admin_config, _ := Get("alloydb-postgres-admin")
-	alloydb_observability_config, _ := Get("alloydb-postgres-observability")
-	alloydb_config, _ := Get("alloydb-postgres")
-	bigquery_config, _ := Get("bigquery")
-	clickhouse_config, _ := Get("clickhouse")
-	cloudsqlpg_observability_config, _ := Get("cloud-sql-postgres-observability")
-	cloudsqlpg_config, _ := Get("cloud-sql-postgres")
-	cloudsqlpg_admin_config, _ := Get("cloud-sql-postgres-admin")
-	cloudsqlmysql_admin_config, _ := Get("cloud-sql-mysql-admin")
-	cloudsqlmssql_admin_config, _ := Get("cloud-sql-mssql-admin")
-	cloudsqlmysql_observability_config, _ := Get("cloud-sql-mysql-observability")
-	cloudsqlmysql_config, _ := Get("cloud-sql-mysql")
-	cloudsqlmssql_observability_config, _ := Get("cloud-sql-mssql-observability")
-	cloudsqlmssql_config, _ := Get("cloud-sql-mssql")
-	dataplex_config, _ := Get("dataplex")
-	firestoreconfig, _ := Get("firestore")
-	looker_config, _ := Get("looker")
-	lookerca_config, _ := Get("looker-conversational-analytics")
-	mysql_config, _ := Get("mysql")
-	mssql_config, _ := Get("mssql")
-	oceanbase_config, _ := Get("oceanbase")
-	postgresconfig, _ := Get("postgres")
-	singlestore_config, _ := Get("singlestore")
-	spanner_config, _ := Get("spanner")
-	spannerpg_config, _ := Get("spanner-postgres")
-	mindsdb_config, _ := Get("mindsdb")
-	sqlite_config, _ := Get("sqlite")
-	neo4jconfig, _ := Get("neo4j")
-	healthcare_config, _ := Get("cloud-healthcare")
-	snowflake_config, _ := Get("snowflake")
+	alloydb_omni_config := getOrFatal(t, "alloydb-omni")
+	alloydb_admin_config := getOrFatal(t, "alloydb-postgres-admin")
+	alloydb_observability_config := getOrFatal(t, "alloydb-postgres-observability")
+	alloydb_config := getOrFatal(t, "alloydb-postgres")
+	bigquery_config := getOrFatal(t, "bigquery")
+	clickhouse_config := getOrFatal(t, "clickhouse")
+	cloudsqlpg_observability_config := getOrFatal(t, "cloud-sql-postgres-observability")
+	cloudsqlpg_config := getOrFatal(t, "cloud-sql-postgres")
+	cloudsqlpg_admin_config := getOrFatal(t, "cloud-sql-postgres-admin")
+	cloudsqlmysql_admin_config := getOrFatal(t, "cloud-sql-mysql-admin")
+	cloudsqlmssql_admin_config := getOrFatal(t, "cloud-sql-mssql-admin")
+	cloudsqlmysql_observability_config := getOrFatal(t, "cloud-sql-mysql-observability")
+	cloudsqlmysql_config := getOrFatal(t, "cloud-sql-mysql")
+	cloudsqlmssql_observability_config := getOrFatal(t, "cloud-sql-mssql-observability")
+	cloudsqlmssql_config := getOrFatal(t, "cloud-sql-mssql")
+	dataplex_config := getOrFatal(t, "dataplex")
+	firestoreconfig := getOrFatal(t, "firestore")
+	looker_config := getOrFatal(t, "looker")
+	lookerca_config := getOrFatal(t, "looker-conversational-analytics")
+	mysql_config := getOrFatal(t, "mysql")
+	mssql_config := getOrFatal(t, "mssql")
+	oceanbase_config := getOrFatal(t, "oceanbase")
+	postgresconfig := getOrFatal(t, "postgres")
+	singlestore_config := getOrFatal(t, "singlestore")
+	spanner_config := getOrFatal(t, "spanner")
+	spannerpg_config := getOrFatal(t, "spanner-postgres")
+	mindsdb_config := getOrFatal(t, "mindsdb")
+	sqlite_config := getOrFatal(t, "sqlite")
+	neo4jconfig := getOrFatal(t, "neo4j")
+	healthcare_config := getOrFatal(t, "cloud-healthcare")
+	snowflake_config := getOrFatal(t, "snowflake")
+	if len(alloydb_omni_config) <= 0 {
+		t.Fatalf("unexpected error: could not fetch alloydb omni prebuilt tools yaml")
+	}
 	if len(alloydb_admin_config) <= 0 {
 		t.Fatalf("unexpected error: could not fetch alloydb admin prebuilt tools yaml")
 	}
@@ -232,4 +237,12 @@ func TestFailGetPrebuiltTool(t *testing.T) {
 	if err == nil {
 		t.Fatalf("unexpected an error but got nil.")
 	}
+}
+
+func getOrFatal(t *testing.T, prebuiltSourceConfig string) []byte {
+	bytes, err := Get(prebuiltSourceConfig)
+	if err != nil {
+		t.Fatalf("Cannot get prebuilt config for %q, error %v", prebuiltSourceConfig, err)
+	}
+	return bytes
 }

@@ -28,18 +28,18 @@ of tables) as part of the logical replication feature. The tool takes the follow
 ## Example
 
 ```yaml
-tools:
-  list_indexes:
-    kind: postgres-list-publication-tables
-    source: postgres-source
-    description: |
-      Lists all tables that are explicitly part of a publication in the database.
-      Tables that are part of a publication via 'FOR ALL TABLES' are not included,
-      unless they are also explicitly added to the publication.
-      Returns the publication name, schema name, and table name, along with
-      definition details indicating if it publishes all tables, whether it
-      replicates inserts, updates, deletes, or truncates, and the publication
-      owner.
+kind: tools
+name: list_indexes
+type: postgres-list-publication-tables
+source: postgres-source
+description: |
+  Lists all tables that are explicitly part of a publication in the database.
+  Tables that are part of a publication via 'FOR ALL TABLES' are not included,
+  unless they are also explicitly added to the publication.
+  Returns the publication name, schema name, and table name, along with
+  definition details indicating if it publishes all tables, whether it
+  replicates inserts, updates, deletes, or truncates, and the publication
+  owner.
 ```
 
 The response is a JSON array with the following elements:
@@ -61,6 +61,6 @@ The response is a JSON array with the following elements:
 
 | **field**   | **type** | **required** | **description**                                      |
 |-------------|:--------:|:------------:|------------------------------------------------------|
-| kind        |  string  |     true     | Must be "postgres-list-publication-tables".          |
+| type        |  string  |     true     | Must be "postgres-list-publication-tables".          |
 | source      |  string  |     true     | Name of the source the SQL should execute on.        |
 | description |  string  |    false     | Description of the tool that is passed to the agent. |
