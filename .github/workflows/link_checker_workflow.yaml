@@ -42,16 +42,17 @@ jobs:
             --exclude '^neo4j\+.*' --exclude '^bolt://.*'
             README.md
             docs/
-          output: /tmp/foo.txt
-          fail: true
-          jobSummary: true
+          output: lychee-report.md
+          format: markdown
+          fail: true           
+          jobSummary: false    
           debug: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      # This step only runs if the 'lychee_check' step fails, ensuring the 
-      # context note only appears when the developer needs to troubleshoot.
-      - name: Display Link Context Note on Failure
-        if: ${{ failure() }}
+
+      - name: Display Failure Report
+        # Run this ONLY if the link checker failed
+        if: steps.lychee-check.outcome == 'failure'
         run: |
           echo "## Link Resolution Note" >> $GITHUB_STEP_SUMMARY
           echo "Local links and directory changes work differently on GitHub than on the docsite." >> $GITHUB_STEP_SUMMARY
@@ -59,3 +60,7 @@ jobs:
           echo "See [Link Checking and Fixing with Lychee](https://github.com/googleapis/genai-toolbox/blob/main/DEVELOPER.md#link-checking-and-fixing-with-lychee) for more details." >> $GITHUB_STEP_SUMMARY
           echo "---" >> $GITHUB_STEP_SUMMARY
 
+          echo "### Broken Links Found" >> $GITHUB_STEP_SUMMARY
+          cat ./lychee-report.md >> $GITHUB_STEP_SUMMARY
+
+          exit 1
