@@ -13134,8 +13134,8 @@ Source code for [js-sdk](https://github.com/googleapis/mcp-toolbox-sdk-js)
 {{< /notice >}}
 
 
-# adk
-Toolbox-adk SDK for connecting to the MCP Toolbox server and invoking tools programmatically.
+# Adk
+MCP Toolbox ADK SDK for integrating functionalities of MCP Toolbox into your apps.
 
 
 ## Overview
