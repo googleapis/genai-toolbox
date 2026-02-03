@@ -6303,6 +6303,78 @@ There are a couple of steps to run and use a Collector.
 [trace-explorer]: https://console.cloud.google.com/traces
 
 
+# Invoke Tools via CLI
+Learn how to invoke your tools directly from the command line using the `invoke` command.
+
+
+The `invoke` command allows you to invoke tools defined in your configuration directly from the CLI. This is useful for:
+
+- **Ephemeral Invocation:** Executing a tool without spinning up a full MCP server/client.
+- **Debugging:** Isolating tool execution logic and testing with various parameter combinations.
+
+{{< notice tip >}}
+**Keep configurations minimal:** The `invoke` command initializes *all* resources (sources, tools, etc.) defined in your configuration files during execution. To ensure fast response times, consider using a minimal configuration file containing only the tools you need for the specific invocation.
+{{< /notice >}}
+
+## Before you begin
+
+1. Make sure you have the `toolbox` binary installed or built.
+2. Make sure you have a valid tool configuration file (e.g., `tools.yaml`).
+
+## Basic Usage
+
+The basic syntax for the command is:
+
+```bash
+toolbox [--tools-file <path> | --prebuilt <name>] invoke <tool-name> [params]
+```
+
+- `<tool-name>`: The name of the tool you want to call. This must match the name defined in your `tools.yaml`.
+- `[params]`: (Optional) A JSON string representing the arguments for the tool.
+
+## Examples
+
+### 1. Calling a Tool without Parameters
+
+If your tool takes no parameters, simply provide the tool name:
+
+```bash
+toolbox  --tools-file tools.yaml invoke my-simple-tool
+```
+
+### 2. Calling a Tool with Parameters
+
+For tools that require arguments, pass them as a JSON string. Ensure you escape quotes correctly for your shell.
+
+**Example: A tool that takes parameters**
+
+Assuming a tool named `mytool` taking `a` and `b`:
+
+```bash
+toolbox --tools-file tools.yaml invoke mytool '{"a": 10, "b": 20}' 
+```
+
+**Example: A tool that queries a database**
+
+```bash
+toolbox  --tools-file tools.yaml invoke db-query '{"sql": "SELECT * FROM users LIMIT 5"}'
+```
+
+### 3. Using Prebuilt Configurations
+
+You can also use the `--prebuilt` flag to load prebuilt toolsets.
+
+```bash
+toolbox --prebuilt cloudsql-postgres invoke cloudsql-postgres-list-instances
+```
+
+## Troubleshooting
+
+- **Tool not found:** Ensure the `<tool-name>` matches exactly what is in your YAML file and that the file is correctly loaded via `--tools-file`.
+- **Invalid parameters:** Double-check your JSON syntax. The error message will usually indicate if the JSON parsing failed or if the parameters didn't match the tool's schema.
+- **Auth errors:** The `invoke` command currently does not support flows requiring client-side authorization (like OAuth flow initiation via the CLI). It works best for tools using service-side authentication (e.g., Application Default Credentials).
+
+
 # Resources
 List of reference documentation for resources in Toolbox.
 
@@ -13479,7 +13551,9 @@ Starting MCP inspector...
 Pre and Post processing in GenAI applications.
 
 
-Pre and post processing allow developers to intercept and modify interactions between the agent and its tools or the user. This capability is essential for building robust, secure, and compliant agents.
+Pre and post processing allow developers to intercept and modify interactions between the agent and its tools or the user.
+
+> **Note**: These capabilities are typically features of **orchestration frameworks** (like LangChain, LangGraph, or Agent Builder) rather than the Toolbox SDK itself. However, Toolbox tools are designed to fully leverage these framework capabilities to support robust, secure, and compliant agent architectures.
 
 ## Types of Processing
 
@@ -13501,28 +13575,21 @@ Post-processing occurs after a tool has executed or the model has generated a re
 
 ## Processing Scopes
 
-Processing logic can be applied at different levels of the application:
+While processing logic can be applied at various levels (Agent, Model, Tool), this guide primarily focuses on **Tool Level** processing, which is most relevant for granular control over tool execution.
 
-### Tool Level
+### Tool Level (Primary Focus)
 
 Wraps individual tool executions. This is best for logic specific to a single tool or a set of tools.
 
 - **Scope**: Intercepts the raw inputs (arguments) to a tool and its outputs.
 - **Use Cases**: Argument validation, output formatting, specific privacy rules for sensitive tools.
 
-### Model Level
+### Comparison with Other Levels
 
-Intercepts individual calls to the Large Language Model (LLM).
+It is helpful to understand how tool-level processing differs from other scopes:
 
-- **Scope**: Intercepts the list of messages (prompt) sent to the model and the generation (response) received.
-- **Use Cases**: Global PII redaction (across all tools/chat), prompt engineering/injection, token usage tracking, and hallucination detection.
-
-### Agent Level
-
-Wraps the high-level agent execution loop (e.g., a "turn" in the conversation).
-
-- **Scope**: Intercepts the initial user input and the final agent response, enveloping one or more model calls and tool executions.
-- **Use Cases**: User authentication, rate limiting, session management, and end-to-end audit logging.
+- **Model Level**: Intercepts individual calls to the LLM (prompts and responses). Unlike tool-level, this applies globally to all text sent/received, making it better for global PII redaction or token tracking.
+- **Agent Level**: Wraps the high-level execution loop (e.g., a "turn" in the conversation). Unlike tool-level, this envelopes the entire turn (user input to final response), making it suitable for session management or end-to-end auditing.
 
 
 # (Python) Pre and post processing
@@ -13867,6 +13934,21 @@ This page describes the `toolbox` command-line options.
 |              | `--user-agent-metadata`    | Appends additional metadata to the User-Agent.                                                                                                                                   |             |
 | `-v`         | `--version`                | version for toolbox                                                                                                                                                              |             |
 
+## Sub Commands
+
+### `invoke`
+
+Executes a tool directly with the provided parameters. This is useful for testing tool configurations and parameters without needing a full client setup.
+
+**Syntax:**
+
+```bash
+toolbox invoke <tool-name> [params]
+```
+
+- `<tool-name>`: The name of the tool to execute (as defined in your configuration).
+- `[params]`: (Optional) A JSON string containing the parameters for the tool.
+
 ## Examples
 
 ### Transport Configuration
@@ -13988,9 +14070,9 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
-    *   `list_schemas`: Lists schemas in the database. 
-    *   `database_overview`: Fetches the current state of the PostgreSQL server. 
-    *   `list_triggers`: Lists triggers in the database. 
+    *   `list_schemas`: Lists schemas in the database.
+    *   `database_overview`: Fetches the current state of the PostgreSQL server.
+    *   `list_triggers`: Lists triggers in the database.
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
     *   `list_publication_tables`: List publication tables in a PostgreSQL database.
@@ -13998,7 +14080,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
     *   `list_database_stats`: Lists the key performance and activity statistics for
         each database in the AlloyDB instance.
-    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.  
+    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.
 
 ## AlloyDB Postgres Admin
 
@@ -14033,6 +14115,43 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `get_query_metrics`: Fetches query level cloud monitoring data
         (timeseries metrics) for queries running in an AlloyDB instance using a
         PromQL query.
+
+## AlloyDB Omni
+
+*   `--prebuilt` value: `alloydb-omni`
+*   **Environment Variables:**
+    *   `ALLOYDB_OMNI_HOST`: (Optional) The hostname or IP address (Default: localhost).
+    *   `ALLOYDB_OMNI_PORT`: (Optional) The port number (Default: 5432).
+    *   `ALLOYDB_OMNI_DATABASE`: The name of the database to connect to.
+    *   `ALLOYDB_OMNI_USER`: The database username.
+    *   `ALLOYDB_OMNI_PASSWORD`: (Optional) The password for the database user.
+    *   `ALLOYDB_OMNI_QUERY_PARAMS`: (Optional) Connection query parameters.
+*   **Tools:**
+    *   `execute_sql`: Executes a SQL query.
+    *   `list_tables`: Lists tables in the database.
+    *   `list_autovacuum_configurations`: Lists autovacuum configurations in the
+        database.
+    *   `list_columnar_configurations`: List AlloyDB Omni columnar-related configurations.
+    *   `list_columnar_recommended_columns`: Lists columns that AlloyDB Omni recommends adding to the columnar engine.
+    *   `list_memory_configurations`: Lists memory-related configurations in the
+        database.
+    *   `list_top_bloated_tables`: List top bloated tables in the database.
+    *   `list_replication_slots`: Lists replication slots in the database.
+    *   `list_invalid_indexes`: Lists invalid indexes in the database.
+    *   `get_query_plan`: Generate the execution plan of a statement.
+    *   `list_views`: Lists views in the database from pg_views with a default
+        limit of 50 rows. Returns schemaname, viewname and the ownername.
+    *   `list_schemas`: Lists schemas in the database.
+    *   `database_overview`: Fetches the current state of the PostgreSQL server.
+    *   `list_triggers`: Lists triggers in the database.
+    *   `list_indexes`: List available user indexes in a PostgreSQL database.
+    *   `list_sequences`: List sequences in a PostgreSQL database.
+    *   `list_publication_tables`: List publication tables in a PostgreSQL database.
+    *   `list_tablespaces`: Lists tablespaces in the database.
+    *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
+    *   `list_database_stats`: Lists the key performance and activity statistics for
+        each database in the AlloyDB instance.
+    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.
 
 ## BigQuery
 
@@ -14177,9 +14296,9 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
-    *   `list_schemas`: Lists schemas in the database. 
-    *   `database_overview`: Fetches the current state of the PostgreSQL server. 
-    *   `list_triggers`: Lists triggers in the database. 
+    *   `list_schemas`: Lists schemas in the database.
+    *   `database_overview`: Fetches the current state of the PostgreSQL server.
+    *   `list_triggers`: Lists triggers in the database.
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
     *   `list_publication_tables`: List publication tables in a PostgreSQL database.
@@ -14187,7 +14306,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
     *   `list_database_stats`: Lists the key performance and activity statistics for
         each database in the postgreSQL instance.
-    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.  
+    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.
 
 ## Cloud SQL for PostgreSQL Observability
 
@@ -14311,10 +14430,10 @@ See [Usage Examples](../reference/cli.md#examples).
         entries.
     *   **Dataplex Editor** (`roles/dataplex.editor`) to modify entries.
 *   **Tools:**
-    *   `dataplex_search_entries`: Searches for entries in Dataplex Catalog.
-    *   `dataplex_lookup_entry`: Retrieves a specific entry from Dataplex
+    *   `search_entries`: Searches for entries in Dataplex Catalog.
+    *   `lookup_entry`: Retrieves a specific entry from Dataplex
         Catalog.
-    *   `dataplex_search_aspect_types`: Finds aspect types relevant to the
+    *   `search_aspect_types`: Finds aspect types relevant to the
         query.
 
 ## Firestore
@@ -14498,9 +14617,9 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `get_query_plan`: Generate the execution plan of a statement.
     *   `list_views`: Lists views in the database from pg_views with a default
         limit of 50 rows. Returns schemaname, viewname and the ownername.
-    *   `list_schemas`: Lists schemas in the database. 
-    *   `database_overview`: Fetches the current state of the PostgreSQL server. 
-    *   `list_triggers`: Lists triggers in the database. 
+    *   `list_schemas`: Lists schemas in the database.
+    *   `database_overview`: Fetches the current state of the PostgreSQL server.
+    *   `list_triggers`: Lists triggers in the database.
     *   `list_indexes`: List available user indexes in a PostgreSQL database.
     *   `list_sequences`: List sequences in a PostgreSQL database.
     *   `list_publication_tables`: List publication tables in a PostgreSQL database.
@@ -14508,7 +14627,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `list_pg_settings`: List configuration parameters for the PostgreSQL server.
     *   `list_database_stats`: Lists the key performance and activity statistics for
         each database in the PostgreSQL server.
-    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.  
+    *   `list_roles`: Lists all the user-created roles in PostgreSQL database.
 
 ## Google Cloud Serverless for Apache Spark
 
