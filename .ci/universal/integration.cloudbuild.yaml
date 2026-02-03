@@ -1,0 +1,64 @@
+# Copyright 2026 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+steps:
+  - name: "${_IMAGE}"
+    id: "universal-test"
+    entrypoint: "bash"
+    args:
+      - -c
+      - |
+        set -ex
+        chmod +x .ci/universal/run_tests.sh
+        .ci/universal/run_tests.sh
+    env:
+      - "CLOUD_SQL_INSTANCE=${_CLOUD_SQL_INSTANCE}"
+      - "GCP_PROJECT=${_GCP_PROJECT}"
+      - "DATABASE_NAME=${_DATABASE_NAME}"
+      - "DB_USER=${_DB_USER}"
+      - "TARGET_ROOT=${_TARGET_ROOT}"
+      - "TARGET_LANG=${_TARGET_LANG}"
+      - "TABLE_NAME=${_TABLE_NAME}"
+      - "SQL_FILE=${_SQL_FILE}"
+      - "AGENT_FILE_PATTERN=${_AGENT_FILE_PATTERN}"
+    secretEnv: ["TOOLS_YAML_CONTENT", "GOOGLE_API_KEY", "DB_PASSWORD"]
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/${_GCP_PROJECT}/secrets/${_TOOLS_YAML_SECRET}/versions/5
+      env: "TOOLS_YAML_CONTENT"
+    - versionName: projects/${_GCP_PROJECT_NUMBER}/secrets/${_API_KEY_SECRET}/versions/latest
+      env: "GOOGLE_API_KEY"
+    - versionName: projects/${_GCP_PROJECT}/secrets/${_DB_PASS_SECRET}/versions/latest
+      env: "DB_PASSWORD"
+
+artifacts:
+  objects:
+    location: "gs://${_LOG_BUCKET}/universal-tests/$BUILD_ID"
+    paths: ["*.log"]
+
+timeout: 1200s
+
+substitutions:
+  _TARGET_LANG: "python"
+  _IMAGE: "python:3.11"
+  _TARGET_ROOT: "docs/en/getting-started/quickstart/python"
+  _TABLE_NAME: "hotels_python"
+  _SQL_FILE: ".ci/universal/setup_hotels.sql"
+  _AGENT_FILE_PATTERN: "quickstart.py"
+  _LOG_BUCKET: "toolbox-test-logs"
+
+options:
+  machineType: "E2_HIGHCPU_8"
+  logging: CLOUD_LOGGING_ONLY
