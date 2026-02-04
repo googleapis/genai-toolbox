@@ -29,7 +29,7 @@ This SDK is supported on Go version 1.24.4 and higher.
 
 ## Quickstart
 
-For more information on how to load a ToolboxTool, see [the core package](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core)
+For more information on how to load a `ToolboxTool`, see [the core package](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/core)
 
 ## Convert Toolbox Tool to a Genkit Tool
 
