@@ -18,7 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http" // Added for http.StatusInternalServerError
+	"net/http"
 	"strings"
 
 	firestoreapi "cloud.google.com/go/firestore"
@@ -27,7 +27,7 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/sources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	fsUtil "github.com/googleapis/genai-toolbox/internal/tools/firestore/util"
-	"github.com/googleapis/genai-toolbox/internal/util" // Added for util.ToolboxError
+	"github.com/googleapis/genai-toolbox/internal/util"
 	"github.com/googleapis/genai-toolbox/internal/util/parameters"
 )
 
