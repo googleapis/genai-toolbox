@@ -18,7 +18,9 @@ from typing import Any, Dict, Optional, Awaitable
 
 from google.adk import Agent
 from google.adk.apps import App
-from google.adk.agents import InvocationContext
+from google.adk.runners import Runner
+from google.adk.sessions.in_memory_session_service import InMemorySessionService
+from google.genai import types
 from toolbox_adk import ToolboxToolset, CredentialStrategy
 
 system_prompt = """
@@ -32,46 +34,53 @@ system_prompt = """
 """
 
 async def before_tool_callback(context: Any, args: Dict[str, Any]):
-    """
-    Callback fired before a tool is executed.
-    Enforces business logic: Max stay duration is 14 days.
-    """
-    tool_name = getattr(context, "name", "unknown_tool")
-    
+    """Enforces business logic: Max stay duration is 14 days."""
+    tool_name = getattr(context, "name", "unknown_tool")    
     print(f"POLICY CHECK: Intercepting '{tool_name}'")
+    
     if tool_name == "update-hotel" or ("checkin_date" in args and "checkout_date" in args):
         try:
             start = datetime.fromisoformat(args["checkin_date"])
             end = datetime.fromisoformat(args["checkout_date"])
-            duration = (end - start).days
-
-            if duration > 14:
+            if (end - start).days > 14:
                 print("BLOCKED: Stay too long")
                 raise ValueError("Error: Maximum stay duration is 14 days.")
         except ValueError as e:
-            if "Maximum stay duration" in str(e):
-                raise
-            pass 
-            
+            if "Maximum stay duration" in str(e): raise
     return args
 
 async def after_tool_callback(context: Any, args: Dict[str, Any], result: Any, error: Optional[Exception]) -> Awaitable[Any]:
-    """
-    Callback fired after a tool execution.
-    Enriches response for successful bookings.
-    """
+    """Enriches response for successful bookings."""
     tool_name = getattr(context, "name", "unknown_tool")
-
     if error:
-        print(f"[Tool-Level] after_tool_callback: Tool '{tool_name}' failed with error: {error}")
+        print(f"[Tool-Level] Tool '{tool_name}' failed: {error}")
         return None
+
     if isinstance(result, str) and "Error" not in result:
-        is_booking = tool_name == "book-hotel" or "booking" in str(result).lower() or "confirmed" in str(result).lower()
-        
+        is_booking = tool_name == "book-hotel" or "booking" in str(result).lower()
         if is_booking:
-             loyalty_bonus = 500
-             return f"Booking Confirmed!\n You earned {loyalty_bonus} Loyalty Points with this stay.\n\nSystem Details: {result}"
+             return f"Booking Confirmed!\n You earned 500 Loyalty Points with this stay.\n\nSystem Details: {result}"
     return result
+
+async def run_turn(runner: Runner, user_id: str, session_id: str, text: str):
+    """Helper to run a single turn."""
+    print(f"\nUSER: '{text}'")
+    response_text = ""
+    async for event in runner.run_async(
+        user_id=user_id, session_id=session_id,
+        new_message=types.Content(role="user", parts=[types.Part(text=text)])
+    ):
+        if event.content and event.content.parts:
+            for part in event.content.parts: 
+                if part.text:
+                    response_text += part.text
+        pass
+    print(f"AI: {response_text}")
+
+queries = [
+    "Book hotel with id 3.",
+    "Update my hotel with id 3 with checkin date 2025-01-18 and checkout date 2025-02-10",
+]
 
 async def main():
     print("🚀 Initializing ADK Agent with Toolbox...")
@@ -84,41 +93,18 @@ async def main():
         post_hook=after_tool_callback
     )
 
-    root_agent = Agent(
-        name='root_agent',
-        model='gemini-2.5-flash',
-        instruction=system_prompt,
-        tools=[toolset],
+    app = App(
+        root_agent=Agent(name='root_agent', model='gemini-2.5-flash', instruction=system_prompt, tools=[toolset]),
+        name="my_agent"
     )
+    runner = Runner(app=app, session_service=InMemorySessionService())
+    
+    user_id, session_id = "test-user", "test-session"
+    await runner.session_service.create_session(app_name=app.name, user_id=user_id, session_id=session_id)
 
-    app = App(root_agent=root_agent, name="my_agent")
-    user_input = "Book hotel with id 3."
-    print(f"\nUSER: '{user_input}'")
-    
-    # Note: run_async expects an InvocationContext and returns an async generator
-    context = InvocationContext(text=user_input)
-    response_text = ""
-    async for chunk in root_agent.run_async(context):
-        # Accumulate text from chunks
-        text_chunk = getattr(chunk, 'text', str(chunk))
-        if text_chunk:
-             response_text += text_chunk
-
-    print(f"AI: {response_text}")
-    
-    # Test Pre-processing
-    print("-" * 50)
-    user_input_2 = "Update my hotel with id 3 with checkin date 2025-01-18 and checkout date 2025-02-10" # > 14 days
-    print(f"USER: '{user_input_2}'")
-    
-    context_2 = InvocationContext(text=user_input_2)
-    response_text = ""
-    async for chunk in root_agent.run_async(context_2):
-        text_chunk = getattr(chunk, 'text', str(chunk))
-        if text_chunk:
-             response_text += text_chunk
-             
-    print(f"AI: {response_text}")
+    for query in queries:
+        await run_turn(runner, user_id, session_id, query)
+        print("-" * 50)
 
 if __name__ == "__main__":
     asyncio.run(main())
