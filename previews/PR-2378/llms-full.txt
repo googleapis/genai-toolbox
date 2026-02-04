@@ -13602,7 +13602,7 @@ This tutorial assumes that you have set up a basic toolbox application as descri
 
 This guide demonstrates how to implement these patterns in your Toolbox applications.
 
-## Python
+## Implementation
 
 {{< tabpane persist=header >}}
 {{% tab header="ADK" text=true %}}
@@ -13619,6 +13619,7 @@ For more information, see the [LangChain Middleware documentation](https://docs.
 You can also add model-level (`wrap_model`) and agent-level (`before_agent`, `after_agent`) hooks to intercept messages at different stages of the execution loop. See the [LangChain Middleware documentation](https://docs.langchain.com/oss/python/langchain/middleware/custom#wrap-style-hooks) for details on these additional hook types.
 {{% /tab %}}
 {{< /tabpane >}}
+
 
 # Snowflake
 How to get started running Toolbox with MCP Inspector and Snowflake as the source.
