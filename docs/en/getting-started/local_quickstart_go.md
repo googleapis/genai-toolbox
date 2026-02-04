@@ -46,6 +46,11 @@ from Toolbox.
     go get github.com/googleapis/mcp-toolbox-sdk-go
     ```
 
+1. Set your API key (If you don't have an API key yet, you can get one from [Google AI Studio](https://aistudio.google.com/app/apikey).)
+   ```bash
+   export GOOGLE_API_KEY="YOUR_ACTUAL_GEMINI_API_KEY"
+   ```
+
 1. Create a new file named `hotelagent.go` and copy the following code to create
    an agent:
 
