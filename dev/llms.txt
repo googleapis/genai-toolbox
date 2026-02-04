@@ -47,6 +47,7 @@ List of guides detailing how to do different things with Toolbox.
 - [Deploy to Kubernetes](https://googleapis.github.io/genai-toolbox/dev/how-to/deploy_gke/): How to set up and configure Toolbox to deploy on Kubernetes with Google Kubernetes Engine (GKE).
 - [Deploy using Docker Compose](https://googleapis.github.io/genai-toolbox/dev/how-to/deploy_docker/): How to deploy Toolbox using Docker Compose.
 - [Export Telemetry](https://googleapis.github.io/genai-toolbox/dev/how-to/export_telemetry/): How to set up and configure Toolbox to use the Otel Collector.
+- [Generate Agent Skills](https://googleapis.github.io/genai-toolbox/dev/how-to/generate_skill/): How to generate agent skills from a toolset.
 - [Invoke Tools via CLI](https://googleapis.github.io/genai-toolbox/dev/how-to/invoke_tool/): Learn how to invoke your tools directly from the command line using the `invoke` command.
 
 ### Resources

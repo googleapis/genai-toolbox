@@ -285,7 +285,14 @@ telemetry data.&lt;/p>
 &lt;li>&lt;code>Connectors&lt;/code>&lt;/li>
 &lt;/ul>
 &lt;p>Example of setting up the classes of pipeline components (in this example, we
-don&amp;rsquo;t use connectors):&lt;/p></description></item><item><title>Invoke Tools via CLI</title><link>https://googleapis.github.io/genai-toolbox/dev/how-to/invoke_tool/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/how-to/invoke_tool/</guid><description>&lt;p>The &lt;code>invoke&lt;/code> command allows you to invoke tools defined in your configuration directly from the CLI. This is useful for:&lt;/p>
+don&amp;rsquo;t use connectors):&lt;/p></description></item><item><title>Generate Agent Skills</title><link>https://googleapis.github.io/genai-toolbox/dev/how-to/generate_skill/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/how-to/generate_skill/</guid><description>&lt;p>The &lt;code>skills-generate&lt;/code> command allows you to convert a &lt;strong>toolset&lt;/strong> into an &lt;strong>Agent Skill&lt;/strong>. A toolset is a collection of tools, and the generated skill will contain metadata and execution scripts for all tools within that toolset, complying with the &lt;a href="https://agentskills.io/specification">Agent Skill specification&lt;/a>.&lt;/p>
+&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+&lt;ol>
+&lt;li>Make sure you have the &lt;code>toolbox&lt;/code> executable in your PATH.&lt;/li>
+&lt;li>Make sure you have &lt;a href="https://nodejs.org/">Node.js&lt;/a> installed on your system.&lt;/li>
+&lt;/ol>
+&lt;h2 id="generating-a-skill-from-a-toolset">Generating a Skill from a Toolset&lt;/h2>
+&lt;p>A skill package consists of a &lt;code>SKILL.md&lt;/code> file (with required YAML frontmatter) and a set of Node.js scripts. Each tool defined in your toolset maps to a corresponding script in the generated Node.js scripts (&lt;code>.js&lt;/code>) that work across different platforms (Linux, macOS, Windows).&lt;/p></description></item><item><title>Invoke Tools via CLI</title><link>https://googleapis.github.io/genai-toolbox/dev/how-to/invoke_tool/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/dev/how-to/invoke_tool/</guid><description>&lt;p>The &lt;code>invoke&lt;/code> command allows you to invoke tools defined in your configuration directly from the CLI. This is useful for:&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>Ephemeral Invocation:&lt;/strong> Executing a tool without spinning up a full MCP server/client.&lt;/li>
 &lt;li>&lt;strong>Debugging:&lt;/strong> Isolating tool execution logic and testing with various parameter combinations.&lt;/li>
