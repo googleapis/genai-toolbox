@@ -171,6 +171,23 @@ steps:
           alloydbainl \
           alloydbainl
 
+  - id: "alloydb-omni"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "AlloyDB Omni" \
+          alloydbomni \
+          postgres
+
   - id: "bigtable"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -294,6 +311,25 @@ steps:
           "Cloud Healthcare API" \
           cloudhealthcare \
           cloudhealthcare
+
+  - id: "cloud-logging-admin"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "LOGADMIN_PROJECT=$PROJECT_ID"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Cloud Logging Admin" \
+          cloudloggingadmin \
+          cloudloggingadmin
 
   - id: "postgres"
     name: golang:1
@@ -677,7 +713,7 @@ steps:
           "Looker" \
           looker \
           looker
-    
+
   - id: "mindsdb"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -865,7 +901,7 @@ steps:
           "Snowflake" \
           snowflake \
           snowflake
- 
+
   - id: "cassandra"
     name: golang:1
     waitFor: ["compile-test-binary"]
@@ -907,16 +943,16 @@ steps:
         tar -C /usr/local -xzf go.tar.gz
         export PATH="/usr/local/go/bin:$$PATH"
 
-        go test -v ./internal/sources/oracle/... \
+        go test -v ./tests/oracle/... \
           -coverprofile=oracle_coverage.out \
           -coverpkg=./internal/sources/oracle/...,./internal/tools/oracle/...
-        
+
         # Coverage check
         total_coverage=$(go tool cover -func=oracle_coverage.out | grep "total:" | awk '{print $3}')
         echo "Oracle total coverage: $total_coverage"
         coverage_numeric=$(echo "$total_coverage" | sed 's/%//')
-        if awk -v cov="$coverage_numeric" 'BEGIN {exit !(cov < 20)}'; then
-            echo "Coverage failure: $total_coverage is below 20%."
+        if awk -v cov="$coverage_numeric" 'BEGIN {exit !(cov < 60)}'; then
+            echo "Coverage failure: $total_coverage is below 60%."
             exit 1
         fi
 
