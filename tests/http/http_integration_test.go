@@ -404,37 +404,41 @@ func runQueryParamInvokeTest(t *testing.T) {
 	}
 }
 
-// runToolInvoke runs the tool invoke endpoint
 func runAdvancedHTTPInvokeTest(t *testing.T) {
 	// Test HTTP tool invoke endpoint
 	invokeTcs := []struct {
 		name          string
 		api           string
 		requestHeader map[string]string
-		requestBody   io.Reader
+		requestBody   func() io.Reader // Use a func to avoid reader reuse issues
 		want          string
-		isErr         bool
+		isAgentErr    bool
 	}{
 		{
 			name:          "invoke my-advanced-tool",
 			api:           "http://127.0.0.1:5000/api/tool/my-advanced-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 3, "path": "tool3", "country": "US", "X-Other-Header": "test"}`)),
-			want:          `"hello world"`,
-			isErr:         false,
+			requestBody: func() io.Reader {
+				return bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 3, "path": "tool3", "country": "US", "X-Other-Header": "test"}`))
+			},
+			want:       `"hello world"`,
+			isAgentErr: false,
 		},
 		{
 			name:          "invoke my-advanced-tool with wrong params",
 			api:           "http://127.0.0.1:5000/api/tool/my-advanced-tool/invoke",
 			requestHeader: map[string]string{},
-			requestBody:   bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 4, "path": "tool3", "country": "US", "X-Other-Header": "test"}`)),
-			isErr:         true,
+			requestBody: func() io.Reader {
+				return bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 4, "path": "tool3", "country": "US", "X-Other-Header": "test"}`))
+			},
+			want:       "error processing request",
+			isAgentErr: true,
 		},
 	}
+
 	for _, tc := range invokeTcs {
 		t.Run(tc.name, func(t *testing.T) {
-			// Send Tool invocation request
-			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody)
+			req, err := http.NewRequest(http.MethodPost, tc.api, tc.requestBody())
 			if err != nil {
 				t.Fatalf("unable to create request: %s", err)
 			}
@@ -442,33 +446,44 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 			for k, v := range tc.requestHeader {
 				req.Header.Add(k, v)
 			}
+
 			resp, err := http.DefaultClient.Do(req)
 			if err != nil {
 				t.Fatalf("unable to send request: %s", err)
 			}
 			defer resp.Body.Close()
 
+			// As you noted, the toolbox wraps errors in a 200 OK
 			if resp.StatusCode != http.StatusOK {
-				if tc.isErr == true {
-					return
-				}
 				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(bodyBytes))
+				t.Fatalf("expected status 200 from toolbox, got %d: %s", resp.StatusCode, string(bodyBytes))
 			}
 
-			// Check response body
-			var body map[string]interface{}
-			err = json.NewDecoder(resp.Body).Decode(&body)
-			if err != nil {
-				t.Fatalf("error parsing response body")
-			}
-			got, ok := body["result"].(string)
-			if !ok {
-				t.Fatalf("unable to find result in response body")
+			// Decode the response body into a map
+			var body map[string]any
+			if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+				t.Fatalf("failed to decode response: %v", err)
 			}
 
-			if got != tc.want {
-				t.Fatalf("unexpected value: got %q, want %q", got, tc.want)
+			if tc.isAgentErr {
+				// Look for the "error" key
+				gotErr, ok := body["error"].(string)
+				if !ok {
+					t.Fatalf("expected 'error' field in response body, got: %v", body)
+				}
+				if !strings.Contains(gotErr, tc.want) {
+					t.Fatalf("unexpected error message: got %q, want it to contain %q", gotErr, tc.want)
+				}
+			} else {
+				got, ok := body["result"].(string)
+				if !ok {
+					resBytes, _ := json.Marshal(body["result"])
+					got = string(resBytes)
+				}
+
+				if got != tc.want {
+					t.Fatalf("unexpected result: got %q, want %q", got, tc.want)
+				}
 			}
 		})
 	}
