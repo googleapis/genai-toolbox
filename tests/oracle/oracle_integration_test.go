@@ -168,7 +168,7 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 	// Invoke the 'my-update-tool' and verify the result.
 	testDmlQueries(t, "my-update-tool",
 		`{"name": "UpdatedAlice", "id": 1}`,
-		`"rows_affected":1`)
+		`\"rows_affected\":1`)
 }
 
 func setupOracleTable(t *testing.T, ctx context.Context, pool *sql.DB, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
