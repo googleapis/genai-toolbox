@@ -1,0 +1,2 @@
+google-adk[toolbox]==1.23.0
+pytest==9.0.2
