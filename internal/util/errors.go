@@ -37,7 +37,12 @@ type AgentError struct {
 
 var _ ToolboxError = &AgentError{}
 
-func (e *AgentError) Error() string { return e.Msg }
+func (e *AgentError) Error() string {
+	if e.Cause != nil {
+		return fmt.Sprintf("%s: %v", e.Msg, e.Cause)
+	}
+	return e.Msg
+}
 
 func (e *AgentError) Category() ErrorCategory { return CategoryAgent }
 
@@ -56,7 +61,12 @@ type ClientServerError struct {
 
 var _ ToolboxError = &ClientServerError{}
 
-func (e *ClientServerError) Error() string { return fmt.Sprintf("%s: %v", e.Msg, e.Cause) }
+func (e *ClientServerError) Error() string {
+	if e.Cause != nil {
+		return fmt.Sprintf("%s: %v", e.Msg, e.Cause)
+	}
+	return e.Msg
+}
 
 func (e *ClientServerError) Category() ErrorCategory { return CategoryServer }
 
