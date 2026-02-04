@@ -47,8 +47,6 @@ func NewAgentError(msg string, cause error) *AgentError {
 	return &AgentError{Msg: msg, Cause: cause}
 }
 
-var _ ToolboxError = &AgentError{}
-
 // ClientServerError returns 4XX/5XX error code
 type ClientServerError struct {
 	Msg   string
