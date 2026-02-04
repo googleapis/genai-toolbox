@@ -165,7 +165,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 	resp, err := source.SearchDICOM(t.Type, storeID, dicomWebPath, tokenStr, opts)
 	if err != nil {
-		return nil, util.ProecessGcpError(err)
+		return nil, util.ProcessGcpError(err)
 	}
 	return resp, nil
 }

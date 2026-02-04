@@ -272,11 +272,11 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	// Build the query
 	query, err := source.BuildQuery(queryParams.CollectionPath, filter, nil, orderByField, orderByDirection, queryParams.Limit, queryParams.AnalyzeQuery)
 	if err != nil {
-		return nil, util.ProecessGcpError(err)
+		return nil, util.ProcessGcpError(err)
 	}
 	resp, err := source.ExecuteQuery(ctx, query, queryParams.AnalyzeQuery)
 	if err != nil {
-		return nil, util.ProecessGcpError(err)
+		return nil, util.ProcessGcpError(err)
 	}
 	return resp, nil
 }

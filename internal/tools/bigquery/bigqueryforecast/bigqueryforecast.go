@@ -195,7 +195,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 			}
 			dryRunJob, err := bqutil.DryRunQuery(ctx, restService, source.BigQueryClient().Project(), source.BigQueryClient().Location, historyData, nil, connProps)
 			if err != nil {
-				return nil, util.ProecessGcpError(err)
+				return nil, util.ProcessGcpError(err)
 			}
 			statementType := dryRunJob.Statistics.Query.StatementType
 			if statementType != "SELECT" {
@@ -271,7 +271,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	resp, err := source.RunSQL(ctx, bqClient, sql, "SELECT", nil, connProps)
 	if err != nil {
-		return nil, util.ProecessGcpError(err)
+		return nil, util.ProcessGcpError(err)
 	}
 	return resp, nil
 }

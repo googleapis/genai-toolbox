@@ -253,7 +253,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 		op, err := source.GetOperations(ctx, project, location, operation, alloyDBConnectionMessageTemplate, delay, string(accessToken))
 		if err != nil {
-			return nil, util.ProecessGcpError(err)
+			return nil, util.ProcessGcpError(err)
 		}
 		if op != nil {
 			return op, nil

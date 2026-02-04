@@ -152,7 +152,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	resp, err := source.CloneInstance(ctx, project, sourceInstanceName, destinationInstanceName, pointInTime, preferredZone, preferredSecondaryZone, string(accessToken))
 	if err != nil {
-		return nil, util.ProecessGcpError(err)
+		return nil, util.ProcessGcpError(err)
 	}
 	return resp, nil
 }

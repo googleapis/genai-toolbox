@@ -115,7 +115,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	}
 	resp, err := source.ListCollections(ctx, parentPath)
 	if err != nil {
-		return nil, util.ProecessGcpError(err)
+		return nil, util.ProcessGcpError(err)
 	}
 	return resp, nil
 }

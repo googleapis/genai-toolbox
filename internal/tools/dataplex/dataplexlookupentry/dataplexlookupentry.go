@@ -129,7 +129,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	aspectTypes := aspectTypeSlice.([]string)
 	resp, err := source.LookupEntry(ctx, name, view, aspectTypes, entry)
 	if err != nil {
-		return nil, util.ProecessGcpError(err)
+		return nil, util.ProcessGcpError(err)
 	}
 	return resp, nil
 }

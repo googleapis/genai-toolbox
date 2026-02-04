@@ -234,7 +234,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	service, err := source.GetService(ctx, string(accessToken))
 	if err != nil {
-		return nil, util.ProecessGcpError(err)
+		return nil, util.ProcessGcpError(err)
 	}
 
 	delay := t.Delay
@@ -252,7 +252,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 		op, err := source.GetWaitForOperations(ctx, service, project, operationID, cloudSQLConnectionMessageTemplate, delay)
 		if err != nil {
-			return nil, util.ProecessGcpError(err)
+			return nil, util.ProcessGcpError(err)
 		} else if op != nil {
 			return op, nil
 		}

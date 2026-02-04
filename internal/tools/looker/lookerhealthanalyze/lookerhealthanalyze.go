@@ -343,6 +343,13 @@ func (t *analyzeTool) models(ctx context.Context, project, model string) ([]map[
 				exploreCount = len(*m.Explores)
 			}
 
+			if m.ProjectName == nil {
+				return nil, util.NewAgentError("model project name is nil", nil)
+			}
+			if m.Name == nil {
+				return nil, util.NewAgentError("model name is nil", nil)
+			}
+
 			results = append(results, map[string]interface{}{
 				"Project":     *m.ProjectName,
 				"Model":       *m.Name,
@@ -354,7 +361,7 @@ func (t *analyzeTool) models(ctx context.Context, project, model string) ([]map[
 	return results, nil
 }
 
-func (t *analyzeTool) getUsedModels(ctx context.Context) (map[string]int, error) {
+func (t *analyzeTool) getUsedModels(ctx context.Context) (map[string]int, util.ToolboxError) {
 	limit := "5000"
 	query := &v4.WriteQuery{
 		Model:  "system__activity",
@@ -370,22 +377,30 @@ func (t *analyzeTool) getUsedModels(ctx context.Context) (map[string]int, error)
 	}
 	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", nil)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError(fmt.Sprintf("error running inline query for used models: %v", err), http.StatusInternalServerError, err)
 	}
 
 	var data []map[string]interface{}
-	_ = json.Unmarshal([]byte(raw), &data)
+	if err := json.Unmarshal([]byte(raw), &data); err != nil {
+		return nil, util.NewClientServerError(fmt.Sprintf("error unmarshaling used models data: %v", err), http.StatusInternalServerError, err)
+	}
 
 	results := make(map[string]int)
 	for _, row := range data {
-		model, _ := row["query.model"].(string)
-		count, _ := row["history.query_run_count"].(float64)
+		model, ok := row["query.model"].(string)
+		if !ok {
+			return nil, util.NewAgentError("error casting 'query.model' in used models data", nil)
+		}
+		count, ok := row["history.query_run_count"].(float64)
+		if !ok {
+			return nil, util.NewAgentError("error casting 'history.query_run_count' in used models data", nil)
+		}
 		results[model] = int(count)
 	}
 	return results, nil
 }
 
-func (t *analyzeTool) getUsedExploreFields(ctx context.Context, model, explore string) (map[string]int, error) {
+func (t *analyzeTool) getUsedExploreFields(ctx context.Context, model, explore string) (map[string]int, util.ToolboxError) {
 	limit := "5000"
 	query := &v4.WriteQuery{
 		Model:  "system__activity",
@@ -402,19 +417,30 @@ func (t *analyzeTool) getUsedExploreFields(ctx context.Context, model, explore s
 	}
 	raw, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, query, "json", nil)
 	if err != nil {
-		return nil, err
+		return nil, util.NewClientServerError(fmt.Sprintf("error running inline query for used explore fields: %v", err), http.StatusInternalServerError, err)
 	}
 
 	var data []map[string]interface{}
-	_ = json.Unmarshal([]byte(raw), &data)
+	if err := json.Unmarshal([]byte(raw), &data); err != nil {
+		return nil, util.NewClientServerError(fmt.Sprintf("error unmarshaling used explore fields data: %v", err), http.StatusInternalServerError, err)
+	}
 
 	results := make(map[string]int)
 	fieldRegex := regexp.MustCompile(`(\w+\.\w+)`)
 
 	for _, row := range data {
-		count, _ := row["history.query_run_count"].(float64)
-		formattedFields, _ := row["query.formatted_fields"].(string)
-		filters, _ := row["query.filters"].(string)
+		count, ok := row["history.query_run_count"].(float64)
+		if !ok {
+			return nil, util.NewAgentError("error casting 'history.query_run_count' in used explore fields data", nil)
+		}
+		formattedFields, ok := row["query.formatted_fields"].(string)
+		if !ok {
+			return nil, util.NewAgentError("error casting 'query.formatted_fields' in used explore fields data", nil)
+		}
+		filters, ok := row["query.filters"].(string)
+		if !ok {
+			return nil, util.NewAgentError("error casting 'query.filters' in used explore fields data", nil)
+		}
 
 		usedFields := make(map[string]bool)
 
@@ -432,21 +458,24 @@ func (t *analyzeTool) getUsedExploreFields(ctx context.Context, model, explore s
 	return results, nil
 }
 
-func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]map[string]interface{}, error) {
+func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]map[string]interface{}, util.ToolboxError) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get logger from ctx: %s", err)
+		return nil, util.NewClientServerError("unable to get logger from ctx", http.StatusInternalServerError, err)
 	}
 	logger.InfoContext(ctx, "Analyzing explores...")
 
 	lookmlModels, err := t.SdkClient.AllLookmlModels(v4.RequestAllLookmlModels{}, nil)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching LookML models: %w", err)
+		return nil, util.NewClientServerError(fmt.Sprintf("error fetching LookML models: %v", err), http.StatusInternalServerError, err)
 	}
 
 	var results []map[string]interface{}
 	for _, m := range lookmlModels {
-		if model != "" && (m.Name == nil || *m.Name != model) {
+		if m.Name == nil {
+			return nil, util.NewAgentError("model name is nil", nil)
+		}
+		if model != "" && *m.Name != model {
 			continue
 		}
 		if m.Explores == nil {
@@ -454,10 +483,10 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 		}
 
 		for _, e := range *m.Explores {
-			if explore != "" && (e.Name == nil || *e.Name != explore) {
-				continue
-			}
 			if e.Name == nil {
+				return nil, util.NewAgentError("explore name is nil", nil)
+			}
+			if explore != "" && *e.Name != explore {
 				continue
 			}
 
@@ -475,6 +504,12 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 
 			fieldCount := 0
 			if exploreDetail.Fields != nil {
+				if exploreDetail.Fields.Dimensions == nil {
+					return nil, util.NewAgentError("explore dimensions are nil", nil)
+				}
+				if exploreDetail.Fields.Measures == nil {
+					return nil, util.NewAgentError("explore measures are nil", nil)
+				}
 				fieldCount = len(*exploreDetail.Fields.Dimensions) + len(*exploreDetail.Fields.Measures)
 			}
 
@@ -491,12 +526,30 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 
 			allFields := []string{}
 			if exploreDetail.Fields != nil {
+				if exploreDetail.Fields.Dimensions == nil {
+					return nil, util.NewAgentError("explore dimensions are nil", nil)
+				}
 				for _, d := range *exploreDetail.Fields.Dimensions {
+					if d.Hidden == nil {
+						return nil, util.NewAgentError("dimension hidden status is nil", nil)
+					}
+					if d.Name == nil {
+						return nil, util.NewAgentError("dimension name is nil", nil)
+					}
 					if !*d.Hidden {
 						allFields = append(allFields, *d.Name)
 					}
 				}
+				if exploreDetail.Fields.Measures == nil {
+					return nil, util.NewAgentError("explore measures are nil", nil)
+				}
 				for _, ms := range *exploreDetail.Fields.Measures {
+					if ms.Hidden == nil {
+						return nil, util.NewAgentError("measure hidden status is nil", nil)
+					}
+					if ms.Name == nil {
+						return nil, util.NewAgentError("measure name is nil", nil)
+					}
 					if !*ms.Hidden {
 						allFields = append(allFields, *ms.Name)
 					}
@@ -517,6 +570,9 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 					joinStats[join] += queryCount
 				}
 				for _, join := range *exploreDetail.Joins {
+					if join.Name == nil {
+						return nil, util.NewAgentError("join name is nil", nil)
+					}
 					if _, ok := joinStats[*join.Name]; !ok {
 						joinStats[*join.Name] = 0
 					}
@@ -548,22 +604,32 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 
 			rawQueryCount, err := lookercommon.RunInlineQuery(ctx, t.SdkClient, queryCountQueryBody, "json", nil)
 			if err != nil {
-				return nil, err
+				return nil, util.NewClientServerError(fmt.Sprintf("error running inline query for query count: %v", err), http.StatusInternalServerError, err)
 			}
 			queryCount := 0
 			var data []map[string]interface{}
-			_ = json.Unmarshal([]byte(rawQueryCount), &data)
+			if err := json.Unmarshal([]byte(rawQueryCount), &data); err != nil {
+				return nil, util.NewClientServerError(fmt.Sprintf("error unmarshaling query count data: %v", err), http.StatusInternalServerError, err)
+			}
 			if len(data) > 0 {
 				if count, ok := data[0]["history.query_run_count"].(float64); ok {
 					queryCount = int(count)
+				} else {
+					return nil, util.NewAgentError("error casting 'history.query_run_count' in query count data", nil)
 				}
+			}
+			if e.Hidden == nil {
+				return nil, util.NewAgentError("explore hidden status is nil", nil)
+			}
+			if e.Description == nil {
+				return nil, util.NewAgentError("explore description is nil", nil)
 			}
 
 			results = append(results, map[string]interface{}{
 				"Model":           *m.Name,
 				"Explore":         *e.Name,
 				"Is Hidden":       *e.Hidden,
-				"Has Description": e.Description != nil && *e.Description != "",
+				"Has Description": *e.Description != "",
 				"# Joins":         joinCount,
 				"# Unused Joins":  unusedJoinsCount,
 				"# Unused Fields": unusedFieldsCount,

@@ -162,7 +162,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	resp, err := source.CreateCluster(ctx, project, location, network, user, password, clusterID, string(accessToken))
 
 	if err != nil {
-		return nil, util.ProecessGcpError(err)
+		return nil, util.ProcessGcpError(err)
 	}
 
 	return resp, nil

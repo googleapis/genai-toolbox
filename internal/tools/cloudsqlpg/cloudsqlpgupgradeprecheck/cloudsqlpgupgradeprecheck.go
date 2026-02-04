@@ -158,7 +158,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	service, err := source.GetService(ctx, string(accessToken))
 	if err != nil {
-		return nil, util.ProecessGcpError(err)
+		return nil, util.ProcessGcpError(err)
 	}
 
 	reqBody := &sqladmin.InstancesPreCheckMajorVersionUpgradeRequest{
@@ -170,7 +170,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	call := service.Instances.PreCheckMajorVersionUpgrade(project, instanceName, reqBody).Context(ctx)
 	op, err := call.Do()
 	if err != nil {
-		return nil, util.ProecessGcpError(err)
+		return nil, util.ProcessGcpError(err)
 	}
 
 	const pollTimeout = 20 * time.Second
@@ -179,7 +179,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	for time.Now().Before(cutoffTime) {
 		currentOp, err := service.Operations.Get(project, op.Name).Context(ctx).Do()
 		if err != nil {
-			return nil, util.ProecessGcpError(err)
+			return nil, util.ProcessGcpError(err)
 		}
 
 		if currentOp.Status == "DONE" {

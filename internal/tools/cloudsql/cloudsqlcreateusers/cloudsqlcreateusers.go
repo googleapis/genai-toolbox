@@ -146,7 +146,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	password, _ := paramsMap["password"].(string)
 	resp, err := source.CreateUsers(ctx, project, instance, name, password, iamUser, string(accessToken))
 	if err != nil {
-		return nil, util.ProecessGcpError(err)
+		return nil, util.ProcessGcpError(err)
 	}
 	return resp, nil
 }

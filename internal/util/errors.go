@@ -85,9 +85,9 @@ func NewClientServerError(msg string, code int, cause error) *ClientServerError 
 	return &ClientServerError{Msg: msg, Code: code, Cause: cause}
 }
 
-// ProecessGcpError catches auth related errors and return 401/403 error codes
+// ProcessGcpError catches auth related errors in GCP requests results and return 401/403 error codes
 // Returns AgentError for all other errors
-func ProecessGcpError(err error) ToolboxError {
+func ProcessGcpError(err error) ToolboxError {
 	var gErr *googleapi.Error
 	if errors.As(err, &gErr) {
 		if gErr.Code == 401 {
