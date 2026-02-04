@@ -233,12 +233,11 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	params, err := parameters.ParseParams(tool.GetParameters(), data, claimsFromAuth)
 	if err != nil {
-		// If auth error, return 401
-		errMsg := fmt.Sprintf("error parsing authenticated parameters from ID token: %w", err)
+		// If auth error, return 401 or 403
 		var clientServerErr *util.ClientServerError
-		if errors.As(err, &clientServerErr) && clientServerErr.Code == http.StatusUnauthorized {
-			s.logger.DebugContext(ctx, errMsg)
-			_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
+		if errors.As(err, &clientServerErr) && (clientServerErr.Code == http.StatusUnauthorized || clientServerErr.Code == http.StatusForbidden) {
+			s.logger.DebugContext(ctx, fmt.Sprintf("error parsing authenticated parameters from ID token: %s", err))
+			_ = render.Render(w, r, newErrResponse(err, clientServerErr.Code))
 			return
 		}
 		err = fmt.Errorf("provided parameters were invalid: %w", err)

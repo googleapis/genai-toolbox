@@ -123,8 +123,9 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	}
 	if clientAuth {
 		if accessToken == "" {
-			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, "missing access token in the 'Authorization' header", nil), util.NewClientServerError(
-				"missing access token in the 'Authorization' header",
+			errMsg := "missing access token in the 'Authorization' header"
+			return jsonrpc.NewError(id, jsonrpc.INVALID_REQUEST, errMsg, nil), util.NewClientServerError(
+				errMsg,
 				http.StatusUnauthorized,
 				nil,
 			)

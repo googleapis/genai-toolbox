@@ -448,12 +448,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		case jsonrpc.INVALID_REQUEST:
 			var clientServerErr *util.ClientServerError
 			if errors.As(err, &clientServerErr) {
-				switch clientServerErr.Code {
-				case http.StatusUnauthorized:
-					w.WriteHeader(http.StatusUnauthorized)
-				case http.StatusForbidden:
-					w.WriteHeader(http.StatusForbidden)
-				}
+				w.WriteHeader(clientServerErr.Code)
 			}
 		}
 	}
