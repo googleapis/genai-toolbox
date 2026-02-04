@@ -1,13 +1,13 @@
 ---
-title: "tbGenkit Package"
-linkTitle: "tbGenkit"
+title: "Genkit Package"
+linkTitle: "Genkit"
 type: docs
 weight: 1
 ---
 
 ![MCP Toolbox Logo](https://raw.githubusercontent.com/googleapis/genai-toolbox/main/logo.png)
 
-# MCP Toolbox TBGenkit Package
+# MCP Toolbox For Go Genkit SDK
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
@@ -19,19 +19,6 @@ applications.
 This simplifies integrating external functionalities (like APIs, databases, or
 custom logic) managed by the Toolbox into your workflows, especially those
 involving Large Language Models (LLMs).
-
-
-<!-- TOC ignore:true -->
-<!-- TOC -->
-
-- [Installation](#installation)
-- [Quickstart](#quickstart)
-- [Convert Toolbox Tool to a Genkit Tool](#convert-toolbox-tool-to-a-genkit-tool)
-- [Contributing](#contributing)
-- [License](#license)
-- [Support](#support)
-- [Samples for Reference](#samples-for-reference)
-<!-- /TOC -->
 
 ## Installation
 
@@ -60,23 +47,9 @@ func main() {
 }
 ```
 
-For end-to-end example on how to use Toolbox with Genkit Go, check out the [/samples/](https://github.com/googleapis/mcp-toolbox-sdk-go/tree/main/tbgenkit/samples) folder
+# Using with Orchestration Frameworks
 
-# Contributing
-
-Contributions are welcome! Please refer to the [DEVELOPER.md](/DEVELOPER.md)
-file for guidelines on how to set up a development environment and run tests.
-
-# License
-
-This project is licensed under the Apache License 2.0. See the
-[LICENSE](https://github.com/googleapis/mcp-toolbox-sdk-go/blob/main/LICENSE) file for details.
-
-# Support
-
-If you encounter issues or have questions, check the existing [GitHub Issues](https://github.com/googleapis/genai-toolbox/issues) for the main Toolbox project.
-
-# Samples for Reference
+To see how the MCP Toolbox Go SDK works with orchestration frameworks, check out these end-to-end examples given below.
 
 <details>
 <summary>Genkit Go</summary>
