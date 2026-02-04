@@ -247,7 +247,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	for retries < maxRetries {
 		select {
 		case <-ctx.Done():
-			return nil, util.NewAgentError("timed out waiting for operation %s", ctx.Err())
+			return nil, util.NewAgentError("timed out waiting for operation", ctx.Err())
 		default:
 		}
 
