@@ -25,6 +25,8 @@ const (
 type ToolboxError interface {
 	error
 	Category() ErrorCategory
+	Error() string
+	Unwrap() error
 }
 
 // Agent Errors return 200 to the sender
@@ -32,6 +34,8 @@ type AgentError struct {
 	Msg   string
 	Cause error
 }
+
+var _ ToolboxError = &AgentError{}
 
 func (e *AgentError) Error() string { return e.Msg }
 
@@ -43,12 +47,16 @@ func NewAgentError(msg string, cause error) *AgentError {
 	return &AgentError{Msg: msg, Cause: cause}
 }
 
+var _ ToolboxError = &AgentError{}
+
 // ClientServerError returns 4XX/5XX error code
 type ClientServerError struct {
 	Msg   string
 	Code  int
 	Cause error
 }
+
+var _ ToolboxError = &ClientServerError{}
 
 func (e *ClientServerError) Error() string { return fmt.Sprintf("%s: %v", e.Msg, e.Cause) }
 
