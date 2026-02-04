@@ -106,24 +106,19 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetMySQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, OracleToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
 
-	// Configure a DML tool (Update) to verify the 'readonly: false' logic.
-	// We insert this directly into the tools map to ensure the 'readonly' flag
-	// is explicitly set to false, allowing UPDATE statements to execute.
-	// -------------------------------------------------------------------------
+	// Configure a DML tool to verify the 'readonly: false' logic.
 	updateStmt := fmt.Sprintf(`UPDATE %s SET "name" = :1 WHERE "id" = :2`, tableNameParam)
 
-	// Retrieve the existing tools map from the configuration
 	toolsMap, ok := toolsFile["tools"].(map[string]any)
 	if !ok {
 		t.Fatal("Configuration error: 'tools' key is missing or is not a map")
 	}
 
-	// Add the new update tool to the configuration
 	toolsMap["my-update-tool"] = map[string]any{
 		"type":        "oracle-sql",
-		"source":      "my-instance", // Uses the existing test database source
+		"source":      "my-instance",
 		"statement":   updateStmt,
-		"readOnly":    false, // This flag triggers the DML execution path in oracle.go
+		"readOnly":    false,
 		"description": "Update user name by ID.",
 		"parameters": []map[string]any{
 			{
@@ -171,11 +166,9 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 
 	// Invoke the 'my-update-tool' and verify the result.
-	// We expect the operation to succeed and return "rows_affected": 1.
-	// This proves that the Source.RunSQL method correctly handled the DML request.
-	runInvokeToolTest(t, "my-update-tool",
+	testDmlQueries(t, "my-update-tool",
 		`{"name": "UpdatedAlice", "id": 1}`,
-		`"text":"{\"rows_affected\":1}"`)
+		`"rows_affected":1`)
 }
 
 func setupOracleTable(t *testing.T, ctx context.Context, pool *sql.DB, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
@@ -286,9 +279,9 @@ func dropAllUserTables(t *testing.T, ctx context.Context, db *sql.DB) {
 	}
 }
 
-// runInvokeToolTest sends a JSON-RPC request to the running test server
+// testDmlQueries sends a JSON-RPC request to the running test server
 // and asserts that the response body contains the expected substring.
-func runInvokeToolTest(t *testing.T, toolName, paramsJSON, wantResponseSubStr string) {
+func testDmlQueries(t *testing.T, toolName, paramsJSON, wantResponseSubStr string) {
 	t.Helper()
 
 	// The test server typically runs on port 8080
