@@ -431,7 +431,7 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 			requestBody: func() io.Reader {
 				return bytes.NewBuffer([]byte(`{"animalArray": ["rabbit", "ostrich", "whale"], "id": 4, "path": "tool3", "country": "US", "X-Other-Header": "test"}`))
 			},
-			want:       "error processing request",
+			want:       "error processing request: unexpected status code: 400, response body: Bad Request: Incorrect query parameter: id, actual: [2 1 4]",
 			isAgentErr: true,
 		},
 	}
