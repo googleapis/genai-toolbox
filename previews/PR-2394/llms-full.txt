@@ -13167,7 +13167,7 @@ To get started using Toolbox tools with an application, follow these general ste
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 This package allows you to seamlessly integrate the functionalities of
-[Toolbox](https://github.com/googleapis/genai-toolbox) allowing you to load and
+[MCP Toolbox](https://github.com/googleapis/genai-toolbox) allowing you to load and
 use tools defined in the service as standard Genkit Tools within your Genkit Go
 applications.
 
