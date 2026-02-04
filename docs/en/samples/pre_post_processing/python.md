@@ -12,7 +12,7 @@ This tutorial assumes that you have set up a basic toolbox application as descri
 
 This guide demonstrates how to implement these patterns in your Toolbox applications.
 
-## Python
+## Implementation
 
 {{< tabpane persist=header >}}
 {{% tab header="ADK" text=true %}}
