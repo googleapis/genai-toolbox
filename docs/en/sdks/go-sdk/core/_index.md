@@ -7,7 +7,7 @@ weight: 1
 
 ![MCP Toolbox Logo](https://raw.githubusercontent.com/googleapis/genai-toolbox/main/logo.png)
 
-# MCP Toolbox Go Core SDK
+# MCP Toolbox For Go Core SDK
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
