@@ -186,7 +186,7 @@ These header-generating functions are called just before each request, ensuring 
 You can configure these dynamic headers as seen below:
 
 ```javascript
-import { ToolboxClient } from '@toolbox-sdk/adk';
+import { ToolboxClient } from '@toolbox-sdk/core';
 import {getGoogleIdToken} from '@toolbox-sdk/core/auth'
 
 const URL = 'http://127.0.0.1:5000';
