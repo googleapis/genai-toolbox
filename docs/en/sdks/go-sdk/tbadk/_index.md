@@ -12,7 +12,7 @@ weight: 1
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 This SDK allows you to seamlessly integrate the functionalities of
-[Toolbox](https://github.com/googleapis/genai-toolbox) allowing you to load and
+[MCP Toolbox](https://github.com/googleapis/genai-toolbox) allowing you to load and
 use tools defined in the service as standard Go structs within your ADK Go
 applications.
 
