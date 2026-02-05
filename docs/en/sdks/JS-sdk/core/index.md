@@ -119,10 +119,10 @@ A toolset is a collection of related tools. You can load all tools in a toolset 
 
 ```javascript
 // Load all tools
-const tools = await toolbox.loadToolset()
+const tools = await client.loadToolset()
 
 // Load a specific toolset
-const tools = await toolbox.loadToolset("my-toolset")
+const tools = await client.loadToolset("my-toolset")
 ```
 
 ### Load a single tool
