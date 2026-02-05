@@ -1,3 +1,4 @@
+# [start:quickstart]
 import asyncio
 
 from google.adk import Agent
@@ -16,13 +17,6 @@ update checkin or checkout dates if mentioned by the user.
 Don't ask for confirmations from the user.
 """
 
-queries = [
-    "Find hotels in Basel with Basel in its name.",
-    "Can you book the Hilton Basel for me?",
-    "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
-    "My check in dates would be from April 10, 2024 to April 19, 2024.",
-]
-
 # TODO(developer): update the TOOLBOX_URL to your toolbox endpoint
 toolset = ToolboxToolset(
     server_url="http://127.0.0.1:5000",
@@ -36,6 +30,14 @@ root_agent = Agent(
 )
 
 app = App(root_agent=root_agent, name="my_agent")
+# [end:quickstart]
+
+queries = [
+    "Find hotels in Basel with Basel in its name.",
+    "Can you book the Hilton Basel for me?",
+    "Oh wait, this is too expensive. Please cancel it and book the Hyatt Regency instead.",
+    "My check in dates would be from April 10, 2024 to April 19, 2024.",
+]
 
 async def main():
     runner = InMemoryRunner(app=app)
