@@ -13169,7 +13169,8 @@ Here's a minimal example to get you started. Ensure your Toolbox service is runn
 ```javascript
 
 import { ToolboxClient } from '@toolbox-sdk/core';  
-const client = new ToolboxClient(URL);  
+const URL = 'http://127.0.0.1:5000'; // Replace with your Toolbox service URL
+const client = new ToolboxClient(URL);
 
 async function quickstart() {  
   try {  
@@ -13250,10 +13251,10 @@ A toolset is a collection of related tools. You can load all tools in a toolset 
 
 ```javascript
 // Load all tools
-const tools = await toolbox.loadToolset()
+const tools = await client.loadToolset()
 
 // Load a specific toolset
-const tools = await toolbox.loadToolset("my-toolset")
+const tools = await client.loadToolset("my-toolset")
 ```
 
 ### Load a single tool
@@ -13261,7 +13262,7 @@ const tools = await toolbox.loadToolset("my-toolset")
 Loads a specific tool by its unique name. This provides fine-grained control.
 
 ```javascript
-const tool = await toolbox.loadTool("my-tool")
+const tool = await client.loadTool("my-tool")
 ```
 
 ## Invoking Tools
@@ -13317,7 +13318,7 @@ These header-generating functions are called just before each request, ensuring 
 You can configure these dynamic headers as seen below:
 
 ```javascript
-import { ToolboxClient } from '@toolbox-sdk/adk';
+import { ToolboxClient } from '@toolbox-sdk/core';
 import {getGoogleIdToken} from '@toolbox-sdk/core/auth'
 
 const URL = 'http://127.0.0.1:5000';
@@ -13347,7 +13348,7 @@ For Toolbox servers hosted on Google Cloud (e.g., Cloud Run) and requiring
 3. **Connect to the Toolbox Server**
 
     ```javascript
-    import { ToolboxClient } from '@toolbox-sdk/adk';
+    import { ToolboxClient } from '@toolbox-sdk/core';
     import {getGoogleIdToken} from '@toolbox-sdk/core/auth'
 
     const URL = 'http://127.0.0.1:5000';
@@ -13442,11 +13443,11 @@ tools loaded in that specific call, without modifying the original tool objects
 if they were loaded previously.
 
 ```javascript
-const authTool = await toolbox.loadTool("toolName", {"myAuth": getAuthToken})
+const authTool = await client.loadTool("toolName", {"myAuth": getAuthToken})
 
 // OR
 
-const authTools = await toolbox.loadToolset({"myAuth": getAuthToken})
+const authTools = await client.loadToolset({"myAuth": getAuthToken})
 ```
 
 {{< notice note>}}
@@ -13598,7 +13599,7 @@ const multiplyNumbers = tool({
     name: multiplyTool.getName(),
     description: multiplyTool.getDescription(),
     parameters: multiplyTool.getParamSchema(),
-    execute: mutliplyTool
+    execute: multiplyTool
 });
 
 await multiplyNumbers.call({ a: 2, b: 3 });
