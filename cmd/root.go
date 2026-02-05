@@ -34,6 +34,8 @@ import (
 	"github.com/fsnotify/fsnotify"
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/auth"
+	"github.com/googleapis/genai-toolbox/internal/cli/invoke"
+	"github.com/googleapis/genai-toolbox/internal/cli/skills"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
@@ -91,6 +93,9 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaresearchdicominstances"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaresearchdicomseries"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudhealthcare/cloudhealthcaresearchdicomstudies"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudloggingadmin/cloudloggingadminlistlognames"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudloggingadmin/cloudloggingadminlistresourcetypes"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudloggingadmin/cloudloggingadminquerylogs"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudmonitoring"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlcloneinstance"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/cloudsql/cloudsqlcreatebackup"
@@ -244,6 +249,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/sources/clickhouse"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudgda"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudhealthcare"
+	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudloggingadmin"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudmonitoring"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqladmin"
 	_ "github.com/googleapis/genai-toolbox/internal/sources/cloudsqlmssql"
@@ -361,36 +367,43 @@ func NewCommand(opts ...Option) *Command {
 	baseCmd.SetErr(cmd.errStream)
 
 	flags := cmd.Flags()
+	persistentFlags := cmd.PersistentFlags()
+
 	flags.StringVarP(&cmd.cfg.Address, "address", "a", "127.0.0.1", "Address of the interface the server will listen on.")
 	flags.IntVarP(&cmd.cfg.Port, "port", "p", 5000, "Port the server will listen on.")
 
 	flags.StringVar(&cmd.tools_file, "tools_file", "", "File path specifying the tool configuration. Cannot be used with --tools-files, or --tools-folder.")
 	// deprecate tools_file
 	_ = flags.MarkDeprecated("tools_file", "please use --tools-file instead")
-	flags.StringVar(&cmd.tools_file, "tools-file", "", "File path specifying the tool configuration. Cannot be used with --tools-files, or --tools-folder.")
-	flags.StringSliceVar(&cmd.tools_files, "tools-files", []string{}, "Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --tools-file, or --tools-folder.")
-	flags.StringVar(&cmd.tools_folder, "tools-folder", "", "Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --tools-file, or --tools-files.")
-	flags.Var(&cmd.cfg.LogLevel, "log-level", "Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.")
-	flags.Var(&cmd.cfg.LoggingFormat, "logging-format", "Specify logging format to use. Allowed: 'standard' or 'JSON'.")
-	flags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
-	flags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
-	flags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
+	persistentFlags.StringVar(&cmd.tools_file, "tools-file", "", "File path specifying the tool configuration. Cannot be used with --tools-files, or --tools-folder.")
+	persistentFlags.StringSliceVar(&cmd.tools_files, "tools-files", []string{}, "Multiple file paths specifying tool configurations. Files will be merged. Cannot be used with --tools-file, or --tools-folder.")
+	persistentFlags.StringVar(&cmd.tools_folder, "tools-folder", "", "Directory path containing YAML tool configuration files. All .yaml and .yml files in the directory will be loaded and merged. Cannot be used with --tools-file, or --tools-files.")
+	persistentFlags.Var(&cmd.cfg.LogLevel, "log-level", "Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.")
+	persistentFlags.Var(&cmd.cfg.LoggingFormat, "logging-format", "Specify logging format to use. Allowed: 'standard' or 'JSON'.")
+	persistentFlags.BoolVar(&cmd.cfg.TelemetryGCP, "telemetry-gcp", false, "Enable exporting directly to Google Cloud Monitoring.")
+	persistentFlags.StringVar(&cmd.cfg.TelemetryOTLP, "telemetry-otlp", "", "Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')")
+	persistentFlags.StringVar(&cmd.cfg.TelemetryServiceName, "telemetry-service-name", "toolbox", "Sets the value of the service.name resource attribute for telemetry data.")
 	// Fetch prebuilt tools sources to customize the help description
 	prebuiltHelp := fmt.Sprintf(
 		"Use a prebuilt tool configuration by source type. Allowed: '%s'. Can be specified multiple times.",
 		strings.Join(prebuiltconfigs.GetPrebuiltSources(), "', '"),
 	)
-	flags.StringSliceVar(&cmd.prebuiltConfigs, "prebuilt", []string{}, prebuiltHelp)
+	persistentFlags.StringSliceVar(&cmd.prebuiltConfigs, "prebuilt", []string{}, prebuiltHelp)
 	flags.BoolVar(&cmd.cfg.Stdio, "stdio", false, "Listens via MCP STDIO instead of acting as a remote HTTP server.")
 	flags.BoolVar(&cmd.cfg.DisableReload, "disable-reload", false, "Disables dynamic reloading of tools file.")
 	flags.BoolVar(&cmd.cfg.UI, "ui", false, "Launches the Toolbox UI web server.")
 	// TODO: Insecure by default. Might consider updating this for v1.0.0
 	flags.StringSliceVar(&cmd.cfg.AllowedOrigins, "allowed-origins", []string{"*"}, "Specifies a list of origins permitted to access this server. Defaults to '*'.")
 	flags.StringSliceVar(&cmd.cfg.AllowedHosts, "allowed-hosts", []string{"*"}, "Specifies a list of hosts permitted to access this server. Defaults to '*'.")
-	flags.StringSliceVar(&cmd.cfg.UserAgentMetadata, "user-agent-metadata", []string{}, "Appends additional metadata to the User-Agent.")
+	persistentFlags.StringSliceVar(&cmd.cfg.UserAgentMetadata, "user-agent-metadata", []string{}, "Appends additional metadata to the User-Agent.")
 
 	// wrap RunE command so that we have access to original Command object
 	cmd.RunE = func(*cobra.Command, []string) error { return run(cmd) }
+
+	// Register subcommands for tool invocation
+	baseCmd.AddCommand(invoke.NewCommand(cmd))
+	// Register subcommands for skill generation
+	baseCmd.AddCommand(skills.NewCommand(cmd))
 
 	return cmd
 }
@@ -915,70 +928,23 @@ func resolveWatcherInputs(toolsFile string, toolsFiles []string, toolsFolder str
 	return watchDirs, watchedFiles
 }
 
-func run(cmd *Command) error {
-	ctx, cancel := context.WithCancel(cmd.Context())
-	defer cancel()
+func (cmd *Command) Config() server.ServerConfig {
+	return cmd.cfg
+}
 
-	// watch for sigterm / sigint signals
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, syscall.SIGTERM, syscall.SIGINT)
-	go func(sCtx context.Context) {
-		var s os.Signal
-		select {
-		case <-sCtx.Done():
-			// this should only happen when the context supplied when testing is canceled
-			return
-		case s = <-signals:
-		}
-		switch s {
-		case syscall.SIGINT:
-			cmd.logger.DebugContext(sCtx, "Received SIGINT signal to shutdown.")
-		case syscall.SIGTERM:
-			cmd.logger.DebugContext(sCtx, "Sending SIGTERM signal to shutdown.")
-		}
-		cancel()
-	}(ctx)
+func (cmd *Command) Out() io.Writer {
+	return cmd.outStream
+}
 
-	// If stdio, set logger's out stream (usually DEBUG and INFO logs) to errStream
-	loggerOut := cmd.outStream
-	if cmd.cfg.Stdio {
-		loggerOut = cmd.errStream
-	}
+func (cmd *Command) Logger() log.Logger {
+	return cmd.logger
+}
 
-	// Handle logger separately from config
-	switch strings.ToLower(cmd.cfg.LoggingFormat.String()) {
-	case "json":
-		logger, err := log.NewStructuredLogger(loggerOut, cmd.errStream, cmd.cfg.LogLevel.String())
-		if err != nil {
-			return fmt.Errorf("unable to initialize logger: %w", err)
-		}
-		cmd.logger = logger
-	case "standard":
-		logger, err := log.NewStdLogger(loggerOut, cmd.errStream, cmd.cfg.LogLevel.String())
-		if err != nil {
-			return fmt.Errorf("unable to initialize logger: %w", err)
-		}
-		cmd.logger = logger
-	default:
-		return fmt.Errorf("logging format invalid")
-	}
-
-	ctx = util.WithLogger(ctx, cmd.logger)
-
-	// Set up OpenTelemetry
-	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.cfg.Version, cmd.cfg.TelemetryOTLP, cmd.cfg.TelemetryGCP, cmd.cfg.TelemetryServiceName)
+func (cmd *Command) LoadConfig(ctx context.Context) error {
+	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
-		errMsg := fmt.Errorf("error setting up OpenTelemetry: %w", err)
-		cmd.logger.ErrorContext(ctx, errMsg.Error())
-		return errMsg
+		return err
 	}
-	defer func() {
-		err := otelShutdown(ctx)
-		if err != nil {
-			errMsg := fmt.Errorf("error shutting down OpenTelemetry: %w", err)
-			cmd.logger.ErrorContext(ctx, errMsg.Error())
-		}
-	}()
 
 	var allToolsFiles []ToolsFile
 
@@ -988,12 +954,12 @@ func run(cmd *Command) error {
 		slices.Sort(cmd.prebuiltConfigs)
 		sourcesList := strings.Join(cmd.prebuiltConfigs, ", ")
 		logMsg := fmt.Sprintf("Using prebuilt tool configurations for: %s", sourcesList)
-		cmd.logger.InfoContext(ctx, logMsg)
+		logger.InfoContext(ctx, logMsg)
 
 		for _, configName := range cmd.prebuiltConfigs {
 			buf, err := prebuiltconfigs.Get(configName)
 			if err != nil {
-				cmd.logger.ErrorContext(ctx, err.Error())
+				logger.ErrorContext(ctx, err.Error())
 				return err
 			}
 
@@ -1001,7 +967,7 @@ func run(cmd *Command) error {
 			parsed, err := parseToolsFile(ctx, buf)
 			if err != nil {
 				errMsg := fmt.Errorf("unable to parse prebuilt tool configuration for '%s': %w", configName, err)
-				cmd.logger.ErrorContext(ctx, errMsg.Error())
+				logger.ErrorContext(ctx, errMsg.Error())
 				return errMsg
 			}
 			allToolsFiles = append(allToolsFiles, parsed)
@@ -1027,7 +993,7 @@ func run(cmd *Command) error {
 			(cmd.tools_file != "" && cmd.tools_folder != "") ||
 			(len(cmd.tools_files) > 0 && cmd.tools_folder != "") {
 			errMsg := fmt.Errorf("--tools-file, --tools-files, and --tools-folder flags cannot be used simultaneously")
-			cmd.logger.ErrorContext(ctx, errMsg.Error())
+			logger.ErrorContext(ctx, errMsg.Error())
 			return errMsg
 		}
 
@@ -1036,18 +1002,18 @@ func run(cmd *Command) error {
 
 		if len(cmd.tools_files) > 0 {
 			// Use tools-files
-			cmd.logger.InfoContext(ctx, fmt.Sprintf("Loading and merging %d tool configuration files", len(cmd.tools_files)))
+			logger.InfoContext(ctx, fmt.Sprintf("Loading and merging %d tool configuration files", len(cmd.tools_files)))
 			customTools, err = loadAndMergeToolsFiles(ctx, cmd.tools_files)
 		} else if cmd.tools_folder != "" {
 			// Use tools-folder
-			cmd.logger.InfoContext(ctx, fmt.Sprintf("Loading and merging all YAML files from directory: %s", cmd.tools_folder))
+			logger.InfoContext(ctx, fmt.Sprintf("Loading and merging all YAML files from directory: %s", cmd.tools_folder))
 			customTools, err = loadAndMergeToolsFolder(ctx, cmd.tools_folder)
 		} else {
 			// Use single file (tools-file or default `tools.yaml`)
 			buf, readFileErr := os.ReadFile(cmd.tools_file)
 			if readFileErr != nil {
 				errMsg := fmt.Errorf("unable to read tool file at %q: %w", cmd.tools_file, readFileErr)
-				cmd.logger.ErrorContext(ctx, errMsg.Error())
+				logger.ErrorContext(ctx, errMsg.Error())
 				return errMsg
 			}
 			customTools, err = parseToolsFile(ctx, buf)
@@ -1057,7 +1023,7 @@ func run(cmd *Command) error {
 		}
 
 		if err != nil {
-			cmd.logger.ErrorContext(ctx, err.Error())
+			logger.ErrorContext(ctx, err.Error())
 			return err
 		}
 		allToolsFiles = append(allToolsFiles, customTools)
@@ -1079,7 +1045,7 @@ func run(cmd *Command) error {
 	// This will error if custom tools collide with prebuilt tools
 	finalToolsFile, err := mergeToolsFiles(allToolsFiles...)
 	if err != nil {
-		cmd.logger.ErrorContext(ctx, err.Error())
+		logger.ErrorContext(ctx, err.Error())
 		return err
 	}
 
@@ -1090,14 +1056,90 @@ func run(cmd *Command) error {
 	cmd.cfg.ToolsetConfigs = finalToolsFile.Toolsets
 	cmd.cfg.PromptConfigs = finalToolsFile.Prompts
 
-	instrumentation, err := telemetry.CreateTelemetryInstrumentation(versionString)
+	return nil
+}
+
+func (cmd *Command) Setup(ctx context.Context) (context.Context, func(context.Context) error, error) {
+	// If stdio, set logger's out stream (usually DEBUG and INFO logs) to errStream
+	loggerOut := cmd.outStream
+	if cmd.cfg.Stdio {
+		loggerOut = cmd.errStream
+	}
+
+	// Handle logger separately from config
+	logger, err := log.NewLogger(cmd.cfg.LoggingFormat.String(), cmd.cfg.LogLevel.String(), loggerOut, cmd.errStream)
+	if err != nil {
+		return ctx, nil, fmt.Errorf("unable to initialize logger: %w", err)
+	}
+	cmd.logger = logger
+
+	ctx = util.WithLogger(ctx, cmd.logger)
+
+	// Set up OpenTelemetry
+	otelShutdown, err := telemetry.SetupOTel(ctx, cmd.cfg.Version, cmd.cfg.TelemetryOTLP, cmd.cfg.TelemetryGCP, cmd.cfg.TelemetryServiceName)
+	if err != nil {
+		errMsg := fmt.Errorf("error setting up OpenTelemetry: %w", err)
+		cmd.logger.ErrorContext(ctx, errMsg.Error())
+		return ctx, nil, errMsg
+	}
+
+	shutdownFunc := func(ctx context.Context) error {
+		err := otelShutdown(ctx)
+		if err != nil {
+			errMsg := fmt.Errorf("error shutting down OpenTelemetry: %w", err)
+			cmd.logger.ErrorContext(ctx, errMsg.Error())
+			return err
+		}
+		return nil
+	}
+
+	instrumentation, err := telemetry.CreateTelemetryInstrumentation(cmd.cfg.Version)
 	if err != nil {
 		errMsg := fmt.Errorf("unable to create telemetry instrumentation: %w", err)
 		cmd.logger.ErrorContext(ctx, errMsg.Error())
-		return errMsg
+		return ctx, shutdownFunc, errMsg
 	}
 
 	ctx = util.WithInstrumentation(ctx, instrumentation)
+
+	return ctx, shutdownFunc, nil
+}
+
+func run(cmd *Command) error {
+	ctx, cancel := context.WithCancel(cmd.Context())
+	defer cancel()
+
+	// watch for sigterm / sigint signals
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGTERM, syscall.SIGINT)
+	go func(sCtx context.Context) {
+		var s os.Signal
+		select {
+		case <-sCtx.Done():
+			// this should only happen when the context supplied when testing is canceled
+			return
+		case s = <-signals:
+		}
+		switch s {
+		case syscall.SIGINT:
+			cmd.logger.DebugContext(sCtx, "Received SIGINT signal to shutdown.")
+		case syscall.SIGTERM:
+			cmd.logger.DebugContext(sCtx, "Sending SIGTERM signal to shutdown.")
+		}
+		cancel()
+	}(ctx)
+
+	ctx, shutdown, err := cmd.Setup(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = shutdown(ctx)
+	}()
+
+	if err := cmd.LoadConfig(ctx); err != nil {
+		return err
+	}
 
 	// start server
 	s, err := server.NewServer(ctx, cmd.cfg)
@@ -1137,6 +1179,9 @@ func run(cmd *Command) error {
 			}
 		}()
 	}
+
+	// Determine if Custom Files are configured (re-check as loadAndMergeConfig might have updated defaults)
+	isCustomConfigured := cmd.tools_file != "" || len(cmd.tools_files) > 0 || cmd.tools_folder != ""
 
 	if isCustomConfigured && !cmd.cfg.DisableReload {
 		watchDirs, watchedFiles := resolveWatcherInputs(cmd.tools_file, cmd.tools_files, cmd.tools_folder)
