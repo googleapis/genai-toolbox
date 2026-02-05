@@ -13643,8 +13643,7 @@ The following example demonstrates how to use `ToolboxClient` with LangChain's m
 {{< include "js/langchain/agent.js" >}}
 ```
 
-For more information, see the [LangChain Middleware documentation](https://js.langchain.com/docs/introduction/middleware).
-You can also add model-level (`wrap_model`) and agent-level (`before_agent`, `after_agent`) hooks to intercept messages at different stages of the execution loop. See the [LangChain Middleware documentation](https://js.langchain.com/docs/introduction/middleware) for details on these additional hook types.
+For more information, see the [LangChain Middleware documentation](https://docs.langchain.com/oss/javascript/langchain/middleware/custom#tool-call-monitoring).
 {{% /tab %}}
 {{< /tabpane >}}
 
