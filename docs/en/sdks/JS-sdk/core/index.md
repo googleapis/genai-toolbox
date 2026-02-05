@@ -37,7 +37,8 @@ Here's a minimal example to get you started. Ensure your Toolbox service is runn
 ```javascript
 
 import { ToolboxClient } from '@toolbox-sdk/core';  
-const client = new ToolboxClient(URL);  
+const URL = 'http://127.0.0.1:5000'; // Replace with your Toolbox service URL
+const client = new ToolboxClient(URL);
 
 async function quickstart() {  
   try {  
