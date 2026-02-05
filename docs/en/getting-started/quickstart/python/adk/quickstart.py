@@ -47,7 +47,7 @@ async def main():
         print(f"\nUser: {query}")
         user_message = Content(parts=[Part.from_text(text=query)])
 
-        async for event in runner.run_async(session_id=session.id, new_message=user_message):
+        async for event in runner.run_async(user_id="test_user", session_id=session.id, new_message=user_message):
             if event.is_final_response():
                 print(f"Agent: {event.content.parts[0].text}")
 
