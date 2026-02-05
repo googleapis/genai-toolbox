@@ -311,11 +311,11 @@ tools loaded in that specific call, without modifying the original tool objects
 if they were loaded previously.
 
 ```javascript
-const authTool = await toolbox.loadTool("toolName", {"myAuth": getAuthToken})
+const authTool = await client.loadTool("toolName", {"myAuth": getAuthToken})
 
 // OR
 
-const authTools = await toolbox.loadToolset({"myAuth": getAuthToken})
+const authTools = await client.loadToolset({"myAuth": getAuthToken})
 ```
 
 {{< notice note>}}
