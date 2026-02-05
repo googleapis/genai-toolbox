@@ -435,7 +435,7 @@ const loadedTools = await toolboxClient.loadToolset();
 
 export const rootAgent = new LlmAgent({
   name: 'weather_time_agent',
-  model: 'gemini-2.5-flash',
+  model: 'gemini-3-flash-preview',
   description:
     'Agent to answer questions about the time and weather in a city.',
   instruction:
