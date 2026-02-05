@@ -1,6 +1,6 @@
 import { ToolboxClient } from "@toolbox-sdk/core";
 import { ChatVertexAI } from "@langchain/google-vertexai";
-import { createAgent, createMiddleware } from "langchain";
+import { createAgent, createMiddleware, ToolMessage } from "langchain";
 import { tool } from "@langchain/core/tools";
 import { fileURLToPath } from "url";
 import process from "process";
@@ -17,42 +17,41 @@ const systemPrompt = `
 
 const businessRulesMiddleware = createMiddleware({
   name: "BusinessRules",
-  wrapToolCall: async (toolCall, handler) => {
-    const { name, args } = toolCall;
-    console.log(`POLICY CHECK: Intercepting '${name}'`);
-
-    if (name === "update-hotel" && args.checkin_date && args.checkout_date) {
+  wrapToolCall: async (request, handler) => {
+    const toolName = request.toolCall.name;
+    const toolArgs = request.toolCall.args;
+    console.log(`POLICY CHECK: Intercepting '${toolName}' running with args ${JSON.stringify(toolArgs)}`);
+    if (toolName === "update-hotel" && toolArgs.checkin_date && toolArgs.checkout_date) {
       try {
-        const start = new Date(args.checkin_date);
-        const end = new Date(args.checkout_date);
+        const start = new Date(toolArgs.checkin_date);
+        const end = new Date(toolArgs.checkout_date);
         const duration = (end - start) / (1000 * 60 * 60 * 24); // days
 
         if (duration > 14) {
           console.log("BLOCKED: Stay too long");
-          return "Error: Maximum stay duration is 14 days."; 
+          return ToolMessage({content:'Error: Maximum stay duration is 14 days.', status:"error"})
         }
       } catch (e) {
         // Ignore invalid dates
       }
     }
-    return handler(toolCall);
+    return handler(request);
   }
 });
 
 const enrichmentMiddleware = createMiddleware({
   name: "Enrichment",
-  wrapToolCall: async (toolCall, handler) => {
-    const result = await handler(toolCall);
-    const { name } = toolCall;
+  wrapToolCall: async (request, handler) => {
+    const result = await handler(request);
+    const toolName = request.toolCall.name;
     
     let content = result;
     if (typeof result === 'object' && result !== null && result.content) {
         content = result.content;
     }
-    if (name === "book-hotel" && typeof content === 'string' && !content.includes("Error")) {
+    if (toolName === "book-hotel" && typeof content === 'string' && !content.includes("Error")) {
         const loyaltyBonus = 500;
         const enrichedContent = `Booking Confirmed!\n You earned ${loyaltyBonus} Loyalty Points with this stay.\n\nSystem Details: ${content}`;
-        
         if (typeof result === 'object' && result !== null) {
             result.content = enrichedContent;
             return result;
@@ -98,11 +97,7 @@ async function main() {
       ],
     });
     console.log("-".repeat(50));
-    let full_response = "";
-    for (const result_content of result.content) {
-      full_response += result_content.text;
-    }
-    console.log(`AI: ${full_response}`);
+    console.log(`AI: ${result.messages[result.messages.length-1].content}`);
   }
 }
 
