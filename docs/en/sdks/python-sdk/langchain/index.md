@@ -3,7 +3,7 @@ title: "langchain"
 type: docs
 weight: 8
 description: >
-  Toolbox-langchain SDK for connecting to the MCP Toolbox server and invoking tools programmatically.
+  MCP Toolbox LangChain SDK for integrating functionalities of MCP Toolbox into your LangChain/LangGraph apps.
 ---
 
 ## Overview
@@ -168,7 +168,7 @@ execution outside of an agent framework.
 This section describes how to authenticate the ToolboxClient itself when
 connecting to a Toolbox server instance that requires authentication. This is
 crucial for securing your Toolbox server endpoint, especially when deployed on
-platforms like Cloud Run, GKE,  or any environment where unauthenticated access
+platforms like Cloud Run, GKE, or any environment where unauthenticated access
 is restricted.
 
 This client-to-server authentication ensures that the Toolbox server can verify
