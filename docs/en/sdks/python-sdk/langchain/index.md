@@ -28,7 +28,7 @@ from langgraph.prebuilt import create_react_agent
 async with ToolboxClient("http://127.0.0.1:5000") as toolbox:
     tools = toolbox.load_toolset()
 
-    model = ChatVertexAI(model="gemini-2.0-flash-001")
+    model = ChatVertexAI(model="gemini-3-flash-preview")
     agent = create_react_agent(model, tools)
 
     prompt = "How's the weather today?"
@@ -87,7 +87,7 @@ input. Include tools loaded from the Toolbox SDK in the agent's toolkit:
 ```py
 from langchain_google_vertexai import ChatVertexAI
 
-model = ChatVertexAI(model="gemini-2.0-flash-001")
+model = ChatVertexAI(model="gemini-3-flash-preview")
 
 # Initialize agent with tools
 agent = model.bind_tools(tools)
@@ -117,7 +117,7 @@ def call_model(state: MessagesState):
     response = model.invoke(messages)
     return {"messages": [response]}  # Return a list to add to existing messages
 
-model = ChatVertexAI(model="gemini-2.0-flash-001")
+model = ChatVertexAI(model="gemini-3-flash-preview")
 builder = StateGraph(MessagesState)
 tool_node = ToolNode(tools)
 
