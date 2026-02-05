@@ -201,7 +201,7 @@ Toolbox automatically supports [Managed Connection Pooling][csql-mcp]. If your C
 
 The interface is identical, so there's no additional configuration required on the client. For more information on configuring your instance, see the [Cloud SQL Managed Connection Pooling documentation][csql-mcp-docs].
 
-[csql-mcp]: https://cloud.google.com/blog/products/databases/alloydb-managed-connection-pooling
+[csql-mcp]: https://docs.cloud.google.com/sql/docs/postgres/managed-connection-pooling
 [csql-mcp-docs]: https://docs.cloud.google.com/sql/docs/postgres/configure-mcp
 
 ## Reference
