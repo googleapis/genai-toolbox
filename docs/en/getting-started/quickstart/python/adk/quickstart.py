@@ -7,13 +7,13 @@ from google.adk.tools.toolbox_toolset import ToolboxToolset
 from google.genai.types import Content, Part
 
 prompt = """
-  You're a helpful hotel assistant. You handle hotel searching, booking and
-  cancellations. When the user searches for a hotel, mention it's name, id,
-  location and price tier. Always mention hotel ids while performing any
-  searches. This is very important for any operations. For any bookings or
-  cancellations, please provide the appropriate confirmation. Be sure to
-  update checkin or checkout dates if mentioned by the user.
-  Don't ask for confirmations from the user.
+You're a helpful hotel assistant. You handle hotel searching, booking and
+cancellations. When the user searches for a hotel, mention it's name, id,
+location and price tier. Always mention hotel ids while performing any
+searches. This is very important for any operations. For any bookings or
+cancellations, please provide the appropriate confirmation. Be sure to
+update checkin or checkout dates if mentioned by the user.
+Don't ask for confirmations from the user.
 """
 
 queries = [
@@ -46,7 +46,7 @@ async def main():
     for query in queries:
         print(f"\nUser: {query}")
         user_message = Content(parts=[Part.from_text(text=query)])
-        
+
         async for event in runner.run_async(session_id=session.id, new_message=user_message):
             if event.is_final_response():
                 print(f"Agent: {event.content.parts[0].text}")
