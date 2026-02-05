@@ -89,12 +89,18 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 
 	// set up data for param tool
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := getOracleParamToolInfo(tableNameParam)
-	teardownTable1 := setupOracleTable(t, ctx, db, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
+	teardownTable1, err := setupOracleTable(t, ctx, db, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
+	if err != nil {
+		t.Fatalf("failed to setup Oracle table %s: %v", tableNameParam, err)
+	}
 	defer teardownTable1(t)
 
 	// set up data for auth tool
 	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := getOracleAuthToolInfo(tableNameAuth)
-	teardownTable2 := setupOracleTable(t, ctx, db, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
+	teardownTable2, err := setupOracleTable(t, ctx, db, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
+	if err != nil {
+		t.Fatalf("failed to setup Oracle table %s: %v", tableNameAuth, err)
+	}
 	defer teardownTable2(t)
 
 	// Write config into a file and pass it to command
@@ -135,31 +141,31 @@ func TestOracleSimpleToolEndpoints(t *testing.T) {
 	tests.RunToolInvokeWithTemplateParameters(t, tableNameTemplateParam)
 }
 
-func setupOracleTable(t *testing.T, ctx context.Context, pool *sql.DB, createStatement, insertStatement, tableName string, params []any) func(*testing.T) {
+func setupOracleTable(t *testing.T, ctx context.Context, pool *sql.DB, createStatement, insertStatement, tableName string, params []any) (func(*testing.T), error) {
 	err := pool.PingContext(ctx)
 	if err != nil {
-		t.Fatalf("unable to connect to test database: %s", err)
+		return nil, fmt.Errorf("unable to connect to test database: %w", err)
 	}
 
 	// Create table
 	_, err = pool.QueryContext(ctx, createStatement)
 	if err != nil {
-		t.Fatalf("unable to create test table %s: %s", tableName, err)
+		return nil, fmt.Errorf("unable to create test table %s: %w", tableName, err)
 	}
 
 	// Insert test data
 	_, err = pool.QueryContext(ctx, insertStatement, params...)
 	if err != nil {
-		t.Fatalf("unable to insert test data: %s", err)
+		return nil, fmt.Errorf("unable to insert test data: %w", err)
 	}
 
 	return func(t *testing.T) {
 		// tear down test
-		_, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s", tableName))
+		_, err = pool.ExecContext(ctx, fmt.Sprintf("DROP TABLE %s CASCADE CONSTRAINTS", tableName))
 		if err != nil {
 			t.Errorf("Teardown failed: %s", err)
 		}
-	}
+	}, nil
 }
 
 func getOracleParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {

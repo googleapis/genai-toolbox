@@ -103,13 +103,24 @@ func TestPostgres(t *testing.T) {
 
 	// set up data for param tool
 	createParamTableStmt, insertParamTableStmt, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, paramTestParams := tests.GetPostgresSQLParamToolInfo(tableNameParam)
-	teardownTable1 := tests.SetupPostgresSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
-	defer teardownTable1(t)
+	// teardownTable1 := tests.SetupPostgresSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
+	teardownTable1, err := tests.SetupPostgresSQLTable(t, ctx, pool, createParamTableStmt, insertParamTableStmt, tableNameParam, paramTestParams)
+	if teardownTable1 != nil {
+		defer teardownTable1(t)
+	}
+	if err != nil {
+		t.Fatalf("Setup failed: %v", err)
+	}
 
 	// set up data for auth tool
 	createAuthTableStmt, insertAuthTableStmt, authToolStmt, authTestParams := tests.GetPostgresSQLAuthToolInfo(tableNameAuth)
-	teardownTable2 := tests.SetupPostgresSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
-	defer teardownTable2(t)
+	teardownTable2, err := tests.SetupPostgresSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
+	if teardownTable2 != nil {
+		defer teardownTable2(t)
+	}
+	if err != nil {
+		t.Fatalf("Setup failed: %v", err)
+	}
 
 	// Set up table for semantic search
 	vectorTableName, tearDownVectorTable := tests.SetupPostgresVectorTable(t, ctx, pool)
