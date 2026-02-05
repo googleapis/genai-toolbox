@@ -111,7 +111,7 @@ function wrapToolWithBusinessLogic(toolInstance) {
 async function runTurn(agentExecutor, input) {
   console.log(`\nUSER: '${input}'`);
   const result = await agentExecutor.invoke({ input });
-  console.log("-" .repeat(50));
+  console.log("-".repeat(50));
   console.log("Final Client Response:");
   console.log(`AI: ${result.output}`);
 }
