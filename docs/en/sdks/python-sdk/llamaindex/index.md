@@ -34,7 +34,7 @@ async def run_agent():
     tools = toolbox.load_toolset()
 
     vertex_model = GoogleGenAI(
-        model="gemini-2.0-flash-001",
+        model="gemini-3-flash-preview",
         vertexai_config={"project": "project-id", "location": "us-central1"},
     )
     agent = AgentWorkflow.from_tools_or_functions(
@@ -97,7 +97,7 @@ from llama_index.llms.google_genai import GoogleGenAI
 from llama_index.core.agent.workflow import AgentWorkflow
 
 vertex_model = GoogleGenAI(
-    model="gemini-2.0-flash-001",
+    model="gemini-3-flash-preview",
     vertexai_config={"project": "project-id", "location": "us-central1"},
 )
 
@@ -123,7 +123,7 @@ from llama_index.core.workflow import Context
 from llama_index.llms.google_genai import GoogleGenAI
 
 vertex_model = GoogleGenAI(
-    model="gemini-2.0-flash-001",
+    model="gemini-3-flash-preview",
     vertexai_config={"project": "project-id", "location": "us-central1"},
 )
 agent = AgentWorkflow.from_tools_or_functions(
