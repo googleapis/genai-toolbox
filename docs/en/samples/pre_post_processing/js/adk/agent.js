@@ -1,6 +1,8 @@
 import { InMemoryRunner, LlmAgent, LogLevel } from '@google/adk';
 import { ToolboxClient } from '@toolbox-sdk/adk';
 
+process.env.GOOGLE_GENAI_API_KEY = process.env.GOOGLE_API_KEY || 'your-api-key'; // Replace it with your API key
+
 const systemPrompt = `
   You're a helpful hotel assistant. You handle hotel searching, booking and
   cancellations. When the user searches for a hotel, mention it's name, id,
@@ -36,7 +38,7 @@ function preProcess({tool, args}) {
  */
 function postProcess({tool, response}) {
   const name = tool.name;
-  
+  console.log(`ENRICHING RESPONSE: Intercepting '${name}'`);
   let content = response;
   if (typeof response === 'object' && response !== null) {
       if (response.result) content = response.result;
@@ -52,8 +54,6 @@ function postProcess({tool, response}) {
   }
   return response;
 }
-
-process.env.GOOGLE_GENAI_API_KEY = process.env.GOOGLE_API_KEY || 'your-api-key';
 
 async function runTurn(runner, userId, sessionId, prompt) {
   console.log(`\nUSER: '${prompt}'`);
