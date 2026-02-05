@@ -130,7 +130,7 @@ const tools = await client.loadToolset("my-toolset")
 Loads a specific tool by its unique name. This provides fine-grained control.
 
 ```javascript
-const tool = await toolbox.loadTool("my-tool")
+const tool = await client.loadTool("my-tool")
 ```
 
 ## Invoking Tools
