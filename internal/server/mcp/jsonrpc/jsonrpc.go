@@ -45,6 +45,9 @@ type Request struct {
 			// notifications. The receiver is not obligated to provide these
 			// notifications.
 			ProgressToken ProgressToken `json:"progressToken,omitempty"`
+			// W3C Trace Context fields for distributed tracing
+			Traceparent string `json:"traceparent,omitempty"`
+			Tracestate  string `json:"tracestate,omitempty"`
 		} `json:"_meta,omitempty"`
 	} `json:"params,omitempty"`
 }
