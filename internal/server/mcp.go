@@ -223,9 +223,11 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 			}
 			return err
 		}
+		// This ensures the transport span becomes a child of the client span
+		msgCtx := extractTraceContext(ctx, []byte(line))
 
 		// Create span for STDIO transport
-		msgCtx, span := s.server.instrumentation.Tracer.Start(ctx, "toolbox/server/mcp/stdio",
+		msgCtx, span := s.server.instrumentation.Tracer.Start(msgCtx, "toolbox/server/mcp/stdio",
 			trace.WithSpanKind(trace.SpanKindServer),
 		)
 
@@ -427,11 +429,27 @@ func methodNotAllowed(s *Server, w http.ResponseWriter, r *http.Request) {
 func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	ctx, span := s.instrumentation.Tracer.Start(r.Context(), "toolbox/server/mcp/http",
+	ctx := r.Context()
+	ctx = util.WithLogger(ctx, s.logger)
+
+	// Read body first so we can extract trace context
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		// Generate a new uuid if unable to decode
+		id := uuid.New().String()
+		s.logger.DebugContext(ctx, err.Error())
+		render.JSON(w, r, jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil))
+		return
+	}
+
+	// This ensures the transport span becomes a child of the client span
+	ctx = extractTraceContext(ctx, body)
+
+	// Create span for HTTP transport
+	ctx, span := s.instrumentation.Tracer.Start(ctx, "toolbox/server/mcp/http",
 		trace.WithSpanKind(trace.SpanKindServer),
 	)
 	r = r.WithContext(ctx)
-	ctx = util.WithLogger(r.Context(), s.logger)
 
 	var sessionId, protocolVersion string
 	var session *sseSession
@@ -473,7 +491,6 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 	s.logger.DebugContext(ctx, fmt.Sprintf("toolset name: %s", toolsetName))
 	span.SetAttributes(attribute.String("toolset_name", toolsetName))
 
-	var err error
 	defer func() {
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
@@ -492,15 +509,6 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		)
 	}()
 
-	// Read and returns a body from io.Reader
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		// Generate a new uuid if unable to decode
-		id := uuid.New().String()
-		s.logger.DebugContext(ctx, err.Error())
-		render.JSON(w, r, jsonrpc.NewError(id, jsonrpc.PARSE_ERROR, err.Error(), nil))
-		return
-	}
 	networkProtocolVersion := fmt.Sprintf("%d.%d", r.ProtoMajor, r.ProtoMinor)
 
 	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName, promptsetName, r.Header, "http", networkProtocolVersion)
@@ -562,9 +570,6 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		return "", jsonrpc.NewError("", jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
 	}
 
-	// Extract trace context from params._meta
-	ctx = extractTraceContext(ctx, body)
-
 	// Generic baseMessage could either be a JSONRPCNotification or JSONRPCRequest
 	var baseMessage jsonrpc.BaseMessage
 	if err = util.DecodeJSON(bytes.NewBuffer(body), &baseMessage); err != nil {
@@ -610,6 +615,7 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 	}
 
 	// Create method-specific span with semantic conventions
+	// Note: Trace context is already extracted and set in ctx by the caller
 	spanName := getMethodSpanName(baseMessage.Method, body)
 	ctx, span := s.instrumentation.Tracer.Start(ctx, spanName,
 		trace.WithSpanKind(trace.SpanKindServer),
