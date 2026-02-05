@@ -1,4 +1,3 @@
-Final Client Response:
 AI:
 Loyalty Points
 POLICY CHECK: Intercepting 'update-hotel'
