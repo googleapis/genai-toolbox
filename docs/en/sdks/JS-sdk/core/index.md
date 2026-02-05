@@ -216,7 +216,7 @@ For Toolbox servers hosted on Google Cloud (e.g., Cloud Run) and requiring
 3. **Connect to the Toolbox Server**
 
     ```javascript
-    import { ToolboxClient } from '@toolbox-sdk/adk';
+    import { ToolboxClient } from '@toolbox-sdk/core';
     import {getGoogleIdToken} from '@toolbox-sdk/core/auth'
 
     const URL = 'http://127.0.0.1:5000';
