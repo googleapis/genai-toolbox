@@ -58,9 +58,6 @@ describe(`${ORCH_NAME} Pre/Post Processing Agent`, () => {
     capturedErrors = [];
 
     await runAgent();
-    if (capturedErrors.length > 0) {
-        console.error("Captured Stderr:", capturedErrors.join("\n"));
-    }
     assert.equal(
         capturedErrors.length, 
         0, 
