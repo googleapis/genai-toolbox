@@ -13168,8 +13168,9 @@ Here's a minimal example to get you started. Ensure your Toolbox service is runn
 
 ```javascript
 
-import { ToolboxClient } from '@toolbox-sdk/adk';  
-const client = new ToolboxClient(URL);  
+import { ToolboxClient } from '@toolbox-sdk/adk';
+const URL = 'http://127.0.0.1:5000'; // Replace with your Toolbox service URL
+const client = new ToolboxClient(URL);
 
 async function quickstart() {  
   try {  
@@ -13269,7 +13270,7 @@ const tool = await toolbox.loadTool("my-tool")
 Once loaded, tools behave like awaitable JS functions. You invoke them using `await` and pass arguments corresponding to the parameters defined in the tool's configuration within the Toolbox service.
 
 ```javascript
-const tool = await toolbox.loadTool("my-tool")
+const tool = await client.loadTool("my-tool")
 const result = await tool.runAsync(args: {a: 5, b: 2})
 ```
 
@@ -13566,7 +13567,7 @@ const loadedTools = await toolboxClient.loadToolset();
 
 export const rootAgent = new LlmAgent({
   name: 'weather_time_agent',
-  model: 'gemini-2.5-flash',
+  model: 'gemini-3-flash-preview',
   description:
     'Agent to answer questions about the time and weather in a city.',
   instruction:
