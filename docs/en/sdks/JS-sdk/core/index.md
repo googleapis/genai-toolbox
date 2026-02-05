@@ -496,7 +496,7 @@ multiplyTool = await client.loadTool("multiply")
 
 const ai = genkit({
   plugins: [googleAI()],
-  model: googleAI.model('gemini-1.5-pro'),
+  model: googleAI.model('gemini-3-flash-preview'),
 });
 
 const multiplyNumbers = ai.defineTool({
