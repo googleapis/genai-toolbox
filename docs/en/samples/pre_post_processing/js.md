@@ -16,7 +16,11 @@ This guide demonstrates how to implement these patterns in your Toolbox applicat
 
 {{< tabpane persist=header >}}
 {{% tab header="ADK" text=true %}}
-Coming soon.
+The following example demonstrates how to use the `beforeToolCallback` and `afterToolCallback` hooks in the ADK `LlmAgent` to implement pre and post processing logic. Specifically, it shows how to intercept tool calls to enforce business policies (blocking invalid actions) and enrich tool outputs (adding loyalty points) before they return to the model.
+
+```js
+{{< include "js/adk/agent.js" >}}
+```
 {{% /tab %}}
 {{% tab header="Langchain" text=true %}}
 The following example demonstrates how to use `ToolboxClient` with LangChain's middleware to implement pre and post processing for tool calls.
