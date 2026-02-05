@@ -138,7 +138,7 @@ const tool = await toolbox.loadTool("my-tool")
 Once loaded, tools behave like awaitable JS functions. You invoke them using `await` and pass arguments corresponding to the parameters defined in the tool's configuration within the Toolbox service.
 
 ```javascript
-const tool = await toolbox.loadTool("my-tool")
+const tool = await client.loadTool("my-tool")
 const result = await tool.runAsync(args: {a: 5, b: 2})
 ```
 
