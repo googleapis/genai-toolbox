@@ -38,7 +38,7 @@ root_agent = Agent(
 app = App(root_agent=root_agent, name="my_agent")
 
 async def main():
-    runner = InMemoryRunner(agent=root_agent, app=app)
+    runner = InMemoryRunner(app=app)
     session = await runner.session_service.create_session(
         app_name=app.name, user_id="test_user"
     )
