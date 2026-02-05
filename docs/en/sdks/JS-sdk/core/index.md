@@ -138,7 +138,7 @@ const tool = await client.loadTool("my-tool")
 Once loaded, tools behave like awaitable JS functions. You invoke them using `await` and pass arguments corresponding to the parameters defined in the tool's configuration within the Toolbox service.
 
 ```javascript
-const tool = await toolbox.loadTool("my-tool")
+const tool = await client.loadTool("my-tool")
 const result = await tool.runAsync(args: {a: 5, b: 2})
 ```
 
@@ -200,7 +200,7 @@ const client = new ToolboxClient(URL, null, {"Authorization": getGoogleIdTokenGe
 
 For Toolbox servers hosted on Google Cloud (e.g., Cloud Run) and requiring
 `Google ID token` authentication, the helper module
-[auth_methods](src/toolbox_core/authMethods.ts) provides utility functions.
+[auth_methods](https://github.com/googleapis/mcp-toolbox-sdk-js/blob/main/packages/toolbox-core/src/toolbox_core/authMethods.ts) provides utility functions.
 
 ### Step by Step Guide for Cloud Run
 
