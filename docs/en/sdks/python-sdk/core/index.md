@@ -187,7 +187,7 @@ async def main():
     async with ToolboxClient("http://127.0.0.1:5000") as toolbox:
         tools = await toolbox.load_toolset()
         wrapped_tools = [StructuredTool.from_function(tool, parse_docstring=True) for tool in tools]
-        model_with_tools = ChatVertexAI(model="gemini-2.5-flash").bind_tools(wrapped_tools)
+        model_with_tools = ChatVertexAI(model="gemini-3-flash-preview").bind_tools(wrapped_tools)
         tool_node = ToolNode(wrapped_tools)
 
         def call_agent(state: State):
