@@ -3,7 +3,7 @@ title: "Python"
 type: docs
 weight: 1
 description: >
-  How to add pre and post processing to your Python toolbox applications.
+  How to add pre- and post- processing to your Python toolbox applications.
 ---
 
 ## Prerequisites
@@ -19,7 +19,7 @@ This guide demonstrates how to implement these patterns in your Toolbox applicat
 Coming soon.
 {{% /tab %}}
 {{% tab header="Langchain" text=true %}}
-The following example demonstrates how to use `ToolboxClient` with LangChain's middleware to implement pre and post processing for tool calls.
+The following example demonstrates how to use `ToolboxClient` with LangChain's middleware to implement pre- and post- processing for tool calls.
 
 ```py
 {{< include "python/langchain/agent.py" >}}
