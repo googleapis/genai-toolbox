@@ -29,3 +29,13 @@ For more information, see the [LangChain Middleware documentation](https://docs.
 You can also add model-level (`wrap_model`) and agent-level (`before_agent`, `after_agent`) hooks to intercept messages at different stages of the execution loop. See the [LangChain Middleware documentation](https://docs.langchain.com/oss/python/langchain/middleware/custom#wrap-style-hooks) for details on these additional hook types.
 {{% /tab %}}
 {{< /tabpane >}}
+
+## Results
+
+The output should look similar to the following. Note that exact responses may vary due to the non-deterministic nature of LLMs and differences between orchestration frameworks.
+
+```
+AI: Booking Confirmed! You earned 500 Loyalty Points with this stay.
+
+AI: Error: Maximum stay duration is 14 days.
+```
