@@ -1,7 +1,7 @@
 ---
 title: "Python"
 type: docs
-weight: 4
+weight: 1
 description: >
   How to add pre and post processing to your Python toolbox applications.
 ---
