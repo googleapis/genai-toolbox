@@ -3,7 +3,7 @@ title: "Pre and Post processing"
 type: docs
 weight: 1
 description: >
-  Pre and Post processing in GenAI applications.
+  Pre- and post- processing in GenAI applications.
 ---
 
 Pre and post processing allow developers to intercept and modify interactions between the agent and its tools or the user.
