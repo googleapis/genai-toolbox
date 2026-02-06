@@ -45,7 +45,10 @@ export async function main() {
 async function runPrompt(runner, userId, sessionId, prompt) {
   const content = { role: 'user', parts: [{ text: prompt }] };
   const stream = runner.runAsync({ userId, sessionId, newMessage: content });
-  const responses = await Array.fromAsync(stream);
+  const responses = [];
+  for await (const response of stream) {
+      responses.push(response);
+  }
   const accumulatedResponse = responses
     .flatMap((e) => e.content?.parts?.map((p) => p.text) ?? [])
     .join('');
