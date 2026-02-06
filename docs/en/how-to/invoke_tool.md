@@ -13,21 +13,22 @@ The `invoke` command allows you to invoke tools defined in your configuration di
 
 {{< notice tip >}}
 **Keep configurations minimal:** The `invoke` command initializes *all* resources (sources, tools, etc.) defined in your configuration files during execution. To ensure fast response times, consider using a minimal configuration file containing only the tools you need for the specific invocation.
-{{< notice tip >}}
+{{< /notice >}}
 
-## Prerequisites
+## Before you begin
 
-- You have the `toolbox` binary installed or built.
-- You have a valid tool configuration file (e.g., `tools.yaml`).
+1. Make sure you have the `toolbox` binary installed or built.
+2. Make sure you have a valid tool configuration file (e.g., `tools.yaml`).
 
-## Basic Usage
+### Command Usage
 
 The basic syntax for the command is:
 
 ```bash
-toolbox [--tools-file <path> | --prebuilt <name>] invoke <tool-name> [params]
+toolbox <tool-source> invoke <tool-name> [params]
 ```
 
+- `<tool-source>`: Can be `--tools-file`, `--tools-files`, `--tools-folder`, and `--prebuilt`. See the [CLI Reference](../reference/cli.md) for details.
 - `<tool-name>`: The name of the tool you want to call. This must match the name defined in your `tools.yaml`.
 - `[params]`: (Optional) A JSON string representing the arguments for the tool.
 
