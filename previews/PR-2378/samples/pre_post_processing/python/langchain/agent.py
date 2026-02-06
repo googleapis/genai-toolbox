@@ -47,7 +47,13 @@ async def enforce_business_rules(request, handler):
             except ValueError:
                 pass  # Ignore invalid date formats
 
-    return await handler(request)
+    # PRE: Code here runs BEFORE the tool execution
+    
+    # EXEC: Execute the tool (or next middleware)
+    result = await handler(request)
+
+    # POST: Code here runs AFTER the tool execution
+    return result
 
 
 # Post processing
@@ -58,8 +64,12 @@ async def enrich_response(request, handler):
     Adds loyalty points information to successful bookings.
     Standardizes output format.
     """
+    # PRE: Code here runs BEFORE the tool execution
+    
+    # EXEC: Execute the tool (or next middleware)
     result = await handler(request)
 
+    # POST: Code here runs AFTER the tool execution
     if isinstance(result, ToolMessage):
         content = str(result.content)
         tool_name = request.tool_call["name"]
@@ -79,6 +89,7 @@ async def main():
             system_prompt=system_prompt,
             model=model,
             tools=tools,
+            # add any pre and post processing methods
             middleware=[enforce_business_rules, enrich_response],
         )
 
