@@ -1,5 +1,5 @@
 ---
-title: "(Python) Pre and post processing"
+title: "Python"
 type: docs
 weight: 4
 description: >
