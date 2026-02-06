@@ -64,13 +64,14 @@ func (r Config) SourceConfigType() string {
 
 func (r Config) Initialize(ctx context.Context, tracer trace.Tracer) (sources.Source, error) {
 	// Initializes a Dataplex source
-	client, err := initDataplexConnection(ctx, tracer, r.Name, r.Project)
+	client, dataScanClient, err := initDataplexConnection(ctx, tracer, r.Name, r.Project)
 	if err != nil {
 		return nil, err
 	}
 	s := &Source{
-		Config: r,
-		Client: client,
+		Config:         r,
+		Client:         client,
+		DataScanClient: dataScanClient,
 	}
 
 	return s, nil
@@ -80,7 +81,8 @@ var _ sources.Source = &Source{}
 
 type Source struct {
 	Config
-	Client *dataplexapi.CatalogClient
+	Client         *dataplexapi.CatalogClient
+	DataScanClient *dataplexapi.DataScanClient
 }
 
 func (s *Source) SourceType() string {
@@ -100,30 +102,39 @@ func (s *Source) CatalogClient() *dataplexapi.CatalogClient {
 	return s.Client
 }
 
+func (s *Source) GetDataScanClient() *dataplexapi.DataScanClient {
+	return s.DataScanClient
+}
+
 func initDataplexConnection(
 	ctx context.Context,
 	tracer trace.Tracer,
 	name string,
 	project string,
-) (*dataplexapi.CatalogClient, error) {
+) (*dataplexapi.CatalogClient, *dataplexapi.DataScanClient, error) {
 	ctx, span := sources.InitConnectionSpan(ctx, tracer, SourceType, name)
 	defer span.End()
 
 	cred, err := google.FindDefaultCredentials(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
+		return nil, nil, fmt.Errorf("failed to find default Google Cloud credentials: %w", err)
 	}
 
 	userAgent, err := util.UserAgentFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	client, err := dataplexapi.NewCatalogClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
 	if err != nil {
-		return nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
+		return nil, nil, fmt.Errorf("failed to create Dataplex client for project %q: %w", project, err)
 	}
-	return client, nil
+
+	dataScanClient, err := dataplexapi.NewDataScanClient(ctx, option.WithUserAgent(userAgent), option.WithCredentials(cred))
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to create Dataplex DataScan client for project %q: %w", project, err)
+	}
+	return client, dataScanClient, nil
 }
 
 func (s *Source) LookupEntry(ctx context.Context, name string, view int, aspectTypes []string, entry string) (*dataplexpb.Entry, error) {
@@ -237,6 +248,36 @@ func (s *Source) SearchEntries(ctx context.Context, query string, pageSize int, 
 			return nil, fmt.Errorf("failed to search entries: %w", err)
 		}
 		results = append(results, entry)
+	}
+	return results, nil
+}
+
+func (s *Source) SearchDataQualityScans(ctx context.Context, query string, pageSize int, orderBy string) ([]*dataplexpb.DataScan, error) {
+	// ListDataScansRequest doesn't support generic specific "query" field like SearchEntries,
+	// but it supports "filter".  We will assume `query` is passed as filter.
+	// If the user wants to search by name/display_name they should provide a filter string.
+	// Example filter: "display_name = \"my-scan\""
+	req := &dataplexpb.ListDataScansRequest{
+		Parent:   fmt.Sprintf("projects/%s/locations/-", s.ProjectID()),
+		Filter:   query,
+		PageSize: int32(pageSize),
+		OrderBy:  orderBy,
+	}
+
+	it := s.GetDataScanClient().ListDataScans(ctx, req)
+	var results []*dataplexpb.DataScan
+	for {
+		scan, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			if st, ok := grpcstatus.FromError(err); ok {
+				return nil, fmt.Errorf("failed to list data scans: code=%s message=%s", st.Code(), st.Message())
+			}
+			return nil, fmt.Errorf("failed to list data scans: %w", err)
+		}
+		results = append(results, scan)
 	}
 	return results, nil
 }
