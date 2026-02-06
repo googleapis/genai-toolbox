@@ -53,7 +53,7 @@ func getCockroachDBVars(t *testing.T) map[string]any {
 	}
 
 	return map[string]any{
-		"kind":           CockroachDBSourceKind,
+		"type":           CockroachDBSourceKind,
 		"host":           CockroachDBHost,
 		"port":           CockroachDBPort,
 		"database":       CockroachDBDatabase,
