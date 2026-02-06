@@ -39,7 +39,7 @@ Wraps individual tool executions. This is best for logic specific to a single to
 - **Scope**: Intercepts the raw inputs (arguments) to a tool and its outputs.
 - **Use Cases**: Argument validation, output formatting, specific privacy rules for sensitive tools.
 
-### Comparison with Other Levels
+### Other Levels
 
 It is helpful to understand how tool-level processing differs from other scopes:
 
