@@ -76,6 +76,25 @@ func TestParseFromYamlRedis(t *testing.T) {
 				},
 			},
 		},
+		{
+			desc: "tls enabled",
+			in: `
+			kind: sources
+			name: my-redis-instance
+			type: redis
+			address:
+			  - 127.0.0.1
+			tlsEnabled: true
+			`,
+			want: map[string]sources.SourceConfig{
+				"my-redis-instance": redis.Config{
+					Name:       "my-redis-instance",
+					Type:       redis.SourceType,
+					Address:    []string{"127.0.0.1"},
+					TLSEnabled: true,
+				},
+			},
+		},
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {

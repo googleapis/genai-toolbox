@@ -15,6 +15,7 @@ package redis
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"time"
 
@@ -52,6 +53,7 @@ type Config struct {
 	Database       int      `yaml:"database"`
 	UseGCPIAM      bool     `yaml:"useGCPIAM"`
 	ClusterEnabled bool     `yaml:"clusterEnabled"`
+	TLSEnabled     bool     `yaml:"tlsEnabled"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -91,6 +93,11 @@ func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 		}
 	}
 
+	var tlsConfig *tls.Config
+	if r.TLSEnabled {
+		tlsConfig = &tls.Config{}
+	}
+
 	var client RedisClient
 	var err error
 	if r.ClusterEnabled {
@@ -104,6 +111,7 @@ func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 			CredentialsProviderContext: authFn,
 			Username:                   r.Username,
 			Password:                   r.Password,
+			TLSConfig:                  tlsConfig,
 		})
 		err = clusterClient.ForEachShard(ctx, func(ctx context.Context, shard *redis.Client) error {
 			return shard.Ping(ctx).Err()
@@ -125,6 +133,7 @@ func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 		CredentialsProviderContext: authFn,
 		Username:                   r.Username,
 		Password:                   r.Password,
+		TLSConfig:                  tlsConfig,
 	})
 	_, err = standaloneClient.Ping(ctx).Result()
 	if err != nil {
