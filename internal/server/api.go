@@ -245,9 +245,10 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 		var agentErr *util.AgentError
 		if errors.As(err, &agentErr) {
 			s.logger.DebugContext(ctx, fmt.Sprintf("agent validation error: %v", err))
-			// We return StatusOK 200 because the API request succeeded,
-			// even if the agent's logic failed.
-			_ = render.Render(w, r, newErrResponse(err, http.StatusOK))
+			errMap := map[string]string{"error": err.Error()}
+			errMarshal, _ := json.Marshal(errMap)
+
+			_ = render.Render(w, r, &resultResponse{Result: string(errMarshal)})
 			return
 		}
 
