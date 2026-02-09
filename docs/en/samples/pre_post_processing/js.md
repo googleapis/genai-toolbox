@@ -8,7 +8,7 @@ description: >
 
 ## Prerequisites
 
-This tutorial assumes that you have set up Toolbox with a basic agent as described in the [local quickstart](../../getting-started/local_quickstart_js).
+This tutorial assumes that you have set up Toolbox with a basic agent as described in the [local quickstart](../../getting-started/local_quickstart_js.md).
 
 
 This guide demonstrates how to implement these patterns in your Toolbox applications.
