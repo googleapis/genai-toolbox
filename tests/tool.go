@@ -311,7 +311,7 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:        true,
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
-			wantBody:       `{"error":"parameter \"name\" is required"}`,
+			wantBody:       `{"error":"parameter \"id\" is required"}`,
 			wantStatusCode: http.StatusOK,
 		},
 		{
