@@ -66,8 +66,7 @@ async def after_tool_callback(
 
     tool_name = tool.name
     if isinstance(result, str) and "Error" not in result:
-        is_booking_tool = tool_name == "book-hotel"
-        if is_booking_tool:
+        if tool_name == "book-hotel":
             loyalty_bonus = 500
             enriched_result = f"Booking Confirmed!\n You earned {loyalty_bonus} Loyalty Points with this stay.\n\nSystem Details: {result}"
 
