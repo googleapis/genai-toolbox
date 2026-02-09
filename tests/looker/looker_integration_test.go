@@ -222,6 +222,11 @@ func TestLooker(t *testing.T) {
 				"source":      "my-instance",
 				"description": "Simple tool to test end to end functionality.",
 			},
+			"validate_project": map[string]any{
+				"type":        "looker-validate-project",
+				"source":      "my-instance",
+				"description": "Simple tool to test end to end functionality.",
+			},
 			"generate_embed_url": map[string]any{
 				"type":        "looker-generate-embed-url",
 				"source":      "my-instance",
@@ -1446,6 +1451,23 @@ func TestLooker(t *testing.T) {
 			},
 		},
 	)
+	tests.RunToolGetTestByName(t, "validate_project",
+		map[string]any{
+			"validate_project": map[string]any{
+				"description":  "Simple tool to test end to end functionality.",
+				"authRequired": []any{},
+				"parameters": []any{
+					map[string]any{
+						"authSources": []any{},
+						"description": "The id of the project to validate",
+						"name":        "project_id",
+						"required":    true,
+						"type":        "string",
+					},
+				},
+			},
+		},
+	)
 	tests.RunToolGetTestByName(t, "generate_embed_url",
 		map[string]any{
 			"generate_embed_url": map[string]any{
@@ -1664,6 +1686,9 @@ func TestLooker(t *testing.T) {
 
 	wantResult = "deleted"
 	tests.RunToolInvokeParametersTest(t, "delete_project_file", []byte(`{"project_id": "the_look", "file_path": "foo.view.lkml"}`), wantResult)
+
+	wantResult = "\"errors\":[]"
+	tests.RunToolInvokeParametersTest(t, "validate_project", []byte(`{"project_id": "the_look"}`), wantResult)
 
 	wantResult = "production"
 	tests.RunToolInvokeParametersTest(t, "dev_mode", []byte(`{"devMode": false}`), wantResult)
