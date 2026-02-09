@@ -64,7 +64,7 @@ Here is an example tools.yaml config with [AUTH][auth] enabled:
 ```yaml
 kind: sources
 name: my-redis-cluster-instance
-type: memorystore-redis
+type: redis
 address:
   - 127.0.0.1:6379
 password: ${MY_AUTH_STRING}
@@ -81,7 +81,7 @@ using IAM authentication:
 ```yaml
 kind: sources
 name: my-redis-cluster-instance
-type: memorystore-redis
+type: redis
 address:
   - 127.0.0.1:6379
 useGCPIAM: true
@@ -94,7 +94,7 @@ clusterEnabled: true
 
 | **field**              | **type** | **required** | **description**                                                                                                                 |
 |------------------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------|
-| type                   |  string  |     true     | Must be "memorystore-redis".                                                                                                    |
+| type                   |  string  |     true     | Must be "redis".                                                                                                                |
 | address                |  string  |     true     | Primary endpoint for the Memorystore Redis instance to connect to.                                                              |
 | username               |  string  |    false     | If you are using a non-default user, specify the user name here. If you are using Memorystore for Redis, leave this field blank |
 | password               |  string  |    false     | If you have [Redis AUTH][auth] enabled, specify the AUTH string here                                                            |
@@ -102,6 +102,6 @@ clusterEnabled: true
 | tls.enabled            |   bool   |    false     | Set it to `true` to enable TLS for the Redis connection. Defaults to `false`.                                                   |
 | tls.insecureSkipVerify |   bool   |    false     | Set it to `true` to skip TLS certificate verification. Defaults to `false`.                                                     |
 | clusterEnabled         |   bool   |    false     | Set it to `true` if using a Redis Cluster instance. Defaults to `false`.                                                        |
-| useGCPIAM              |  string  |    false     | Set it to `true` if you are using GCP's IAM authentication. Defaults to `false`.                                                |
+| useGCPIAM              |   bool   |    false     | Set it to `true` if you are using GCP's IAM authentication. Defaults to `false`.                                                |
 
 [auth]: https://cloud.google.com/memorystore/docs/redis/about-redis-auth
