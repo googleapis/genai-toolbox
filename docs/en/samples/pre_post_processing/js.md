@@ -25,6 +25,9 @@ The following example demonstrates how to use `ToolboxClient` with LangChain's m
 ```js
 {{< include "js/langchain/agent.js" >}}
 ```
+You can also use the `wrapModel` hook to intercept messages before and after model calls.
+You can also use [node-style hooks](https://docs.langchain.com/oss/javascript/langchain/middleware/custom#node-style-hooks) to intercept messages at the agent and model level.
+See the [LangChain Middleware documentation](https://docs.langchain.com/oss/javascript/langchain/middleware/custom#tool-call-monitoring) for details on these additional hook types.
 
 For more information, see the [LangChain Middleware documentation](https://docs.langchain.com/oss/javascript/langchain/middleware/custom#tool-call-monitoring).
 {{% /tab %}}
