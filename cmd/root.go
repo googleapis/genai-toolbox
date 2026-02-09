@@ -35,6 +35,7 @@ import (
 	yaml "github.com/goccy/go-yaml"
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/cli/invoke"
+	"github.com/googleapis/genai-toolbox/internal/cli/skills"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/log"
 	"github.com/googleapis/genai-toolbox/internal/prebuiltconfigs"
@@ -162,6 +163,7 @@ import (
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerrundashboard"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerrunlook"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookerupdateprojectfile"
+	_ "github.com/googleapis/genai-toolbox/internal/tools/looker/lookervalidateproject"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mindsdb/mindsdbexecutesql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mindsdb/mindsdbsql"
 	_ "github.com/googleapis/genai-toolbox/internal/tools/mongodb/mongodbaggregate"
@@ -401,6 +403,8 @@ func NewCommand(opts ...Option) *Command {
 
 	// Register subcommands for tool invocation
 	baseCmd.AddCommand(invoke.NewCommand(cmd))
+	// Register subcommands for skill generation
+	baseCmd.AddCommand(skills.NewCommand(cmd))
 
 	return cmd
 }
