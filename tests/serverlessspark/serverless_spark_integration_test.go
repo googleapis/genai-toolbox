@@ -203,14 +203,14 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 					name:     "zero page size",
 					toolName: "list-batches",
 					request:  map[string]any{"pageSize": 0},
-					wantCode: http.StatusBadRequest,
+					wantCode: http.StatusOK,
 					wantMsg:  "pageSize must be positive: 0",
 				},
 				{
 					name:     "negative page size",
 					toolName: "list-batches",
 					request:  map[string]any{"pageSize": -1},
-					wantCode: http.StatusBadRequest,
+					wantCode: http.StatusOK,
 					wantMsg:  "pageSize must be positive: -1",
 				},
 			}
@@ -250,14 +250,14 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 						name:     "missing batch",
 						toolName: "get-batch",
 						request:  map[string]any{"name": "INVALID_BATCH"},
-						wantCode: http.StatusBadRequest,
-						wantMsg:  fmt.Sprintf("Not found: Batch projects/%s/locations/%s/batches/INVALID_BATCH", serverlessSparkProject, serverlessSparkLocation),
+						wantCode: http.StatusOK,
+						wantMsg:  fmt.Sprintf("error processing GCP request: failed to get batch: rpc error: code = NotFound desc = Not found: Batch projects/%s/locations/%s/batches/INVALID_BATCH", serverlessSparkProject, serverlessSparkLocation),
 					},
 					{
 						name:     "full batch name",
 						toolName: "get-batch",
 						request:  map[string]any{"name": missingBatchFullName},
-						wantCode: http.StatusBadRequest,
+						wantCode: http.StatusOK,
 						wantMsg:  fmt.Sprintf("name must be a short batch name without '/': %s", missingBatchFullName),
 					},
 				}
@@ -536,14 +536,14 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 						name:     "nonexistent op",
 						toolName: "cancel-batch",
 						request:  map[string]any{"operation": "INVALID_OPERATION"},
-						wantCode: http.StatusBadRequest,
-						wantMsg:  "Operation not found",
+						wantCode: http.StatusOK,
+						wantMsg:  "error processing GCP request: failed to cancel operation: rpc error: code = NotFound desc = Operation not found",
 					},
 					{
 						name:     "full op name",
 						toolName: "cancel-batch",
 						request:  map[string]any{"operation": fullOpName},
-						wantCode: http.StatusBadRequest,
+						wantCode: http.StatusOK,
 						wantMsg:  fmt.Sprintf("operation must be a short operation name without '/': %s", fullOpName),
 					},
 				}
@@ -556,7 +556,7 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 			})
 			t.Run("auth", func(t *testing.T) {
 				t.Parallel()
-				runAuthTest(t, "cancel-batch-with-auth", map[string]any{"operation": "INVALID_OPERATION"}, http.StatusBadRequest)
+				runAuthTest(t, "cancel-batch-with-auth", map[string]any{"operation": "INVALID_OPERATION"}, http.StatusOK)
 			})
 		})
 	})

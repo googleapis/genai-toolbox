@@ -410,7 +410,7 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 		name          string
 		api           string
 		requestHeader map[string]string
-		requestBody   func() io.Reader // Use a func to avoid reader reuse issues
+		requestBody   func() io.Reader
 		want          string
 		isAgentErr    bool
 	}{
@@ -466,11 +466,21 @@ func runAdvancedHTTPInvokeTest(t *testing.T) {
 			}
 
 			if tc.isAgentErr {
-				// Look for the "error" key
-				gotErr, ok := body["error"].(string)
+				resStr, ok := body["result"].(string)
 				if !ok {
-					t.Fatalf("expected 'error' field in response body, got: %v", body)
+					t.Fatalf("expected 'result' field as string in response body, got: %v", body)
 				}
+
+				var resMap map[string]any
+				if err := json.Unmarshal([]byte(resStr), &resMap); err != nil {
+					t.Fatalf("failed to unmarshal result string: %v", err)
+				}
+
+				gotErr, ok := resMap["error"].(string)
+				if !ok {
+					t.Fatalf("expected 'error' field inside result, got: %v", resMap)
+				}
+
 				if !strings.Contains(gotErr, tc.want) {
 					t.Fatalf("unexpected error message: got %q, want it to contain %q", gotErr, tc.want)
 				}
