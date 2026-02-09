@@ -96,7 +96,7 @@ clusterEnabled: true
 | username       |  string  |    false     | If you are using a non-default user, specify the user name here. If you are using Memorystore for Redis, leave this field blank |
 | password       |  string  |    false     | If you have [Redis AUTH][auth] enabled, specify the AUTH string here                                                            |
 | database       |   int    |    false     | The Redis database to connect to. Not applicable for cluster enabled instances. The default database is `0`.                    |
-| tlsEnabled     |   bool   |    false     | Set it to `true` to enable TLS for the Redis connection. Defaults to `false`.                                                   |
+| tls.enabled    |   bool   |    false     | Set it to `true` to enable TLS for the Redis connection. Defaults to `false`.                                                   |
 | clusterEnabled |   bool   |    false     | Set it to `true` if using a Redis Cluster instance. Defaults to `false`.                                                        |
 | useGCPIAM      |  string  |    false     | Set it to `true` if you are using GCP's IAM authentication. Defaults to `false`.                                                |
 

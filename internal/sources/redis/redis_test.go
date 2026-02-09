@@ -84,14 +84,17 @@ func TestParseFromYamlRedis(t *testing.T) {
 			type: redis
 			address:
 			  - 127.0.0.1
-			tlsEnabled: true
+			tls:
+			  enabled: true
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-redis-instance": redis.Config{
-					Name:       "my-redis-instance",
-					Type:       redis.SourceType,
-					Address:    []string{"127.0.0.1"},
-					TLSEnabled: true,
+					Name:    "my-redis-instance",
+					Type:    redis.SourceType,
+					Address: []string{"127.0.0.1"},
+					TLS: struct {
+						Enabled bool `yaml:"enabled"`
+					}{Enabled: true},
 				},
 			},
 		},

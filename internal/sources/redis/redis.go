@@ -53,7 +53,9 @@ type Config struct {
 	Database       int      `yaml:"database"`
 	UseGCPIAM      bool     `yaml:"useGCPIAM"`
 	ClusterEnabled bool     `yaml:"clusterEnabled"`
-	TLSEnabled     bool     `yaml:"tlsEnabled"`
+	TLS            struct {
+		Enabled bool `yaml:"enabled"`
+	} `yaml:"tls"`
 }
 
 func (r Config) SourceConfigType() string {
@@ -94,7 +96,7 @@ func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 	}
 
 	var tlsConfig *tls.Config
-	if r.TLSEnabled {
+	if r.TLS.Enabled {
 		tlsConfig = &tls.Config{}
 	}
 
