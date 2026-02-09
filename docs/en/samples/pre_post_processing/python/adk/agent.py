@@ -52,7 +52,7 @@ async def after_tool_callback(
     args: Dict[str, Any],
     tool_context: ToolContext,
     tool_response: Any,
-):
+) -> Optional[Any]:
     """
     Callback fired after a tool execution.
     Enriches response for successful bookings.
