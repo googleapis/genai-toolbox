@@ -311,8 +311,8 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:        true,
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(`{}`)),
-			wantBody:       "",
-			wantStatusCode: http.StatusBadRequest,
+			wantBody:       `{"error":"parameter \"name\" is required"}`,
+			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "Invoke my-tool with insufficient parameters",
@@ -320,8 +320,8 @@ func RunToolInvokeTest(t *testing.T, select1Want string, options ...InvokeTestOp
 			enabled:        true,
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(`{"id": 1}`)),
-			wantBody:       "",
-			wantStatusCode: http.StatusBadRequest,
+			wantBody:       `{"error":"parameter \"name\" is required"}`,
+			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "invoke my-array-tool",
