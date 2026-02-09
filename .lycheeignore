@@ -23,8 +23,7 @@ https://cloud.dgraph.io/login
 https://dgraph.io/docs
 
 # MySQL Community downloads and main site (often protected by bot mitigation)
-https://dev.mysql.com/downloads/installer/
-https://www.mysql.com/
+^https?://(.*\.)?mysql\.com/.*
 
 # Claude desktop download link
 https://claude.ai/download
@@ -37,9 +36,9 @@ https://dev.mysql.com/doc/refman/8.4/en/sql-prepared-statements.html
 https://dev.mysql.com/doc/refman/8.4/en/user-names.html
 
 # npmjs links can occasionally trigger rate limiting during high-frequency CI builds
-https://www.npmjs.com/package/@toolbox-sdk/core
-https://www.npmjs.com/package/@toolbox-sdk/adk
+^https?://(www\.)?npmjs\.com/.*
 
+https://www.oceanbase.com/
 
 # Ignore social media and blog profiles to reduce external request overhead
 https://medium.com/@mcp_toolbox

@@ -17,7 +17,6 @@ package yugabytedbsql_test
 import (
 	"testing"
 
-	yaml "github.com/goccy/go-yaml"
 	"github.com/google/go-cmp/cmp"
 	"github.com/googleapis/genai-toolbox/internal/server"
 	"github.com/googleapis/genai-toolbox/internal/testutils"
@@ -38,30 +37,30 @@ func TestParseFromYamlYugabyteDBSQL(t *testing.T) {
 		{
 			desc: "basic valid config",
 			in: `
-			tools:
-			  hotel_search:
-			    kind: yugabytedb-sql
-			    source: yb-source
-			    description: search hotels by city
-			    statement: |
-			      SELECT * FROM hotels WHERE city = $1;
-			    authRequired:
-			      - auth-service-a
-			      - auth-service-b
-			    parameters:
-			      - name: city
-			        type: string
-			        description: city name
-			        authServices:
-			          - name: auth-service-a
-			            field: user_id
-			          - name: auth-service-b
-			            field: user_id
+			kind: tools
+			name: hotel_search
+			type: yugabytedb-sql
+			source: yb-source
+			description: search hotels by city
+			statement: |
+			  SELECT * FROM hotels WHERE city = $1;
+			authRequired:
+			  - auth-service-a
+			  - auth-service-b
+			parameters:
+			  - name: city
+			    type: string
+			    description: city name
+			    authServices:
+			      - name: auth-service-a
+			        field: user_id
+			      - name: auth-service-b
+			        field: user_id
 			`,
 			want: server.ToolConfigs{
 				"hotel_search": yugabytedbsql.Config{
 					Name:         "hotel_search",
-					Kind:         "yugabytedb-sql",
+					Type:         "yugabytedb-sql",
 					Source:       "yb-source",
 					Description:  "search hotels by city",
 					Statement:    "SELECT * FROM hotels WHERE city = $1;\n",
@@ -81,14 +80,11 @@ func TestParseFromYamlYugabyteDBSQL(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})
@@ -107,32 +103,29 @@ func TestFailParseFromYamlYugabyteDBSQL(t *testing.T) {
 		{
 			desc: "missing required field (statement)",
 			in: `
-			tools:
-			  tool1:
-			    kind: yugabytedb-sql
-			    source: yb-source
-			    description: incomplete config
+			kind: tools
+			name: tool1
+			type: yugabytedb-sql
+			source: yb-source
+			description: incomplete config
 			`,
 		},
 		{
 			desc: "unknown field (foo)",
 			in: `
-			tools:
-			  tool2:
-			    kind: yugabytedb-sql
-			    source: yb-source
-			    description: test
-			    statement: SELECT 1;
-			    foo: bar
+			kind: tools
+			name: tool2
+			type: yugabytedb-sql
+			source: yb-source
+			description: test
+			statement: SELECT 1;
+			foo: bar
 			`,
 		},
 	}
 	for _, tc := range cases {
 		t.Run(tc.desc, func(t *testing.T) {
-			cfg := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &cfg)
+			_, _, _, _, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err == nil {
 				t.Fatalf("expected error but got none")
 			}
@@ -153,33 +146,33 @@ func TestParseFromYamlWithTemplateParamsYugabyteDB(t *testing.T) {
 		{
 			desc: "basic example",
 			in: `
-			tools:
-				example_tool:
-					kind: yugabytedb-sql
-					source: my-yb-instance
-					description: some description
-					statement: |
-						SELECT * FROM SQL_STATEMENT;
-					parameters:
-						- name: name
-						  type: string
-						  description: some description
-					templateParameters:
-						- name: tableName
-						  type: string
-						  description: The table to select hotels from.
-						- name: fieldArray
-						  type: array
-						  description: The columns to return for the query.
-						  items: 
-								name: column
-								type: string
-								description: A column name that will be returned from the query.
+			kind: tools
+			name: example_tool
+			type: yugabytedb-sql
+			source: my-yb-instance
+			description: some description
+			statement: |
+				SELECT * FROM SQL_STATEMENT;
+			parameters:
+				- name: name
+				  type: string
+				  description: some description
+			templateParameters:
+				- name: tableName
+				  type: string
+				  description: The table to select hotels from.
+				- name: fieldArray
+				  type: array
+				  description: The columns to return for the query.
+				  items: 
+						name: column
+						type: string
+						description: A column name that will be returned from the query.
 			`,
 			want: server.ToolConfigs{
 				"example_tool": yugabytedbsql.Config{
 					Name:         "example_tool",
-					Kind:         "yugabytedb-sql",
+					Type:         "yugabytedb-sql",
 					Source:       "my-yb-instance",
 					Description:  "some description",
 					Statement:    "SELECT * FROM SQL_STATEMENT;\n",
@@ -197,15 +190,11 @@ func TestParseFromYamlWithTemplateParamsYugabyteDB(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.desc, func(t *testing.T) {
-			got := struct {
-				Tools server.ToolConfigs `yaml:"tools"`
-			}{}
-			// Parse contents
-			err := yaml.UnmarshalContext(ctx, testutils.FormatYaml(tc.in), &got)
+			_, _, _, got, _, _, err := server.UnmarshalResourceConfig(ctx, testutils.FormatYaml(tc.in))
 			if err != nil {
 				t.Fatalf("unable to unmarshal: %s", err)
 			}
-			if diff := cmp.Diff(tc.want, got.Tools); diff != "" {
+			if diff := cmp.Diff(tc.want, got); diff != "" {
 				t.Fatalf("incorrect parse: diff %v", diff)
 			}
 		})

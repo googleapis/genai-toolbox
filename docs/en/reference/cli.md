@@ -16,7 +16,7 @@ description: >
 |              | `--log-level`              | Specify the minimum level logged. Allowed: 'DEBUG', 'INFO', 'WARN', 'ERROR'.                                                                                                     | `info`      |
 |              | `--logging-format`         | Specify logging format to use. Allowed: 'standard' or 'JSON'.                                                                                                                    | `standard`  |
 | `-p`         | `--port`                   | Port the server will listen on.                                                                                                                                                  | `5000`      |
-|              | `--prebuilt`               | Use a prebuilt tool configuration by source type. See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values.                                                          |             |
+|              | `--prebuilt`               | Use one or more prebuilt tool configuration by source type. See [Prebuilt Tools Reference](prebuilt-tools.md) for allowed values.                                                          |             |
 |              | `--stdio`                  | Listens via MCP STDIO instead of acting as a remote HTTP server.                                                                                                                 |             |
 |              | `--telemetry-gcp`          | Enable exporting directly to Google Cloud Monitoring.                                                                                                                            |             |
 |              | `--telemetry-otlp`         | Enable exporting using OpenTelemetry Protocol (OTLP) to the specified endpoint (e.g. 'http://127.0.0.1:4318')                                                                    |             |
@@ -27,7 +27,52 @@ description: >
 |              | `--ui`                     | Launches the Toolbox UI web server.                                                                                                                                              |             |
 |              | `--allowed-origins`        | Specifies a list of origins permitted to access this server for CORs access.                                                                                                     | `*`         |
 |              | `--allowed-hosts`          | Specifies a list of hosts permitted to access this server to prevent DNS rebinding attacks.                                                                                      | `*`         |
+|              | `--user-agent-metadata`    | Appends additional metadata to the User-Agent.                                                                                                                                   |             |
 | `-v`         | `--version`                | version for toolbox                                                                                                                                                              |             |
+
+## Sub Commands
+
+<details>
+<summary><code>invoke</code></summary>
+
+Executes a tool directly with the provided parameters. This is useful for testing tool configurations and parameters without needing a full client setup.
+
+**Syntax:**
+
+```bash
+toolbox invoke <tool-name> [params]
+```
+
+**Arguments:**
+
+- `tool-name`: The name of the tool to execute (as defined in your configuration).
+- `params`: (Optional) A JSON string containing the parameters for the tool.
+
+For more detailed instructions, see [Invoke Tools via CLI](../how-to/invoke_tool.md).
+
+</details>
+
+<details>
+<summary><code>skills-generate</code></summary>
+
+Generates a skill package from a specified toolset. Each tool in the toolset will have a corresponding Node.js execution script in the generated skill.
+
+**Syntax:**
+
+```bash
+toolbox skills-generate --name <name> --description <description> --toolset <toolset> --output-dir <output>
+```
+
+**Flags:**
+
+- `--name`: Name of the generated skill.
+- `--description`: Description of the generated skill.
+- `--toolset`: (Optional) Name of the toolset to convert into a skill. If not provided, all tools will be included.
+- `--output-dir`: (Optional) Directory to output generated skills (default: "skills").
+
+For more detailed instructions, see [Generate Agent Skills](../how-to/generate_skill.md).
+
+</details>
 
 ## Examples
 
@@ -50,6 +95,11 @@ description: >
 
 # Server with prebuilt + custom tools configurations
 ./toolbox --tools-file tools.yaml --prebuilt alloydb-postgres
+
+# Server with multiple prebuilt tools configurations
+./toolbox --prebuilt alloydb-postgres,alloydb-postgres-admin
+# OR
+./toolbox --prebuilt alloydb-postgres --prebuilt alloydb-postgres-admin
 ```
 
 ### Tool Configuration Sources
@@ -70,7 +120,7 @@ The CLI supports multiple mutually exclusive ways to specify tool configurations
 
 **Prebuilt Configurations:**
 
-- `--prebuilt`: Use predefined configurations for specific database types (e.g.,
+- `--prebuilt`: Use one or more predefined configurations for specific database types (e.g.,
   'bigquery', 'postgres', 'spanner'). See [Prebuilt Tools
   Reference](prebuilt-tools.md) for allowed values.
 
