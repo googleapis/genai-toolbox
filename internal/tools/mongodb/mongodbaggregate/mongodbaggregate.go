@@ -60,6 +60,7 @@ type Config struct {
 	PipelineParams  parameters.Parameters `yaml:"pipelineParams" validate:"required"`
 	Canonical       bool                  `yaml:"canonical"`
 	ReadOnly        bool                  `yaml:"readOnly"`
+	Annotations    *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // validate interface
@@ -81,7 +82,8 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	}
 
 	// Create MCP manifest
-	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, nil)
+	annotations := tools.GetAnnotationsOrDefault(cfg.Annotations, tools.NewReadOnlyAnnotations)
+	mcpManifest := tools.GetMcpManifest(cfg.Name, cfg.Description, cfg.AuthRequired, allParameters, annotations)
 
 	// finish tool setup
 	return Tool{
