@@ -28,6 +28,8 @@ import (
 	"github.com/googleapis/genai-toolbox/internal/server/resources"
 	"github.com/googleapis/genai-toolbox/internal/tools"
 	"github.com/googleapis/genai-toolbox/internal/util"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // ProcessMethod returns a response for the request.
@@ -94,6 +96,15 @@ func toolsCallHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *re
 	toolName := req.Params.Name
 	toolArgument := req.Params.Arguments
 	logger.DebugContext(ctx, fmt.Sprintf("tool name: %s", toolName))
+
+	// Update span name and set gen_ai attributes
+	span := trace.SpanFromContext(ctx)
+	span.SetName(fmt.Sprintf("%s %s", TOOLS_CALL, toolName))
+	span.SetAttributes(
+		attribute.String("gen_ai.tool.name", toolName),
+		attribute.String("gen_ai.operation.name", "execute_tool"),
+	)
+
 	tool, ok := resourceMgr.GetTool(toolName)
 	if !ok {
 		err = fmt.Errorf("invalid tool name: tool with name %q does not exist", toolName)
@@ -279,6 +290,12 @@ func promptsGetHandler(ctx context.Context, id jsonrpc.RequestId, resourceMgr *r
 
 	promptName := req.Params.Name
 	logger.DebugContext(ctx, fmt.Sprintf("prompt name: %s", promptName))
+
+	// Update span name and set gen_ai attributes
+	span := trace.SpanFromContext(ctx)
+	span.SetName(fmt.Sprintf("%s %s", PROMPTS_GET, promptName))
+	span.SetAttributes(attribute.String("gen_ai.prompt.name", promptName))
+
 	prompt, ok := resourceMgr.GetPrompt(promptName)
 	if !ok {
 		err := fmt.Errorf("prompt with name %q does not exist", promptName)
