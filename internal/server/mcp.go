@@ -168,35 +168,6 @@ func extractTraceContext(ctx context.Context, body []byte) context.Context {
 	return ctx
 }
 
-// getMethodSpanName returns the span name for a given MCP method following semantic conventions
-// Format: {mcp.method.name} {target} (e.g., "tools/call get-weather")
-func getMethodSpanName(method string, body []byte) string {
-	switch method {
-	case "tools/call":
-		var req struct {
-			Params struct {
-				Name string `json:"name"`
-			} `json:"params"`
-		}
-		if json.Unmarshal(body, &req) == nil && req.Params.Name != "" {
-			return fmt.Sprintf("tools/call %s", req.Params.Name)
-		}
-		return "tools/call"
-	case "prompts/get":
-		var req struct {
-			Params struct {
-				Name string `json:"name"`
-			} `json:"params"`
-		}
-		if json.Unmarshal(body, &req) == nil && req.Params.Name != "" {
-			return fmt.Sprintf("prompts/get %s", req.Params.Name)
-		}
-		return "prompts/get"
-	default:
-		return method
-	}
-}
-
 func NewStdioSession(s *Server, stdin io.Reader, stdout io.Writer) *stdioSession {
 	stdioSession := &stdioSession{
 		server: s,
@@ -230,15 +201,15 @@ func (s *stdioSession) readInputStream(ctx context.Context) error {
 		msgCtx, span := s.server.instrumentation.Tracer.Start(msgCtx, "toolbox/server/mcp/stdio",
 			trace.WithSpanKind(trace.SpanKindServer),
 		)
+		defer span.End()
 
-		v, res, err := processMcpMessage(msgCtx, []byte(line), s.server, s.protocol, "", "", nil, "stdio", "")
+		v, res, err := processMcpMessage(msgCtx, []byte(line), s.server, s.protocol, "", "", nil, "")
 		if err != nil {
 			// errors during the processing of message will generate a valid MCP Error response.
 			// server can continue to run.
 			s.server.logger.ErrorContext(msgCtx, err.Error())
 			span.SetStatus(codes.Error, err.Error())
 		}
-		span.End()
 
 		if v != "" {
 			s.protocol = v
@@ -511,7 +482,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	networkProtocolVersion := fmt.Sprintf("%d.%d", r.ProtoMajor, r.ProtoMinor)
 
-	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName, promptsetName, r.Header, "http", networkProtocolVersion)
+	v, res, err := processMcpMessage(ctx, body, s, protocolVersion, toolsetName, promptsetName, r.Header, networkProtocolVersion)
 	if err != nil {
 		s.logger.DebugContext(ctx, fmt.Errorf("error processing message: %w", err).Error())
 	}
@@ -564,7 +535,7 @@ func httpHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 }
 
 // processMcpMessage process the messages received from clients
-func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVersion string, toolsetName string, promptsetName string, header http.Header, transportType string, networkProtocolVersion string) (string, any, error) {
+func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVersion string, toolsetName string, promptsetName string, header http.Header, networkProtocolVersion string) (string, any, error) {
 	logger, err := util.LoggerFromContext(ctx)
 	if err != nil {
 		return "", jsonrpc.NewError("", jsonrpc.INTERNAL_ERROR, err.Error(), nil), err
@@ -600,6 +571,13 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
 	}
 
+	// Create method-specific span with semantic conventions
+	// Note: Trace context is already extracted and set in ctx by the caller
+	ctx, span := s.instrumentation.Tracer.Start(ctx, baseMessage.Method,
+		trace.WithSpanKind(trace.SpanKindServer),
+	)
+	defer span.End()
+
 	// Check if message is a notification
 	if baseMessage.Id == nil {
 		err := mcp.NotificationHandler(ctx, body)
@@ -614,20 +592,12 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 		networkProtocolName = "http"
 	}
 
-	// Create method-specific span with semantic conventions
-	// Note: Trace context is already extracted and set in ctx by the caller
-	spanName := getMethodSpanName(baseMessage.Method, body)
-	ctx, span := s.instrumentation.Tracer.Start(ctx, spanName,
-		trace.WithSpanKind(trace.SpanKindServer),
-	)
-	defer span.End()
-
-	// Set required semantic attributes
+	// Set required semantic attributes for span according to OTEL MCP semcov
+	// ref: https://opentelemetry.io/docs/specs/semconv/gen-ai/mcp/#server
 	span.SetAttributes(
 		attribute.String("mcp.method.name", baseMessage.Method),
 		attribute.String("network.transport", networkTransport),
 		attribute.String("network.protocol.name", networkProtocolName),
-		attribute.String("mcp.transport.type", transportType),
 	)
 
 	// Set network protocol version if available
@@ -642,87 +612,49 @@ func processMcpMessage(ctx context.Context, body []byte, s *Server, protocolVers
 
 	// Set request ID
 	if baseMessage.Id != nil {
-		if idStr, ok := baseMessage.Id.(string); ok {
-			span.SetAttributes(attribute.String("jsonrpc.request.id", idStr))
-		} else if idNum, ok := baseMessage.Id.(float64); ok {
-			span.SetAttributes(attribute.String("jsonrpc.request.id", fmt.Sprintf("%v", idNum)))
-		}
+		span.SetAttributes(attribute.String("jsonrpc.request.id", fmt.Sprintf("%v", baseMessage.Id)))
 	}
 
-	// Set toolset name if available
-	if toolsetName != "" {
-		span.SetAttributes(attribute.String("toolset.name", toolsetName))
-	}
-
-	// Extract tool/prompt name for gen_ai attributes
-	switch baseMessage.Method {
-	case "tools/call":
-		var req struct {
-			Params struct {
-				Name string `json:"name"`
-			} `json:"params"`
-		}
-		if json.Unmarshal(body, &req) == nil && req.Params.Name != "" {
-			span.SetAttributes(
-				attribute.String("gen_ai.tool.name", req.Params.Name),
-				attribute.String("gen_ai.operation.name", "execute_tool"),
-			)
-		}
-	case "prompts/get":
-		var req struct {
-			Params struct {
-				Name string `json:"name"`
-			} `json:"params"`
-		}
-		if json.Unmarshal(body, &req) == nil && req.Params.Name != "" {
-			span.SetAttributes(attribute.String("gen_ai.prompt.name", req.Params.Name))
-		}
-	}
+	// Set toolset name
+	span.SetAttributes(attribute.String("toolset.name", toolsetName))
 
 	// Process the method
-	var result any
-	var version string
-
 	switch baseMessage.Method {
 	case mcputil.INITIALIZE:
-		result, version, err = mcp.InitializeResponse(ctx, baseMessage.Id, body, s.version)
+		result, version, err := mcp.InitializeResponse(ctx, baseMessage.Id, body, s.version)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
-			span.SetAttributes(attribute.String("error.type", "initialization_error"))
+			if rpcErr, ok := result.(jsonrpc.JSONRPCError); ok {
+				span.SetAttributes(attribute.String("error.type", rpcErr.Error.String()))
+			}
 			return "", result, err
 		}
+		span.SetAttributes(attribute.String("mcp.protocol.version", version))
 		return version, result, err
 	default:
 		toolset, ok := s.ResourceMgr.GetToolset(toolsetName)
 		if !ok {
-			err = fmt.Errorf("toolset does not exist")
+			err := fmt.Errorf("toolset does not exist")
+			rpcErr := jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil)
 			span.SetStatus(codes.Error, err.Error())
-			span.SetAttributes(attribute.String("error.type", "invalid_toolset"))
-			return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+			span.SetAttributes(attribute.String("error.type", rpcErr.Error.String()))
+			return "", rpcErr, err
 		}
 		promptset, ok := s.ResourceMgr.GetPromptset(promptsetName)
 		if !ok {
-			err = fmt.Errorf("promptset does not exist")
+			err := fmt.Errorf("promptset does not exist")
+			rpcErr := jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil)
 			span.SetStatus(codes.Error, err.Error())
-			span.SetAttributes(attribute.String("error.type", "invalid_promptset"))
-			return "", jsonrpc.NewError(baseMessage.Id, jsonrpc.INVALID_REQUEST, err.Error(), nil), err
+			span.SetAttributes(attribute.String("error.type", rpcErr.Error.String()))
+			return "", rpcErr, err
 		}
-		result, err = mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, promptset, s.ResourceMgr, body, header)
+		result, err := mcp.ProcessMethod(ctx, protocolVersion, baseMessage.Id, baseMessage.Method, toolset, promptset, s.ResourceMgr, body, header)
 		if err != nil {
 			span.SetStatus(codes.Error, err.Error())
 			// Set error.type based on JSON-RPC error code
 			if rpcErr, ok := result.(jsonrpc.JSONRPCError); ok {
 				span.SetAttributes(attribute.Int("jsonrpc.error.code", rpcErr.Error.Code))
-				switch rpcErr.Error.Code {
-				case jsonrpc.METHOD_NOT_FOUND:
-					span.SetAttributes(attribute.String("error.type", "method_not_found"))
-				case jsonrpc.INVALID_PARAMS:
-					span.SetAttributes(attribute.String("error.type", "invalid_params"))
-				case jsonrpc.INTERNAL_ERROR:
-					span.SetAttributes(attribute.String("error.type", "internal_error"))
-				default:
-					span.SetAttributes(attribute.String("error.type", "jsonrpc_error"))
-				}
+				span.SetAttributes(attribute.String("error.type", rpcErr.Error.String()))
 			}
 		}
 		return "", result, err
