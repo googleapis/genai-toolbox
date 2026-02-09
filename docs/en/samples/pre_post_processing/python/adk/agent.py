@@ -25,7 +25,7 @@ SYSTEM_PROMPT = """
 # Pre processing
 async def before_tool_callback(
     tool: ToolboxTool, args: Dict[str, Any], tool_context: ToolContext
-) -> Dict[str, Any]:
+) -> Optional[Dict[str, Any]]:
     """
     Callback fired before a tool is executed.
     Enforces business logic: Max stay duration is 14 days.
