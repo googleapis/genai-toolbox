@@ -41,11 +41,22 @@ def golden_keywords():
 class TestExecution:
     """Test framework execution and output validation."""
 
+    _cached_output = None
+
     @pytest.fixture(scope="function")
     def script_output(self, capsys):
         """Run the quickstart function and return its output."""
-        asyncio.run(quickstart.main())
-        return capsys.readouterr()
+        if TestExecution._cached_output is None:
+            asyncio.run(quickstart.main())
+            out, err = capsys.readouterr()
+            TestExecution._cached_output = (out, err)
+            
+        class Output:
+            def __init__(self, out, err):
+                self.out = out
+                self.err = err
+                
+        return Output(*TestExecution._cached_output)
 
     def test_script_runs_without_errors(self, script_output):
         """Test that the script runs and produces no stderr."""
