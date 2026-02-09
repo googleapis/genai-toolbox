@@ -25,7 +25,7 @@ SYSTEM_PROMPT = """
 # Pre processing
 async def before_tool_callback(
     tool: ToolboxTool, args: Dict[str, Any], tool_context: ToolContext
-) -> Dict[str, Any]:
+) -> Optional[Dict[str, Any]]:
     """
     Callback fired before a tool is executed.
     Enforces business logic: Max stay duration is 14 days.
@@ -33,9 +33,7 @@ async def before_tool_callback(
     tool_name = tool.name
     print(f"POLICY CHECK: Intercepting '{tool_name}'")
 
-    if tool_name == "update-hotel" or (
-        "checkin_date" in args and "checkout_date" in args
-    ):
+    if tool_name == "update-hotel" and "checkin_date" in args and "checkout_date" in args:
         start = datetime.fromisoformat(args["checkin_date"])
         end = datetime.fromisoformat(args["checkout_date"])
         duration = (end - start).days
@@ -52,7 +50,7 @@ async def after_tool_callback(
     args: Dict[str, Any],
     tool_context: ToolContext,
     tool_response: Any,
-):
+) -> Optional[Any]:
     """
     Callback fired after a tool execution.
     Enriches response for successful bookings.
@@ -66,8 +64,7 @@ async def after_tool_callback(
 
     tool_name = tool.name
     if isinstance(result, str) and "Error" not in result:
-        is_booking_tool = tool_name == "book-hotel"
-        if is_booking_tool:
+        if tool_name == "book-hotel":
             loyalty_bonus = 500
             enriched_result = f"Booking Confirmed!\n You earned {loyalty_bonus} Loyalty Points with this stay.\n\nSystem Details: {result}"
 
