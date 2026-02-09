@@ -11,9 +11,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@langchain/google-genai": "^2.0.0",
-    "@langchain/langgraph": "^1.0.0",
-    "@toolbox-sdk/core": "^0.1.2",
-    "langchain": "^1.0.0"
+    "@langchain/core": "^0.3.0",
+    "@langchain/google-genai": "^0.2.0",
+    "@langchain/langgraph": "^0.2.0",
+    "@toolbox-sdk/core": "^0.2.0",
+    "langchain": "^0.3.0"
   }
 }
