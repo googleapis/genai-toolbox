@@ -1239,8 +1239,8 @@ func TestAlloyDBCreateInstance(t *testing.T) {
 		{
 			name:           "api failure",
 			body:           `{"project": "p1", "location": "l1", "cluster": "c1", "instance": "i2-api-failure", "instanceType": "PRIMARY", "displayName": "i1-success"}`,
-			want:           "internal api error",
-			wantStatusCode: http.StatusBadRequest,
+			want:           `{"error":"error processing GCP request: error creating AlloyDB instance: googleapi: Error 500: internal api error"}`,
+			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "missing project",
@@ -1269,8 +1269,8 @@ func TestAlloyDBCreateInstance(t *testing.T) {
 		{
 			name:           "invalid instanceType",
 			body:           `{"project": "p1", "location": "l1", "cluster": "c1", "instance": "i1", "instanceType": "INVALID", "displayName": "invalid"}`,
-			want:           `invalid 'instanceType' parameter; expected 'PRIMARY' or 'READ_POOL'`,
-			wantStatusCode: http.StatusBadRequest,
+			want:           `{"error":"invalid 'instanceType' parameter; expected 'PRIMARY' or 'READ_POOL'"}`,
+			wantStatusCode: http.StatusOK,
 		},
 	}
 
