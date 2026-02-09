@@ -67,6 +67,7 @@ type Config struct {
 	Description        string   `yaml:"description" validate:"required"`
 	AuthRequired       []string `yaml:"authRequired"`
 	CacheExpireMinutes *int     `yaml:"cacheExpireMinutes,omitempty"` // Cache expiration time in minutes.
+	Annotations        *tools.ToolAnnotations `yaml:"annotations,omitempty"`
 }
 
 // Statically verify that Config implements the tools.ToolConfig interface.
