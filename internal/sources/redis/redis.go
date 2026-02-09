@@ -53,8 +53,9 @@ type Config struct {
 	Database       int      `yaml:"database"`
 	UseGCPIAM      bool     `yaml:"useGCPIAM"`
 	ClusterEnabled bool     `yaml:"clusterEnabled"`
-	TLS            struct {
-		Enabled bool `yaml:"enabled"`
+	TLS struct {
+		Enabled            bool `yaml:"enabled"`
+		InsecureSkipVerify bool `yaml:"insecureSkipVerify"`
 	} `yaml:"tls"`
 }
 
@@ -97,7 +98,9 @@ func initRedisClient(ctx context.Context, r Config) (RedisClient, error) {
 
 	var tlsConfig *tls.Config
 	if r.TLS.Enabled {
-		tlsConfig = &tls.Config{}
+		tlsConfig = &tls.Config{
+			InsecureSkipVerify: r.TLS.InsecureSkipVerify,
+		}
 	}
 
 	var client RedisClient

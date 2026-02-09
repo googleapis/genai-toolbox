@@ -93,7 +93,8 @@ func TestParseFromYamlRedis(t *testing.T) {
 					Type:    redis.SourceType,
 					Address: []string{"127.0.0.1"},
 					TLS: struct {
-						Enabled bool `yaml:"enabled"`
+						Enabled            bool `yaml:"enabled"`
+						InsecureSkipVerify bool `yaml:"insecureSkipVerify"`
 					}{Enabled: true},
 				},
 			},
