@@ -97,7 +97,7 @@ func (h *masterRestoreBackupHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 	default:
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(map[string]string{
+		_ = json.NewEncoder(w).Encode(map[string]string{
 			"error": "source project and instance are required when restoring via backup ID",
 		})
 		return
