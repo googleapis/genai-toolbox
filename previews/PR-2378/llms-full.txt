@@ -13631,7 +13631,7 @@ How to add pre- and post- processing to your Agents using Python.
 
 ## Prerequisites
 
-This tutorial assumes that you have set up Toolbox with a basic agent as described in the [local quickstart](../../getting-started/local_quickstart).
+This tutorial assumes that you have set up Toolbox with a basic agent as described in the [local quickstart](../../getting-started/local_quickstart.md).
 
 This guide demonstrates how to implement these patterns in your Toolbox applications.
 
@@ -13662,6 +13662,7 @@ AI: Booking Confirmed! You earned 500 Loyalty Points with this stay.
 
 AI: Error: Maximum stay duration is 14 days.
 ```
+
 
 # Snowflake
 How to get started running Toolbox with MCP Inspector and Snowflake as the source.
