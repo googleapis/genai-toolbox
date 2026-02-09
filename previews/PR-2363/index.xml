@@ -1273,7 +1273,8 @@ names, or other parts of the query.&lt;/p></description></item><item><title>CLI<
  &lt;/tbody>
 &lt;/table>
 &lt;h2 id="sub-commands">Sub Commands&lt;/h2>
-&lt;h3 id="invoke">&lt;code>invoke&lt;/code>&lt;/h3>
+&lt;details>
+&lt;summary>&lt;code>invoke&lt;/code>&lt;/summary>
 &lt;p>Executes a tool directly with the provided parameters. This is useful for testing tool configurations and parameters without needing a full client setup.&lt;/p></description></item><item><title>ClickHouse</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2363/resources/sources/clickhouse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2363/resources/sources/clickhouse/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>&lt;a href="https://clickhouse.com/docs">ClickHouse&lt;/a> is a fast, open-source, column-oriented database&lt;/p>
 &lt;h2 id="available-tools">Available Tools&lt;/h2>
@@ -6791,6 +6792,59 @@ as well as the new file content.&lt;/p>
  &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
+&lt;/table></description></item><item><title>looker-validate-project</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2363/resources/tools/looker/looker-validate-project/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2363/resources/tools/looker/looker-validate-project/</guid><description>&lt;h2 id="about">About&lt;/h2>
+&lt;p>A &amp;ldquo;looker-validate-project&amp;rdquo; tool checks the syntax of a LookML project and reports any errors&lt;/p>
+&lt;p>It&amp;rsquo;s compatible with the following sources:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2363/resources/sources/looker/">looker&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>looker-validate-project&lt;/code> accepts a project_id parameter.&lt;/p>
+&lt;h2 id="example">Example&lt;/h2>
+&lt;div class="highlight">&lt;pre tabindex="0" class="chroma">&lt;code class="language-yaml" data-lang="yaml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">tools&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">validate_project&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">kind&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-validate-project&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">source&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="l">looker-source&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nt">description&lt;/span>&lt;span class="p">:&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">|&lt;/span>&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> This tool checks a LookML project for syntax errors.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Prerequisite: The Looker session must be in Development Mode. Use `dev_mode: true` first.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Parameters:
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> - project_id (required): The unique ID of the LookML project.
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> Output:
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> A list of error details including the file path and line number, and also a list of models
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="sd"> that are not currently valid due to LookML errors.&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;h2 id="reference">Reference&lt;/h2>
+&lt;table>
+ &lt;thead>
+ &lt;tr>
+ &lt;th>&lt;strong>field&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>type&lt;/strong>&lt;/th>
+ &lt;th style="text-align: center">&lt;strong>required&lt;/strong>&lt;/th>
+ &lt;th>&lt;strong>description&lt;/strong>&lt;/th>
+ &lt;/tr>
+ &lt;/thead>
+ &lt;tbody>
+ &lt;tr>
+ &lt;td>kind&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Must be &amp;ldquo;looker-validate-project&amp;rdquo;.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>source&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Name of the source Looker instance.&lt;/td>
+ &lt;/tr>
+ &lt;tr>
+ &lt;td>description&lt;/td>
+ &lt;td style="text-align: center">string&lt;/td>
+ &lt;td style="text-align: center">true&lt;/td>
+ &lt;td>Description of the tool that is passed to the LLM.&lt;/td>
+ &lt;/tr>
+ &lt;/tbody>
 &lt;/table></description></item><item><title>MariaDB</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2363/resources/sources/mariadb/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2363/resources/sources/mariadb/</guid><description>&lt;h2 id="about">About&lt;/h2>
 &lt;p>MariaDB is a relational database management system derived from MySQL. It
 implements the MySQL protocol and client libraries and supports modern SQL
@@ -12201,7 +12255,14 @@ exponential backoff.&lt;/p>
  &lt;td>The maximum number of polling attempts before giving up. Defaults to 10.&lt;/td>
  &lt;/tr>
  &lt;/tbody>
-&lt;/table></description></item><item><title>Invoke Tools via CLI</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2363/how-to/invoke_tool/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2363/how-to/invoke_tool/</guid><description>&lt;p>The &lt;code>invoke&lt;/code> command allows you to invoke tools defined in your configuration directly from the CLI. This is useful for:&lt;/p>
+&lt;/table></description></item><item><title>Generate Agent Skills</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2363/how-to/generate_skill/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2363/how-to/generate_skill/</guid><description>&lt;p>The &lt;code>skills-generate&lt;/code> command allows you to convert a &lt;strong>toolset&lt;/strong> into an &lt;strong>Agent Skill&lt;/strong>. A toolset is a collection of tools, and the generated skill will contain metadata and execution scripts for all tools within that toolset, complying with the &lt;a href="https://agentskills.io/specification">Agent Skill specification&lt;/a>.&lt;/p>
+&lt;h2 id="before-you-begin">Before you begin&lt;/h2>
+&lt;ol>
+&lt;li>Make sure you have the &lt;code>toolbox&lt;/code> executable in your PATH.&lt;/li>
+&lt;li>Make sure you have &lt;a href="https://nodejs.org/">Node.js&lt;/a> installed on your system.&lt;/li>
+&lt;/ol>
+&lt;h2 id="generating-a-skill-from-a-toolset">Generating a Skill from a Toolset&lt;/h2>
+&lt;p>A skill package consists of a &lt;code>SKILL.md&lt;/code> file (with required YAML frontmatter) and a set of Node.js scripts. Each tool defined in your toolset maps to a corresponding script in the generated Node.js scripts (&lt;code>.js&lt;/code>) that work across different platforms (Linux, macOS, Windows).&lt;/p></description></item><item><title>Invoke Tools via CLI</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2363/how-to/invoke_tool/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2363/how-to/invoke_tool/</guid><description>&lt;p>The &lt;code>invoke&lt;/code> command allows you to invoke tools defined in your configuration directly from the CLI. This is useful for:&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>Ephemeral Invocation:&lt;/strong> Executing a tool without spinning up a full MCP server/client.&lt;/li>
 &lt;li>&lt;strong>Debugging:&lt;/strong> Isolating tool execution logic and testing with various parameter combinations.&lt;/li>
