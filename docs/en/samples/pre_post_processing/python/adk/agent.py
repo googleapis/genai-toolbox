@@ -33,7 +33,7 @@ async def before_tool_callback(
     tool_name = tool.name
     print(f"POLICY CHECK: Intercepting '{tool_name}'")
 
-    if "checkin_date" in args and "checkout_date" in args:
+    if tool_name == "update-hotel" and "checkin_date" in args and "checkout_date" in args:
         start = datetime.fromisoformat(args["checkin_date"])
         end = datetime.fromisoformat(args["checkout_date"])
         duration = (end - start).days
