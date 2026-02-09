@@ -31,13 +31,13 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
-// kind defines the unique identifier for this tool.
-const kind string = "neo4j-schema"
+// type defines the unique identifier for this tool.
+const resourceType string = "neo4j-schema"
 
 // init registers the tool with the application's tool registry when the package is initialized.
 func init() {
-	if !tools.Register(kind, newConfig) {
-		panic(fmt.Sprintf("tool kind %q already registered", kind))
+	if !tools.Register(resourceType, newConfig) {
+		panic(fmt.Sprintf("tool type %q already registered", resourceType))
 	}
 }
 
@@ -62,7 +62,7 @@ type compatibleSource interface {
 // These settings are typically read from a YAML file.
 type Config struct {
 	Name               string   `yaml:"name" validate:"required"`
-	Kind               string   `yaml:"kind" validate:"required"`
+	Type               string   `yaml:"type" validate:"required"`
 	Source             string   `yaml:"source" validate:"required"`
 	Description        string   `yaml:"description" validate:"required"`
 	AuthRequired       []string `yaml:"authRequired"`
@@ -72,9 +72,9 @@ type Config struct {
 // Statically verify that Config implements the tools.ToolConfig interface.
 var _ tools.ToolConfig = Config{}
 
-// ToolConfigKind returns the kind of this tool configuration.
-func (cfg Config) ToolConfigKind() string {
-	return kind
+// ToolConfigType returns the type of this tool configuration.
+func (cfg Config) ToolConfigType() string {
+	return resourceType
 }
 
 // Initialize sets up the tool with its dependencies and returns a ready-to-use Tool instance.
@@ -115,7 +115,7 @@ type Tool struct {
 // Invoke executes the tool's main logic: fetching the Neo4j schema.
 // It first checks the cache for a valid schema before extracting it from the database.
 func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, params parameters.ParamValues, accessToken tools.AccessToken) (any, error) {
-	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Kind)
+	source, err := tools.GetCompatibleSource[compatibleSource](resourceMgr, t.Source, t.Name, t.Type)
 	if err != nil {
 		return nil, err
 	}
@@ -138,11 +138,6 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	t.cache.Set("schema", schema, expiration)
 
 	return schema, nil
-}
-
-// ParseParams is a placeholder as this tool does not require input parameters.
-func (t Tool) ParseParams(data map[string]any, claimsMap map[string]map[string]any) (parameters.ParamValues, error) {
-	return parameters.ParamValues{}, nil
 }
 
 func (t Tool) EmbedParams(ctx context.Context, paramValues parameters.ParamValues, embeddingModelsMap map[string]embeddingmodels.EmbeddingModel) (parameters.ParamValues, error) {
@@ -701,4 +696,9 @@ func (t Tool) ToConfig() tools.ToolConfig {
 
 func (t Tool) GetAuthTokenHeaderName(resourceMgr tools.SourceProvider) (string, error) {
 	return "Authorization", nil
+}
+
+// This tool does not have parameters, so return an empty set.
+func (t Tool) GetParameters() parameters.Parameters {
+	return parameters.Parameters{}
 }

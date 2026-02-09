@@ -14,8 +14,11 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"regexp"
 	"strings"
 
 	yaml "github.com/goccy/go-yaml"
@@ -64,12 +67,14 @@ type ServerConfig struct {
 	Stdio bool
 	// DisableReload indicates if the user has disabled dynamic reloading for Toolbox.
 	DisableReload bool
-	// UI indicates if Toolbox UI endpoints (/ui) are available
+	// UI indicates if Toolbox UI endpoints (/ui) are available.
 	UI bool
 	// Specifies a list of origins permitted to access this server.
 	AllowedOrigins []string
-	// Specifies a list of hosts permitted to access this server
+	// Specifies a list of hosts permitted to access this server.
 	AllowedHosts []string
+	// UserAgentMetadata specifies additional metadata to append to the User-Agent string.
+	UserAgentMetadata []string
 }
 
 type logFormat string
@@ -124,272 +129,282 @@ func (s *StringLevel) Type() string {
 	return "stringLevel"
 }
 
-// SourceConfigs is a type used to allow unmarshal of the data source config map
 type SourceConfigs map[string]sources.SourceConfig
-
-// validate interface
-var _ yaml.InterfaceUnmarshalerContext = &SourceConfigs{}
-
-func (c *SourceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
-	*c = make(SourceConfigs)
-	// Parse the 'kind' fields for each source
-	var raw map[string]util.DelayedUnmarshaler
-	if err := unmarshal(&raw); err != nil {
-		return err
-	}
-
-	for name, u := range raw {
-		// Unmarshal to a general type that ensure it capture all fields
-		var v map[string]any
-		if err := u.Unmarshal(&v); err != nil {
-			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
-		}
-
-		kind, ok := v["kind"]
-		if !ok {
-			return fmt.Errorf("missing 'kind' field for source %q", name)
-		}
-		kindStr, ok := kind.(string)
-		if !ok {
-			return fmt.Errorf("invalid 'kind' field for source %q (must be a string)", name)
-		}
-
-		yamlDecoder, err := util.NewStrictDecoder(v)
-		if err != nil {
-			return fmt.Errorf("error creating YAML decoder for source %q: %w", name, err)
-		}
-
-		sourceConfig, err := sources.DecodeConfig(ctx, kindStr, name, yamlDecoder)
-		if err != nil {
-			return err
-		}
-		(*c)[name] = sourceConfig
-	}
-	return nil
-}
-
-// AuthServiceConfigs is a type used to allow unmarshal of the data authService config map
 type AuthServiceConfigs map[string]auth.AuthServiceConfig
-
-// validate interface
-var _ yaml.InterfaceUnmarshalerContext = &AuthServiceConfigs{}
-
-func (c *AuthServiceConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
-	*c = make(AuthServiceConfigs)
-	// Parse the 'kind' fields for each authService
-	var raw map[string]util.DelayedUnmarshaler
-	if err := unmarshal(&raw); err != nil {
-		return err
-	}
-
-	for name, u := range raw {
-		var v map[string]any
-		if err := u.Unmarshal(&v); err != nil {
-			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
-		}
-
-		kind, ok := v["kind"]
-		if !ok {
-			return fmt.Errorf("missing 'kind' field for %q", name)
-		}
-
-		dec, err := util.NewStrictDecoder(v)
-		if err != nil {
-			return fmt.Errorf("error creating decoder: %w", err)
-		}
-		switch kind {
-		case google.AuthServiceKind:
-			actual := google.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		default:
-			return fmt.Errorf("%q is not a valid kind of auth source", kind)
-		}
-	}
-	return nil
-}
-
-// EmbeddingModelConfigs is a type used to allow unmarshal of the embedding model config map
 type EmbeddingModelConfigs map[string]embeddingmodels.EmbeddingModelConfig
-
-// validate interface
-var _ yaml.InterfaceUnmarshalerContext = &EmbeddingModelConfigs{}
-
-func (c *EmbeddingModelConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
-	*c = make(EmbeddingModelConfigs)
-	// Parse the 'kind' fields for each embedding model
-	var raw map[string]util.DelayedUnmarshaler
-	if err := unmarshal(&raw); err != nil {
-		return err
-	}
-
-	for name, u := range raw {
-		// Unmarshal to a general type that ensure it capture all fields
-		var v map[string]any
-		if err := u.Unmarshal(&v); err != nil {
-			return fmt.Errorf("unable to unmarshal embedding model %q: %w", name, err)
-		}
-
-		kind, ok := v["kind"]
-		if !ok {
-			return fmt.Errorf("missing 'kind' field for embedding model %q", name)
-		}
-
-		dec, err := util.NewStrictDecoder(v)
-		if err != nil {
-			return fmt.Errorf("error creating decoder: %w", err)
-		}
-		switch kind {
-		case gemini.EmbeddingModelKind:
-			actual := gemini.Config{Name: name}
-			if err := dec.DecodeContext(ctx, &actual); err != nil {
-				return fmt.Errorf("unable to parse as %q: %w", kind, err)
-			}
-			(*c)[name] = actual
-		default:
-			return fmt.Errorf("%q is not a valid kind of auth source", kind)
-		}
-	}
-	return nil
-}
-
-// ToolConfigs is a type used to allow unmarshal of the tool configs
 type ToolConfigs map[string]tools.ToolConfig
-
-// validate interface
-var _ yaml.InterfaceUnmarshalerContext = &ToolConfigs{}
-
-func (c *ToolConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
-	*c = make(ToolConfigs)
-	// Parse the 'kind' fields for each source
-	var raw map[string]util.DelayedUnmarshaler
-	if err := unmarshal(&raw); err != nil {
-		return err
-	}
-
-	for name, u := range raw {
-		var v map[string]any
-		if err := u.Unmarshal(&v); err != nil {
-			return fmt.Errorf("unable to unmarshal %q: %w", name, err)
-		}
-
-		// `authRequired` and `useClientOAuth` cannot be specified together
-		if v["authRequired"] != nil && v["useClientOAuth"] == true {
-			return fmt.Errorf("`authRequired` and `useClientOAuth` are mutually exclusive. Choose only one authentication method")
-		}
-
-		// Make `authRequired` an empty list instead of nil for Tool manifest
-		if v["authRequired"] == nil {
-			v["authRequired"] = []string{}
-		}
-
-		kindVal, ok := v["kind"]
-		if !ok {
-			return fmt.Errorf("missing 'kind' field for tool %q", name)
-		}
-		kindStr, ok := kindVal.(string)
-		if !ok {
-			return fmt.Errorf("invalid 'kind' field for tool %q (must be a string)", name)
-		}
-
-		yamlDecoder, err := util.NewStrictDecoder(v)
-		if err != nil {
-			return fmt.Errorf("error creating YAML decoder for tool %q: %w", name, err)
-		}
-
-		toolCfg, err := tools.DecodeConfig(ctx, kindStr, name, yamlDecoder)
-		if err != nil {
-			return err
-		}
-		(*c)[name] = toolCfg
-	}
-	return nil
-}
-
-// ToolsetConfigs is a type used to allow unmarshal of the toolset configs
 type ToolsetConfigs map[string]tools.ToolsetConfig
-
-// validate interface
-var _ yaml.InterfaceUnmarshalerContext = &ToolsetConfigs{}
-
-func (c *ToolsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
-	*c = make(ToolsetConfigs)
-
-	var raw map[string][]string
-	if err := unmarshal(&raw); err != nil {
-		return err
-	}
-
-	for name, toolList := range raw {
-		(*c)[name] = tools.ToolsetConfig{Name: name, ToolNames: toolList}
-	}
-	return nil
-}
-
-// PromptConfigs is a type used to allow unmarshal of the prompt configs
 type PromptConfigs map[string]prompts.PromptConfig
-
-// validate interface
-var _ yaml.InterfaceUnmarshalerContext = &PromptConfigs{}
-
-func (c *PromptConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
-	*c = make(PromptConfigs)
-	var raw map[string]util.DelayedUnmarshaler
-	if err := unmarshal(&raw); err != nil {
-		return err
-	}
-
-	for name, u := range raw {
-		var v map[string]any
-		if err := u.Unmarshal(&v); err != nil {
-			return fmt.Errorf("unable to unmarshal prompt %q: %w", name, err)
-		}
-
-		// Look for the 'kind' field. If it's not present, kindStr will be an
-		// empty string, which prompts.DecodeConfig will correctly default to "custom".
-		var kindStr string
-		if kindVal, ok := v["kind"]; ok {
-			var isString bool
-			kindStr, isString = kindVal.(string)
-			if !isString {
-				return fmt.Errorf("invalid 'kind' field for prompt %q (must be a string)", name)
-			}
-		}
-
-		// Create a new, strict decoder for this specific prompt's data.
-		yamlDecoder, err := util.NewStrictDecoder(v)
-		if err != nil {
-			return fmt.Errorf("error creating YAML decoder for prompt %q: %w", name, err)
-		}
-
-		// Use the central registry to decode the prompt based on its kind.
-		promptCfg, err := prompts.DecodeConfig(ctx, kindStr, name, yamlDecoder)
-		if err != nil {
-			return err
-		}
-		(*c)[name] = promptCfg
-	}
-	return nil
-}
-
-// PromptsetConfigs is a type used to allow unmarshal of the PromptsetConfigs configs
 type PromptsetConfigs map[string]prompts.PromptsetConfig
 
-// validate interface
-var _ yaml.InterfaceUnmarshalerContext = &PromptsetConfigs{}
+func UnmarshalResourceConfig(ctx context.Context, raw []byte) (SourceConfigs, AuthServiceConfigs, EmbeddingModelConfigs, ToolConfigs, ToolsetConfigs, PromptConfigs, error) {
+	// prepare configs map
+	var sourceConfigs SourceConfigs
+	var authServiceConfigs AuthServiceConfigs
+	var embeddingModelConfigs EmbeddingModelConfigs
+	var toolConfigs ToolConfigs
+	var toolsetConfigs ToolsetConfigs
+	var promptConfigs PromptConfigs
+	// promptset configs is not yet supported
 
-func (c *PromptsetConfigs) UnmarshalYAML(ctx context.Context, unmarshal func(interface{}) error) error {
-	*c = make(PromptsetConfigs)
+	decoder := yaml.NewDecoder(bytes.NewReader(raw))
+	// for loop to unmarshal documents with the `---` separator
+	for {
+		var resource map[string]any
+		if err := decoder.DecodeContext(ctx, &resource); err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, nil, nil, nil, nil, nil, fmt.Errorf("unable to decode YAML document: %w", err)
+		}
+		var kind, name string
+		var ok bool
+		if kind, ok = resource["kind"].(string); !ok {
+			return nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'kind' field or it is not a string: %v", resource)
+		}
+		if name, ok = resource["name"].(string); !ok {
+			return nil, nil, nil, nil, nil, nil, fmt.Errorf("missing 'name' field or it is not a string")
+		}
+		// remove 'kind' from map for strict unmarshaling
+		delete(resource, "kind")
 
-	var raw map[string][]string
-	if err := unmarshal(&raw); err != nil {
-		return err
+		switch kind {
+		case "sources":
+			c, err := UnmarshalYAMLSourceConfig(ctx, name, resource)
+			if err != nil {
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+			}
+			if sourceConfigs == nil {
+				sourceConfigs = make(SourceConfigs)
+			}
+			sourceConfigs[name] = c
+		case "authServices":
+			c, err := UnmarshalYAMLAuthServiceConfig(ctx, name, resource)
+			if err != nil {
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+			}
+			if authServiceConfigs == nil {
+				authServiceConfigs = make(AuthServiceConfigs)
+			}
+			authServiceConfigs[name] = c
+		case "tools":
+			c, err := UnmarshalYAMLToolConfig(ctx, name, resource)
+			if err != nil {
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+			}
+			if toolConfigs == nil {
+				toolConfigs = make(ToolConfigs)
+			}
+			toolConfigs[name] = c
+		case "toolsets":
+			c, err := UnmarshalYAMLToolsetConfig(ctx, name, resource)
+			if err != nil {
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+			}
+			if toolsetConfigs == nil {
+				toolsetConfigs = make(ToolsetConfigs)
+			}
+			toolsetConfigs[name] = c
+		case "embeddingModels":
+			c, err := UnmarshalYAMLEmbeddingModelConfig(ctx, name, resource)
+			if err != nil {
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+			}
+			if embeddingModelConfigs == nil {
+				embeddingModelConfigs = make(EmbeddingModelConfigs)
+			}
+			embeddingModelConfigs[name] = c
+		case "prompts":
+			c, err := UnmarshalYAMLPromptConfig(ctx, name, resource)
+			if err != nil {
+				return nil, nil, nil, nil, nil, nil, fmt.Errorf("error unmarshaling %s: %s", kind, err)
+			}
+			if promptConfigs == nil {
+				promptConfigs = make(PromptConfigs)
+			}
+			promptConfigs[name] = c
+		default:
+			return nil, nil, nil, nil, nil, nil, fmt.Errorf("invalid kind %s", kind)
+		}
+	}
+	return sourceConfigs, authServiceConfigs, embeddingModelConfigs, toolConfigs, toolsetConfigs, promptConfigs, nil
+}
+
+func UnmarshalYAMLSourceConfig(ctx context.Context, name string, r map[string]any) (sources.SourceConfig, error) {
+	resourceType, ok := r["type"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing 'type' field or it is not a string")
+	}
+	dec, err := util.NewStrictDecoder(r)
+	if err != nil {
+		return nil, fmt.Errorf("error creating decoder: %w", err)
+	}
+	sourceConfig, err := sources.DecodeConfig(ctx, resourceType, name, dec)
+	if err != nil {
+		return nil, err
+	}
+	return sourceConfig, nil
+}
+
+func UnmarshalYAMLAuthServiceConfig(ctx context.Context, name string, r map[string]any) (auth.AuthServiceConfig, error) {
+	resourceType, ok := r["type"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing 'type' field or it is not a string")
+	}
+	if resourceType != google.AuthServiceType {
+		return nil, fmt.Errorf("%s is not a valid type of auth service", resourceType)
+	}
+	dec, err := util.NewStrictDecoder(r)
+	if err != nil {
+		return nil, fmt.Errorf("error creating decoder: %s", err)
+	}
+	actual := google.Config{Name: name}
+	if err := dec.DecodeContext(ctx, &actual); err != nil {
+		return nil, fmt.Errorf("unable to parse as %s: %w", name, err)
+	}
+	return actual, nil
+}
+
+func UnmarshalYAMLEmbeddingModelConfig(ctx context.Context, name string, r map[string]any) (embeddingmodels.EmbeddingModelConfig, error) {
+	resourceType, ok := r["type"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing 'type' field or it is not a string")
+	}
+	if resourceType != gemini.EmbeddingModelType {
+		return nil, fmt.Errorf("%s is not a valid type of embedding model", resourceType)
+	}
+	dec, err := util.NewStrictDecoder(r)
+	if err != nil {
+		return nil, fmt.Errorf("error creating decoder: %s", err)
+	}
+	actual := gemini.Config{Name: name}
+	if err := dec.DecodeContext(ctx, &actual); err != nil {
+		return nil, fmt.Errorf("unable to parse as %q: %w", name, err)
+	}
+	return actual, nil
+}
+
+func UnmarshalYAMLToolConfig(ctx context.Context, name string, r map[string]any) (tools.ToolConfig, error) {
+	resourceType, ok := r["type"].(string)
+	if !ok {
+		return nil, fmt.Errorf("missing 'type' field or it is not a string")
+	}
+	// `authRequired` and `useClientOAuth` cannot be specified together
+	if r["authRequired"] != nil && r["useClientOAuth"] == true {
+		return nil, fmt.Errorf("`authRequired` and `useClientOAuth` are mutually exclusive. Choose only one authentication method")
+	}
+	// Make `authRequired` an empty list instead of nil for Tool manifest
+	if r["authRequired"] == nil {
+		r["authRequired"] = []string{}
 	}
 
-	for name, promptList := range raw {
-		(*c)[name] = prompts.PromptsetConfig{Name: name, PromptNames: promptList}
+	// validify parameter references
+	if rawParams, ok := r["parameters"]; ok {
+		if paramsList, ok := rawParams.([]any); ok {
+			// Turn params into a map
+			validParamNames := make(map[string]bool)
+			for _, rawP := range paramsList {
+				if pMap, ok := rawP.(map[string]any); ok {
+					if pName, ok := pMap["name"].(string); ok && pName != "" {
+						validParamNames[pName] = true
+					}
+				}
+			}
+
+			// Validate references
+			for i, rawP := range paramsList {
+				pMap, ok := rawP.(map[string]any)
+				if !ok {
+					continue
+				}
+
+				pName, _ := pMap["name"].(string)
+				refName, _ := pMap["valueFromParam"].(string)
+
+				if refName != "" {
+					// Check if the referenced parameter exists
+					if !validParamNames[refName] {
+						return nil, fmt.Errorf("tool %q config error: parameter %q (index %d) references '%q' in the 'valueFromParam' field, which is not a defined parameter", name, pName, i, refName)
+					}
+
+					// Check for self-reference
+					if refName == pName {
+						return nil, fmt.Errorf("tool %q config error: parameter %q cannot copy value from itself", name, pName)
+					}
+				}
+			}
+		}
+	}
+
+	dec, err := util.NewStrictDecoder(r)
+	if err != nil {
+		return nil, fmt.Errorf("error creating decoder: %s", err)
+	}
+	toolCfg, err := tools.DecodeConfig(ctx, resourceType, name, dec)
+	if err != nil {
+		return nil, err
+	}
+	return toolCfg, nil
+}
+
+func UnmarshalYAMLToolsetConfig(ctx context.Context, name string, r map[string]any) (tools.ToolsetConfig, error) {
+	var toolsetConfig tools.ToolsetConfig
+	toolList, ok := r["tools"].([]any)
+	if !ok {
+		return toolsetConfig, fmt.Errorf("tools is missing or not a list of strings: %v", r)
+	}
+	justTools := map[string]any{"tools": toolList}
+	dec, err := util.NewStrictDecoder(justTools)
+	if err != nil {
+		return toolsetConfig, fmt.Errorf("error creating decoder: %s", err)
+	}
+	var raw map[string][]string
+	if err := dec.DecodeContext(ctx, &raw); err != nil {
+		return toolsetConfig, fmt.Errorf("unable to unmarshal tools: %s", err)
+	}
+	return tools.ToolsetConfig{Name: name, ToolNames: raw["tools"]}, nil
+}
+
+func UnmarshalYAMLPromptConfig(ctx context.Context, name string, r map[string]any) (prompts.PromptConfig, error) {
+	// Look for the 'type' field. If it's not present, typeStr will be an
+	// empty string, which prompts.DecodeConfig will correctly default to "custom".
+	var resourceType string
+	if typeVal, ok := r["type"]; ok {
+		var isString bool
+		resourceType, isString = typeVal.(string)
+		if !isString {
+			return nil, fmt.Errorf("invalid 'type' field for prompt %q (must be a string)", name)
+		}
+	}
+	dec, err := util.NewStrictDecoder(r)
+	if err != nil {
+		return nil, fmt.Errorf("error creating decoder: %s", err)
+	}
+
+	// Use the central registry to decode the prompt based on its type.
+	promptCfg, err := prompts.DecodeConfig(ctx, resourceType, name, dec)
+	if err != nil {
+		return nil, err
+	}
+	return promptCfg, nil
+}
+
+// Tools naming validation is added in the MCP v2025-11-25, but we'll be
+// implementing it across Toolbox
+// Tool names SHOULD be between 1 and 128 characters in length (inclusive).
+// Tool names SHOULD be considered case-sensitive.
+// The following SHOULD be the only allowed characters: uppercase and lowercase ASCII letters (A-Z, a-z), digits (0-9), underscore (_), hyphen (-), and dot (.)
+// Tool names SHOULD NOT contain spaces, commas, or other special characters.
+// Tool names SHOULD be unique within a server.
+func NameValidation(name string) error {
+	strLen := len(name)
+	if strLen < 1 || strLen > 128 {
+		return fmt.Errorf("resource name SHOULD be between 1 and 128 characters in length (inclusive)")
+	}
+	validChars := regexp.MustCompile("^[a-zA-Z0-9_.-]+$")
+	isValid := validChars.MatchString(name)
+	if !isValid {
+		return fmt.Errorf("invalid character for resource name; only uppercase and lowercase ASCII letters (A-Z, a-z), digits (0-9), underscore (_), hyphen (-), and dot (.) is allowed")
 	}
 	return nil
 }

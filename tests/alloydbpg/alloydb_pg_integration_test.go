@@ -32,8 +32,8 @@ import (
 )
 
 var (
-	AlloyDBPostgresSourceKind = "alloydb-postgres"
-	AlloyDBPostgresToolKind   = "postgres-sql"
+	AlloyDBPostgresSourceType = "alloydb-postgres"
+	AlloyDBPostgresToolType   = "postgres-sql"
 	AlloyDBPostgresProject    = os.Getenv("ALLOYDB_POSTGRES_PROJECT")
 	AlloyDBPostgresRegion     = os.Getenv("ALLOYDB_POSTGRES_REGION")
 	AlloyDBPostgresCluster    = os.Getenv("ALLOYDB_POSTGRES_CLUSTER")
@@ -61,7 +61,7 @@ func getAlloyDBPgVars(t *testing.T) map[string]any {
 		t.Fatal("'ALLOYDB_POSTGRES_PASS' not set")
 	}
 	return map[string]any{
-		"kind":     AlloyDBPostgresSourceKind,
+		"type":     AlloyDBPostgresSourceType,
 		"project":  AlloyDBPostgresProject,
 		"cluster":  AlloyDBPostgresCluster,
 		"instance": AlloyDBPostgresInstance,
@@ -147,11 +147,19 @@ func TestAlloyDBPgToolEndpoints(t *testing.T) {
 	teardownTable2 := tests.SetupPostgresSQLTable(t, ctx, pool, createAuthTableStmt, insertAuthTableStmt, tableNameAuth, authTestParams)
 	defer teardownTable2(t)
 
+	// Set up table for semanti search
+	vectorTableName, tearDownVectorTable := tests.SetupPostgresVectorTable(t, ctx, pool)
+	defer tearDownVectorTable(t)
+
 	// Write config into a file and pass it to command
-	toolsFile := tests.GetToolsConfig(sourceConfig, AlloyDBPostgresToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
+	toolsFile := tests.GetToolsConfig(sourceConfig, AlloyDBPostgresToolType, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
 	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "postgres-execute-sql")
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
-	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, AlloyDBPostgresToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
+	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, AlloyDBPostgresToolType, tmplSelectCombined, tmplSelectFilterCombined, "")
+
+	// Add semantic search tool config
+	insertStmt, searchStmt := tests.GetPostgresVectorSearchStmts(vectorTableName)
+	toolsFile = tests.AddSemanticSearchConfig(t, toolsFile, AlloyDBPostgresToolType, insertStmt, searchStmt)
 
 	toolsFile = tests.AddPostgresPrebuiltConfig(t, toolsFile)
 
@@ -224,7 +232,7 @@ func TestAlloyDBPgIpConnection(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
 			sourceConfig["ipType"] = tc.ipType
-			err := tests.RunSourceConnectionTest(t, sourceConfig, AlloyDBPostgresToolKind)
+			err := tests.RunSourceConnectionTest(t, sourceConfig, AlloyDBPostgresToolType)
 			if err != nil {
 				t.Fatalf("Connection test failure: %s", err)
 			}
@@ -239,7 +247,7 @@ func TestAlloyDBPgIAMConnection(t *testing.T) {
 	serviceAccountEmail := strings.TrimSuffix(tests.ServiceAccountEmail, ".gserviceaccount.com")
 
 	noPassSourceConfig := map[string]any{
-		"kind":     AlloyDBPostgresSourceKind,
+		"type":     AlloyDBPostgresSourceType,
 		"project":  AlloyDBPostgresProject,
 		"cluster":  AlloyDBPostgresCluster,
 		"instance": AlloyDBPostgresInstance,
@@ -249,7 +257,7 @@ func TestAlloyDBPgIAMConnection(t *testing.T) {
 	}
 
 	noUserSourceConfig := map[string]any{
-		"kind":     AlloyDBPostgresSourceKind,
+		"type":     AlloyDBPostgresSourceType,
 		"project":  AlloyDBPostgresProject,
 		"cluster":  AlloyDBPostgresCluster,
 		"instance": AlloyDBPostgresInstance,
@@ -259,7 +267,7 @@ func TestAlloyDBPgIAMConnection(t *testing.T) {
 	}
 
 	noUserNoPassSourceConfig := map[string]any{
-		"kind":     AlloyDBPostgresSourceKind,
+		"type":     AlloyDBPostgresSourceType,
 		"project":  AlloyDBPostgresProject,
 		"cluster":  AlloyDBPostgresCluster,
 		"instance": AlloyDBPostgresInstance,
@@ -289,7 +297,7 @@ func TestAlloyDBPgIAMConnection(t *testing.T) {
 	}
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tests.RunSourceConnectionTest(t, tc.sourceConfig, AlloyDBPostgresToolKind)
+			err := tests.RunSourceConnectionTest(t, tc.sourceConfig, AlloyDBPostgresToolType)
 			if err != nil {
 				if tc.isErr {
 					return

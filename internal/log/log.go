@@ -22,6 +22,18 @@ import (
 	"strings"
 )
 
+// NewLogger creates a new logger based on the provided format and level.
+func NewLogger(format, level string, out, err io.Writer) (Logger, error) {
+	switch strings.ToLower(format) {
+	case "json":
+		return NewStructuredLogger(out, err, level)
+	case "standard":
+		return NewStdLogger(out, err, level)
+	default:
+		return nil, fmt.Errorf("logging format invalid: %s", format)
+	}
+}
+
 // StdLogger is the standard logger
 type StdLogger struct {
 	outLogger *slog.Logger
