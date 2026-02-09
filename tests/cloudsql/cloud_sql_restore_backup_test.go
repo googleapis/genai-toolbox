@@ -95,7 +95,11 @@ func (h *masterRestoreBackupHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 		response = map[string]any{"name": "op1", "status": "PENDING"}
 		statusCode = http.StatusOK
 	default:
-		http.Error(w, fmt.Sprintf("unhandled restore request body: %v", body), http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{
+			"error": "source project and instance are required when restoring via backup ID",
+		})
 		return
 	}
 
@@ -178,11 +182,10 @@ func TestRestoreBackupToolEndpoints(t *testing.T) {
 			want:     `{"name":"op1","status":"PENDING"}`,
 		},
 		{
-			name:        "missing source instance info for standard backup",
-			toolName:    "restore-backup",
-			body:        `{"target_project": "p1", "target_instance": "instance-project-level", "backup_id": "12345"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			name:     "missing source instance info for standard backup",
+			toolName: "restore-backup",
+			body:     `{"target_project": "p1", "target_instance": "instance-project-level", "backup_id": "12345"}`,
+			want:     `{"error":"error processing GCP request: source project and instance are required when restoring via backup ID"}`,
 		},
 		{
 			name:        "missing backup identifier",

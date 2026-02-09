@@ -144,6 +144,10 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 
 	iamUser, _ := paramsMap["iamUser"].(bool)
 	password, _ := paramsMap["password"].(string)
+	if !iamUser && password == "" {
+		return nil, util.NewAgentError("missing 'password' parameter for non-IAM user", nil)
+	}
+
 	resp, err := source.CreateUsers(ctx, project, instance, name, password, iamUser, string(accessToken))
 	if err != nil {
 		return nil, util.ProcessGcpError(err)

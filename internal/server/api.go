@@ -278,8 +278,9 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 			case util.CategoryAgent:
 				// Agent Errors -> 200 OK
 				s.logger.DebugContext(ctx, fmt.Sprintf("Tool invocation agent error: %v", err))
-				_ = render.Render(w, r, newErrResponse(err, http.StatusOK))
-				return
+				res = map[string]string{
+					"error": err.Error(),
+				}
 
 			case util.CategoryServer:
 				// Server Errors -> Check the specific code inside
