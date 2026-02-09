@@ -126,7 +126,8 @@
  &lt;/tbody>
 &lt;/table>
 &lt;h2 id="sub-commands">Sub Commands&lt;/h2>
-&lt;h3 id="invoke">&lt;code>invoke&lt;/code>&lt;/h3>
+&lt;details>
+&lt;summary>&lt;code>invoke&lt;/code>&lt;/summary>
 &lt;p>Executes a tool directly with the provided parameters. This is useful for testing tool configurations and parameters without needing a full client setup.&lt;/p></description></item><item><title>Prebuilt Tools</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2378/reference/prebuilt-tools/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2378/reference/prebuilt-tools/</guid><description>&lt;p>Prebuilt tools are reusable, pre-packaged toolsets that are designed to extend
 the capabilities of agents. These tools are built to be generic and adaptable,
 allowing developers to interact with and take action on databases.&lt;/p>

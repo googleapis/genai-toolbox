@@ -47,6 +47,7 @@ List of guides detailing how to do different things with Toolbox.
 - [Deploy to Kubernetes](https://googleapis.github.io/genai-toolbox/previews/PR-2378/how-to/deploy_gke/): How to set up and configure Toolbox to deploy on Kubernetes with Google Kubernetes Engine (GKE).
 - [Deploy using Docker Compose](https://googleapis.github.io/genai-toolbox/previews/PR-2378/how-to/deploy_docker/): How to deploy Toolbox using Docker Compose.
 - [Export Telemetry](https://googleapis.github.io/genai-toolbox/previews/PR-2378/how-to/export_telemetry/): How to set up and configure Toolbox to use the Otel Collector.
+- [Generate Agent Skills](https://googleapis.github.io/genai-toolbox/previews/PR-2378/how-to/generate_skill/): How to generate agent skills from a toolset.
 - [Invoke Tools via CLI](https://googleapis.github.io/genai-toolbox/previews/PR-2378/how-to/invoke_tool/): Learn how to invoke your tools directly from the command line using the `invoke` command.
 
 ### Resources
@@ -106,6 +107,7 @@ List of reference documentation for resources in Toolbox.
   - [Cassandra](https://googleapis.github.io/genai-toolbox/previews/PR-2378/resources/tools/cassandra/): Tools that work with Cassandra Sources.
   - [ClickHouse](https://googleapis.github.io/genai-toolbox/previews/PR-2378/resources/tools/clickhouse/): Tools for interacting with ClickHouse databases and tables.
   - [Cloud Healthcare API](https://googleapis.github.io/genai-toolbox/previews/PR-2378/resources/tools/cloudhealthcare/): Tools that work with Cloud Healthcare Sources.
+  - [Cloud Logging Admin](https://googleapis.github.io/genai-toolbox/previews/PR-2378/resources/tools/cloudloggingadmin/): Tools that work with Cloud Logging Admin Sources.
   - [Cloud Monitoring](https://googleapis.github.io/genai-toolbox/previews/PR-2378/resources/tools/cloudmonitoring/): Tools that work with Cloud Monitoring source.
   - [Cloud SQL](https://googleapis.github.io/genai-toolbox/previews/PR-2378/resources/tools/cloudsql/): Tools that work with Cloud SQL. 
   - [Couchbase](https://googleapis.github.io/genai-toolbox/previews/PR-2378/resources/tools/couchbase/): Tools that work with Couchbase Sources.
@@ -137,9 +139,6 @@ List of reference documentation for resources in Toolbox.
   - [Utility tools](https://googleapis.github.io/genai-toolbox/previews/PR-2378/resources/tools/utility/): Tools that provide utility.
   - [Valkey](https://googleapis.github.io/genai-toolbox/previews/PR-2378/resources/tools/valkey/): Tools that work with Valkey Sources.
   - [YugabyteDB](https://googleapis.github.io/genai-toolbox/previews/PR-2378/resources/tools/yuagbytedb/): Tools that work with Valkey Sources.
-  - [cloud-logging-admin-list-log-names](https://googleapis.github.io/genai-toolbox/previews/PR-2378/resources/tools/cloudloggingadmin/cloud-logging-admin-list-log-names/): A "cloud-logging-admin-list-log-names" tool lists the log names in the project.
-  - [cloud-logging-admin-list-resource-types](https://googleapis.github.io/genai-toolbox/previews/PR-2378/resources/tools/cloudloggingadmin/cloud-logging-admin-list-resource-types/): A "cloud-logging-admin-list-resource-types" tool lists the monitored resource types.
-  - [cloud-logging-admin-query-logs](https://googleapis.github.io/genai-toolbox/previews/PR-2378/resources/tools/cloudloggingadmin/cloud-logging-admin-query-logs/): A "cloud-logging-admin-query-logs" tool queries log entries.
 - [Prompts](https://googleapis.github.io/genai-toolbox/previews/PR-2378/resources/prompts/): Prompts allow servers to provide structured messages and instructions for interacting with language models.
   - [Custom](https://googleapis.github.io/genai-toolbox/previews/PR-2378/resources/prompts/custom/): Custom prompts defined by the user.
 

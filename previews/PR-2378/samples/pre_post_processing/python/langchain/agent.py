@@ -99,7 +99,6 @@ async def main():
         )
 
         print("-" * 50)
-        print("Final Client Response:")
         last_ai_msg = response["messages"][-1].content
         print(f"AI: {last_ai_msg}")
 
