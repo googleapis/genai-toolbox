@@ -53,10 +53,10 @@ type Config struct {
 	Database       int       `yaml:"database"`
 	UseGCPIAM      bool      `yaml:"useGCPIAM"`
 	ClusterEnabled bool      `yaml:"clusterEnabled"`
-	TLS            TlsConfig `yaml:"tls"`
+	TLS            TLSConfig `yaml:"tls"`
 }
 
-type TlsConfig struct {
+type TLSConfig struct {
 	Enabled            bool `yaml:"enabled"`
 	InsecureSkipVerify bool `yaml:"insecureSkipVerify"`
 }

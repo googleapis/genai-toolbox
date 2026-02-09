@@ -92,16 +92,16 @@ clusterEnabled: true
 
 ## Reference
 
-| **field**              | **type** | **required** | **description**                                                                                                                 |
-|------------------------|:--------:|:------------:|---------------------------------------------------------------------------------------------------------------------------------|
-| type                   |  string  |     true     | Must be "redis".                                                                                                                |
-| address                |  string  |     true     | Primary endpoint for the Memorystore Redis instance to connect to.                                                              |
-| username               |  string  |    false     | If you are using a non-default user, specify the user name here. If you are using Memorystore for Redis, leave this field blank |
-| password               |  string  |    false     | If you have [Redis AUTH][auth] enabled, specify the AUTH string here                                                            |
-| database               |   int    |    false     | The Redis database to connect to. Not applicable for cluster enabled instances. The default database is `0`.                    |
-| tls.enabled            |   bool   |    false     | Set it to `true` to enable TLS for the Redis connection. Defaults to `false`.                                                   |
-| tls.insecureSkipVerify |   bool   |    false     | Set it to `true` to skip TLS certificate verification. Defaults to `false`.                                                     |
-| clusterEnabled         |   bool   |    false     | Set it to `true` if using a Redis Cluster instance. Defaults to `false`.                                                        |
-| useGCPIAM              |   bool   |    false     | Set it to `true` if you are using GCP's IAM authentication. Defaults to `false`.                                                |
+| **field**              | **type** | **required** | **description**                                                                                                                               |
+|------------------------|:--------:|:------------:|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| type                   |  string  |     true     | Must be "redis".                                                                                                                              |
+| address                |  string  |     true     | Primary endpoint for the Memorystore Redis instance to connect to.                                                                            |
+| username               |  string  |    false     | If you are using a non-default user, specify the user name here. If you are using Memorystore for Redis, leave this field blank               |
+| password               |  string  |    false     | If you have [Redis AUTH][auth] enabled, specify the AUTH string here                                                                          |
+| database               |   int    |    false     | The Redis database to connect to. Not applicable for cluster enabled instances. The default database is `0`.                                  |
+| tls.enabled            |   bool   |    false     | Set it to `true` to enable TLS for the Redis connection. Defaults to `false`.                                                                 |
+| tls.insecureSkipVerify |   bool   |    false     | Set it to `true` to skip TLS certificate verification. **Warning:** This is insecure and not recommended for production. Defaults to `false`. |
+| clusterEnabled         |   bool   |    false     | Set it to `true` if using a Redis Cluster instance. Defaults to `false`.                                                                      |
+| useGCPIAM              |   bool   |    false     | Set it to `true` if you are using GCP's IAM authentication. Defaults to `false`.                                                              |
 
 [auth]: https://cloud.google.com/memorystore/docs/redis/about-redis-auth

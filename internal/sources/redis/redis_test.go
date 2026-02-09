@@ -76,7 +76,7 @@ func TestParseFromYamlRedis(t *testing.T) {
 					Database:       1,
 					ClusterEnabled: true,
 					UseGCPIAM:      true,
-					TLS: redis.TlsConfig{
+					TLS: redis.TLSConfig{
 						Enabled:            true,
 						InsecureSkipVerify: true,
 					},
