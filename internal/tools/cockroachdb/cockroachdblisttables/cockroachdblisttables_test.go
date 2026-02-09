@@ -67,7 +67,7 @@ func TestParseFromYamlCockroachDBListTables(t *testing.T) {
 	}
 }
 
-func TestCockroachDBListTablesToolConfigKind(t *testing.T) {
+func TestCockroachDBListTablesToolConfigType(t *testing.T) {
 	cfg := cockroachdblisttables.Config{
 		Name:        "test-tool",
 		Type:        "cockroachdb-list-tables",
@@ -75,7 +75,7 @@ func TestCockroachDBListTablesToolConfigKind(t *testing.T) {
 		Description: "test description",
 	}
 
-	if cfg.ToolConfigKind() != "cockroachdb-list-tables" {
-		t.Errorf("expected ToolConfigKind 'cockroachdb-list-tables', got %q", cfg.ToolConfigKind())
+	if cfg.ToolConfigType() != "cockroachdb-list-tables" {
+		t.Errorf("expected ToolConfigType 'cockroachdb-list-tables', got %q", cfg.ToolConfigType())
 	}
 }

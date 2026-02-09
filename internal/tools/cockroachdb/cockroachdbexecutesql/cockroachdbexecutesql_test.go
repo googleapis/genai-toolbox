@@ -67,7 +67,7 @@ func TestParseFromYamlCockroachDBExecuteSQL(t *testing.T) {
 	}
 }
 
-func TestCockroachDBExecuteSQLToolConfigKind(t *testing.T) {
+func TestCockroachDBExecuteSQLToolConfigType(t *testing.T) {
 	cfg := cockroachdbexecutesql.Config{
 		Name:        "test-tool",
 		Type:        "cockroachdb-execute-sql",
@@ -75,7 +75,7 @@ func TestCockroachDBExecuteSQLToolConfigKind(t *testing.T) {
 		Description: "test description",
 	}
 
-	if cfg.ToolConfigKind() != "cockroachdb-execute-sql" {
-		t.Errorf("expected ToolConfigKind 'cockroachdb-execute-sql', got %q", cfg.ToolConfigKind())
+	if cfg.ToolConfigType() != "cockroachdb-execute-sql" {
+		t.Errorf("expected ToolConfigType 'cockroachdb-execute-sql', got %q", cfg.ToolConfigType())
 	}
 }

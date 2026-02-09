@@ -78,7 +78,7 @@ func TestParseFromYamlCockroachDB(t *testing.T) {
 	}
 }
 
-func TestCockroachDBSQLToolConfigKind(t *testing.T) {
+func TestCockroachDBSQLToolConfigType(t *testing.T) {
 	cfg := cockroachdbsql.Config{
 		Name:        "test-tool",
 		Type:        "cockroachdb-sql",
@@ -87,7 +87,7 @@ func TestCockroachDBSQLToolConfigKind(t *testing.T) {
 		Statement:   "SELECT 1",
 	}
 
-	if cfg.ToolConfigKind() != "cockroachdb-sql" {
-		t.Errorf("expected ToolConfigKind 'cockroachdb-sql', got %q", cfg.ToolConfigKind())
+	if cfg.ToolConfigType() != "cockroachdb-sql" {
+		t.Errorf("expected ToolConfigType 'cockroachdb-sql', got %q", cfg.ToolConfigType())
 	}
 }

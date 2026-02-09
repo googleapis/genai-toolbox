@@ -104,9 +104,9 @@ database: defaultdb
 				t.Fatalf("expected Config type, got %T", cfg)
 			}
 
-			// Verify SourceConfigKind
-			if cockroachCfg.SourceConfigKind() != SourceKind {
-				t.Errorf("expected SourceConfigKind %q, got %q", SourceKind, cockroachCfg.SourceConfigKind())
+			// Verify SourceConfigType
+			if cockroachCfg.SourceConfigType() != SourceType {
+				t.Errorf("expected SourceConfigType %q, got %q", SourceType, cockroachCfg.SourceConfigType())
 			}
 
 			t.Logf("✅ Config parsed successfully: %+v", cockroachCfg)
@@ -114,7 +114,7 @@ database: defaultdb
 	}
 }
 
-func TestCockroachDBSourceKind(t *testing.T) {
+func TestCockroachDBSourceType(t *testing.T) {
 	yamlContent := `
 name: test-cockroachdb
 type: cockroachdb
