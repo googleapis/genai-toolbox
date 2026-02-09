@@ -63,6 +63,9 @@ func TestParseFromYamlRedis(t *testing.T) {
 			database: 1
 			useGCPIAM: true
 			clusterEnabled: true
+			tls:
+			  enabled: true
+			  insecureSkipVerify: true
 			`,
 			want: map[string]sources.SourceConfig{
 				"my-redis-instance": redis.Config{
@@ -73,29 +76,10 @@ func TestParseFromYamlRedis(t *testing.T) {
 					Database:       1,
 					ClusterEnabled: true,
 					UseGCPIAM:      true,
-				},
-			},
-		},
-		{
-			desc: "tls enabled",
-			in: `
-			kind: sources
-			name: my-redis-instance
-			type: redis
-			address:
-			  - 127.0.0.1
-			tls:
-			  enabled: true
-			`,
-			want: map[string]sources.SourceConfig{
-				"my-redis-instance": redis.Config{
-					Name:    "my-redis-instance",
-					Type:    redis.SourceType,
-					Address: []string{"127.0.0.1"},
-					TLS: struct {
-						Enabled            bool `yaml:"enabled"`
-						InsecureSkipVerify bool `yaml:"insecureSkipVerify"`
-					}{Enabled: true},
+					TLS: redis.TlsConfig{
+						Enabled:            true,
+						InsecureSkipVerify: true,
+					},
 				},
 			},
 		},

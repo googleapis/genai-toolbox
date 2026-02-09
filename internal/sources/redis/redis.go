@@ -45,18 +45,20 @@ func newConfig(ctx context.Context, name string, decoder *yaml.Decoder) (sources
 }
 
 type Config struct {
-	Name           string   `yaml:"name" validate:"required"`
-	Type           string   `yaml:"type" validate:"required"`
-	Address        []string `yaml:"address" validate:"required"`
-	Username       string   `yaml:"username"`
-	Password       string   `yaml:"password"`
-	Database       int      `yaml:"database"`
-	UseGCPIAM      bool     `yaml:"useGCPIAM"`
-	ClusterEnabled bool     `yaml:"clusterEnabled"`
-	TLS struct {
-		Enabled            bool `yaml:"enabled"`
-		InsecureSkipVerify bool `yaml:"insecureSkipVerify"`
-	} `yaml:"tls"`
+	Name           string    `yaml:"name" validate:"required"`
+	Type           string    `yaml:"type" validate:"required"`
+	Address        []string  `yaml:"address" validate:"required"`
+	Username       string    `yaml:"username"`
+	Password       string    `yaml:"password"`
+	Database       int       `yaml:"database"`
+	UseGCPIAM      bool      `yaml:"useGCPIAM"`
+	ClusterEnabled bool      `yaml:"clusterEnabled"`
+	TLS            TlsConfig `yaml:"tls"`
+}
+
+type TlsConfig struct {
+	Enabled            bool `yaml:"enabled"`
+	InsecureSkipVerify bool `yaml:"insecureSkipVerify"`
 }
 
 func (r Config) SourceConfigType() string {
