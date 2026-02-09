@@ -44,6 +44,9 @@ password: ${MY_AUTH_STRING} # Omit this field if you don't have a password.
 # database: 0
 # clusterEnabled: false
 # useGCPIAM: false
+# tls:
+#   enabled: false
+#   insecureSkipVerify: false
 ```
 
 {{< notice tip >}}
