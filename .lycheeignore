@@ -44,3 +44,7 @@ https://www.oceanbase.com/
 
 # Ignore social media and blog profiles to reduce external request overhead
 https://medium.com/@mcp_toolbox
+
+# Ignore local toolbox server during link checks
+http://127.0.0.1:5000.*
+
