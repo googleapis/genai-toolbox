@@ -58,4 +58,4 @@
  
  &lt;div class="tab-body tab-pane fade show active"
  id="tabs-00-00" role="tabpanel" aria-labelled-by="tabs-00-00-tab" tabindex="0">
- &lt;p>The following example demonstrates how to use the &lt;code>beforeToolCallback&lt;/code> and &lt;code>afterToolCallback&lt;/code> hooks in the ADK &lt;code>LlmAgent&lt;/code> to implement pre and post processing logic. Specifically, it shows how to intercept tool calls to enforce business policies (blocking invalid actions) and enrich tool outputs (adding loyalty points) before they return to the model.&lt;/p></description></item></channel></rss>
+ &lt;p>The following example demonstrates how to use the &lt;code>beforeToolCallback&lt;/code> and &lt;code>afterToolCallback&lt;/code> hooks in the ADK &lt;code>LlmAgent&lt;/code> to implement pre and post processing logic.&lt;/p></description></item></channel></rss>
