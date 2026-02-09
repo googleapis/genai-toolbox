@@ -159,8 +159,8 @@ Samples and guides for using Toolbox.
 - [Neo4j](https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/neo4j/): How to get started with Toolbox using Neo4j.
   - [Quickstart (MCP with Neo4j)](https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/neo4j/mcp_quickstart/): How to get started running Toolbox with MCP Inspector and Neo4j as the source.
 - [Pre and Post processing](https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/): Pre and Post processing in GenAI applications.
+  - [Javascript](https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/js/): How to add pre- and post- processing to your Agents using JS.
   - [(Python) Pre and post processing](https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/python/): How to add pre and post processing to your Python toolbox applications.
-  - [(JS) Pre and post processing](https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/js/): How to add pre and post processing to your JS toolbox applications.
 - [Snowflake](https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/snowflake/): How to get started running Toolbox with MCP Inspector and Snowflake as the source.
 
 ### About

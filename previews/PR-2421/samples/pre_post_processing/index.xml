@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Pre and Post processing on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/</link><description>Recent content in Pre and Post processing on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/index.xml" rel="self" type="application/rss+xml"/><item><title>(Python) Pre and post processing</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/python/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/python/</guid><description>&lt;h2 id="prerequisites">Prerequisites&lt;/h2>
-&lt;p>This tutorial assumes that you have set up a basic toolbox application as described in the &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2421/getting-started/local_quickstart/">local quickstart&lt;/a>.&lt;/p>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Pre and Post processing on MCP Toolbox for Databases</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/</link><description>Recent content in Pre and Post processing on MCP Toolbox for Databases</description><generator>Hugo</generator><language>en</language><atom:link href="https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/index.xml" rel="self" type="application/rss+xml"/><item><title>Javascript</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/js/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/js/</guid><description>&lt;h2 id="prerequisites">Prerequisites&lt;/h2>
+&lt;p>This tutorial assumes that you have set up Toolbox with a basic agent as described in the &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2421/getting-started/local_quickstart_js/">local quickstart&lt;/a>.&lt;/p>
 &lt;p>This guide demonstrates how to implement these patterns in your Toolbox applications.&lt;/p>
-&lt;h2 id="python">Python&lt;/h2>
+&lt;h2 id="implementation">Implementation&lt;/h2>
 
 
 
@@ -31,10 +31,10 @@
  
  &lt;div class="tab-body tab-pane fade"
  id="tabs-00-01" role="tabpanel" aria-labelled-by="tabs-00-01-tab" tabindex="0">
- &lt;p>The following example demonstrates how to use &lt;code>ToolboxClient&lt;/code> with LangChain&amp;rsquo;s middleware to implement pre and post processing for tool calls.&lt;/p></description></item><item><title>(JS) Pre and post processing</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/js/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/js/</guid><description>&lt;h2 id="prerequisites">Prerequisites&lt;/h2>
-&lt;p>This tutorial assumes that you have set up a basic toolbox application as described in the &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2421/getting-started/local_quickstart_js/">local quickstart&lt;/a>.&lt;/p>
+ &lt;p>The following example demonstrates how to use &lt;code>ToolboxClient&lt;/code> with LangChain&amp;rsquo;s middleware to implement pre- and post- processing for tool calls.&lt;/p></description></item><item><title>(Python) Pre and post processing</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/python/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/python/</guid><description>&lt;h2 id="prerequisites">Prerequisites&lt;/h2>
+&lt;p>This tutorial assumes that you have set up a basic toolbox application as described in the &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2421/getting-started/local_quickstart/">local quickstart&lt;/a>.&lt;/p>
 &lt;p>This guide demonstrates how to implement these patterns in your Toolbox applications.&lt;/p>
-&lt;h2 id="implementation">Implementation&lt;/h2>
+&lt;h2 id="python">Python&lt;/h2>
 
 
 

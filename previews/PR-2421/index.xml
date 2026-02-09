@@ -9694,7 +9694,40 @@ that don&amp;rsquo;t.&lt;/p></description></item><item><title>Firestore using MC
  &lt;link rel="canonical" href="https://github.com/googleapis/mcp-toolbox-sdk-go"/>
  &lt;meta http-equiv="refresh" content="0;url=https://github.com/googleapis/mcp-toolbox-sdk-go"/>
  &lt;/head>
-&lt;/html></description></item><item><title>JS SDK</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2421/sdks/js-sdk/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2421/sdks/js-sdk/</guid><description>&lt;html>
+&lt;/html></description></item><item><title>Javascript</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/js/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/js/</guid><description>&lt;h2 id="prerequisites">Prerequisites&lt;/h2>
+&lt;p>This tutorial assumes that you have set up Toolbox with a basic agent as described in the &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2421/getting-started/local_quickstart_js/">local quickstart&lt;/a>.&lt;/p>
+&lt;p>This guide demonstrates how to implement these patterns in your Toolbox applications.&lt;/p>
+&lt;h2 id="implementation">Implementation&lt;/h2>
+
+
+
+&lt;ul class="nav nav-tabs" id="tabs-0" role="tablist">
+ &lt;li class="nav-item">
+ &lt;button class="nav-link active"
+ id="tabs-00-00-tab" data-bs-toggle="tab" data-bs-target="#tabs-00-00" role="tab"
+ data-td-tp-persist="adk" aria-controls="tabs-00-00" aria-selected="true">
+ ADK
+ &lt;/button>
+ &lt;/li>&lt;li class="nav-item">
+ &lt;button class="nav-link"
+ id="tabs-00-01-tab" data-bs-toggle="tab" data-bs-target="#tabs-00-01" role="tab"
+ data-td-tp-persist="langchain" aria-controls="tabs-00-01" aria-selected="false">
+ Langchain
+ &lt;/button>
+ &lt;/li>
+&lt;/ul>
+
+&lt;div class="tab-content" id="tabs-0-content">
+ 
+ &lt;div class="tab-body tab-pane fade show active"
+ id="tabs-00-00" role="tabpanel" aria-labelled-by="tabs-00-00-tab" tabindex="0">
+ &lt;p>Coming soon.&lt;/p>
+
+ &lt;/div>
+ 
+ &lt;div class="tab-body tab-pane fade"
+ id="tabs-00-01" role="tabpanel" aria-labelled-by="tabs-00-01-tab" tabindex="0">
+ &lt;p>The following example demonstrates how to use &lt;code>ToolboxClient&lt;/code> with LangChain&amp;rsquo;s middleware to implement pre- and post- processing for tool calls.&lt;/p></description></item><item><title>JS SDK</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2421/sdks/js-sdk/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2421/sdks/js-sdk/</guid><description>&lt;html>
  &lt;head>
  &lt;link rel="canonical" href="https://github.com/googleapis/mcp-toolbox-sdk-js"/>
  &lt;meta http-equiv="refresh" content="0;url=https://github.com/googleapis/mcp-toolbox-sdk-js"/>
@@ -10971,40 +11004,7 @@ local development:&lt;/p>
 (ADC)&lt;/a>&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>Set your project and enable Vertex AI&lt;/p></description></item><item><title>(JS) Pre and post processing</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/js/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2421/samples/pre_post_processing/js/</guid><description>&lt;h2 id="prerequisites">Prerequisites&lt;/h2>
-&lt;p>This tutorial assumes that you have set up a basic toolbox application as described in the &lt;a href="https://googleapis.github.io/genai-toolbox/previews/PR-2421/getting-started/local_quickstart_js/">local quickstart&lt;/a>.&lt;/p>
-&lt;p>This guide demonstrates how to implement these patterns in your Toolbox applications.&lt;/p>
-&lt;h2 id="implementation">Implementation&lt;/h2>
-
-
-
-&lt;ul class="nav nav-tabs" id="tabs-0" role="tablist">
- &lt;li class="nav-item">
- &lt;button class="nav-link active"
- id="tabs-00-00-tab" data-bs-toggle="tab" data-bs-target="#tabs-00-00" role="tab"
- data-td-tp-persist="adk" aria-controls="tabs-00-00" aria-selected="true">
- ADK
- &lt;/button>
- &lt;/li>&lt;li class="nav-item">
- &lt;button class="nav-link"
- id="tabs-00-01-tab" data-bs-toggle="tab" data-bs-target="#tabs-00-01" role="tab"
- data-td-tp-persist="langchain" aria-controls="tabs-00-01" aria-selected="false">
- Langchain
- &lt;/button>
- &lt;/li>
-&lt;/ul>
-
-&lt;div class="tab-content" id="tabs-0-content">
- 
- &lt;div class="tab-body tab-pane fade show active"
- id="tabs-00-00" role="tabpanel" aria-labelled-by="tabs-00-00-tab" tabindex="0">
- &lt;p>Coming soon.&lt;/p>
-
- &lt;/div>
- 
- &lt;div class="tab-body tab-pane fade"
- id="tabs-00-01" role="tabpanel" aria-labelled-by="tabs-00-01-tab" tabindex="0">
- &lt;p>The following example demonstrates how to use &lt;code>ToolboxClient&lt;/code> with LangChain&amp;rsquo;s middleware to implement pre and post processing for tool calls.&lt;/p></description></item><item><title>Cloud SQL for SQL Server Admin using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2421/how-to/connect-ide/cloud_sql_mssql_admin_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2421/how-to/connect-ide/cloud_sql_mssql_admin_mcp/</guid><description>&lt;p>This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a> to expose your
+&lt;p>Set your project and enable Vertex AI&lt;/p></description></item><item><title>Cloud SQL for SQL Server Admin using MCP</title><link>https://googleapis.github.io/genai-toolbox/previews/PR-2421/how-to/connect-ide/cloud_sql_mssql_admin_mcp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://googleapis.github.io/genai-toolbox/previews/PR-2421/how-to/connect-ide/cloud_sql_mssql_admin_mcp/</guid><description>&lt;p>This guide covers how to use &lt;a href="https://github.com/googleapis/genai-toolbox">MCP Toolbox for Databases&lt;/a> to expose your
 developer assistant tools to create and manage Cloud SQL for SQL Server
 instance, database and users:&lt;/p>
 &lt;ul>
