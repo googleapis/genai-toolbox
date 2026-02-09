@@ -1,4 +1,4 @@
-# [start:quickstart]
+# [START quickstart]
 import asyncio
 
 from google.adk import Agent
@@ -30,7 +30,7 @@ root_agent = Agent(
 )
 
 app = App(root_agent=root_agent, name="my_agent")
-# [end:quickstart]
+# [END quickstart]
 
 queries = [
     "Find hotels in Basel with Basel in its name.",
