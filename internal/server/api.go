@@ -233,16 +233,27 @@ func toolInvokeHandler(s *Server, w http.ResponseWriter, r *http.Request) {
 
 	params, err := parameters.ParseParams(tool.GetParameters(), data, claimsFromAuth)
 	if err != nil {
-		// If auth error, return 401 or 403
 		var clientServerErr *util.ClientServerError
-		if errors.As(err, &clientServerErr) && (clientServerErr.Code == http.StatusUnauthorized || clientServerErr.Code == http.StatusForbidden) {
-			s.logger.DebugContext(ctx, fmt.Sprintf("error parsing authenticated parameters from ID token: %s", err))
-			_ = render.Render(w, r, newErrResponse(err, clientServerErr.Code))
+
+		// Return 401 Authentication errors
+		if errors.As(err, &clientServerErr) && clientServerErr.Code == http.StatusUnauthorized {
+			s.logger.DebugContext(ctx, fmt.Sprintf("auth error: %v", err))
+			_ = render.Render(w, r, newErrResponse(err, http.StatusUnauthorized))
 			return
 		}
-		err = fmt.Errorf("provided parameters were invalid: %w", err)
-		s.logger.DebugContext(ctx, err.Error())
-		_ = render.Render(w, r, newErrResponse(err, http.StatusBadRequest))
+
+		var agentErr *util.AgentError
+		if errors.As(err, &agentErr) {
+			s.logger.DebugContext(ctx, fmt.Sprintf("agent validation error: %v", err))
+			// We return StatusOK 200 because the API request succeeded,
+			// even if the agent's logic failed.
+			_ = render.Render(w, r, newErrResponse(err, http.StatusOK))
+			return
+		}
+
+		// Return 500 if it's a specific ClientServerError that isn't a 401, or any other unexpected error
+		s.logger.ErrorContext(ctx, fmt.Sprintf("internal server error: %v", err))
+		_ = render.Render(w, r, newErrResponse(err, http.StatusInternalServerError))
 		return
 	}
 	s.logger.DebugContext(ctx, fmt.Sprintf("invocation params: %s", params))

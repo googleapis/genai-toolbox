@@ -148,20 +148,20 @@ func ParseParams(ps Parameters, data map[string]any, claimsMap map[string]map[st
 				v = p.GetDefault()
 				// if the parameter is required and no value given, throw an error
 				if CheckParamRequired(p.GetRequired(), v) {
-					return nil, fmt.Errorf("parameter %q is required", name)
+					return nil, util.NewAgentError(fmt.Sprintf("parameter %q is required", name), nil)
 				}
 			}
 		} else {
 			// parse authenticated parameter
 			v, err = parseFromAuthService(paramAuthServices, claimsMap)
 			if err != nil {
-				return nil, fmt.Errorf("error parsing authenticated parameter %q: %w", name, err)
+				return nil, util.NewClientServerError("error parsing authenticated parameter", http.StatusUnauthorized, err)
 			}
 		}
 		if v != nil {
 			newV, err = p.Parse(v)
 			if err != nil {
-				return nil, fmt.Errorf("unable to parse value for %q: %w", name, err)
+				return nil, util.NewAgentError("unable to parse value for %q)", err)
 			}
 		}
 		params = append(params, ParamValue{Name: name, Value: newV})
