@@ -13600,12 +13600,12 @@ It is helpful to understand how tool-level processing differs from other scopes:
 
 
 # Python
-How to add pre- and post- processing to your Python toolbox applications.
+How to add pre- and post- processing to your Agents using Python.
 
 
 ## Prerequisites
 
-This tutorial assumes that you have set up a basic toolbox application as described in the [local quickstart](../../getting-started/local_quickstart).
+This tutorial assumes that you have set up Toolbox with a basic agent as described in the [local quickstart](../../getting-started/local_quickstart).
 
 This guide demonstrates how to implement these patterns in your Toolbox applications.
 
