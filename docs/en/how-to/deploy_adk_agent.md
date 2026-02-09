@@ -83,7 +83,7 @@ Toolbox instead of the local address.
 
 2.  Open your agent file (`my_agent/agent.py`).
 
-3.  Update the `ToolboxSyncClient` initialization to use your Cloud Run URL.
+3.  Update the `ToolboxToolset` initialization to use your Cloud Run URL.
 
     {{% alert color="info" %}}
 Since Cloud Run services are secured by default, you also need to provide an
