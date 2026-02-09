@@ -13632,7 +13632,7 @@ It is helpful to understand how tool-level processing differs from other scopes:
 ### Observability & Debugging
 
 - **Structured Logging**: Instead of simple print statements, use structured JSON logging with correlation IDs. This allows you to trace a single user request through multiple agent turns and tool calls.
-- **Redundant Logging for Testability**: LLM responses are non-deterministic and may summarize away key details.
+- **Logging for Testability**: LLM responses are non-deterministic and may summarize away key details.
   - **Pattern**: Add explicit logging markers in your post-processing middleware (e.g., `logger.info("ACTION_SUCCESS: <id>")`).
   - **Benefit**: Your integration tests can grep logs for these stable markers to verify tool success, rather than painfully parsing variable natural language responses.
 
