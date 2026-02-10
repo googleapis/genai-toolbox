@@ -43,7 +43,7 @@ Omni](https://cloud.google.com/alloydb/omni/docs/overview).
     * [Install AlloyDB Omni](https://cloud.google.com/alloydb/omni/docs/quickstart)
 
 1. Create or reuse [a database
-   user](https://docs.cloud.google.com/alloydb/omni/containers/17.5.0/docs/database-users/manage-users)
+   user](https://docs.cloud.google.com/alloydb/omni/containers/current/docs/database-users/manage-users)
    and have the username and password ready.
 
 ## Install MCP Toolbox
