@@ -59,22 +59,22 @@ func NewStdLogger(outW, errW io.Writer, logLevel string) (Logger, error) {
 }
 
 // DebugContext logs debug messages
-func (sl *StdLogger) DebugContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+func (sl *StdLogger) DebugContext(ctx context.Context, msg string, keysAndValues ...any) {
 	sl.outLogger.DebugContext(ctx, msg, keysAndValues...)
 }
 
 // InfoContext logs debug messages
-func (sl *StdLogger) InfoContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+func (sl *StdLogger) InfoContext(ctx context.Context, msg string, keysAndValues ...any) {
 	sl.outLogger.InfoContext(ctx, msg, keysAndValues...)
 }
 
 // WarnContext logs warning messages
-func (sl *StdLogger) WarnContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+func (sl *StdLogger) WarnContext(ctx context.Context, msg string, keysAndValues ...any) {
 	sl.errLogger.WarnContext(ctx, msg, keysAndValues...)
 }
 
 // ErrorContext logs error messages
-func (sl *StdLogger) ErrorContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+func (sl *StdLogger) ErrorContext(ctx context.Context, msg string, keysAndValues ...any) {
 	sl.errLogger.ErrorContext(ctx, msg, keysAndValues...)
 }
 
@@ -177,21 +177,21 @@ func NewStructuredLogger(outW, errW io.Writer, logLevel string) (Logger, error) 
 }
 
 // DebugContext logs debug messages
-func (sl *StructuredLogger) DebugContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+func (sl *StructuredLogger) DebugContext(ctx context.Context, msg string, keysAndValues ...any) {
 	sl.outLogger.DebugContext(ctx, msg, keysAndValues...)
 }
 
 // InfoContext logs info messages
-func (sl *StructuredLogger) InfoContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+func (sl *StructuredLogger) InfoContext(ctx context.Context, msg string, keysAndValues ...any) {
 	sl.outLogger.InfoContext(ctx, msg, keysAndValues...)
 }
 
 // WarnContext logs warning messages
-func (sl *StructuredLogger) WarnContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+func (sl *StructuredLogger) WarnContext(ctx context.Context, msg string, keysAndValues ...any) {
 	sl.errLogger.WarnContext(ctx, msg, keysAndValues...)
 }
 
 // ErrorContext logs error messages
-func (sl *StructuredLogger) ErrorContext(ctx context.Context, msg string, keysAndValues ...interface{}) {
+func (sl *StructuredLogger) ErrorContext(ctx context.Context, msg string, keysAndValues ...any) {
 	sl.errLogger.ErrorContext(ctx, msg, keysAndValues...)
 }

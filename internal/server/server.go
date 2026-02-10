@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"net/http"
 	"slices"
@@ -28,7 +29,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/httplog/v2"
+	"github.com/go-chi/httplog/v3"
 	"github.com/googleapis/genai-toolbox/internal/auth"
 	"github.com/googleapis/genai-toolbox/internal/embeddingmodels"
 	"github.com/googleapis/genai-toolbox/internal/log"
@@ -347,31 +348,16 @@ func NewServer(ctx context.Context, cfg ServerConfig) (*Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize http log: %w", err)
 	}
-	var httpOpts httplog.Options
-	switch cfg.LoggingFormat.String() {
-	case "json":
-		httpOpts = httplog.Options{
-			JSON:             true,
-			LogLevel:         logLevel,
-			Concise:          true,
-			RequestHeaders:   false,
-			MessageFieldName: "message",
-			SourceFieldName:  "logging.googleapis.com/sourceLocation",
-			TimeFieldName:    "timestamp",
-			LevelFieldName:   "severity",
-		}
-	case "standard":
-		httpOpts = httplog.Options{
-			LogLevel:         logLevel,
-			Concise:          true,
-			RequestHeaders:   false,
-			MessageFieldName: "message",
-		}
-	default:
-		return nil, fmt.Errorf("invalid Logging format: %q", cfg.LoggingFormat.String())
+
+	schema := httplog.SchemaGCP
+	schema.Level = cfg.LogLevel.String()
+	schema.Concise(true)
+	httpOpts := &httplog.Options{
+		Level:  logLevel,
+		Schema: schema,
 	}
-	httpLogger := httplog.NewLogger("httplog", httpOpts)
-	r.Use(httplog.RequestLogger(httpLogger))
+	logger := l.(*slog.Logger)
+	r.Use(httplog.RequestLogger(logger, httpOpts))
 
 	sourcesMap, authServicesMap, embeddingModelsMap, toolsMap, toolsetsMap, promptsMap, promptsetsMap, err := InitializeConfigs(ctx, cfg)
 	if err != nil {
