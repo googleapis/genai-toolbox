@@ -98,7 +98,7 @@ func (cfg Config) Initialize(srcs map[string]sources.Source) (tools.Tool, error)
 	maps.Copy(combinedHeaders, cfg.Headers)
 
 	// Create a slice for all parameters
-	allParameters := slices.Concat(cfg.PathParams, cfg.BodyParams, cfg.HeaderParams, cfg.QueryParams)
+	allParameters := slices.Concat(cfg.PathParams, cfg.QueryParams, cfg.BodyParams, cfg.HeaderParams)
 
 	// Verify no duplicate parameter names
 	err := parameters.CheckDuplicateParameters(allParameters)
