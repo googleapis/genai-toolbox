@@ -1803,7 +1803,7 @@ func TestPrebuiltTools(t *testing.T) {
 			wantToolset: server.ToolsetConfigs{
 				"discovery": tools.ToolsetConfig{
 					Name:      "discovery",
-					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types", "lookup_context"},
+					ToolNames: []string{"search_entries", "lookup_entry", "search_aspect_types", "lookup_context", "search_dq_scans"},
 				},
 			},
 		},
