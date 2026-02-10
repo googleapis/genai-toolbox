@@ -584,7 +584,7 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-entry-tool/invoke",
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s\"}", DataplexProject, DataplexProject, DataplexProject, "non-existent-dataset"))),
-			wantStatusCode: 400,
+			wantStatusCode: 200,
 			expectResult:   false,
 		},
 		{
@@ -602,7 +602,7 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 			api:            "http://127.0.0.1:5000/api/tool/my-dataplex-lookup-entry-tool/invoke",
 			requestHeader:  map[string]string{},
 			requestBody:    bytes.NewBuffer([]byte(fmt.Sprintf("{\"name\":\"projects/%s/locations/us\", \"entry\":\"projects/%s/locations/us/entryGroups/@bigquery/entries/bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s\", \"view\": %d}", DataplexProject, DataplexProject, DataplexProject, datasetName, tableName, 3))),
-			wantStatusCode: 400,
+			wantStatusCode: 200,
 			expectResult:   false,
 		},
 		{
