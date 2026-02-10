@@ -17,7 +17,6 @@ system_prompt = """
   Don't ask for confirmations from the user.
 """
 
-
 # Pre processing
 @wrap_tool_call
 async def enforce_business_rules(request, handler):
