@@ -414,10 +414,10 @@ See [Usage Examples](../reference/cli.md#examples).
         entries.
     *   **Dataplex Editor** (`roles/dataplex.editor`) to modify entries.
 *   **Tools:**
-    *   `dataplex_search_entries`: Searches for entries in Dataplex Catalog.
-    *   `dataplex_lookup_entry`: Retrieves a specific entry from Dataplex
+    *   `search_entries`: Searches for entries in Dataplex Catalog.
+    *   `lookup_entry`: Retrieves a specific entry from Dataplex
         Catalog.
-    *   `dataplex_search_aspect_types`: Finds aspect types relevant to the
+    *   `search_aspect_types`: Finds aspect types relevant to the
         query.
 
 ## Firestore
@@ -488,6 +488,7 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `create_project_file`: Create a new LookML file.
     *   `update_project_file`: Update an existing LookML file.
     *   `delete_project_file`: Delete a LookML file.
+    *   `validate_project`: Check the syntax of a LookML project.
     *   `get_connections`: Get the available connections in a Looker instance.
     *   `get_connection_schemas`: Get the available schemas in a connection.
     *   `get_connection_databases`: Get the available databases in a connection.
