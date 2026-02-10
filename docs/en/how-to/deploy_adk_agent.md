@@ -86,8 +86,7 @@ Toolbox instead of the local address.
 3.  Update the `ToolboxToolset` initialization to use your Cloud Run URL.
 
     {{% alert color="info" %}}
-Since Cloud Run services are secured by default, you also need to provide an
-authentication token.
+By default, Toolbox uses `TOOLBOX_IDENTITY`. You can configure other authentication methods following [this guide](https://github.com/googleapis/mcp-toolbox-sdk-python/tree/main/packages/toolbox-adk#authentication).
     {{% /alert %}}
 
     Replace your existing client initialization code with the following:
@@ -96,16 +95,9 @@ authentication token.
     from google.adk import Agent
     from google.adk.apps import App
     from google.adk.tools.toolbox_toolset import ToolboxToolset
-    from toolbox_adk import CredentialStrategy
 
     # TODO(developer): Replace with your Toolbox Cloud Run Service URL
-    TOOLBOX_URL = "https://your-toolbox-service-xyz.a.run.app"
-
-    # Initialize the toolset with Workload Identity (generates ID token for the URL)
-    toolset = ToolboxToolset(
-        server_url=TOOLBOX_URL,
-        credentials=CredentialStrategy.workload_identity(target_audience=TOOLBOX_URL)
-    )
+    toolset = ToolboxToolset(server_url="<TOOLBOX_URL>")
 
     root_agent = Agent(
         name='root_agent',
