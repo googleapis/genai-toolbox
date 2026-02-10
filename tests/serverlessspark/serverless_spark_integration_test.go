@@ -529,8 +529,8 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 						name:     "missing op parameter",
 						toolName: "cancel-batch",
 						request:  map[string]any{},
-						wantCode: http.StatusBadRequest,
-						wantMsg:  "parameter \\\"operation\\\" is required",
+						wantCode: http.StatusOK,
+						wantMsg:  `{"error":"parameter \"operation\" is required"}`,
 					},
 					{
 						name:     "nonexistent op",

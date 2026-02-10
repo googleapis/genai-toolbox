@@ -1172,13 +1172,13 @@ func RunPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth, user
 			name:           "invoke list_tables with invalid output format",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
 			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "abcd"}`)),
-			wantStatusCode: http.StatusBadRequest,
+			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "invoke list_tables with malformed table_names parameter",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
 			requestBody:    bytes.NewBuffer([]byte(`{"table_names": 12345, "output_format": "detailed"}`)),
-			wantStatusCode: http.StatusBadRequest,
+			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "invoke list_tables with multiple table names",
@@ -3409,7 +3409,7 @@ func RunMySQLGetQueryPlanTest(t *testing.T, ctx context.Context, pool *sql.DB, d
 		{
 			name:           "invoke get_query_plan with invalid query",
 			requestBody:    bytes.NewBufferString(`{"sql_statement": "SELECT * FROM non_existent_table"}`),
-			wantStatusCode: http.StatusBadRequest,
+			wantStatusCode: http.StatusOK,
 			checkResult:    nil,
 		},
 	}
@@ -3543,13 +3543,13 @@ func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 			name:           "invoke list_tables with invalid output format",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
 			requestBody:    `{"table_names": "", "output_format": "abcd"}`,
-			wantStatusCode: http.StatusBadRequest,
+			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "invoke list_tables with malformed table_names parameter",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
 			requestBody:    `{"table_names": 12345, "output_format": "detailed"}`,
-			wantStatusCode: http.StatusBadRequest,
+			wantStatusCode: http.StatusOK,
 		},
 		{
 			name:           "invoke list_tables with multiple table names",

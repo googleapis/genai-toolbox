@@ -138,11 +138,10 @@ func TestListDatabasesToolEndpoints(t *testing.T) {
 			want:     `[{"name":"db1","charset":"utf8","collation":"utf8_general_ci"},{"name":"db2","charset":"utf8mb4","collation":"utf8mb4_unicode_ci"}]`,
 		},
 		{
-			name:        "missing instance",
-			toolName:    "list-databases",
-			body:        `{"project": "p1"}`,
-			expectError: true,
-			errorStatus: http.StatusBadRequest,
+			name:     "missing instance",
+			toolName: "list-databases",
+			body:     `{"project": "p1"}`,
+			want:     `{"error":"parameter \"instance\" is required"}`,
 		},
 	}
 
