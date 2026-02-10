@@ -517,8 +517,8 @@ func runDataplexSearchEntriesToolInvokeTest(t *testing.T, tableName string, data
 					t.Fatalf("expected entry to have key '%s', but it was not found in %v", tc.wantContentKey, entry)
 				}
 			} else {
-				if len(entries) != 0 {
-					t.Fatalf("expected 0 entries, but got %d", len(entries))
+				if !strings.Contains(resultStr, `"error":`) {
+					t.Fatalf("expected an error message in the result, but got: %s", resultStr)
 				}
 			}
 		})
