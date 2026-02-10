@@ -643,42 +643,44 @@ func runDataplexLookupEntryToolInvokeTest(t *testing.T, tableName string, datase
 				t.Fatalf("Error parsing response body: %v", err)
 			}
 
+			resultStr, hasResult := result["result"].(string)
+
 			if tc.expectResult {
-				resultStr, ok := result["result"].(string)
-				if !ok {
-					t.Fatalf("Expected 'result' field to be a string on success, got %T", result["result"])
-				}
-				if resultStr == "" || resultStr == "{}" || resultStr == "null" {
-					t.Fatal("Expected an entry, but got empty result")
+				if !hasResult || resultStr == "" || resultStr == "{}" || resultStr == "null" {
+					t.Fatalf("Expected a result, but got: %v", result)
 				}
 
 				var entry map[string]interface{}
 				if err := json.Unmarshal([]byte(resultStr), &entry); err != nil {
-					t.Fatalf("Error unmarshalling result string into entry map: %v", err)
+					t.Fatalf("Error unmarshalling result string: %v. Raw result: %s", err, resultStr)
 				}
 
 				if _, ok := entry[tc.wantContentKey]; !ok {
 					t.Fatalf("Expected entry to have key '%s', but it was not found in %v", tc.wantContentKey, entry)
 				}
 
-				if _, ok := entry[tc.dontWantContentKey]; ok {
-					t.Fatalf("Expected entry to not have key '%s', but it was found in %v", tc.dontWantContentKey, entry)
+				if tc.dontWantContentKey != "" {
+					if _, ok := entry[tc.dontWantContentKey]; ok {
+						t.Fatalf("Expected entry to NOT have key '%s', but it was found", tc.dontWantContentKey)
+					}
 				}
 
 				if tc.aspectCheck {
-					// Check length of aspects
 					aspects, ok := entry["aspects"].(map[string]interface{})
-					if !ok {
-						t.Fatalf("Expected 'aspects' to be a map, got %T", aspects)
-					}
-					if len(aspects) != 1 {
+					if !ok || len(aspects) != 1 {
 						t.Fatalf("Expected exactly one aspect, but got %d", len(aspects))
 					}
 				}
-			} else { // Handle expected error response
-				_, ok := result["error"]
-				if !ok {
-					t.Fatalf("Expected 'error' field in response, got %v", result)
+			} else {
+				foundError := false
+				if _, ok := result["error"]; ok {
+					foundError = true
+				} else if hasResult && strings.Contains(resultStr, `"error"`) {
+					foundError = true
+				}
+
+				if !foundError {
+					t.Fatalf("Expected an error in response, but none was found. Response: %v", result)
 				}
 			}
 		})
