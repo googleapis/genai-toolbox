@@ -1,4 +1,4 @@
-// Copyright 2025 Google LLC
+// Copyright 2026 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -300,4 +300,33 @@ func UpdateProjectFile(l *v4.LookerSDK, projectId string, fileContent FileConten
 	path := fmt.Sprintf("/projects/%s/files", url.PathEscape(projectId))
 	err := l.AuthSession.Do(nil, "PUT", "/4.0", path, nil, fileContent, options)
 	return err
+}
+
+func GetProjectDirectories(l *v4.LookerSDK, projectId string, options *rtl.ApiSettings) (string, error) {
+	var result string
+	path := fmt.Sprintf("/projects/%s/directories", url.PathEscape(projectId))
+	err := l.AuthSession.Do(&result, "GET", "/4.0", path, nil, nil, options)
+	return result, err
+}
+
+type Directory struct {
+	Path string `json:"path"`
+}
+
+func CreateProjectDirectory(l *v4.LookerSDK, projectId string, directoryPath string, options *rtl.ApiSettings) error {
+	d := Directory{
+		Path: directoryPath,
+	}
+	var result string
+	path := fmt.Sprintf("/projects/%s/directories", url.PathEscape(projectId))
+	return l.AuthSession.Do(&result, "POST", "/4.0", path, nil, d, options)
+}
+
+func DeleteProjectDirectory(l *v4.LookerSDK, projectId string, directoryPath string, options *rtl.ApiSettings) error {
+	var query = map[string]any{
+		"path": directoryPath,
+	}
+	var result string
+	path := fmt.Sprintf("/projects/%s/directories", url.PathEscape(projectId))
+	return l.AuthSession.Do(&result, "DELETE", "/4.0", path, query, nil, options)
 }
