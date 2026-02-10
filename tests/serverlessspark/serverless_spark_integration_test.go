@@ -352,7 +352,7 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 					{
 						name:    "missing main file",
 						request: map[string]any{},
-						wantMsg: `parameter "mainFile" is required`,
+						wantMsg: `{"error":"parameter \"mainFile\" is required"}`,
 					},
 				}
 				for _, tc := range tcs {
