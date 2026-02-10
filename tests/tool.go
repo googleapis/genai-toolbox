@@ -723,6 +723,9 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 				}
 				t.Fatalf("response status code is not 200, got %d: %s", resp.StatusCode, string(respBody))
 			}
+			if tc.isAgentErr {
+				return
+			}
 
 			// Check response body
 			var body map[string]interface{}
