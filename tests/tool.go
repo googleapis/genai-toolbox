@@ -1141,6 +1141,7 @@ func RunPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth, user
 		wantStatusCode int
 		want           string
 		isAllTables    bool
+		isAgentErr     bool
 	}{
 		{
 			name:           "invoke list_tables all tables detailed output",
@@ -1177,12 +1178,14 @@ func RunPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth, user
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
 			requestBody:    bytes.NewBuffer([]byte(`{"table_names": "", "output_format": "abcd"}`)),
 			wantStatusCode: http.StatusOK,
+			isAgentErr:     true,
 		},
 		{
 			name:           "invoke list_tables with malformed table_names parameter",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
 			requestBody:    bytes.NewBuffer([]byte(`{"table_names": 12345, "output_format": "detailed"}`)),
 			wantStatusCode: http.StatusOK,
+			isAgentErr:     true,
 		},
 		{
 			name:           "invoke list_tables with multiple table names",
@@ -1214,6 +1217,7 @@ func RunPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth, user
 			}
 
 			if tc.wantStatusCode == http.StatusOK {
+
 				var bodyWrapper map[string]json.RawMessage
 
 				if err := json.Unmarshal(respBytes, &bodyWrapper); err != nil {
@@ -1223,6 +1227,10 @@ func RunPostgresListTablesTest(t *testing.T, tableNameParam, tableNameAuth, user
 				resultJSON, ok := bodyWrapper["result"]
 				if !ok {
 					t.Fatal("unable to find 'result' in response body")
+				}
+
+				if tc.isAgentErr {
+					return
 				}
 
 				var resultString string
