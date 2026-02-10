@@ -1123,16 +1123,16 @@ func TestClickHouseListTablesTool(t *testing.T) {
 	t.Run("ListTablesWithMissingDatabase", func(t *testing.T) {
 		api := "http://127.0.0.1:5000/api/tool/test-list-tables/invoke"
 		resp, _ := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
-		if resp.StatusCode == http.StatusOK {
-			t.Error("Expected error for missing database parameter, but got 200 OK")
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Expected 200 OK for missing database parameter, but got %d", resp.StatusCode)
 		}
 	})
 
 	t.Run("ListTablesWithInvalidSource", func(t *testing.T) {
 		api := "http://127.0.0.1:5000/api/tool/test-invalid-source/invoke"
 		resp, _ := tests.RunRequest(t, http.MethodPost, api, bytes.NewBuffer([]byte(`{}`)), nil)
-		if resp.StatusCode == http.StatusOK {
-			t.Error("Expected error for non-existent source, but got 200 OK")
+		if resp.StatusCode != http.StatusOK {
+			t.Errorf("Expected 200 OK for non-existent source, but got %d", resp.StatusCode)
 		}
 	})
 
