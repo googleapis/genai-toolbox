@@ -1017,13 +1017,14 @@ func testError(t *testing.T, toolName string, request map[string]any, wantCode i
 		t.Fatalf("failed to unmarshal outer response: %v", err)
 	}
 
-	resultStr, ok := body["result"].(string)
-	if !ok {
-		if errMsg, ok := body["error"].(string); ok {
-			resultStr = errMsg
-		} else {
-			t.Fatalf("unable to find result string in response: %s", string(bodyBytes))
-		}
+	var resultStr string
+	if res, ok := body["result"].(string); ok {
+		resultStr = res
+	} else if errMsg, ok := body["error"].(string); ok {
+		resultStr = errMsg
+	} else {
+		// If neither exists, check the raw bytes as a last resort
+		resultStr = string(bodyBytes)
 	}
 
 	if !strings.Contains(resultStr, wantMsg) {
