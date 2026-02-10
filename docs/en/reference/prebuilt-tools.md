@@ -488,6 +488,9 @@ See [Usage Examples](../reference/cli.md#examples).
     *   `create_project_file`: Create a new LookML file.
     *   `update_project_file`: Update an existing LookML file.
     *   `delete_project_file`: Delete a LookML file.
+    *   `get_project_directories`: Retrieves a list of project directories for a given LookML project.
+    *   `create_project_directory`: Creates a new directory within a specified LookML project.
+    *   `delete_project_directory`: Deletes a directory from a specified LookML project.
     *   `validate_project`: Check the syntax of a LookML project.
     *   `get_connections`: Get the available connections in a Looker instance.
     *   `get_connection_schemas`: Get the available schemas in a connection.
