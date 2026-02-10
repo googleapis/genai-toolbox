@@ -635,6 +635,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 		requestBody   io.Reader
 		want          string
 		isErr         bool
+		isAgentErr    bool
 	}{
 		{
 			name:          "invoke my-exec-sql-tool",
@@ -673,7 +674,7 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{}`)),
-			isErr:         true,
+			isAgentErr:    true,
 		},
 		{
 			name:          "Invoke my-auth-exec-sql-tool with auth token",
@@ -702,14 +703,14 @@ func RunExecuteSqlToolInvokeTest(t *testing.T, createTableStatement, select1Want
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"SELECT * FROM non_existent_table"}`)),
-			isErr:         true,
+			isAgentErr:    true,
 		},
 		{
 			name:          "invoke my-exec-sql-tool with invalid ALTER SQL",
 			api:           "http://127.0.0.1:5000/api/tool/my-exec-sql-tool/invoke",
 			requestHeader: map[string]string{},
 			requestBody:   bytes.NewBuffer([]byte(`{"sql":"ALTER TALE t ALTER COLUMN id DROP NOT NULL"}`)),
-			isErr:         true,
+			isAgentErr:    true,
 		},
 	}
 	for _, tc := range invokeTcs {
