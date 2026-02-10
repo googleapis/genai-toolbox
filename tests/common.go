@@ -528,6 +528,29 @@ func GetPostgresSQLTmplToolStatement() (string, string) {
 	return tmplSelectCombined, tmplSelectFilterCombined
 }
 
+// GetCockroachDBParamToolInfo returns statements and param for my-tool cockroachdb-sql type
+// Uses explicit INT PRIMARY KEY instead of SERIAL to ensure deterministic IDs
+func GetCockroachDBParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT PRIMARY KEY, name TEXT);", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name) VALUES (1, $1), (2, $2), (3, $3), (4, $4);", tableName)
+	toolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = $1 OR name = $2 ORDER BY id;", tableName)
+	idParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = $1;", tableName)
+	nameParamStatement := fmt.Sprintf("SELECT * FROM %s WHERE name = $1;", tableName)
+	arrayToolStatement := fmt.Sprintf("SELECT * FROM %s WHERE id = ANY($1) AND name = ANY($2) ORDER BY id;", tableName)
+	params := []any{"Alice", "Jane", "Sid", nil}
+	return createStatement, insertStatement, toolStatement, idParamStatement, nameParamStatement, arrayToolStatement, params
+}
+
+// GetCockroachDBAuthToolInfo returns statements and param of my-auth-tool for cockroachdb-sql type
+// Uses explicit INT PRIMARY KEY instead of SERIAL to ensure deterministic IDs
+func GetCockroachDBAuthToolInfo(tableName string) (string, string, string, []any) {
+	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT PRIMARY KEY, name TEXT, email TEXT);", tableName)
+	insertStatement := fmt.Sprintf("INSERT INTO %s (id, name, email) VALUES (1, $1, $2), (2, $3, $4)", tableName)
+	toolStatement := fmt.Sprintf("SELECT name FROM %s WHERE email = $1;", tableName)
+	params := []any{"Alice", ServiceAccountEmail, "Jane", "janedoe@gmail.com"}
+	return createStatement, insertStatement, toolStatement, params
+}
+
 // GetMSSQLParamToolInfo returns statements and param for my-tool mssql-sql type
 func GetMSSQLParamToolInfo(tableName string) (string, string, string, string, string, string, []any) {
 	createStatement := fmt.Sprintf("CREATE TABLE %s (id INT IDENTITY(1,1) PRIMARY KEY, name VARCHAR(255));", tableName)
