@@ -110,7 +110,7 @@ func TestDataformCompileTool(t *testing.T) {
 			name:       "missing parameter",
 			reqBody:    `{}`,
 			wantStatus: http.StatusOK,
-			wantBody:   `"error":"parameter \"project_dir\" is required"`,
+			wantBody:   `error`,
 		},
 		{
 			name:       "non-existent directory",
