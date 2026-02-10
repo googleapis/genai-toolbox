@@ -352,13 +352,13 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 					{
 						name:    "missing main file",
 						request: map[string]any{},
-						wantMsg: "parameter \\\"mainFile\\\" is required",
+						wantMsg: `parameter "mainFile" is required`,
 					},
 				}
 				for _, tc := range tcs {
 					t.Run(tc.name, func(t *testing.T) {
 						t.Parallel()
-						testError(t, "create-pyspark-batch", tc.request, http.StatusBadRequest, tc.wantMsg)
+						testError(t, "create-pyspark-batch", tc.request, http.StatusOK, tc.wantMsg)
 					})
 				}
 			})
@@ -478,7 +478,7 @@ func TestServerlessSparkToolEndpoints(t *testing.T) {
 				for _, tc := range tcs {
 					t.Run(tc.name, func(t *testing.T) {
 						t.Parallel()
-						testError(t, "create-spark-batch", tc.request, http.StatusBadRequest, tc.wantMsg)
+						testError(t, "create-spark-batch", tc.request, http.StatusOK, tc.wantMsg)
 					})
 				}
 			})
@@ -1003,18 +1003,31 @@ func testError(t *testing.T, toolName string, request map[string]any, wantCode i
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != wantCode {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		t.Fatalf("response status code is not %d, got %d: %s", wantCode, resp.StatusCode, string(bodyBytes))
-	}
-
 	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("failed to read response body: %v", err)
 	}
 
-	if !bytes.Contains(bodyBytes, []byte(wantMsg)) {
-		t.Fatalf("response body does not contain %q: %s", wantMsg, string(bodyBytes))
+	if resp.StatusCode != wantCode {
+		t.Fatalf("response status code is not %d, got %d: %s", wantCode, resp.StatusCode, string(bodyBytes))
+	}
+
+	var body map[string]any
+	if err := json.Unmarshal(bodyBytes, &body); err != nil {
+		t.Fatalf("failed to unmarshal outer response: %v", err)
+	}
+
+	resultStr, ok := body["result"].(string)
+	if !ok {
+		if errMsg, ok := body["error"].(string); ok {
+			resultStr = errMsg
+		} else {
+			t.Fatalf("unable to find result string in response: %s", string(bodyBytes))
+		}
+	}
+
+	if !strings.Contains(resultStr, wantMsg) {
+		t.Fatalf("result string %q does not contain expected message %q", resultStr, wantMsg)
 	}
 }
 
