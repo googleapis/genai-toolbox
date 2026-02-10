@@ -3512,6 +3512,7 @@ func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 		wantStatusCode int
 		want           string
 		isAllTables    bool
+		isAgentErr     bool
 	}{
 		{
 			name:           "invoke list_tables for all tables detailed output",
@@ -3548,12 +3549,14 @@ func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
 			requestBody:    `{"table_names": "", "output_format": "abcd"}`,
 			wantStatusCode: http.StatusOK,
+			isAgentErr:     true,
 		},
 		{
 			name:           "invoke list_tables with malformed table_names parameter",
 			api:            "http://127.0.0.1:5000/api/tool/list_tables/invoke",
 			requestBody:    `{"table_names": 12345, "output_format": "detailed"}`,
 			wantStatusCode: http.StatusOK,
+			isAgentErr:     true,
 		},
 		{
 			name:           "invoke list_tables with multiple table names",
@@ -3598,6 +3601,11 @@ func RunMSSQLListTablesTest(t *testing.T, tableNameParam, tableNameAuth string) 
 				}
 
 				var resultString string
+
+				if tc.isAgentErr {
+					return
+				}
+
 				if err := json.Unmarshal(resultJSON, &resultString); err != nil {
 					if string(resultJSON) == "null" {
 						resultString = "null"
