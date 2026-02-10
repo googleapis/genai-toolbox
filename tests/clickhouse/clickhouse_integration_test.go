@@ -548,6 +548,7 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 		sql            string
 		resultSliceLen int
 		isErr          bool
+		isAgentErr     bool
 	}{
 		{
 			name:           "CreateTable",
@@ -594,6 +595,9 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 			}
 			if tc.isErr {
 				t.Fatalf("expecting an error from server")
+			}
+			if tc.isAgentErr {
+				return
 			}
 
 			var body map[string]interface{}
