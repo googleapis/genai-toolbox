@@ -535,9 +535,9 @@ func getHTTPToolsConfig(sourceConfig map[string]any, toolType string) map[string
 				"method":      "GET",
 				"path":        "/tool1",
 				"description": "some description",
-				"bodyParams":  []parameters.Parameter{parameters.NewStringParameter("name", "user name")},
 				"queryParams": []parameters.Parameter{
 					parameters.NewIntParameter("id", "user ID")},
+				"bodyParams": []parameters.Parameter{parameters.NewStringParameter("name", "user name")},
 				"requestBody": `{
 "age": 36,
 "name": "{{.name}}"
