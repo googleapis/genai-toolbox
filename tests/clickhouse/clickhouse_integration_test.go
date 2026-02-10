@@ -571,15 +571,15 @@ func TestClickHouseExecuteSQLTool(t *testing.T) {
 			resultSliceLen: 0,
 		},
 		{
-			name:           "MissingSQL",
-			sql:            "",
-			resultSliceLen: 1,
+			name:       "MissingSQL",
+			sql:        "",
+			isAgentErr: true,
 		},
 
 		{
-			name:           "SQLInjectionAttempt",
-			sql:            "SELECT 1; DROP TABLE system.users; SELECT 2",
-			resultSliceLen: 1,
+			name:       "SQLInjectionAttempt",
+			sql:        "SELECT 1; DROP TABLE system.users; SELECT 2",
+			isAgentErr: true,
 		},
 	}
 	for _, tc := range tcs {
