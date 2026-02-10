@@ -110,12 +110,12 @@ func TestDataformCompileTool(t *testing.T) {
 			name:       "missing parameter",
 			reqBody:    `{}`,
 			wantStatus: http.StatusOK,
-			wantBody:   `parameter \"project_dir\" is required`,
+			wantBody:   `"error":"parameter \"project_dir\" is required"`,
 		},
 		{
 			name:       "non-existent directory",
 			reqBody:    fmt.Sprintf(`{"project_dir":"%s"}`, nonExistentDir),
-			wantStatus: http.StatusBadRequest,
+			wantStatus: http.StatusOK,
 			wantBody:   "error executing dataform compile",
 		},
 	}
