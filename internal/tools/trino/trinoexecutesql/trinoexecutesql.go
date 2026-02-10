@@ -101,7 +101,7 @@ func (t Tool) Invoke(ctx context.Context, resourceMgr tools.SourceProvider, para
 	if !ok {
 		return nil, util.NewAgentError("unable to cast the `sql` input parameter into string", nil)
 	}
-	res, err := source.RunSQL(ctx, sql, sliceParams)
+	res, err := source.RunSQL(ctx, sql, []any{})
 	if err != nil {
 		return nil, util.ProcessGeneralError(err)
 	}
