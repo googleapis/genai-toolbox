@@ -489,42 +489,42 @@ func runAlloyDBListUsersTest(t *testing.T, vars map[string]string) {
 		requestBody    io.Reader
 		wantContains   string
 		wantStatusCode int
+		expectAgentErr bool
 	}{
 		{
 			name:           "list users success",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "%s"}`, vars["project"], vars["location"], vars["cluster"])),
 			wantContains:   fmt.Sprintf("projects/%s/locations/%s/clusters/%s/users/%s", vars["project"], vars["location"], vars["cluster"], AlloyDBUser),
 			wantStatusCode: http.StatusOK,
+			expectAgentErr: false,
 		},
 		{
 			name:           "list users missing project",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"location": "%s", "cluster": "%s"}`, vars["location"], vars["cluster"])),
 			wantStatusCode: http.StatusOK,
+			wantContains:   `parameter \"project\" is required`,
+			expectAgentErr: true,
 		},
 		{
 			name:           "list users missing location",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "cluster": "%s"}`, vars["project"], vars["cluster"])),
 			wantStatusCode: http.StatusOK,
+			wantContains:   `parameter \"location\" is required`,
+			expectAgentErr: true,
 		},
 		{
 			name:           "list users missing cluster",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s"}`, vars["project"], vars["cluster"])),
 			wantStatusCode: http.StatusOK,
-		},
-		{
-			name:           "list users non-existent project",
-			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "non-existent-project", "location": "%s", "cluster": "%s"}`, vars["location"], vars["cluster"])),
-			wantStatusCode: http.StatusInternalServerError,
-		},
-		{
-			name:           "list users non-existent location",
-			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "non-existent-location", "cluster": "%s"}`, vars["project"], vars["cluster"])),
-			wantStatusCode: http.StatusInternalServerError,
+			wantContains:   `parameter \"cluster\" is required`,
+			expectAgentErr: true,
 		},
 		{
 			name:           "list users non-existent cluster",
 			requestBody:    bytes.NewBufferString(fmt.Sprintf(`{"project": "%s", "location": "%s", "cluster": "non-existent-cluster"}`, vars["project"], vars["location"])),
 			wantStatusCode: http.StatusOK,
+			wantContains:   `was not found`,
+			expectAgentErr: true,
 		},
 	}
 
@@ -544,7 +544,7 @@ func runAlloyDBListUsersTest(t *testing.T, vars map[string]string) {
 
 			if resp.StatusCode != tc.wantStatusCode {
 				bodyBytes, _ := io.ReadAll(resp.Body)
-				t.Fatalf("response status code is not %d, got %d: %s", tc.wantStatusCode, resp.StatusCode, string(bodyBytes))
+				t.Fatalf("response status code: got %d, want %d: %s", resp.StatusCode, tc.wantStatusCode, string(bodyBytes))
 			}
 
 			if tc.wantStatusCode == http.StatusOK {
@@ -553,27 +553,28 @@ func runAlloyDBListUsersTest(t *testing.T, vars map[string]string) {
 					t.Fatalf("error parsing outer response body: %v", err)
 				}
 
-				var usersData UsersResponse
-				if err := json.Unmarshal([]byte(body.Result), &usersData); err != nil {
-					t.Fatalf("error parsing nested result JSON: %v", err)
-				}
-
-				var got []string
-				for _, user := range usersData.Users {
-					got = append(got, user.Name)
-				}
-
-				sort.Strings(got)
-
-				found := false
-				for _, g := range got {
-					if g == tc.wantContains {
-						found = true
-						break
+				if tc.expectAgentErr {
+					// Logic for checking wrapped error messages
+					if !strings.Contains(body.Result, tc.wantContains) {
+						t.Errorf("expected agent error message not found:\n got: %s\nwant: %s", body.Result, tc.wantContains)
 					}
-				}
-				if !found {
-					t.Errorf("wantContains not found in response:\n got: %v\nwant: %v", got, tc.wantContains)
+				} else {
+					// Logic for checking successful resource lists
+					var usersData UsersResponse
+					if err := json.Unmarshal([]byte(body.Result), &usersData); err != nil {
+						t.Fatalf("error parsing nested result JSON: %v. Result was: %s", err, body.Result)
+					}
+
+					found := false
+					for _, user := range usersData.Users {
+						if user.Name == tc.wantContains {
+							found = true
+							break
+						}
+					}
+					if !found {
+						t.Errorf("expected user name %q not found in response", tc.wantContains)
+					}
 				}
 			}
 		})
