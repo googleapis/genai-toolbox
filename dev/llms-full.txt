@@ -8312,6 +8312,245 @@ useClientOAuth: true
 | useClientOAuth |  boolean |     false    | If true, the source will use client-side OAuth for authorization. Otherwise, it will use Application Default Credentials. Defaults to `false`. |
 
 
+# CockroachDB
+CockroachDB is a distributed SQL database built for cloud applications.
+
+
+## About
+
+[CockroachDB][crdb-docs] is a distributed SQL database designed for cloud-native applications. It provides strong consistency, horizontal scalability, and built-in resilience with automatic failover and recovery. CockroachDB uses the PostgreSQL wire protocol, making it compatible with many PostgreSQL tools and drivers while providing unique features like multi-region deployments and distributed transactions.
+
+**Minimum Version:** CockroachDB v25.1 or later is recommended for full tool compatibility.
+
+[crdb-docs]: https://www.cockroachlabs.com/docs/
+
+## Available Tools
+
+- [`cockroachdb-sql`](../tools/cockroachdb/cockroachdb-sql.md)
+  Execute SQL queries as prepared statements in CockroachDB (alias for execute-sql).
+
+- [`cockroachdb-execute-sql`](../tools/cockroachdb/cockroachdb-execute-sql.md)
+  Run parameterized SQL statements in CockroachDB.
+
+- [`cockroachdb-list-schemas`](../tools/cockroachdb/cockroachdb-list-schemas.md)
+  List schemas in a CockroachDB database.
+
+- [`cockroachdb-list-tables`](../tools/cockroachdb/cockroachdb-list-tables.md)
+  List tables in a CockroachDB database.
+
+## Requirements
+
+### Database User
+
+This source uses standard authentication. You will need to [create a CockroachDB user][crdb-users] to login to the database with. For CockroachDB Cloud deployments, SSL/TLS is required.
+
+[crdb-users]: https://www.cockroachlabs.com/docs/stable/create-user.html
+
+### SSL/TLS Configuration
+
+CockroachDB Cloud clusters require SSL/TLS connections. Use the `queryParams` section to configure SSL settings:
+
+- **For CockroachDB Cloud**: Use `sslmode: require` at minimum
+- **For self-hosted with certificates**: Use `sslmode: verify-full` with certificate paths
+- **For local development only**: Use `sslmode: disable` (not recommended for production)
+
+## Example
+
+```yaml
+sources:
+  my_cockroachdb:
+    type: cockroachdb
+    host: your-cluster.cockroachlabs.cloud
+    port: "26257"
+    user: myuser
+    password: mypassword
+    database: defaultdb
+    maxRetries: 5
+    retryBaseDelay: 500ms
+    queryParams:
+      sslmode: require
+      application_name: my-app
+    
+    # MCP Security Settings (recommended for production)
+    readOnlyMode: true          # Read-only by default (MCP best practice)
+    enableWriteMode: false      # Set to true to allow write operations
+    maxRowLimit: 1000           # Limit query results
+    queryTimeoutSec: 30         # Prevent long-running queries
+    enableTelemetry: true       # Enable observability
+    telemetryVerbose: false     # Set true for detailed logs
+    clusterID: "my-cluster"     # Optional identifier
+
+tools:
+  list_expenses:
+    type: cockroachdb-sql
+    source: my_cockroachdb
+    description: List all expenses
+    statement: SELECT id, description, amount, category FROM expenses WHERE user_id = $1
+    parameters:
+      - name: user_id
+        type: string
+        description: The user's ID
+  
+  describe_expenses:
+    type: cockroachdb-describe-table
+    source: my_cockroachdb
+    description: Describe the expenses table schema
+  
+  list_expenses_indexes:
+    type: cockroachdb-list-indexes
+    source: my_cockroachdb
+    description: List indexes on the expenses table
+```
+
+## Configuration Parameters
+
+### Required Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `type` | string | Must be `cockroachdb` |
+| `host` | string | The hostname or IP address of the CockroachDB cluster |
+| `port` | string | The port number (typically "26257") |
+| `user` | string | The database user name |
+| `database` | string | The database name to connect to |
+
+### Optional Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `password` | string | "" | The database password (can be empty for certificate-based auth) |
+| `maxRetries` | integer | 5 | Maximum number of connection retry attempts |
+| `retryBaseDelay` | string | "500ms" | Base delay between retry attempts (exponential backoff) |
+| `queryParams` | map | {} | Additional connection parameters (e.g., SSL configuration) |
+
+### MCP Security Parameters
+
+CockroachDB integration includes security features following the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) specification:
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `readOnlyMode` | boolean | true | Enables read-only mode by default (MCP requirement) |
+| `enableWriteMode` | boolean | false | Explicitly enable write operations (INSERT/UPDATE/DELETE/CREATE/DROP) |
+| `maxRowLimit` | integer | 1000 | Maximum rows returned per SELECT query (auto-adds LIMIT clause) |
+| `queryTimeoutSec` | integer | 30 | Query timeout in seconds to prevent long-running queries |
+| `enableTelemetry` | boolean | true | Enable structured logging of tool invocations |
+| `telemetryVerbose` | boolean | false | Enable detailed JSON telemetry output |
+| `clusterID` | string | "" | Optional cluster identifier for telemetry |
+
+### Query Parameters
+
+Common query parameters for CockroachDB connections:
+
+| Parameter | Values | Description |
+|-----------|--------|-------------|
+| `sslmode` | `disable`, `require`, `verify-ca`, `verify-full` | SSL/TLS mode (CockroachDB Cloud requires `require` or higher) |
+| `sslrootcert` | file path | Path to root certificate for SSL verification |
+| `sslcert` | file path | Path to client certificate |
+| `sslkey` | file path | Path to client key |
+| `application_name` | string | Application name for connection tracking |
+
+## Best Practices
+
+### Security and MCP Compliance
+
+**Read-Only by Default**: The integration follows MCP best practices by defaulting to read-only mode. This prevents accidental data modifications:
+
+```yaml
+sources:
+  my_cockroachdb:
+    readOnlyMode: true        # Default behavior
+    enableWriteMode: false    # Explicit write opt-in required
+```
+
+To enable write operations:
+
+```yaml
+sources:
+  my_cockroachdb:
+    readOnlyMode: false       # Disable read-only protection
+    enableWriteMode: true     # Explicitly allow writes
+```
+
+**Query Limits**: Automatic row limits prevent excessive data retrieval:
+- SELECT queries automatically get `LIMIT 1000` appended (configurable via `maxRowLimit`)
+- Queries are terminated after 30 seconds (configurable via `queryTimeoutSec`)
+
+**Observability**: Structured telemetry provides visibility into tool usage:
+- Tool invocations are logged with status, latency, and row counts
+- SQL queries are redacted to protect sensitive values
+- Set `telemetryVerbose: true` for detailed JSON logs
+
+### Use UUID Primary Keys
+
+CockroachDB performs best with UUID primary keys rather than sequential integers to avoid transaction hotspots:
+
+```sql
+CREATE TABLE expenses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  description TEXT,
+  amount DECIMAL(10,2)
+);
+```
+
+### Automatic Transaction Retry
+
+This source uses the official `cockroach-go/v2` library which provides automatic transaction retry for serialization conflicts. For write operations requiring explicit transaction control, tools can use the `ExecuteTxWithRetry` method.
+
+### Multi-Region Deployments
+
+CockroachDB supports multi-region deployments with automatic data distribution. Configure your cluster's regions and survival goals separately from the Toolbox configuration. The source will connect to any node in the cluster.
+
+### Connection Pooling
+
+The source maintains a connection pool to the CockroachDB cluster. The pool automatically handles:
+- Load balancing across cluster nodes
+- Connection retry with exponential backoff
+- Health checking of connections
+
+## Troubleshooting
+
+### SSL/TLS Errors
+
+If you encounter "server requires encryption" errors:
+
+1. For CockroachDB Cloud, ensure `sslmode` is set to `require` or higher:
+   ```yaml
+   queryParams:
+     sslmode: require
+   ```
+
+2. For certificate verification, download your cluster's root certificate and configure:
+   ```yaml
+   queryParams:
+     sslmode: verify-full
+     sslrootcert: /path/to/ca.crt
+   ```
+
+### Connection Timeouts
+
+If experiencing connection timeouts:
+
+1. Check network connectivity to the CockroachDB cluster
+2. Verify firewall rules allow connections on port 26257
+3. For CockroachDB Cloud, ensure IP allowlisting is configured
+4. Increase `maxRetries` or `retryBaseDelay` if needed
+
+### Transaction Retry Errors
+
+CockroachDB may encounter serializable transaction conflicts. The integration automatically handles these retries using the cockroach-go library. If you see retry-related errors, check:
+
+1. Database load and contention
+2. Query patterns that might cause conflicts
+3. Consider using `SELECT FOR UPDATE` for explicit locking
+
+## Additional Resources
+
+- [CockroachDB Documentation](https://www.cockroachlabs.com/docs/)
+- [CockroachDB Best Practices](https://www.cockroachlabs.com/docs/stable/performance-best-practices-overview.html)
+- [Multi-Region Capabilities](https://www.cockroachlabs.com/docs/stable/multiregion-overview.html)
+- [Connection Parameters](https://www.cockroachlabs.com/docs/stable/connection-parameters.html)
+
+
 # Couchbase
 A "couchbase" source connects to a Couchbase database.
 
@@ -11278,6 +11517,1207 @@ Tools that work with Cloud Monitoring source.
 # Cloud SQL
 Tools that work with Cloud SQL. 
 
+
+
+# cockroachdb-execute-sql
+Execute ad-hoc SQL statements against a CockroachDB database.
+
+
+## About
+
+A `cockroachdb-execute-sql` tool executes ad-hoc SQL statements against a CockroachDB database. This tool is designed for interactive workflows where the SQL query is provided dynamically at runtime, making it ideal for developer assistance and exploratory data analysis.
+
+The tool takes a single `sql` parameter containing the SQL statement to execute and returns the query results.
+
+> **Note:** This tool is intended for developer assistant workflows with human-in-the-loop and shouldn't be used for production agents. For production use cases with predefined queries, use [cockroachdb-sql](./cockroachdb-sql.md) instead.
+
+## Example
+
+```yaml
+sources:
+  my_cockroachdb:
+    type: cockroachdb
+    host: your-cluster.cockroachlabs.cloud
+    port: "26257"
+    user: myuser
+    password: mypassword
+    database: defaultdb
+    queryParams:
+      sslmode: require
+
+tools:
+  execute_sql:
+    type: cockroachdb-execute-sql
+    source: my_cockroachdb
+    description: Execute any SQL statement against the CockroachDB database
+```
+
+## Usage Examples
+
+### Simple SELECT Query
+
+```json
+{
+  "sql": "SELECT * FROM users LIMIT 10"
+}
+```
+
+### Query with Aggregations
+
+```json
+{
+  "sql": "SELECT category, COUNT(*) as count, SUM(amount) as total FROM expenses GROUP BY category ORDER BY total DESC"
+}
+```
+
+### Database Introspection
+
+```json
+{
+  "sql": "SHOW TABLES"
+}
+```
+
+```json
+{
+  "sql": "SHOW COLUMNS FROM expenses"
+}
+```
+
+### Multi-Region Information
+
+```json
+{
+  "sql": "SHOW REGIONS FROM DATABASE defaultdb"
+}
+```
+
+```json
+{
+  "sql": "SHOW ZONE CONFIGURATIONS"
+}
+```
+
+## CockroachDB-Specific Features
+
+### Check Cluster Version
+
+```json
+{
+  "sql": "SELECT version()"
+}
+```
+
+### View Node Status
+
+```json
+{
+  "sql": "SELECT node_id, address, locality, is_live FROM crdb_internal.gossip_nodes"
+}
+```
+
+### Check Replication Status
+
+```json
+{
+  "sql": "SELECT range_id, start_key, end_key, replicas, lease_holder FROM crdb_internal.ranges LIMIT 10"
+}
+```
+
+### View Table Regions
+
+```json
+{
+  "sql": "SHOW REGIONS FROM TABLE expenses"
+}
+```
+
+## Configuration
+
+### Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | string | Must be `cockroachdb-execute-sql` |
+| `source` | string | Name of the CockroachDB source to use |
+| `description` | string | Human-readable description for the LLM |
+
+### Optional Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `authRequired` | array | List of authentication services required |
+
+## Parameters
+
+The tool accepts a single runtime parameter:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `sql` | string | The SQL statement to execute |
+
+## Best Practices
+
+### Use for Exploration, Not Production
+
+This tool is ideal for:
+- Interactive database exploration
+- Ad-hoc analysis and reporting
+- Debugging and troubleshooting
+- Schema inspection
+
+For production use cases, use [cockroachdb-sql](./cockroachdb-sql.md) with parameterized queries.
+
+### Be Cautious with Data Modification
+
+While this tool can execute any SQL statement, be careful with:
+- `INSERT`, `UPDATE`, `DELETE` statements
+- `DROP` or `ALTER` statements
+- Schema changes in production
+
+### Use LIMIT for Large Results
+
+Always use `LIMIT` clauses when exploring data:
+
+```sql
+SELECT * FROM large_table LIMIT 100
+```
+
+### Leverage CockroachDB's SQL Extensions
+
+CockroachDB supports PostgreSQL syntax plus extensions:
+
+```sql
+-- Show database survival goal
+SHOW SURVIVAL GOAL FROM DATABASE defaultdb;
+
+-- View zone configurations
+SHOW ZONE CONFIGURATION FOR TABLE expenses;
+
+-- Check table localities
+SHOW CREATE TABLE expenses;
+```
+
+## Error Handling
+
+The tool will return descriptive errors for:
+- **Syntax errors**: Invalid SQL syntax
+- **Permission errors**: Insufficient user privileges
+- **Connection errors**: Network or authentication issues
+- **Runtime errors**: Constraint violations, type mismatches, etc.
+
+## Security Considerations
+
+### SQL Injection Risk
+
+Since this tool executes arbitrary SQL, it should only be used with:
+- Trusted users in interactive sessions
+- Human-in-the-loop workflows
+- Development and testing environments
+
+Never expose this tool directly to end users without proper authorization controls.
+
+### Use Authentication
+
+Configure the `authRequired` field to restrict access:
+
+```yaml
+tools:
+  execute_sql:
+    type: cockroachdb-execute-sql
+    source: my_cockroachdb
+    description: Execute SQL statements
+    authRequired:
+      - my-auth-service
+```
+
+### Read-Only Users
+
+For safer exploration, create read-only database users:
+
+```sql
+CREATE USER readonly_user;
+GRANT SELECT ON DATABASE defaultdb TO readonly_user;
+```
+
+## Common Use Cases
+
+### Database Administration
+
+```sql
+-- View database size
+SELECT
+  table_name,
+  pg_size_pretty(pg_total_relation_size(table_name::regclass)) AS size
+FROM information_schema.tables
+WHERE table_schema = 'public'
+ORDER BY pg_total_relation_size(table_name::regclass) DESC;
+```
+
+### Performance Analysis
+
+```sql
+-- Find slow queries
+SELECT query, count, mean_latency
+FROM crdb_internal.statement_statistics
+WHERE mean_latency > INTERVAL '1 second'
+ORDER BY mean_latency DESC
+LIMIT 10;
+```
+
+### Data Quality Checks
+
+```sql
+-- Find NULL values
+SELECT COUNT(*) as null_count
+FROM expenses
+WHERE description IS NULL OR amount IS NULL;
+
+-- Find duplicates
+SELECT user_id, email, COUNT(*) as count
+FROM users
+GROUP BY user_id, email
+HAVING COUNT(*) > 1;
+```
+
+## See Also
+
+- [cockroachdb-sql](./cockroachdb-sql.md) - For parameterized, production-ready queries
+- [cockroachdb-list-tables](./cockroachdb-list-tables.md) - List tables in the database
+- [cockroachdb-list-schemas](./cockroachdb-list-schemas.md) - List database schemas
+- [CockroachDB Source](../../sources/cockroachdb.md) - Source configuration reference
+- [CockroachDB SQL Reference](https://www.cockroachlabs.com/docs/stable/sql-statements.html) - Official SQL documentation
+
+
+# cockroachdb-list-schemas
+List schemas in a CockroachDB database.
+
+
+## About
+
+The `cockroachdb-list-schemas` tool retrieves a list of schemas (namespaces) in a CockroachDB database. Schemas are used to organize database objects such as tables, views, and functions into logical groups.
+
+This tool is useful for:
+- Understanding database organization
+- Discovering available schemas
+- Multi-tenant application analysis
+- Schema-level access control planning
+
+## Example
+
+```yaml
+sources:
+  my_cockroachdb:
+    type: cockroachdb
+    host: your-cluster.cockroachlabs.cloud
+    port: "26257"
+    user: myuser
+    password: mypassword
+    database: defaultdb
+    queryParams:
+      sslmode: require
+
+tools:
+  list_schemas:
+    type: cockroachdb-list-schemas
+    source: my_cockroachdb
+    description: List all schemas in the database
+```
+
+## Configuration
+
+### Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | string | Must be `cockroachdb-list-schemas` |
+| `source` | string | Name of the CockroachDB source to use |
+| `description` | string | Human-readable description for the LLM |
+
+### Optional Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `authRequired` | array | List of authentication services required |
+
+## Output Structure
+
+The tool returns a list of schemas with the following information:
+
+```json
+[
+  {
+    "catalog_name": "defaultdb",
+    "schema_name": "public",
+    "is_user_defined": true
+  },
+  {
+    "catalog_name": "defaultdb",
+    "schema_name": "analytics",
+    "is_user_defined": true
+  }
+]
+```
+
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `catalog_name` | string | The database (catalog) name |
+| `schema_name` | string | The schema name |
+| `is_user_defined` | boolean | Whether this is a user-created schema (excludes system schemas) |
+
+## Usage Example
+
+```json
+{}
+```
+
+No parameters are required. The tool automatically lists all user-defined schemas.
+
+## Default Schemas
+
+CockroachDB includes several standard schemas:
+
+- **`public`**: The default schema for user objects
+- **`pg_catalog`**: PostgreSQL system catalog (excluded from results)
+- **`information_schema`**: SQL standard metadata views (excluded from results)
+- **`crdb_internal`**: CockroachDB internal metadata (excluded from results)
+- **`pg_extension`**: PostgreSQL extension objects (excluded from results)
+
+The tool filters out system schemas and only returns user-defined schemas.
+
+## Schema Management in CockroachDB
+
+### Creating Schemas
+
+```sql
+CREATE SCHEMA analytics;
+```
+
+### Using Schemas
+
+```sql
+-- Create table in specific schema
+CREATE TABLE analytics.revenue (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  amount DECIMAL(10,2),
+  date DATE
+);
+
+-- Query from specific schema
+SELECT * FROM analytics.revenue;
+```
+
+### Schema Search Path
+
+The search path determines which schemas are searched for unqualified object names:
+
+```sql
+-- Show current search path
+SHOW search_path;
+
+-- Set search path
+SET search_path = analytics, public;
+```
+
+## Multi-Tenant Applications
+
+Schemas are commonly used for multi-tenant applications:
+
+```sql
+-- Create schema per tenant
+CREATE SCHEMA tenant_acme;
+CREATE SCHEMA tenant_globex;
+
+-- Create same table structure in each schema
+CREATE TABLE tenant_acme.orders (...);
+CREATE TABLE tenant_globex.orders (...);
+```
+
+The `cockroachdb-list-schemas` tool helps discover all tenant schemas:
+
+```yaml
+tools:
+  list_tenants:
+    type: cockroachdb-list-schemas
+    source: my_cockroachdb
+    description: |
+      List all tenant schemas in the database.
+      Each schema represents a separate tenant's data namespace.
+```
+
+## Best Practices
+
+### Use Schemas for Organization
+
+Group related tables into schemas:
+
+```sql
+CREATE SCHEMA sales;
+CREATE SCHEMA inventory;
+CREATE SCHEMA hr;
+
+CREATE TABLE sales.orders (...);
+CREATE TABLE inventory.products (...);
+CREATE TABLE hr.employees (...);
+```
+
+### Schema Naming Conventions
+
+Use clear, descriptive schema names:
+- Lowercase names
+- Use underscores for multi-word names
+- Avoid reserved keywords
+- Use prefixes for grouped schemas (e.g., `tenant_`, `app_`)
+
+### Schema-Level Permissions
+
+Schemas enable fine-grained access control:
+
+```sql
+-- Grant access to specific schema
+GRANT USAGE ON SCHEMA analytics TO analyst_role;
+GRANT SELECT ON ALL TABLES IN SCHEMA analytics TO analyst_role;
+
+-- Revoke access
+REVOKE ALL ON SCHEMA hr FROM public;
+```
+
+## Integration with Other Tools
+
+### Combined with List Tables
+
+```yaml
+tools:
+  list_schemas:
+    type: cockroachdb-list-schemas
+    source: my_cockroachdb
+    description: List all schemas first
+    
+  list_tables:
+    type: cockroachdb-list-tables
+    source: my_cockroachdb
+    description: |
+      List tables in the database.
+      Use list_schemas first to understand schema organization.
+```
+
+### Schema Discovery Workflow
+
+1. Call `cockroachdb-list-schemas` to discover schemas
+2. Call `cockroachdb-list-tables` to see tables in each schema
+3. Generate queries using fully qualified names: `schema.table`
+
+## Common Use Cases
+
+### Discover Database Structure
+
+```yaml
+tools:
+  discover_schemas:
+    type: cockroachdb-list-schemas
+    source: my_cockroachdb
+    description: |
+      Discover how the database is organized into schemas.
+      Use this to understand the logical grouping of tables.
+```
+
+### Multi-Tenant Analysis
+
+```yaml
+tools:
+  list_tenant_schemas:
+    type: cockroachdb-list-schemas
+    source: my_cockroachdb
+    description: |
+      List all tenant schemas (each tenant has their own schema).
+      Schema names follow the pattern: tenant_<company_name>
+```
+
+### Schema Migration Planning
+
+```yaml
+tools:
+  audit_schemas:
+    type: cockroachdb-list-schemas
+    source: my_cockroachdb
+    description: |
+      Audit existing schemas before migration.
+      Identifies all schemas that need to be migrated.
+```
+
+## Error Handling
+
+The tool handles common errors:
+- **Connection errors**: Returns connection failure details
+- **Permission errors**: Returns error if user lacks USAGE privilege
+- **Empty results**: Returns empty array if no user schemas exist
+
+## Permissions Required
+
+To list schemas, the user needs:
+- `CONNECT` privilege on the database
+- No specific schema privileges required for listing
+
+To query objects within schemas, the user needs:
+- `USAGE` privilege on the schema
+- Appropriate object privileges (SELECT, INSERT, etc.)
+
+## CockroachDB-Specific Features
+
+### System Schemas
+
+CockroachDB includes PostgreSQL-compatible system schemas plus CockroachDB-specific ones:
+
+- `crdb_internal.*`: CockroachDB internal metadata and statistics
+- `pg_catalog.*`: PostgreSQL system catalog
+- `information_schema.*`: SQL standard information schema
+
+These are automatically filtered from the results.
+
+### User-Defined Flag
+
+The `is_user_defined` field helps distinguish:
+- `true`: User-created schemas
+- `false`: System schemas (already filtered out)
+
+## See Also
+
+- [cockroachdb-sql](./cockroachdb-sql.md) - Execute parameterized queries
+- [cockroachdb-execute-sql](./cockroachdb-execute-sql.md) - Execute ad-hoc SQL
+- [cockroachdb-list-tables](./cockroachdb-list-tables.md) - List tables in the database
+- [CockroachDB Source](../../sources/cockroachdb.md) - Source configuration reference
+- [CockroachDB Schema Design](https://www.cockroachlabs.com/docs/stable/schema-design-overview.html) - Official documentation
+
+
+# cockroachdb-list-tables
+List tables in a CockroachDB database with schema details.
+
+
+## About
+
+The `cockroachdb-list-tables` tool retrieves a list of tables from a CockroachDB database. It provides detailed information about table structure, including columns, constraints, indexes, and foreign key relationships.
+
+This tool is useful for:
+- Database schema discovery
+- Understanding table relationships
+- Generating context for AI-powered database queries
+- Documentation and analysis
+
+## Example
+
+```yaml
+sources:
+  my_cockroachdb:
+    type: cockroachdb
+    host: your-cluster.cockroachlabs.cloud
+    port: "26257"
+    user: myuser
+    password: mypassword
+    database: defaultdb
+    queryParams:
+      sslmode: require
+
+tools:
+  list_all_tables:
+    type: cockroachdb-list-tables
+    source: my_cockroachdb
+    description: List all user tables in the database with their structure
+```
+
+## Configuration
+
+### Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | string | Must be `cockroachdb-list-tables` |
+| `source` | string | Name of the CockroachDB source to use |
+| `description` | string | Human-readable description for the LLM |
+
+### Optional Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `authRequired` | array | List of authentication services required |
+
+## Parameters
+
+The tool accepts optional runtime parameters:
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `table_names` | array | all tables | List of specific table names to retrieve |
+| `output_format` | string | "detailed" | Output format: "simple" or "detailed" |
+
+## Output Formats
+
+### Simple Format
+
+Returns basic table information:
+- Table name
+- Row count estimate
+- Size information
+
+```json
+{
+  "table_names": ["users"],
+  "output_format": "simple"
+}
+```
+
+### Detailed Format (Default)
+
+Returns comprehensive table information:
+- Table name and schema
+- All columns with types and constraints
+- Primary keys
+- Foreign keys and relationships
+- Indexes
+- Check constraints
+- Table size and row counts
+
+```json
+{
+  "table_names": ["users", "orders"],
+  "output_format": "detailed"
+}
+```
+
+## Usage Examples
+
+### List All Tables
+
+```json
+{}
+```
+
+### List Specific Tables
+
+```json
+{
+  "table_names": ["users", "orders", "expenses"]
+}
+```
+
+### Simple Output
+
+```json
+{
+  "output_format": "simple"
+}
+```
+
+## Output Structure
+
+### Simple Format Output
+
+```json
+{
+  "table_name": "users",
+  "estimated_rows": 1000,
+  "size": "128 KB"
+}
+```
+
+### Detailed Format Output
+
+```json
+{
+  "table_name": "users",
+  "schema": "public",
+  "columns": [
+    {
+      "name": "id",
+      "type": "UUID",
+      "nullable": false,
+      "default": "gen_random_uuid()"
+    },
+    {
+      "name": "email",
+      "type": "STRING",
+      "nullable": false,
+      "default": null
+    },
+    {
+      "name": "created_at",
+      "type": "TIMESTAMP",
+      "nullable": false,
+      "default": "now()"
+    }
+  ],
+  "primary_key": ["id"],
+  "indexes": [
+    {
+      "name": "users_pkey",
+      "columns": ["id"],
+      "unique": true,
+      "primary": true
+    },
+    {
+      "name": "users_email_idx",
+      "columns": ["email"],
+      "unique": true,
+      "primary": false
+    }
+  ],
+  "foreign_keys": [],
+  "constraints": [
+    {
+      "name": "users_email_check",
+      "type": "CHECK",
+      "definition": "email ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}$'"
+    }
+  ]
+}
+```
+
+## CockroachDB-Specific Information
+
+### UUID Primary Keys
+
+The tool recognizes CockroachDB's recommended UUID primary key pattern:
+
+```sql
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ...
+);
+```
+
+### Multi-Region Tables
+
+For multi-region tables, the output includes locality information:
+
+```json
+{
+  "table_name": "users",
+  "locality": "REGIONAL BY ROW",
+  "regions": ["us-east-1", "us-west-2", "eu-west-1"]
+}
+```
+
+### Interleaved Tables
+
+The tool shows parent-child relationships for interleaved tables (legacy feature):
+
+```json
+{
+  "table_name": "order_items",
+  "interleaved_in": "orders"
+}
+```
+
+## Best Practices
+
+### Use for Schema Discovery
+
+The tool is ideal for helping AI assistants understand your database structure:
+
+```yaml
+tools:
+  discover_schema:
+    type: cockroachdb-list-tables
+    source: my_cockroachdb
+    description: |
+      Use this tool first to understand the database schema before generating queries.
+      It shows all tables, their columns, data types, and relationships.
+```
+
+### Filter Large Schemas
+
+For databases with many tables, specify relevant tables:
+
+```json
+{
+  "table_names": ["users", "orders", "products"],
+  "output_format": "detailed"
+}
+```
+
+### Use Simple Format for Overviews
+
+When you need just table names and sizes:
+
+```json
+{
+  "output_format": "simple"
+}
+```
+
+## Excluded Tables
+
+The tool automatically excludes system tables and schemas:
+- `pg_catalog.*` - PostgreSQL system catalog
+- `information_schema.*` - SQL standard information schema
+- `crdb_internal.*` - CockroachDB internal tables
+- `pg_extension.*` - PostgreSQL extension tables
+
+Only user-created tables in the public schema (and other user schemas) are returned.
+
+## Error Handling
+
+The tool handles common errors:
+- **Table not found**: Returns empty result for non-existent tables
+- **Permission errors**: Returns error if user lacks SELECT privileges
+- **Connection errors**: Returns connection failure details
+
+## Integration with AI Assistants
+
+### Prompt Example
+
+```yaml
+tools:
+  list_tables:
+    type: cockroachdb-list-tables
+    source: my_cockroachdb
+    description: |
+      Lists all tables in the database with detailed schema information.
+      Use this tool to understand:
+      - What tables exist
+      - What columns each table has
+      - Data types and constraints
+      - Relationships between tables (foreign keys)
+      - Available indexes
+      
+      Always call this tool before generating SQL queries to ensure
+      you use correct table and column names.
+```
+
+## Common Use Cases
+
+### Generate Context for Queries
+
+```json
+{}
+```
+
+This provides comprehensive schema information that helps AI assistants generate accurate SQL queries.
+
+### Analyze Table Structure
+
+```json
+{
+  "table_names": ["users"],
+  "output_format": "detailed"
+}
+```
+
+Perfect for understanding a specific table's structure, constraints, and relationships.
+
+### Quick Schema Overview
+
+```json
+{
+  "output_format": "simple"
+}
+```
+
+Gets a quick list of tables with basic statistics.
+
+## Performance Considerations
+
+- **Simple format** is faster for large databases
+- **Detailed format** queries system tables extensively
+- Specifying `table_names` reduces query time
+- Results are fetched in a single query for efficiency
+
+## See Also
+
+- [cockroachdb-sql](./cockroachdb-sql.md) - Execute parameterized queries
+- [cockroachdb-execute-sql](./cockroachdb-execute-sql.md) - Execute ad-hoc SQL
+- [cockroachdb-list-schemas](./cockroachdb-list-schemas.md) - List database schemas
+- [CockroachDB Source](../../sources/cockroachdb.md) - Source configuration reference
+- [CockroachDB Schema Design](https://www.cockroachlabs.com/docs/stable/schema-design-overview.html) - Best practices
+
+
+# cockroachdb-sql
+Execute parameterized SQL queries in CockroachDB.
+
+
+## About
+
+The `cockroachdb-sql` tool allows you to execute parameterized SQL queries against a CockroachDB database. This tool supports prepared statements with parameter binding, template parameters for dynamic query construction, and automatic transaction retry for resilience against serialization conflicts.
+
+## Example
+
+```yaml
+sources:
+  my_cockroachdb:
+    type: cockroachdb
+    host: your-cluster.cockroachlabs.cloud
+    port: "26257"
+    user: myuser
+    password: mypassword
+    database: defaultdb
+    queryParams:
+      sslmode: require
+
+tools:
+  get_user_orders:
+    type: cockroachdb-sql
+    source: my_cockroachdb
+    description: Get all orders for a specific user
+    statement: |
+      SELECT o.id, o.order_date, o.total_amount, o.status
+      FROM orders o
+      WHERE o.user_id = $1
+      ORDER BY o.order_date DESC
+    parameters:
+      - name: user_id
+        type: string
+        description: The UUID of the user
+```
+
+## Configuration
+
+### Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `type` | string | Must be `cockroachdb-sql` |
+| `source` | string | Name of the CockroachDB source to use |
+| `description` | string | Human-readable description of what the tool does |
+| `statement` | string | The SQL query to execute |
+
+### Optional Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `parameters` | array | List of parameter definitions for the query |
+| `templateParameters` | array | List of template parameters for dynamic query construction |
+| `authRequired` | array | List of authentication services required |
+
+## Parameters
+
+Parameters allow you to safely pass values into your SQL queries using prepared statements. CockroachDB uses PostgreSQL-style parameter placeholders: `$1`, `$2`, etc.
+
+### Parameter Types
+
+- `string`: Text values
+- `number`: Numeric values (integers or decimals)
+- `boolean`: True/false values
+- `array`: Array of values
+
+### Example with Multiple Parameters
+
+```yaml
+tools:
+  filter_expenses:
+    type: cockroachdb-sql
+    source: my_cockroachdb
+    description: Filter expenses by category and date range
+    statement: |
+      SELECT id, description, amount, category, expense_date
+      FROM expenses
+      WHERE user_id = $1
+        AND category = $2
+        AND expense_date >= $3
+        AND expense_date <= $4
+      ORDER BY expense_date DESC
+    parameters:
+      - name: user_id
+        type: string
+        description: The user's UUID
+      - name: category
+        type: string
+        description: Expense category (e.g., "Food", "Transport")
+      - name: start_date
+        type: string
+        description: Start date in YYYY-MM-DD format
+      - name: end_date
+        type: string
+        description: End date in YYYY-MM-DD format
+```
+
+## Template Parameters
+
+Template parameters enable dynamic query construction by replacing placeholders in the SQL statement before parameter binding. This is useful for dynamic table names, column names, or query structure.
+
+### Example with Template Parameters
+
+```yaml
+tools:
+  get_column_data:
+    type: cockroachdb-sql
+    source: my_cockroachdb
+    description: Get data from a specific column
+    statement: |
+      SELECT {{column_name}}
+      FROM {{table_name}}
+      WHERE user_id = $1
+      LIMIT 100
+    templateParameters:
+      - name: table_name
+        type: string
+        description: The table to query
+      - name: column_name
+        type: string
+        description: The column to retrieve
+    parameters:
+      - name: user_id
+        type: string
+        description: The user's UUID
+```
+
+## Best Practices
+
+### Use UUID Primary Keys
+
+CockroachDB performs best with UUID primary keys to avoid transaction hotspots:
+
+```sql
+CREATE TABLE orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL,
+  order_date TIMESTAMP DEFAULT now(),
+  total_amount DECIMAL(10,2)
+);
+```
+
+### Use Indexes for Performance
+
+Create indexes on frequently queried columns:
+
+```sql
+CREATE INDEX idx_orders_user_id ON orders(user_id);
+CREATE INDEX idx_orders_date ON orders(order_date DESC);
+```
+
+### Use JOINs Efficiently
+
+CockroachDB supports standard SQL JOINs. Keep joins efficient by:
+- Adding appropriate indexes
+- Using UUIDs for foreign keys
+- Limiting result sets with WHERE clauses
+
+```yaml
+tools:
+  get_user_with_orders:
+    type: cockroachdb-sql
+    source: my_cockroachdb
+    description: Get user details with their recent orders
+    statement: |
+      SELECT u.name, u.email, o.id as order_id, o.order_date, o.total_amount
+      FROM users u
+      LEFT JOIN orders o ON u.id = o.user_id
+      WHERE u.id = $1
+      ORDER BY o.order_date DESC
+      LIMIT 10
+    parameters:
+      - name: user_id
+        type: string
+        description: The user's UUID
+```
+
+### Handle NULL Values
+
+Use COALESCE or NULL checks when dealing with nullable columns:
+
+```sql
+SELECT id, description, COALESCE(notes, 'No notes') as notes
+FROM expenses
+WHERE user_id = $1
+```
+
+## Error Handling
+
+The tool automatically handles:
+- **Connection errors**: Retried with exponential backoff
+- **Serialization conflicts**: Automatically retried using cockroach-go library
+- **Invalid parameters**: Returns descriptive error messages
+- **SQL syntax errors**: Returns database error details
+
+## Advanced Usage
+
+### Aggregations
+
+```yaml
+tools:
+  expense_summary:
+    type: cockroachdb-sql
+    source: my_cockroachdb
+    description: Get expense summary by category for a user
+    statement: |
+      SELECT 
+        category,
+        COUNT(*) as count,
+        SUM(amount) as total_amount,
+        AVG(amount) as avg_amount
+      FROM expenses
+      WHERE user_id = $1
+        AND expense_date >= $2
+      GROUP BY category
+      ORDER BY total_amount DESC
+    parameters:
+      - name: user_id
+        type: string
+        description: The user's UUID
+      - name: start_date
+        type: string
+        description: Start date in YYYY-MM-DD format
+```
+
+### Window Functions
+
+```yaml
+tools:
+  running_total:
+    type: cockroachdb-sql
+    source: my_cockroachdb
+    description: Get running total of expenses
+    statement: |
+      SELECT 
+        expense_date,
+        amount,
+        SUM(amount) OVER (ORDER BY expense_date) as running_total
+      FROM expenses
+      WHERE user_id = $1
+      ORDER BY expense_date
+    parameters:
+      - name: user_id
+        type: string
+        description: The user's UUID
+```
+
+### Common Table Expressions (CTEs)
+
+```yaml
+tools:
+  top_spenders:
+    type: cockroachdb-sql
+    source: my_cockroachdb
+    description: Find top spending users
+    statement: |
+      WITH user_totals AS (
+        SELECT 
+          user_id,
+          SUM(amount) as total_spent
+        FROM expenses
+        WHERE expense_date >= $1
+        GROUP BY user_id
+      )
+      SELECT 
+        u.name,
+        u.email,
+        ut.total_spent
+      FROM user_totals ut
+      JOIN users u ON ut.user_id = u.id
+      ORDER BY ut.total_spent DESC
+      LIMIT 10
+    parameters:
+      - name: start_date
+        type: string
+        description: Start date in YYYY-MM-DD format
+```
+
+## See Also
+
+- [cockroachdb-execute-sql](./cockroachdb-execute-sql.md) - For ad-hoc SQL execution
+- [cockroachdb-list-tables](./cockroachdb-list-tables.md) - List tables in the database
+- [cockroachdb-list-schemas](./cockroachdb-list-schemas.md) - List database schemas
+- [CockroachDB Source](../../sources/cockroachdb.md) - Source configuration reference
 
 
 # Couchbase
