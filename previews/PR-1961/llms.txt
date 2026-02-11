@@ -20,6 +20,9 @@ How to get started with Toolbox.
 Some core concepts in Toolbox
 - [Telemetry](https://googleapis.github.io/genai-toolbox/previews/PR-1961/concepts/telemetry/): An overview of telemetry and observability in Toolbox.
 
+### Featured Articles
+
+Toolbox Medium Blogs
 ### How-to
 
 List of guides detailing how to do different things with Toolbox. 
@@ -44,6 +47,8 @@ List of guides detailing how to do different things with Toolbox.
 - [Deploy to Kubernetes](https://googleapis.github.io/genai-toolbox/previews/PR-1961/how-to/deploy_gke/): How to set up and configure Toolbox to deploy on Kubernetes with Google Kubernetes Engine (GKE).
 - [Deploy using Docker Compose](https://googleapis.github.io/genai-toolbox/previews/PR-1961/how-to/deploy_docker/): How to deploy Toolbox using Docker Compose.
 - [Export Telemetry](https://googleapis.github.io/genai-toolbox/previews/PR-1961/how-to/export_telemetry/): How to set up and configure Toolbox to use the Otel Collector.
+- [Generate Agent Skills](https://googleapis.github.io/genai-toolbox/previews/PR-1961/how-to/generate_skill/): How to generate agent skills from a toolset.
+- [Invoke Tools via CLI](https://googleapis.github.io/genai-toolbox/previews/PR-1961/how-to/invoke_tool/): Learn how to invoke your tools directly from the command line using the `invoke` command.
 
 ### Resources
 
@@ -58,6 +63,7 @@ List of reference documentation for resources in Toolbox.
   - [Cassandra](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/sources/cassandra/): Apache Cassandra is a NoSQL distributed database known for its horizontal scalability, distributed architecture, and flexible schema definition.
   - [ClickHouse](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/sources/clickhouse/): ClickHouse is an open-source, OLTP database.
   - [Cloud Healthcare API](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/sources/cloud-healthcare/): The Cloud Healthcare API provides a managed solution for storing and accessing healthcare data in Google Cloud, providing a critical bridge  between existing care systems and applications hosted on Google Cloud.
+  - [Cloud Logging Admin](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/sources/cloud-logging-admin/): The Cloud Logging Admin source enables tools to interact with the Cloud Logging API, allowing for the retrieval of log names, monitored resource types, and the querying of log data.
   - [Cloud Monitoring](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/sources/cloud-monitoring/): A "cloud-monitoring" source provides a client for the Cloud Monitoring API.
   - [Cloud SQL for MySQL](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/sources/cloud-sql-mysql/): Cloud SQL for MySQL is a fully-managed database service for MySQL.
   - [Cloud SQL for PostgreSQL](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/sources/cloud-sql-pg/): Cloud SQL for PostgreSQL is a fully-managed database service for Postgres.
@@ -83,6 +89,7 @@ List of reference documentation for resources in Toolbox.
   - [Redis](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/sources/redis/): Redis is a in-memory data structure store.
   - [Serverless for Apache Spark](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/sources/serverless-spark/): Google Cloud Serverless for Apache Spark lets you run Spark workloads without requiring you to provision and manage your own Spark cluster.
   - [SingleStore](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/sources/singlestore/): SingleStore is the cloud-native database built with speed and scale to power data-intensive applications.
+  - [Snowflake](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/sources/snowflake/): Snowflake is a cloud-based data platform.
   - [Spanner](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/sources/spanner/): Spanner is a fully managed database service from Google Cloud that combines  relational, key-value, graph, and search capabilities.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/sources/mssql/): SQL Server is a relational database management system (RDBMS).
   - [SQLite](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/sources/sqlite/): SQLite is a C-language library that implements a small, fast, self-contained,  high-reliability, full-featured, SQL database engine.
@@ -100,6 +107,7 @@ List of reference documentation for resources in Toolbox.
   - [Cassandra](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/tools/cassandra/): Tools that work with Cassandra Sources.
   - [ClickHouse](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/tools/clickhouse/): Tools for interacting with ClickHouse databases and tables.
   - [Cloud Healthcare API](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/tools/cloudhealthcare/): Tools that work with Cloud Healthcare Sources.
+  - [Cloud Logging Admin](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/tools/cloudloggingadmin/): Tools that work with Cloud Logging Admin Sources.
   - [Cloud Monitoring](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/tools/cloudmonitoring/): Tools that work with Cloud Monitoring source.
   - [Cloud SQL](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/tools/cloudsql/): Tools that work with Cloud SQL. 
   - [Couchbase](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/tools/couchbase/): Tools that work with Couchbase Sources.
@@ -122,6 +130,7 @@ List of reference documentation for resources in Toolbox.
   - [Redis](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/tools/redis/): Tools that work with Redis Sources.
   - [Serverless for Apache Spark](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/tools/serverless-spark/): Tools that work with Google Cloud Serverless for Apache Spark Sources.
   - [SingleStore](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/tools/singlestore/): Tools that work with SingleStore Sources
+  - [Snowflake](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/tools/snowflake/): Tools that work with Snowflake Sources.
   - [Spanner](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/tools/spanner/): Tools that work with Spanner Sources.
   - [SQL Server](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/tools/mssql/): Tools that work with SQL Server Sources, such as CloudSQL for SQL Server.
   - [SQLite](https://googleapis.github.io/genai-toolbox/previews/PR-1961/resources/tools/sqlite/): Tools that work with SQLite Sources.
@@ -146,6 +155,11 @@ Samples and guides for using Toolbox.
   - [Gemini-CLI and OAuth](https://googleapis.github.io/genai-toolbox/previews/PR-1961/samples/looker/looker_gemini_oauth/): How to connect to Looker from Gemini-CLI with end-user credentials
   - [Quickstart (MCP with Looker and Gemini-CLI)](https://googleapis.github.io/genai-toolbox/previews/PR-1961/samples/looker/looker_gemini/): How to get started running Toolbox with Gemini-CLI and Looker as the source.
   - [Quickstart (MCP with Looker)](https://googleapis.github.io/genai-toolbox/previews/PR-1961/samples/looker/looker_mcp_inspector/): How to get started running Toolbox with MCP Inspector and Looker as the source.
+- [Neo4j](https://googleapis.github.io/genai-toolbox/previews/PR-1961/samples/neo4j/): How to get started with Toolbox using Neo4j.
+  - [Quickstart (MCP with Neo4j)](https://googleapis.github.io/genai-toolbox/previews/PR-1961/samples/neo4j/mcp_quickstart/): How to get started running Toolbox with MCP Inspector and Neo4j as the source.
+- [Pre- and Post- Processing](https://googleapis.github.io/genai-toolbox/previews/PR-1961/samples/pre_post_processing/): Intercept and modify interactions between the agent and its tools either before or after a tool is executed.
+  - [Python](https://googleapis.github.io/genai-toolbox/previews/PR-1961/samples/pre_post_processing/python/): How to add pre- and post- processing to your Agents using Python.
+- [Snowflake](https://googleapis.github.io/genai-toolbox/previews/PR-1961/samples/snowflake/): How to get started running Toolbox with MCP Inspector and Snowflake as the source.
 
 ### About
 
