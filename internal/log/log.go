@@ -222,14 +222,14 @@ type SplitHandler struct {
 }
 
 func (h *SplitHandler) Enabled(ctx context.Context, level slog.Level) bool {
-	if level >= slog.LevelError {
+	if level >= slog.LevelWarn {
 		return h.ErrHandler.Enabled(ctx, level)
 	}
 	return h.OutHandler.Enabled(ctx, level)
 }
 
 func (h *SplitHandler) Handle(ctx context.Context, r slog.Record) error {
-	if r.Level >= slog.LevelError {
+	if r.Level >= slog.LevelWarn {
 		return h.ErrHandler.Handle(ctx, r)
 	}
 	return h.OutHandler.Handle(ctx, r)
