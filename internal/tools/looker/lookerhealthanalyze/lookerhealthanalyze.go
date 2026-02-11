@@ -618,12 +618,6 @@ func (t *analyzeTool) explores(ctx context.Context, model, explore string) ([]ma
 					return nil, util.NewAgentError("error casting 'history.query_run_count' in query count data", nil)
 				}
 			}
-			if e.Hidden == nil {
-				return nil, util.NewAgentError("explore hidden status is nil", nil)
-			}
-			if e.Description == nil {
-				return nil, util.NewAgentError("explore description is nil", nil)
-			}
 
 			results = append(results, map[string]interface{}{
 				"Model":           *m.Name,
