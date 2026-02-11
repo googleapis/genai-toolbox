@@ -400,6 +400,26 @@ steps:
           spanner \
           spanner || echo "Integration tests failed." # ignore test failures
 
+  - id: "spanner-admin"
+    name: golang:1
+    waitFor: ["compile-test-binary"]
+    entrypoint: /bin/bash
+    env:
+      - "GOPATH=/gopath"
+      - "SPANNER_PROJECT=$PROJECT_ID"
+      - "SERVICE_ACCOUNT_EMAIL=$SERVICE_ACCOUNT_EMAIL"
+    secretEnv: ["CLIENT_ID"]
+    volumes:
+      - name: "go"
+        path: "/gopath"
+    args:
+      - -c
+      - |
+        .ci/test_with_coverage.sh \
+          "Spanner Admin" \
+          spanneradmin \
+          spanneradmin || echo "Integration tests failed."
+
   - id: "neo4j"
     name: golang:1
     waitFor: ["compile-test-binary"]
