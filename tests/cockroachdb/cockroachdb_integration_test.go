@@ -129,7 +129,10 @@ func TestCockroachDB(t *testing.T) {
 
 	// Write config into a file and pass it to command
 	toolsFile := tests.GetToolsConfig(sourceConfig, CockroachDBToolKind, paramToolStmt, idParamToolStmt, nameParamToolStmt, arrayToolStmt, authToolStmt)
-	toolsFile = tests.AddExecuteSqlConfig(t, toolsFile, "cockroachdb-execute-sql")
+
+	// Add execute-sql tool with write-enabled source (CockroachDB MCP security requires explicit opt-in)
+	toolsFile = addCockroachDBExecuteSqlConfig(t, toolsFile, sourceConfig)
+
 	tmplSelectCombined, tmplSelectFilterCombined := tests.GetPostgresSQLTmplToolStatement()
 	toolsFile = tests.AddTemplateParamConfig(t, toolsFile, CockroachDBToolKind, tmplSelectCombined, tmplSelectFilterCombined, "")
 
@@ -172,4 +175,46 @@ func TestCockroachDB(t *testing.T) {
 	})
 
 	t.Logf("✅✅✅ All CockroachDB integration tests passed!")
+}
+
+// addCockroachDBExecuteSqlConfig adds execute-sql tool with write-enabled source
+// CockroachDB has MCP security enabled by default, so execute-sql needs a separate source with enableWriteMode
+func addCockroachDBExecuteSqlConfig(t *testing.T, config map[string]any, baseSourceConfig map[string]any) map[string]any {
+	// Add write-enabled source for execute-sql tool
+	sources, ok := config["sources"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get sources from config")
+	}
+
+	// Create a copy of the base source config with write mode enabled
+	writeEnabledSource := make(map[string]any)
+	for k, v := range baseSourceConfig {
+		writeEnabledSource[k] = v
+	}
+	writeEnabledSource["enableWriteMode"] = true
+	writeEnabledSource["readOnlyMode"] = false
+
+	sources["my-write-instance"] = writeEnabledSource
+
+	// Add tools using the write-enabled source
+	tools, ok := config["tools"].(map[string]any)
+	if !ok {
+		t.Fatalf("unable to get tools from config")
+	}
+
+	tools["my-exec-sql-tool"] = map[string]any{
+		"type":        "cockroachdb-execute-sql",
+		"source":      "my-write-instance",
+		"description": "Tool to execute sql",
+	}
+	tools["my-auth-exec-sql-tool"] = map[string]any{
+		"type":        "cockroachdb-execute-sql",
+		"source":      "my-write-instance",
+		"description": "Tool to execute sql",
+		"authRequired": []string{
+			"my-google-auth",
+		},
+	}
+
+	return config
 }
