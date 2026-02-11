@@ -21,23 +21,36 @@ jobs:
   link-check:
     runs-on: ubuntu-latest
     steps:
-      - name: Get all changed files compared to main
-        id: get_changed_files
-        shell: bash
-        run: |
-          git fetch origin main --unshallow || git fetch origin main
-
-          CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
-
-          # Print the list of changed files
-          echo "Changed files: $CHANGED_FILES"
-
-          # (Optional) Set an output variable for subsequent steps (GitHub Actions example)
-          echo "files=$CHANGED_FILES" >> $GITHUB_OUTPUT
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          fetch-depth: 0
+      - name: Identify Changed Files
+        id: changed-files
+        shell: bash
+        run: |
+          git fetch origin main
+          CHANGED_FILES=$(git diff --name-only --diff-filter=ACMRT origin/main...HEAD -- '*.md')
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No markdown files changed. Skipping checks."
+            echo "HAS_CHANGES=false" >> $GITHUB_ENV
+          else
+            echo "--- Changed Files to Scan ---"
+            echo "$CHANGED_FILES"
+            echo "-----------------------------"
+            
+            # Flatten newlines to spaces for the args list
+            FILES_FLAT=$(echo "$CHANGED_FILES" | tr '\n' ' ')
+            
+            echo "CHECK_FILES=$FILES_FLAT" >> $GITHUB_ENV
+            echo "HAS_CHANGES=true" >> $GITHUB_ENV
+          fi
+
+
 
       - name: Restore lychee cache
+        if: env.HAS_CHANGES == 'true'
         uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
         with:
           path: .lycheecache
@@ -46,6 +59,7 @@ jobs:
 
       - name: Link Checker
         id: lychee-check       
+        if: env.HAS_CHANGES == 'true'
         uses: lycheeverse/lychee-action@a8c4c7cb88f0c7386610c35eb25108e448569cb0 # v2
         continue-on-error: true 
         with:
